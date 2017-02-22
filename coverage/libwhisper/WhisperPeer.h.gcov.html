@@ -1,0 +1,157 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libwhisper/WhisperPeer.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libwhisper</a> - WhisperPeer.h<span style="font-size: 80%;"> (source / <a href="WhisperPeer.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file WhisperPeer.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;mutex&gt;
+<span class="lineNum">      25 </span>            : #include &lt;array&gt;
+<span class="lineNum">      26 </span>            : #include &lt;set&gt;
+<span class="lineNum">      27 </span>            : #include &lt;memory&gt;
+<span class="lineNum">      28 </span>            : #include &lt;utility&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #include &lt;libdevcore/RLP.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libdevcore/Guards.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libdevcore/SHA3.h&gt;
+<span class="lineNum">      33 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      34 </span>            : #include &quot;Message.h&quot;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : namespace dev
+<span class="lineNum">      37 </span>            : {
+<span class="lineNum">      38 </span>            : namespace shh
+<span class="lineNum">      39 </span>            : {
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : using p2p::SessionFace;
+<span class="lineNum">      42 </span>            : using p2p::HostCapabilityFace;
+<span class="lineNum">      43 </span>            : using p2p::HostCapability;
+<span class="lineNum">      44 </span>            : using p2p::Capability;
+<span class="lineNum">      45 </span>            : using p2p::CapDesc;
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : class WhisperPeer: public Capability
+<span class="lineNum">      48 </span>            : {
+<span class="lineNum">      49 </span>            :         friend class WhisperHost;
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : public:
+<span class="lineNum">      52 </span>            :         WhisperPeer(std::shared_ptr&lt;SessionFace&gt; _s, HostCapabilityFace* _h, unsigned _i, CapDesc const&amp; _cap, uint16_t _capID);
+<span class="lineNum">      53 </span>            :         virtual ~WhisperPeer();
+<span class="lineNum">      54 </span>            :         WhisperHost* host() const;
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :         static std::string name() { return &quot;shh&quot;; }</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :         static u256 version() { return WhisperProtocolVersion; }</span>
+<span class="lineNum">      57 </span>            :         static unsigned messageCount() { return PacketCount; }
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :         TopicBloomFilterHash bloom() const { dev::Guard g(x_bloom); return m_bloom; }</span>
+<span class="lineNum">      59 </span>            :         void sendTopicsOfInterest(TopicBloomFilterHash const&amp; _bloom); ///&lt; sends our bloom filter to remote peer
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :         void noteAdvertiseTopicsOfInterest() { dev::Guard g(x_advertiseTopicsOfInterest); m_advertiseTopicsOfInterest = true; }</span>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : private:
+<span class="lineNum">      63 </span>            :         virtual bool interpret(unsigned _id, RLP const&amp;) override;
+<span class="lineNum">      64 </span>            :         void sendMessages();
+<a name="65"><span class="lineNum">      65 </span>            :         unsigned ratingForPeer(Envelope const&amp; e) const;</a>
+<span class="lineNum">      66 </span>            :         void noteNewMessage(h256 _h, Envelope const&amp; _m);
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :         void setBloom(TopicBloomFilterHash const&amp; _b) { dev::Guard g(x_bloom); m_bloom = _b; }</span>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :         mutable dev::Mutex x_unseen;
+<span class="lineNum">      70 </span>            :         std::multimap&lt;unsigned, h256&gt; m_unseen;   ///&lt; Rated according to what they want.
+<span class="lineNum">      71 </span>            :         std::chrono::system_clock::time_point m_timer = std::chrono::system_clock::now();
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :         mutable dev::Mutex x_bloom;
+<span class="lineNum">      74 </span>            :         TopicBloomFilterHash m_bloom; ///&lt; Peer's topics of interest
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            :         mutable dev::Mutex x_advertiseTopicsOfInterest;
+<span class="lineNum">      77 </span>            :         bool m_advertiseTopicsOfInterest;
+<span class="lineNum">      78 </span>            : };
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : }
+<span class="lineNum">      81 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

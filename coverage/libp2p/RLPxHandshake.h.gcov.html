@@ -1,0 +1,225 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libp2p/RLPxHandshake.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libp2p</a> - RLPxHandshake.h<span style="font-size: 80%;"> (source / <a href="RLPxHandshake.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :  This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            :  
+<span class="lineNum">       4 </span>            :  cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :  it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :  the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :  (at your option) any later version.
+<span class="lineNum">       8 </span>            :  
+<span class="lineNum">       9 </span>            :  cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :  but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :  GNU General Public License for more details.
+<span class="lineNum">      13 </span>            :  
+<span class="lineNum">      14 </span>            :  You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :  along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            :  */
+<span class="lineNum">      17 </span>            : /** @file RLPXHandshake.h
+<span class="lineNum">      18 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #pragma once
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;memory&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libdevcrypto/Common.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libdevcrypto/ECDHE.h&gt;
+<span class="lineNum">      28 </span>            : #include &quot;RLPXSocket.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;RLPXFrameCoder.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      31 </span>            : namespace ba = boost::asio;
+<span class="lineNum">      32 </span>            : namespace bi = boost::asio::ip;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace dev
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            : namespace p2p
+<span class="lineNum">      37 </span>            : {
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : static const unsigned c_rlpxVersion = 4;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : /**
+<span class="lineNum">      42 </span>            :  * @brief Setup inbound or outbound connection for communication over RLPXFrameCoder.
+<span class="lineNum">      43 </span>            :  * RLPx Spec: https://github.com/ethereum/devp2p/blob/master/rlpx.md#encrypted-handshake
+<span class="lineNum">      44 </span>            :  *
+<span class="lineNum">      45 </span>            :  * @todo Implement StartSession transition via lambda which is passed to constructor.
+<span class="lineNum">      46 </span>            :  *
+<span class="lineNum">      47 </span>            :  * Thread Safety
+<span class="lineNum">      48 </span>            :  * Distinct Objects: Safe.
+<span class="lineNum">      49 </span>            :  * Shared objects: Unsafe.
+<span class="lineNum">      50 </span>            :  */
+<span class="lineNum">      51 </span>            : class RLPXHandshake: public std::enable_shared_from_this&lt;RLPXHandshake&gt;
+<span class="lineNum">      52 </span>            : {
+<span class="lineNum">      53 </span>            :         friend class RLPXFrameCoder;
+<span class="lineNum">      54 </span>            : 
+<a name="55"><span class="lineNum">      55 </span>            : public:</a>
+<span class="lineNum">      56 </span>            :         /// Setup incoming connection.
+<span class="lineNum">      57 </span><span class="lineCov">        440 :         RLPXHandshake(Host* _host, std::shared_ptr&lt;RLPXSocket&gt; const&amp; _socket): m_host(_host), m_originated(false), m_socket(_socket), m_idleTimer(m_socket-&gt;ref().get_io_service()) { crypto::Nonce::get().ref().copyTo(m_nonce.ref()); }</span>
+<a name="58"><span class="lineNum">      58 </span>            :         </a>
+<span class="lineNum">      59 </span>            :         /// Setup outbound connection.
+<a name="60"><span class="lineNum">      60 </span><span class="lineCov">        418 :         RLPXHandshake(Host* _host, std::shared_ptr&lt;RLPXSocket&gt; const&amp; _socket, NodeID _remote): m_host(_host), m_remote(_remote), m_originated(true), m_socket(_socket), m_idleTimer(m_socket-&gt;ref().get_io_service()) { crypto::Nonce::get().ref().copyTo(m_nonce.ref()); }</span></a>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span><span class="lineCov">        484 :         ~RLPXHandshake() {}</span>
+<a name="63"><span class="lineNum">      63 </span>            : </a>
+<span class="lineNum">      64 </span>            :         /// Start handshake.
+<span class="lineNum">      65 </span><span class="lineCov">         88 :         void start() { transition(); }</span>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :         /// Aborts the handshake.
+<span class="lineNum">      68 </span>            :         void cancel();
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : protected:
+<span class="lineNum">      71 </span>            :         /// Sequential states of handshake
+<span class="lineNum">      72 </span>            :         enum State
+<span class="lineNum">      73 </span>            :         {
+<span class="lineNum">      74 </span>            :                 Error = -1,
+<span class="lineNum">      75 </span>            :                 New,
+<span class="lineNum">      76 </span>            :                 AckAuth,
+<span class="lineNum">      77 </span>            :                 AckAuthEIP8,
+<span class="lineNum">      78 </span>            :                 WriteHello,
+<span class="lineNum">      79 </span>            :                 ReadHello,
+<span class="lineNum">      80 </span>            :                 StartSession
+<span class="lineNum">      81 </span>            :         };
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :         /// Write Auth message to socket and transitions to AckAuth.
+<span class="lineNum">      84 </span>            :         void writeAuth();
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            :         /// Reads Auth message from socket and transitions to AckAuth.
+<span class="lineNum">      87 </span>            :         void readAuth();
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :         /// Continues reading Auth message in EIP-8 format and transitions to AckAuthEIP8.
+<span class="lineNum">      90 </span>            :         void readAuthEIP8();
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :         /// Derives ephemeral secret from signature and sets members after Auth has been decrypted.
+<span class="lineNum">      93 </span>            :         void setAuthValues(Signature const&amp; sig, Public const&amp; remotePubk, h256 const&amp; remoteNonce, uint64_t remoteVersion);
+<span class="lineNum">      94 </span>            :         
+<span class="lineNum">      95 </span>            :         /// Write Ack message to socket and transitions to WriteHello.
+<span class="lineNum">      96 </span>            :         void writeAck();
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            :         /// Write Ack message in EIP-8 format to socket and transitions to WriteHello.
+<span class="lineNum">      99 </span>            :         void writeAckEIP8();
+<span class="lineNum">     100 </span>            :         
+<span class="lineNum">     101 </span>            :         /// Reads Auth message from socket and transitions to WriteHello.
+<span class="lineNum">     102 </span>            :         void readAck();
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :         /// Continues reading Ack message in EIP-8 format and transitions to WriteHello.
+<span class="lineNum">     105 </span>            :         void readAckEIP8();
+<span class="lineNum">     106 </span>            :         
+<span class="lineNum">     107 </span>            :         /// Closes connection and ends transitions.
+<span class="lineNum">     108 </span>            :         void error();
+<span class="lineNum">     109 </span>            :         
+<span class="lineNum">     110 </span>            :         /// Performs transition for m_nextState.
+<span class="lineNum">     111 </span>            :         virtual void transition(boost::system::error_code _ech = boost::system::error_code());
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :         /// Timeout for remote to respond to transition events. Enforced by m_idleTimer and refreshed by transition().
+<span class="lineNum">     114 </span>            :         boost::posix_time::milliseconds const c_timeout = boost::posix_time::milliseconds(1800);
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            :         State m_nextState = New;                        ///&lt; Current or expected state of transition.
+<span class="lineNum">     117 </span>            :         bool m_cancel = false;                  ///&lt; Will be set to true if connection was canceled.
+<span class="lineNum">     118 </span>            :         
+<span class="lineNum">     119 </span>            :         Host* m_host;                                   ///&lt; Host which provides m_alias, protocolVersion(), m_clientVersion, caps(), and TCP listenPort().
+<span class="lineNum">     120 </span>            :         
+<span class="lineNum">     121 </span>            :         /// Node id of remote host for socket.
+<span class="lineNum">     122 </span>            :         NodeID m_remote;                                        ///&lt; Public address of remote host.
+<span class="lineNum">     123 </span>            :         bool m_originated = false;              ///&lt; True if connection is outbound.
+<span class="lineNum">     124 </span>            :         
+<span class="lineNum">     125 </span>            :         /// Buffers for encoded and decoded handshake phases
+<span class="lineNum">     126 </span>            :         bytes m_auth;                                   ///&lt; Plaintext of egress or ingress Auth message.
+<span class="lineNum">     127 </span>            :         bytes m_authCipher;                             ///&lt; Ciphertext of egress or ingress Auth message.
+<span class="lineNum">     128 </span>            :         bytes m_ack;                                            ///&lt; Plaintext of egress or ingress Ack message.
+<span class="lineNum">     129 </span>            :         bytes m_ackCipher;                              ///&lt; Ciphertext of egress or ingress Ack message.
+<span class="lineNum">     130 </span>            :         bytes m_handshakeOutBuffer;             ///&lt; Frame buffer for egress Hello packet.
+<span class="lineNum">     131 </span>            :         bytes m_handshakeInBuffer;              ///&lt; Frame buffer for ingress Hello packet.
+<span class="lineNum">     132 </span>            :         
+<span class="lineNum">     133 </span>            :         crypto::ECDHE m_ecdhe;                  ///&lt; Ephemeral ECDH secret and agreement.
+<span class="lineNum">     134 </span>            :         h256 m_nonce;                                   ///&lt; Nonce generated by this host for handshake.
+<span class="lineNum">     135 </span>            :         
+<span class="lineNum">     136 </span>            :         Public m_remoteEphemeral;                       ///&lt; Remote ephemeral public key.
+<span class="lineNum">     137 </span>            :         h256 m_remoteNonce;                             ///&lt; Nonce generated by remote host for handshake.
+<span class="lineNum">     138 </span>            :         uint64_t m_remoteVersion;
+<span class="lineNum">     139 </span>            :         
+<span class="lineNum">     140 </span>            :         /// Used to read and write RLPx encrypted frames for last step of handshake authentication.
+<span class="lineNum">     141 </span>            :         /// Passed onto Host which will take ownership.
+<span class="lineNum">     142 </span>            :         std::unique_ptr&lt;RLPXFrameCoder&gt; m_io;
+<span class="lineNum">     143 </span>            :         
+<span class="lineNum">     144 </span>            :         std::shared_ptr&lt;RLPXSocket&gt; m_socket;             ///&lt; Socket.
+<span class="lineNum">     145 </span>            :         boost::asio::deadline_timer m_idleTimer;        ///&lt; Timer which enforces c_timeout.
+<span class="lineNum">     146 </span>            : };
+<span class="lineNum">     147 </span>            :         
+<span class="lineNum">     148 </span>            : }
+<span class="lineNum">     149 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

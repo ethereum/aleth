@@ -1,0 +1,1159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/fstream</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5</a> - fstream<span style="font-size: 80%;"> (source / <a href="fstream.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // File based streams -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 1997-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file include/fstream
+<span class="lineNum">      26 </span>            :  *  This is a Standard C++ Library header.
+<span class="lineNum">      27 </span>            :  */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : //
+<span class="lineNum">      30 </span>            : // ISO C++ 14882: 27.8  File-based streams
+<span class="lineNum">      31 </span>            : //
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #ifndef _GLIBCXX_FSTREAM
+<span class="lineNum">      34 </span>            : #define _GLIBCXX_FSTREAM 1
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #pragma GCC system_header
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #include &lt;istream&gt;
+<span class="lineNum">      39 </span>            : #include &lt;ostream&gt;
+<span class="lineNum">      40 </span>            : #include &lt;bits/codecvt.h&gt;
+<span class="lineNum">      41 </span>            : #include &lt;cstdio&gt;             // For BUFSIZ
+<span class="lineNum">      42 </span>            : #include &lt;bits/basic_file.h&gt;  // For __basic_file, __c_lock
+<span class="lineNum">      43 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">      44 </span>            : #include &lt;string&gt;             // For std::string overloads.
+<span class="lineNum">      45 </span>            : #endif
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      48 </span>            : {
+<span class="lineNum">      49 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            :   // [27.8.1.1] template class basic_filebuf
+<span class="lineNum">      52 </span>            :   /**
+<span class="lineNum">      53 </span>            :    *  @brief  The actual work of input and output (for files).
+<span class="lineNum">      54 </span>            :    *  @ingroup io
+<span class="lineNum">      55 </span>            :    *
+<span class="lineNum">      56 </span>            :    *  @tparam _CharT  Type of character stream.
+<span class="lineNum">      57 </span>            :    *  @tparam _Traits  Traits for character type, defaults to
+<span class="lineNum">      58 </span>            :    *                   char_traits&lt;_CharT&gt;.
+<span class="lineNum">      59 </span>            :    *
+<span class="lineNum">      60 </span>            :    *  This class associates both its input and output sequence with an
+<span class="lineNum">      61 </span>            :    *  external disk file, and maintains a joint file position for both
+<span class="lineNum">      62 </span>            :    *  sequences.  Many of its semantics are described in terms of similar
+<span class="lineNum">      63 </span>            :    *  behavior in the Standard C Library's @c FILE streams.
+<span class="lineNum">      64 </span>            :    *
+<span class="lineNum">      65 </span>            :    *  Requirements on traits_type, specific to this class:
+<span class="lineNum">      66 </span>            :    *  - traits_type::pos_type must be fpos&lt;traits_type::state_type&gt;
+<span class="lineNum">      67 </span>            :    *  - traits_type::off_type must be streamoff
+<span class="lineNum">      68 </span>            :    *  - traits_type::state_type must be Assignable and DefaultConstructible,
+<span class="lineNum">      69 </span>            :    *  - traits_type::state_type() must be the initial state for codecvt.
+<span class="lineNum">      70 </span>            :    */
+<span class="lineNum">      71 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">      72 </span>            :     class basic_filebuf : public basic_streambuf&lt;_CharT, _Traits&gt;
+<span class="lineNum">      73 </span>            :     {
+<span class="lineNum">      74 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">      75 </span>            :       template&lt;typename _Tp&gt;
+<span class="lineNum">      76 </span>            :         using __chk_state = __and_&lt;is_copy_assignable&lt;_Tp&gt;,
+<span class="lineNum">      77 </span>            :                                    is_copy_constructible&lt;_Tp&gt;,
+<span class="lineNum">      78 </span>            :                                    is_default_constructible&lt;_Tp&gt;&gt;;
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            :       static_assert(__chk_state&lt;typename _Traits::state_type&gt;::value,
+<span class="lineNum">      81 </span>            :                     &quot;state_type must be CopyAssignable, CopyConstructible&quot;
+<span class="lineNum">      82 </span>            :                     &quot; and DefaultConstructible&quot;);
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            :       static_assert(is_same&lt;typename _Traits::pos_type,
+<span class="lineNum">      85 </span>            :                             fpos&lt;typename _Traits::state_type&gt;&gt;::value,
+<span class="lineNum">      86 </span>            :                     &quot;pos_type must be fpos&lt;state_type&gt;&quot;);
+<span class="lineNum">      87 </span>            : #endif
+<span class="lineNum">      88 </span>            :     public:
+<span class="lineNum">      89 </span>            :       // Types:
+<span class="lineNum">      90 </span>            :       typedef _CharT                                    char_type;
+<span class="lineNum">      91 </span>            :       typedef _Traits                                   traits_type;
+<span class="lineNum">      92 </span>            :       typedef typename traits_type::int_type            int_type;
+<span class="lineNum">      93 </span>            :       typedef typename traits_type::pos_type            pos_type;
+<span class="lineNum">      94 </span>            :       typedef typename traits_type::off_type            off_type;
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            :       typedef basic_streambuf&lt;char_type, traits_type&gt;     __streambuf_type;
+<span class="lineNum">      97 </span>            :       typedef basic_filebuf&lt;char_type, traits_type&gt;     __filebuf_type;
+<span class="lineNum">      98 </span>            :       typedef __basic_file&lt;char&gt;                  __file_type;
+<span class="lineNum">      99 </span>            :       typedef typename traits_type::state_type          __state_type;
+<span class="lineNum">     100 </span>            :       typedef codecvt&lt;char_type, char, __state_type&gt;    __codecvt_type;
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :       friend class ios_base; // For sync_with_stdio.
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :     protected:
+<span class="lineNum">     105 </span>            :       // Data Members:
+<span class="lineNum">     106 </span>            :       // MT lock inherited from libio or other low-level io library.
+<span class="lineNum">     107 </span>            :       __c_lock                  _M_lock;
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            :       // External buffer.
+<span class="lineNum">     110 </span>            :       __file_type               _M_file;
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            :       /// Place to stash in || out || in | out settings for current filebuf.
+<span class="lineNum">     113 </span>            :       ios_base::openmode        _M_mode;
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            :       // Beginning state type for codecvt.
+<span class="lineNum">     116 </span>            :       __state_type              _M_state_beg;
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :       // During output, the state that corresponds to pptr(),
+<span class="lineNum">     119 </span>            :       // during input, the state that corresponds to egptr() and
+<span class="lineNum">     120 </span>            :       // _M_ext_next.
+<span class="lineNum">     121 </span>            :       __state_type              _M_state_cur;
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            :       // Not used for output. During input, the state that corresponds
+<span class="lineNum">     124 </span>            :       // to eback() and _M_ext_buf.
+<span class="lineNum">     125 </span>            :       __state_type              _M_state_last;
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :       /// Pointer to the beginning of internal buffer.
+<span class="lineNum">     128 </span>            :       char_type*                _M_buf;
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :       /**
+<span class="lineNum">     131 </span>            :        *  Actual size of internal buffer. This number is equal to the size
+<span class="lineNum">     132 </span>            :        *  of the put area + 1 position, reserved for the overflow char of
+<span class="lineNum">     133 </span>            :        *  a full area.
+<span class="lineNum">     134 </span>            :        */
+<span class="lineNum">     135 </span>            :       size_t                    _M_buf_size;
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :       // Set iff _M_buf is allocated memory from _M_allocate_internal_buffer.
+<span class="lineNum">     138 </span>            :       bool                      _M_buf_allocated;
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :       /**
+<span class="lineNum">     141 </span>            :        *  _M_reading == false &amp;&amp; _M_writing == false for @b uncommitted mode;
+<span class="lineNum">     142 </span>            :        *  _M_reading == true for @b read mode;
+<span class="lineNum">     143 </span>            :        *  _M_writing == true for @b write mode;
+<span class="lineNum">     144 </span>            :        *
+<span class="lineNum">     145 </span>            :        *  NB: _M_reading == true &amp;&amp; _M_writing == true is unused.
+<span class="lineNum">     146 </span>            :        */
+<span class="lineNum">     147 </span>            :       bool                      _M_reading;
+<span class="lineNum">     148 </span>            :       bool                      _M_writing;
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            :       //@{
+<span class="lineNum">     151 </span>            :       /**
+<span class="lineNum">     152 </span>            :        *  Necessary bits for putback buffer management.
+<span class="lineNum">     153 </span>            :        *
+<span class="lineNum">     154 </span>            :        *  @note pbacks of over one character are not currently supported.
+<span class="lineNum">     155 </span>            :        */
+<span class="lineNum">     156 </span>            :       char_type                 _M_pback;
+<span class="lineNum">     157 </span>            :       char_type*                _M_pback_cur_save;
+<span class="lineNum">     158 </span>            :       char_type*                _M_pback_end_save;
+<span class="lineNum">     159 </span>            :       bool                      _M_pback_init;
+<span class="lineNum">     160 </span>            :       //@}
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :       // Cached codecvt facet.
+<span class="lineNum">     163 </span>            :       const __codecvt_type*     _M_codecvt;
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :       /**
+<span class="lineNum">     166 </span>            :        *  Buffer for external characters. Used for input when
+<span class="lineNum">     167 </span>            :        *  codecvt::always_noconv() == false. When valid, this corresponds
+<span class="lineNum">     168 </span>            :        *  to eback().
+<span class="lineNum">     169 </span>            :        */
+<span class="lineNum">     170 </span>            :       char*                     _M_ext_buf;
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :       /**
+<span class="lineNum">     173 </span>            :        *  Size of buffer held by _M_ext_buf.
+<span class="lineNum">     174 </span>            :        */
+<span class="lineNum">     175 </span>            :       streamsize                _M_ext_buf_size;
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :       /**
+<span class="lineNum">     178 </span>            :        *  Pointers into the buffer held by _M_ext_buf that delimit a
+<span class="lineNum">     179 </span>            :        *  subsequence of bytes that have been read but not yet converted.
+<span class="lineNum">     180 </span>            :        *  When valid, _M_ext_next corresponds to egptr().
+<span class="lineNum">     181 </span>            :        */
+<span class="lineNum">     182 </span>            :       const char*               _M_ext_next;
+<span class="lineNum">     183 </span>            :       char*                     _M_ext_end;
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :       /**
+<span class="lineNum">     186 </span>            :        *  Initializes pback buffers, and moves normal buffers to safety.
+<span class="lineNum">     187 </span>            :        *  Assumptions:
+<span class="lineNum">     188 </span>            :        *  _M_in_cur has already been moved back
+<span class="lineNum">     189 </span>            :        */
+<span class="lineNum">     190 </span>            :       void
+<span class="lineNum">     191 </span>            :       _M_create_pback()
+<span class="lineNum">     192 </span>            :       {
+<span class="lineNum">     193 </span>            :         if (!_M_pback_init)
+<span class="lineNum">     194 </span>            :           {
+<span class="lineNum">     195 </span>            :             _M_pback_cur_save = this-&gt;gptr();
+<span class="lineNum">     196 </span>            :             _M_pback_end_save = this-&gt;egptr();
+<span class="lineNum">     197 </span>            :             this-&gt;setg(&amp;_M_pback, &amp;_M_pback, &amp;_M_pback + 1);
+<span class="lineNum">     198 </span>            :             _M_pback_init = true;
+<span class="lineNum">     199 </span>            :           }
+<span class="lineNum">     200 </span>            :       }
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            :       /**
+<span class="lineNum">     203 </span>            :        *  Deactivates pback buffer contents, and restores normal buffer.
+<span class="lineNum">     204 </span>            :        *  Assumptions:
+<span class="lineNum">     205 </span>            :        *  The pback buffer has only moved forward.
+<span class="lineNum">     206 </span>            :        */
+<span class="lineNum">     207 </span>            :       void
+<span class="lineNum">     208 </span>            :       _M_destroy_pback() throw()
+<span class="lineNum">     209 </span>            :       {
+<span class="lineNum">     210 </span>            :         if (_M_pback_init)
+<span class="lineNum">     211 </span>            :           {
+<span class="lineNum">     212 </span>            :             // Length _M_in_cur moved in the pback buffer.
+<span class="lineNum">     213 </span>            :             _M_pback_cur_save += this-&gt;gptr() != this-&gt;eback();
+<span class="lineNum">     214 </span>            :             this-&gt;setg(_M_buf, _M_pback_cur_save, _M_pback_end_save);
+<span class="lineNum">     215 </span>            :             _M_pback_init = false;
+<span class="lineNum">     216 </span>            :           }
+<span class="lineNum">     217 </span>            :       }
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            :     public:
+<span class="lineNum">     220 </span>            :       // Constructors/destructor:
+<span class="lineNum">     221 </span>            :       /**
+<span class="lineNum">     222 </span>            :        *  @brief  Does not open any files.
+<span class="lineNum">     223 </span>            :        *
+<span class="lineNum">     224 </span>            :        *  The default constructor initializes the parent class using its
+<span class="lineNum">     225 </span>            :        *  own default ctor.
+<span class="lineNum">     226 </span>            :        */
+<span class="lineNum">     227 </span>            :       basic_filebuf();
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     230 </span>            :       basic_filebuf(const basic_filebuf&amp;) = delete;
+<span class="lineNum">     231 </span>            :       basic_filebuf(basic_filebuf&amp;&amp;);
+<span class="lineNum">     232 </span>            : #endif
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            :       /**
+<span class="lineNum">     235 </span>            :        *  @brief  The destructor closes the file first.
+<span class="lineNum">     236 </span>            :        */
+<span class="lineNum">     237 </span>            :       virtual
+<span class="lineNum">     238 </span>            :       ~basic_filebuf()
+<span class="lineNum">     239 </span>            :       { this-&gt;close(); }
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     242 </span>            :       basic_filebuf&amp; operator=(const basic_filebuf&amp;) = delete;
+<span class="lineNum">     243 </span>            :       basic_filebuf&amp; operator=(basic_filebuf&amp;&amp;);
+<span class="lineNum">     244 </span>            :       void swap(basic_filebuf&amp;);
+<span class="lineNum">     245 </span>            : #endif
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            :       // Members:
+<span class="lineNum">     248 </span>            :       /**
+<span class="lineNum">     249 </span>            :        *  @brief  Returns true if the external file is open.
+<span class="lineNum">     250 </span>            :        */
+<span class="lineNum">     251 </span>            :       bool
+<span class="lineNum">     252 </span>            :       is_open() const throw()
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :       { return _M_file.is_open(); }</span>
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            :       /**
+<span class="lineNum">     256 </span>            :        *  @brief  Opens an external file.
+<span class="lineNum">     257 </span>            :        *  @param  __s  The name of the file.
+<span class="lineNum">     258 </span>            :        *  @param  __mode  The open mode flags.
+<span class="lineNum">     259 </span>            :        *  @return  @c this on success, NULL on failure
+<span class="lineNum">     260 </span>            :        *
+<span class="lineNum">     261 </span>            :        *  If a file is already open, this function immediately fails.
+<span class="lineNum">     262 </span>            :        *  Otherwise it tries to open the file named @a __s using the flags
+<span class="lineNum">     263 </span>            :        *  given in @a __mode.
+<span class="lineNum">     264 </span>            :        *
+<span class="lineNum">     265 </span>            :        *  Table 92, adapted here, gives the relation between openmode
+<span class="lineNum">     266 </span>            :        *  combinations and the equivalent @c fopen() flags.
+<span class="lineNum">     267 </span>            :        *  (NB: lines app, in|out|app, in|app, binary|app, binary|in|out|app,
+<span class="lineNum">     268 </span>            :        *  and binary|in|app per DR 596)
+<span class="lineNum">     269 </span>            :        *  &lt;pre&gt;
+<span class="lineNum">     270 </span>            :        *  +---------------------------------------------------------+
+<span class="lineNum">     271 </span>            :        *  | ios_base Flag combination            stdio equivalent   |
+<span class="lineNum">     272 </span>            :        *  |binary  in  out  trunc  app                              |
+<span class="lineNum">     273 </span>            :        *  +---------------------------------------------------------+
+<span class="lineNum">     274 </span>            :        *  |             +                        w                  |
+<span class="lineNum">     275 </span>            :        *  |             +           +            a                  |
+<span class="lineNum">     276 </span>            :        *  |                         +            a                  |
+<span class="lineNum">     277 </span>            :        *  |             +     +                  w                  |
+<span class="lineNum">     278 </span>            :        *  |         +                            r                  |
+<span class="lineNum">     279 </span>            :        *  |         +   +                        r+                 |
+<span class="lineNum">     280 </span>            :        *  |         +   +     +                  w+                 |
+<span class="lineNum">     281 </span>            :        *  |         +   +           +            a+                 |
+<span class="lineNum">     282 </span>            :        *  |         +               +            a+                 |
+<span class="lineNum">     283 </span>            :        *  +---------------------------------------------------------+
+<span class="lineNum">     284 </span>            :        *  |   +         +                        wb                 |
+<span class="lineNum">     285 </span>            :        *  |   +         +           +            ab                 |
+<span class="lineNum">     286 </span>            :        *  |   +                     +            ab                 |
+<span class="lineNum">     287 </span>            :        *  |   +         +     +                  wb                 |
+<span class="lineNum">     288 </span>            :        *  |   +     +                            rb                 |
+<span class="lineNum">     289 </span>            :        *  |   +     +   +                        r+b                |
+<span class="lineNum">     290 </span>            :        *  |   +     +   +     +                  w+b                |
+<span class="lineNum">     291 </span>            :        *  |   +     +   +           +            a+b                |
+<span class="lineNum">     292 </span>            :        *  |   +     +               +            a+b                |
+<span class="lineNum">     293 </span>            :        *  +---------------------------------------------------------+
+<span class="lineNum">     294 </span>            :        *  &lt;/pre&gt;
+<span class="lineNum">     295 </span>            :        */
+<span class="lineNum">     296 </span>            :       __filebuf_type*
+<span class="lineNum">     297 </span>            :       open(const char* __s, ios_base::openmode __mode);
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     300 </span>            :       /**
+<span class="lineNum">     301 </span>            :        *  @brief  Opens an external file.
+<span class="lineNum">     302 </span>            :        *  @param  __s  The name of the file.
+<span class="lineNum">     303 </span>            :        *  @param  __mode  The open mode flags.
+<span class="lineNum">     304 </span>            :        *  @return  @c this on success, NULL on failure
+<span class="lineNum">     305 </span>            :        */
+<span class="lineNum">     306 </span>            :       __filebuf_type*
+<span class="lineNum">     307 </span>            :       open(const std::string&amp; __s, ios_base::openmode __mode)
+<span class="lineNum">     308 </span>            :       { return open(__s.c_str(), __mode); }
+<span class="lineNum">     309 </span>            : #endif
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            :       /**
+<span class="lineNum">     312 </span>            :        *  @brief  Closes the currently associated file.
+<span class="lineNum">     313 </span>            :        *  @return  @c this on success, NULL on failure
+<span class="lineNum">     314 </span>            :        *
+<span class="lineNum">     315 </span>            :        *  If no file is currently open, this function immediately fails.
+<span class="lineNum">     316 </span>            :        *
+<span class="lineNum">     317 </span>            :        *  If a &lt;em&gt;put buffer area&lt;/em&gt; exists, @c overflow(eof) is
+<span class="lineNum">     318 </span>            :        *  called to flush all the characters.  The file is then
+<span class="lineNum">     319 </span>            :        *  closed.
+<span class="lineNum">     320 </span>            :        *
+<span class="lineNum">     321 </span>            :        *  If any operations fail, this function also fails.
+<span class="lineNum">     322 </span>            :        */
+<span class="lineNum">     323 </span>            :       __filebuf_type*
+<span class="lineNum">     324 </span>            :       close();
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span>            :     protected:
+<span class="lineNum">     327 </span>            :       void
+<span class="lineNum">     328 </span>            :       _M_allocate_internal_buffer();
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span>            :       void
+<span class="lineNum">     331 </span>            :       _M_destroy_internal_buffer() throw();
+<span class="lineNum">     332 </span>            : 
+<span class="lineNum">     333 </span>            :       // [27.8.1.4] overridden virtual functions
+<span class="lineNum">     334 </span>            :       virtual streamsize
+<span class="lineNum">     335 </span>            :       showmanyc();
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span>            :       // Stroustrup, 1998, p. 628
+<span class="lineNum">     338 </span>            :       // underflow() and uflow() functions are called to get the next
+<span class="lineNum">     339 </span>            :       // character from the real input source when the buffer is empty.
+<span class="lineNum">     340 </span>            :       // Buffered input uses underflow()
+<span class="lineNum">     341 </span>            : 
+<span class="lineNum">     342 </span>            :       virtual int_type
+<span class="lineNum">     343 </span>            :       underflow();
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span>            :       virtual int_type
+<span class="lineNum">     346 </span>            :       pbackfail(int_type __c = _Traits::eof());
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            :       // Stroustrup, 1998, p 648
+<span class="lineNum">     349 </span>            :       // The overflow() function is called to transfer characters to the
+<span class="lineNum">     350 </span>            :       // real output destination when the buffer is full. A call to
+<span class="lineNum">     351 </span>            :       // overflow(c) outputs the contents of the buffer plus the
+<span class="lineNum">     352 </span>            :       // character c.
+<span class="lineNum">     353 </span>            :       // 27.5.2.4.5
+<span class="lineNum">     354 </span>            :       // Consume some sequence of the characters in the pending sequence.
+<span class="lineNum">     355 </span>            :       virtual int_type
+<span class="lineNum">     356 </span>            :       overflow(int_type __c = _Traits::eof());
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span>            :       // Convert internal byte sequence to external, char-based
+<span class="lineNum">     359 </span>            :       // sequence via codecvt.
+<span class="lineNum">     360 </span>            :       bool
+<span class="lineNum">     361 </span>            :       _M_convert_to_external(char_type*, streamsize);
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span>            :       /**
+<span class="lineNum">     364 </span>            :        *  @brief  Manipulates the buffer.
+<span class="lineNum">     365 </span>            :        *  @param  __s  Pointer to a buffer area.
+<span class="lineNum">     366 </span>            :        *  @param  __n  Size of @a __s.
+<span class="lineNum">     367 </span>            :        *  @return  @c this
+<span class="lineNum">     368 </span>            :        *
+<span class="lineNum">     369 </span>            :        *  If no file has been opened, and both @a __s and @a __n are zero, then
+<span class="lineNum">     370 </span>            :        *  the stream becomes unbuffered.  Otherwise, @c __s is used as a
+<span class="lineNum">     371 </span>            :        *  buffer; see
+<span class="lineNum">     372 </span>            :        *  https://gcc.gnu.org/onlinedocs/libstdc++/manual/streambufs.html#io.streambuf.buffering
+<span class="lineNum">     373 </span>            :        *  for more.
+<span class="lineNum">     374 </span>            :        */
+<span class="lineNum">     375 </span>            :       virtual __streambuf_type*
+<span class="lineNum">     376 </span>            :       setbuf(char_type* __s, streamsize __n);
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span>            :       virtual pos_type
+<span class="lineNum">     379 </span>            :       seekoff(off_type __off, ios_base::seekdir __way,
+<span class="lineNum">     380 </span>            :               ios_base::openmode __mode = ios_base::in | ios_base::out);
+<span class="lineNum">     381 </span>            : 
+<span class="lineNum">     382 </span>            :       virtual pos_type
+<span class="lineNum">     383 </span>            :       seekpos(pos_type __pos,
+<span class="lineNum">     384 </span>            :               ios_base::openmode __mode = ios_base::in | ios_base::out);
+<span class="lineNum">     385 </span>            : 
+<span class="lineNum">     386 </span>            :       // Common code for seekoff, seekpos, and overflow
+<span class="lineNum">     387 </span>            :       pos_type
+<span class="lineNum">     388 </span>            :       _M_seek(off_type __off, ios_base::seekdir __way, __state_type __state);
+<span class="lineNum">     389 </span>            :       
+<span class="lineNum">     390 </span>            :       int
+<span class="lineNum">     391 </span>            :       _M_get_ext_pos(__state_type &amp;__state);
+<span class="lineNum">     392 </span>            : 
+<span class="lineNum">     393 </span>            :       virtual int
+<span class="lineNum">     394 </span>            :       sync();
+<span class="lineNum">     395 </span>            : 
+<span class="lineNum">     396 </span>            :       virtual void
+<span class="lineNum">     397 </span>            :       imbue(const locale&amp; __loc);
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span>            :       virtual streamsize
+<span class="lineNum">     400 </span>            :       xsgetn(char_type* __s, streamsize __n);
+<span class="lineNum">     401 </span>            : 
+<span class="lineNum">     402 </span>            :       virtual streamsize
+<span class="lineNum">     403 </span>            :       xsputn(const char_type* __s, streamsize __n);
+<span class="lineNum">     404 </span>            : 
+<span class="lineNum">     405 </span>            :       // Flushes output buffer, then writes unshift sequence.
+<span class="lineNum">     406 </span>            :       bool
+<span class="lineNum">     407 </span>            :       _M_terminate_output();
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span>            :       /**
+<span class="lineNum">     410 </span>            :        *  This function sets the pointers of the internal buffer, both get
+<span class="lineNum">     411 </span>            :        *  and put areas. Typically:
+<span class="lineNum">     412 </span>            :        *
+<span class="lineNum">     413 </span>            :        *   __off == egptr() - eback() upon underflow/uflow (@b read mode);
+<span class="lineNum">     414 </span>            :        *   __off == 0 upon overflow (@b write mode);
+<span class="lineNum">     415 </span>            :        *   __off == -1 upon open, setbuf, seekoff/pos (@b uncommitted mode).
+<span class="lineNum">     416 </span>            :        *
+<span class="lineNum">     417 </span>            :        *  NB: epptr() - pbase() == _M_buf_size - 1, since _M_buf_size
+<span class="lineNum">     418 </span>            :        *  reflects the actual allocated memory and the last cell is reserved
+<span class="lineNum">     419 </span>            :        *  for the overflow char of a full put area.
+<span class="lineNum">     420 </span>            :        */
+<span class="lineNum">     421 </span>            :       void
+<span class="lineNum">     422 </span>            :       _M_set_buffer(streamsize __off)
+<span class="lineNum">     423 </span>            :       {
+<span class="lineNum">     424 </span>            :         const bool __testin = _M_mode &amp; ios_base::in;
+<span class="lineNum">     425 </span>            :         const bool __testout = (_M_mode &amp; ios_base::out
+<span class="lineNum">     426 </span>            :                                 || _M_mode &amp; ios_base::app);
+<span class="lineNum">     427 </span>            : 
+<span class="lineNum">     428 </span>            :         if (__testin &amp;&amp; __off &gt; 0)
+<span class="lineNum">     429 </span>            :           this-&gt;setg(_M_buf, _M_buf, _M_buf + __off);
+<span class="lineNum">     430 </span>            :         else
+<span class="lineNum">     431 </span>            :           this-&gt;setg(_M_buf, _M_buf, _M_buf);
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span>            :         if (__testout &amp;&amp; __off == 0 &amp;&amp; _M_buf_size &gt; 1 )
+<span class="lineNum">     434 </span>            :           this-&gt;setp(_M_buf, _M_buf + _M_buf_size - 1);
+<span class="lineNum">     435 </span>            :         else
+<span class="lineNum">     436 </span>            :           this-&gt;setp(0, 0);
+<span class="lineNum">     437 </span>            :       }
+<span class="lineNum">     438 </span>            :     };
+<span class="lineNum">     439 </span>            : 
+<span class="lineNum">     440 </span>            :   // [27.8.1.5] Template class basic_ifstream
+<span class="lineNum">     441 </span>            :   /**
+<span class="lineNum">     442 </span>            :    *  @brief  Controlling input for files.
+<span class="lineNum">     443 </span>            :    *  @ingroup io
+<span class="lineNum">     444 </span>            :    *
+<span class="lineNum">     445 </span>            :    *  @tparam _CharT  Type of character stream.
+<span class="lineNum">     446 </span>            :    *  @tparam _Traits  Traits for character type, defaults to
+<span class="lineNum">     447 </span>            :    *                   char_traits&lt;_CharT&gt;.
+<span class="lineNum">     448 </span>            :    *
+<span class="lineNum">     449 </span>            :    *  This class supports reading from named files, using the inherited
+<span class="lineNum">     450 </span>            :    *  functions from std::basic_istream.  To control the associated
+<span class="lineNum">     451 </span>            :    *  sequence, an instance of std::basic_filebuf is used, which this page
+<span class="lineNum">     452 </span>            :    *  refers to as @c sb.
+<span class="lineNum">     453 </span>            :    */
+<span class="lineNum">     454 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     455 </span>            :     class basic_ifstream : public basic_istream&lt;_CharT, _Traits&gt;
+<span class="lineNum">     456 </span>            :     {
+<span class="lineNum">     457 </span>            :     public:
+<span class="lineNum">     458 </span>            :       // Types:
+<span class="lineNum">     459 </span>            :       typedef _CharT                                    char_type;
+<span class="lineNum">     460 </span>            :       typedef _Traits                                   traits_type;
+<span class="lineNum">     461 </span>            :       typedef typename traits_type::int_type            int_type;
+<span class="lineNum">     462 </span>            :       typedef typename traits_type::pos_type            pos_type;
+<span class="lineNum">     463 </span>            :       typedef typename traits_type::off_type            off_type;
+<span class="lineNum">     464 </span>            : 
+<span class="lineNum">     465 </span>            :       // Non-standard types:
+<span class="lineNum">     466 </span>            :       typedef basic_filebuf&lt;char_type, traits_type&gt;       __filebuf_type;
+<span class="lineNum">     467 </span>            :       typedef basic_istream&lt;char_type, traits_type&gt;       __istream_type;
+<span class="lineNum">     468 </span>            : 
+<span class="lineNum">     469 </span>            :     private:
+<span class="lineNum">     470 </span>            :       __filebuf_type    _M_filebuf;
+<span class="lineNum">     471 </span>            : 
+<span class="lineNum">     472 </span>            :     public:
+<span class="lineNum">     473 </span>            :       // Constructors/Destructors:
+<span class="lineNum">     474 </span>            :       /**
+<span class="lineNum">     475 </span>            :        *  @brief  Default constructor.
+<span class="lineNum">     476 </span>            :        *
+<span class="lineNum">     477 </span>            :        *  Initializes @c sb using its default constructor, and passes
+<span class="lineNum">     478 </span>            :        *  @c &amp;sb to the base class initializer.  Does not open any files
+<span class="lineNum">     479 </span>            :        *  (you haven't given it a filename to open).
+<span class="lineNum">     480 </span>            :        */
+<span class="lineNum">     481 </span>            :       basic_ifstream() : __istream_type(), _M_filebuf()
+<span class="lineNum">     482 </span>            :       { this-&gt;init(&amp;_M_filebuf); }
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span>            :       /**
+<span class="lineNum">     485 </span>            :        *  @brief  Create an input file stream.
+<span class="lineNum">     486 </span>            :        *  @param  __s  Null terminated string specifying the filename.
+<span class="lineNum">     487 </span>            :        *  @param  __mode  Open file in specified mode (see std::ios_base).
+<span class="lineNum">     488 </span>            :        *
+<span class="lineNum">     489 </span>            :        *  @c ios_base::in is automatically included in @a __mode.
+<span class="lineNum">     490 </span>            :        *
+<span class="lineNum">     491 </span>            :        *  Tip:  When using std::string to hold the filename, you must use
+<span class="lineNum">     492 </span>            :        *  .c_str() before passing it to this constructor.
+<span class="lineNum">     493 </span>            :        */
+<span class="lineNum">     494 </span>            :       explicit
+<span class="lineNum">     495 </span>            :       basic_ifstream(const char* __s, ios_base::openmode __mode = ios_base::in)
+<span class="lineNum">     496 </span>            :       : __istream_type(), _M_filebuf()
+<span class="lineNum">     497 </span>            :       {
+<span class="lineNum">     498 </span>            :         this-&gt;init(&amp;_M_filebuf);
+<span class="lineNum">     499 </span>            :         this-&gt;open(__s, __mode);
+<span class="lineNum">     500 </span>            :       }
+<span class="lineNum">     501 </span>            : 
+<span class="lineNum">     502 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     503 </span>            :       /**
+<span class="lineNum">     504 </span>            :        *  @brief  Create an input file stream.
+<span class="lineNum">     505 </span>            :        *  @param  __s  std::string specifying the filename.
+<span class="lineNum">     506 </span>            :        *  @param  __mode  Open file in specified mode (see std::ios_base).
+<span class="lineNum">     507 </span>            :        *
+<span class="lineNum">     508 </span>            :        *  @c ios_base::in is automatically included in @a __mode.
+<span class="lineNum">     509 </span>            :        */
+<span class="lineNum">     510 </span>            :       explicit
+<span class="lineNum">     511 </span>            :       basic_ifstream(const std::string&amp; __s,
+<span class="lineNum">     512 </span>            :                      ios_base::openmode __mode = ios_base::in)
+<span class="lineNum">     513 </span>            :       : __istream_type(), _M_filebuf()
+<span class="lineNum">     514 </span>            :       {
+<span class="lineNum">     515 </span>            :         this-&gt;init(&amp;_M_filebuf);
+<span class="lineNum">     516 </span>            :         this-&gt;open(__s, __mode);
+<span class="lineNum">     517 </span>            :       }
+<span class="lineNum">     518 </span>            : 
+<span class="lineNum">     519 </span>            :       basic_ifstream(const basic_ifstream&amp;) = delete;
+<span class="lineNum">     520 </span>            : 
+<span class="lineNum">     521 </span>            :       basic_ifstream(basic_ifstream&amp;&amp; __rhs)
+<span class="lineNum">     522 </span>            :       : __istream_type(std::move(__rhs)),
+<span class="lineNum">     523 </span>            :       _M_filebuf(std::move(__rhs._M_filebuf))
+<span class="lineNum">     524 </span>            :       { __istream_type::set_rdbuf(&amp;_M_filebuf); }
+<span class="lineNum">     525 </span>            : #endif
+<span class="lineNum">     526 </span>            : 
+<span class="lineNum">     527 </span>            :       /**
+<span class="lineNum">     528 </span>            :        *  @brief  The destructor does nothing.
+<span class="lineNum">     529 </span>            :        *
+<span class="lineNum">     530 </span>            :        *  The file is closed by the filebuf object, not the formatting
+<span class="lineNum">     531 </span>            :        *  stream.
+<span class="lineNum">     532 </span>            :        */
+<span class="lineNum">     533 </span>            :       ~basic_ifstream()
+<span class="lineNum">     534 </span>            :       { }
+<span class="lineNum">     535 </span>            : 
+<span class="lineNum">     536 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     537 </span>            :       // 27.8.3.2 Assign and swap:
+<span class="lineNum">     538 </span>            : 
+<span class="lineNum">     539 </span>            :       basic_ifstream&amp;
+<span class="lineNum">     540 </span>            :       operator=(const basic_ifstream&amp;) = delete;
+<span class="lineNum">     541 </span>            : 
+<span class="lineNum">     542 </span>            :       basic_ifstream&amp;
+<span class="lineNum">     543 </span>            :       operator=(basic_ifstream&amp;&amp; __rhs)
+<span class="lineNum">     544 </span>            :       {
+<span class="lineNum">     545 </span>            :         __istream_type::operator=(std::move(__rhs));
+<span class="lineNum">     546 </span>            :         _M_filebuf = std::move(__rhs._M_filebuf);
+<span class="lineNum">     547 </span>            :         return *this;
+<span class="lineNum">     548 </span>            :       }
+<span class="lineNum">     549 </span>            : 
+<span class="lineNum">     550 </span>            :       void
+<span class="lineNum">     551 </span>            :       swap(basic_ifstream&amp; __rhs)
+<span class="lineNum">     552 </span>            :       {
+<span class="lineNum">     553 </span>            :         __istream_type::swap(__rhs);
+<span class="lineNum">     554 </span>            :         _M_filebuf.swap(__rhs._M_filebuf);
+<span class="lineNum">     555 </span>            :       }
+<span class="lineNum">     556 </span>            : #endif
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span>            :       // Members:
+<span class="lineNum">     559 </span>            :       /**
+<span class="lineNum">     560 </span>            :        *  @brief  Accessing the underlying buffer.
+<span class="lineNum">     561 </span>            :        *  @return  The current basic_filebuf buffer.
+<span class="lineNum">     562 </span>            :        *
+<span class="lineNum">     563 </span>            :        *  This hides both signatures of std::basic_ios::rdbuf().
+<span class="lineNum">     564 </span>            :        */
+<span class="lineNum">     565 </span>            :       __filebuf_type*
+<span class="lineNum">     566 </span>            :       rdbuf() const
+<span class="lineNum">     567 </span>            :       { return const_cast&lt;__filebuf_type*&gt;(&amp;_M_filebuf); }
+<span class="lineNum">     568 </span>            : 
+<span class="lineNum">     569 </span>            :       /**
+<span class="lineNum">     570 </span>            :        *  @brief  Wrapper to test for an open file.
+<span class="lineNum">     571 </span>            :        *  @return  @c rdbuf()-&gt;is_open()
+<span class="lineNum">     572 </span>            :        */
+<span class="lineNum">     573 </span>            :       bool
+<span class="lineNum">     574 </span>            :       is_open()
+<span class="lineNum">     575 </span>            :       { return _M_filebuf.is_open(); }
+<span class="lineNum">     576 </span>            : 
+<span class="lineNum">     577 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     578 </span>            :       // 365. Lack of const-qualification in clause 27
+<span class="lineNum">     579 </span>            :       bool
+<span class="lineNum">     580 </span>            :       is_open() const
+<span class="lineNum">     581 </span>            :       { return _M_filebuf.is_open(); }
+<span class="lineNum">     582 </span>            : 
+<span class="lineNum">     583 </span>            :       /**
+<span class="lineNum">     584 </span>            :        *  @brief  Opens an external file.
+<span class="lineNum">     585 </span>            :        *  @param  __s  The name of the file.
+<span class="lineNum">     586 </span>            :        *  @param  __mode  The open mode flags.
+<span class="lineNum">     587 </span>            :        *
+<span class="lineNum">     588 </span>            :        *  Calls @c std::basic_filebuf::open(s,__mode|in).  If that function
+<span class="lineNum">     589 </span>            :        *  fails, @c failbit is set in the stream's error state.
+<span class="lineNum">     590 </span>            :        *
+<span class="lineNum">     591 </span>            :        *  Tip:  When using std::string to hold the filename, you must use
+<span class="lineNum">     592 </span>            :        *  .c_str() before passing it to this constructor.
+<span class="lineNum">     593 </span>            :        */
+<span class="lineNum">     594 </span>            :       void
+<span class="lineNum">     595 </span>            :       open(const char* __s, ios_base::openmode __mode = ios_base::in)
+<span class="lineNum">     596 </span>            :       {
+<span class="lineNum">     597 </span>            :         if (!_M_filebuf.open(__s, __mode | ios_base::in))
+<span class="lineNum">     598 </span>            :           this-&gt;setstate(ios_base::failbit);
+<span class="lineNum">     599 </span>            :         else
+<span class="lineNum">     600 </span>            :           // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     601 </span>            :           // 409. Closing an fstream should clear error state
+<span class="lineNum">     602 </span>            :           this-&gt;clear();
+<span class="lineNum">     603 </span>            :       }
+<span class="lineNum">     604 </span>            : 
+<span class="lineNum">     605 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     606 </span>            :       /**
+<span class="lineNum">     607 </span>            :        *  @brief  Opens an external file.
+<span class="lineNum">     608 </span>            :        *  @param  __s  The name of the file.
+<span class="lineNum">     609 </span>            :        *  @param  __mode  The open mode flags.
+<span class="lineNum">     610 </span>            :        *
+<span class="lineNum">     611 </span>            :        *  Calls @c std::basic_filebuf::open(__s,__mode|in).  If that function
+<span class="lineNum">     612 </span>            :        *  fails, @c failbit is set in the stream's error state.
+<span class="lineNum">     613 </span>            :        */
+<span class="lineNum">     614 </span>            :       void
+<span class="lineNum">     615 </span>            :       open(const std::string&amp; __s, ios_base::openmode __mode = ios_base::in)
+<span class="lineNum">     616 </span>            :       {
+<span class="lineNum">     617 </span>            :         if (!_M_filebuf.open(__s, __mode | ios_base::in))
+<span class="lineNum">     618 </span>            :           this-&gt;setstate(ios_base::failbit);
+<span class="lineNum">     619 </span>            :         else
+<span class="lineNum">     620 </span>            :           // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     621 </span>            :           // 409. Closing an fstream should clear error state
+<span class="lineNum">     622 </span>            :           this-&gt;clear();
+<span class="lineNum">     623 </span>            :       }
+<span class="lineNum">     624 </span>            : #endif
+<span class="lineNum">     625 </span>            : 
+<span class="lineNum">     626 </span>            :       /**
+<span class="lineNum">     627 </span>            :        *  @brief  Close the file.
+<span class="lineNum">     628 </span>            :        *
+<span class="lineNum">     629 </span>            :        *  Calls @c std::basic_filebuf::close().  If that function
+<span class="lineNum">     630 </span>            :        *  fails, @c failbit is set in the stream's error state.
+<span class="lineNum">     631 </span>            :        */
+<span class="lineNum">     632 </span>            :       void
+<span class="lineNum">     633 </span>            :       close()
+<span class="lineNum">     634 </span>            :       {
+<span class="lineNum">     635 </span>            :         if (!_M_filebuf.close())
+<span class="lineNum">     636 </span>            :           this-&gt;setstate(ios_base::failbit);
+<span class="lineNum">     637 </span>            :       }
+<span class="lineNum">     638 </span>            :     };
+<span class="lineNum">     639 </span>            : 
+<span class="lineNum">     640 </span>            : 
+<span class="lineNum">     641 </span>            :   // [27.8.1.8] Template class basic_ofstream
+<span class="lineNum">     642 </span>            :   /**
+<span class="lineNum">     643 </span>            :    *  @brief  Controlling output for files.
+<span class="lineNum">     644 </span>            :    *  @ingroup io
+<span class="lineNum">     645 </span>            :    *
+<span class="lineNum">     646 </span>            :    *  @tparam _CharT  Type of character stream.
+<span class="lineNum">     647 </span>            :    *  @tparam _Traits  Traits for character type, defaults to
+<span class="lineNum">     648 </span>            :    *                   char_traits&lt;_CharT&gt;.
+<span class="lineNum">     649 </span>            :    *
+<span class="lineNum">     650 </span>            :    *  This class supports reading from named files, using the inherited
+<span class="lineNum">     651 </span>            :    *  functions from std::basic_ostream.  To control the associated
+<span class="lineNum">     652 </span>            :    *  sequence, an instance of std::basic_filebuf is used, which this page
+<span class="lineNum">     653 </span>            :    *  refers to as @c sb.
+<span class="lineNum">     654 </span>            :    */
+<span class="lineNum">     655 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     656 </span>            :     class basic_ofstream : public basic_ostream&lt;_CharT,_Traits&gt;
+<span class="lineNum">     657 </span>            :     {
+<span class="lineNum">     658 </span>            :     public:
+<span class="lineNum">     659 </span>            :       // Types:
+<span class="lineNum">     660 </span>            :       typedef _CharT                                    char_type;
+<span class="lineNum">     661 </span>            :       typedef _Traits                                   traits_type;
+<span class="lineNum">     662 </span>            :       typedef typename traits_type::int_type            int_type;
+<span class="lineNum">     663 </span>            :       typedef typename traits_type::pos_type            pos_type;
+<span class="lineNum">     664 </span>            :       typedef typename traits_type::off_type            off_type;
+<span class="lineNum">     665 </span>            : 
+<span class="lineNum">     666 </span>            :       // Non-standard types:
+<span class="lineNum">     667 </span>            :       typedef basic_filebuf&lt;char_type, traits_type&gt;       __filebuf_type;
+<span class="lineNum">     668 </span>            :       typedef basic_ostream&lt;char_type, traits_type&gt;       __ostream_type;
+<span class="lineNum">     669 </span>            : 
+<span class="lineNum">     670 </span>            :     private:
+<span class="lineNum">     671 </span>            :       __filebuf_type    _M_filebuf;
+<span class="lineNum">     672 </span>            : 
+<span class="lineNum">     673 </span>            :     public:
+<span class="lineNum">     674 </span>            :       // Constructors:
+<span class="lineNum">     675 </span>            :       /**
+<span class="lineNum">     676 </span>            :        *  @brief  Default constructor.
+<span class="lineNum">     677 </span>            :        *
+<span class="lineNum">     678 </span>            :        *  Initializes @c sb using its default constructor, and passes
+<span class="lineNum">     679 </span>            :        *  @c &amp;sb to the base class initializer.  Does not open any files
+<span class="lineNum">     680 </span>            :        *  (you haven't given it a filename to open).
+<span class="lineNum">     681 </span>            :        */
+<span class="lineNum">     682 </span>            :       basic_ofstream(): __ostream_type(), _M_filebuf()
+<span class="lineNum">     683 </span>            :       { this-&gt;init(&amp;_M_filebuf); }
+<span class="lineNum">     684 </span>            : 
+<span class="lineNum">     685 </span>            :       /**
+<span class="lineNum">     686 </span>            :        *  @brief  Create an output file stream.
+<span class="lineNum">     687 </span>            :        *  @param  __s  Null terminated string specifying the filename.
+<span class="lineNum">     688 </span>            :        *  @param  __mode  Open file in specified mode (see std::ios_base).
+<span class="lineNum">     689 </span>            :        *
+<span class="lineNum">     690 </span>            :        *  @c ios_base::out | @c ios_base::trunc is automatically included in
+<span class="lineNum">     691 </span>            :        *  @a __mode.
+<span class="lineNum">     692 </span>            :        *
+<span class="lineNum">     693 </span>            :        *  Tip:  When using std::string to hold the filename, you must use
+<span class="lineNum">     694 </span>            :        *  .c_str() before passing it to this constructor.
+<span class="lineNum">     695 </span>            :        */
+<span class="lineNum">     696 </span>            :       explicit
+<span class="lineNum">     697 </span>            :       basic_ofstream(const char* __s,
+<span class="lineNum">     698 </span>            :                      ios_base::openmode __mode = ios_base::out|ios_base::trunc)
+<span class="lineNum">     699 </span>            :       : __ostream_type(), _M_filebuf()
+<span class="lineNum">     700 </span>            :       {
+<span class="lineNum">     701 </span>            :         this-&gt;init(&amp;_M_filebuf);
+<span class="lineNum">     702 </span>            :         this-&gt;open(__s, __mode);
+<span class="lineNum">     703 </span>            :       }
+<span class="lineNum">     704 </span>            : 
+<span class="lineNum">     705 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     706 </span>            :       /**
+<span class="lineNum">     707 </span>            :        *  @brief  Create an output file stream.
+<span class="lineNum">     708 </span>            :        *  @param  __s  std::string specifying the filename.
+<span class="lineNum">     709 </span>            :        *  @param  __mode  Open file in specified mode (see std::ios_base).
+<span class="lineNum">     710 </span>            :        *
+<span class="lineNum">     711 </span>            :        *  @c ios_base::out | @c ios_base::trunc is automatically included in
+<span class="lineNum">     712 </span>            :        *  @a __mode.
+<span class="lineNum">     713 </span>            :        */
+<span class="lineNum">     714 </span>            :       explicit
+<span class="lineNum">     715 </span>            :       basic_ofstream(const std::string&amp; __s,
+<span class="lineNum">     716 </span>            :                      ios_base::openmode __mode = ios_base::out|ios_base::trunc)
+<span class="lineNum">     717 </span>            :       : __ostream_type(), _M_filebuf()
+<span class="lineNum">     718 </span>            :       {
+<span class="lineNum">     719 </span>            :         this-&gt;init(&amp;_M_filebuf);
+<span class="lineNum">     720 </span>            :         this-&gt;open(__s, __mode);
+<span class="lineNum">     721 </span>            :       }
+<span class="lineNum">     722 </span>            : 
+<span class="lineNum">     723 </span>            :       basic_ofstream(const basic_ofstream&amp;) = delete;
+<span class="lineNum">     724 </span>            : 
+<span class="lineNum">     725 </span>            :       basic_ofstream(basic_ofstream&amp;&amp; __rhs)
+<span class="lineNum">     726 </span>            :       : __ostream_type(std::move(__rhs)),
+<span class="lineNum">     727 </span>            :       _M_filebuf(std::move(__rhs._M_filebuf))
+<span class="lineNum">     728 </span>            :       { __ostream_type::set_rdbuf(&amp;_M_filebuf); }
+<span class="lineNum">     729 </span>            : #endif
+<span class="lineNum">     730 </span>            : 
+<span class="lineNum">     731 </span>            :       /**
+<span class="lineNum">     732 </span>            :        *  @brief  The destructor does nothing.
+<span class="lineNum">     733 </span>            :        *
+<span class="lineNum">     734 </span>            :        *  The file is closed by the filebuf object, not the formatting
+<span class="lineNum">     735 </span>            :        *  stream.
+<span class="lineNum">     736 </span>            :        */
+<span class="lineNum">     737 </span>            :       ~basic_ofstream()
+<span class="lineNum">     738 </span>            :       { }
+<span class="lineNum">     739 </span>            : 
+<span class="lineNum">     740 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     741 </span>            :       // 27.8.3.2 Assign and swap:
+<span class="lineNum">     742 </span>            : 
+<span class="lineNum">     743 </span>            :       basic_ofstream&amp;
+<span class="lineNum">     744 </span>            :       operator=(const basic_ofstream&amp;) = delete;
+<span class="lineNum">     745 </span>            : 
+<span class="lineNum">     746 </span>            :       basic_ofstream&amp;
+<span class="lineNum">     747 </span>            :       operator=(basic_ofstream&amp;&amp; __rhs)
+<span class="lineNum">     748 </span>            :       {
+<span class="lineNum">     749 </span>            :         __ostream_type::operator=(std::move(__rhs));
+<span class="lineNum">     750 </span>            :         _M_filebuf = std::move(__rhs._M_filebuf);
+<span class="lineNum">     751 </span>            :         return *this;
+<span class="lineNum">     752 </span>            :       }
+<span class="lineNum">     753 </span>            : 
+<span class="lineNum">     754 </span>            :       void
+<span class="lineNum">     755 </span>            :       swap(basic_ofstream&amp; __rhs)
+<span class="lineNum">     756 </span>            :       {
+<span class="lineNum">     757 </span>            :         __ostream_type::swap(__rhs);
+<span class="lineNum">     758 </span>            :         _M_filebuf.swap(__rhs._M_filebuf);
+<span class="lineNum">     759 </span>            :       }
+<span class="lineNum">     760 </span>            : #endif
+<span class="lineNum">     761 </span>            : 
+<span class="lineNum">     762 </span>            :       // Members:
+<span class="lineNum">     763 </span>            :       /**
+<span class="lineNum">     764 </span>            :        *  @brief  Accessing the underlying buffer.
+<span class="lineNum">     765 </span>            :        *  @return  The current basic_filebuf buffer.
+<span class="lineNum">     766 </span>            :        *
+<span class="lineNum">     767 </span>            :        *  This hides both signatures of std::basic_ios::rdbuf().
+<span class="lineNum">     768 </span>            :        */
+<span class="lineNum">     769 </span>            :       __filebuf_type*
+<span class="lineNum">     770 </span>            :       rdbuf() const
+<span class="lineNum">     771 </span>            :       { return const_cast&lt;__filebuf_type*&gt;(&amp;_M_filebuf); }
+<span class="lineNum">     772 </span>            : 
+<span class="lineNum">     773 </span>            :       /**
+<span class="lineNum">     774 </span>            :        *  @brief  Wrapper to test for an open file.
+<span class="lineNum">     775 </span>            :        *  @return  @c rdbuf()-&gt;is_open()
+<span class="lineNum">     776 </span>            :        */
+<span class="lineNum">     777 </span>            :       bool
+<span class="lineNum">     778 </span>            :       is_open()
+<span class="lineNum">     779 </span>            :       { return _M_filebuf.is_open(); }
+<span class="lineNum">     780 </span>            : 
+<span class="lineNum">     781 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     782 </span>            :       // 365. Lack of const-qualification in clause 27
+<span class="lineNum">     783 </span>            :       bool
+<span class="lineNum">     784 </span>            :       is_open() const
+<span class="lineNum">     785 </span>            :       { return _M_filebuf.is_open(); }
+<span class="lineNum">     786 </span>            : 
+<span class="lineNum">     787 </span>            :       /**
+<span class="lineNum">     788 </span>            :        *  @brief  Opens an external file.
+<span class="lineNum">     789 </span>            :        *  @param  __s  The name of the file.
+<span class="lineNum">     790 </span>            :        *  @param  __mode  The open mode flags.
+<span class="lineNum">     791 </span>            :        *
+<span class="lineNum">     792 </span>            :        *  Calls @c std::basic_filebuf::open(__s,__mode|out|trunc).  If that
+<span class="lineNum">     793 </span>            :        *  function fails, @c failbit is set in the stream's error state.
+<span class="lineNum">     794 </span>            :        *
+<span class="lineNum">     795 </span>            :        *  Tip:  When using std::string to hold the filename, you must use
+<span class="lineNum">     796 </span>            :        *  .c_str() before passing it to this constructor.
+<span class="lineNum">     797 </span>            :        */
+<span class="lineNum">     798 </span>            :       void
+<span class="lineNum">     799 </span>            :       open(const char* __s,
+<span class="lineNum">     800 </span>            :            ios_base::openmode __mode = ios_base::out | ios_base::trunc)
+<span class="lineNum">     801 </span>            :       {
+<span class="lineNum">     802 </span>            :         if (!_M_filebuf.open(__s, __mode | ios_base::out))
+<span class="lineNum">     803 </span>            :           this-&gt;setstate(ios_base::failbit);
+<span class="lineNum">     804 </span>            :         else
+<span class="lineNum">     805 </span>            :           // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     806 </span>            :           // 409. Closing an fstream should clear error state
+<span class="lineNum">     807 </span>            :           this-&gt;clear();
+<span class="lineNum">     808 </span>            :       }
+<span class="lineNum">     809 </span>            : 
+<span class="lineNum">     810 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     811 </span>            :       /**
+<span class="lineNum">     812 </span>            :        *  @brief  Opens an external file.
+<span class="lineNum">     813 </span>            :        *  @param  __s  The name of the file.
+<span class="lineNum">     814 </span>            :        *  @param  __mode  The open mode flags.
+<span class="lineNum">     815 </span>            :        *
+<span class="lineNum">     816 </span>            :        *  Calls @c std::basic_filebuf::open(s,mode|out|trunc).  If that
+<span class="lineNum">     817 </span>            :        *  function fails, @c failbit is set in the stream's error state.
+<span class="lineNum">     818 </span>            :        */
+<span class="lineNum">     819 </span>            :       void
+<span class="lineNum">     820 </span>            :       open(const std::string&amp; __s,
+<span class="lineNum">     821 </span>            :            ios_base::openmode __mode = ios_base::out | ios_base::trunc)
+<span class="lineNum">     822 </span>            :       {
+<span class="lineNum">     823 </span>            :         if (!_M_filebuf.open(__s, __mode | ios_base::out))
+<span class="lineNum">     824 </span>            :           this-&gt;setstate(ios_base::failbit);
+<span class="lineNum">     825 </span>            :         else
+<span class="lineNum">     826 </span>            :           // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     827 </span>            :           // 409. Closing an fstream should clear error state
+<span class="lineNum">     828 </span>            :           this-&gt;clear();
+<span class="lineNum">     829 </span>            :       }
+<span class="lineNum">     830 </span>            : #endif
+<span class="lineNum">     831 </span>            : 
+<span class="lineNum">     832 </span>            :       /**
+<span class="lineNum">     833 </span>            :        *  @brief  Close the file.
+<span class="lineNum">     834 </span>            :        *
+<span class="lineNum">     835 </span>            :        *  Calls @c std::basic_filebuf::close().  If that function
+<span class="lineNum">     836 </span>            :        *  fails, @c failbit is set in the stream's error state.
+<span class="lineNum">     837 </span>            :        */
+<span class="lineNum">     838 </span>            :       void
+<span class="lineNum">     839 </span>            :       close()
+<span class="lineNum">     840 </span>            :       {
+<span class="lineNum">     841 </span>            :         if (!_M_filebuf.close())
+<span class="lineNum">     842 </span>            :           this-&gt;setstate(ios_base::failbit);
+<span class="lineNum">     843 </span>            :       }
+<span class="lineNum">     844 </span>            :     };
+<span class="lineNum">     845 </span>            : 
+<span class="lineNum">     846 </span>            : 
+<span class="lineNum">     847 </span>            :   // [27.8.1.11] Template class basic_fstream
+<span class="lineNum">     848 </span>            :   /**
+<span class="lineNum">     849 </span>            :    *  @brief  Controlling input and output for files.
+<span class="lineNum">     850 </span>            :    *  @ingroup io
+<span class="lineNum">     851 </span>            :    *
+<span class="lineNum">     852 </span>            :    *  @tparam _CharT  Type of character stream.
+<span class="lineNum">     853 </span>            :    *  @tparam _Traits  Traits for character type, defaults to
+<span class="lineNum">     854 </span>            :    *                   char_traits&lt;_CharT&gt;.
+<span class="lineNum">     855 </span>            :    *
+<span class="lineNum">     856 </span>            :    *  This class supports reading from and writing to named files, using
+<span class="lineNum">     857 </span>            :    *  the inherited functions from std::basic_iostream.  To control the
+<span class="lineNum">     858 </span>            :    *  associated sequence, an instance of std::basic_filebuf is used, which
+<span class="lineNum">     859 </span>            :    *  this page refers to as @c sb.
+<span class="lineNum">     860 </span>            :    */
+<span class="lineNum">     861 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     862 </span>            :     class basic_fstream : public basic_iostream&lt;_CharT, _Traits&gt;
+<span class="lineNum">     863 </span>            :     {
+<span class="lineNum">     864 </span>            :     public:
+<span class="lineNum">     865 </span>            :       // Types:
+<span class="lineNum">     866 </span>            :       typedef _CharT                                    char_type;
+<span class="lineNum">     867 </span>            :       typedef _Traits                                   traits_type;
+<span class="lineNum">     868 </span>            :       typedef typename traits_type::int_type            int_type;
+<span class="lineNum">     869 </span>            :       typedef typename traits_type::pos_type            pos_type;
+<span class="lineNum">     870 </span>            :       typedef typename traits_type::off_type            off_type;
+<span class="lineNum">     871 </span>            : 
+<span class="lineNum">     872 </span>            :       // Non-standard types:
+<span class="lineNum">     873 </span>            :       typedef basic_filebuf&lt;char_type, traits_type&gt;       __filebuf_type;
+<span class="lineNum">     874 </span>            :       typedef basic_ios&lt;char_type, traits_type&gt;           __ios_type;
+<span class="lineNum">     875 </span>            :       typedef basic_iostream&lt;char_type, traits_type&gt;      __iostream_type;
+<span class="lineNum">     876 </span>            : 
+<span class="lineNum">     877 </span>            :     private:
+<span class="lineNum">     878 </span>            :       __filebuf_type    _M_filebuf;
+<span class="lineNum">     879 </span>            : 
+<span class="lineNum">     880 </span>            :     public:
+<span class="lineNum">     881 </span>            :       // Constructors/destructor:
+<span class="lineNum">     882 </span>            :       /**
+<span class="lineNum">     883 </span>            :        *  @brief  Default constructor.
+<span class="lineNum">     884 </span>            :        *
+<span class="lineNum">     885 </span>            :        *  Initializes @c sb using its default constructor, and passes
+<span class="lineNum">     886 </span>            :        *  @c &amp;sb to the base class initializer.  Does not open any files
+<span class="lineNum">     887 </span>            :        *  (you haven't given it a filename to open).
+<span class="lineNum">     888 </span>            :        */
+<span class="lineNum">     889 </span>            :       basic_fstream()
+<span class="lineNum">     890 </span>            :       : __iostream_type(), _M_filebuf()
+<span class="lineNum">     891 </span>            :       { this-&gt;init(&amp;_M_filebuf); }
+<span class="lineNum">     892 </span>            : 
+<span class="lineNum">     893 </span>            :       /**
+<span class="lineNum">     894 </span>            :        *  @brief  Create an input/output file stream.
+<span class="lineNum">     895 </span>            :        *  @param  __s  Null terminated string specifying the filename.
+<span class="lineNum">     896 </span>            :        *  @param  __mode  Open file in specified mode (see std::ios_base).
+<span class="lineNum">     897 </span>            :        *
+<span class="lineNum">     898 </span>            :        *  Tip:  When using std::string to hold the filename, you must use
+<span class="lineNum">     899 </span>            :        *  .c_str() before passing it to this constructor.
+<span class="lineNum">     900 </span>            :        */
+<span class="lineNum">     901 </span>            :       explicit
+<span class="lineNum">     902 </span>            :       basic_fstream(const char* __s,
+<span class="lineNum">     903 </span>            :                     ios_base::openmode __mode = ios_base::in | ios_base::out)
+<span class="lineNum">     904 </span>            :       : __iostream_type(0), _M_filebuf()
+<span class="lineNum">     905 </span>            :       {
+<span class="lineNum">     906 </span>            :         this-&gt;init(&amp;_M_filebuf);
+<span class="lineNum">     907 </span>            :         this-&gt;open(__s, __mode);
+<span class="lineNum">     908 </span>            :       }
+<span class="lineNum">     909 </span>            : 
+<span class="lineNum">     910 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     911 </span>            :       /**
+<span class="lineNum">     912 </span>            :        *  @brief  Create an input/output file stream.
+<span class="lineNum">     913 </span>            :        *  @param  __s  Null terminated string specifying the filename.
+<span class="lineNum">     914 </span>            :        *  @param  __mode  Open file in specified mode (see std::ios_base).
+<span class="lineNum">     915 </span>            :        */
+<span class="lineNum">     916 </span>            :       explicit
+<span class="lineNum">     917 </span>            :       basic_fstream(const std::string&amp; __s,
+<span class="lineNum">     918 </span>            :                     ios_base::openmode __mode = ios_base::in | ios_base::out)
+<span class="lineNum">     919 </span>            :       : __iostream_type(0), _M_filebuf()
+<span class="lineNum">     920 </span>            :       {
+<span class="lineNum">     921 </span>            :         this-&gt;init(&amp;_M_filebuf);
+<span class="lineNum">     922 </span>            :         this-&gt;open(__s, __mode);
+<span class="lineNum">     923 </span>            :       }
+<span class="lineNum">     924 </span>            : 
+<span class="lineNum">     925 </span>            :       basic_fstream(const basic_fstream&amp;) = delete;
+<span class="lineNum">     926 </span>            : 
+<span class="lineNum">     927 </span>            :       basic_fstream(basic_fstream&amp;&amp; __rhs)
+<span class="lineNum">     928 </span>            :       : __iostream_type(std::move(__rhs)),
+<span class="lineNum">     929 </span>            :       _M_filebuf(std::move(__rhs._M_filebuf))
+<span class="lineNum">     930 </span>            :       { __iostream_type::set_rdbuf(&amp;_M_filebuf); }
+<span class="lineNum">     931 </span>            : #endif
+<span class="lineNum">     932 </span>            : 
+<span class="lineNum">     933 </span>            :       /**
+<span class="lineNum">     934 </span>            :        *  @brief  The destructor does nothing.
+<span class="lineNum">     935 </span>            :        *
+<span class="lineNum">     936 </span>            :        *  The file is closed by the filebuf object, not the formatting
+<span class="lineNum">     937 </span>            :        *  stream.
+<span class="lineNum">     938 </span>            :        */
+<span class="lineNum">     939 </span>            :       ~basic_fstream()
+<span class="lineNum">     940 </span>            :       { }
+<span class="lineNum">     941 </span>            : 
+<span class="lineNum">     942 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     943 </span>            :       // 27.8.3.2 Assign and swap:
+<span class="lineNum">     944 </span>            : 
+<span class="lineNum">     945 </span>            :       basic_fstream&amp;
+<span class="lineNum">     946 </span>            :       operator=(const basic_fstream&amp;) = delete;
+<span class="lineNum">     947 </span>            : 
+<span class="lineNum">     948 </span>            :       basic_fstream&amp;
+<span class="lineNum">     949 </span>            :       operator=(basic_fstream&amp;&amp; __rhs)
+<span class="lineNum">     950 </span>            :       {
+<span class="lineNum">     951 </span>            :         __iostream_type::operator=(std::move(__rhs));
+<span class="lineNum">     952 </span>            :         _M_filebuf = std::move(__rhs._M_filebuf);
+<span class="lineNum">     953 </span>            :         return *this;
+<span class="lineNum">     954 </span>            :       }
+<span class="lineNum">     955 </span>            : 
+<span class="lineNum">     956 </span>            :       void
+<span class="lineNum">     957 </span>            :       swap(basic_fstream&amp; __rhs)
+<span class="lineNum">     958 </span>            :       {
+<span class="lineNum">     959 </span>            :         __iostream_type::swap(__rhs);
+<span class="lineNum">     960 </span>            :         _M_filebuf.swap(__rhs._M_filebuf);
+<span class="lineNum">     961 </span>            :       }
+<span class="lineNum">     962 </span>            : #endif
+<span class="lineNum">     963 </span>            : 
+<span class="lineNum">     964 </span>            :       // Members:
+<span class="lineNum">     965 </span>            :       /**
+<span class="lineNum">     966 </span>            :        *  @brief  Accessing the underlying buffer.
+<span class="lineNum">     967 </span>            :        *  @return  The current basic_filebuf buffer.
+<span class="lineNum">     968 </span>            :        *
+<span class="lineNum">     969 </span>            :        *  This hides both signatures of std::basic_ios::rdbuf().
+<span class="lineNum">     970 </span>            :        */
+<span class="lineNum">     971 </span>            :       __filebuf_type*
+<span class="lineNum">     972 </span>            :       rdbuf() const
+<span class="lineNum">     973 </span>            :       { return const_cast&lt;__filebuf_type*&gt;(&amp;_M_filebuf); }
+<span class="lineNum">     974 </span>            : 
+<span class="lineNum">     975 </span>            :       /**
+<span class="lineNum">     976 </span>            :        *  @brief  Wrapper to test for an open file.
+<span class="lineNum">     977 </span>            :        *  @return  @c rdbuf()-&gt;is_open()
+<span class="lineNum">     978 </span>            :        */
+<span class="lineNum">     979 </span>            :       bool
+<span class="lineNum">     980 </span>            :       is_open()
+<span class="lineNum">     981 </span><span class="lineNoCov">          0 :       { return _M_filebuf.is_open(); }</span>
+<span class="lineNum">     982 </span>            : 
+<span class="lineNum">     983 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     984 </span>            :       // 365. Lack of const-qualification in clause 27
+<span class="lineNum">     985 </span>            :       bool
+<span class="lineNum">     986 </span>            :       is_open() const
+<span class="lineNum">     987 </span>            :       { return _M_filebuf.is_open(); }
+<span class="lineNum">     988 </span>            : 
+<span class="lineNum">     989 </span>            :       /**
+<span class="lineNum">     990 </span>            :        *  @brief  Opens an external file.
+<span class="lineNum">     991 </span>            :        *  @param  __s  The name of the file.
+<span class="lineNum">     992 </span>            :        *  @param  __mode  The open mode flags.
+<span class="lineNum">     993 </span>            :        *
+<span class="lineNum">     994 </span>            :        *  Calls @c std::basic_filebuf::open(__s,__mode).  If that
+<span class="lineNum">     995 </span>            :        *  function fails, @c failbit is set in the stream's error state.
+<span class="lineNum">     996 </span>            :        *
+<span class="lineNum">     997 </span>            :        *  Tip:  When using std::string to hold the filename, you must use
+<span class="lineNum">     998 </span>            :        *  .c_str() before passing it to this constructor.
+<span class="lineNum">     999 </span>            :        */
+<span class="lineNum">    1000 </span>            :       void
+<span class="lineNum">    1001 </span>            :       open(const char* __s,
+<span class="lineNum">    1002 </span>            :            ios_base::openmode __mode = ios_base::in | ios_base::out)
+<span class="lineNum">    1003 </span>            :       {
+<span class="lineNum">    1004 </span>            :         if (!_M_filebuf.open(__s, __mode))
+<span class="lineNum">    1005 </span>            :           this-&gt;setstate(ios_base::failbit);
+<span class="lineNum">    1006 </span>            :         else
+<span class="lineNum">    1007 </span>            :           // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">    1008 </span>            :           // 409. Closing an fstream should clear error state
+<span class="lineNum">    1009 </span>            :           this-&gt;clear();
+<span class="lineNum">    1010 </span>            :       }
+<span class="lineNum">    1011 </span>            : 
+<span class="lineNum">    1012 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1013 </span>            :       /**
+<span class="lineNum">    1014 </span>            :        *  @brief  Opens an external file.
+<span class="lineNum">    1015 </span>            :        *  @param  __s  The name of the file.
+<span class="lineNum">    1016 </span>            :        *  @param  __mode  The open mode flags.
+<span class="lineNum">    1017 </span>            :        *
+<span class="lineNum">    1018 </span>            :        *  Calls @c std::basic_filebuf::open(__s,__mode).  If that
+<span class="lineNum">    1019 </span>            :        *  function fails, @c failbit is set in the stream's error state.
+<span class="lineNum">    1020 </span>            :        */
+<span class="lineNum">    1021 </span>            :       void
+<span class="lineNum">    1022 </span>            :       open(const std::string&amp; __s,
+<span class="lineNum">    1023 </span>            :            ios_base::openmode __mode = ios_base::in | ios_base::out)
+<span class="lineNum">    1024 </span>            :       {
+<span class="lineNum">    1025 </span>            :         if (!_M_filebuf.open(__s, __mode))
+<span class="lineNum">    1026 </span>            :           this-&gt;setstate(ios_base::failbit);
+<span class="lineNum">    1027 </span>            :         else
+<span class="lineNum">    1028 </span>            :           // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">    1029 </span>            :           // 409. Closing an fstream should clear error state
+<span class="lineNum">    1030 </span>            :           this-&gt;clear();
+<span class="lineNum">    1031 </span>            :       }
+<span class="lineNum">    1032 </span>            : #endif
+<span class="lineNum">    1033 </span>            : 
+<span class="lineNum">    1034 </span>            :       /**
+<span class="lineNum">    1035 </span>            :        *  @brief  Close the file.
+<span class="lineNum">    1036 </span>            :        *
+<span class="lineNum">    1037 </span>            :        *  Calls @c std::basic_filebuf::close().  If that function
+<span class="lineNum">    1038 </span>            :        *  fails, @c failbit is set in the stream's error state.
+<span class="lineNum">    1039 </span>            :        */
+<span class="lineNum">    1040 </span>            :       void
+<span class="lineNum">    1041 </span>            :       close()
+<span class="lineNum">    1042 </span>            :       {
+<span class="lineNum">    1043 </span>            :         if (!_M_filebuf.close())
+<span class="lineNum">    1044 </span>            :           this-&gt;setstate(ios_base::failbit);
+<span class="lineNum">    1045 </span>            :       }
+<span class="lineNum">    1046 </span>            :     };
+<span class="lineNum">    1047 </span>            : 
+<span class="lineNum">    1048 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1049 </span>            :   /// Swap specialization for filebufs.
+<span class="lineNum">    1050 </span>            :   template &lt;class _CharT, class _Traits&gt;
+<span class="lineNum">    1051 </span>            :     inline void
+<span class="lineNum">    1052 </span>            :     swap(basic_filebuf&lt;_CharT, _Traits&gt;&amp; __x,
+<span class="lineNum">    1053 </span>            :          basic_filebuf&lt;_CharT, _Traits&gt;&amp; __y)
+<span class="lineNum">    1054 </span>            :     { __x.swap(__y); }
+<span class="lineNum">    1055 </span>            : 
+<span class="lineNum">    1056 </span>            :   /// Swap specialization for ifstreams.
+<span class="lineNum">    1057 </span>            :   template &lt;class _CharT, class _Traits&gt;
+<span class="lineNum">    1058 </span>            :     inline void
+<span class="lineNum">    1059 </span>            :     swap(basic_ifstream&lt;_CharT, _Traits&gt;&amp; __x,
+<span class="lineNum">    1060 </span>            :          basic_ifstream&lt;_CharT, _Traits&gt;&amp; __y)
+<span class="lineNum">    1061 </span>            :     { __x.swap(__y); }
+<span class="lineNum">    1062 </span>            : 
+<span class="lineNum">    1063 </span>            :   /// Swap specialization for ofstreams.
+<span class="lineNum">    1064 </span>            :   template &lt;class _CharT, class _Traits&gt;
+<span class="lineNum">    1065 </span>            :     inline void
+<span class="lineNum">    1066 </span>            :     swap(basic_ofstream&lt;_CharT, _Traits&gt;&amp; __x,
+<span class="lineNum">    1067 </span>            :          basic_ofstream&lt;_CharT, _Traits&gt;&amp; __y)
+<span class="lineNum">    1068 </span>            :     { __x.swap(__y); }
+<span class="lineNum">    1069 </span>            : 
+<span class="lineNum">    1070 </span>            :   /// Swap specialization for fstreams.
+<span class="lineNum">    1071 </span>            :   template &lt;class _CharT, class _Traits&gt;
+<span class="lineNum">    1072 </span>            :     inline void
+<span class="lineNum">    1073 </span>            :     swap(basic_fstream&lt;_CharT, _Traits&gt;&amp; __x,
+<span class="lineNum">    1074 </span>            :          basic_fstream&lt;_CharT, _Traits&gt;&amp; __y)
+<span class="lineNum">    1075 </span>            :     { __x.swap(__y); }
+<span class="lineNum">    1076 </span>            : #endif
+<span class="lineNum">    1077 </span>            : 
+<span class="lineNum">    1078 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">    1079 </span>            : } // namespace
+<span class="lineNum">    1080 </span>            : 
+<span class="lineNum">    1081 </span>            : #include &lt;bits/fstream.tcc&gt;
+<span class="lineNum">    1082 </span>            : 
+<span class="lineNum">    1083 </span>            : #endif /* _GLIBCXX_FSTREAM */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

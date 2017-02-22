@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/algorithm/cxx11/all_of.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/algorithm/cxx11</a> - all_of.hpp<span style="font-size: 80%;"> (source / <a href="all_of.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* </a>
+<span class="lineNum">       2 </span>            :    Copyright (c) Marshall Clow 2008-2012.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :    Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       5 </span>            :    file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       6 </span>            : */
+<span class="lineNum">       7 </span>            : 
+<span class="lineNum">       8 </span>            : /// \file  all_of.hpp
+<span class="lineNum">       9 </span>            : /// \brief Test ranges to see if all elements match a value or predicate.
+<span class="lineNum">      10 </span>            : /// \author Marshall Clow
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #ifndef BOOST_ALGORITHM_ALL_OF_HPP
+<span class="lineNum">      13 </span>            : #define BOOST_ALGORITHM_ALL_OF_HPP
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #include &lt;boost/range/begin.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/range/end.hpp&gt;
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : namespace boost { namespace algorithm {
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : /// \fn all_of ( InputIterator first, InputIterator last, Predicate p )
+<span class="lineNum">      21 </span>            : /// \return true if all elements in [first, last) satisfy the predicate 'p'
+<span class="lineNum">      22 </span>            : /// \note returns true on an empty range
+<span class="lineNum">      23 </span>            : /// 
+<span class="lineNum">      24 </span>            : /// \param first The start of the input sequence
+<span class="lineNum">      25 </span>            : /// \param last  One past the end of the input sequence
+<span class="lineNum">      26 </span>            : /// \param p     A predicate for testing the elements of the sequence
+<span class="lineNum">      27 </span>            : ///
+<span class="lineNum">      28 </span>            : /// \note           This function is part of the C++2011 standard library.
+<span class="lineNum">      29 </span>            : template&lt;typename InputIterator, typename Predicate&gt; 
+<span class="lineNum">      30 </span>            : bool all_of ( InputIterator first, InputIterator last, Predicate p )
+<span class="lineNum">      31 </span>            : {
+<span class="lineNum">      32 </span><span class="lineCov">       1131 :     for ( ; first != last; ++first )</span>
+<span class="lineNum">      33 </span><span class="lineCov">        916 :         if ( !p(*first)) </span>
+<span class="lineNum">      34 </span>            :             return false;
+<span class="lineNum">      35 </span>            :     return true; 
+<span class="lineNum">      36 </span>            : } 
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : /// \fn all_of ( const Range &amp;r, Predicate p )
+<span class="lineNum">      39 </span>            : /// \return true if all elements in the range satisfy the predicate 'p'
+<span class="lineNum">      40 </span>            : /// \note returns true on an empty range
+<span class="lineNum">      41 </span>            : /// 
+<span class="lineNum">      42 </span>            : /// \param r    The input range
+<span class="lineNum">      43 </span>            : /// \param p    A predicate for testing the elements of the range
+<span class="lineNum">      44 </span>            : ///
+<span class="lineNum">      45 </span>            : template&lt;typename Range, typename Predicate&gt; 
+<span class="lineNum">      46 </span>            : bool all_of ( const Range &amp;r, Predicate p )
+<span class="lineNum">      47 </span>            : {
+<span class="lineNum">      48 </span>            :     return boost::algorithm::all_of ( boost::begin (r), boost::end (r), p );
+<span class="lineNum">      49 </span>            : } 
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : /// \fn all_of_equal ( InputIterator first, InputIterator last, const T &amp;val )
+<span class="lineNum">      52 </span>            : /// \return true if all elements in [first, last) are equal to 'val'
+<span class="lineNum">      53 </span>            : /// \note returns true on an empty range
+<span class="lineNum">      54 </span>            : /// 
+<span class="lineNum">      55 </span>            : /// \param first The start of the input sequence
+<span class="lineNum">      56 </span>            : /// \param last  One past the end of the input sequence
+<span class="lineNum">      57 </span>            : /// \param val   A value to compare against
+<span class="lineNum">      58 </span>            : ///
+<span class="lineNum">      59 </span>            : template&lt;typename InputIterator, typename T&gt; 
+<span class="lineNum">      60 </span>            : bool all_of_equal ( InputIterator first, InputIterator last, const T &amp;val )
+<span class="lineNum">      61 </span>            : {
+<span class="lineNum">      62 </span>            :     for ( ; first != last; ++first )
+<span class="lineNum">      63 </span>            :     if ( val != *first ) 
+<span class="lineNum">      64 </span>            :         return false;
+<span class="lineNum">      65 </span>            :     return true; 
+<span class="lineNum">      66 </span>            : } 
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : /// \fn all_of_equal ( const Range &amp;r, const T &amp;val )
+<span class="lineNum">      69 </span>            : /// \return true if all elements in the range are equal to 'val'
+<span class="lineNum">      70 </span>            : /// \note returns true on an empty range
+<span class="lineNum">      71 </span>            : /// 
+<span class="lineNum">      72 </span>            : /// \param r    The input range
+<span class="lineNum">      73 </span>            : /// \param val  A value to compare against
+<span class="lineNum">      74 </span>            : ///
+<span class="lineNum">      75 </span>            : template&lt;typename Range, typename T&gt; 
+<span class="lineNum">      76 </span>            : bool all_of_equal ( const Range &amp;r, const T &amp;val ) 
+<span class="lineNum">      77 </span>            : {
+<span class="lineNum">      78 </span>            :     return boost::algorithm::all_of_equal ( boost::begin (r), boost::end (r), val );
+<span class="lineNum">      79 </span>            : } 
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : }} // namespace boost and algorithm
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : #endif // BOOST_ALGORITHM_ALL_OF_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

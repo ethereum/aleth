@@ -1,0 +1,251 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/spirit/home/classic/core/non_terminal/rule.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/spirit/home/classic/core/non_terminal</a> - rule.hpp<span style="font-size: 80%;"> (source / <a href="rule.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*=============================================================================</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 1998-2003 Joel de Guzman
+<span class="lineNum">       3 </span>            :     http://spirit.sourceforge.net/
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :   Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       6 </span>            :   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       7 </span>            : =============================================================================*/
+<span class="lineNum">       8 </span>            : #if !defined(BOOST_SPIRIT_RULE_HPP)
+<span class="lineNum">       9 </span>            : #define BOOST_SPIRIT_RULE_HPP
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #include &lt;boost/static_assert.hpp&gt;
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      14 </span>            : //
+<span class="lineNum">      15 </span>            : //  Spirit predefined maximum number of simultaneously usable different
+<span class="lineNum">      16 </span>            : //  scanner types.
+<span class="lineNum">      17 </span>            : //
+<span class="lineNum">      18 </span>            : //  This limit defines the maximum number of possible different scanner
+<span class="lineNum">      19 </span>            : //  types for which a specific rule&lt;&gt; may be used. If this isn't defined, a
+<span class="lineNum">      20 </span>            : //  rule&lt;&gt; may be used with one scanner type only (multiple scanner support
+<span class="lineNum">      21 </span>            : //  is disabled).
+<span class="lineNum">      22 </span>            : //
+<span class="lineNum">      23 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      24 </span>            : #if !defined(BOOST_SPIRIT_RULE_SCANNERTYPE_LIMIT)
+<span class="lineNum">      25 </span>            : #  define BOOST_SPIRIT_RULE_SCANNERTYPE_LIMIT 1
+<span class="lineNum">      26 </span>            : #endif
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : //  Ensure a meaningful maximum number of simultaneously usable scanner types
+<span class="lineNum">      29 </span>            : BOOST_STATIC_ASSERT(BOOST_SPIRIT_RULE_SCANNERTYPE_LIMIT &gt; 0);
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : #include &lt;boost/scoped_ptr.hpp&gt;
+<span class="lineNum">      32 </span>            : #include &lt;boost/spirit/home/classic/namespace.hpp&gt;
+<span class="lineNum">      33 </span>            : #include &lt;boost/spirit/home/classic/core/non_terminal/impl/rule.ipp&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #if BOOST_SPIRIT_RULE_SCANNERTYPE_LIMIT &gt; 1
+<span class="lineNum">      36 </span>            : #  include &lt;boost/preprocessor/enum_params.hpp&gt;
+<span class="lineNum">      37 </span>            : #endif
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      40 </span>            : namespace boost { namespace spirit {
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : #if BOOST_SPIRIT_RULE_SCANNERTYPE_LIMIT &gt; 1
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      47 </span>            :     //
+<span class="lineNum">      48 </span>            :     //  scanner_list (a fake scanner)
+<span class="lineNum">      49 </span>            :     //
+<span class="lineNum">      50 </span>            :     //      Typically, rules are tied to a specific scanner type and
+<span class="lineNum">      51 </span>            :     //      a particular rule cannot be used with anything else. Sometimes
+<span class="lineNum">      52 </span>            :     //      there's a need for rules that can accept more than one scanner
+<span class="lineNum">      53 </span>            :     //      type. The scanner_list&lt;S0, ...SN&gt; can be used as a template
+<span class="lineNum">      54 </span>            :     //      parameter to the rule class to specify up to the number of
+<span class="lineNum">      55 </span>            :     //      scanner types defined by the BOOST_SPIRIT_RULE_SCANNERTYPE_LIMIT
+<span class="lineNum">      56 </span>            :     //      constant. Example:
+<span class="lineNum">      57 </span>            :     //
+<span class="lineNum">      58 </span>            :     //          rule&lt;scanner_list&lt;ScannerT0, ScannerT1&gt; &gt; r;
+<span class="lineNum">      59 </span>            :     //
+<span class="lineNum">      60 </span>            :     //      *** This feature is available only to compilers that support
+<span class="lineNum">      61 </span>            :     //      partial template specialization. ***
+<span class="lineNum">      62 </span>            :     //
+<span class="lineNum">      63 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      64 </span>            :     template &lt;
+<span class="lineNum">      65 </span>            :         BOOST_PP_ENUM_PARAMS(
+<span class="lineNum">      66 </span>            :             BOOST_SPIRIT_RULE_SCANNERTYPE_LIMIT,
+<span class="lineNum">      67 </span>            :             typename ScannerT
+<span class="lineNum">      68 </span>            :         )
+<span class="lineNum">      69 </span>            :     &gt;
+<span class="lineNum">      70 </span>            :     struct scanner_list : scanner_base {};
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : #endif
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      75 </span>            :     //
+<span class="lineNum">      76 </span>            :     //  rule class
+<span class="lineNum">      77 </span>            :     //
+<span class="lineNum">      78 </span>            :     //      The rule is a polymorphic parser that acts as a named place-
+<span class="lineNum">      79 </span>            :     //      holder capturing the behavior of an EBNF expression assigned to
+<span class="lineNum">      80 </span>            :     //      it.
+<span class="lineNum">      81 </span>            :     //
+<span class="lineNum">      82 </span>            :     //      The rule is a template class parameterized by:
+<span class="lineNum">      83 </span>            :     //
+<span class="lineNum">      84 </span>            :     //          1) scanner (scanner_t, see scanner.hpp),
+<span class="lineNum">      85 </span>            :     //          2) the rule's context (context_t, see parser_context.hpp)
+<span class="lineNum">      86 </span>            :     //          3) an arbitrary tag (tag_t, see parser_id.hpp) that allows
+<span class="lineNum">      87 </span>            :     //             a rule to be tagged for identification.
+<span class="lineNum">      88 </span>            :     //
+<span class="lineNum">      89 </span>            :     //      These template parameters may be specified in any order. The
+<span class="lineNum">      90 </span>            :     //      scanner will default to scanner&lt;&gt; when it is not specified.
+<span class="lineNum">      91 </span>            :     //      The context will default to parser_context when not specified.
+<span class="lineNum">      92 </span>            :     //      The tag will default to parser_address_tag when not specified.
+<span class="lineNum">      93 </span>            :     //
+<span class="lineNum">      94 </span>            :     //      The definition of the rule (its right hand side, RHS) held by
+<span class="lineNum">      95 </span>            :     //      the rule through a scoped_ptr. When a rule is seen in the RHS
+<span class="lineNum">      96 </span>            :     //      of an assignment or copy construction EBNF expression, the rule
+<span class="lineNum">      97 </span>            :     //      is held by the LHS rule by reference.
+<span class="lineNum">      98 </span>            :     //
+<span class="lineNum">      99 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     100 </span>            :     template &lt;
+<span class="lineNum">     101 </span>            :         typename T0 = nil_t
+<span class="lineNum">     102 </span>            :       , typename T1 = nil_t
+<span class="lineNum">     103 </span>            :       , typename T2 = nil_t
+<span class="lineNum">     104 </span>            :     &gt;
+<span class="lineNum">     105 </span>            :     class rule
+<span class="lineNum">     106 </span>            :         : public impl::rule_base&lt;
+<span class="lineNum">     107 </span>            :             rule&lt;T0, T1, T2&gt;
+<span class="lineNum">     108 </span>            :           , rule&lt;T0, T1, T2&gt; const&amp;
+<span class="lineNum">     109 </span>            :           , T0, T1, T2&gt;
+<span class="lineNum">     110 </span>            :     {
+<span class="lineNum">     111 </span>            :     public:
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :         typedef rule&lt;T0, T1, T2&gt; self_t;
+<span class="lineNum">     114 </span>            :         typedef impl::rule_base&lt;
+<span class="lineNum">     115 </span>            :             self_t
+<span class="lineNum">     116 </span>            :           , self_t const&amp;
+<span class="lineNum">     117 </span>            :           , T0, T1, T2&gt;
+<span class="lineNum">     118 </span>            :         base_t;
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            :         typedef typename base_t::scanner_t scanner_t;
+<span class="lineNum">     121 </span>            :         typedef typename base_t::attr_t attr_t;
+<span class="lineNum">     122 </span>            :         typedef impl::abstract_parser&lt;scanner_t, attr_t&gt; abstract_parser_t;
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span><span class="lineCov">     877572 :         rule() : ptr() {}</span>
+<span class="lineNum">     125 </span><span class="lineCov">     877572 :         ~rule() {}</span>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :         rule(rule const&amp; r)
+<span class="lineNum">     128 </span>            :         : ptr(new impl::concrete_parser&lt;rule, scanner_t, attr_t&gt;(r)) {}
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :         template &lt;typename ParserT&gt;
+<span class="lineNum">     131 </span>            :         rule(ParserT const&amp; p)
+<span class="lineNum">     132 </span>            :         : ptr(new impl::concrete_parser&lt;ParserT, scanner_t, attr_t&gt;(p)) {}
+<a name="133"><span class="lineNum">     133 </span>            : </a>
+<span class="lineNum">     134 </span>            :         template &lt;typename ParserT&gt;
+<span class="lineNum">     135 </span><span class="lineCov">     438786 :         rule&amp; operator=(ParserT const&amp; p)</span>
+<span class="lineNum">     136 </span>            :         {
+<span class="lineNum">     137 </span><span class="lineCov">     828818 :             ptr.reset(new impl::concrete_parser&lt;ParserT, scanner_t, attr_t&gt;(p));</span>
+<span class="lineNum">     138 </span><span class="lineCov">     438786 :             return *this;</span>
+<span class="lineNum">     139 </span>            :         }
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            :         rule&amp; operator=(rule const&amp; r)
+<span class="lineNum">     142 </span>            :         {
+<span class="lineNum">     143 </span>            :             ptr.reset(new impl::concrete_parser&lt;rule, scanner_t, attr_t&gt;(r));
+<span class="lineNum">     144 </span>            :             return *this;
+<span class="lineNum">     145 </span>            :         }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            :         rule&lt;T0, T1, T2&gt;
+<span class="lineNum">     148 </span>            :         copy() const
+<span class="lineNum">     149 </span>            :         {
+<span class="lineNum">     150 </span>            :             return rule&lt;T0, T1, T2&gt;(ptr.get() ? ptr-&gt;clone() : 0);
+<span class="lineNum">     151 </span>            :         }
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :     private:
+<span class="lineNum">     154 </span>            :         friend class impl::rule_base_access;
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :         abstract_parser_t*
+<span class="lineNum">     157 </span>            :         get() const
+<span class="lineNum">     158 </span>            :         {
+<span class="lineNum">     159 </span><span class="lineCov">   25725045 :             return ptr.get();</span>
+<span class="lineNum">     160 </span>            :         }
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :         rule(abstract_parser_t* ptr_)
+<span class="lineNum">     163 </span>            :         : ptr(ptr_) {}
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :         rule(abstract_parser_t const* ptr_)
+<span class="lineNum">     166 </span>            :         : ptr(ptr_) {}
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :         scoped_ptr&lt;abstract_parser_t&gt; ptr;
+<span class="lineNum">     169 </span>            :     };
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_END
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            : }} // namespace BOOST_SPIRIT_CLASSIC_NS
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

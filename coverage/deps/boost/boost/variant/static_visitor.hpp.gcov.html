@@ -1,0 +1,171 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/variant/static_visitor.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/variant</a> - static_visitor.hpp<span style="font-size: 80%;"> (source / <a href="static_visitor.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //-----------------------------------------------------------------------------</a>
+<span class="lineNum">       2 </span>            : // boost variant/static_visitor.hpp header file
+<span class="lineNum">       3 </span>            : // See http://www.boost.org for updates, documentation, and revision history.
+<span class="lineNum">       4 </span>            : //-----------------------------------------------------------------------------
+<span class="lineNum">       5 </span>            : //
+<span class="lineNum">       6 </span>            : // Copyright (c) 2002-2003
+<span class="lineNum">       7 </span>            : // Eric Friedman
+<span class="lineNum">       8 </span>            : //
+<span class="lineNum">       9 </span>            : // Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">      10 </span>            : // accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">      11 </span>            : // http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #ifndef BOOST_VARIANT_STATIC_VISITOR_HPP
+<span class="lineNum">      14 </span>            : #define BOOST_VARIANT_STATIC_VISITOR_HPP
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/detail/workaround.hpp&gt;
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #include &lt;boost/mpl/if.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/type_traits/is_base_and_derived.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;boost/type_traits/integral_constant.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/mpl/aux_/lambda_support.hpp&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : namespace boost {
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : //////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      28 </span>            : // class template static_visitor
+<span class="lineNum">      29 </span>            : //
+<span class="lineNum">      30 </span>            : // An empty base class that typedefs the return type of a deriving static
+<span class="lineNum">      31 </span>            : // visitor. The class is analogous to std::unary_function in this role.
+<span class="lineNum">      32 </span>            : //
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace detail {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            :     struct is_static_visitor_tag { };
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            :     typedef void static_visitor_default_return;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : } // namespace detail
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : template &lt;typename R = ::boost::detail::static_visitor_default_return&gt;
+<span class="lineNum">      43 </span>            : class static_visitor
+<span class="lineNum">      44 </span>            :     : public detail::is_static_visitor_tag
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span>            : public: // typedefs
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            :     typedef R result_type;
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : protected: // for use as base class only
+<span class="lineNum">      51 </span>            : #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) &amp;&amp; !defined(BOOST_NO_CXX11_NON_PUBLIC_DEFAULTED_FUNCTIONS)
+<span class="lineNum">      52 </span><span class="lineCov">   12726733 :     static_visitor() = default;</span>
+<span class="lineNum">      53 </span>            :     ~static_visitor() = default;
+<span class="lineNum">      54 </span>            : #else
+<span class="lineNum">      55 </span>            :     static_visitor()  BOOST_NOEXCEPT { }
+<span class="lineNum">      56 </span>            :     ~static_visitor()  BOOST_NOEXCEPT { }
+<span class="lineNum">      57 </span>            : #endif
+<span class="lineNum">      58 </span>            : };
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : //////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      61 </span>            : // metafunction is_static_visitor
+<span class="lineNum">      62 </span>            : //
+<span class="lineNum">      63 </span>            : // Value metafunction indicates whether the specified type derives from
+<span class="lineNum">      64 </span>            : // static_visitor&lt;...&gt;.
+<span class="lineNum">      65 </span>            : //
+<span class="lineNum">      66 </span>            : // NOTE #1: This metafunction does NOT check whether the specified type
+<span class="lineNum">      67 </span>            : //  fulfills the requirements of the StaticVisitor concept.
+<span class="lineNum">      68 </span>            : //
+<span class="lineNum">      69 </span>            : // NOTE #2: This template never needs to be specialized!
+<span class="lineNum">      70 </span>            : //
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : namespace detail {
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : template &lt;typename T&gt;
+<span class="lineNum">      75 </span>            : struct is_static_visitor_impl
+<span class="lineNum">      76 </span>            : {
+<span class="lineNum">      77 </span>            :     BOOST_STATIC_CONSTANT(bool, value = 
+<span class="lineNum">      78 </span>            :         (::boost::is_base_and_derived&lt; 
+<span class="lineNum">      79 </span>            :             detail::is_static_visitor_tag,
+<span class="lineNum">      80 </span>            :             T
+<span class="lineNum">      81 </span>            :         &gt;::value));
+<span class="lineNum">      82 </span>            : };
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : } // namespace detail
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            : template&lt; typename T &gt; struct is_static_visitor
+<span class="lineNum">      87 </span>            :         : public ::boost::integral_constant&lt;bool,(::boost::detail::is_static_visitor_impl&lt;T&gt;::value)&gt;
+<span class="lineNum">      88 </span>            : {
+<span class="lineNum">      89 </span>            : public:
+<span class="lineNum">      90 </span>            :     BOOST_MPL_AUX_LAMBDA_SUPPORT(1,is_static_visitor,(T))
+<span class="lineNum">      91 </span>            : };
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : } // namespace boost
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : #endif // BOOST_VARIANT_STATIC_VISITOR_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

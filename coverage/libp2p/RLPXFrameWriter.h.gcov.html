@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libp2p/RLPXFrameWriter.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libp2p</a> - RLPXFrameWriter.h<span style="font-size: 80%;"> (source / <a href="RLPXFrameWriter.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :  This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            :  
+<span class="lineNum">       4 </span>            :  cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :  it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :  the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :  (at your option) any later version.
+<span class="lineNum">       8 </span>            :  
+<span class="lineNum">       9 </span>            :  cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :  but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :  GNU General Public License for more details.
+<span class="lineNum">      13 </span>            :  
+<span class="lineNum">      14 </span>            :  You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :  along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            :  */
+<span class="lineNum">      17 </span>            : /** @file RLPXperimental.h
+<span class="lineNum">      18 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #pragma once
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;deque&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libdevcore/Guards.h&gt;
+<span class="lineNum">      27 </span>            : #include &quot;RLPXFrameCoder.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;RLPXPacket.h&quot;
+<span class="lineNum">      29 </span>            : namespace ba = boost::asio;
+<span class="lineNum">      30 </span>            : namespace bi = boost::asio::ip;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace dev
+<span class="lineNum">      33 </span>            : {
+<span class="lineNum">      34 </span>            : namespace p2p
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : /**
+<span class="lineNum">      38 </span>            :  * @brief Multiplex packets into encrypted RLPX frames.
+<span class="lineNum">      39 </span>            :  * @todo throw when enqueued packet is invalid
+<span class="lineNum">      40 </span>            :  * @todo use RLPXFrameInfo
+<span class="lineNum">      41 </span>            :  */
+<span class="lineNum">      42 </span><span class="lineCov">        136 : class RLPXFrameWriter</span>
+<span class="lineNum">      43 </span>            : {
+<span class="lineNum">      44 </span>            :         /**
+<span class="lineNum">      45 </span>            :          * @brief Queue and state for Writer
+<span class="lineNum">      46 </span>            :          * Properties are used independently;
+<span class="lineNum">      47 </span>            :          * only valid packets should be added to q
+<a name="48"><span class="lineNum">      48 </span>            :          * @todo implement as class</a>
+<span class="lineNum">      49 </span>            :          */
+<span class="lineNum">      50 </span><span class="lineCov">        544 :         struct WriterState</span>
+<span class="lineNum">      51 </span>            :         {
+<span class="lineNum">      52 </span>            :                 std::deque&lt;RLPXPacket&gt; q;
+<span class="lineNum">      53 </span>            :                 mutable Mutex x;
+<span class="lineNum">      54 </span>            :                 
+<span class="lineNum">      55 </span>            :                 RLPXPacket* writing = nullptr;
+<span class="lineNum">      56 </span>            :                 size_t remaining = 0;
+<span class="lineNum">      57 </span>            :                 bool multiFrame = false;
+<span class="lineNum">      58 </span>            :                 uint16_t sequence = -1;
+<span class="lineNum">      59 </span>            :         };
+<span class="lineNum">      60 </span>            :         
+<span class="lineNum">      61 </span>            : public:
+<span class="lineNum">      62 </span>            :         enum PacketPriority { PriorityLow = 0, PriorityHigh };
+<span class="lineNum">      63 </span>            :         static const uint16_t EmptyFrameLength;
+<span class="lineNum">      64 </span>            :         static const uint16_t MinFrameDequeLength;
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span><span class="lineCov">         53 :         RLPXFrameWriter(uint16_t _protocolType): m_protocolId(_protocolType) {}</span>
+<span class="lineNum">      67 </span><span class="lineCov">         15 :         RLPXFrameWriter(RLPXFrameWriter const&amp; _s): m_protocolId(_s.m_protocolId) {}</span>
+<span class="lineNum">      68 </span>            :         
+<span class="lineNum">      69 </span>            :         /// Returns total number of queued packets. Thread-safe.
+<span class="lineNum">      70 </span>            :         size_t size() const { size_t l = 0; size_t h = 0; DEV_GUARDED(m_q.first.x) h = m_q.first.q.size(); DEV_GUARDED(m_q.second.x) l = m_q.second.q.size(); return l + h; }
+<span class="lineNum">      71 </span>            :         
+<span class="lineNum">      72 </span>            :         /// Moves @_payload output to queue, to be muxed into frames by mux() when network buffer is ready for writing. Thread-safe.
+<span class="lineNum">      73 </span>            :         void enque(uint8_t _packetType, RLPStream&amp; _payload, PacketPriority _priority = PriorityLow);
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            :         /// Returns number of packets framed and outputs frames to o_bytes. Not thread-safe.
+<span class="lineNum">      76 </span>            :         size_t mux(RLPXFrameCoder&amp; _coder, unsigned _size, std::deque&lt;bytes&gt;&amp; o_toWrite);
+<span class="lineNum">      77 </span>            :         
+<span class="lineNum">      78 </span>            :         /// Moves @_p to queue, to be muxed into frames by mux() when network buffer is ready for writing. Thread-safe.
+<span class="lineNum">      79 </span>            :         void enque(RLPXPacket&amp;&amp; _p, PacketPriority _priority = PriorityLow);
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            :         uint16_t protocolId() const { return m_protocolId; }
+<span class="lineNum">      82 </span>            :         
+<span class="lineNum">      83 </span>            : private:
+<span class="lineNum">      84 </span>            :         uint16_t const m_protocolId;
+<span class="lineNum">      85 </span>            :         std::pair&lt;WriterState, WriterState&gt; m_q;          // High, Low frame queues
+<span class="lineNum">      86 </span>            :         uint16_t m_sequenceId = 0;                              // Sequence ID
+<span class="lineNum">      87 </span>            : };
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : }
+<span class="lineNum">      90 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

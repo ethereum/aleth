@@ -1,0 +1,498 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/TransactionQueue.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - TransactionQueue.cpp<span style="font-size: 80%;"> (source / <a href="TransactionQueue.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">210</td>
+            <td class="headerCovTableEntry">225</td>
+            <td class="headerCovTableEntryHi">93.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntryHi">96.2 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file TransactionQueue.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;TransactionQueue.h&quot;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;libdevcore/Log.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libethcore/Exceptions.h&gt;
+<span class="lineNum">      26 </span>            : #include &quot;Transaction.h&quot;
+<span class="lineNum">      27 </span>            : using namespace std;
+<span class="lineNum">      28 </span>            : using namespace dev;
+<a name="29"><span class="lineNum">      29 </span>            : using namespace dev::eth;</a>
+<a name="30"><span class="lineNum">      30 </span>            : </a>
+<span class="lineNum">      31 </span><span class="lineCov">          1 : const char* TransactionQueueChannel::name() { return EthCyan &quot;┉┅▶&quot;; }</span>
+<span class="lineNum">      32 </span><span class="lineNoCov">          0 : const char* TransactionQueueTraceChannel::name() { return EthCyan &quot; ┅▶&quot;; }</span>
+<span class="lineNum">      33 </span>            : 
+<a name="34"><span class="lineNum">      34 </span>            : const size_t c_maxVerificationQueueSize = 8192;</a>
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span><span class="lineCov">      15098 : TransactionQueue::TransactionQueue(unsigned _limit, unsigned _futureLimit):</span>
+<span class="lineNum">      37 </span>            :         m_current(PriorityCompare { *this }),
+<span class="lineNum">      38 </span>            :         m_limit(_limit),
+<span class="lineNum">      39 </span><span class="lineCov">     256666 :         m_futureLimit(_futureLimit)</span>
+<span class="lineNum">      40 </span>            : {
+<a name="41"><span class="lineNum">      41 </span><span class="lineCov">      30196 :         unsigned verifierThreads = std::max(thread::hardware_concurrency(), 3U) - 2U;</span></a>
+<span class="lineNum">      42 </span><span class="lineCov">     105686 :         for (unsigned i = 0; i &lt; verifierThreads; ++i)</span>
+<span class="lineNum">      43 </span><span class="lineCov">     271471 :                 m_verifiers.emplace_back([=](){</span>
+<span class="lineNum">      44 </span><span class="lineCov">     271083 :                         setThreadName(&quot;txcheck&quot; + toString(i));</span>
+<span class="lineNum">      45 </span><span class="lineCov">      90394 :                         this-&gt;verifierBody();</span>
+<span class="lineNum">      46 </span><span class="lineCov">     181176 :                 });</span>
+<a name="47"><span class="lineNum">      47 </span><span class="lineCov">      15098 : }</span></a>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineCov">     135882 : TransactionQueue::~TransactionQueue()</span>
+<span class="lineNum">      50 </span>            : {
+<span class="lineNum">      51 </span><span class="lineCov">      75490 :         DEV_GUARDED(x_queue)</span>
+<span class="lineNum">      52 </span><span class="lineCov">      30196 :                 m_aborting = true;</span>
+<span class="lineNum">      53 </span><span class="lineCov">      15098 :         m_queueReady.notify_all();</span>
+<span class="lineNum">      54 </span><span class="lineCov">     150980 :         for (auto&amp; i: m_verifiers)</span>
+<span class="lineNum">      55 </span><span class="lineCov">      90588 :                 i.join();</span>
+<a name="56"><span class="lineNum">      56 </span><span class="lineCov">      15098 : }</span></a>
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span><span class="lineCov">      11314 : ImportResult TransactionQueue::import(bytesConstRef _transactionRLP, IfDropped _ik)</span>
+<span class="lineNum">      59 </span>            : {
+<span class="lineNum">      60 </span>            :         // Check if we already know this transaction.
+<span class="lineNum">      61 </span>            :         h256 h = sha3(_transactionRLP);
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineCov">      22628 :         Transaction t;</span>
+<span class="lineNum">      64 </span>            :         ImportResult ir;
+<span class="lineNum">      65 </span>            :         {
+<span class="lineNum">      66 </span><span class="lineCov">      33940 :                 UpgradableGuard l(m_lock);</span>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">      11314 :                 ir = check_WITH_LOCK(h, _ik);</span>
+<span class="lineNum">      69 </span><span class="lineCov">      11314 :                 if (ir != ImportResult::Success)</span>
+<span class="lineNum">      70 </span><span class="lineCov">          2 :                         return ir;</span>
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :                 try
+<span class="lineNum">      73 </span>            :                 {
+<span class="lineNum">      74 </span>            :                         // Check validity of _transactionRLP as a transaction. To do this we just deserialise and attempt to determine the sender.
+<span class="lineNum">      75 </span>            :                         // If it doesn't work, the signature is bad.
+<span class="lineNum">      76 </span>            :                         // The transaction's nonce may yet be invalid (or, it could be &quot;valid&quot; but we may be missing a marginally older transaction).
+<span class="lineNum">      77 </span><span class="lineCov">      33937 :                         t = Transaction(_transactionRLP, CheckTransaction::Everything);</span>
+<span class="lineNum">      78 </span><span class="lineCov">      22624 :                         UpgradeGuard ul(l);</span>
+<span class="lineNum">      79 </span>            : //                      cdebug &lt;&lt; &quot;Importing&quot; &lt;&lt; t;
+<span class="lineNum">      80 </span><span class="lineCov">      11312 :                         ir = manageImport_WITH_LOCK(h, t);</span>
+<span class="lineNum">      81 </span>            :                 }
+<span class="lineNum">      82 </span><span class="lineCov">          1 :                 catch (...)</span>
+<span class="lineNum">      83 </span>            :                 {
+<span class="lineNum">      84 </span>            :                         return ImportResult::Malformed;
+<span class="lineNum">      85 </span>            :                 }
+<span class="lineNum">      86 </span>            :         }
+<span class="lineNum">      87 </span><span class="lineCov">      11312 :         return ir;</span>
+<a name="88"><span class="lineNum">      88 </span>            : }</a>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineCov">      11353 : ImportResult TransactionQueue::check_WITH_LOCK(h256 const&amp; _h, IfDropped _ik)</span>
+<span class="lineNum">      91 </span>            : {
+<span class="lineNum">      92 </span><span class="lineCov">      22706 :         if (m_known.count(_h))</span>
+<span class="lineNum">      93 </span>            :                 return ImportResult::AlreadyKnown;
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineCov">      22694 :         if (m_dropped.count(_h) &amp;&amp; _ik == IfDropped::Ignore)</span>
+<span class="lineNum">      96 </span>            :                 return ImportResult::AlreadyInChain;
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineCov">      11346 :         return ImportResult::Success;</span>
+<a name="99"><span class="lineNum">      99 </span>            : }</a>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span><span class="lineCov">         38 : ImportResult TransactionQueue::import(Transaction const&amp; _transaction, IfDropped _ik)</span>
+<span class="lineNum">     102 </span>            : {
+<span class="lineNum">     103 </span>            :         // Check if we already know this transaction.
+<span class="lineNum">     104 </span><span class="lineCov">         38 :         h256 h = _transaction.sha3(WithSignature);</span>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            :         ImportResult ret;
+<span class="lineNum">     107 </span>            :         {
+<span class="lineNum">     108 </span><span class="lineCov">        111 :                 UpgradableGuard l(m_lock);</span>
+<span class="lineNum">     109 </span><span class="lineCov">         39 :                 auto ir = check_WITH_LOCK(h, _ik);</span>
+<span class="lineNum">     110 </span><span class="lineCov">         39 :                 if (ir != ImportResult::Success)</span>
+<span class="lineNum">     111 </span><span class="lineCov">         12 :                         return ir;</span>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :                 {
+<span class="lineNum">     114 </span><span class="lineCov">         33 :                         _transaction.safeSender(); // Perform EC recovery outside of the write lock</span>
+<span class="lineNum">     115 </span><span class="lineCov">         66 :                         UpgradeGuard ul(l);</span>
+<span class="lineNum">     116 </span><span class="lineCov">         33 :                         ret = manageImport_WITH_LOCK(h, _transaction);</span>
+<span class="lineNum">     117 </span>            :                 }
+<span class="lineNum">     118 </span>            :         }
+<span class="lineNum">     119 </span><span class="lineCov">         33 :         return ret;</span>
+<a name="120"><span class="lineNum">     120 </span>            : }</a>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">      14163 : Transactions TransactionQueue::topTransactions(unsigned _limit, h256Hash const&amp; _avoid) const</span>
+<span class="lineNum">     123 </span>            : {
+<span class="lineNum">     124 </span><span class="lineCov">      42489 :         ReadGuard l(m_lock);</span>
+<span class="lineNum">     125 </span><span class="lineCov">      14163 :         Transactions ret;</span>
+<span class="lineNum">     126 </span><span class="lineCov">      71200 :         for (auto t = m_current.begin(); ret.size() &lt; _limit &amp;&amp; t != m_current.end(); ++t)</span>
+<span class="lineNum">     127 </span><span class="lineCov">      14548 :                 if (!_avoid.count(t-&gt;transaction.sha3()))</span>
+<span class="lineNum">     128 </span><span class="lineCov">       7274 :                         ret.push_back(t-&gt;transaction);</span>
+<span class="lineNum">     129 </span><span class="lineCov">      14163 :         return ret;</span>
+<a name="130"><span class="lineNum">     130 </span>            : }</a>
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span><span class="lineCov">          4 : h256Hash TransactionQueue::knownTransactions() const</span>
+<span class="lineNum">     133 </span>            : {
+<span class="lineNum">     134 </span><span class="lineCov">         12 :         ReadGuard l(m_lock);</span>
+<span class="lineNum">     135 </span><span class="lineCov">         12 :         return m_known;</span>
+<a name="136"><span class="lineNum">     136 </span>            : }</a>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span><span class="lineCov">      11345 : ImportResult TransactionQueue::manageImport_WITH_LOCK(h256 const&amp; _h, Transaction const&amp; _transaction)</span>
+<span class="lineNum">     139 </span>            : {
+<span class="lineNum">     140 </span>            :         try
+<span class="lineNum">     141 </span>            :         {
+<span class="lineNum">     142 </span><span class="lineCov">      22690 :                 assert(_h == _transaction.sha3());</span>
+<span class="lineNum">     143 </span>            :                 // Remove any prior transaction with the same nonce but a lower gas price.
+<span class="lineNum">     144 </span>            :                 // Bomb out if there's a prior transaction with higher gas price.
+<span class="lineNum">     145 </span><span class="lineCov">      34035 :                 auto cs = m_currentByAddressAndNonce.find(_transaction.from());</span>
+<span class="lineNum">     146 </span><span class="lineCov">      22690 :                 if (cs != m_currentByAddressAndNonce.end())</span>
+<span class="lineNum">     147 </span>            :                 {
+<span class="lineNum">     148 </span><span class="lineCov">       2684 :                         auto t = cs-&gt;second.find(_transaction.nonce());</span>
+<span class="lineNum">     149 </span><span class="lineCov">       1342 :                         if (t != cs-&gt;second.end())</span>
+<span class="lineNum">     150 </span>            :                         {
+<span class="lineNum">     151 </span><span class="lineCov">         25 :                                 if (_transaction.gasPrice() &lt; (*t-&gt;second).transaction.gasPrice())</span>
+<span class="lineNum">     152 </span>            :                                         return ImportResult::OverbidGasPrice;
+<span class="lineNum">     153 </span>            :                                 else
+<span class="lineNum">     154 </span>            :                                 {
+<span class="lineNum">     155 </span><span class="lineCov">          8 :                                         h256 dropped = (*t-&gt;second).transaction.sha3();</span>
+<span class="lineNum">     156 </span><span class="lineCov">          4 :                                         remove_WITH_LOCK(dropped);</span>
+<span class="lineNum">     157 </span><span class="lineCov">          4 :                                         m_onReplaced(dropped);</span>
+<span class="lineNum">     158 </span>            :                                 }
+<span class="lineNum">     159 </span>            :                         }
+<span class="lineNum">     160 </span>            :                 }
+<span class="lineNum">     161 </span><span class="lineCov">      34032 :                 auto fs = m_future.find(_transaction.from());</span>
+<span class="lineNum">     162 </span><span class="lineCov">      22688 :                 if (fs != m_future.end())</span>
+<span class="lineNum">     163 </span>            :                 {
+<span class="lineNum">     164 </span><span class="lineCov">          8 :                         auto t = fs-&gt;second.find(_transaction.nonce());</span>
+<span class="lineNum">     165 </span><span class="lineCov">          4 :                         if (t != fs-&gt;second.end())</span>
+<span class="lineNum">     166 </span>            :                         {
+<span class="lineNum">     167 </span><span class="lineCov">          4 :                                 if (_transaction.gasPrice() &lt; t-&gt;second.transaction.gasPrice())</span>
+<span class="lineNum">     168 </span>            :                                         return ImportResult::OverbidGasPrice;
+<span class="lineNum">     169 </span>            :                                 else
+<span class="lineNum">     170 </span>            :                                 {
+<span class="lineNum">     171 </span><span class="lineCov">          2 :                                         fs-&gt;second.erase(t);</span>
+<span class="lineNum">     172 </span><span class="lineCov">          1 :                                         --m_futureSize;</span>
+<span class="lineNum">     173 </span><span class="lineCov">          2 :                                         if (fs-&gt;second.empty())</span>
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :                                                 m_future.erase(fs);</span>
+<span class="lineNum">     175 </span>            :                                 }
+<span class="lineNum">     176 </span>            :                         }
+<span class="lineNum">     177 </span>            :                 }
+<span class="lineNum">     178 </span>            :                 // If valid, append to transactions.
+<span class="lineNum">     179 </span><span class="lineCov">      22688 :                 insertCurrent_WITH_LOCK(make_pair(_h, _transaction));</span>
+<span class="lineNum">     180 </span><span class="lineCov">      11344 :                 clog(TransactionQueueTraceChannel) &lt;&lt; &quot;Queued vaguely legit-looking transaction&quot; &lt;&lt; _h;</span>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineCov">      22700 :                 while (m_current.size() &gt; m_limit)</span>
+<span class="lineNum">     183 </span>            :                 {
+<span class="lineNum">     184 </span><span class="lineCov">          4 :                         clog(TransactionQueueTraceChannel) &lt;&lt; &quot;Dropping out of bounds transaction&quot; &lt;&lt; _h;</span>
+<span class="lineNum">     185 </span><span class="lineCov">         12 :                         remove_WITH_LOCK(m_current.rbegin()-&gt;transaction.sha3());</span>
+<span class="lineNum">     186 </span>            :                 }
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span><span class="lineCov">      11344 :                 m_onReady();</span>
+<span class="lineNum">     189 </span>            :         }
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     191 </span>            :         {
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :                 ctxq &lt;&lt; &quot;Ignoring invalid transaction: &quot; &lt;&lt;  diagnostic_information(_e);</span>
+<span class="lineNum">     193 </span>            :                 return ImportResult::Malformed;
+<span class="lineNum">     194 </span>            :         }
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     196 </span>            :         {
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :                 ctxq &lt;&lt; &quot;Ignoring invalid transaction: &quot; &lt;&lt; _e.what();</span>
+<span class="lineNum">     198 </span>            :                 return ImportResult::Malformed;
+<span class="lineNum">     199 </span>            :         }
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            :         return ImportResult::Success;
+<a name="202"><span class="lineNum">     202 </span>            : }</a>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineCov">          8 : u256 TransactionQueue::maxNonce(Address const&amp; _a) const</span>
+<span class="lineNum">     205 </span>            : {
+<span class="lineNum">     206 </span><span class="lineCov">         24 :         ReadGuard l(m_lock);</span>
+<span class="lineNum">     207 </span><span class="lineCov">         16 :         return maxNonce_WITH_LOCK(_a);</span>
+<a name="208"><span class="lineNum">     208 </span>            : }</a>
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span><span class="lineCov">          8 : u256 TransactionQueue::maxNonce_WITH_LOCK(Address const&amp; _a) const</span>
+<span class="lineNum">     211 </span>            : {
+<span class="lineNum">     212 </span><span class="lineCov">         16 :         u256 ret = 0;</span>
+<span class="lineNum">     213 </span><span class="lineCov">         16 :         auto cs = m_currentByAddressAndNonce.find(_a);</span>
+<span class="lineNum">     214 </span><span class="lineCov">         30 :         if (cs != m_currentByAddressAndNonce.end() &amp;&amp; !cs-&gt;second.empty())</span>
+<span class="lineNum">     215 </span><span class="lineCov">         35 :                 ret = cs-&gt;second.rbegin()-&gt;first + 1;</span>
+<span class="lineNum">     216 </span><span class="lineCov">         16 :         auto fs = m_future.find(_a);</span>
+<span class="lineNum">     217 </span><span class="lineCov">         16 :         if (fs != m_future.end() &amp;&amp; !fs-&gt;second.empty())</span>
+<span class="lineNum">     218 </span><span class="lineNoCov">          0 :                 ret = std::max(ret, fs-&gt;second.rbegin()-&gt;first + 1);</span>
+<span class="lineNum">     219 </span><span class="lineCov">          8 :         return ret;</span>
+<a name="220"><span class="lineNum">     220 </span>            : }</a>
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span><span class="lineCov">      11344 : void TransactionQueue::insertCurrent_WITH_LOCK(std::pair&lt;h256, Transaction&gt; const&amp; _p)</span>
+<span class="lineNum">     223 </span>            : {
+<span class="lineNum">     224 </span><span class="lineCov">      22688 :         if (m_currentByHash.count(_p.first))</span>
+<span class="lineNum">     225 </span>            :         {
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Transaction hash&quot; &lt;&lt; _p.first &lt;&lt; &quot;already in current?!&quot;;</span>
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :                 return;</span>
+<span class="lineNum">     228 </span>            :         }
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span><span class="lineCov">      11344 :         Transaction const&amp; t = _p.second;</span>
+<span class="lineNum">     231 </span>            :         // Insert into current
+<span class="lineNum">     232 </span><span class="lineCov">      68064 :         auto inserted = m_currentByAddressAndNonce[t.from()].insert(std::make_pair(t.nonce(), PriorityQueue::iterator()));</span>
+<span class="lineNum">     233 </span><span class="lineCov">      34032 :         PriorityQueue::iterator handle = m_current.emplace(VerifiedTransaction(t));</span>
+<span class="lineNum">     234 </span><span class="lineCov">      11344 :         inserted.first-&gt;second = handle;</span>
+<span class="lineNum">     235 </span><span class="lineCov">      22688 :         m_currentByHash[_p.first] = handle;</span>
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            :         // Move following transactions from future to current
+<span class="lineNum">     238 </span><span class="lineCov">      11344 :         makeCurrent_WITH_LOCK(t);</span>
+<span class="lineNum">     239 </span><span class="lineCov">      22688 :         m_known.insert(_p.first);</span>
+<a name="240"><span class="lineNum">     240 </span>            : }</a>
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span><span class="lineCov">         16 : bool TransactionQueue::remove_WITH_LOCK(h256 const&amp; _txHash)</span>
+<span class="lineNum">     243 </span>            : {
+<span class="lineNum">     244 </span><span class="lineCov">         32 :         auto t = m_currentByHash.find(_txHash);</span>
+<span class="lineNum">     245 </span><span class="lineCov">         32 :         if (t == m_currentByHash.end())</span>
+<span class="lineNum">     246 </span>            :                 return false;
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span><span class="lineCov">         48 :         Address from = (*t-&gt;second).transaction.from();</span>
+<span class="lineNum">     249 </span><span class="lineCov">         32 :         auto it = m_currentByAddressAndNonce.find(from);</span>
+<span class="lineNum">     250 </span><span class="lineCov">         32 :         assert (it != m_currentByAddressAndNonce.end());</span>
+<span class="lineNum">     251 </span><span class="lineCov">         80 :         it-&gt;second.erase((*t-&gt;second).transaction.nonce());</span>
+<span class="lineNum">     252 </span><span class="lineCov">         32 :         m_current.erase(t-&gt;second);</span>
+<span class="lineNum">     253 </span><span class="lineCov">         32 :         m_currentByHash.erase(t);</span>
+<span class="lineNum">     254 </span><span class="lineCov">         32 :         if (it-&gt;second.empty())</span>
+<span class="lineNum">     255 </span><span class="lineCov">          6 :                 m_currentByAddressAndNonce.erase(it);</span>
+<span class="lineNum">     256 </span><span class="lineCov">         32 :         m_known.erase(_txHash);</span>
+<span class="lineNum">     257 </span><span class="lineCov">         16 :         return true;</span>
+<a name="258"><span class="lineNum">     258 </span>            : }</a>
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span><span class="lineCov">       7618 : unsigned TransactionQueue::waiting(Address const&amp; _a) const</span>
+<span class="lineNum">     261 </span>            : {
+<span class="lineNum">     262 </span><span class="lineCov">      22854 :         ReadGuard l(m_lock);</span>
+<span class="lineNum">     263 </span><span class="lineCov">       7618 :         unsigned ret = 0;</span>
+<span class="lineNum">     264 </span><span class="lineCov">      15236 :         auto cs = m_currentByAddressAndNonce.find(_a);</span>
+<span class="lineNum">     265 </span><span class="lineCov">      15236 :         if (cs != m_currentByAddressAndNonce.end())</span>
+<span class="lineNum">     266 </span><span class="lineCov">      15232 :                 ret = cs-&gt;second.size();</span>
+<span class="lineNum">     267 </span><span class="lineCov">      15236 :         auto fs = m_future.find(_a);</span>
+<span class="lineNum">     268 </span><span class="lineCov">      15236 :         if (fs != m_future.end())</span>
+<span class="lineNum">     269 </span><span class="lineCov">          6 :                 ret += fs-&gt;second.size();</span>
+<span class="lineNum">     270 </span><span class="lineCov">      15236 :         return ret;</span>
+<a name="271"><span class="lineNum">     271 </span>            : }</a>
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span><span class="lineCov">          7 : void TransactionQueue::setFuture(h256 const&amp; _txHash)</span>
+<span class="lineNum">     274 </span>            : {
+<span class="lineNum">     275 </span><span class="lineCov">         21 :         WriteGuard l(m_lock);</span>
+<span class="lineNum">     276 </span><span class="lineCov">         14 :         auto it = m_currentByHash.find(_txHash);</span>
+<span class="lineNum">     277 </span><span class="lineCov">         14 :         if (it == m_currentByHash.end())</span>
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :                 return;</span>
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span><span class="lineCov">         14 :         VerifiedTransaction const&amp; st = *(it-&gt;second);</span>
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span><span class="lineCov">         14 :         Address from = st.transaction.from();</span>
+<span class="lineNum">     283 </span><span class="lineCov">         14 :         auto&amp; queue = m_currentByAddressAndNonce[from];</span>
+<span class="lineNum">     284 </span><span class="lineCov">         14 :         auto&amp; target = m_future[from];</span>
+<span class="lineNum">     285 </span><span class="lineCov">         21 :         auto cutoff = queue.lower_bound(st.transaction.nonce());</span>
+<span class="lineNum">     286 </span><span class="lineCov">         23 :         for (auto m = cutoff; m != queue.end(); ++m)</span>
+<span class="lineNum">     287 </span>            :         {
+<span class="lineNum">     288 </span><span class="lineCov">         18 :                 VerifiedTransaction&amp; t = const_cast&lt;VerifiedTransaction&amp;&gt;(*(m-&gt;second)); // set has only const iterators. Since we are moving out of container that's fine</span>
+<span class="lineNum">     289 </span><span class="lineCov">         18 :                 m_currentByHash.erase(t.transaction.sha3());</span>
+<span class="lineNum">     290 </span><span class="lineCov">         27 :                 target.emplace(t.transaction.nonce(), move(t));</span>
+<span class="lineNum">     291 </span><span class="lineCov">         18 :                 m_current.erase(m-&gt;second);</span>
+<span class="lineNum">     292 </span><span class="lineCov">          9 :                 ++m_futureSize;</span>
+<span class="lineNum">     293 </span>            :         }
+<span class="lineNum">     294 </span><span class="lineCov">         14 :         queue.erase(cutoff, queue.end());</span>
+<span class="lineNum">     295 </span><span class="lineCov">          7 :         if (queue.empty())</span>
+<span class="lineNum">     296 </span><span class="lineCov">          2 :                 m_currentByAddressAndNonce.erase(from);</span>
+<a name="297"><span class="lineNum">     297 </span>            : }</a>
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span><span class="lineCov">      11346 : void TransactionQueue::makeCurrent_WITH_LOCK(Transaction const&amp; _t)</span>
+<span class="lineNum">     300 </span>            : {
+<span class="lineNum">     301 </span><span class="lineCov">      11346 :         bool newCurrent = false;</span>
+<span class="lineNum">     302 </span><span class="lineCov">      34038 :         auto fs = m_future.find(_t.from());</span>
+<span class="lineNum">     303 </span><span class="lineCov">      22692 :         if (fs != m_future.end())</span>
+<span class="lineNum">     304 </span>            :         {
+<span class="lineNum">     305 </span><span class="lineCov">          6 :                 u256 nonce = _t.nonce() + 1;</span>
+<span class="lineNum">     306 </span><span class="lineCov">          4 :                 auto fb = fs-&gt;second.find(nonce);</span>
+<span class="lineNum">     307 </span><span class="lineCov">          4 :                 if (fb != fs-&gt;second.end())</span>
+<span class="lineNum">     308 </span>            :                 {
+<span class="lineNum">     309 </span>            :                         auto ft = fb;
+<span class="lineNum">     310 </span><span class="lineCov">         17 :                         while (ft != fs-&gt;second.end() &amp;&amp; ft-&gt;second.transaction.nonce() == nonce)</span>
+<span class="lineNum">     311 </span>            :                         {
+<span class="lineNum">     312 </span><span class="lineCov">         14 :                                 auto inserted = m_currentByAddressAndNonce[_t.from()].insert(std::make_pair(ft-&gt;second.transaction.nonce(), PriorityQueue::iterator()));</span>
+<span class="lineNum">     313 </span><span class="lineCov">          4 :                                 PriorityQueue::iterator handle = m_current.emplace(move(ft-&gt;second));</span>
+<span class="lineNum">     314 </span><span class="lineCov">          2 :                                 inserted.first-&gt;second = handle;</span>
+<span class="lineNum">     315 </span><span class="lineCov">          4 :                                 m_currentByHash[(*handle).transaction.sha3()] = handle;</span>
+<span class="lineNum">     316 </span><span class="lineCov">          2 :                                 --m_futureSize;</span>
+<span class="lineNum">     317 </span><span class="lineCov">          2 :                                 ++ft;</span>
+<span class="lineNum">     318 </span><span class="lineCov">          2 :                                 ++nonce;</span>
+<span class="lineNum">     319 </span><span class="lineCov">          2 :                                 newCurrent = true;</span>
+<span class="lineNum">     320 </span>            :                         }
+<span class="lineNum">     321 </span><span class="lineCov">          3 :                         fs-&gt;second.erase(fb, ft);</span>
+<span class="lineNum">     322 </span><span class="lineCov">          2 :                         if (fs-&gt;second.empty())</span>
+<span class="lineNum">     323 </span><span class="lineCov">          3 :                                 m_future.erase(_t.from());</span>
+<span class="lineNum">     324 </span>            :                 }
+<span class="lineNum">     325 </span>            :         }
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span><span class="lineCov">      11348 :         while (m_futureSize &gt; m_futureLimit)</span>
+<span class="lineNum">     328 </span>            :         {
+<span class="lineNum">     329 </span>            :                 // TODO: priority queue for future transactions
+<span class="lineNum">     330 </span>            :                 // For now just drop random chain end
+<span class="lineNum">     331 </span><span class="lineCov">          2 :                 --m_futureSize;</span>
+<span class="lineNum">     332 </span><span class="lineCov">         12 :                 clog(TransactionQueueTraceChannel) &lt;&lt; &quot;Dropping out of bounds future transaction&quot; &lt;&lt; m_future.begin()-&gt;second.rbegin()-&gt;second.transaction.sha3();</span>
+<span class="lineNum">     333 </span><span class="lineCov">         16 :                 m_future.begin()-&gt;second.erase(--m_future.begin()-&gt;second.end());</span>
+<span class="lineNum">     334 </span><span class="lineCov">          8 :                 if (m_future.begin()-&gt;second.empty())</span>
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :                         m_future.erase(m_future.begin());</span>
+<span class="lineNum">     336 </span>            :         }
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span><span class="lineCov">      11346 :         if (newCurrent)</span>
+<span class="lineNum">     339 </span><span class="lineCov">          1 :                 m_onReady();</span>
+<a name="340"><span class="lineNum">     340 </span><span class="lineCov">      11346 : }</span></a>
+<span class="lineNum">     341 </span>            : 
+<span class="lineNum">     342 </span><span class="lineCov">      30718 : void TransactionQueue::drop(h256 const&amp; _txHash)</span>
+<span class="lineNum">     343 </span>            : {
+<span class="lineNum">     344 </span><span class="lineCov">      61443 :         UpgradableGuard l(m_lock);</span>
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span><span class="lineCov">      61436 :         if (!m_known.count(_txHash))</span>
+<span class="lineNum">     347 </span><span class="lineCov">      30711 :                 return;</span>
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span><span class="lineCov">         14 :         UpgradeGuard ul(l);</span>
+<span class="lineNum">     350 </span><span class="lineCov">         14 :         m_dropped.insert(_txHash);</span>
+<span class="lineNum">     351 </span><span class="lineCov">          7 :         remove_WITH_LOCK(_txHash);</span>
+<a name="352"><span class="lineNum">     352 </span>            : }</a>
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span><span class="lineCov">          2 : void TransactionQueue::dropGood(Transaction const&amp; _t)</span>
+<span class="lineNum">     355 </span>            : {
+<span class="lineNum">     356 </span><span class="lineCov">          5 :         WriteGuard l(m_lock);</span>
+<span class="lineNum">     357 </span><span class="lineCov">          2 :         makeCurrent_WITH_LOCK(_t);</span>
+<span class="lineNum">     358 </span><span class="lineCov">          4 :         if (!m_known.count(_t.sha3()))</span>
+<span class="lineNum">     359 </span><span class="lineCov">          1 :                 return;</span>
+<span class="lineNum">     360 </span><span class="lineCov">          1 :         remove_WITH_LOCK(_t.sha3());</span>
+<a name="361"><span class="lineNum">     361 </span>            : }</a>
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span><span class="lineCov">      13725 : void TransactionQueue::clear()</span>
+<span class="lineNum">     364 </span>            : {
+<span class="lineNum">     365 </span><span class="lineCov">      41175 :         WriteGuard l(m_lock);</span>
+<span class="lineNum">     366 </span><span class="lineCov">      27450 :         m_known.clear();</span>
+<span class="lineNum">     367 </span><span class="lineCov">      27450 :         m_current.clear();</span>
+<span class="lineNum">     368 </span><span class="lineCov">      27450 :         m_currentByAddressAndNonce.clear();</span>
+<span class="lineNum">     369 </span><span class="lineCov">      27450 :         m_currentByHash.clear();</span>
+<span class="lineNum">     370 </span><span class="lineCov">      27450 :         m_future.clear();</span>
+<span class="lineNum">     371 </span><span class="lineCov">      13725 :         m_futureSize = 0;</span>
+<a name="372"><span class="lineNum">     372 </span><span class="lineCov">      13725 : }</span></a>
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span><span class="lineCov">          2 : void TransactionQueue::enqueue(RLP const&amp; _data, h512 const&amp; _nodeId)</span>
+<span class="lineNum">     375 </span>            : {
+<span class="lineNum">     376 </span><span class="lineCov">          2 :         bool queued = false;</span>
+<span class="lineNum">     377 </span>            :         {
+<span class="lineNum">     378 </span><span class="lineCov">          6 :                 Guard l(x_queue);</span>
+<span class="lineNum">     379 </span><span class="lineCov">          2 :                 unsigned itemCount = _data.itemCount();</span>
+<span class="lineNum">     380 </span><span class="lineCov">          6 :                 for (unsigned i = 0; i &lt; itemCount; ++i)</span>
+<span class="lineNum">     381 </span>            :                 {
+<span class="lineNum">     382 </span><span class="lineCov">          8 :                         if (m_unverified.size() &gt;= c_maxVerificationQueueSize)</span>
+<span class="lineNum">     383 </span>            :                         {
+<span class="lineNum">     384 </span><span class="lineNoCov">          0 :                                 clog(TransactionQueueChannel) &lt;&lt; &quot;Transaction verification queue is full. Dropping&quot; &lt;&lt; itemCount - i &lt;&lt; &quot;transactions&quot;;</span>
+<span class="lineNum">     385 </span><span class="lineNoCov">          0 :                                 break;</span>
+<span class="lineNum">     386 </span>            :                         }
+<span class="lineNum">     387 </span><span class="lineCov">         12 :                         m_unverified.emplace_back(UnverifiedTransaction(_data[i].data(), _nodeId));</span>
+<span class="lineNum">     388 </span><span class="lineCov">          4 :                         queued = true;</span>
+<span class="lineNum">     389 </span>            :                 }
+<span class="lineNum">     390 </span>            :         }
+<span class="lineNum">     391 </span><span class="lineCov">          2 :         if (queued)</span>
+<span class="lineNum">     392 </span><span class="lineCov">          2 :                 m_queueReady.notify_all();</span>
+<a name="393"><span class="lineNum">     393 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     394 </span>            : 
+<span class="lineNum">     395 </span><span class="lineCov">      90079 : void TransactionQueue::verifierBody()</span>
+<span class="lineNum">     396 </span>            : {
+<span class="lineNum">     397 </span><span class="lineCov">     180166 :         while (!m_aborting)</span>
+<span class="lineNum">     398 </span>            :         {
+<span class="lineNum">     399 </span><span class="lineCov">      90153 :                 UnverifiedTransaction work;</span>
+<span class="lineNum">     400 </span>            : 
+<a name="401"><span class="lineNum">     401 </span>            :                 {</a>
+<span class="lineNum">     402 </span><span class="lineCov">     180740 :                         unique_lock&lt;Mutex&gt; l(x_queue);</span>
+<span class="lineNum">     403 </span><span class="lineCov">     724698 :                         m_queueReady.wait(l, [&amp;](){ return !m_unverified.empty() || m_aborting; });</span>
+<span class="lineNum">     404 </span><span class="lineCov">     181174 :                         if (m_aborting)</span>
+<span class="lineNum">     405 </span><span class="lineCov">      90582 :                                 return;</span>
+<span class="lineNum">     406 </span><span class="lineCov">          8 :                         work = move(m_unverified.front());</span>
+<span class="lineNum">     407 </span><span class="lineCov">          4 :                         m_unverified.pop_front();</span>
+<span class="lineNum">     408 </span>            :                 }
+<span class="lineNum">     409 </span>            : 
+<span class="lineNum">     410 </span>            :                 try
+<span class="lineNum">     411 </span>            :                 {
+<span class="lineNum">     412 </span><span class="lineCov">          7 :                         Transaction t(work.transaction, CheckTransaction::Cheap); //Signature will be checked later</span>
+<span class="lineNum">     413 </span><span class="lineCov">          7 :                         ImportResult ir = import(t);</span>
+<span class="lineNum">     414 </span><span class="lineCov">          4 :                         m_onImport(ir, t.sha3(), work.nodeId);</span>
+<span class="lineNum">     415 </span>            :                 }
+<span class="lineNum">     416 </span><span class="lineNoCov">          0 :                 catch (...)</span>
+<span class="lineNum">     417 </span>            :                 {
+<span class="lineNum">     418 </span>            :                         // should not happen as exceptions are handled in import.
+<span class="lineNum">     419 </span><span class="lineNoCov">          0 :                         cwarn &lt;&lt; &quot;Bad transaction:&quot; &lt;&lt; boost::current_exception_diagnostic_information();</span>
+<a name="420"><span class="lineNum">     420 </span>            :                 }</a>
+<span class="lineNum">     421 </span>            :         }
+<span class="lineNum">     422 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

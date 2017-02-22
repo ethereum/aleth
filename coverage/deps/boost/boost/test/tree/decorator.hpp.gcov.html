@@ -1,0 +1,353 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/tree/decorator.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/tree</a> - decorator.hpp<span style="font-size: 80%;"> (source / <a href="decorator.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntryLo">8.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntryLo">4.5 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision: 62016 $
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : defines decorators to be using with auto registered test units
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_TREE_DECORATOR_HPP_091911GER
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_TREE_DECORATOR_HPP_091911GER
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/detail/config.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/detail/global_typedef.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/tree/fixture.hpp&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/tools/assertion_result.hpp&gt;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;boost/test/utils/basic_cstring/basic_cstring.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/test/utils/trivial_singleton.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : // Boost
+<span class="lineNum">      30 </span>            : #include &lt;boost/shared_ptr.hpp&gt;
+<span class="lineNum">      31 </span>            : #include &lt;boost/function/function0.hpp&gt;
+<span class="lineNum">      32 </span>            : #include &lt;boost/function/function1.hpp&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : // STL
+<span class="lineNum">      37 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : namespace boost {
+<span class="lineNum">      42 </span>            : namespace unit_test {
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : class test_unit;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : namespace decorator {
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : // ************************************************************************** //
+<span class="lineNum">      49 </span>            : // **************             decorator::collector             ************** //
+<span class="lineNum">      50 </span>            : // ************************************************************************** //
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : class base;
+<a name="53"><span class="lineNum">      53 </span>            : typedef boost::shared_ptr&lt;base&gt; base_ptr;</a>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineCov">          1 : class BOOST_TEST_DECL collector : public singleton&lt;collector&gt; {</span>
+<span class="lineNum">      56 </span>            : public:
+<span class="lineNum">      57 </span>            :     collector&amp;              operator*( base const&amp; d );
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            :     void                    store_in( test_unit&amp; tu );
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            :     void                    reset();
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : private:
+<span class="lineNum">      64 </span><span class="lineCov">          2 :     BOOST_TEST_SINGLETON_CONS( collector )</span>
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :     // Data members
+<span class="lineNum">      67 </span>            :     std::vector&lt;base_ptr&gt;   m_tu_decorators;
+<span class="lineNum">      68 </span>            : };
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : // ************************************************************************** //
+<span class="lineNum">      71 </span>            : // **************               decorator::base                ************** //
+<span class="lineNum">      72 </span>            : // ************************************************************************** //
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 : class BOOST_TEST_DECL base {</span>
+<span class="lineNum">      75 </span>            : public:
+<span class="lineNum">      76 </span>            :     // composition interface
+<span class="lineNum">      77 </span>            :     collector&amp;              operator*() const;
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :     // application interface
+<span class="lineNum">      80 </span>            :     virtual void            apply( test_unit&amp; tu ) = 0;
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :     // deep cloning interface
+<span class="lineNum">      83 </span>            :     virtual base_ptr        clone() const = 0;
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : protected:
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :     virtual ~base() {}</span>
+<span class="lineNum">      87 </span>            : };
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : // ************************************************************************** //
+<span class="lineNum">      90 </span>            : // **************               decorator::label               ************** //
+<a name="91"><span class="lineNum">      91 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 : class BOOST_TEST_DECL label : public decorator::base {</span>
+<span class="lineNum">      94 </span>            : public:
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :     explicit                label( const_string l ) : m_label( l ) {}</span>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : private:
+<a name="98"><span class="lineNum">      98 </span>            :     // decorator::base interface</a>
+<span class="lineNum">      99 </span>            :     virtual void            apply( test_unit&amp; tu );
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :     virtual base_ptr        clone() const { return base_ptr(new label( m_label )); }</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :     // Data members
+<span class="lineNum">     103 </span>            :     const_string            m_label;
+<span class="lineNum">     104 </span>            : };
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : // ************************************************************************** //
+<span class="lineNum">     107 </span>            : // **************         decorator::expected_failures         ************** //
+<a name="108"><span class="lineNum">     108 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 : class BOOST_TEST_DECL expected_failures : public decorator::base {</span>
+<span class="lineNum">     111 </span>            : public:
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :     explicit                expected_failures( counter_t ef ) : m_exp_fail( ef ) {}</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            : private:
+<a name="115"><span class="lineNum">     115 </span>            :     // decorator::base interface</a>
+<span class="lineNum">     116 </span>            :     virtual void            apply( test_unit&amp; tu );
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :     virtual base_ptr        clone() const { return base_ptr(new expected_failures( m_exp_fail )); }</span>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :     // Data members
+<span class="lineNum">     120 </span>            :     counter_t               m_exp_fail;
+<span class="lineNum">     121 </span>            : };
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : // ************************************************************************** //
+<span class="lineNum">     124 </span>            : // **************              decorator::timeout              ************** //
+<a name="125"><span class="lineNum">     125 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 : class BOOST_TEST_DECL timeout : public decorator::base {</span>
+<span class="lineNum">     128 </span>            : public:
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :     explicit                timeout( unsigned t ) : m_timeout( t ) {}</span>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            : private:
+<a name="132"><span class="lineNum">     132 </span>            :     // decorator::base interface</a>
+<span class="lineNum">     133 </span>            :     virtual void            apply( test_unit&amp; tu );
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :     virtual base_ptr        clone() const { return base_ptr(new timeout( m_timeout )); }</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :     // Data members
+<span class="lineNum">     137 </span>            :     unsigned                m_timeout;
+<span class="lineNum">     138 </span>            : };
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : // ************************************************************************** //
+<span class="lineNum">     141 </span>            : // **************            decorator::description            ************** //
+<a name="142"><span class="lineNum">     142 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 : class BOOST_TEST_DECL description : public decorator::base {</span>
+<span class="lineNum">     145 </span>            : public:
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :     explicit                description( const_string descr ) : m_description( descr ) {}</span>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            : private:
+<a name="149"><span class="lineNum">     149 </span>            :     // decorator::base interface</a>
+<span class="lineNum">     150 </span>            :     virtual void            apply( test_unit&amp; tu );
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :     virtual base_ptr        clone() const { return base_ptr(new description( m_description )); }</span>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :     // Data members
+<span class="lineNum">     154 </span>            :     const_string            m_description;
+<span class="lineNum">     155 </span>            : };
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            : // ************************************************************************** //
+<span class="lineNum">     158 </span>            : // **************            decorator::depends_on             ************** //
+<a name="159"><span class="lineNum">     159 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 : class BOOST_TEST_DECL depends_on : public decorator::base {</span>
+<span class="lineNum">     162 </span>            : public:
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :     explicit                depends_on( const_string dependency ) : m_dependency( dependency ) {}</span>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : private:
+<a name="166"><span class="lineNum">     166 </span>            :     // decorator::base interface</a>
+<span class="lineNum">     167 </span>            :     virtual void            apply( test_unit&amp; tu );
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :     virtual base_ptr        clone() const { return base_ptr(new depends_on( m_dependency )); }</span>
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :     // Data members
+<span class="lineNum">     171 </span>            :     const_string            m_dependency;
+<span class="lineNum">     172 </span>            : };
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : // ************************************************************************** //
+<span class="lineNum">     175 </span>            : // **************    decorator::enable_if/enabled/disabled     ************** //
+<span class="lineNum">     176 </span>            : // ************************************************************************** //
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            : class BOOST_TEST_DECL enable_if_impl : public decorator::base {
+<span class="lineNum">     179 </span>            : protected:
+<span class="lineNum">     180 </span>            :     void                    apply_impl( test_unit&amp; tu, bool condition );
+<span class="lineNum">     181 </span>            : };
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            : template&lt;bool condition&gt;
+<span class="lineNum">     184 </span>            : class enable_if : public enable_if_impl {
+<span class="lineNum">     185 </span>            : private:
+<span class="lineNum">     186 </span>            :     // decorator::base interface
+<span class="lineNum">     187 </span>            :     virtual void            apply( test_unit&amp; tu )   { this-&gt;apply_impl( tu, condition ); }
+<span class="lineNum">     188 </span>            :     virtual base_ptr        clone() const            { return base_ptr(new enable_if&lt;condition&gt;()); }
+<span class="lineNum">     189 </span>            : };
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            : typedef enable_if&lt;true&gt; enabled;
+<span class="lineNum">     192 </span>            : typedef enable_if&lt;false&gt; disabled;
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            : // ************************************************************************** //
+<span class="lineNum">     195 </span>            : // **************              decorator::fixture              ************** //
+<a name="196"><span class="lineNum">     196 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 : class BOOST_TEST_DECL fixture_t : public decorator::base {</span>
+<span class="lineNum">     199 </span>            : public:
+<span class="lineNum">     200 </span>            :     // Constructor
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :     explicit                fixture_t( test_unit_fixture_ptr impl ) : m_impl( impl ) {}</span>
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            : private:
+<a name="204"><span class="lineNum">     204 </span>            :     // decorator::base interface</a>
+<span class="lineNum">     205 </span>            :     virtual void            apply( test_unit&amp; tu );
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :     virtual base_ptr        clone() const { return base_ptr(new fixture_t( m_impl )); }</span>
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            :     // Data members
+<span class="lineNum">     209 </span>            :     test_unit_fixture_ptr m_impl;
+<span class="lineNum">     210 </span>            : };
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : template&lt;typename F&gt;
+<span class="lineNum">     215 </span>            : inline fixture_t
+<span class="lineNum">     216 </span>            : fixture()
+<span class="lineNum">     217 </span>            : {
+<span class="lineNum">     218 </span>            :     return fixture_t( test_unit_fixture_ptr( new unit_test::class_based_fixture&lt;F&gt;() ) );
+<span class="lineNum">     219 </span>            : }
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            : template&lt;typename F, typename Arg&gt;
+<span class="lineNum">     224 </span>            : inline fixture_t
+<span class="lineNum">     225 </span>            : fixture( Arg const&amp; arg )
+<span class="lineNum">     226 </span>            : {
+<span class="lineNum">     227 </span>            :     return fixture_t( test_unit_fixture_ptr( new unit_test::class_based_fixture&lt;F,Arg&gt;( arg ) ) );
+<span class="lineNum">     228 </span>            : }
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            : inline fixture_t
+<span class="lineNum">     233 </span>            : fixture( boost::function&lt;void()&gt; const&amp; setup, boost::function&lt;void()&gt; const&amp; teardown = boost::function&lt;void()&gt;() )
+<span class="lineNum">     234 </span>            : {
+<span class="lineNum">     235 </span>            :     return fixture_t( test_unit_fixture_ptr( new unit_test::function_based_fixture( setup, teardown ) ) );
+<span class="lineNum">     236 </span>            : }
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            : // ************************************************************************** //
+<span class="lineNum">     241 </span>            : // **************            decorator::depends_on             ************** //
+<a name="242"><span class="lineNum">     242 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 : class BOOST_TEST_DECL precondition : public decorator::base {</span>
+<span class="lineNum">     245 </span>            : public:
+<span class="lineNum">     246 </span>            :     typedef boost::function&lt;test_tools::assertion_result (test_unit_id)&gt;   predicate_t;
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :     explicit                precondition( predicate_t p ) : m_precondition( p ) {}</span>
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            : private:
+<a name="251"><span class="lineNum">     251 </span>            :     // decorator::base interface</a>
+<span class="lineNum">     252 </span>            :     virtual void            apply( test_unit&amp; tu );
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :     virtual base_ptr        clone() const { return base_ptr(new precondition( m_precondition )); }</span>
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            :     // Data members
+<span class="lineNum">     256 </span>            :     predicate_t             m_precondition;
+<span class="lineNum">     257 </span>            : };
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            : } // namespace decorator
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            : using decorator::label;
+<span class="lineNum">     262 </span>            : using decorator::expected_failures;
+<span class="lineNum">     263 </span>            : using decorator::timeout;
+<span class="lineNum">     264 </span>            : using decorator::description;
+<span class="lineNum">     265 </span>            : using decorator::depends_on;
+<span class="lineNum">     266 </span>            : using decorator::enable_if;
+<span class="lineNum">     267 </span>            : using decorator::enabled;
+<span class="lineNum">     268 </span>            : using decorator::disabled;
+<span class="lineNum">     269 </span>            : using decorator::fixture;
+<span class="lineNum">     270 </span>            : using decorator::precondition;
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            : } // namespace unit_test
+<span class="lineNum">     273 </span>            : } // namespace boost
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            : #endif // BOOST_TEST_TREE_DECORATOR_HPP_091911GER
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,665 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libethereum/BlockChain.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libethereum</a> - BlockChain.cpp<span style="font-size: 80%;"> (source / <a href="BlockChain.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">167</td>
+            <td class="headerCovTableEntry">223</td>
+            <td class="headerCovTableEntryLo">74.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">28</td>
+            <td class="headerCovTableEntry">28</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file fullblockchain.cpp
+<span class="lineNum">      18 </span>            :  * @author Dimitry Khokhlov &lt;dimitry@ethdev.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  * Blockchain test functions.
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;libethereum/Block.h&gt;
+<span class="lineNum">      24 </span>            : #include &lt;libethereum/BlockChain.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;test/BlockChainHelper.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libethereum/GenesisInfo.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libethashseal/GenesisInfo.h&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : using namespace std;
+<span class="lineNum">      32 </span>            : using namespace dev;
+<span class="lineNum">      33 </span>            : using namespace dev::eth;
+<span class="lineNum">      34 </span>            : using namespace dev::test;
+<span class="lineNum">      35 </span>            : 
+<a name="36"><span class="lineNum">      36 </span><span class="lineCov">          3 : BOOST_FIXTURE_TEST_SUITE(BlockChainSuite, TestOutputHelper)</span></a>
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(output)</span>
+<span class="lineNum">      39 </span>            : {
+<span class="lineNum">      40 </span>            :         try
+<span class="lineNum">      41 </span>            :         {
+<span class="lineNum">      42 </span><span class="lineCov">         14 :                 BOOST_WARN(string(BlockChainDebug::name()) == string(EthBlue &quot;☍&quot; EthWhite &quot; ◇&quot;));</span>
+<span class="lineNum">      43 </span><span class="lineCov">         14 :                 BOOST_WARN(string(BlockChainWarn::name()) == string(EthBlue &quot;☍&quot; EthOnRed EthBlackBold &quot; ✘&quot;));</span>
+<span class="lineNum">      44 </span><span class="lineCov">         14 :                 BOOST_WARN(string(BlockChainNote::name()) == string(EthBlue &quot;☍&quot; EthBlue &quot; ℹ&quot;));</span>
+<span class="lineNum">      45 </span><span class="lineCov">         14 :                 BOOST_WARN(string(BlockChainChat::name()) == string(EthBlue &quot;☍&quot; EthWhite &quot; ◌&quot;));</span>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineCov">          2 :                 TestBlock genesis = TestBlockChain::defaultGenesisBlock();</span>
+<span class="lineNum">      48 </span><span class="lineCov">          2 :                 TestBlockChain bc(genesis);</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">          2 :                 TestBlock block;</span>
+<span class="lineNum">      51 </span><span class="lineCov">          1 :                 block.mine(bc);</span>
+<span class="lineNum">      52 </span><span class="lineCov">          1 :                 bc.addBlock(block);</span>
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span><span class="lineCov">          2 :                 std::stringstream buffer;</span>
+<span class="lineNum">      55 </span><span class="lineCov">          1 :                 buffer &lt;&lt; bc.interface();</span>
+<span class="lineNum">      56 </span><span class="lineCov">         10 :                 BOOST_REQUIRE(buffer.str().size() == 139);</span>
+<span class="lineNum">      57 </span><span class="lineCov">          3 :                 buffer.str(std::string());</span>
+<span class="lineNum">      58 </span>            :         }
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">      60 </span>            :         {
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">      62 </span>            :         }
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">      64 </span>            :         {
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">      66 </span>            :         }
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">      68 </span>            :         {
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Exception thrown when trying to mine or import a block!&quot;);</span>
+<span class="lineNum">      70 </span>            :         }
+<a name="71"><span class="lineNum">      71 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(opendb)</span>
+<span class="lineNum">      74 </span>            : {
+<span class="lineNum">      75 </span><span class="lineCov">          2 :         TestBlock genesis = TestBlockChain::defaultGenesisBlock();</span>
+<span class="lineNum">      76 </span><span class="lineCov">          2 :         TransientDirectory tempDirBlockchain;</span>
+<a name="77"><span class="lineNum">      77 </span><span class="lineCov">          2 :         ChainParams p(genesisInfo(Network::TransitionnetTest), genesis.bytes(), genesis.accountMap());</span></a>
+<span class="lineNum">      78 </span><span class="lineCov">          3 :         BlockChain bc(p, tempDirBlockchain.path(), WithExisting::Kill);</span>
+<span class="lineNum">      79 </span><span class="lineCov">          5 :         auto is_critical = []( std::exception const&amp; _e) { return string(_e.what()).find(&quot;DatabaseAlreadyOpen&quot;) != string::npos; };</span>
+<span class="lineNum">      80 </span><span class="lineCov">         10 :         BOOST_CHECK_EXCEPTION(BlockChain bc2(p, tempDirBlockchain.path(), WithExisting::Verify), DatabaseAlreadyOpen, is_critical);</span>
+<span class="lineNum">      81 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : //BOOST_AUTO_TEST_CASE(rebuild)
+<span class="lineNum">      84 </span>            : //{
+<span class="lineNum">      85 </span>            : //      string dbPath;
+<span class="lineNum">      86 </span>            : //      TestBlock genesisCopy;
+<span class="lineNum">      87 </span>            : //      {
+<span class="lineNum">      88 </span>            : //              TestBlock genesis = TestBlockChain::getDefaultGenesisBlock();
+<span class="lineNum">      89 </span>            : //              genesisCopy = genesis;
+<span class="lineNum">      90 </span>            : //              TransientDirectory tempDirBlockchain;
+<span class="lineNum">      91 </span>            : //              dbPath = tempDirBlockchain.path();
+<span class="lineNum">      92 </span>            : //              FullBlockChain&lt;Ethash&gt; bc(genesis.getBytes(), AccountMap(), tempDirBlockchain.path(), WithExisting::Kill);
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : //              TestTransaction testTr = TestTransaction::getDefaultTransaction();
+<span class="lineNum">      95 </span>            : //              TransactionQueue trQueue;
+<span class="lineNum">      96 </span>            : //              trQueue.import(testTr.getTransaction().rlp());
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : //              ZeroGasPricer gp;
+<span class="lineNum">      99 </span>            : //              Block block = bc.genesisBlock(genesis.getState().db());
+<span class="lineNum">     100 </span>            : //              block.sync(bc);
+<span class="lineNum">     101 </span>            : //              block.sync(bc, trQueue, gp);
+<span class="lineNum">     102 </span>            : //              dev::eth::mine(block, bc);
+<span class="lineNum">     103 </span>            : //              bc.import(block.blockData(), block.state().db());
+<span class="lineNum">     104 </span>            : //              BOOST_REQUIRE(bc.number() == 1);
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : //              bc.rebuild(tempDirBlockchain.path());
+<span class="lineNum">     107 </span>            : //              BOOST_REQUIRE(bc.number() == 1);
+<span class="lineNum">     108 </span>            : //      }
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            : //      FullBlockChain&lt;Ethash&gt; bc(genesisCopy.getBytes(), AccountMap(), dbPath, WithExisting::Verify);
+<span class="lineNum">     111 </span>            : //      BOOST_REQUIRE(bc.number() == 0);
+<span class="lineNum">     112 </span>            : //      bc.rebuild(dbPath);
+<span class="lineNum">     113 </span>            : //      BOOST_REQUIRE(bc.number() == 1);
+<a name="114"><span class="lineNum">     114 </span>            : //}</a>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(Mining_1_mineBlockWithTransaction)</span>
+<span class="lineNum">     117 </span>            : {
+<span class="lineNum">     118 </span>            :         try
+<span class="lineNum">     119 </span>            :         {
+<span class="lineNum">     120 </span><span class="lineCov">          1 :                 dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;</span>
+<span class="lineNum">     121 </span><span class="lineCov">          2 :                 TestBlockChain bc(TestBlockChain::defaultGenesisBlock());</span>
+<span class="lineNum">     122 </span><span class="lineCov">          6 :                 TestTransaction tr = TestTransaction::defaultTransaction(1); //nonce = 1</span>
+<span class="lineNum">     123 </span><span class="lineCov">          2 :                 TestBlock block;</span>
+<span class="lineNum">     124 </span><span class="lineCov">          1 :                 block.addTransaction(tr);</span>
+<span class="lineNum">     125 </span><span class="lineCov">          1 :                 block.mine(bc);</span>
+<span class="lineNum">     126 </span><span class="lineCov">          1 :                 bc.addBlock(block);</span>
+<span class="lineNum">     127 </span><span class="lineCov">         10 :                 BOOST_REQUIRE(bc.interface().transactions().size() &gt; 0);</span>
+<span class="lineNum">     128 </span>            :         }
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     130 </span>            :         {
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">     132 </span>            :         }
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     134 </span>            :         {
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">     136 </span>            :         }
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">     138 </span>            :         {
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Exception thrown when trying to mine or import a block!&quot;);</span>
+<span class="lineNum">     140 </span>            :         }
+<a name="141"><span class="lineNum">     141 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(Mining_2_mineUncles)</span>
+<span class="lineNum">     144 </span>            : {
+<span class="lineNum">     145 </span>            :         try
+<span class="lineNum">     146 </span>            :         {
+<span class="lineNum">     147 </span><span class="lineCov">          1 :                 dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;</span>
+<span class="lineNum">     148 </span><span class="lineCov">          2 :                 TestBlockChain bc(TestBlockChain::defaultGenesisBlock());</span>
+<span class="lineNum">     149 </span><span class="lineCov">          6 :                 TestTransaction tr = TestTransaction::defaultTransaction(1); //nonce = 1</span>
+<span class="lineNum">     150 </span><span class="lineCov">          2 :                 TestBlock block;</span>
+<span class="lineNum">     151 </span><span class="lineCov">          1 :                 block.addTransaction(tr);</span>
+<span class="lineNum">     152 </span><span class="lineCov">          1 :                 block.mine(bc);</span>
+<span class="lineNum">     153 </span><span class="lineCov">          1 :                 bc.addBlock(block);</span>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">          2 :                 TestBlock uncleBlock;</span>
+<span class="lineNum">     156 </span><span class="lineCov">          1 :                 uncleBlock.mine(bc);</span>
+<span class="lineNum">     157 </span><span class="lineCov">          2 :                 TestBlock uncleBlock2;</span>
+<span class="lineNum">     158 </span><span class="lineCov">          1 :                 uncleBlock2.mine(bc);</span>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineCov">          6 :                 TestTransaction tr2 = TestTransaction::defaultTransaction(2);</span>
+<span class="lineNum">     161 </span><span class="lineCov">          2 :                 TestBlock block2;</span>
+<span class="lineNum">     162 </span><span class="lineCov">          1 :                 block2.addTransaction(tr2);</span>
+<span class="lineNum">     163 </span><span class="lineCov">          1 :                 block2.mine(bc);</span>
+<span class="lineNum">     164 </span><span class="lineCov">          1 :                 bc.addBlock(block2);</span>
+<span class="lineNum">     165 </span>            :         }
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     167 </span>            :         {
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">     169 </span>            :         }
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     171 </span>            :         {
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">     173 </span>            :         }
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">     175 </span>            :         {
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Exception thrown when trying to mine or import a block!&quot;);</span>
+<span class="lineNum">     177 </span>            :         }
+<span class="lineNum">     178 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            : /*
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            : Often broken test disabled 5th September 2016, until we have time to
+<span class="lineNum">     184 </span>            : troubleshoot the root cause.
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            : See https://github.com/ethereum/cpp-ethereum/issues/3256.
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            : BOOST_AUTO_TEST_CASE(Mining_3_mineBlockWithUncles)
+<span class="lineNum">     189 </span>            : {
+<span class="lineNum">     190 </span>            :         try
+<span class="lineNum">     191 </span>            :         {
+<span class="lineNum">     192 </span>            :                 dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
+<span class="lineNum">     193 </span>            :                 TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
+<span class="lineNum">     194 </span>            :                 TestTransaction tr = TestTransaction::defaultTransaction(1); //nonce = 1
+<span class="lineNum">     195 </span>            :                 TestBlock block;
+<span class="lineNum">     196 </span>            :                 block.addTransaction(tr);
+<span class="lineNum">     197 </span>            :                 block.mine(bc);
+<span class="lineNum">     198 </span>            :                 bc.addBlock(block);
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            :                 TestBlock uncleBlock;
+<span class="lineNum">     201 </span>            :                 uncleBlock.mine(bc);
+<span class="lineNum">     202 </span>            :                 TestBlock uncleBlock2;
+<span class="lineNum">     203 </span>            :                 uncleBlock2.mine(bc);
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            :                 TestTransaction tr2 = TestTransaction::defaultTransaction(2);
+<span class="lineNum">     206 </span>            :                 TestBlock block2;
+<span class="lineNum">     207 </span>            :                 block2.addTransaction(tr2);
+<span class="lineNum">     208 </span>            :                 block2.mine(bc);
+<span class="lineNum">     209 </span>            :                 bc.addBlock(block2);
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :                 TestTransaction tr3 = TestTransaction::defaultTransaction(3);
+<span class="lineNum">     212 </span>            :                 TestBlock block3;
+<span class="lineNum">     213 </span>            :                 block3.addUncle(uncleBlock);
+<span class="lineNum">     214 </span>            :                 bc.syncUncles(block3.uncles());
+<span class="lineNum">     215 </span>            :                 block3.addTransaction(tr3);
+<span class="lineNum">     216 </span>            :                 block3.mine(bc);
+<span class="lineNum">     217 </span>            :                 bc.addBlock(block3);
+<span class="lineNum">     218 </span>            :                 BOOST_REQUIRE(bc.interface().info().number() == 3);
+<span class="lineNum">     219 </span>            :                 BOOST_REQUIRE(bc.interface().info(uncleBlock.blockHeader().hash()) == uncleBlock.blockHeader());
+<span class="lineNum">     220 </span>            :         }
+<span class="lineNum">     221 </span>            :         catch (Exception const&amp; _e)
+<span class="lineNum">     222 </span>            :         {
+<span class="lineNum">     223 </span>            :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));
+<span class="lineNum">     224 </span>            :         }
+<span class="lineNum">     225 </span>            :         catch (std::exception const&amp; _e)
+<span class="lineNum">     226 </span>            :         {
+<span class="lineNum">     227 </span>            :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; _e.what());
+<span class="lineNum">     228 </span>            :         }
+<span class="lineNum">     229 </span>            :         catch(...)
+<span class="lineNum">     230 </span>            :         {
+<span class="lineNum">     231 </span>            :                 BOOST_ERROR(&quot;Exception thrown when trying to mine or import a block!&quot;);
+<span class="lineNum">     232 </span>            :         }
+<span class="lineNum">     233 </span>            : }
+<span class="lineNum">     234 </span>            : */
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            : /*
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            : Often broken test disabled 5th September 2016, until we have time to
+<span class="lineNum">     240 </span>            : troubleshoot the root cause.
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            : See https://github.com/ethereum/cpp-ethereum/issues/3059.
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            : BOOST_AUTO_TEST_CASE(Mining_4_BlockQueueSyncing)
+<span class="lineNum">     245 </span>            : {
+<span class="lineNum">     246 </span>            :         try
+<span class="lineNum">     247 </span>            :         {
+<span class="lineNum">     248 </span>            :                 dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
+<span class="lineNum">     249 </span>            :                 TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
+<span class="lineNum">     250 </span>            :                 TestBlockChain bc2(TestBlockChain::defaultGenesisBlock());
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            :                 TestBlock block;
+<span class="lineNum">     253 </span>            :                 block.mine(bc2);
+<span class="lineNum">     254 </span>            :                 bc2.addBlock(block);
+<span class="lineNum">     255 </span>            :                 TestBlock block2;
+<span class="lineNum">     256 </span>            :                 block2.mine(bc2);
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            :                 BlockQueue uncleBlockQueue;
+<span class="lineNum">     259 </span>            :                 uncleBlockQueue.setChain(bc2.interface());
+<span class="lineNum">     260 </span>            :                 ImportResult importIntoQueue = uncleBlockQueue.import(&amp;block2.bytes(), false);
+<span class="lineNum">     261 </span>            :                 BOOST_REQUIRE(importIntoQueue == ImportResult::Success);
+<span class="lineNum">     262 </span>            :                 this_thread::sleep_for(chrono::seconds(2));
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            :                 BlockChain&amp; bcRef = bc.interfaceUnsafe();
+<span class="lineNum">     265 </span>            :                 bcRef.sync(uncleBlockQueue, bc.testGenesis().state().db(), unsigned(4));
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span>            :                 //Attempt import block5 to another blockchain
+<span class="lineNum">     268 </span>            :                 pair&lt;ImportResult, ImportRoute&gt; importAttempt;
+<span class="lineNum">     269 </span>            :                 importAttempt = bcRef.attemptImport(block2.bytes(), bc.testGenesis().state().db());
+<span class="lineNum">     270 </span>            :                 BOOST_REQUIRE(importAttempt.first == ImportResult::UnknownParent);
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            :                 //Insert block5 to another blockchain
+<span class="lineNum">     273 </span>            :                 auto is_critical = []( std::exception const&amp; _e) { cnote &lt;&lt; _e.what(); return true; };
+<span class="lineNum">     274 </span>            :                 BOOST_CHECK_EXCEPTION(bcRef.insert(block2.bytes(), block2.receipts()), UnknownParent, is_critical);
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span>            :                 //Get status of block5 in the block queue based on block5's chain (block5 imported into queue but not imported into chain)
+<span class="lineNum">     277 </span>            :                 //BlockQueue(bc2) changed by sync function of original bc
+<span class="lineNum">     278 </span>            :                 QueueStatus status = uncleBlockQueue.blockStatus(block2.blockHeader().hash());
+<span class="lineNum">     279 </span>            :                 BOOST_REQUIRE_MESSAGE(status == QueueStatus::Bad, &quot;Received Queue Status: &quot; + toString(status) + &quot; Expected Queue Status: &quot; + toString(QueueStatus::Bad));
+<span class="lineNum">     280 </span>            :         }
+<span class="lineNum">     281 </span>            :         catch (Exception const&amp; _e)
+<span class="lineNum">     282 </span>            :         {
+<span class="lineNum">     283 </span>            :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));
+<span class="lineNum">     284 </span>            :         }
+<span class="lineNum">     285 </span>            :         catch (std::exception const&amp; _e)
+<span class="lineNum">     286 </span>            :         {
+<span class="lineNum">     287 </span>            :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; _e.what());
+<span class="lineNum">     288 </span>            :         }
+<span class="lineNum">     289 </span>            :         catch(...)
+<span class="lineNum">     290 </span>            :         {
+<span class="lineNum">     291 </span>            :                 BOOST_ERROR(&quot;Exception thrown when trying to mine or import a block!&quot;);
+<span class="lineNum">     292 </span>            :         }
+<span class="lineNum">     293 </span>            : }
+<span class="lineNum">     294 </span>            : */
+<a name="295"><span class="lineNum">     295 </span>            : </a>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(Mining_5_BlockFutureTime)</span>
+<span class="lineNum">     298 </span>            : {
+<span class="lineNum">     299 </span>            :         try
+<span class="lineNum">     300 </span>            :         {
+<span class="lineNum">     301 </span><span class="lineCov">          1 :                 dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;</span>
+<span class="lineNum">     302 </span><span class="lineCov">          2 :                 TestBlockChain bc(TestBlockChain::defaultGenesisBlock());</span>
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span><span class="lineCov">          2 :                 TestBlock uncleBlock;</span>
+<span class="lineNum">     305 </span><span class="lineCov">          1 :                 uncleBlock.mine(bc);</span>
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span><span class="lineCov">          2 :                 BlockHeader uncleHeader = uncleBlock.blockHeader();</span>
+<span class="lineNum">     308 </span><span class="lineCov">          2 :                 uncleHeader.setTimestamp(uncleHeader.timestamp() + 10000);</span>
+<span class="lineNum">     309 </span><span class="lineCov">          1 :                 uncleBlock.setBlockHeader(uncleHeader);</span>
+<span class="lineNum">     310 </span><span class="lineCov">          1 :                 uncleBlock.updateNonce(bc);</span>
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span><span class="lineCov">          2 :                 BlockQueue uncleBlockQueue;</span>
+<span class="lineNum">     313 </span><span class="lineCov">          2 :                 uncleBlockQueue.setChain(bc.interface());</span>
+<span class="lineNum">     314 </span><span class="lineCov">          2 :                 uncleBlockQueue.import(&amp;uncleBlock.bytes(), false);</span>
+<span class="lineNum">     315 </span><span class="lineCov">          2 :                 this_thread::sleep_for(chrono::seconds(2));</span>
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span><span class="lineCov">          1 :                 BlockChain&amp; bcRef = bc.interfaceUnsafe();</span>
+<span class="lineNum">     318 </span><span class="lineCov">          3 :                 bcRef.sync(uncleBlockQueue, bc.testGenesis().state().db(), unsigned(4));</span>
+<span class="lineNum">     319 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(uncleBlockQueue.blockStatus(uncleBlock.blockHeader().hash()) == QueueStatus::Unknown);</span>
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span><span class="lineCov">          2 :                 pair&lt;ImportResult, ImportRoute&gt; importAttempt;</span>
+<span class="lineNum">     322 </span><span class="lineCov">          4 :                 importAttempt = bcRef.attemptImport(uncleBlock.bytes(), bc.testGenesis().state().db());</span>
+<a name="323"><span class="lineNum">     323 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(importAttempt.first == ImportResult::FutureTimeKnown);</span></a>
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span><span class="lineCov">          1 :                 auto is_critical = []( std::exception const&amp; _e) { cnote &lt;&lt; _e.what(); return true; };</span>
+<span class="lineNum">     326 </span><span class="lineCov">          9 :                 BOOST_CHECK_EXCEPTION(bcRef.insert(uncleBlock.bytes(), uncleBlock.receipts()), FutureTime, is_critical);</span>
+<span class="lineNum">     327 </span>            :         }
+<span class="lineNum">     328 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     329 </span>            :         {
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">     331 </span>            :         }
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     333 </span>            :         {
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">     335 </span>            :         }
+<span class="lineNum">     336 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">     337 </span>            :         {
+<span class="lineNum">     338 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Exception thrown when trying to mine or import a block!&quot;);</span>
+<span class="lineNum">     339 </span>            :         }
+<span class="lineNum">     340 </span><span class="lineCov">          1 : }</span>
+<a name="341"><span class="lineNum">     341 </span>            : </a>
+<span class="lineNum">     342 </span>            : bool onBadwasCalled = false;
+<span class="lineNum">     343 </span><span class="lineCov">          2 : void onBad(Exception&amp; _ex)</span>
+<span class="lineNum">     344 </span>            : {
+<span class="lineNum">     345 </span><span class="lineCov">          2 :         cout &lt;&lt; _ex.what();</span>
+<span class="lineNum">     346 </span><span class="lineCov">          2 :         onBadwasCalled = true;</span>
+<a name="347"><span class="lineNum">     347 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(attemptImport)</span>
+<span class="lineNum">     350 </span>            : {
+<span class="lineNum">     351 </span>            :         //UnknownParent
+<span class="lineNum">     352 </span>            :         //Success
+<span class="lineNum">     353 </span>            :         //AlreadyKnown
+<span class="lineNum">     354 </span>            :         //FutureTimeKnown
+<span class="lineNum">     355 </span>            :         //Malformed
+<span class="lineNum">     356 </span>            : 
+<span class="lineNum">     357 </span>            :         try
+<span class="lineNum">     358 </span>            :         {
+<span class="lineNum">     359 </span><span class="lineCov">          2 :                 TestBlockChain bc(TestBlockChain::defaultGenesisBlock());</span>
+<span class="lineNum">     360 </span>            : 
+<span class="lineNum">     361 </span><span class="lineCov">          6 :                 TestTransaction tr = TestTransaction::defaultTransaction();</span>
+<span class="lineNum">     362 </span><span class="lineCov">          2 :                 TestBlock block;</span>
+<span class="lineNum">     363 </span><span class="lineCov">          1 :                 block.addTransaction(tr);</span>
+<span class="lineNum">     364 </span><span class="lineCov">          1 :                 block.mine(bc);</span>
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span><span class="lineCov">          2 :                 pair&lt;ImportResult, ImportRoute&gt; importAttempt;</span>
+<span class="lineNum">     367 </span><span class="lineCov">          1 :                 BlockChain&amp; bcRef = bc.interfaceUnsafe();</span>
+<span class="lineNum">     368 </span><span class="lineCov">          1 :                 bcRef.setOnBad(onBad);</span>
+<span class="lineNum">     369 </span>            : 
+<span class="lineNum">     370 </span><span class="lineCov">          4 :                 importAttempt = bcRef.attemptImport(block.bytes(), bc.testGenesis().state().db());</span>
+<span class="lineNum">     371 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(importAttempt.first == ImportResult::Success);</span>
+<span class="lineNum">     372 </span>            : 
+<span class="lineNum">     373 </span><span class="lineCov">          4 :                 importAttempt = bcRef.attemptImport(block.bytes(), bc.testGenesis().state().db());</span>
+<span class="lineNum">     374 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(importAttempt.first == ImportResult::AlreadyKnown);</span>
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span><span class="lineCov">          2 :                 bytes blockBytes = block.bytes();</span>
+<span class="lineNum">     377 </span><span class="lineCov">          1 :                 blockBytes[0] = 0;</span>
+<span class="lineNum">     378 </span><span class="lineCov">          4 :                 importAttempt = bcRef.attemptImport(blockBytes, bc.testGenesis().state().db());</span>
+<span class="lineNum">     379 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(importAttempt.first == ImportResult::Malformed);</span>
+<span class="lineNum">     380 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(onBadwasCalled == true);</span>
+<span class="lineNum">     381 </span><span class="lineCov">          1 :                 cout &lt;&lt; endl;</span>
+<span class="lineNum">     382 </span>            :         }
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     384 </span>            :         {
+<span class="lineNum">     385 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">     386 </span>            :         }
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     388 </span>            :         {
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">     390 </span>            :         }
+<span class="lineNum">     391 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">     392 </span>            :         {
+<span class="lineNum">     393 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Exception thrown when trying to mine or import a block!&quot;);</span>
+<span class="lineNum">     394 </span>            :         }
+<a name="395"><span class="lineNum">     395 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(insert)</span>
+<span class="lineNum">     398 </span>            : {
+<span class="lineNum">     399 </span>            :         try
+<span class="lineNum">     400 </span>            :         {
+<span class="lineNum">     401 </span><span class="lineCov">          2 :                 TestBlockChain bc(TestBlockChain::defaultGenesisBlock());</span>
+<span class="lineNum">     402 </span><span class="lineCov">          6 :                 TestTransaction tr = TestTransaction::defaultTransaction();</span>
+<span class="lineNum">     403 </span><span class="lineCov">          2 :                 TestBlock block;</span>
+<span class="lineNum">     404 </span><span class="lineCov">          1 :                 block.addTransaction(tr);</span>
+<span class="lineNum">     405 </span><span class="lineCov">          1 :                 block.mine(bc);</span>
+<span class="lineNum">     406 </span>            : 
+<span class="lineNum">     407 </span><span class="lineCov">          1 :                 BlockChain&amp; bcRef = bc.interfaceUnsafe();</span>
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span>            :                 //Incorrect Receipt
+<span class="lineNum">     410 </span><span class="lineCov">          2 :                 ZeroGasPricer gp;</span>
+<span class="lineNum">     411 </span><span class="lineCov">          3 :                 Block bl = bcRef.genesisBlock(bc.testGenesis().state().db());</span>
+<span class="lineNum">     412 </span><span class="lineCov">          1 :                 bl.sync(bcRef);</span>
+<span class="lineNum">     413 </span><span class="lineCov">          2 :                 bl.sync(bcRef, block.transactionQueue(), gp);</span>
+<span class="lineNum">     414 </span>            : 
+<span class="lineNum">     415 </span>            :                 //Receipt should be RLPStream
+<span class="lineNum">     416 </span><span class="lineCov">          2 :                 const bytes receipt = bl.receipt(0).rlp();</span>
+<a name="417"><span class="lineNum">     417 </span><span class="lineCov">          2 :                 bytesConstRef receiptRef(&amp;receipt[0], receipt.size());</span></a>
+<span class="lineNum">     418 </span>            : 
+<a name="419"><span class="lineNum">     419 </span><span class="lineCov">          5 :                 auto is_critical = []( std::exception const&amp; _e) { return string(_e.what()).find(&quot;InvalidBlockFormat&quot;) != string::npos; };</span></a>
+<span class="lineNum">     420 </span><span class="lineCov">          9 :                 BOOST_CHECK_EXCEPTION(bcRef.insert(bl.blockData(), receiptRef), InvalidBlockFormat, is_critical);</span>
+<span class="lineNum">     421 </span><span class="lineCov">          5 :                 auto is_critical2 = []( std::exception const&amp; _e) { return string(_e.what()).find(&quot;InvalidReceiptsStateRoot&quot;) != string::npos; };</span>
+<span class="lineNum">     422 </span><span class="lineCov">          9 :                 BOOST_CHECK_EXCEPTION(bcRef.insert(block.bytes(), receiptRef), InvalidReceiptsStateRoot, is_critical2);</span>
+<span class="lineNum">     423 </span>            : 
+<span class="lineNum">     424 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(bcRef.number() == 0);</span>
+<span class="lineNum">     425 </span>            : 
+<span class="lineNum">     426 </span>            :                 try
+<span class="lineNum">     427 </span>            :                 {
+<span class="lineNum">     428 </span><span class="lineCov">          1 :                         bcRef.insert(block.bytes(), block.receipts());</span>
+<span class="lineNum">     429 </span>            :                 }
+<span class="lineNum">     430 </span><span class="lineNoCov">          0 :                 catch(...)</span>
+<span class="lineNum">     431 </span>            :                 {
+<span class="lineNum">     432 </span><span class="lineNoCov">          0 :                         BOOST_ERROR(&quot;Unexpected Exception!&quot;);</span>
+<span class="lineNum">     433 </span>            :                 }
+<span class="lineNum">     434 </span>            :         }
+<span class="lineNum">     435 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     436 </span>            :         {
+<span class="lineNum">     437 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">     438 </span>            :         }
+<span class="lineNum">     439 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     440 </span>            :         {
+<span class="lineNum">     441 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">     442 </span>            :         }
+<span class="lineNum">     443 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">     444 </span>            :         {
+<span class="lineNum">     445 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Exception thrown when trying to mine or import a block!&quot;);</span>
+<span class="lineNum">     446 </span>            :         }
+<a name="447"><span class="lineNum">     447 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     448 </span>            : 
+<span class="lineNum">     449 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(insertException)</span>
+<span class="lineNum">     450 </span>            : {
+<span class="lineNum">     451 </span>            :         try
+<span class="lineNum">     452 </span>            :         {
+<span class="lineNum">     453 </span><span class="lineCov">          2 :                 TestBlockChain bc(TestBlockChain::defaultGenesisBlock());</span>
+<span class="lineNum">     454 </span><span class="lineCov">          1 :                 BlockChain&amp; bcRef = bc.interfaceUnsafe();</span>
+<span class="lineNum">     455 </span>            : 
+<span class="lineNum">     456 </span><span class="lineCov">          6 :                 TestTransaction tr = TestTransaction::defaultTransaction();</span>
+<span class="lineNum">     457 </span><span class="lineCov">          2 :                 TestBlock block;</span>
+<span class="lineNum">     458 </span><span class="lineCov">          1 :                 block.addTransaction(tr);</span>
+<span class="lineNum">     459 </span><span class="lineCov">          1 :                 block.mine(bc);</span>
+<a name="460"><span class="lineNum">     460 </span><span class="lineCov">          1 :                 bc.addBlock(block);</span></a>
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span><span class="lineCov">          1 :                 auto is_critical = []( std::exception const&amp; _e) { cnote &lt;&lt; _e.what(); return true; };</span>
+<span class="lineNum">     463 </span><span class="lineCov">          9 :                 BOOST_CHECK_EXCEPTION(bcRef.insert(block.bytes(), block.receipts()), AlreadyHaveBlock, is_critical);</span>
+<span class="lineNum">     464 </span>            :         }
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     466 </span>            :         {
+<span class="lineNum">     467 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">     468 </span>            :         }
+<span class="lineNum">     469 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     470 </span>            :         {
+<span class="lineNum">     471 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">     472 </span>            :         }
+<span class="lineNum">     473 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">     474 </span>            :         {
+<span class="lineNum">     475 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Exception thrown when trying to mine or import a block!&quot;);</span>
+<span class="lineNum">     476 </span>            :         }
+<a name="477"><span class="lineNum">     477 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     478 </span>            : 
+<span class="lineNum">     479 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(rescue)</span>
+<span class="lineNum">     480 </span>            : {
+<span class="lineNum">     481 </span>            :         try
+<span class="lineNum">     482 </span>            :         {
+<span class="lineNum">     483 </span><span class="lineCov">          2 :                 TestBlockChain bc(TestBlockChain::defaultGenesisBlock());</span>
+<span class="lineNum">     484 </span>            : 
+<span class="lineNum">     485 </span>            :                 {
+<span class="lineNum">     486 </span><span class="lineCov">          6 :                         TestTransaction tr = TestTransaction::defaultTransaction();</span>
+<span class="lineNum">     487 </span><span class="lineCov">          2 :                         TestBlock block;</span>
+<span class="lineNum">     488 </span><span class="lineCov">          1 :                         block.addTransaction(tr);</span>
+<span class="lineNum">     489 </span><span class="lineCov">          1 :                         block.mine(bc);</span>
+<span class="lineNum">     490 </span><span class="lineCov">          1 :                         bc.addBlock(block);</span>
+<span class="lineNum">     491 </span>            :                 }
+<span class="lineNum">     492 </span>            : 
+<span class="lineNum">     493 </span>            :                 {
+<span class="lineNum">     494 </span><span class="lineCov">          6 :                         TestTransaction tr = TestTransaction::defaultTransaction(1);</span>
+<span class="lineNum">     495 </span><span class="lineCov">          2 :                         TestBlock block;</span>
+<span class="lineNum">     496 </span><span class="lineCov">          1 :                         block.addTransaction(tr);</span>
+<span class="lineNum">     497 </span><span class="lineCov">          1 :                         block.mine(bc);</span>
+<span class="lineNum">     498 </span><span class="lineCov">          1 :                         bc.addBlock(block);</span>
+<span class="lineNum">     499 </span>            :                 }
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span>            :                 {
+<span class="lineNum">     502 </span><span class="lineCov">          6 :                         TestTransaction tr = TestTransaction::defaultTransaction(2);</span>
+<span class="lineNum">     503 </span><span class="lineCov">          2 :                         TestBlock block;</span>
+<span class="lineNum">     504 </span><span class="lineCov">          1 :                         block.addTransaction(tr);</span>
+<span class="lineNum">     505 </span><span class="lineCov">          1 :                         block.mine(bc);</span>
+<span class="lineNum">     506 </span><span class="lineCov">          1 :                         bc.addBlock(block);</span>
+<span class="lineNum">     507 </span>            :                 }
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            :                 // Temporary disable this assertion, which is failing in TravisCI for OS X Mavericks
+<span class="lineNum">     510 </span>            :                 // See https://travis-ci.org/ethereum/cpp-ethereum/jobs/156083698.
+<span class="lineNum">     511 </span>            :                 #if !defined(DISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
+<span class="lineNum">     512 </span>            :                         try
+<span class="lineNum">     513 </span>            :                         {
+<span class="lineNum">     514 </span>            :                                 BlockChain&amp; bcRef = bc.interfaceUnsafe();
+<span class="lineNum">     515 </span>            :                                 std::this_thread::sleep_for(std::chrono::seconds(10)); //try wait for block verification before rescue
+<span class="lineNum">     516 </span>            :                                 bcRef.rescue(bc.testGenesis().state().db());
+<span class="lineNum">     517 </span>            :                                 BOOST_CHECK_MESSAGE(bcRef.number() == 3, &quot;Rescued Blockchain missing some blocks!&quot;);
+<span class="lineNum">     518 </span>            :                         }
+<span class="lineNum">     519 </span>            :                         catch(...)
+<span class="lineNum">     520 </span>            :                         {
+<span class="lineNum">     521 </span>            :                                 BOOST_ERROR(&quot;Unexpected Exception!&quot;);
+<span class="lineNum">     522 </span>            :                         }
+<span class="lineNum">     523 </span>            :                 #endif // !defined(DISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
+<span class="lineNum">     524 </span>            : 
+<span class="lineNum">     525 </span>            :         }
+<span class="lineNum">     526 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     527 </span>            :         {
+<span class="lineNum">     528 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">     529 </span>            :         }
+<span class="lineNum">     530 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     531 </span>            :         {
+<span class="lineNum">     532 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">     533 </span>            :         }
+<span class="lineNum">     534 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">     535 </span>            :         {
+<span class="lineNum">     536 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Exception thrown when trying to mine or import a block!&quot;);</span>
+<span class="lineNum">     537 </span>            :         }
+<a name="538"><span class="lineNum">     538 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     539 </span>            : 
+<span class="lineNum">     540 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(updateStats)</span>
+<span class="lineNum">     541 </span>            : {
+<span class="lineNum">     542 </span>            :         try
+<span class="lineNum">     543 </span>            :         {
+<span class="lineNum">     544 </span><span class="lineCov">          2 :                 TestBlockChain bc(TestBlockChain::defaultGenesisBlock());</span>
+<span class="lineNum">     545 </span><span class="lineCov">          1 :                 BlockChain&amp; bcRef = bc.interfaceUnsafe();</span>
+<span class="lineNum">     546 </span>            : 
+<span class="lineNum">     547 </span><span class="lineCov">          1 :                 BlockChain::Statistics stat = bcRef.usage();</span>
+<span class="lineNum">     548 </span>            :                 //Absolutely random values here!
+<span class="lineNum">     549 </span>            :                 //BOOST_REQUIRE(stat.memBlockHashes == 0);
+<span class="lineNum">     550 </span>            :                 //BOOST_REQUIRE(stat.memBlocks == 1); //incorrect value here
+<span class="lineNum">     551 </span>            :                 //BOOST_REQUIRE(stat.memDetails == 0);
+<span class="lineNum">     552 </span>            :                 //BOOST_REQUIRE(stat.memLogBlooms == 0);
+<span class="lineNum">     553 </span>            :                 //BOOST_REQUIRE(stat.memReceipts == 0);
+<span class="lineNum">     554 </span>            :                 //BOOST_REQUIRE(stat.memTotal() == 0);
+<span class="lineNum">     555 </span>            :                 //BOOST_REQUIRE(stat.memTransactionAddresses == 0); //incorrect value here
+<span class="lineNum">     556 </span>            : 
+<span class="lineNum">     557 </span><span class="lineCov">          6 :                 TestTransaction tr = TestTransaction::defaultTransaction();</span>
+<span class="lineNum">     558 </span><span class="lineCov">          2 :                 TestBlock block;</span>
+<span class="lineNum">     559 </span><span class="lineCov">          1 :                 block.addTransaction(tr);</span>
+<span class="lineNum">     560 </span><span class="lineCov">          1 :                 block.mine(bc);</span>
+<span class="lineNum">     561 </span><span class="lineCov">          1 :                 bc.addBlock(block);</span>
+<span class="lineNum">     562 </span>            : 
+<span class="lineNum">     563 </span><span class="lineCov">          1 :                 stat = bcRef.usage(true);</span>
+<span class="lineNum">     564 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(stat.memBlockHashes == 0);</span>
+<span class="lineNum">     565 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(stat.memBlocks == 675);</span>
+<span class="lineNum">     566 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(stat.memDetails == 138);</span>
+<span class="lineNum">     567 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(stat.memLogBlooms == 8422);</span>
+<span class="lineNum">     568 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(stat.memReceipts == 0);</span>
+<span class="lineNum">     569 </span><span class="lineCov">          9 :                 BOOST_REQUIRE(stat.memTotal() == 9235);</span>
+<span class="lineNum">     570 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(stat.memTransactionAddresses == 0);</span>
+<span class="lineNum">     571 </span>            : 
+<span class="lineNum">     572 </span>            :                 //memchache size 33554432 - 3500 blocks before cache to be cleared
+<span class="lineNum">     573 </span><span class="lineCov">          1 :                 bcRef.garbageCollect(true);</span>
+<span class="lineNum">     574 </span>            :         }
+<span class="lineNum">     575 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     576 </span>            :         {
+<span class="lineNum">     577 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">     578 </span>            :         }
+<span class="lineNum">     579 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     580 </span>            :         {
+<span class="lineNum">     581 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">     582 </span>            :         }
+<span class="lineNum">     583 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">     584 </span>            :         {
+<span class="lineNum">     585 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Exception thrown when trying to mine or import a block!&quot;);</span>
+<span class="lineNum">     586 </span>            :         }
+<a name="587"><span class="lineNum">     587 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     588 </span>            : 
+<span class="lineNum">     589 </span><span class="lineCov">          3 : BOOST_AUTO_TEST_SUITE_END()</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

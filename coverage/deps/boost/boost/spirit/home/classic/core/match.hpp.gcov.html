@@ -1,0 +1,261 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/spirit/home/classic/core/match.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/spirit/home/classic/core</a> - match.hpp<span style="font-size: 80%;"> (source / <a href="match.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryHi">90.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*=============================================================================</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 1998-2003 Joel de Guzman
+<span class="lineNum">       3 </span>            :     http://spirit.sourceforge.net/
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :   Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       6 </span>            :   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       7 </span>            : =============================================================================*/
+<span class="lineNum">       8 </span>            : #if !defined(BOOST_SPIRIT_MATCH_HPP)
+<span class="lineNum">       9 </span>            : #define BOOST_SPIRIT_MATCH_HPP
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #include &lt;boost/spirit/home/classic/namespace.hpp&gt;
+<span class="lineNum">      12 </span>            : #include &lt;boost/spirit/home/classic/core/config.hpp&gt;
+<span class="lineNum">      13 </span>            : #include &lt;boost/spirit/home/classic/core/nil.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/call_traits.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/optional.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/spirit/home/classic/core/assert.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/spirit/home/classic/core/safe_bool.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/spirit/home/classic/core/impl/match_attr_traits.ipp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/type_traits/add_const.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/type_traits/is_reference.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : namespace boost { namespace spirit {
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      27 </span>            :     //
+<span class="lineNum">      28 </span>            :     //  match class
+<span class="lineNum">      29 </span>            :     //
+<span class="lineNum">      30 </span>            :     //      The match holds the result of a parser. A match object evaluates
+<span class="lineNum">      31 </span>            :     //      to true when a successful match is found, otherwise false. The
+<span class="lineNum">      32 </span>            :     //      length of the match is the number of characters (or tokens) that
+<span class="lineNum">      33 </span>            :     //      is successfully matched. This can be queried through its length()
+<span class="lineNum">      34 </span>            :     //      member function. A negative value means that the match is
+<span class="lineNum">      35 </span>            :     //      unsucessful.
+<span class="lineNum">      36 </span>            :     //
+<span class="lineNum">      37 </span>            :     //      Each parser may have an associated attribute. This attribute is
+<span class="lineNum">      38 </span>            :     //      also returned back to the client on a successful parse through
+<span class="lineNum">      39 </span>            :     //      the match object. The match's value() member function returns the
+<span class="lineNum">      40 </span>            :     //      match's attribute.
+<span class="lineNum">      41 </span>            :     //
+<span class="lineNum">      42 </span>            :     //      A match attribute is valid:
+<span class="lineNum">      43 </span>            :     //
+<span class="lineNum">      44 </span>            :     //          * on a successful match
+<span class="lineNum">      45 </span>            :     //          * when its value is set through the value(val) member function
+<span class="lineNum">      46 </span>            :     //          * if it is assigned or copied from a compatible match object
+<span class="lineNum">      47 </span>            :     //            (e.g. match&lt;double&gt; from match&lt;int&gt;) with a valid attribute.
+<span class="lineNum">      48 </span>            :     //
+<span class="lineNum">      49 </span>            :     //      The match attribute is undefined:
+<span class="lineNum">      50 </span>            :     //
+<span class="lineNum">      51 </span>            :     //          * on an unsuccessful match
+<span class="lineNum">      52 </span>            :     //          * when an attempt to copy or assign from another match object
+<span class="lineNum">      53 </span>            :     //            with an incompatible attribute type (e.g. match&lt;std::string&gt;
+<span class="lineNum">      54 </span>            :     //            from match&lt;int&gt;).
+<span class="lineNum">      55 </span>            :     //
+<span class="lineNum">      56 </span>            :     //      The member function has_valid_attribute() can be queried to know if
+<span class="lineNum">      57 </span>            :     //      it is safe to get the match's attribute. The attribute may be set
+<span class="lineNum">      58 </span>            :     //      through the member function value(v) where v is the new attribute
+<span class="lineNum">      59 </span>            :     //      value.
+<span class="lineNum">      60 </span>            :     //
+<span class="lineNum">      61 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      62 </span>            :     template &lt;typename T = nil_t&gt;
+<span class="lineNum">      63 </span><span class="lineCov"> 1246391231 :     class match : public safe_bool&lt;match&lt;T&gt; &gt;</span>
+<span class="lineNum">      64 </span>            :     {
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :     public:
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            :         typedef typename boost::optional&lt;T&gt; optional_type;
+<span class="lineNum">      69 </span>            :         typedef typename optional_type::argument_type ctor_param_t;
+<span class="lineNum">      70 </span>            :         typedef typename optional_type::reference_const_type return_t;
+<span class="lineNum">      71 </span>            :         typedef T attr_t;
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :                                 match();
+<span class="lineNum">      74 </span>            :         explicit                match(std::size_t length);
+<span class="lineNum">      75 </span>            :                                 match(std::size_t length, ctor_param_t val);
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :         bool                    operator!() const;
+<span class="lineNum">      78 </span>            :         std::ptrdiff_t          length() const;
+<span class="lineNum">      79 </span>            :         bool                    has_valid_attribute() const;
+<span class="lineNum">      80 </span>            :         return_t                value() const;
+<span class="lineNum">      81 </span>            :         void                    swap(match&amp; other);
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :         template &lt;typename T2&gt;
+<span class="lineNum">      84 </span>            :         match(match&lt;T2&gt; const&amp; other)
+<span class="lineNum">      85 </span><span class="lineCov">  615583668 :         : len(other.length()), val()</span>
+<span class="lineNum">      86 </span>            :         {
+<span class="lineNum">      87 </span><span class="lineCov">  206546146 :             impl::match_attr_traits&lt;T&gt;::copy(val, other);</span>
+<span class="lineNum">      88 </span>            :         }
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            :         template &lt;typename T2&gt;
+<span class="lineNum">      91 </span>            :         match&amp;
+<span class="lineNum">      92 </span>            :         operator=(match&lt;T2&gt; const&amp; other)
+<span class="lineNum">      93 </span>            :         {
+<span class="lineNum">      94 </span>            :             impl::match_attr_traits&lt;T&gt;::assign(val, other);
+<span class="lineNum">      95 </span>            :             len = other.length();
+<span class="lineNum">      96 </span>            :             return *this;
+<span class="lineNum">      97 </span>            :         }
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :         template &lt;typename MatchT&gt;
+<span class="lineNum">     100 </span>            :         void
+<span class="lineNum">     101 </span>            :         concat(MatchT const&amp; other)
+<span class="lineNum">     102 </span>            :         {
+<span class="lineNum">     103 </span>            :             BOOST_SPIRIT_ASSERT(*this &amp;&amp; other);
+<span class="lineNum">     104 </span>            :             len += other.length();
+<span class="lineNum">     105 </span>            :         }
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :         template &lt;typename ValueT&gt;
+<span class="lineNum">     108 </span>            :         void
+<span class="lineNum">     109 </span>            :         value(ValueT const&amp; val_)
+<span class="lineNum">     110 </span>            :         {
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :             impl::match_attr_traits&lt;T&gt;::set_value(val, val_, is_reference&lt;T&gt;());</span>
+<span class="lineNum">     112 </span>            :         }
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :         bool operator_bool() const
+<span class="lineNum">     115 </span>            :         {
+<span class="lineNum">     116 </span>            :             return len &gt;= 0;
+<span class="lineNum">     117 </span>            :         }
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :     private:
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            :         std::ptrdiff_t len;
+<span class="lineNum">     122 </span>            :         optional_type val;
+<span class="lineNum">     123 </span>            :     };
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     126 </span>            :     //
+<span class="lineNum">     127 </span>            :     //  match class specialization for nil_t values
+<span class="lineNum">     128 </span>            :     //
+<span class="lineNum">     129 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     130 </span>            :     template &lt;&gt;
+<span class="lineNum">     131 </span>            :     class match&lt;nil_t&gt; : public safe_bool&lt;match&lt;nil_t&gt; &gt;
+<span class="lineNum">     132 </span>            :     {
+<span class="lineNum">     133 </span>            :     public:
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            :         typedef nil_t attr_t;
+<span class="lineNum">     136 </span>            :         typedef nil_t return_t;
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :                                 match();
+<span class="lineNum">     139 </span>            :         explicit                match(std::size_t length);
+<span class="lineNum">     140 </span>            :                                 match(std::size_t length, nil_t);
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            :         bool                    operator!() const;
+<span class="lineNum">     143 </span>            :         bool                    has_valid_attribute() const;
+<span class="lineNum">     144 </span>            :         std::ptrdiff_t          length() const;
+<span class="lineNum">     145 </span>            :         nil_t                   value() const;
+<span class="lineNum">     146 </span>            :         void                    value(nil_t);
+<span class="lineNum">     147 </span>            :         void                    swap(match&amp; other);
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            :         template &lt;typename T&gt;
+<span class="lineNum">     150 </span>            :         match(match&lt;T&gt; const&amp; other)
+<span class="lineNum">     151 </span><span class="lineCov">  822193883 :         : len(other.length()) {}</span>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :         template &lt;typename T&gt;
+<span class="lineNum">     154 </span>            :         match&lt;&gt;&amp;
+<span class="lineNum">     155 </span>            :         operator=(match&lt;T&gt; const&amp; other)
+<span class="lineNum">     156 </span>            :         {
+<span class="lineNum">     157 </span>            :             len = other.length();
+<span class="lineNum">     158 </span>            :             return *this;
+<span class="lineNum">     159 </span>            :         }
+<span class="lineNum">     160 </span>            : 
+<a name="161"><span class="lineNum">     161 </span>            :         template &lt;typename T&gt;</a>
+<span class="lineNum">     162 </span>            :         void
+<span class="lineNum">     163 </span><span class="lineCov">  211916881 :         concat(match&lt;T&gt; const&amp; other)</span>
+<span class="lineNum">     164 </span>            :         {
+<span class="lineNum">     165 </span><span class="lineCov">  423833762 :             BOOST_SPIRIT_ASSERT(*this &amp;&amp; other);</span>
+<span class="lineNum">     166 </span><span class="lineCov">  211916881 :             len += other.length();</span>
+<span class="lineNum">     167 </span><span class="lineCov">  211916881 :         }</span>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            :         bool operator_bool() const
+<span class="lineNum">     170 </span>            :         {
+<span class="lineNum">     171 </span><span class="lineCov">  853055478 :             return len &gt;= 0;</span>
+<span class="lineNum">     172 </span>            :         }
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            :     private:
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            :         std::ptrdiff_t len;
+<span class="lineNum">     177 </span>            :     };
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_END
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            : }} // namespace BOOST_SPIRIT_CLASSIC_NS
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            : #endif
+<span class="lineNum">     184 </span>            : #include &lt;boost/spirit/home/classic/core/impl/match.ipp&gt;
+<span class="lineNum">     185 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

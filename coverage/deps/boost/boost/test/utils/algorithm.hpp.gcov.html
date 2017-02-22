@@ -1,0 +1,396 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/utils/algorithm.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/utils</a> - algorithm.hpp<span style="font-size: 80%;"> (source / <a href="algorithm.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryLo">36.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : /// @file
+<span class="lineNum">       9 </span>            : /// Addition to STL algorithms
+<span class="lineNum">      10 </span>            : // ***************************************************************************
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #ifndef BOOST_TEST_UTILS_ALGORITHM_HPP
+<span class="lineNum">      13 </span>            : #define BOOST_TEST_UTILS_ALGORITHM_HPP
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : // STL
+<span class="lineNum">      16 </span>            : #include &lt;utility&gt;
+<span class="lineNum">      17 </span>            : #include &lt;algorithm&gt; // std::find
+<span class="lineNum">      18 </span>            : #include &lt;functional&gt; // std::bind1st
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : namespace boost {
+<span class="lineNum">      25 </span>            : namespace unit_test {
+<span class="lineNum">      26 </span>            : namespace utils {
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : /// @brief this algorithm search through two collections for first mismatch position that get returned as a pair
+<span class="lineNum">      29 </span>            : /// of iterators, first pointing to the mismatch position in first collection, second iterator in second one
+<span class="lineNum">      30 </span>            : ///
+<span class="lineNum">      31 </span>            : /// @param first1 - first collection begin iterator
+<span class="lineNum">      32 </span>            : /// @param last1 - first collection end iterator
+<span class="lineNum">      33 </span>            : /// @param first2 - second collection begin iterator
+<span class="lineNum">      34 </span>            : /// @param last2 - second collection end iterator
+<span class="lineNum">      35 </span>            : template &lt;class InputIter1, class InputIter2&gt;
+<span class="lineNum">      36 </span>            : inline std::pair&lt;InputIter1, InputIter2&gt;
+<span class="lineNum">      37 </span>            : mismatch( InputIter1 first1, InputIter1 last1,
+<span class="lineNum">      38 </span>            :           InputIter2 first2, InputIter2 last2 )
+<span class="lineNum">      39 </span>            : {
+<span class="lineNum">      40 </span>            :     while( first1 != last1 &amp;&amp; first2 != last2 &amp;&amp; *first1 == *first2 ) {
+<span class="lineNum">      41 </span>            :         ++first1;
+<span class="lineNum">      42 </span>            :         ++first2;
+<span class="lineNum">      43 </span>            :     }
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            :     return std::pair&lt;InputIter1, InputIter2&gt;(first1, first2);
+<span class="lineNum">      46 </span>            : }
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : /// @brief this algorithm search through two collections for first mismatch position that get returned as a pair
+<span class="lineNum">      51 </span>            : /// of iterators, first pointing to the mismatch position in first collection, second iterator in second one. This algorithms
+<span class="lineNum">      52 </span>            : /// uses supplied predicate for collection elements comparison
+<span class="lineNum">      53 </span>            : ///
+<span class="lineNum">      54 </span>            : /// @param first1 - first collection begin iterator
+<span class="lineNum">      55 </span>            : /// @param last1 - first collection end iterator
+<span class="lineNum">      56 </span>            : /// @param first2 - second collection begin iterator
+<span class="lineNum">      57 </span>            : /// @param last2 - second collection end iterator
+<span class="lineNum">      58 </span>            : /// @param pred - predicate to be used for search
+<span class="lineNum">      59 </span>            : template &lt;class InputIter1, class InputIter2, class Predicate&gt;
+<span class="lineNum">      60 </span>            : inline std::pair&lt;InputIter1, InputIter2&gt;
+<span class="lineNum">      61 </span>            : mismatch( InputIter1 first1, InputIter1 last1,
+<span class="lineNum">      62 </span>            :           InputIter2 first2, InputIter2 last2,
+<span class="lineNum">      63 </span>            :           Predicate pred )
+<span class="lineNum">      64 </span>            : {
+<span class="lineNum">      65 </span>            :     while( first1 != last1 &amp;&amp; first2 != last2 &amp;&amp; pred( *first1, *first2 ) ) {
+<span class="lineNum">      66 </span>            :         ++first1;
+<span class="lineNum">      67 </span>            :         ++first2;
+<span class="lineNum">      68 </span>            :     }
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            :     return std::pair&lt;InputIter1, InputIter2&gt;(first1, first2);
+<span class="lineNum">      71 </span>            : }
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : /// @brief this algorithm search through first collection for first element that does not belong a second one
+<span class="lineNum">      76 </span>            : ///
+<span class="lineNum">      77 </span>            : /// @param first1 - first collection begin iterator
+<span class="lineNum">      78 </span>            : /// @param last1 - first collection end iterator
+<span class="lineNum">      79 </span>            : /// @param first2 - second collection begin iterator
+<span class="lineNum">      80 </span>            : /// @param last2 - second collection end iterator
+<span class="lineNum">      81 </span>            : template&lt;class ForwardIterator1, class ForwardIterator2&gt;
+<span class="lineNum">      82 </span>            : inline ForwardIterator1
+<span class="lineNum">      83 </span>            : find_first_not_of( ForwardIterator1 first1, ForwardIterator1 last1,
+<span class="lineNum">      84 </span>            :                    ForwardIterator2 first2, ForwardIterator2 last2 )
+<span class="lineNum">      85 </span>            : {
+<span class="lineNum">      86 </span>            :     while( first1 != last1 ) {
+<span class="lineNum">      87 </span>            :         if( std::find( first2, last2, *first1 ) == last2 )
+<span class="lineNum">      88 </span>            :             break;
+<span class="lineNum">      89 </span>            :         ++first1;
+<span class="lineNum">      90 </span>            :     }
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :     return first1;
+<span class="lineNum">      93 </span>            : }
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : /// @brief this algorithm search through first collection for first element that does not satisfy binary
+<span class="lineNum">      98 </span>            : /// predicate in conjunction will any element in second collection
+<span class="lineNum">      99 </span>            : ///
+<span class="lineNum">     100 </span>            : /// @param first1 - first collection begin iterator
+<span class="lineNum">     101 </span>            : /// @param last1 - first collection end iterator
+<span class="lineNum">     102 </span>            : /// @param first2 - second collection begin iterator
+<span class="lineNum">     103 </span>            : /// @param last2 - second collection end iterator
+<span class="lineNum">     104 </span>            : /// @param pred - predicate to be used for search
+<span class="lineNum">     105 </span>            : template&lt;class ForwardIterator1, class ForwardIterator2, class Predicate&gt;
+<span class="lineNum">     106 </span>            : inline ForwardIterator1
+<span class="lineNum">     107 </span>            : find_first_not_of( ForwardIterator1 first1, ForwardIterator1 last1,
+<span class="lineNum">     108 </span>            :                    ForwardIterator2 first2, ForwardIterator2 last2,
+<span class="lineNum">     109 </span>            :                    Predicate pred )
+<span class="lineNum">     110 </span>            : {
+<span class="lineNum">     111 </span>            :     while( first1 != last1 ) {
+<span class="lineNum">     112 </span>            :         if( std::find_if( first2, last2, std::bind1st( pred, *first1 ) ) == last2 )
+<span class="lineNum">     113 </span>            :             break;
+<span class="lineNum">     114 </span>            :         ++first1;
+<span class="lineNum">     115 </span>            :     }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :     return first1;
+<span class="lineNum">     118 </span>            : }
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : /// @brief this algorithm search through first collection for last element that belongs to a second one
+<span class="lineNum">     123 </span>            : ///
+<span class="lineNum">     124 </span>            : /// @param first1 - first collection begin iterator
+<span class="lineNum">     125 </span>            : /// @param last1 - first collection end iterator
+<span class="lineNum">     126 </span>            : /// @param first2 - second collection begin iterator
+<span class="lineNum">     127 </span>            : /// @param last2 - second collection end iterator
+<a name="128"><span class="lineNum">     128 </span>            : template&lt;class BidirectionalIterator1, class ForwardIterator2&gt;</a>
+<span class="lineNum">     129 </span>            : inline BidirectionalIterator1
+<span class="lineNum">     130 </span><span class="lineCov">          1 : find_last_of( BidirectionalIterator1 first1, BidirectionalIterator1 last1,</span>
+<span class="lineNum">     131 </span>            :               ForwardIterator2 first2, ForwardIterator2 last2 )
+<span class="lineNum">     132 </span>            : {
+<span class="lineNum">     133 </span><span class="lineCov">          1 :     if( first1 == last1 || first2 == last2 )</span>
+<span class="lineNum">     134 </span>            :         return last1;
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :     BidirectionalIterator1 it1 = last1;
+<span class="lineNum">     137 </span><span class="lineCov">         16 :     while( --it1 != first1 &amp;&amp; std::find( first2, last2, *it1 ) == last2 ) {}</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineCov">          1 :     return it1 == first1 &amp;&amp; std::find( first2, last2, *it1 ) == last2 ? last1 : it1;</span>
+<span class="lineNum">     140 </span>            : }
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : /// @brief this algorithm search through first collection for last element that satisfy binary
+<span class="lineNum">     145 </span>            : /// predicate in conjunction will at least one element in second collection
+<span class="lineNum">     146 </span>            : ///
+<span class="lineNum">     147 </span>            : /// @param first1 - first collection begin iterator
+<span class="lineNum">     148 </span>            : /// @param last1 - first collection end iterator
+<span class="lineNum">     149 </span>            : /// @param first2 - second collection begin iterator
+<span class="lineNum">     150 </span>            : /// @param last2 - second collection end iterator
+<span class="lineNum">     151 </span>            : /// @param pred - predicate to be used for search
+<span class="lineNum">     152 </span>            : template&lt;class BidirectionalIterator1, class ForwardIterator2, class Predicate&gt;
+<span class="lineNum">     153 </span>            : inline BidirectionalIterator1
+<span class="lineNum">     154 </span>            : find_last_of( BidirectionalIterator1 first1, BidirectionalIterator1 last1,
+<span class="lineNum">     155 </span>            :               ForwardIterator2 first2, ForwardIterator2 last2,
+<span class="lineNum">     156 </span>            :               Predicate pred )
+<span class="lineNum">     157 </span>            : {
+<span class="lineNum">     158 </span>            :     if( first1 == last1 || first2 == last2 )
+<span class="lineNum">     159 </span>            :         return last1;
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :     BidirectionalIterator1 it1 = last1;
+<span class="lineNum">     162 </span>            :     while( --it1 != first1 &amp;&amp; std::find_if( first2, last2, std::bind1st( pred, *it1 ) ) == last2 ) {}
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :     return it1 == first1 &amp;&amp; std::find_if( first2, last2, std::bind1st( pred, *it1 ) ) == last2 ? last1 : it1;
+<span class="lineNum">     165 </span>            : }
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            : /// @brief this algorithm search through first collection for last element that does not belong to a second one
+<span class="lineNum">     170 </span>            : ///
+<span class="lineNum">     171 </span>            : /// @param first1 - first collection begin iterator
+<span class="lineNum">     172 </span>            : /// @param last1 - first collection end iterator
+<span class="lineNum">     173 </span>            : /// @param first2 - second collection begin iterator
+<span class="lineNum">     174 </span>            : /// @param last2 - second collection end iterator
+<span class="lineNum">     175 </span>            : template&lt;class BidirectionalIterator1, class ForwardIterator2&gt;
+<span class="lineNum">     176 </span>            : inline BidirectionalIterator1
+<span class="lineNum">     177 </span>            : find_last_not_of( BidirectionalIterator1 first1, BidirectionalIterator1 last1,
+<span class="lineNum">     178 </span>            :                   ForwardIterator2 first2, ForwardIterator2 last2 )
+<span class="lineNum">     179 </span>            : {
+<span class="lineNum">     180 </span>            :     if( first1 == last1 || first2 == last2 )
+<span class="lineNum">     181 </span>            :         return last1;
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            :     BidirectionalIterator1 it1 = last1;
+<span class="lineNum">     184 </span>            :     while( --it1 != first1 &amp;&amp; std::find( first2, last2, *it1 ) != last2 ) {}
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :     return it1 == first1 &amp;&amp; std::find( first2, last2, *it1 ) != last2 ? last1 : it1;
+<span class="lineNum">     187 </span>            : }
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            : /// @brief this algorithm search through first collection for last element that does not satisfy binary
+<span class="lineNum">     192 </span>            : /// predicate in conjunction will any element in second collection
+<span class="lineNum">     193 </span>            : ///
+<span class="lineNum">     194 </span>            : /// @param first1 - first collection begin iterator
+<span class="lineNum">     195 </span>            : /// @param last1 - first collection end iterator
+<span class="lineNum">     196 </span>            : /// @param first2 - second collection begin iterator
+<span class="lineNum">     197 </span>            : /// @param last2 - second collection end iterator
+<span class="lineNum">     198 </span>            : /// @param pred - predicate to be used for search
+<span class="lineNum">     199 </span>            : template&lt;class BidirectionalIterator1, class ForwardIterator2, class Predicate&gt;
+<span class="lineNum">     200 </span>            : inline BidirectionalIterator1
+<span class="lineNum">     201 </span>            : find_last_not_of( BidirectionalIterator1 first1, BidirectionalIterator1 last1,
+<span class="lineNum">     202 </span>            :                   ForwardIterator2 first2, ForwardIterator2 last2,
+<span class="lineNum">     203 </span>            :                   Predicate pred )
+<span class="lineNum">     204 </span>            : {
+<span class="lineNum">     205 </span>            :     if( first1 == last1 || first2 == last2 )
+<span class="lineNum">     206 </span>            :         return last1;
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            :     BidirectionalIterator1 it1 = last1;
+<span class="lineNum">     209 </span>            :     while( --it1 != first1 &amp;&amp; std::find_if( first2, last2, std::bind1st( pred, *it1 ) ) != last2 ) {}
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :     return it1 == first1 &amp;&amp; std::find_if( first2, last2, std::bind1st( pred, *it1 ) ) == last2 ? last1 : it1;
+<span class="lineNum">     212 </span>            : }
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            : /// @brief This algorithm replaces all occurrences of a set of substrings by another substrings
+<span class="lineNum">     218 </span>            : ///
+<span class="lineNum">     219 </span>            : /// @param str - string of operation
+<span class="lineNum">     220 </span>            : /// @param first1 - iterator to the beginning of the substrings to replace
+<span class="lineNum">     221 </span>            : /// @param last1 - iterator to the end of the substrings to replace
+<span class="lineNum">     222 </span>            : /// @param first2 - iterator to the beginning of the substrings to replace with
+<span class="lineNum">     223 </span>            : /// @param last2 - iterator to the end of the substrings to replace with
+<a name="224"><span class="lineNum">     224 </span>            : template&lt;class StringClass, class ForwardIterator&gt;</a>
+<span class="lineNum">     225 </span>            : inline StringClass
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 : replace_all_occurrences_of( StringClass str,</span>
+<span class="lineNum">     227 </span>            :                             ForwardIterator first1, ForwardIterator last1,
+<span class="lineNum">     228 </span>            :                             ForwardIterator first2, ForwardIterator last2)
+<span class="lineNum">     229 </span>            : {
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :     for(; first1 != last1 &amp;&amp; first2 != last2; ++first1, ++first2) {</span>
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 :         std::size_t found = str.find( *first1 );</span>
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :         while( found != StringClass::npos ) {</span>
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :             str.replace(found, first1-&gt;size(), *first2 );</span>
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :             found = str.find( *first1, found + first2-&gt;size() );</span>
+<span class="lineNum">     235 </span>            :         }
+<span class="lineNum">     236 </span>            :     }
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :     return str;</span>
+<span class="lineNum">     239 </span>            : }
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            : /// @brief This algorithm replaces all occurrences of a string with basic wildcards
+<span class="lineNum">     242 </span>            : /// with another (optionally containing wildcards as well).
+<span class="lineNum">     243 </span>            : ///
+<span class="lineNum">     244 </span>            : /// @param str - string to transform
+<span class="lineNum">     245 </span>            : /// @param it_string_to_find - iterator to the beginning of the substrings to replace
+<span class="lineNum">     246 </span>            : /// @param it_string_to_find_end - iterator to the end of the substrings to replace
+<span class="lineNum">     247 </span>            : /// @param it_string_to_replace - iterator to the beginning of the substrings to replace with
+<span class="lineNum">     248 </span>            : /// @param it_string_to_replace_end - iterator to the end of the substrings to replace with
+<span class="lineNum">     249 </span>            : ///
+<span class="lineNum">     250 </span>            : /// The wildcard is the symbol '*'. Only a unique wildcard per string is supported. The replacement
+<span class="lineNum">     251 </span>            : /// string may also contain a wildcard, in which case it is considered as a placeholder to the content
+<span class="lineNum">     252 </span>            : /// of the wildcard in the source string.
+<span class="lineNum">     253 </span>            : /// Example:
+<span class="lineNum">     254 </span>            : /// - In order to replace the occurrences of @c 'time=\&quot;some-variable-value\&quot;' to a constant string,
+<span class="lineNum">     255 </span>            : ///   one may use @c 'time=\&quot;*\&quot;' as the string to search for, and 'time=\&quot;0.0\&quot;' as the replacement string.
+<span class="lineNum">     256 </span>            : /// - In order to replace the occurrences of 'file.cpp(XX)' per 'file.cpp:XX', where XX is a variable to keep,
+<span class="lineNum">     257 </span>            : ///   on may use @c 'file.cpp(*)' as the string to search for, and 'file.cpp:*' as the replacement string.
+<span class="lineNum">     258 </span>            : template&lt;class StringClass, class ForwardIterator&gt;
+<span class="lineNum">     259 </span>            : inline StringClass
+<span class="lineNum">     260 </span>            : replace_all_occurrences_with_wildcards(
+<span class="lineNum">     261 </span>            :     StringClass str,
+<span class="lineNum">     262 </span>            :     ForwardIterator it_string_to_find, ForwardIterator it_string_to_find_end,
+<span class="lineNum">     263 </span>            :     ForwardIterator it_string_to_replace, ForwardIterator it_string_to_replace_end)
+<span class="lineNum">     264 </span>            : {
+<span class="lineNum">     265 </span>            :     for(; it_string_to_find != it_string_to_find_end &amp;&amp; it_string_to_replace != it_string_to_replace_end;
+<span class="lineNum">     266 </span>            :         ++it_string_to_find, ++ it_string_to_replace) {
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            :         std::size_t wildcard_pos = it_string_to_find-&gt;find(&quot;*&quot;);
+<span class="lineNum">     269 </span>            :         if(wildcard_pos == StringClass::npos) {
+<span class="lineNum">     270 </span>            :             ForwardIterator it_to_find_current_end(it_string_to_find);
+<span class="lineNum">     271 </span>            :             ForwardIterator it_to_replace_current_end(it_string_to_replace);
+<span class="lineNum">     272 </span>            :             str = replace_all_occurrences_of(
+<span class="lineNum">     273 </span>            :                 str,
+<span class="lineNum">     274 </span>            :                 it_string_to_find, ++it_to_find_current_end,
+<span class="lineNum">     275 </span>            :                 it_string_to_replace, ++it_to_replace_current_end);
+<span class="lineNum">     276 </span>            :             continue;
+<span class="lineNum">     277 </span>            :         }
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            :         std::size_t wildcard_pos_replace = it_string_to_replace-&gt;find(&quot;*&quot;);
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span>            :         std::size_t found_begin = str.find( it_string_to_find-&gt;substr(0, wildcard_pos) );
+<span class="lineNum">     282 </span>            :         while( found_begin != StringClass::npos ) {
+<span class="lineNum">     283 </span>            :             std::size_t found_end = str.find(it_string_to_find-&gt;substr(wildcard_pos+1), found_begin + wildcard_pos + 1); // to simplify
+<span class="lineNum">     284 </span>            :             if( found_end != StringClass::npos ) {
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            :                 if( wildcard_pos_replace == StringClass::npos ) {
+<span class="lineNum">     287 </span>            :                     StringClass replace_content = *it_string_to_replace;
+<span class="lineNum">     288 </span>            :                     str.replace(
+<span class="lineNum">     289 </span>            :                         found_begin,
+<span class="lineNum">     290 </span>            :                         found_end + (it_string_to_find-&gt;size() - wildcard_pos - 1 ) - found_begin,
+<span class="lineNum">     291 </span>            :                         replace_content);
+<span class="lineNum">     292 </span>            :                 } else {
+<span class="lineNum">     293 </span>            :                     StringClass replace_content =
+<span class="lineNum">     294 </span>            :                         it_string_to_replace-&gt;substr(0, wildcard_pos_replace)
+<span class="lineNum">     295 </span>            :                         + str.substr(found_begin + wildcard_pos,
+<span class="lineNum">     296 </span>            :                                      found_end - found_begin - wildcard_pos)
+<span class="lineNum">     297 </span>            :                         + it_string_to_replace-&gt;substr(wildcard_pos_replace+1) ;
+<span class="lineNum">     298 </span>            :                     str.replace(
+<span class="lineNum">     299 </span>            :                         found_begin,
+<span class="lineNum">     300 </span>            :                         found_end + (it_string_to_find-&gt;size() - wildcard_pos - 1 ) - found_begin,
+<span class="lineNum">     301 </span>            :                         replace_content);
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span>            :                 }
+<span class="lineNum">     304 </span>            :             }
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span>            :             // may adapt the restart to the replacement and be more efficient
+<span class="lineNum">     307 </span>            :             found_begin = str.find( it_string_to_find-&gt;substr(0, wildcard_pos), found_begin + 1 );
+<span class="lineNum">     308 </span>            :        }
+<span class="lineNum">     309 </span>            :     }
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            :     return str;
+<span class="lineNum">     312 </span>            : }
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span>            : } // namespace utils
+<span class="lineNum">     315 </span>            : } // namespace unit_test
+<span class="lineNum">     316 </span>            : } // namespace boost
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span>            : #endif // BOOST_TEST_UTILS_ALGORITHM_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

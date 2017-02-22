@@ -1,0 +1,123 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/detail/atomic_count.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/detail</a> - atomic_count.hpp<span style="font-size: 80%;"> (source / <a href="atomic_count.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // detail/atomic_count.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DETAIL_ATOMIC_COUNT_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DETAIL_ATOMIC_COUNT_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #if !defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">      21 </span>            : // Nothing to include.
+<span class="lineNum">      22 </span>            : #elif defined(BOOST_ASIO_HAS_STD_ATOMIC)
+<span class="lineNum">      23 </span>            : # include &lt;atomic&gt;
+<span class="lineNum">      24 </span>            : #else // defined(BOOST_ASIO_HAS_STD_ATOMIC)
+<span class="lineNum">      25 </span>            : # include &lt;boost/detail/atomic_count.hpp&gt;
+<span class="lineNum">      26 </span>            : #endif // defined(BOOST_ASIO_HAS_STD_ATOMIC)
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace boost {
+<span class="lineNum">      29 </span>            : namespace asio {
+<span class="lineNum">      30 </span>            : namespace detail {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #if !defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">      33 </span>            : typedef long atomic_count;
+<span class="lineNum">      34 </span>            : inline void increment(atomic_count&amp; a, long b) { a += b; }
+<span class="lineNum">      35 </span>            : #elif defined(BOOST_ASIO_HAS_STD_ATOMIC)
+<span class="lineNum">      36 </span>            : typedef std::atomic&lt;long&gt; atomic_count;
+<span class="lineNum">      37 </span><span class="lineNoCov">          0 : inline void increment(atomic_count&amp; a, long b) { a += b; }</span>
+<span class="lineNum">      38 </span>            : #else // defined(BOOST_ASIO_HAS_STD_ATOMIC)
+<span class="lineNum">      39 </span>            : typedef boost::detail::atomic_count atomic_count;
+<span class="lineNum">      40 </span>            : inline void increment(atomic_count&amp; a, long b) { while (b &gt; 0) ++a, --b; }
+<span class="lineNum">      41 </span>            : #endif // defined(BOOST_ASIO_HAS_STD_ATOMIC)
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : } // namespace detail
+<span class="lineNum">      44 </span>            : } // namespace asio
+<span class="lineNum">      45 </span>            : } // namespace boost
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : #endif // BOOST_ASIO_DETAIL_ATOMIC_COUNT_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

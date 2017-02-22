@@ -1,0 +1,716 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/math/special_functions/fpclassify.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/math/special_functions</a> - fpclassify.hpp<span style="font-size: 80%;"> (source / <a href="fpclassify.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  Copyright John Maddock 2005-2008.</a>
+<span class="lineNum">       2 </span>            : //  Copyright (c) 2006-2008 Johan Rade
+<span class="lineNum">       3 </span>            : //  Use, modification and distribution are subject to the
+<span class="lineNum">       4 </span>            : //  Boost Software License, Version 1.0. (See accompanying file
+<span class="lineNum">       5 </span>            : //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #ifndef BOOST_MATH_FPCLASSIFY_HPP
+<span class="lineNum">       8 </span>            : #define BOOST_MATH_FPCLASSIFY_HPP
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #ifdef _MSC_VER
+<span class="lineNum">      11 </span>            : #pragma once
+<span class="lineNum">      12 </span>            : #endif
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &lt;math.h&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/config/no_tr1/cmath.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/limits.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/math/tools/real_cast.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/type_traits/is_floating_point.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/math/special_functions/math_fwd.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/math/special_functions/detail/fp_traits.hpp&gt;
+<span class="lineNum">      21 </span>            : /*!
+<span class="lineNum">      22 </span>            :   \file fpclassify.hpp
+<span class="lineNum">      23 </span>            :   \brief Classify floating-point value as normal, subnormal, zero, infinite, or NaN.
+<span class="lineNum">      24 </span>            :   \version 1.0
+<span class="lineNum">      25 </span>            :   \author John Maddock
+<span class="lineNum">      26 </span>            :  */
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : /*
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : 1. If the platform is C99 compliant, then the native floating point
+<span class="lineNum">      31 </span>            : classification functions are used.  However, note that we must only
+<span class="lineNum">      32 </span>            : define the functions which call std::fpclassify etc if that function
+<span class="lineNum">      33 </span>            : really does exist: otherwise a compiler may reject the code even though
+<span class="lineNum">      34 </span>            : the template is never instantiated.
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : 2. If the platform is not C99 compliant, and the binary format for
+<span class="lineNum">      37 </span>            : a floating point type (float, double or long double) can be determined
+<span class="lineNum">      38 </span>            : at compile time, then the following algorithm is used:
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            :         If all exponent bits, the flag bit (if there is one),
+<span class="lineNum">      41 </span>            :         and all significand bits are 0, then the number is zero.
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            :         If all exponent bits and the flag bit (if there is one) are 0,
+<span class="lineNum">      44 </span>            :         and at least one significand bit is 1, then the number is subnormal.
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :         If all exponent bits are 1 and all significand bits are 0,
+<span class="lineNum">      47 </span>            :         then the number is infinity.
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :         If all exponent bits are 1 and at least one significand bit is 1,
+<span class="lineNum">      50 </span>            :         then the number is a not-a-number.
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            :         Otherwise the number is normal.
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            :         This algorithm works for the IEEE 754 representation,
+<span class="lineNum">      55 </span>            :         and also for several non IEEE 754 formats.
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :     Most formats have the structure
+<span class="lineNum">      58 </span>            :         sign bit + exponent bits + significand bits.
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :     A few have the structure
+<span class="lineNum">      61 </span>            :         sign bit + exponent bits + flag bit + significand bits.
+<span class="lineNum">      62 </span>            :     The flag bit is 0 for zero and subnormal numbers,
+<span class="lineNum">      63 </span>            :         and 1 for normal numbers and NaN.
+<span class="lineNum">      64 </span>            :         It is 0 (Motorola 68K) or 1 (Intel) for infinity.
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :     To get the bits, the four or eight most significant bytes are copied
+<span class="lineNum">      67 </span>            :     into an uint32_t or uint64_t and bit masks are applied.
+<span class="lineNum">      68 </span>            :     This covers all the exponent bits and the flag bit (if there is one),
+<span class="lineNum">      69 </span>            :     but not always all the significand bits.
+<span class="lineNum">      70 </span>            :     Some of the functions below have two implementations,
+<span class="lineNum">      71 </span>            :     depending on whether all the significand bits are copied or not.
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : 3. If the platform is not C99 compliant, and the binary format for
+<span class="lineNum">      74 </span>            : a floating point type (float, double or long double) can not be determined
+<span class="lineNum">      75 </span>            : at compile time, then comparison with std::numeric_limits values
+<span class="lineNum">      76 </span>            : is used.
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : */
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : #if defined(_MSC_VER) || defined(__BORLANDC__)
+<span class="lineNum">      81 </span>            : #include &lt;float.h&gt;
+<span class="lineNum">      82 </span>            : #endif
+<span class="lineNum">      83 </span>            : #ifdef BOOST_MATH_USE_FLOAT128
+<span class="lineNum">      84 </span>            : #ifdef __has_include
+<span class="lineNum">      85 </span>            : #if  __has_include(&quot;quadmath.h&quot;)
+<span class="lineNum">      86 </span>            : #include &quot;quadmath.h&quot;
+<span class="lineNum">      87 </span>            : #define BOOST_MATH_HAS_QUADMATH_H
+<span class="lineNum">      88 </span>            : #endif
+<span class="lineNum">      89 </span>            : #endif
+<span class="lineNum">      90 </span>            : #endif
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : #ifdef BOOST_NO_STDC_NAMESPACE
+<span class="lineNum">      93 </span>            :   namespace std{ using ::abs; using ::fabs; }
+<span class="lineNum">      94 </span>            : #endif
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : namespace boost{
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : //
+<span class="lineNum">      99 </span>            : // This must not be located in any namespace under boost::math
+<span class="lineNum">     100 </span>            : // otherwise we can get into an infinite loop if isnan is
+<span class="lineNum">     101 </span>            : // a #define for &quot;isnan&quot; !
+<span class="lineNum">     102 </span>            : //
+<span class="lineNum">     103 </span>            : namespace math_detail{
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">     106 </span>            : #pragma warning(push)
+<span class="lineNum">     107 </span>            : #pragma warning(disable:4800)
+<span class="lineNum">     108 </span>            : #endif
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            : template &lt;class T&gt;
+<span class="lineNum">     111 </span>            : inline bool is_nan_helper(T t, const boost::true_type&amp;)
+<span class="lineNum">     112 </span>            : {
+<span class="lineNum">     113 </span>            : #ifdef isnan
+<span class="lineNum">     114 </span>            :    return isnan(t);
+<span class="lineNum">     115 </span>            : #elif defined(BOOST_MATH_DISABLE_STD_FPCLASSIFY) || !defined(BOOST_HAS_FPCLASSIFY)
+<span class="lineNum">     116 </span>            :    (void)t;
+<span class="lineNum">     117 </span>            :    return false;
+<span class="lineNum">     118 </span>            : #else // BOOST_HAS_FPCLASSIFY
+<span class="lineNum">     119 </span>            :    return (BOOST_FPCLASSIFY_PREFIX fpclassify(t) == (int)FP_NAN);
+<span class="lineNum">     120 </span>            : #endif
+<span class="lineNum">     121 </span>            : }
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">     124 </span>            : #pragma warning(pop)
+<span class="lineNum">     125 </span>            : #endif
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : template &lt;class T&gt;
+<span class="lineNum">     128 </span>            : inline bool is_nan_helper(T, const boost::false_type&amp;)
+<span class="lineNum">     129 </span>            : {
+<span class="lineNum">     130 </span>            :    return false;
+<span class="lineNum">     131 </span>            : }
+<span class="lineNum">     132 </span>            : #if defined(BOOST_MATH_USE_FLOAT128) 
+<span class="lineNum">     133 </span>            : #if defined(BOOST_MATH_HAS_QUADMATH_H)
+<span class="lineNum">     134 </span>            : inline bool is_nan_helper(__float128 f, const boost::true_type&amp;) { return ::isnanq(f); }
+<span class="lineNum">     135 </span>            : inline bool is_nan_helper(__float128 f, const boost::false_type&amp;) { return ::isnanq(f); }
+<span class="lineNum">     136 </span>            : #elif defined(BOOST_GNU_STDLIB) &amp;&amp; BOOST_GNU_STDLIB &amp;&amp; \
+<span class="lineNum">     137 </span>            :       _GLIBCXX_USE_C99_MATH &amp;&amp; !_GLIBCXX_USE_C99_FP_MACROS_DYNAMIC
+<span class="lineNum">     138 </span>            : inline bool is_nan_helper(__float128 f, const boost::true_type&amp;) { return std::isnan(static_cast&lt;double&gt;(f)); }
+<span class="lineNum">     139 </span>            : inline bool is_nan_helper(__float128 f, const boost::false_type&amp;) { return std::isnan(static_cast&lt;double&gt;(f)); }
+<span class="lineNum">     140 </span>            : #else
+<span class="lineNum">     141 </span>            : inline bool is_nan_helper(__float128 f, const boost::true_type&amp;) { return ::isnan(static_cast&lt;double&gt;(f)); }
+<span class="lineNum">     142 </span>            : inline bool is_nan_helper(__float128 f, const boost::false_type&amp;) { return ::isnan(static_cast&lt;double&gt;(f)); }
+<span class="lineNum">     143 </span>            : #endif
+<span class="lineNum">     144 </span>            : #endif
+<span class="lineNum">     145 </span>            : }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : namespace math{
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            : namespace detail{
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            : #ifdef BOOST_MATH_USE_STD_FPCLASSIFY
+<span class="lineNum">     152 </span>            : template &lt;class T&gt;
+<span class="lineNum">     153 </span>            : inline int fpclassify_imp BOOST_NO_MACRO_EXPAND(T t, const native_tag&amp;)
+<span class="lineNum">     154 </span>            : {
+<span class="lineNum">     155 </span>            :    return (std::fpclassify)(t);
+<span class="lineNum">     156 </span>            : }
+<span class="lineNum">     157 </span>            : #endif
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : template &lt;class T&gt;
+<span class="lineNum">     160 </span>            : inline int fpclassify_imp BOOST_NO_MACRO_EXPAND(T t, const generic_tag&lt;true&gt;&amp;)
+<span class="lineNum">     161 </span>            : {
+<span class="lineNum">     162 </span>            :    BOOST_MATH_INSTRUMENT_VARIABLE(t);
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :    // whenever possible check for Nan's first:
+<span class="lineNum">     165 </span>            : #if defined(BOOST_HAS_FPCLASSIFY)  &amp;&amp; !defined(BOOST_MATH_DISABLE_STD_FPCLASSIFY)
+<span class="lineNum">     166 </span>            :    if(::boost::math_detail::is_nan_helper(t, ::boost::is_floating_point&lt;T&gt;()))
+<span class="lineNum">     167 </span>            :       return FP_NAN;
+<span class="lineNum">     168 </span>            : #elif defined(isnan)
+<span class="lineNum">     169 </span>            :    if(boost::math_detail::is_nan_helper(t, ::boost::is_floating_point&lt;T&gt;()))
+<span class="lineNum">     170 </span>            :       return FP_NAN;
+<span class="lineNum">     171 </span>            : #elif defined(_MSC_VER) || defined(__BORLANDC__)
+<span class="lineNum">     172 </span>            :    if(::_isnan(boost::math::tools::real_cast&lt;double&gt;(t)))
+<span class="lineNum">     173 </span>            :       return FP_NAN;
+<span class="lineNum">     174 </span>            : #endif
+<span class="lineNum">     175 </span>            :    // std::fabs broken on a few systems especially for long long!!!!
+<span class="lineNum">     176 </span>            :    T at = (t &lt; T(0)) ? -t : t;
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :    // Use a process of exclusion to figure out
+<span class="lineNum">     179 </span>            :    // what kind of type we have, this relies on
+<span class="lineNum">     180 </span>            :    // IEEE conforming reals that will treat
+<span class="lineNum">     181 </span>            :    // Nan's as unordered.  Some compilers
+<span class="lineNum">     182 </span>            :    // don't do this once optimisations are
+<span class="lineNum">     183 </span>            :    // turned on, hence the check for nan's above.
+<span class="lineNum">     184 </span>            :    if(at &lt;= (std::numeric_limits&lt;T&gt;::max)())
+<span class="lineNum">     185 </span>            :    {
+<span class="lineNum">     186 </span>            :       if(at &gt;= (std::numeric_limits&lt;T&gt;::min)())
+<span class="lineNum">     187 </span>            :          return FP_NORMAL;
+<span class="lineNum">     188 </span>            :       return (at != 0) ? FP_SUBNORMAL : FP_ZERO;
+<span class="lineNum">     189 </span>            :    }
+<span class="lineNum">     190 </span>            :    else if(at &gt; (std::numeric_limits&lt;T&gt;::max)())
+<span class="lineNum">     191 </span>            :       return FP_INFINITE;
+<span class="lineNum">     192 </span>            :    return FP_NAN;
+<span class="lineNum">     193 </span>            : }
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            : template &lt;class T&gt;
+<span class="lineNum">     196 </span>            : inline int fpclassify_imp BOOST_NO_MACRO_EXPAND(T t, const generic_tag&lt;false&gt;&amp;)
+<span class="lineNum">     197 </span>            : {
+<span class="lineNum">     198 </span>            : #ifdef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+<span class="lineNum">     199 </span>            :    if(std::numeric_limits&lt;T&gt;::is_specialized)
+<span class="lineNum">     200 </span>            :       return fpclassify_imp(t, generic_tag&lt;true&gt;());
+<span class="lineNum">     201 </span>            : #endif
+<span class="lineNum">     202 </span>            :    //
+<span class="lineNum">     203 </span>            :    // An unknown type with no numeric_limits support,
+<span class="lineNum">     204 </span>            :    // so what are we supposed to do we do here?
+<span class="lineNum">     205 </span>            :    //
+<span class="lineNum">     206 </span>            :    BOOST_MATH_INSTRUMENT_VARIABLE(t);
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            :    return t == 0 ? FP_ZERO : FP_NORMAL;
+<span class="lineNum">     209 </span>            : }
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            : template&lt;class T&gt;
+<span class="lineNum">     212 </span>            : int fpclassify_imp BOOST_NO_MACRO_EXPAND(T x, ieee_copy_all_bits_tag)
+<span class="lineNum">     213 </span>            : {
+<span class="lineNum">     214 </span>            :    typedef BOOST_DEDUCED_TYPENAME fp_traits&lt;T&gt;::type traits;
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            :    BOOST_MATH_INSTRUMENT_VARIABLE(x);
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            :    BOOST_DEDUCED_TYPENAME traits::bits a;
+<span class="lineNum">     219 </span>            :    traits::get_bits(x,a);
+<span class="lineNum">     220 </span>            :    BOOST_MATH_INSTRUMENT_VARIABLE(a);
+<span class="lineNum">     221 </span>            :    a &amp;= traits::exponent | traits::flag | traits::significand;
+<span class="lineNum">     222 </span>            :    BOOST_MATH_INSTRUMENT_VARIABLE((traits::exponent | traits::flag | traits::significand));
+<span class="lineNum">     223 </span>            :    BOOST_MATH_INSTRUMENT_VARIABLE(a);
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span>            :    if(a &lt;= traits::significand) {
+<span class="lineNum">     226 </span>            :       if(a == 0)
+<span class="lineNum">     227 </span>            :          return FP_ZERO;
+<span class="lineNum">     228 </span>            :       else
+<span class="lineNum">     229 </span>            :          return FP_SUBNORMAL;
+<span class="lineNum">     230 </span>            :    }
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            :    if(a &lt; traits::exponent) return FP_NORMAL;
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            :    a &amp;= traits::significand;
+<span class="lineNum">     235 </span>            :    if(a == 0) return FP_INFINITE;
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            :    return FP_NAN;
+<span class="lineNum">     238 </span>            : }
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            : template&lt;class T&gt;
+<span class="lineNum">     241 </span>            : int fpclassify_imp BOOST_NO_MACRO_EXPAND(T x, ieee_copy_leading_bits_tag)
+<span class="lineNum">     242 </span>            : {
+<span class="lineNum">     243 </span>            :    typedef BOOST_DEDUCED_TYPENAME fp_traits&lt;T&gt;::type traits;
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span>            :    BOOST_MATH_INSTRUMENT_VARIABLE(x);
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            :    BOOST_DEDUCED_TYPENAME traits::bits a;
+<span class="lineNum">     248 </span>            :    traits::get_bits(x,a);
+<span class="lineNum">     249 </span>            :    a &amp;= traits::exponent | traits::flag | traits::significand;
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            :    if(a &lt;= traits::significand) {
+<span class="lineNum">     252 </span>            :       if(x == 0)
+<span class="lineNum">     253 </span>            :          return FP_ZERO;
+<span class="lineNum">     254 </span>            :       else
+<span class="lineNum">     255 </span>            :          return FP_SUBNORMAL;
+<span class="lineNum">     256 </span>            :    }
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            :    if(a &lt; traits::exponent) return FP_NORMAL;
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span>            :    a &amp;= traits::significand;
+<span class="lineNum">     261 </span>            :    traits::set_bits(x,a);
+<span class="lineNum">     262 </span>            :    if(x == 0) return FP_INFINITE;
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            :    return FP_NAN;
+<span class="lineNum">     265 </span>            : }
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span>            : #if defined(BOOST_MATH_USE_STD_FPCLASSIFY) &amp;&amp; (defined(BOOST_MATH_NO_NATIVE_LONG_DOUBLE_FP_CLASSIFY) || defined(BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS))
+<span class="lineNum">     268 </span>            : inline int fpclassify_imp BOOST_NO_MACRO_EXPAND(long double t, const native_tag&amp;)
+<span class="lineNum">     269 </span>            : {
+<span class="lineNum">     270 </span>            :    return boost::math::detail::fpclassify_imp(t, generic_tag&lt;true&gt;());
+<span class="lineNum">     271 </span>            : }
+<span class="lineNum">     272 </span>            : #endif
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            : }  // namespace detail
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span>            : template &lt;class T&gt;
+<span class="lineNum">     277 </span>            : inline int fpclassify BOOST_NO_MACRO_EXPAND(T t)
+<span class="lineNum">     278 </span>            : {
+<span class="lineNum">     279 </span>            :    typedef typename detail::fp_traits&lt;T&gt;::type traits;
+<span class="lineNum">     280 </span>            :    typedef typename traits::method method;
+<span class="lineNum">     281 </span>            :    typedef typename tools::promote_args_permissive&lt;T&gt;::type value_type;
+<span class="lineNum">     282 </span>            : #ifdef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+<span class="lineNum">     283 </span>            :    if(std::numeric_limits&lt;T&gt;::is_specialized &amp;&amp; detail::is_generic_tag_false(static_cast&lt;method*&gt;(0)))
+<span class="lineNum">     284 </span>            :       return detail::fpclassify_imp(static_cast&lt;value_type&gt;(t), detail::generic_tag&lt;true&gt;());
+<span class="lineNum">     285 </span>            :    return detail::fpclassify_imp(static_cast&lt;value_type&gt;(t), method());
+<span class="lineNum">     286 </span>            : #else
+<span class="lineNum">     287 </span>            :    return detail::fpclassify_imp(static_cast&lt;value_type&gt;(t), method());
+<span class="lineNum">     288 </span>            : #endif
+<span class="lineNum">     289 </span>            : }
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            : #ifdef BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
+<span class="lineNum">     292 </span>            : template &lt;&gt;
+<span class="lineNum">     293 </span>            : inline int fpclassify&lt;long double&gt; BOOST_NO_MACRO_EXPAND(long double t)
+<span class="lineNum">     294 </span>            : {
+<span class="lineNum">     295 </span>            :    typedef detail::fp_traits&lt;long double&gt;::type traits;
+<span class="lineNum">     296 </span>            :    typedef traits::method method;
+<span class="lineNum">     297 </span>            :    typedef long double value_type;
+<span class="lineNum">     298 </span>            : #ifdef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+<span class="lineNum">     299 </span>            :    if(std::numeric_limits&lt;long double&gt;::is_specialized &amp;&amp; detail::is_generic_tag_false(static_cast&lt;method*&gt;(0)))
+<span class="lineNum">     300 </span>            :       return detail::fpclassify_imp(static_cast&lt;value_type&gt;(t), detail::generic_tag&lt;true&gt;());
+<span class="lineNum">     301 </span>            :    return detail::fpclassify_imp(static_cast&lt;value_type&gt;(t), method());
+<span class="lineNum">     302 </span>            : #else
+<span class="lineNum">     303 </span>            :    return detail::fpclassify_imp(static_cast&lt;value_type&gt;(t), method());
+<span class="lineNum">     304 </span>            : #endif
+<span class="lineNum">     305 </span>            : }
+<span class="lineNum">     306 </span>            : #endif
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            : namespace detail {
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            : #ifdef BOOST_MATH_USE_STD_FPCLASSIFY
+<span class="lineNum">     311 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     312 </span>            :     inline bool isfinite_impl(T x, native_tag const&amp;)
+<span class="lineNum">     313 </span>            :     {
+<span class="lineNum">     314 </span><span class="lineCov">        115 :         return (std::isfinite)(x);</span>
+<span class="lineNum">     315 </span>            :     }
+<span class="lineNum">     316 </span>            : #endif
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     319 </span>            :     inline bool isfinite_impl(T x, generic_tag&lt;true&gt; const&amp;)
+<span class="lineNum">     320 </span>            :     {
+<span class="lineNum">     321 </span>            :         return x &gt;= -(std::numeric_limits&lt;T&gt;::max)()
+<span class="lineNum">     322 </span>            :             &amp;&amp; x &lt;= (std::numeric_limits&lt;T&gt;::max)();
+<span class="lineNum">     323 </span>            :     }
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     326 </span>            :     inline bool isfinite_impl(T x, generic_tag&lt;false&gt; const&amp;)
+<span class="lineNum">     327 </span>            :     {
+<span class="lineNum">     328 </span>            : #ifdef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+<span class="lineNum">     329 </span>            :       if(std::numeric_limits&lt;T&gt;::is_specialized)
+<span class="lineNum">     330 </span>            :          return isfinite_impl(x, generic_tag&lt;true&gt;());
+<span class="lineNum">     331 </span>            : #endif
+<span class="lineNum">     332 </span>            :        (void)x; // warning suppression.
+<span class="lineNum">     333 </span>            :        return true;
+<span class="lineNum">     334 </span>            :     }
+<span class="lineNum">     335 </span>            : 
+<span class="lineNum">     336 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     337 </span>            :     inline bool isfinite_impl(T x, ieee_tag const&amp;)
+<span class="lineNum">     338 </span>            :     {
+<span class="lineNum">     339 </span>            :         typedef BOOST_DEDUCED_TYPENAME detail::fp_traits&lt;T&gt;::type traits;
+<span class="lineNum">     340 </span>            :         BOOST_DEDUCED_TYPENAME traits::bits a;
+<span class="lineNum">     341 </span>            :         traits::get_bits(x,a);
+<span class="lineNum">     342 </span>            :         a &amp;= traits::exponent;
+<span class="lineNum">     343 </span>            :         return a != traits::exponent;
+<span class="lineNum">     344 </span>            :     }
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span>            : #if defined(BOOST_MATH_USE_STD_FPCLASSIFY) &amp;&amp; defined(BOOST_MATH_NO_NATIVE_LONG_DOUBLE_FP_CLASSIFY)
+<span class="lineNum">     347 </span>            : inline bool isfinite_impl BOOST_NO_MACRO_EXPAND(long double t, const native_tag&amp;)
+<span class="lineNum">     348 </span>            : {
+<span class="lineNum">     349 </span>            :    return boost::math::detail::isfinite_impl(t, generic_tag&lt;true&gt;());
+<span class="lineNum">     350 </span>            : }
+<span class="lineNum">     351 </span>            : #endif
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span>            : }
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span>            : template&lt;class T&gt;
+<span class="lineNum">     356 </span>            : inline bool (isfinite)(T x)
+<span class="lineNum">     357 </span>            : { //!&lt; \brief return true if floating-point type t is finite.
+<span class="lineNum">     358 </span>            :    typedef typename detail::fp_traits&lt;T&gt;::type traits;
+<span class="lineNum">     359 </span>            :    typedef typename traits::method method;
+<span class="lineNum">     360 </span>            :    // typedef typename boost::is_floating_point&lt;T&gt;::type fp_tag;
+<span class="lineNum">     361 </span>            :    typedef typename tools::promote_args_permissive&lt;T&gt;::type value_type;
+<span class="lineNum">     362 </span><span class="lineCov">        230 :    return detail::isfinite_impl(static_cast&lt;value_type&gt;(x), method());</span>
+<span class="lineNum">     363 </span>            : }
+<span class="lineNum">     364 </span>            : 
+<span class="lineNum">     365 </span>            : #ifdef BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
+<span class="lineNum">     366 </span>            : template&lt;&gt;
+<span class="lineNum">     367 </span>            : inline bool (isfinite)(long double x)
+<span class="lineNum">     368 </span>            : { //!&lt; \brief return true if floating-point type t is finite.
+<span class="lineNum">     369 </span>            :    typedef detail::fp_traits&lt;long double&gt;::type traits;
+<span class="lineNum">     370 </span>            :    typedef traits::method method;
+<span class="lineNum">     371 </span>            :    //typedef boost::is_floating_point&lt;long double&gt;::type fp_tag;
+<span class="lineNum">     372 </span>            :    typedef long double value_type;
+<span class="lineNum">     373 </span>            :    return detail::isfinite_impl(static_cast&lt;value_type&gt;(x), method());
+<span class="lineNum">     374 </span>            : }
+<span class="lineNum">     375 </span>            : #endif
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span>            : //------------------------------------------------------------------------------
+<span class="lineNum">     378 </span>            : 
+<span class="lineNum">     379 </span>            : namespace detail {
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span>            : #ifdef BOOST_MATH_USE_STD_FPCLASSIFY
+<span class="lineNum">     382 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     383 </span>            :     inline bool isnormal_impl(T x, native_tag const&amp;)
+<span class="lineNum">     384 </span>            :     {
+<span class="lineNum">     385 </span>            :         return (std::isnormal)(x);
+<span class="lineNum">     386 </span>            :     }
+<span class="lineNum">     387 </span>            : #endif
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     390 </span>            :     inline bool isnormal_impl(T x, generic_tag&lt;true&gt; const&amp;)
+<span class="lineNum">     391 </span>            :     {
+<span class="lineNum">     392 </span>            :         if(x &lt; 0) x = -x;
+<span class="lineNum">     393 </span>            :         return x &gt;= (std::numeric_limits&lt;T&gt;::min)()
+<span class="lineNum">     394 </span>            :             &amp;&amp; x &lt;= (std::numeric_limits&lt;T&gt;::max)();
+<span class="lineNum">     395 </span>            :     }
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     398 </span>            :     inline bool isnormal_impl(T x, generic_tag&lt;false&gt; const&amp;)
+<span class="lineNum">     399 </span>            :     {
+<span class="lineNum">     400 </span>            : #ifdef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+<span class="lineNum">     401 </span>            :       if(std::numeric_limits&lt;T&gt;::is_specialized)
+<span class="lineNum">     402 </span>            :          return isnormal_impl(x, generic_tag&lt;true&gt;());
+<span class="lineNum">     403 </span>            : #endif
+<span class="lineNum">     404 </span>            :        return !(x == 0);
+<span class="lineNum">     405 </span>            :     }
+<span class="lineNum">     406 </span>            : 
+<span class="lineNum">     407 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     408 </span>            :     inline bool isnormal_impl(T x, ieee_tag const&amp;)
+<span class="lineNum">     409 </span>            :     {
+<span class="lineNum">     410 </span>            :         typedef BOOST_DEDUCED_TYPENAME detail::fp_traits&lt;T&gt;::type traits;
+<span class="lineNum">     411 </span>            :         BOOST_DEDUCED_TYPENAME traits::bits a;
+<span class="lineNum">     412 </span>            :         traits::get_bits(x,a);
+<span class="lineNum">     413 </span>            :         a &amp;= traits::exponent | traits::flag;
+<span class="lineNum">     414 </span>            :         return (a != 0) &amp;&amp; (a &lt; traits::exponent);
+<span class="lineNum">     415 </span>            :     }
+<span class="lineNum">     416 </span>            : 
+<span class="lineNum">     417 </span>            : #if defined(BOOST_MATH_USE_STD_FPCLASSIFY) &amp;&amp; defined(BOOST_MATH_NO_NATIVE_LONG_DOUBLE_FP_CLASSIFY)
+<span class="lineNum">     418 </span>            : inline bool isnormal_impl BOOST_NO_MACRO_EXPAND(long double t, const native_tag&amp;)
+<span class="lineNum">     419 </span>            : {
+<span class="lineNum">     420 </span>            :    return boost::math::detail::isnormal_impl(t, generic_tag&lt;true&gt;());
+<span class="lineNum">     421 </span>            : }
+<span class="lineNum">     422 </span>            : #endif
+<span class="lineNum">     423 </span>            : 
+<span class="lineNum">     424 </span>            : }
+<span class="lineNum">     425 </span>            : 
+<span class="lineNum">     426 </span>            : template&lt;class T&gt;
+<span class="lineNum">     427 </span>            : inline bool (isnormal)(T x)
+<span class="lineNum">     428 </span>            : {
+<span class="lineNum">     429 </span>            :    typedef typename detail::fp_traits&lt;T&gt;::type traits;
+<span class="lineNum">     430 </span>            :    typedef typename traits::method method;
+<span class="lineNum">     431 </span>            :    //typedef typename boost::is_floating_point&lt;T&gt;::type fp_tag;
+<span class="lineNum">     432 </span>            :    typedef typename tools::promote_args_permissive&lt;T&gt;::type value_type;
+<span class="lineNum">     433 </span>            :    return detail::isnormal_impl(static_cast&lt;value_type&gt;(x), method());
+<span class="lineNum">     434 </span>            : }
+<span class="lineNum">     435 </span>            : 
+<span class="lineNum">     436 </span>            : #ifdef BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
+<span class="lineNum">     437 </span>            : template&lt;&gt;
+<span class="lineNum">     438 </span>            : inline bool (isnormal)(long double x)
+<span class="lineNum">     439 </span>            : {
+<span class="lineNum">     440 </span>            :    typedef detail::fp_traits&lt;long double&gt;::type traits;
+<span class="lineNum">     441 </span>            :    typedef traits::method method;
+<span class="lineNum">     442 </span>            :    //typedef boost::is_floating_point&lt;long double&gt;::type fp_tag;
+<span class="lineNum">     443 </span>            :    typedef long double value_type;
+<span class="lineNum">     444 </span>            :    return detail::isnormal_impl(static_cast&lt;value_type&gt;(x), method());
+<span class="lineNum">     445 </span>            : }
+<span class="lineNum">     446 </span>            : #endif
+<span class="lineNum">     447 </span>            : 
+<span class="lineNum">     448 </span>            : //------------------------------------------------------------------------------
+<span class="lineNum">     449 </span>            : 
+<span class="lineNum">     450 </span>            : namespace detail {
+<span class="lineNum">     451 </span>            : 
+<span class="lineNum">     452 </span>            : #ifdef BOOST_MATH_USE_STD_FPCLASSIFY
+<span class="lineNum">     453 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     454 </span>            :     inline bool isinf_impl(T x, native_tag const&amp;)
+<span class="lineNum">     455 </span>            :     {
+<span class="lineNum">     456 </span><span class="lineCov">         65 :         return (std::isinf)(x);</span>
+<span class="lineNum">     457 </span>            :     }
+<span class="lineNum">     458 </span>            : #endif
+<span class="lineNum">     459 </span>            : 
+<span class="lineNum">     460 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     461 </span>            :     inline bool isinf_impl(T x, generic_tag&lt;true&gt; const&amp;)
+<span class="lineNum">     462 </span>            :     {
+<span class="lineNum">     463 </span>            :         (void)x; // in case the compiler thinks that x is unused because std::numeric_limits&lt;T&gt;::has_infinity is false
+<span class="lineNum">     464 </span>            :         return std::numeric_limits&lt;T&gt;::has_infinity
+<span class="lineNum">     465 </span>            :             &amp;&amp; ( x == std::numeric_limits&lt;T&gt;::infinity()
+<span class="lineNum">     466 </span>            :                  || x == -std::numeric_limits&lt;T&gt;::infinity());
+<span class="lineNum">     467 </span>            :     }
+<span class="lineNum">     468 </span>            : 
+<span class="lineNum">     469 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     470 </span>            :     inline bool isinf_impl(T x, generic_tag&lt;false&gt; const&amp;)
+<span class="lineNum">     471 </span>            :     {
+<span class="lineNum">     472 </span>            : #ifdef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+<span class="lineNum">     473 </span>            :       if(std::numeric_limits&lt;T&gt;::is_specialized)
+<span class="lineNum">     474 </span>            :          return isinf_impl(x, generic_tag&lt;true&gt;());
+<span class="lineNum">     475 </span>            : #endif
+<span class="lineNum">     476 </span>            :         (void)x; // warning suppression.
+<span class="lineNum">     477 </span>            :         return false;
+<span class="lineNum">     478 </span>            :     }
+<span class="lineNum">     479 </span>            : 
+<span class="lineNum">     480 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     481 </span>            :     inline bool isinf_impl(T x, ieee_copy_all_bits_tag const&amp;)
+<span class="lineNum">     482 </span>            :     {
+<span class="lineNum">     483 </span>            :         typedef BOOST_DEDUCED_TYPENAME fp_traits&lt;T&gt;::type traits;
+<span class="lineNum">     484 </span>            : 
+<span class="lineNum">     485 </span>            :         BOOST_DEDUCED_TYPENAME traits::bits a;
+<span class="lineNum">     486 </span>            :         traits::get_bits(x,a);
+<span class="lineNum">     487 </span>            :         a &amp;= traits::exponent | traits::significand;
+<span class="lineNum">     488 </span>            :         return a == traits::exponent;
+<span class="lineNum">     489 </span>            :     }
+<span class="lineNum">     490 </span>            : 
+<span class="lineNum">     491 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     492 </span>            :     inline bool isinf_impl(T x, ieee_copy_leading_bits_tag const&amp;)
+<span class="lineNum">     493 </span>            :     {
+<span class="lineNum">     494 </span>            :         typedef BOOST_DEDUCED_TYPENAME fp_traits&lt;T&gt;::type traits;
+<span class="lineNum">     495 </span>            : 
+<span class="lineNum">     496 </span>            :         BOOST_DEDUCED_TYPENAME traits::bits a;
+<span class="lineNum">     497 </span>            :         traits::get_bits(x,a);
+<span class="lineNum">     498 </span>            :         a &amp;= traits::exponent | traits::significand;
+<span class="lineNum">     499 </span>            :         if(a != traits::exponent)
+<span class="lineNum">     500 </span>            :             return false;
+<span class="lineNum">     501 </span>            : 
+<span class="lineNum">     502 </span>            :         traits::set_bits(x,0);
+<span class="lineNum">     503 </span>            :         return x == 0;
+<span class="lineNum">     504 </span>            :     }
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span>            : #if defined(BOOST_MATH_USE_STD_FPCLASSIFY) &amp;&amp; defined(BOOST_MATH_NO_NATIVE_LONG_DOUBLE_FP_CLASSIFY)
+<span class="lineNum">     507 </span>            : inline bool isinf_impl BOOST_NO_MACRO_EXPAND(long double t, const native_tag&amp;)
+<span class="lineNum">     508 </span>            : {
+<span class="lineNum">     509 </span>            :    return boost::math::detail::isinf_impl(t, generic_tag&lt;true&gt;());
+<span class="lineNum">     510 </span>            : }
+<span class="lineNum">     511 </span>            : #endif
+<span class="lineNum">     512 </span>            : 
+<span class="lineNum">     513 </span>            : }   // namespace detail
+<span class="lineNum">     514 </span>            : 
+<span class="lineNum">     515 </span>            : template&lt;class T&gt;
+<span class="lineNum">     516 </span>            : inline bool (isinf)(T x)
+<span class="lineNum">     517 </span>            : {
+<span class="lineNum">     518 </span>            :    typedef typename detail::fp_traits&lt;T&gt;::type traits;
+<span class="lineNum">     519 </span>            :    typedef typename traits::method method;
+<span class="lineNum">     520 </span>            :    // typedef typename boost::is_floating_point&lt;T&gt;::type fp_tag;
+<span class="lineNum">     521 </span>            :    typedef typename tools::promote_args_permissive&lt;T&gt;::type value_type;
+<span class="lineNum">     522 </span><span class="lineCov">        130 :    return detail::isinf_impl(static_cast&lt;value_type&gt;(x), method());</span>
+<span class="lineNum">     523 </span>            : }
+<span class="lineNum">     524 </span>            : 
+<span class="lineNum">     525 </span>            : #ifdef BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
+<span class="lineNum">     526 </span>            : template&lt;&gt;
+<span class="lineNum">     527 </span>            : inline bool (isinf)(long double x)
+<span class="lineNum">     528 </span>            : {
+<span class="lineNum">     529 </span>            :    typedef detail::fp_traits&lt;long double&gt;::type traits;
+<span class="lineNum">     530 </span>            :    typedef traits::method method;
+<span class="lineNum">     531 </span>            :    //typedef boost::is_floating_point&lt;long double&gt;::type fp_tag;
+<span class="lineNum">     532 </span>            :    typedef long double value_type;
+<span class="lineNum">     533 </span>            :    return detail::isinf_impl(static_cast&lt;value_type&gt;(x), method());
+<span class="lineNum">     534 </span>            : }
+<span class="lineNum">     535 </span>            : #endif
+<span class="lineNum">     536 </span>            : #if defined(BOOST_MATH_USE_FLOAT128) &amp;&amp; defined(BOOST_MATH_HAS_QUADMATH_H)
+<span class="lineNum">     537 </span>            : template&lt;&gt;
+<span class="lineNum">     538 </span>            : inline bool (isinf)(__float128 x)
+<span class="lineNum">     539 </span>            : {
+<span class="lineNum">     540 </span>            :    return ::isinfq(x);
+<span class="lineNum">     541 </span>            : }
+<span class="lineNum">     542 </span>            : #endif
+<span class="lineNum">     543 </span>            : 
+<span class="lineNum">     544 </span>            : //------------------------------------------------------------------------------
+<span class="lineNum">     545 </span>            : 
+<span class="lineNum">     546 </span>            : namespace detail {
+<span class="lineNum">     547 </span>            : 
+<span class="lineNum">     548 </span>            : #ifdef BOOST_MATH_USE_STD_FPCLASSIFY
+<span class="lineNum">     549 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     550 </span>            :     inline bool isnan_impl(T x, native_tag const&amp;)
+<span class="lineNum">     551 </span>            :     {
+<span class="lineNum">     552 </span><span class="lineCov">         65 :         return (std::isnan)(x);</span>
+<span class="lineNum">     553 </span>            :     }
+<span class="lineNum">     554 </span>            : #endif
+<span class="lineNum">     555 </span>            : 
+<span class="lineNum">     556 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     557 </span>            :     inline bool isnan_impl(T x, generic_tag&lt;true&gt; const&amp;)
+<span class="lineNum">     558 </span>            :     {
+<span class="lineNum">     559 </span>            :         return std::numeric_limits&lt;T&gt;::has_infinity
+<span class="lineNum">     560 </span>            :             ? !(x &lt;= std::numeric_limits&lt;T&gt;::infinity())
+<span class="lineNum">     561 </span>            :             : x != x;
+<span class="lineNum">     562 </span>            :     }
+<span class="lineNum">     563 </span>            : 
+<span class="lineNum">     564 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     565 </span>            :     inline bool isnan_impl(T x, generic_tag&lt;false&gt; const&amp;)
+<span class="lineNum">     566 </span>            :     {
+<span class="lineNum">     567 </span>            : #ifdef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+<span class="lineNum">     568 </span>            :       if(std::numeric_limits&lt;T&gt;::is_specialized)
+<span class="lineNum">     569 </span>            :          return isnan_impl(x, generic_tag&lt;true&gt;());
+<span class="lineNum">     570 </span>            : #endif
+<span class="lineNum">     571 </span>            :         (void)x; // warning suppression
+<span class="lineNum">     572 </span>            :         return false;
+<span class="lineNum">     573 </span>            :     }
+<span class="lineNum">     574 </span>            : 
+<span class="lineNum">     575 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     576 </span>            :     inline bool isnan_impl(T x, ieee_copy_all_bits_tag const&amp;)
+<span class="lineNum">     577 </span>            :     {
+<span class="lineNum">     578 </span>            :         typedef BOOST_DEDUCED_TYPENAME fp_traits&lt;T&gt;::type traits;
+<span class="lineNum">     579 </span>            : 
+<span class="lineNum">     580 </span>            :         BOOST_DEDUCED_TYPENAME traits::bits a;
+<span class="lineNum">     581 </span>            :         traits::get_bits(x,a);
+<span class="lineNum">     582 </span>            :         a &amp;= traits::exponent | traits::significand;
+<span class="lineNum">     583 </span>            :         return a &gt; traits::exponent;
+<span class="lineNum">     584 </span>            :     }
+<span class="lineNum">     585 </span>            : 
+<span class="lineNum">     586 </span>            :     template&lt;class T&gt;
+<span class="lineNum">     587 </span>            :     inline bool isnan_impl(T x, ieee_copy_leading_bits_tag const&amp;)
+<span class="lineNum">     588 </span>            :     {
+<span class="lineNum">     589 </span>            :         typedef BOOST_DEDUCED_TYPENAME fp_traits&lt;T&gt;::type traits;
+<span class="lineNum">     590 </span>            : 
+<span class="lineNum">     591 </span>            :         BOOST_DEDUCED_TYPENAME traits::bits a;
+<span class="lineNum">     592 </span>            :         traits::get_bits(x,a);
+<span class="lineNum">     593 </span>            : 
+<span class="lineNum">     594 </span>            :         a &amp;= traits::exponent | traits::significand;
+<span class="lineNum">     595 </span>            :         if(a &lt; traits::exponent)
+<span class="lineNum">     596 </span>            :             return false;
+<span class="lineNum">     597 </span>            : 
+<span class="lineNum">     598 </span>            :         a &amp;= traits::significand;
+<span class="lineNum">     599 </span>            :         traits::set_bits(x,a);
+<span class="lineNum">     600 </span>            :         return x != 0;
+<span class="lineNum">     601 </span>            :     }
+<span class="lineNum">     602 </span>            : 
+<span class="lineNum">     603 </span>            : }   // namespace detail
+<span class="lineNum">     604 </span>            : 
+<span class="lineNum">     605 </span>            : template&lt;class T&gt;
+<span class="lineNum">     606 </span>            : inline bool (isnan)(T x)
+<span class="lineNum">     607 </span>            : { //!&lt; \brief return true if floating-point type t is NaN (Not A Number).
+<span class="lineNum">     608 </span>            :    typedef typename detail::fp_traits&lt;T&gt;::type traits;
+<span class="lineNum">     609 </span>            :    typedef typename traits::method method;
+<span class="lineNum">     610 </span>            :    // typedef typename boost::is_floating_point&lt;T&gt;::type fp_tag;
+<span class="lineNum">     611 </span><span class="lineCov">        130 :    return detail::isnan_impl(x, method());</span>
+<span class="lineNum">     612 </span>            : }
+<span class="lineNum">     613 </span>            : 
+<span class="lineNum">     614 </span>            : #ifdef isnan
+<span class="lineNum">     615 </span>            : template &lt;&gt; inline bool isnan BOOST_NO_MACRO_EXPAND&lt;float&gt;(float t){ return ::boost::math_detail::is_nan_helper(t, boost::true_type()); }
+<span class="lineNum">     616 </span>            : template &lt;&gt; inline bool isnan BOOST_NO_MACRO_EXPAND&lt;double&gt;(double t){ return ::boost::math_detail::is_nan_helper(t, boost::true_type()); }
+<span class="lineNum">     617 </span>            : template &lt;&gt; inline bool isnan BOOST_NO_MACRO_EXPAND&lt;long double&gt;(long double t){ return ::boost::math_detail::is_nan_helper(t, boost::true_type()); }
+<span class="lineNum">     618 </span>            : #elif defined(BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS)
+<span class="lineNum">     619 </span>            : template&lt;&gt;
+<span class="lineNum">     620 </span>            : inline bool (isnan)(long double x)
+<span class="lineNum">     621 </span>            : { //!&lt; \brief return true if floating-point type t is NaN (Not A Number).
+<span class="lineNum">     622 </span>            :    typedef detail::fp_traits&lt;long double&gt;::type traits;
+<span class="lineNum">     623 </span>            :    typedef traits::method method;
+<span class="lineNum">     624 </span>            :    //typedef boost::is_floating_point&lt;long double&gt;::type fp_tag;
+<span class="lineNum">     625 </span>            :    return detail::isnan_impl(x, method());
+<span class="lineNum">     626 </span>            : }
+<span class="lineNum">     627 </span>            : #endif
+<span class="lineNum">     628 </span>            : #if defined(BOOST_MATH_USE_FLOAT128) &amp;&amp; defined(BOOST_MATH_HAS_QUADMATH_H)
+<span class="lineNum">     629 </span>            : template&lt;&gt;
+<span class="lineNum">     630 </span>            : inline bool (isnan)(__float128 x)
+<span class="lineNum">     631 </span>            : {
+<span class="lineNum">     632 </span>            :    return ::isnanq(x);
+<span class="lineNum">     633 </span>            : }
+<span class="lineNum">     634 </span>            : #endif
+<span class="lineNum">     635 </span>            : 
+<span class="lineNum">     636 </span>            : } // namespace math
+<span class="lineNum">     637 </span>            : } // namespace boost
+<span class="lineNum">     638 </span>            : 
+<span class="lineNum">     639 </span>            : #endif // BOOST_MATH_FPCLASSIFY_HPP
+<span class="lineNum">     640 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

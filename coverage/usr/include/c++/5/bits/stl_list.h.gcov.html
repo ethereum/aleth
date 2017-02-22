@@ -1,0 +1,1949 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/bits/stl_list.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5/bits</a> - stl_list.h<span style="font-size: 80%;"> (source / <a href="stl_list.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">69</td>
+            <td class="headerCovTableEntry">82</td>
+            <td class="headerCovTableEntryMed">84.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntry">32</td>
+            <td class="headerCovTableEntryLo">59.4 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // List implementation -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2001-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /*
+<span class="lineNum">      26 </span>            :  *
+<span class="lineNum">      27 </span>            :  * Copyright (c) 1994
+<span class="lineNum">      28 </span>            :  * Hewlett-Packard Company
+<span class="lineNum">      29 </span>            :  *
+<span class="lineNum">      30 </span>            :  * Permission to use, copy, modify, distribute and sell this software
+<span class="lineNum">      31 </span>            :  * and its documentation for any purpose is hereby granted without fee,
+<span class="lineNum">      32 </span>            :  * provided that the above copyright notice appear in all copies and
+<span class="lineNum">      33 </span>            :  * that both that copyright notice and this permission notice appear
+<span class="lineNum">      34 </span>            :  * in supporting documentation.  Hewlett-Packard Company makes no
+<span class="lineNum">      35 </span>            :  * representations about the suitability of this software for any
+<span class="lineNum">      36 </span>            :  * purpose.  It is provided &quot;as is&quot; without express or implied warranty.
+<span class="lineNum">      37 </span>            :  *
+<span class="lineNum">      38 </span>            :  *
+<span class="lineNum">      39 </span>            :  * Copyright (c) 1996,1997
+<span class="lineNum">      40 </span>            :  * Silicon Graphics Computer Systems, Inc.
+<span class="lineNum">      41 </span>            :  *
+<span class="lineNum">      42 </span>            :  * Permission to use, copy, modify, distribute and sell this software
+<span class="lineNum">      43 </span>            :  * and its documentation for any purpose is hereby granted without fee,
+<span class="lineNum">      44 </span>            :  * provided that the above copyright notice appear in all copies and
+<span class="lineNum">      45 </span>            :  * that both that copyright notice and this permission notice appear
+<span class="lineNum">      46 </span>            :  * in supporting documentation.  Silicon Graphics makes no
+<span class="lineNum">      47 </span>            :  * representations about the suitability of this software for any
+<span class="lineNum">      48 </span>            :  * purpose.  It is provided &quot;as is&quot; without express or implied warranty.
+<span class="lineNum">      49 </span>            :  */
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : /** @file bits/stl_list.h
+<span class="lineNum">      52 </span>            :  *  This is an internal header file, included by other library headers.
+<span class="lineNum">      53 </span>            :  *  Do not attempt to use it directly. @headername{list}
+<span class="lineNum">      54 </span>            :  */
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : #ifndef _STL_LIST_H
+<span class="lineNum">      57 </span>            : #define _STL_LIST_H 1
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : #include &lt;bits/concept_check.h&gt;
+<span class="lineNum">      60 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">      61 </span>            : #include &lt;initializer_list&gt;
+<span class="lineNum">      62 </span>            : #endif
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span>            :   namespace __detail
+<span class="lineNum">      67 </span>            :   {
+<span class="lineNum">      68 </span>            :   _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            :     // Supporting structures are split into common and templated
+<span class="lineNum">      71 </span>            :     // types; the latter publicly inherits from the former in an
+<span class="lineNum">      72 </span>            :     // effort to reduce code duplication.  This results in some
+<span class="lineNum">      73 </span>            :     // &quot;needless&quot; static_cast'ing later on, but it's all safe
+<span class="lineNum">      74 </span>            :     // downcasting.
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            :     /// Common part of a node in the %list. 
+<span class="lineNum">      77 </span>            :     struct _List_node_base
+<span class="lineNum">      78 </span>            :     {
+<span class="lineNum">      79 </span>            :       _List_node_base* _M_next;
+<span class="lineNum">      80 </span>            :       _List_node_base* _M_prev;
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :       static void
+<span class="lineNum">      83 </span>            :       swap(_List_node_base&amp; __x, _List_node_base&amp; __y) _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            :       void
+<span class="lineNum">      86 </span>            :       _M_transfer(_List_node_base* const __first,
+<span class="lineNum">      87 </span>            :                   _List_node_base* const __last) _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :       void
+<span class="lineNum">      90 </span>            :       _M_reverse() _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :       void
+<span class="lineNum">      93 </span>            :       _M_hook(_List_node_base* const __position) _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            :       void
+<span class="lineNum">      96 </span>            :       _M_unhook() _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">      97 </span>            :     };
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :   _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     100 </span>            :   } // namespace detail
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : _GLIBCXX_BEGIN_NAMESPACE_CONTAINER
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :   /// An actual node in the %list.
+<span class="lineNum">     105 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">     106 </span><span class="lineCov">        282 :     struct _List_node : public __detail::_List_node_base</span>
+<span class="lineNum">     107 </span>            :     {
+<span class="lineNum">     108 </span>            :       ///&lt; User's data.
+<span class="lineNum">     109 </span>            :       _Tp _M_data;
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     112 </span>            :       template&lt;typename... _Args&gt;
+<span class="lineNum">     113 </span>            :         _List_node(_Args&amp;&amp;... __args)
+<span class="lineNum">     114 </span><span class="lineCov">       6792 :         : __detail::_List_node_base(), _M_data(std::forward&lt;_Args&gt;(__args)...) </span>
+<span class="lineNum">     115 </span>            :         { }
+<span class="lineNum">     116 </span>            : #endif
+<span class="lineNum">     117 </span>            :     };
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :   /**
+<span class="lineNum">     120 </span>            :    *  @brief A list::iterator.
+<span class="lineNum">     121 </span>            :    *
+<span class="lineNum">     122 </span>            :    *  All the functions are op overloads.
+<span class="lineNum">     123 </span>            :   */
+<span class="lineNum">     124 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">     125 </span>            :     struct _List_iterator
+<span class="lineNum">     126 </span>            :     {
+<span class="lineNum">     127 </span>            :       typedef _List_iterator&lt;_Tp&gt;                _Self;
+<span class="lineNum">     128 </span>            :       typedef _List_node&lt;_Tp&gt;                    _Node;
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :       typedef ptrdiff_t                          difference_type;
+<span class="lineNum">     131 </span>            :       typedef std::bidirectional_iterator_tag    iterator_category;
+<span class="lineNum">     132 </span>            :       typedef _Tp                                value_type;
+<span class="lineNum">     133 </span>            :       typedef _Tp*                               pointer;
+<span class="lineNum">     134 </span>            :       typedef _Tp&amp;                               reference;
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :       _List_iterator() _GLIBCXX_NOEXCEPT
+<span class="lineNum">     137 </span>            :       : _M_node() { }
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :       explicit
+<span class="lineNum">     140 </span>            :       _List_iterator(__detail::_List_node_base* __x) _GLIBCXX_NOEXCEPT
+<span class="lineNum">     141 </span>            :       : _M_node(__x) { }
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :       _Self
+<span class="lineNum">     144 </span>            :       _M_const_cast() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     145 </span>            :       { return *this; }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            :       // Must downcast from _List_node_base to _List_node to get to _M_data.
+<span class="lineNum">     148 </span>            :       reference
+<span class="lineNum">     149 </span>            :       operator*() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     150 </span><span class="lineCov">        126 :       { return static_cast&lt;_Node*&gt;(_M_node)-&gt;_M_data; }</span>
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :       pointer
+<span class="lineNum">     153 </span>            :       operator-&gt;() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     154 </span>            :       { return std::__addressof(static_cast&lt;_Node*&gt;(_M_node)-&gt;_M_data); }
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :       _Self&amp;
+<span class="lineNum">     157 </span>            :       operator++() _GLIBCXX_NOEXCEPT
+<span class="lineNum">     158 </span>            :       {
+<span class="lineNum">     159 </span><span class="lineCov">        312 :         _M_node = _M_node-&gt;_M_next;</span>
+<span class="lineNum">     160 </span>            :         return *this;
+<span class="lineNum">     161 </span>            :       }
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            :       _Self
+<span class="lineNum">     164 </span>            :       operator++(int) _GLIBCXX_NOEXCEPT
+<span class="lineNum">     165 </span>            :       {
+<span class="lineNum">     166 </span>            :         _Self __tmp = *this;
+<span class="lineNum">     167 </span>            :         _M_node = _M_node-&gt;_M_next;
+<span class="lineNum">     168 </span>            :         return __tmp;
+<span class="lineNum">     169 </span>            :       }
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            :       _Self&amp;
+<span class="lineNum">     172 </span>            :       operator--() _GLIBCXX_NOEXCEPT
+<span class="lineNum">     173 </span>            :       {
+<span class="lineNum">     174 </span><span class="lineCov">          1 :         _M_node = _M_node-&gt;_M_prev;</span>
+<span class="lineNum">     175 </span>            :         return *this;
+<span class="lineNum">     176 </span>            :       }
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :       _Self
+<span class="lineNum">     179 </span>            :       operator--(int) _GLIBCXX_NOEXCEPT
+<span class="lineNum">     180 </span>            :       {
+<span class="lineNum">     181 </span>            :         _Self __tmp = *this;
+<span class="lineNum">     182 </span>            :         _M_node = _M_node-&gt;_M_prev;
+<span class="lineNum">     183 </span>            :         return __tmp;
+<span class="lineNum">     184 </span>            :       }
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :       bool
+<span class="lineNum">     187 </span>            :       operator==(const _Self&amp; __x) const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     188 </span>            :       { return _M_node == __x._M_node; }
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            :       bool
+<span class="lineNum">     191 </span>            :       operator!=(const _Self&amp; __x) const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     192 </span>            :       { return _M_node != __x._M_node; }
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            :       // The only member points to the %list element.
+<span class="lineNum">     195 </span>            :       __detail::_List_node_base* _M_node;
+<span class="lineNum">     196 </span>            :     };
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :   /**
+<span class="lineNum">     199 </span>            :    *  @brief A list::const_iterator.
+<span class="lineNum">     200 </span>            :    *
+<span class="lineNum">     201 </span>            :    *  All the functions are op overloads.
+<span class="lineNum">     202 </span>            :   */
+<span class="lineNum">     203 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">     204 </span>            :     struct _List_const_iterator
+<span class="lineNum">     205 </span>            :     {
+<span class="lineNum">     206 </span>            :       typedef _List_const_iterator&lt;_Tp&gt;          _Self;
+<span class="lineNum">     207 </span>            :       typedef const _List_node&lt;_Tp&gt;              _Node;
+<span class="lineNum">     208 </span>            :       typedef _List_iterator&lt;_Tp&gt;                iterator;
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :       typedef ptrdiff_t                          difference_type;
+<span class="lineNum">     211 </span>            :       typedef std::bidirectional_iterator_tag    iterator_category;
+<span class="lineNum">     212 </span>            :       typedef _Tp                                value_type;
+<span class="lineNum">     213 </span>            :       typedef const _Tp*                         pointer;
+<span class="lineNum">     214 </span>            :       typedef const _Tp&amp;                         reference;
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            :       _List_const_iterator() _GLIBCXX_NOEXCEPT
+<span class="lineNum">     217 </span>            :       : _M_node() { }
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            :       explicit
+<span class="lineNum">     220 </span>            :       _List_const_iterator(const __detail::_List_node_base* __x)
+<span class="lineNum">     221 </span>            :       _GLIBCXX_NOEXCEPT
+<span class="lineNum">     222 </span>            :       : _M_node(__x) { }
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            :       _List_const_iterator(const iterator&amp; __x) _GLIBCXX_NOEXCEPT
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :       : _M_node(__x._M_node) { }</span>
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span>            :       iterator
+<span class="lineNum">     228 </span>            :       _M_const_cast() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     229 </span><span class="lineCov">         84 :       { return iterator(const_cast&lt;__detail::_List_node_base*&gt;(_M_node)); }</span>
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :       // Must downcast from List_node_base to _List_node to get to
+<span class="lineNum">     232 </span>            :       // _M_data.
+<span class="lineNum">     233 </span>            :       reference
+<span class="lineNum">     234 </span>            :       operator*() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     235 </span>            :       { return static_cast&lt;_Node*&gt;(_M_node)-&gt;_M_data; }
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            :       pointer
+<span class="lineNum">     238 </span>            :       operator-&gt;() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     239 </span>            :       { return std::__addressof(static_cast&lt;_Node*&gt;(_M_node)-&gt;_M_data); }
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            :       _Self&amp;
+<span class="lineNum">     242 </span>            :       operator++() _GLIBCXX_NOEXCEPT
+<span class="lineNum">     243 </span>            :       {
+<span class="lineNum">     244 </span><span class="lineCov">         10 :         _M_node = _M_node-&gt;_M_next;</span>
+<span class="lineNum">     245 </span>            :         return *this;
+<span class="lineNum">     246 </span>            :       }
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :       _Self
+<span class="lineNum">     249 </span>            :       operator++(int) _GLIBCXX_NOEXCEPT
+<span class="lineNum">     250 </span>            :       {
+<span class="lineNum">     251 </span>            :         _Self __tmp = *this;
+<span class="lineNum">     252 </span>            :         _M_node = _M_node-&gt;_M_next;
+<span class="lineNum">     253 </span>            :         return __tmp;
+<span class="lineNum">     254 </span>            :       }
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            :       _Self&amp;
+<span class="lineNum">     257 </span>            :       operator--() _GLIBCXX_NOEXCEPT
+<span class="lineNum">     258 </span>            :       {
+<span class="lineNum">     259 </span>            :         _M_node = _M_node-&gt;_M_prev;
+<span class="lineNum">     260 </span>            :         return *this;
+<span class="lineNum">     261 </span>            :       }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            :       _Self
+<span class="lineNum">     264 </span>            :       operator--(int) _GLIBCXX_NOEXCEPT
+<span class="lineNum">     265 </span>            :       {
+<span class="lineNum">     266 </span>            :         _Self __tmp = *this;
+<span class="lineNum">     267 </span>            :         _M_node = _M_node-&gt;_M_prev;
+<span class="lineNum">     268 </span>            :         return __tmp;
+<span class="lineNum">     269 </span>            :       }
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            :       bool
+<span class="lineNum">     272 </span>            :       operator==(const _Self&amp; __x) const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     273 </span>            :       { return _M_node == __x._M_node; }
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            :       bool
+<span class="lineNum">     276 </span>            :       operator!=(const _Self&amp; __x) const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     277 </span>            :       { return _M_node != __x._M_node; }
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            :       // The only member points to the %list element.
+<span class="lineNum">     280 </span>            :       const __detail::_List_node_base* _M_node;
+<span class="lineNum">     281 </span>            :     };
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span>            :   template&lt;typename _Val&gt;
+<span class="lineNum">     284 </span>            :     inline bool
+<span class="lineNum">     285 </span>            :     operator==(const _List_iterator&lt;_Val&gt;&amp; __x,
+<span class="lineNum">     286 </span>            :                const _List_const_iterator&lt;_Val&gt;&amp; __y) _GLIBCXX_NOEXCEPT
+<span class="lineNum">     287 </span>            :     { return __x._M_node == __y._M_node; }
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            :   template&lt;typename _Val&gt;
+<span class="lineNum">     290 </span>            :     inline bool
+<span class="lineNum">     291 </span>            :     operator!=(const _List_iterator&lt;_Val&gt;&amp; __x,
+<span class="lineNum">     292 </span>            :                const _List_const_iterator&lt;_Val&gt;&amp; __y) _GLIBCXX_NOEXCEPT
+<span class="lineNum">     293 </span>            :     { return __x._M_node != __y._M_node; }
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span>            : _GLIBCXX_BEGIN_NAMESPACE_CXX11
+<span class="lineNum">     296 </span>            :   /// See bits/stl_deque.h's _Deque_base for an explanation.
+<span class="lineNum">     297 </span>            :   template&lt;typename _Tp, typename _Alloc&gt;
+<span class="lineNum">     298 </span>            :     class _List_base
+<span class="lineNum">     299 </span>            :     {
+<span class="lineNum">     300 </span>            :     protected:
+<span class="lineNum">     301 </span>            :       // NOTA BENE
+<span class="lineNum">     302 </span>            :       // The stored instance is not actually of &quot;allocator_type&quot;'s
+<span class="lineNum">     303 </span>            :       // type.  Instead we rebind the type to
+<span class="lineNum">     304 </span>            :       // Allocator&lt;List_node&lt;Tp&gt;&gt;, which according to [20.1.5]/4
+<span class="lineNum">     305 </span>            :       // should probably be the same.  List_node&lt;Tp&gt; is not the same
+<span class="lineNum">     306 </span>            :       // size as Tp (it's two pointers larger), and specializations on
+<span class="lineNum">     307 </span>            :       // Tp may go unused because List_node&lt;Tp&gt; is being bound
+<span class="lineNum">     308 </span>            :       // instead.
+<span class="lineNum">     309 </span>            :       //
+<span class="lineNum">     310 </span>            :       // We put this to the test in the constructors and in
+<span class="lineNum">     311 </span>            :       // get_allocator, where we use conversions between
+<span class="lineNum">     312 </span>            :       // allocator_type and _Node_alloc_type. The conversion is
+<span class="lineNum">     313 </span>            :       // required by table 32 in [20.1.5].
+<span class="lineNum">     314 </span>            :       typedef typename _Alloc::template rebind&lt;_List_node&lt;_Tp&gt; &gt;::other
+<span class="lineNum">     315 </span>            :         _Node_alloc_type;
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            :       typedef typename _Alloc::template rebind&lt;_Tp&gt;::other _Tp_alloc_type;
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            :       static size_t
+<span class="lineNum">     320 </span>            :       _S_distance(const __detail::_List_node_base* __first,
+<span class="lineNum">     321 </span>            :                   const __detail::_List_node_base* __last)
+<span class="lineNum">     322 </span>            :       {
+<span class="lineNum">     323 </span>            :         size_t __n = 0;
+<span class="lineNum">     324 </span>            :         while (__first != __last)
+<span class="lineNum">     325 </span>            :           {
+<span class="lineNum">     326 </span>            :             __first = __first-&gt;_M_next;
+<span class="lineNum">     327 </span>            :             ++__n;
+<span class="lineNum">     328 </span>            :           }
+<span class="lineNum">     329 </span>            :         return __n;
+<span class="lineNum">     330 </span>            :       }
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span><span class="lineCov">       6436 :       struct _List_impl</span>
+<span class="lineNum">     333 </span>            :       : public _Node_alloc_type
+<span class="lineNum">     334 </span>            :       {
+<span class="lineNum">     335 </span>            : #if _GLIBCXX_USE_CXX11_ABI
+<span class="lineNum">     336 </span>            :         _List_node&lt;size_t&gt; _M_node;
+<span class="lineNum">     337 </span>            : #else
+<span class="lineNum">     338 </span>            :         __detail::_List_node_base _M_node;
+<span class="lineNum">     339 </span>            : #endif
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span>            :         _List_impl()
+<span class="lineNum">     342 </span><span class="lineCov">      12872 :         : _Node_alloc_type(), _M_node()</span>
+<span class="lineNum">     343 </span>            :         { }
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span>            :         _List_impl(const _Node_alloc_type&amp; __a) _GLIBCXX_NOEXCEPT
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :         : _Node_alloc_type(__a), _M_node()</span>
+<span class="lineNum">     347 </span>            :         { }
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     350 </span>            :         _List_impl(_Node_alloc_type&amp;&amp; __a) _GLIBCXX_NOEXCEPT
+<span class="lineNum">     351 </span>            :         : _Node_alloc_type(std::move(__a)), _M_node()
+<span class="lineNum">     352 </span>            :         { }
+<span class="lineNum">     353 </span>            : #endif
+<span class="lineNum">     354 </span>            :       };
+<span class="lineNum">     355 </span>            : 
+<span class="lineNum">     356 </span>            :       _List_impl _M_impl;
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span>            : #if _GLIBCXX_USE_CXX11_ABI
+<span class="lineNum">     359 </span>            :       size_t _M_get_size() const { return _M_impl._M_node._M_data; }
+<span class="lineNum">     360 </span>            : 
+<span class="lineNum">     361 </span><span class="lineCov">        418 :       void _M_set_size(size_t __n) { _M_impl._M_node._M_data = __n; }</span>
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span><span class="lineCov">        273 :       void _M_inc_size(size_t __n) { _M_impl._M_node._M_data += __n; }</span>
+<span class="lineNum">     364 </span>            : 
+<span class="lineNum">     365 </span><span class="lineCov">         66 :       void _M_dec_size(size_t __n) { _M_impl._M_node._M_data -= __n; }</span>
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span>            :       size_t
+<span class="lineNum">     368 </span>            :       _M_distance(const __detail::_List_node_base* __first,
+<span class="lineNum">     369 </span>            :                   const __detail::_List_node_base* __last) const
+<span class="lineNum">     370 </span>            :       { return _S_distance(__first, __last); }
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span>            :       // return the stored size
+<span class="lineNum">     373 </span>            :       size_t _M_node_count() const { return _M_impl._M_node._M_data; }
+<span class="lineNum">     374 </span>            : #else
+<span class="lineNum">     375 </span>            :       // dummy implementations used when the size is not stored
+<span class="lineNum">     376 </span>            :       size_t _M_get_size() const { return 0; }
+<span class="lineNum">     377 </span>            :       void _M_set_size(size_t) { }
+<span class="lineNum">     378 </span>            :       void _M_inc_size(size_t) { }
+<span class="lineNum">     379 </span>            :       void _M_dec_size(size_t) { }
+<span class="lineNum">     380 </span>            :       size_t _M_distance(const void*, const void*) const { return 0; }
+<span class="lineNum">     381 </span>            : 
+<span class="lineNum">     382 </span>            :       // count the number of nodes
+<span class="lineNum">     383 </span>            :       size_t _M_node_count() const
+<span class="lineNum">     384 </span>            :       {
+<span class="lineNum">     385 </span>            :         return _S_distance(_M_impl._M_node._M_next,
+<span class="lineNum">     386 </span>            :                            std::__addressof(_M_impl._M_node));
+<span class="lineNum">     387 </span>            :       }
+<span class="lineNum">     388 </span>            : #endif
+<span class="lineNum">     389 </span>            : 
+<span class="lineNum">     390 </span>            :       _List_node&lt;_Tp&gt;*
+<span class="lineNum">     391 </span>            :       _M_get_node()
+<span class="lineNum">     392 </span><span class="lineCov">        430 :       { return _M_impl._Node_alloc_type::allocate(1); }</span>
+<span class="lineNum">     393 </span>            : 
+<span class="lineNum">     394 </span>            :       void
+<span class="lineNum">     395 </span>            :       _M_put_node(_List_node&lt;_Tp&gt;* __p) _GLIBCXX_NOEXCEPT
+<span class="lineNum">     396 </span><span class="lineCov">        430 :       { _M_impl._Node_alloc_type::deallocate(__p, 1); }</span>
+<span class="lineNum">     397 </span>            : 
+<span class="lineNum">     398 </span>            :   public:
+<span class="lineNum">     399 </span>            :       typedef _Alloc allocator_type;
+<span class="lineNum">     400 </span>            : 
+<span class="lineNum">     401 </span>            :       _Node_alloc_type&amp;
+<span class="lineNum">     402 </span>            :       _M_get_Node_allocator() _GLIBCXX_NOEXCEPT
+<span class="lineNum">     403 </span>            :       { return *static_cast&lt;_Node_alloc_type*&gt;(&amp;_M_impl); }
+<span class="lineNum">     404 </span>            : 
+<span class="lineNum">     405 </span>            :       const _Node_alloc_type&amp;
+<span class="lineNum">     406 </span>            :       _M_get_Node_allocator() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     407 </span>            :       { return *static_cast&lt;const _Node_alloc_type*&gt;(&amp;_M_impl); }
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span>            :       _Tp_alloc_type
+<span class="lineNum">     410 </span>            :       _M_get_Tp_allocator() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     411 </span>            :       { return _Tp_alloc_type(_M_get_Node_allocator()); }
+<span class="lineNum">     412 </span>            : 
+<span class="lineNum">     413 </span>            :       allocator_type
+<span class="lineNum">     414 </span>            :       get_allocator() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     415 </span>            :       { return allocator_type(_M_get_Node_allocator()); }
+<span class="lineNum">     416 </span>            : 
+<span class="lineNum">     417 </span>            :       _List_base()
+<span class="lineNum">     418 </span><span class="lineCov">      12872 :       : _M_impl()</span>
+<span class="lineNum">     419 </span><span class="lineCov">       6436 :       { _M_init(); }</span>
+<span class="lineNum">     420 </span>            : 
+<span class="lineNum">     421 </span>            :       _List_base(const _Node_alloc_type&amp; __a) _GLIBCXX_NOEXCEPT
+<span class="lineNum">     422 </span><span class="lineNoCov">          0 :       : _M_impl(__a)</span>
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 :       { _M_init(); }</span>
+<span class="lineNum">     424 </span>            : 
+<span class="lineNum">     425 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     426 </span>            :       _List_base(_List_base&amp;&amp; __x) noexcept
+<span class="lineNum">     427 </span>            :       : _M_impl(std::move(__x._M_get_Node_allocator()))
+<span class="lineNum">     428 </span>            :       {
+<span class="lineNum">     429 </span>            :         auto* const __xnode = std::__addressof(__x._M_impl._M_node);
+<span class="lineNum">     430 </span>            :         if (__xnode-&gt;_M_next == __xnode)
+<span class="lineNum">     431 </span>            :           _M_init();
+<span class="lineNum">     432 </span>            :         else
+<span class="lineNum">     433 </span>            :           {
+<span class="lineNum">     434 </span>            :             auto* const __node = std::__addressof(_M_impl._M_node);
+<span class="lineNum">     435 </span>            :             __node-&gt;_M_next = __xnode-&gt;_M_next;
+<span class="lineNum">     436 </span>            :             __node-&gt;_M_prev = __xnode-&gt;_M_prev;
+<span class="lineNum">     437 </span>            :             __node-&gt;_M_next-&gt;_M_prev = __node-&gt;_M_prev-&gt;_M_next = __node;
+<span class="lineNum">     438 </span>            :             _M_set_size(__x._M_get_size());
+<span class="lineNum">     439 </span>            :             __x._M_init();
+<span class="lineNum">     440 </span>            :           }
+<span class="lineNum">     441 </span>            :       }
+<span class="lineNum">     442 </span>            : #endif
+<span class="lineNum">     443 </span>            : 
+<span class="lineNum">     444 </span>            :       // This is what actually destroys the list.
+<span class="lineNum">     445 </span>            :       ~_List_base() _GLIBCXX_NOEXCEPT
+<span class="lineNum">     446 </span><span class="lineCov">      12872 :       { _M_clear(); }</span>
+<span class="lineNum">     447 </span>            : 
+<span class="lineNum">     448 </span>            :       void
+<span class="lineNum">     449 </span>            :       _M_clear() _GLIBCXX_NOEXCEPT;
+<span class="lineNum">     450 </span>            : 
+<span class="lineNum">     451 </span>            :       void
+<span class="lineNum">     452 </span>            :       _M_init() _GLIBCXX_NOEXCEPT
+<span class="lineNum">     453 </span>            :       {
+<span class="lineNum">     454 </span><span class="lineCov">       6720 :         this-&gt;_M_impl._M_node._M_next = &amp;this-&gt;_M_impl._M_node;</span>
+<span class="lineNum">     455 </span><span class="lineCov">       6720 :         this-&gt;_M_impl._M_node._M_prev = &amp;this-&gt;_M_impl._M_node;</span>
+<span class="lineNum">     456 </span><span class="lineCov">       7004 :         _M_set_size(0);</span>
+<span class="lineNum">     457 </span>            :       }
+<span class="lineNum">     458 </span>            :     };
+<span class="lineNum">     459 </span>            : 
+<span class="lineNum">     460 </span>            :   /**
+<span class="lineNum">     461 </span>            :    *  @brief A standard container with linear time access to elements,
+<span class="lineNum">     462 </span>            :    *  and fixed time insertion/deletion at any point in the sequence.
+<span class="lineNum">     463 </span>            :    *
+<span class="lineNum">     464 </span>            :    *  @ingroup sequences
+<span class="lineNum">     465 </span>            :    *
+<span class="lineNum">     466 </span>            :    *  @tparam _Tp  Type of element.
+<span class="lineNum">     467 </span>            :    *  @tparam _Alloc  Allocator type, defaults to allocator&lt;_Tp&gt;.
+<span class="lineNum">     468 </span>            :    *
+<span class="lineNum">     469 </span>            :    *  Meets the requirements of a &lt;a href=&quot;tables.html#65&quot;&gt;container&lt;/a&gt;, a
+<span class="lineNum">     470 </span>            :    *  &lt;a href=&quot;tables.html#66&quot;&gt;reversible container&lt;/a&gt;, and a
+<span class="lineNum">     471 </span>            :    *  &lt;a href=&quot;tables.html#67&quot;&gt;sequence&lt;/a&gt;, including the
+<span class="lineNum">     472 </span>            :    *  &lt;a href=&quot;tables.html#68&quot;&gt;optional sequence requirements&lt;/a&gt; with the
+<span class="lineNum">     473 </span>            :    *  %exception of @c at and @c operator[].
+<span class="lineNum">     474 </span>            :    *
+<span class="lineNum">     475 </span>            :    *  This is a @e doubly @e linked %list.  Traversal up and down the
+<span class="lineNum">     476 </span>            :    *  %list requires linear time, but adding and removing elements (or
+<span class="lineNum">     477 </span>            :    *  @e nodes) is done in constant time, regardless of where the
+<span class="lineNum">     478 </span>            :    *  change takes place.  Unlike std::vector and std::deque,
+<span class="lineNum">     479 </span>            :    *  random-access iterators are not provided, so subscripting ( @c
+<span class="lineNum">     480 </span>            :    *  [] ) access is not allowed.  For algorithms which only need
+<span class="lineNum">     481 </span>            :    *  sequential access, this lack makes no difference.
+<span class="lineNum">     482 </span>            :    *
+<span class="lineNum">     483 </span>            :    *  Also unlike the other standard containers, std::list provides
+<span class="lineNum">     484 </span>            :    *  specialized algorithms %unique to linked lists, such as
+<span class="lineNum">     485 </span>            :    *  splicing, sorting, and in-place reversal.
+<span class="lineNum">     486 </span>            :    *
+<span class="lineNum">     487 </span>            :    *  A couple points on memory allocation for list&lt;Tp&gt;:
+<span class="lineNum">     488 </span>            :    *
+<span class="lineNum">     489 </span>            :    *  First, we never actually allocate a Tp, we allocate
+<span class="lineNum">     490 </span>            :    *  List_node&lt;Tp&gt;'s and trust [20.1.5]/4 to DTRT.  This is to ensure
+<span class="lineNum">     491 </span>            :    *  that after elements from %list&lt;X,Alloc1&gt; are spliced into
+<span class="lineNum">     492 </span>            :    *  %list&lt;X,Alloc2&gt;, destroying the memory of the second %list is a
+<span class="lineNum">     493 </span>            :    *  valid operation, i.e., Alloc1 giveth and Alloc2 taketh away.
+<span class="lineNum">     494 </span>            :    *
+<span class="lineNum">     495 </span>            :    *  Second, a %list conceptually represented as
+<span class="lineNum">     496 </span>            :    *  @code
+<span class="lineNum">     497 </span>            :    *    A &lt;---&gt; B &lt;---&gt; C &lt;---&gt; D
+<span class="lineNum">     498 </span>            :    *  @endcode
+<span class="lineNum">     499 </span>            :    *  is actually circular; a link exists between A and D.  The %list
+<span class="lineNum">     500 </span>            :    *  class holds (as its only data member) a private list::iterator
+<span class="lineNum">     501 </span>            :    *  pointing to @e D, not to @e A!  To get to the head of the %list,
+<span class="lineNum">     502 </span>            :    *  we start at the tail and move forward by one.  When this member
+<span class="lineNum">     503 </span>            :    *  iterator's next/previous pointers refer to itself, the %list is
+<span class="lineNum">     504 </span>            :    *  %empty. 
+<span class="lineNum">     505 </span>            :   */
+<span class="lineNum">     506 </span>            :   template&lt;typename _Tp, typename _Alloc = std::allocator&lt;_Tp&gt; &gt;
+<span class="lineNum">     507 </span><span class="lineCov">      12867 :     class list : protected _List_base&lt;_Tp, _Alloc&gt;</span>
+<span class="lineNum">     508 </span>            :     {
+<span class="lineNum">     509 </span>            :       // concept requirements
+<span class="lineNum">     510 </span>            :       typedef typename _Alloc::value_type                _Alloc_value_type;
+<span class="lineNum">     511 </span>            :       __glibcxx_class_requires(_Tp, _SGIAssignableConcept)
+<span class="lineNum">     512 </span>            :       __glibcxx_class_requires2(_Tp, _Alloc_value_type, _SameTypeConcept)
+<span class="lineNum">     513 </span>            : 
+<span class="lineNum">     514 </span>            :       typedef _List_base&lt;_Tp, _Alloc&gt;                    _Base;
+<span class="lineNum">     515 </span>            :       typedef typename _Base::_Tp_alloc_type             _Tp_alloc_type;
+<span class="lineNum">     516 </span>            :       typedef typename _Base::_Node_alloc_type           _Node_alloc_type;
+<span class="lineNum">     517 </span>            : 
+<span class="lineNum">     518 </span>            :     public:
+<span class="lineNum">     519 </span>            :       typedef _Tp                                        value_type;
+<span class="lineNum">     520 </span>            :       typedef typename _Tp_alloc_type::pointer           pointer;
+<span class="lineNum">     521 </span>            :       typedef typename _Tp_alloc_type::const_pointer     const_pointer;
+<span class="lineNum">     522 </span>            :       typedef typename _Tp_alloc_type::reference         reference;
+<span class="lineNum">     523 </span>            :       typedef typename _Tp_alloc_type::const_reference   const_reference;
+<span class="lineNum">     524 </span>            :       typedef _List_iterator&lt;_Tp&gt;                        iterator;
+<span class="lineNum">     525 </span>            :       typedef _List_const_iterator&lt;_Tp&gt;                  const_iterator;
+<span class="lineNum">     526 </span>            :       typedef std::reverse_iterator&lt;const_iterator&gt;      const_reverse_iterator;
+<span class="lineNum">     527 </span>            :       typedef std::reverse_iterator&lt;iterator&gt;            reverse_iterator;
+<span class="lineNum">     528 </span>            :       typedef size_t                                     size_type;
+<span class="lineNum">     529 </span>            :       typedef ptrdiff_t                                  difference_type;
+<span class="lineNum">     530 </span>            :       typedef _Alloc                                     allocator_type;
+<span class="lineNum">     531 </span>            : 
+<span class="lineNum">     532 </span>            :     protected:
+<span class="lineNum">     533 </span>            :       // Note that pointers-to-_Node's can be ctor-converted to
+<span class="lineNum">     534 </span>            :       // iterator types.
+<span class="lineNum">     535 </span>            :       typedef _List_node&lt;_Tp&gt;                              _Node;
+<span class="lineNum">     536 </span>            : 
+<span class="lineNum">     537 </span>            :       using _Base::_M_impl;
+<span class="lineNum">     538 </span>            :       using _Base::_M_put_node;
+<span class="lineNum">     539 </span>            :       using _Base::_M_get_node;
+<span class="lineNum">     540 </span>            :       using _Base::_M_get_Tp_allocator;
+<span class="lineNum">     541 </span>            :       using _Base::_M_get_Node_allocator;
+<span class="lineNum">     542 </span>            : 
+<span class="lineNum">     543 </span>            :       /**
+<span class="lineNum">     544 </span>            :        *  @param  __args  An instance of user data.
+<span class="lineNum">     545 </span>            :        *
+<span class="lineNum">     546 </span>            :        *  Allocates space for a new node and constructs a copy of
+<span class="lineNum">     547 </span>            :        *  @a __args in it.
+<span class="lineNum">     548 </span>            :        */
+<span class="lineNum">     549 </span>            : #if __cplusplus &lt; 201103L
+<span class="lineNum">     550 </span>            :       _Node*
+<span class="lineNum">     551 </span>            :       _M_create_node(const value_type&amp; __x)
+<span class="lineNum">     552 </span>            :       {
+<span class="lineNum">     553 </span>            :         _Node* __p = this-&gt;_M_get_node();
+<span class="lineNum">     554 </span>            :         __try
+<span class="lineNum">     555 </span>            :           {
+<span class="lineNum">     556 </span>            :             _M_get_Tp_allocator().construct
+<span class="lineNum">     557 </span>            :               (std::__addressof(__p-&gt;_M_data), __x);
+<span class="lineNum">     558 </span>            :           }
+<span class="lineNum">     559 </span>            :         __catch(...)
+<span class="lineNum">     560 </span>            :           {
+<span class="lineNum">     561 </span>            :             _M_put_node(__p);
+<span class="lineNum">     562 </span>            :             __throw_exception_again;
+<span class="lineNum">     563 </span>            :           }
+<span class="lineNum">     564 </span>            :         return __p;
+<span class="lineNum">     565 </span>            :       }
+<span class="lineNum">     566 </span>            : #else
+<a name="567"><span class="lineNum">     567 </span>            :       template&lt;typename... _Args&gt;</a>
+<span class="lineNum">     568 </span>            :         _Node*
+<span class="lineNum">     569 </span><span class="lineCov">         82 :         _M_create_node(_Args&amp;&amp;... __args)</span>
+<span class="lineNum">     570 </span>            :         {
+<span class="lineNum">     571 </span><span class="lineCov">        430 :           _Node* __p = this-&gt;_M_get_node();</span>
+<span class="lineNum">     572 </span>            :           __try
+<span class="lineNum">     573 </span>            :             {
+<span class="lineNum">     574 </span><span class="lineCov">        430 :               _M_get_Node_allocator().construct(__p,</span>
+<span class="lineNum">     575 </span><span class="lineCov">        215 :                                                 std::forward&lt;_Args&gt;(__args)...);</span>
+<span class="lineNum">     576 </span>            :             }
+<span class="lineNum">     577 </span>            :           __catch(...)
+<span class="lineNum">     578 </span>            :             {
+<span class="lineNum">     579 </span>            :               _M_put_node(__p);
+<span class="lineNum">     580 </span>            :               __throw_exception_again;
+<span class="lineNum">     581 </span>            :             }
+<span class="lineNum">     582 </span><span class="lineCov">         82 :           return __p;</span>
+<span class="lineNum">     583 </span>            :         }
+<span class="lineNum">     584 </span>            : #endif
+<span class="lineNum">     585 </span>            : 
+<span class="lineNum">     586 </span>            :     public:
+<span class="lineNum">     587 </span>            :       // [23.2.2.1] construct/copy/destroy
+<span class="lineNum">     588 </span>            :       // (assign() and get_allocator() are also listed in this section)
+<span class="lineNum">     589 </span>            : 
+<span class="lineNum">     590 </span>            :       /**
+<span class="lineNum">     591 </span>            :        *  @brief  Creates a %list with no elements.
+<span class="lineNum">     592 </span>            :        */
+<span class="lineNum">     593 </span>            :       list()
+<span class="lineNum">     594 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     595 </span>            :       noexcept(is_nothrow_default_constructible&lt;_Node_alloc_type&gt;::value)
+<span class="lineNum">     596 </span>            : #endif
+<span class="lineNum">     597 </span><span class="lineCov">      12872 :       : _Base() { }</span>
+<span class="lineNum">     598 </span>            : 
+<span class="lineNum">     599 </span>            :       /**
+<span class="lineNum">     600 </span>            :        *  @brief  Creates a %list with no elements.
+<span class="lineNum">     601 </span>            :        *  @param  __a  An allocator object.
+<span class="lineNum">     602 </span>            :        */
+<span class="lineNum">     603 </span>            :       explicit
+<span class="lineNum">     604 </span>            :       list(const allocator_type&amp; __a) _GLIBCXX_NOEXCEPT
+<span class="lineNum">     605 </span>            :       : _Base(_Node_alloc_type(__a)) { }
+<span class="lineNum">     606 </span>            : 
+<span class="lineNum">     607 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     608 </span>            :       /**
+<span class="lineNum">     609 </span>            :        *  @brief  Creates a %list with default constructed elements.
+<span class="lineNum">     610 </span>            :        *  @param  __n  The number of elements to initially create.
+<span class="lineNum">     611 </span>            :        *
+<span class="lineNum">     612 </span>            :        *  This constructor fills the %list with @a __n default
+<span class="lineNum">     613 </span>            :        *  constructed elements.
+<span class="lineNum">     614 </span>            :        */
+<span class="lineNum">     615 </span>            :       explicit
+<span class="lineNum">     616 </span>            :       list(size_type __n)
+<span class="lineNum">     617 </span>            :       : _Base()
+<span class="lineNum">     618 </span>            :       { _M_default_initialize(__n); }
+<span class="lineNum">     619 </span>            : 
+<span class="lineNum">     620 </span>            :       /**
+<span class="lineNum">     621 </span>            :        *  @brief  Creates a %list with copies of an exemplar element.
+<span class="lineNum">     622 </span>            :        *  @param  __n  The number of elements to initially create.
+<span class="lineNum">     623 </span>            :        *  @param  __value  An element to copy.
+<span class="lineNum">     624 </span>            :        *  @param  __a  An allocator object.
+<span class="lineNum">     625 </span>            :        *
+<a name="626"><span class="lineNum">     626 </span>            :        *  This constructor fills the %list with @a __n copies of @a __value.</a>
+<span class="lineNum">     627 </span>            :        */
+<span class="lineNum">     628 </span><span class="lineNoCov">          0 :       list(size_type __n, const value_type&amp; __value,</span>
+<span class="lineNum">     629 </span>            :            const allocator_type&amp; __a = allocator_type())
+<span class="lineNum">     630 </span><span class="lineNoCov">          0 :       : _Base(_Node_alloc_type(__a))</span>
+<span class="lineNum">     631 </span><span class="lineNoCov">          0 :       { _M_fill_initialize(__n, __value); }</span>
+<span class="lineNum">     632 </span>            : #else
+<span class="lineNum">     633 </span>            :       /**
+<span class="lineNum">     634 </span>            :        *  @brief  Creates a %list with copies of an exemplar element.
+<span class="lineNum">     635 </span>            :        *  @param  __n  The number of elements to initially create.
+<span class="lineNum">     636 </span>            :        *  @param  __value  An element to copy.
+<span class="lineNum">     637 </span>            :        *  @param  __a  An allocator object.
+<span class="lineNum">     638 </span>            :        *
+<span class="lineNum">     639 </span>            :        *  This constructor fills the %list with @a __n copies of @a __value.
+<span class="lineNum">     640 </span>            :        */
+<span class="lineNum">     641 </span>            :       explicit
+<span class="lineNum">     642 </span>            :       list(size_type __n, const value_type&amp; __value = value_type(),
+<span class="lineNum">     643 </span>            :            const allocator_type&amp; __a = allocator_type())
+<span class="lineNum">     644 </span>            :       : _Base(_Node_alloc_type(__a))
+<span class="lineNum">     645 </span>            :       { _M_fill_initialize(__n, __value); }
+<span class="lineNum">     646 </span>            : #endif
+<span class="lineNum">     647 </span>            : 
+<span class="lineNum">     648 </span>            :       /**
+<span class="lineNum">     649 </span>            :        *  @brief  %List copy constructor.
+<span class="lineNum">     650 </span>            :        *  @param  __x  A %list of identical element and allocator types.
+<span class="lineNum">     651 </span>            :        *
+<span class="lineNum">     652 </span>            :        *  The newly-created %list uses a copy of the allocation object used
+<span class="lineNum">     653 </span>            :        *  by @a __x.
+<span class="lineNum">     654 </span>            :        */
+<span class="lineNum">     655 </span>            :       list(const list&amp; __x)
+<span class="lineNum">     656 </span>            :       : _Base(__x._M_get_Node_allocator())
+<span class="lineNum">     657 </span>            :       { _M_initialize_dispatch(__x.begin(), __x.end(), __false_type()); }
+<span class="lineNum">     658 </span>            : 
+<span class="lineNum">     659 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     660 </span>            :       /**
+<span class="lineNum">     661 </span>            :        *  @brief  %List move constructor.
+<span class="lineNum">     662 </span>            :        *  @param  __x  A %list of identical element and allocator types.
+<span class="lineNum">     663 </span>            :        *
+<span class="lineNum">     664 </span>            :        *  The newly-created %list contains the exact contents of @a __x.
+<span class="lineNum">     665 </span>            :        *  The contents of @a __x are a valid, but unspecified %list.
+<span class="lineNum">     666 </span>            :        */
+<span class="lineNum">     667 </span>            :       list(list&amp;&amp; __x) noexcept
+<span class="lineNum">     668 </span>            :       : _Base(std::move(__x)) { }
+<span class="lineNum">     669 </span>            : 
+<span class="lineNum">     670 </span>            :       /**
+<span class="lineNum">     671 </span>            :        *  @brief  Builds a %list from an initializer_list
+<span class="lineNum">     672 </span>            :        *  @param  __l  An initializer_list of value_type.
+<span class="lineNum">     673 </span>            :        *  @param  __a  An allocator object.
+<span class="lineNum">     674 </span>            :        *
+<span class="lineNum">     675 </span>            :        *  Create a %list consisting of copies of the elements in the
+<span class="lineNum">     676 </span>            :        *  initializer_list @a __l.  This is linear in __l.size().
+<span class="lineNum">     677 </span>            :        */
+<span class="lineNum">     678 </span>            :       list(initializer_list&lt;value_type&gt; __l,
+<span class="lineNum">     679 </span>            :            const allocator_type&amp; __a = allocator_type())
+<span class="lineNum">     680 </span>            :       : _Base(_Node_alloc_type(__a))
+<span class="lineNum">     681 </span>            :       { _M_initialize_dispatch(__l.begin(), __l.end(), __false_type()); }
+<span class="lineNum">     682 </span>            : #endif
+<span class="lineNum">     683 </span>            : 
+<span class="lineNum">     684 </span>            :       /**
+<span class="lineNum">     685 </span>            :        *  @brief  Builds a %list from a range.
+<span class="lineNum">     686 </span>            :        *  @param  __first  An input iterator.
+<span class="lineNum">     687 </span>            :        *  @param  __last  An input iterator.
+<span class="lineNum">     688 </span>            :        *  @param  __a  An allocator object.
+<span class="lineNum">     689 </span>            :        *
+<span class="lineNum">     690 </span>            :        *  Create a %list consisting of copies of the elements from
+<span class="lineNum">     691 </span>            :        *  [@a __first,@a __last).  This is linear in N (where N is
+<span class="lineNum">     692 </span>            :        *  distance(@a __first,@a __last)).
+<span class="lineNum">     693 </span>            :        */
+<span class="lineNum">     694 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     695 </span>            :       template&lt;typename _InputIterator,
+<span class="lineNum">     696 </span>            :                typename = std::_RequireInputIter&lt;_InputIterator&gt;&gt;
+<span class="lineNum">     697 </span>            :         list(_InputIterator __first, _InputIterator __last,
+<span class="lineNum">     698 </span>            :              const allocator_type&amp; __a = allocator_type())
+<span class="lineNum">     699 </span>            :         : _Base(_Node_alloc_type(__a))
+<span class="lineNum">     700 </span>            :         { _M_initialize_dispatch(__first, __last, __false_type()); }
+<span class="lineNum">     701 </span>            : #else
+<span class="lineNum">     702 </span>            :       template&lt;typename _InputIterator&gt;
+<span class="lineNum">     703 </span>            :         list(_InputIterator __first, _InputIterator __last,
+<span class="lineNum">     704 </span>            :              const allocator_type&amp; __a = allocator_type())
+<span class="lineNum">     705 </span>            :         : _Base(_Node_alloc_type(__a))
+<span class="lineNum">     706 </span>            :         { 
+<span class="lineNum">     707 </span>            :           // Check whether it's an integral type.  If so, it's not an iterator.
+<span class="lineNum">     708 </span>            :           typedef typename std::__is_integer&lt;_InputIterator&gt;::__type _Integral;
+<span class="lineNum">     709 </span>            :           _M_initialize_dispatch(__first, __last, _Integral());
+<span class="lineNum">     710 </span>            :         }
+<span class="lineNum">     711 </span>            : #endif
+<span class="lineNum">     712 </span>            : 
+<span class="lineNum">     713 </span>            :       /**
+<span class="lineNum">     714 </span>            :        *  No explicit dtor needed as the _Base dtor takes care of
+<span class="lineNum">     715 </span>            :        *  things.  The _Base dtor only erases the elements, and note
+<span class="lineNum">     716 </span>            :        *  that if the elements themselves are pointers, the pointed-to
+<span class="lineNum">     717 </span>            :        *  memory is not touched in any way.  Managing the pointer is
+<span class="lineNum">     718 </span>            :        *  the user's responsibility.
+<span class="lineNum">     719 </span>            :        */
+<span class="lineNum">     720 </span>            : 
+<span class="lineNum">     721 </span>            :       /**
+<span class="lineNum">     722 </span>            :        *  @brief  %List assignment operator.
+<span class="lineNum">     723 </span>            :        *  @param  __x  A %list of identical element and allocator types.
+<span class="lineNum">     724 </span>            :        *
+<span class="lineNum">     725 </span>            :        *  All the elements of @a __x are copied, but unlike the copy
+<span class="lineNum">     726 </span>            :        *  constructor, the allocator object is not copied.
+<span class="lineNum">     727 </span>            :        */
+<span class="lineNum">     728 </span>            :       list&amp;
+<span class="lineNum">     729 </span>            :       operator=(const list&amp; __x);
+<span class="lineNum">     730 </span>            : 
+<span class="lineNum">     731 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     732 </span>            :       /**
+<span class="lineNum">     733 </span>            :        *  @brief  %List move assignment operator.
+<span class="lineNum">     734 </span>            :        *  @param  __x  A %list of identical element and allocator types.
+<span class="lineNum">     735 </span>            :        *
+<span class="lineNum">     736 </span>            :        *  The contents of @a __x are moved into this %list (without copying).
+<span class="lineNum">     737 </span>            :        *  @a __x is a valid, but unspecified %list
+<span class="lineNum">     738 </span>            :        */
+<span class="lineNum">     739 </span>            :       list&amp;
+<span class="lineNum">     740 </span>            :       operator=(list&amp;&amp; __x)
+<span class="lineNum">     741 </span>            :       {
+<span class="lineNum">     742 </span>            :         // NB: DR 1204.
+<span class="lineNum">     743 </span>            :         // NB: DR 675.
+<span class="lineNum">     744 </span>            :         this-&gt;clear();
+<span class="lineNum">     745 </span>            :         this-&gt;swap(__x);
+<span class="lineNum">     746 </span>            :         return *this;
+<span class="lineNum">     747 </span>            :       }
+<span class="lineNum">     748 </span>            : 
+<span class="lineNum">     749 </span>            :       /**
+<span class="lineNum">     750 </span>            :        *  @brief  %List initializer list assignment operator.
+<span class="lineNum">     751 </span>            :        *  @param  __l  An initializer_list of value_type.
+<span class="lineNum">     752 </span>            :        *
+<span class="lineNum">     753 </span>            :        *  Replace the contents of the %list with copies of the elements
+<span class="lineNum">     754 </span>            :        *  in the initializer_list @a __l.  This is linear in l.size().
+<span class="lineNum">     755 </span>            :        */
+<span class="lineNum">     756 </span>            :       list&amp;
+<span class="lineNum">     757 </span>            :       operator=(initializer_list&lt;value_type&gt; __l)
+<span class="lineNum">     758 </span>            :       {
+<span class="lineNum">     759 </span>            :         this-&gt;assign(__l.begin(), __l.end());
+<span class="lineNum">     760 </span>            :         return *this;
+<span class="lineNum">     761 </span>            :       }
+<span class="lineNum">     762 </span>            : #endif
+<span class="lineNum">     763 </span>            : 
+<span class="lineNum">     764 </span>            :       /**
+<span class="lineNum">     765 </span>            :        *  @brief  Assigns a given value to a %list.
+<span class="lineNum">     766 </span>            :        *  @param  __n  Number of elements to be assigned.
+<span class="lineNum">     767 </span>            :        *  @param  __val  Value to be assigned.
+<span class="lineNum">     768 </span>            :        *
+<span class="lineNum">     769 </span>            :        *  This function fills a %list with @a __n copies of the given
+<span class="lineNum">     770 </span>            :        *  value.  Note that the assignment completely changes the %list
+<span class="lineNum">     771 </span>            :        *  and that the resulting %list's size is the same as the number
+<span class="lineNum">     772 </span>            :        *  of elements assigned.  Old data may be lost.
+<span class="lineNum">     773 </span>            :        */
+<span class="lineNum">     774 </span>            :       void
+<span class="lineNum">     775 </span>            :       assign(size_type __n, const value_type&amp; __val)
+<span class="lineNum">     776 </span>            :       { _M_fill_assign(__n, __val); }
+<span class="lineNum">     777 </span>            : 
+<span class="lineNum">     778 </span>            :       /**
+<span class="lineNum">     779 </span>            :        *  @brief  Assigns a range to a %list.
+<span class="lineNum">     780 </span>            :        *  @param  __first  An input iterator.
+<span class="lineNum">     781 </span>            :        *  @param  __last   An input iterator.
+<span class="lineNum">     782 </span>            :        *
+<span class="lineNum">     783 </span>            :        *  This function fills a %list with copies of the elements in the
+<span class="lineNum">     784 </span>            :        *  range [@a __first,@a __last).
+<span class="lineNum">     785 </span>            :        *
+<span class="lineNum">     786 </span>            :        *  Note that the assignment completely changes the %list and
+<span class="lineNum">     787 </span>            :        *  that the resulting %list's size is the same as the number of
+<span class="lineNum">     788 </span>            :        *  elements assigned.  Old data may be lost.
+<span class="lineNum">     789 </span>            :        */
+<span class="lineNum">     790 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     791 </span>            :       template&lt;typename _InputIterator,
+<span class="lineNum">     792 </span>            :                typename = std::_RequireInputIter&lt;_InputIterator&gt;&gt;
+<span class="lineNum">     793 </span>            :         void
+<span class="lineNum">     794 </span>            :         assign(_InputIterator __first, _InputIterator __last)
+<span class="lineNum">     795 </span>            :         { _M_assign_dispatch(__first, __last, __false_type()); }
+<span class="lineNum">     796 </span>            : #else
+<span class="lineNum">     797 </span>            :       template&lt;typename _InputIterator&gt;
+<span class="lineNum">     798 </span>            :         void
+<span class="lineNum">     799 </span>            :         assign(_InputIterator __first, _InputIterator __last)
+<span class="lineNum">     800 </span>            :         {
+<span class="lineNum">     801 </span>            :           // Check whether it's an integral type.  If so, it's not an iterator.
+<span class="lineNum">     802 </span>            :           typedef typename std::__is_integer&lt;_InputIterator&gt;::__type _Integral;
+<span class="lineNum">     803 </span>            :           _M_assign_dispatch(__first, __last, _Integral());
+<span class="lineNum">     804 </span>            :         }
+<span class="lineNum">     805 </span>            : #endif
+<span class="lineNum">     806 </span>            : 
+<span class="lineNum">     807 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     808 </span>            :       /**
+<span class="lineNum">     809 </span>            :        *  @brief  Assigns an initializer_list to a %list.
+<span class="lineNum">     810 </span>            :        *  @param  __l  An initializer_list of value_type.
+<span class="lineNum">     811 </span>            :        *
+<span class="lineNum">     812 </span>            :        *  Replace the contents of the %list with copies of the elements
+<span class="lineNum">     813 </span>            :        *  in the initializer_list @a __l.  This is linear in __l.size().
+<span class="lineNum">     814 </span>            :        */
+<span class="lineNum">     815 </span>            :       void
+<span class="lineNum">     816 </span>            :       assign(initializer_list&lt;value_type&gt; __l)
+<span class="lineNum">     817 </span>            :       { this-&gt;assign(__l.begin(), __l.end()); }
+<span class="lineNum">     818 </span>            : #endif
+<span class="lineNum">     819 </span>            : 
+<span class="lineNum">     820 </span>            :       /// Get a copy of the memory allocation object.
+<span class="lineNum">     821 </span>            :       allocator_type
+<span class="lineNum">     822 </span>            :       get_allocator() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     823 </span>            :       { return _Base::get_allocator(); }
+<span class="lineNum">     824 </span>            : 
+<span class="lineNum">     825 </span>            :       // iterators
+<span class="lineNum">     826 </span>            :       /**
+<span class="lineNum">     827 </span>            :        *  Returns a read/write iterator that points to the first element in the
+<span class="lineNum">     828 </span>            :        *  %list.  Iteration is done in ordinary element order.
+<span class="lineNum">     829 </span>            :        */
+<span class="lineNum">     830 </span>            :       iterator
+<span class="lineNum">     831 </span>            :       begin() _GLIBCXX_NOEXCEPT
+<span class="lineNum">     832 </span><span class="lineCov">       1110 :       { return iterator(this-&gt;_M_impl._M_node._M_next); }</span>
+<span class="lineNum">     833 </span>            : 
+<span class="lineNum">     834 </span>            :       /**
+<span class="lineNum">     835 </span>            :        *  Returns a read-only (constant) iterator that points to the
+<span class="lineNum">     836 </span>            :        *  first element in the %list.  Iteration is done in ordinary
+<span class="lineNum">     837 </span>            :        *  element order.
+<span class="lineNum">     838 </span>            :        */
+<span class="lineNum">     839 </span>            :       const_iterator
+<span class="lineNum">     840 </span>            :       begin() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     841 </span><span class="lineCov">        510 :       { return const_iterator(this-&gt;_M_impl._M_node._M_next); }</span>
+<span class="lineNum">     842 </span>            : 
+<span class="lineNum">     843 </span>            :       /**
+<span class="lineNum">     844 </span>            :        *  Returns a read/write iterator that points one past the last
+<span class="lineNum">     845 </span>            :        *  element in the %list.  Iteration is done in ordinary element
+<span class="lineNum">     846 </span>            :        *  order.
+<span class="lineNum">     847 </span>            :        */
+<span class="lineNum">     848 </span>            :       iterator
+<span class="lineNum">     849 </span>            :       end() _GLIBCXX_NOEXCEPT
+<span class="lineNum">     850 </span><span class="lineCov">       1269 :       { return iterator(&amp;this-&gt;_M_impl._M_node); }</span>
+<span class="lineNum">     851 </span>            : 
+<span class="lineNum">     852 </span>            :       /**
+<span class="lineNum">     853 </span>            :        *  Returns a read-only (constant) iterator that points one past
+<span class="lineNum">     854 </span>            :        *  the last element in the %list.  Iteration is done in ordinary
+<span class="lineNum">     855 </span>            :        *  element order.
+<span class="lineNum">     856 </span>            :        */
+<span class="lineNum">     857 </span>            :       const_iterator
+<span class="lineNum">     858 </span>            :       end() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     859 </span><span class="lineCov">        510 :       { return const_iterator(&amp;this-&gt;_M_impl._M_node); }</span>
+<span class="lineNum">     860 </span>            : 
+<span class="lineNum">     861 </span>            :       /**
+<span class="lineNum">     862 </span>            :        *  Returns a read/write reverse iterator that points to the last
+<span class="lineNum">     863 </span>            :        *  element in the %list.  Iteration is done in reverse element
+<span class="lineNum">     864 </span>            :        *  order.
+<span class="lineNum">     865 </span>            :        */
+<span class="lineNum">     866 </span>            :       reverse_iterator
+<span class="lineNum">     867 </span>            :       rbegin() _GLIBCXX_NOEXCEPT
+<span class="lineNum">     868 </span>            :       { return reverse_iterator(end()); }
+<span class="lineNum">     869 </span>            : 
+<span class="lineNum">     870 </span>            :       /**
+<span class="lineNum">     871 </span>            :        *  Returns a read-only (constant) reverse iterator that points to
+<span class="lineNum">     872 </span>            :        *  the last element in the %list.  Iteration is done in reverse
+<span class="lineNum">     873 </span>            :        *  element order.
+<span class="lineNum">     874 </span>            :        */
+<span class="lineNum">     875 </span>            :       const_reverse_iterator
+<span class="lineNum">     876 </span>            :       rbegin() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     877 </span>            :       { return const_reverse_iterator(end()); }
+<span class="lineNum">     878 </span>            : 
+<span class="lineNum">     879 </span>            :       /**
+<span class="lineNum">     880 </span>            :        *  Returns a read/write reverse iterator that points to one
+<span class="lineNum">     881 </span>            :        *  before the first element in the %list.  Iteration is done in
+<span class="lineNum">     882 </span>            :        *  reverse element order.
+<span class="lineNum">     883 </span>            :        */
+<span class="lineNum">     884 </span>            :       reverse_iterator
+<span class="lineNum">     885 </span>            :       rend() _GLIBCXX_NOEXCEPT
+<span class="lineNum">     886 </span>            :       { return reverse_iterator(begin()); }
+<span class="lineNum">     887 </span>            : 
+<span class="lineNum">     888 </span>            :       /**
+<span class="lineNum">     889 </span>            :        *  Returns a read-only (constant) reverse iterator that points to one
+<span class="lineNum">     890 </span>            :        *  before the first element in the %list.  Iteration is done in reverse
+<span class="lineNum">     891 </span>            :        *  element order.
+<span class="lineNum">     892 </span>            :        */
+<span class="lineNum">     893 </span>            :       const_reverse_iterator
+<span class="lineNum">     894 </span>            :       rend() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     895 </span>            :       { return const_reverse_iterator(begin()); }
+<span class="lineNum">     896 </span>            : 
+<span class="lineNum">     897 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     898 </span>            :       /**
+<span class="lineNum">     899 </span>            :        *  Returns a read-only (constant) iterator that points to the
+<span class="lineNum">     900 </span>            :        *  first element in the %list.  Iteration is done in ordinary
+<span class="lineNum">     901 </span>            :        *  element order.
+<span class="lineNum">     902 </span>            :        */
+<span class="lineNum">     903 </span>            :       const_iterator
+<span class="lineNum">     904 </span>            :       cbegin() const noexcept
+<span class="lineNum">     905 </span>            :       { return const_iterator(this-&gt;_M_impl._M_node._M_next); }
+<span class="lineNum">     906 </span>            : 
+<span class="lineNum">     907 </span>            :       /**
+<span class="lineNum">     908 </span>            :        *  Returns a read-only (constant) iterator that points one past
+<span class="lineNum">     909 </span>            :        *  the last element in the %list.  Iteration is done in ordinary
+<span class="lineNum">     910 </span>            :        *  element order.
+<span class="lineNum">     911 </span>            :        */
+<span class="lineNum">     912 </span>            :       const_iterator
+<span class="lineNum">     913 </span>            :       cend() const noexcept
+<span class="lineNum">     914 </span>            :       { return const_iterator(&amp;this-&gt;_M_impl._M_node); }
+<span class="lineNum">     915 </span>            : 
+<span class="lineNum">     916 </span>            :       /**
+<span class="lineNum">     917 </span>            :        *  Returns a read-only (constant) reverse iterator that points to
+<span class="lineNum">     918 </span>            :        *  the last element in the %list.  Iteration is done in reverse
+<span class="lineNum">     919 </span>            :        *  element order.
+<span class="lineNum">     920 </span>            :        */
+<span class="lineNum">     921 </span>            :       const_reverse_iterator
+<span class="lineNum">     922 </span>            :       crbegin() const noexcept
+<span class="lineNum">     923 </span>            :       { return const_reverse_iterator(end()); }
+<span class="lineNum">     924 </span>            : 
+<span class="lineNum">     925 </span>            :       /**
+<span class="lineNum">     926 </span>            :        *  Returns a read-only (constant) reverse iterator that points to one
+<span class="lineNum">     927 </span>            :        *  before the first element in the %list.  Iteration is done in reverse
+<span class="lineNum">     928 </span>            :        *  element order.
+<span class="lineNum">     929 </span>            :        */
+<span class="lineNum">     930 </span>            :       const_reverse_iterator
+<span class="lineNum">     931 </span>            :       crend() const noexcept
+<span class="lineNum">     932 </span>            :       { return const_reverse_iterator(begin()); }
+<span class="lineNum">     933 </span>            : #endif
+<span class="lineNum">     934 </span>            : 
+<span class="lineNum">     935 </span>            :       // [23.2.2.2] capacity
+<span class="lineNum">     936 </span>            :       /**
+<span class="lineNum">     937 </span>            :        *  Returns true if the %list is empty.  (Thus begin() would equal
+<span class="lineNum">     938 </span>            :        *  end().)
+<span class="lineNum">     939 </span>            :        */
+<span class="lineNum">     940 </span>            :       bool
+<span class="lineNum">     941 </span>            :       empty() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     942 </span><span class="lineCov">         59 :       { return this-&gt;_M_impl._M_node._M_next == &amp;this-&gt;_M_impl._M_node; }</span>
+<span class="lineNum">     943 </span>            : 
+<span class="lineNum">     944 </span>            :       /**  Returns the number of elements in the %list.  */
+<span class="lineNum">     945 </span>            :       size_type
+<span class="lineNum">     946 </span>            :       size() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     947 </span><span class="lineCov">        298 :       { return this-&gt;_M_node_count(); }</span>
+<span class="lineNum">     948 </span>            : 
+<span class="lineNum">     949 </span>            :       /**  Returns the size() of the largest possible %list.  */
+<span class="lineNum">     950 </span>            :       size_type
+<span class="lineNum">     951 </span>            :       max_size() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     952 </span>            :       { return _M_get_Node_allocator().max_size(); }
+<span class="lineNum">     953 </span>            : 
+<span class="lineNum">     954 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     955 </span>            :       /**
+<span class="lineNum">     956 </span>            :        *  @brief Resizes the %list to the specified number of elements.
+<span class="lineNum">     957 </span>            :        *  @param __new_size Number of elements the %list should contain.
+<span class="lineNum">     958 </span>            :        *
+<span class="lineNum">     959 </span>            :        *  This function will %resize the %list to the specified number
+<span class="lineNum">     960 </span>            :        *  of elements.  If the number is smaller than the %list's
+<span class="lineNum">     961 </span>            :        *  current size the %list is truncated, otherwise default
+<span class="lineNum">     962 </span>            :        *  constructed elements are appended.
+<span class="lineNum">     963 </span>            :        */
+<span class="lineNum">     964 </span>            :       void
+<span class="lineNum">     965 </span>            :       resize(size_type __new_size);
+<span class="lineNum">     966 </span>            : 
+<span class="lineNum">     967 </span>            :       /**
+<span class="lineNum">     968 </span>            :        *  @brief Resizes the %list to the specified number of elements.
+<span class="lineNum">     969 </span>            :        *  @param __new_size Number of elements the %list should contain.
+<span class="lineNum">     970 </span>            :        *  @param __x Data with which new elements should be populated.
+<span class="lineNum">     971 </span>            :        *
+<span class="lineNum">     972 </span>            :        *  This function will %resize the %list to the specified number
+<span class="lineNum">     973 </span>            :        *  of elements.  If the number is smaller than the %list's
+<span class="lineNum">     974 </span>            :        *  current size the %list is truncated, otherwise the %list is
+<span class="lineNum">     975 </span>            :        *  extended and new elements are populated with given data.
+<span class="lineNum">     976 </span>            :        */
+<span class="lineNum">     977 </span>            :       void
+<span class="lineNum">     978 </span>            :       resize(size_type __new_size, const value_type&amp; __x);
+<span class="lineNum">     979 </span>            : #else
+<span class="lineNum">     980 </span>            :       /**
+<span class="lineNum">     981 </span>            :        *  @brief Resizes the %list to the specified number of elements.
+<span class="lineNum">     982 </span>            :        *  @param __new_size Number of elements the %list should contain.
+<span class="lineNum">     983 </span>            :        *  @param __x Data with which new elements should be populated.
+<span class="lineNum">     984 </span>            :        *
+<span class="lineNum">     985 </span>            :        *  This function will %resize the %list to the specified number
+<span class="lineNum">     986 </span>            :        *  of elements.  If the number is smaller than the %list's
+<span class="lineNum">     987 </span>            :        *  current size the %list is truncated, otherwise the %list is
+<span class="lineNum">     988 </span>            :        *  extended and new elements are populated with given data.
+<span class="lineNum">     989 </span>            :        */
+<span class="lineNum">     990 </span>            :       void
+<span class="lineNum">     991 </span>            :       resize(size_type __new_size, value_type __x = value_type());
+<span class="lineNum">     992 </span>            : #endif
+<span class="lineNum">     993 </span>            : 
+<span class="lineNum">     994 </span>            :       // element access
+<span class="lineNum">     995 </span>            :       /**
+<span class="lineNum">     996 </span>            :        *  Returns a read/write reference to the data at the first
+<span class="lineNum">     997 </span>            :        *  element of the %list.
+<span class="lineNum">     998 </span>            :        */
+<span class="lineNum">     999 </span>            :       reference
+<span class="lineNum">    1000 </span>            :       front() _GLIBCXX_NOEXCEPT
+<span class="lineNum">    1001 </span><span class="lineCov">          2 :       { return *begin(); }</span>
+<span class="lineNum">    1002 </span>            : 
+<span class="lineNum">    1003 </span>            :       /**
+<span class="lineNum">    1004 </span>            :        *  Returns a read-only (constant) reference to the data at the first
+<span class="lineNum">    1005 </span>            :        *  element of the %list.
+<span class="lineNum">    1006 </span>            :        */
+<span class="lineNum">    1007 </span>            :       const_reference
+<span class="lineNum">    1008 </span>            :       front() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">    1009 </span>            :       { return *begin(); }
+<span class="lineNum">    1010 </span>            : 
+<span class="lineNum">    1011 </span>            :       /**
+<span class="lineNum">    1012 </span>            :        *  Returns a read/write reference to the data at the last element
+<span class="lineNum">    1013 </span>            :        *  of the %list.
+<span class="lineNum">    1014 </span>            :        */
+<span class="lineNum">    1015 </span>            :       reference
+<span class="lineNum">    1016 </span>            :       back() _GLIBCXX_NOEXCEPT
+<span class="lineNum">    1017 </span>            :       { 
+<span class="lineNum">    1018 </span><span class="lineCov">          1 :         iterator __tmp = end();</span>
+<span class="lineNum">    1019 </span><span class="lineCov">          1 :         --__tmp;</span>
+<span class="lineNum">    1020 </span><span class="lineCov">          1 :         return *__tmp;</span>
+<span class="lineNum">    1021 </span>            :       }
+<span class="lineNum">    1022 </span>            : 
+<span class="lineNum">    1023 </span>            :       /**
+<span class="lineNum">    1024 </span>            :        *  Returns a read-only (constant) reference to the data at the last
+<span class="lineNum">    1025 </span>            :        *  element of the %list.
+<span class="lineNum">    1026 </span>            :        */
+<span class="lineNum">    1027 </span>            :       const_reference
+<span class="lineNum">    1028 </span>            :       back() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">    1029 </span>            :       { 
+<span class="lineNum">    1030 </span>            :         const_iterator __tmp = end();
+<span class="lineNum">    1031 </span>            :         --__tmp;
+<span class="lineNum">    1032 </span>            :         return *__tmp;
+<span class="lineNum">    1033 </span>            :       }
+<span class="lineNum">    1034 </span>            : 
+<span class="lineNum">    1035 </span>            :       // [23.2.2.3] modifiers
+<span class="lineNum">    1036 </span>            :       /**
+<span class="lineNum">    1037 </span>            :        *  @brief  Add data to the front of the %list.
+<span class="lineNum">    1038 </span>            :        *  @param  __x  Data to be added.
+<span class="lineNum">    1039 </span>            :        *
+<span class="lineNum">    1040 </span>            :        *  This is a typical stack operation.  The function creates an
+<span class="lineNum">    1041 </span>            :        *  element at the front of the %list and assigns the given data
+<span class="lineNum">    1042 </span>            :        *  to it.  Due to the nature of a %list this operation can be
+<span class="lineNum">    1043 </span>            :        *  done in constant time, and does not invalidate iterators and
+<span class="lineNum">    1044 </span>            :        *  references.
+<span class="lineNum">    1045 </span>            :        */
+<span class="lineNum">    1046 </span>            :       void
+<span class="lineNum">    1047 </span>            :       push_front(const value_type&amp; __x)
+<span class="lineNum">    1048 </span>            :       { this-&gt;_M_insert(begin(), __x); }
+<span class="lineNum">    1049 </span>            : 
+<span class="lineNum">    1050 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1051 </span>            :       void
+<span class="lineNum">    1052 </span>            :       push_front(value_type&amp;&amp; __x)
+<span class="lineNum">    1053 </span>            :       { this-&gt;_M_insert(begin(), std::move(__x)); }
+<span class="lineNum">    1054 </span>            : 
+<span class="lineNum">    1055 </span>            :       template&lt;typename... _Args&gt;
+<span class="lineNum">    1056 </span>            :         void
+<span class="lineNum">    1057 </span>            :         emplace_front(_Args&amp;&amp;... __args)
+<span class="lineNum">    1058 </span>            :         { this-&gt;_M_insert(begin(), std::forward&lt;_Args&gt;(__args)...); }
+<span class="lineNum">    1059 </span>            : #endif
+<span class="lineNum">    1060 </span>            : 
+<span class="lineNum">    1061 </span>            :       /**
+<span class="lineNum">    1062 </span>            :        *  @brief  Removes first element.
+<span class="lineNum">    1063 </span>            :        *
+<span class="lineNum">    1064 </span>            :        *  This is a typical stack operation.  It shrinks the %list by
+<span class="lineNum">    1065 </span>            :        *  one.  Due to the nature of a %list this operation can be done
+<span class="lineNum">    1066 </span>            :        *  in constant time, and only invalidates iterators/references to
+<span class="lineNum">    1067 </span>            :        *  the element being removed.
+<span class="lineNum">    1068 </span>            :        *
+<span class="lineNum">    1069 </span>            :        *  Note that no data is returned, and if the first element's data
+<span class="lineNum">    1070 </span>            :        *  is needed, it should be retrieved before pop_front() is
+<span class="lineNum">    1071 </span>            :        *  called.
+<a name="1072"><span class="lineNum">    1072 </span>            :        */</a>
+<span class="lineNum">    1073 </span>            :       void
+<span class="lineNum">    1074 </span><span class="lineNoCov">          0 :       pop_front() _GLIBCXX_NOEXCEPT</span>
+<span class="lineNum">    1075 </span><span class="lineNoCov">          0 :       { this-&gt;_M_erase(begin()); }</span>
+<span class="lineNum">    1076 </span>            : 
+<span class="lineNum">    1077 </span>            :       /**
+<span class="lineNum">    1078 </span>            :        *  @brief  Add data to the end of the %list.
+<span class="lineNum">    1079 </span>            :        *  @param  __x  Data to be added.
+<span class="lineNum">    1080 </span>            :        *
+<span class="lineNum">    1081 </span>            :        *  This is a typical stack operation.  The function creates an
+<span class="lineNum">    1082 </span>            :        *  element at the end of the %list and assigns the given data to
+<span class="lineNum">    1083 </span>            :        *  it.  Due to the nature of a %list this operation can be done
+<span class="lineNum">    1084 </span>            :        *  in constant time, and does not invalidate iterators and
+<span class="lineNum">    1085 </span>            :        *  references.
+<span class="lineNum">    1086 </span>            :        */
+<span class="lineNum">    1087 </span>            :       void
+<span class="lineNum">    1088 </span>            :       push_back(const value_type&amp; __x)
+<span class="lineNum">    1089 </span><span class="lineCov">         62 :       { this-&gt;_M_insert(end(), __x); }</span>
+<span class="lineNum">    1090 </span>            : 
+<span class="lineNum">    1091 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1092 </span>            :       void
+<span class="lineNum">    1093 </span>            :       push_back(value_type&amp;&amp; __x)
+<span class="lineNum">    1094 </span><span class="lineCov">        306 :       { this-&gt;_M_insert(end(), std::move(__x)); }</span>
+<span class="lineNum">    1095 </span>            : 
+<span class="lineNum">    1096 </span>            :       template&lt;typename... _Args&gt;
+<span class="lineNum">    1097 </span>            :         void
+<span class="lineNum">    1098 </span>            :         emplace_back(_Args&amp;&amp;... __args)
+<span class="lineNum">    1099 </span>            :         { this-&gt;_M_insert(end(), std::forward&lt;_Args&gt;(__args)...); }
+<span class="lineNum">    1100 </span>            : #endif
+<span class="lineNum">    1101 </span>            : 
+<span class="lineNum">    1102 </span>            :       /**
+<span class="lineNum">    1103 </span>            :        *  @brief  Removes last element.
+<span class="lineNum">    1104 </span>            :        *
+<span class="lineNum">    1105 </span>            :        *  This is a typical stack operation.  It shrinks the %list by
+<span class="lineNum">    1106 </span>            :        *  one.  Due to the nature of a %list this operation can be done
+<span class="lineNum">    1107 </span>            :        *  in constant time, and only invalidates iterators/references to
+<span class="lineNum">    1108 </span>            :        *  the element being removed.
+<span class="lineNum">    1109 </span>            :        *
+<span class="lineNum">    1110 </span>            :        *  Note that no data is returned, and if the last element's data
+<span class="lineNum">    1111 </span>            :        *  is needed, it should be retrieved before pop_back() is called.
+<a name="1112"><span class="lineNum">    1112 </span>            :        */</a>
+<span class="lineNum">    1113 </span>            :       void
+<span class="lineNum">    1114 </span><span class="lineNoCov">          0 :       pop_back() _GLIBCXX_NOEXCEPT</span>
+<span class="lineNum">    1115 </span><span class="lineNoCov">          0 :       { this-&gt;_M_erase(iterator(this-&gt;_M_impl._M_node._M_prev)); }</span>
+<span class="lineNum">    1116 </span>            : 
+<span class="lineNum">    1117 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1118 </span>            :       /**
+<span class="lineNum">    1119 </span>            :        *  @brief  Constructs object in %list before specified iterator.
+<span class="lineNum">    1120 </span>            :        *  @param  __position  A const_iterator into the %list.
+<span class="lineNum">    1121 </span>            :        *  @param  __args  Arguments.
+<span class="lineNum">    1122 </span>            :        *  @return  An iterator that points to the inserted data.
+<span class="lineNum">    1123 </span>            :        *
+<span class="lineNum">    1124 </span>            :        *  This function will insert an object of type T constructed
+<span class="lineNum">    1125 </span>            :        *  with T(std::forward&lt;Args&gt;(args)...) before the specified
+<span class="lineNum">    1126 </span>            :        *  location.  Due to the nature of a %list this operation can
+<span class="lineNum">    1127 </span>            :        *  be done in constant time, and does not invalidate iterators
+<span class="lineNum">    1128 </span>            :        *  and references.
+<span class="lineNum">    1129 </span>            :        */
+<span class="lineNum">    1130 </span>            :       template&lt;typename... _Args&gt;
+<span class="lineNum">    1131 </span>            :         iterator
+<span class="lineNum">    1132 </span>            :         emplace(const_iterator __position, _Args&amp;&amp;... __args);
+<span class="lineNum">    1133 </span>            : 
+<span class="lineNum">    1134 </span>            :       /**
+<span class="lineNum">    1135 </span>            :        *  @brief  Inserts given value into %list before specified iterator.
+<span class="lineNum">    1136 </span>            :        *  @param  __position  A const_iterator into the %list.
+<span class="lineNum">    1137 </span>            :        *  @param  __x  Data to be inserted.
+<span class="lineNum">    1138 </span>            :        *  @return  An iterator that points to the inserted data.
+<span class="lineNum">    1139 </span>            :        *
+<span class="lineNum">    1140 </span>            :        *  This function will insert a copy of the given value before
+<span class="lineNum">    1141 </span>            :        *  the specified location.  Due to the nature of a %list this
+<span class="lineNum">    1142 </span>            :        *  operation can be done in constant time, and does not
+<span class="lineNum">    1143 </span>            :        *  invalidate iterators and references.
+<span class="lineNum">    1144 </span>            :        */
+<span class="lineNum">    1145 </span>            :       iterator
+<span class="lineNum">    1146 </span>            :       insert(const_iterator __position, const value_type&amp; __x);
+<span class="lineNum">    1147 </span>            : #else
+<span class="lineNum">    1148 </span>            :       /**
+<span class="lineNum">    1149 </span>            :        *  @brief  Inserts given value into %list before specified iterator.
+<span class="lineNum">    1150 </span>            :        *  @param  __position  An iterator into the %list.
+<span class="lineNum">    1151 </span>            :        *  @param  __x  Data to be inserted.
+<span class="lineNum">    1152 </span>            :        *  @return  An iterator that points to the inserted data.
+<span class="lineNum">    1153 </span>            :        *
+<span class="lineNum">    1154 </span>            :        *  This function will insert a copy of the given value before
+<span class="lineNum">    1155 </span>            :        *  the specified location.  Due to the nature of a %list this
+<span class="lineNum">    1156 </span>            :        *  operation can be done in constant time, and does not
+<span class="lineNum">    1157 </span>            :        *  invalidate iterators and references.
+<span class="lineNum">    1158 </span>            :        */
+<span class="lineNum">    1159 </span>            :       iterator
+<span class="lineNum">    1160 </span>            :       insert(iterator __position, const value_type&amp; __x);
+<span class="lineNum">    1161 </span>            : #endif
+<span class="lineNum">    1162 </span>            : 
+<span class="lineNum">    1163 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1164 </span>            :       /**
+<span class="lineNum">    1165 </span>            :        *  @brief  Inserts given rvalue into %list before specified iterator.
+<span class="lineNum">    1166 </span>            :        *  @param  __position  A const_iterator into the %list.
+<span class="lineNum">    1167 </span>            :        *  @param  __x  Data to be inserted.
+<span class="lineNum">    1168 </span>            :        *  @return  An iterator that points to the inserted data.
+<span class="lineNum">    1169 </span>            :        *
+<span class="lineNum">    1170 </span>            :        *  This function will insert a copy of the given rvalue before
+<span class="lineNum">    1171 </span>            :        *  the specified location.  Due to the nature of a %list this
+<span class="lineNum">    1172 </span>            :        *  operation can be done in constant time, and does not
+<span class="lineNum">    1173 </span>            :        *  invalidate iterators and references.
+<span class="lineNum">    1174 </span>            :         */
+<span class="lineNum">    1175 </span>            :       iterator
+<span class="lineNum">    1176 </span>            :       insert(const_iterator __position, value_type&amp;&amp; __x)
+<span class="lineNum">    1177 </span>            :       { return emplace(__position, std::move(__x)); }
+<span class="lineNum">    1178 </span>            : 
+<span class="lineNum">    1179 </span>            :       /**
+<span class="lineNum">    1180 </span>            :        *  @brief  Inserts the contents of an initializer_list into %list
+<span class="lineNum">    1181 </span>            :        *          before specified const_iterator.
+<span class="lineNum">    1182 </span>            :        *  @param  __p  A const_iterator into the %list.
+<span class="lineNum">    1183 </span>            :        *  @param  __l  An initializer_list of value_type.
+<span class="lineNum">    1184 </span>            :        *  @return  An iterator pointing to the first element inserted
+<span class="lineNum">    1185 </span>            :        *           (or __position).
+<span class="lineNum">    1186 </span>            :        *
+<span class="lineNum">    1187 </span>            :        *  This function will insert copies of the data in the
+<span class="lineNum">    1188 </span>            :        *  initializer_list @a l into the %list before the location
+<span class="lineNum">    1189 </span>            :        *  specified by @a p.
+<span class="lineNum">    1190 </span>            :        *
+<span class="lineNum">    1191 </span>            :        *  This operation is linear in the number of elements inserted and
+<span class="lineNum">    1192 </span>            :        *  does not invalidate iterators and references.
+<span class="lineNum">    1193 </span>            :        */
+<span class="lineNum">    1194 </span>            :       iterator
+<span class="lineNum">    1195 </span>            :       insert(const_iterator __p, initializer_list&lt;value_type&gt; __l)
+<span class="lineNum">    1196 </span>            :       { return this-&gt;insert(__p, __l.begin(), __l.end()); }
+<span class="lineNum">    1197 </span>            : #endif
+<span class="lineNum">    1198 </span>            : 
+<span class="lineNum">    1199 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1200 </span>            :       /**
+<span class="lineNum">    1201 </span>            :        *  @brief  Inserts a number of copies of given data into the %list.
+<span class="lineNum">    1202 </span>            :        *  @param  __position  A const_iterator into the %list.
+<span class="lineNum">    1203 </span>            :        *  @param  __n  Number of elements to be inserted.
+<span class="lineNum">    1204 </span>            :        *  @param  __x  Data to be inserted.
+<span class="lineNum">    1205 </span>            :        *  @return  An iterator pointing to the first element inserted
+<span class="lineNum">    1206 </span>            :        *           (or __position).
+<span class="lineNum">    1207 </span>            :        *
+<span class="lineNum">    1208 </span>            :        *  This function will insert a specified number of copies of the
+<span class="lineNum">    1209 </span>            :        *  given data before the location specified by @a position.
+<span class="lineNum">    1210 </span>            :        *
+<span class="lineNum">    1211 </span>            :        *  This operation is linear in the number of elements inserted and
+<span class="lineNum">    1212 </span>            :        *  does not invalidate iterators and references.
+<span class="lineNum">    1213 </span>            :        */
+<span class="lineNum">    1214 </span>            :       iterator
+<span class="lineNum">    1215 </span>            :       insert(const_iterator __position, size_type __n, const value_type&amp; __x);
+<span class="lineNum">    1216 </span>            : #else
+<span class="lineNum">    1217 </span>            :       /**
+<span class="lineNum">    1218 </span>            :        *  @brief  Inserts a number of copies of given data into the %list.
+<span class="lineNum">    1219 </span>            :        *  @param  __position  An iterator into the %list.
+<span class="lineNum">    1220 </span>            :        *  @param  __n  Number of elements to be inserted.
+<span class="lineNum">    1221 </span>            :        *  @param  __x  Data to be inserted.
+<span class="lineNum">    1222 </span>            :        *
+<span class="lineNum">    1223 </span>            :        *  This function will insert a specified number of copies of the
+<span class="lineNum">    1224 </span>            :        *  given data before the location specified by @a position.
+<span class="lineNum">    1225 </span>            :        *
+<span class="lineNum">    1226 </span>            :        *  This operation is linear in the number of elements inserted and
+<span class="lineNum">    1227 </span>            :        *  does not invalidate iterators and references.
+<span class="lineNum">    1228 </span>            :        */
+<span class="lineNum">    1229 </span>            :       void
+<span class="lineNum">    1230 </span>            :       insert(iterator __position, size_type __n, const value_type&amp; __x)
+<span class="lineNum">    1231 </span>            :       {
+<span class="lineNum">    1232 </span>            :         list __tmp(__n, __x, get_allocator());
+<span class="lineNum">    1233 </span>            :         splice(__position, __tmp);
+<span class="lineNum">    1234 </span>            :       }
+<span class="lineNum">    1235 </span>            : #endif
+<span class="lineNum">    1236 </span>            : 
+<span class="lineNum">    1237 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1238 </span>            :       /**
+<span class="lineNum">    1239 </span>            :        *  @brief  Inserts a range into the %list.
+<span class="lineNum">    1240 </span>            :        *  @param  __position  A const_iterator into the %list.
+<span class="lineNum">    1241 </span>            :        *  @param  __first  An input iterator.
+<span class="lineNum">    1242 </span>            :        *  @param  __last   An input iterator.
+<span class="lineNum">    1243 </span>            :        *  @return  An iterator pointing to the first element inserted
+<span class="lineNum">    1244 </span>            :        *           (or __position).
+<span class="lineNum">    1245 </span>            :        *
+<span class="lineNum">    1246 </span>            :        *  This function will insert copies of the data in the range [@a
+<span class="lineNum">    1247 </span>            :        *  first,@a last) into the %list before the location specified by
+<span class="lineNum">    1248 </span>            :        *  @a position.
+<span class="lineNum">    1249 </span>            :        *
+<span class="lineNum">    1250 </span>            :        *  This operation is linear in the number of elements inserted and
+<span class="lineNum">    1251 </span>            :        *  does not invalidate iterators and references.
+<span class="lineNum">    1252 </span>            :        */
+<span class="lineNum">    1253 </span>            :       template&lt;typename _InputIterator,
+<span class="lineNum">    1254 </span>            :                typename = std::_RequireInputIter&lt;_InputIterator&gt;&gt;
+<span class="lineNum">    1255 </span>            :         iterator
+<span class="lineNum">    1256 </span>            :         insert(const_iterator __position, _InputIterator __first,
+<span class="lineNum">    1257 </span>            :                _InputIterator __last);
+<span class="lineNum">    1258 </span>            : #else
+<span class="lineNum">    1259 </span>            :       /**
+<span class="lineNum">    1260 </span>            :        *  @brief  Inserts a range into the %list.
+<span class="lineNum">    1261 </span>            :        *  @param  __position  An iterator into the %list.
+<span class="lineNum">    1262 </span>            :        *  @param  __first  An input iterator.
+<span class="lineNum">    1263 </span>            :        *  @param  __last   An input iterator.
+<span class="lineNum">    1264 </span>            :        *
+<span class="lineNum">    1265 </span>            :        *  This function will insert copies of the data in the range [@a
+<span class="lineNum">    1266 </span>            :        *  first,@a last) into the %list before the location specified by
+<span class="lineNum">    1267 </span>            :        *  @a position.
+<span class="lineNum">    1268 </span>            :        *
+<span class="lineNum">    1269 </span>            :        *  This operation is linear in the number of elements inserted and
+<span class="lineNum">    1270 </span>            :        *  does not invalidate iterators and references.
+<span class="lineNum">    1271 </span>            :        */
+<span class="lineNum">    1272 </span>            :       template&lt;typename _InputIterator&gt;
+<span class="lineNum">    1273 </span>            :         void
+<span class="lineNum">    1274 </span>            :         insert(iterator __position, _InputIterator __first,
+<span class="lineNum">    1275 </span>            :                _InputIterator __last)
+<span class="lineNum">    1276 </span>            :         {
+<span class="lineNum">    1277 </span>            :           list __tmp(__first, __last, get_allocator());
+<span class="lineNum">    1278 </span>            :           splice(__position, __tmp);
+<span class="lineNum">    1279 </span>            :         }
+<span class="lineNum">    1280 </span>            : #endif
+<span class="lineNum">    1281 </span>            : 
+<span class="lineNum">    1282 </span>            :       /**
+<span class="lineNum">    1283 </span>            :        *  @brief  Remove element at given position.
+<span class="lineNum">    1284 </span>            :        *  @param  __position  Iterator pointing to element to be erased.
+<span class="lineNum">    1285 </span>            :        *  @return  An iterator pointing to the next element (or end()).
+<span class="lineNum">    1286 </span>            :        *
+<span class="lineNum">    1287 </span>            :        *  This function will erase the element at the given position and thus
+<span class="lineNum">    1288 </span>            :        *  shorten the %list by one.
+<span class="lineNum">    1289 </span>            :        *
+<span class="lineNum">    1290 </span>            :        *  Due to the nature of a %list this operation can be done in
+<span class="lineNum">    1291 </span>            :        *  constant time, and only invalidates iterators/references to
+<span class="lineNum">    1292 </span>            :        *  the element being removed.  The user is also cautioned that
+<span class="lineNum">    1293 </span>            :        *  this function only erases the element, and that if the element
+<span class="lineNum">    1294 </span>            :        *  is itself a pointer, the pointed-to memory is not touched in
+<span class="lineNum">    1295 </span>            :        *  any way.  Managing the pointer is the user's responsibility.
+<span class="lineNum">    1296 </span>            :        */
+<span class="lineNum">    1297 </span>            :       iterator
+<span class="lineNum">    1298 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1299 </span>            :       erase(const_iterator __position) noexcept;
+<span class="lineNum">    1300 </span>            : #else
+<span class="lineNum">    1301 </span>            :       erase(iterator __position);
+<span class="lineNum">    1302 </span>            : #endif
+<span class="lineNum">    1303 </span>            : 
+<span class="lineNum">    1304 </span>            :       /**
+<span class="lineNum">    1305 </span>            :        *  @brief  Remove a range of elements.
+<span class="lineNum">    1306 </span>            :        *  @param  __first  Iterator pointing to the first element to be erased.
+<span class="lineNum">    1307 </span>            :        *  @param  __last  Iterator pointing to one past the last element to be
+<span class="lineNum">    1308 </span>            :        *                erased.
+<span class="lineNum">    1309 </span>            :        *  @return  An iterator pointing to the element pointed to by @a last
+<span class="lineNum">    1310 </span>            :        *           prior to erasing (or end()).
+<span class="lineNum">    1311 </span>            :        *
+<span class="lineNum">    1312 </span>            :        *  This function will erase the elements in the range @a
+<span class="lineNum">    1313 </span>            :        *  [first,last) and shorten the %list accordingly.
+<span class="lineNum">    1314 </span>            :        *
+<span class="lineNum">    1315 </span>            :        *  This operation is linear time in the size of the range and only
+<span class="lineNum">    1316 </span>            :        *  invalidates iterators/references to the element being removed.
+<span class="lineNum">    1317 </span>            :        *  The user is also cautioned that this function only erases the
+<span class="lineNum">    1318 </span>            :        *  elements, and that if the elements themselves are pointers, the
+<span class="lineNum">    1319 </span>            :        *  pointed-to memory is not touched in any way.  Managing the pointer
+<span class="lineNum">    1320 </span>            :        *  is the user's responsibility.
+<span class="lineNum">    1321 </span>            :        */
+<span class="lineNum">    1322 </span>            :       iterator
+<span class="lineNum">    1323 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1324 </span>            :       erase(const_iterator __first, const_iterator __last) noexcept
+<span class="lineNum">    1325 </span>            : #else
+<span class="lineNum">    1326 </span>            :       erase(iterator __first, iterator __last)
+<span class="lineNum">    1327 </span>            : #endif
+<span class="lineNum">    1328 </span>            :       {
+<span class="lineNum">    1329 </span>            :         while (__first != __last)
+<span class="lineNum">    1330 </span>            :           __first = erase(__first);
+<span class="lineNum">    1331 </span>            :         return __last._M_const_cast();
+<span class="lineNum">    1332 </span>            :       }
+<span class="lineNum">    1333 </span>            : 
+<span class="lineNum">    1334 </span>            :       /**
+<span class="lineNum">    1335 </span>            :        *  @brief  Swaps data with another %list.
+<span class="lineNum">    1336 </span>            :        *  @param  __x  A %list of the same element and allocator types.
+<span class="lineNum">    1337 </span>            :        *
+<span class="lineNum">    1338 </span>            :        *  This exchanges the elements between two lists in constant
+<span class="lineNum">    1339 </span>            :        *  time.  Note that the global std::swap() function is
+<span class="lineNum">    1340 </span>            :        *  specialized such that std::swap(l1,l2) will feed to this
+<span class="lineNum">    1341 </span>            :        *  function.
+<span class="lineNum">    1342 </span>            :        */
+<span class="lineNum">    1343 </span>            :       void
+<span class="lineNum">    1344 </span>            :       swap(list&amp; __x)
+<span class="lineNum">    1345 </span>            :       {
+<span class="lineNum">    1346 </span><span class="lineCov">         52 :         __detail::_List_node_base::swap(this-&gt;_M_impl._M_node, </span>
+<span class="lineNum">    1347 </span>            :                                         __x._M_impl._M_node);
+<span class="lineNum">    1348 </span>            : 
+<span class="lineNum">    1349 </span><span class="lineCov">         52 :         size_t __xsize = __x._M_get_size();</span>
+<span class="lineNum">    1350 </span><span class="lineCov">        104 :         __x._M_set_size(this-&gt;_M_get_size());</span>
+<span class="lineNum">    1351 </span><span class="lineCov">        104 :         this-&gt;_M_set_size(__xsize);</span>
+<span class="lineNum">    1352 </span>            : 
+<span class="lineNum">    1353 </span>            :         // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">    1354 </span>            :         // 431. Swapping containers with unequal allocators.
+<span class="lineNum">    1355 </span>            :         std::__alloc_swap&lt;typename _Base::_Node_alloc_type&gt;::
+<span class="lineNum">    1356 </span><span class="lineCov">         52 :           _S_do_it(_M_get_Node_allocator(), __x._M_get_Node_allocator());</span>
+<span class="lineNum">    1357 </span>            :       }
+<span class="lineNum">    1358 </span>            : 
+<span class="lineNum">    1359 </span>            :       /**
+<span class="lineNum">    1360 </span>            :        *  Erases all the elements.  Note that this function only erases
+<span class="lineNum">    1361 </span>            :        *  the elements, and that if the elements themselves are
+<span class="lineNum">    1362 </span>            :        *  pointers, the pointed-to memory is not touched in any way.
+<span class="lineNum">    1363 </span>            :        *  Managing the pointer is the user's responsibility.
+<span class="lineNum">    1364 </span>            :        */
+<span class="lineNum">    1365 </span>            :       void
+<span class="lineNum">    1366 </span>            :       clear() _GLIBCXX_NOEXCEPT
+<span class="lineNum">    1367 </span>            :       {
+<span class="lineNum">    1368 </span><span class="lineCov">        301 :         _Base::_M_clear();</span>
+<span class="lineNum">    1369 </span><span class="lineCov">        568 :         _Base::_M_init();</span>
+<span class="lineNum">    1370 </span>            :       }
+<span class="lineNum">    1371 </span>            : 
+<span class="lineNum">    1372 </span>            :       // [23.2.2.4] list operations
+<span class="lineNum">    1373 </span>            :       /**
+<span class="lineNum">    1374 </span>            :        *  @brief  Insert contents of another %list.
+<span class="lineNum">    1375 </span>            :        *  @param  __position  Iterator referencing the element to insert before.
+<span class="lineNum">    1376 </span>            :        *  @param  __x  Source list.
+<span class="lineNum">    1377 </span>            :        *
+<span class="lineNum">    1378 </span>            :        *  The elements of @a __x are inserted in constant time in front of
+<span class="lineNum">    1379 </span>            :        *  the element referenced by @a __position.  @a __x becomes an empty
+<span class="lineNum">    1380 </span>            :        *  list.
+<span class="lineNum">    1381 </span>            :        *
+<span class="lineNum">    1382 </span>            :        *  Requires this != @a __x.
+<span class="lineNum">    1383 </span>            :        */
+<span class="lineNum">    1384 </span>            :       void
+<span class="lineNum">    1385 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1386 </span>            :       splice(const_iterator __position, list&amp;&amp; __x) noexcept
+<span class="lineNum">    1387 </span>            : #else
+<span class="lineNum">    1388 </span>            :       splice(iterator __position, list&amp; __x)
+<span class="lineNum">    1389 </span>            : #endif
+<span class="lineNum">    1390 </span>            :       {
+<span class="lineNum">    1391 </span>            :         if (!__x.empty())
+<span class="lineNum">    1392 </span>            :           {
+<span class="lineNum">    1393 </span>            :             _M_check_equal_allocators(__x);
+<span class="lineNum">    1394 </span>            : 
+<span class="lineNum">    1395 </span>            :             this-&gt;_M_transfer(__position._M_const_cast(),
+<span class="lineNum">    1396 </span>            :                               __x.begin(), __x.end());
+<span class="lineNum">    1397 </span>            : 
+<span class="lineNum">    1398 </span>            :             this-&gt;_M_inc_size(__x._M_get_size());
+<span class="lineNum">    1399 </span>            :             __x._M_set_size(0);
+<span class="lineNum">    1400 </span>            :           }
+<span class="lineNum">    1401 </span>            :       }
+<span class="lineNum">    1402 </span>            : 
+<span class="lineNum">    1403 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1404 </span>            :       void
+<span class="lineNum">    1405 </span>            :       splice(const_iterator __position, list&amp; __x) noexcept
+<span class="lineNum">    1406 </span>            :       { splice(__position, std::move(__x)); }
+<span class="lineNum">    1407 </span>            : #endif
+<span class="lineNum">    1408 </span>            : 
+<span class="lineNum">    1409 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1410 </span>            :       /**
+<span class="lineNum">    1411 </span>            :        *  @brief  Insert element from another %list.
+<span class="lineNum">    1412 </span>            :        *  @param  __position  Const_iterator referencing the element to
+<span class="lineNum">    1413 </span>            :        *                      insert before.
+<span class="lineNum">    1414 </span>            :        *  @param  __x  Source list.
+<span class="lineNum">    1415 </span>            :        *  @param  __i  Const_iterator referencing the element to move.
+<span class="lineNum">    1416 </span>            :        *
+<span class="lineNum">    1417 </span>            :        *  Removes the element in list @a __x referenced by @a __i and
+<span class="lineNum">    1418 </span>            :        *  inserts it into the current list before @a __position.
+<a name="1419"><span class="lineNum">    1419 </span>            :        */</a>
+<span class="lineNum">    1420 </span>            :       void
+<span class="lineNum">    1421 </span><span class="lineCov">         28 :       splice(const_iterator __position, list&amp;&amp; __x, const_iterator __i) noexcept</span>
+<span class="lineNum">    1422 </span>            : #else
+<span class="lineNum">    1423 </span>            :       /**
+<span class="lineNum">    1424 </span>            :        *  @brief  Insert element from another %list.
+<span class="lineNum">    1425 </span>            :        *  @param  __position  Iterator referencing the element to insert before.
+<span class="lineNum">    1426 </span>            :        *  @param  __x  Source list.
+<span class="lineNum">    1427 </span>            :        *  @param  __i  Iterator referencing the element to move.
+<span class="lineNum">    1428 </span>            :        *
+<span class="lineNum">    1429 </span>            :        *  Removes the element in list @a __x referenced by @a __i and
+<span class="lineNum">    1430 </span>            :        *  inserts it into the current list before @a __position.
+<span class="lineNum">    1431 </span>            :        */
+<span class="lineNum">    1432 </span>            :       void
+<span class="lineNum">    1433 </span>            :       splice(iterator __position, list&amp; __x, iterator __i)
+<span class="lineNum">    1434 </span>            : #endif
+<span class="lineNum">    1435 </span>            :       {
+<span class="lineNum">    1436 </span><span class="lineCov">         28 :         iterator __j = __i._M_const_cast();</span>
+<span class="lineNum">    1437 </span><span class="lineCov">         28 :         ++__j;</span>
+<span class="lineNum">    1438 </span><span class="lineCov">         28 :         if (__position == __i || __position == __j)</span>
+<span class="lineNum">    1439 </span>            :           return;
+<span class="lineNum">    1440 </span>            : 
+<span class="lineNum">    1441 </span>            :         if (this != &amp;__x)
+<span class="lineNum">    1442 </span>            :           _M_check_equal_allocators(__x);
+<span class="lineNum">    1443 </span>            : 
+<span class="lineNum">    1444 </span><span class="lineCov">         56 :         this-&gt;_M_transfer(__position._M_const_cast(),</span>
+<span class="lineNum">    1445 </span>            :                           __i._M_const_cast(), __j);
+<span class="lineNum">    1446 </span>            : 
+<span class="lineNum">    1447 </span><span class="lineCov">         56 :         this-&gt;_M_inc_size(1);</span>
+<span class="lineNum">    1448 </span><span class="lineCov">         56 :         __x._M_dec_size(1);</span>
+<span class="lineNum">    1449 </span>            :       }
+<span class="lineNum">    1450 </span>            : 
+<span class="lineNum">    1451 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1452 </span>            :       /**
+<span class="lineNum">    1453 </span>            :        *  @brief  Insert element from another %list.
+<span class="lineNum">    1454 </span>            :        *  @param  __position  Const_iterator referencing the element to
+<span class="lineNum">    1455 </span>            :        *                      insert before.
+<span class="lineNum">    1456 </span>            :        *  @param  __x  Source list.
+<span class="lineNum">    1457 </span>            :        *  @param  __i  Const_iterator referencing the element to move.
+<span class="lineNum">    1458 </span>            :        *
+<span class="lineNum">    1459 </span>            :        *  Removes the element in list @a __x referenced by @a __i and
+<span class="lineNum">    1460 </span>            :        *  inserts it into the current list before @a __position.
+<span class="lineNum">    1461 </span>            :        */
+<span class="lineNum">    1462 </span>            :       void
+<span class="lineNum">    1463 </span>            :       splice(const_iterator __position, list&amp; __x, const_iterator __i) noexcept
+<span class="lineNum">    1464 </span><span class="lineCov">         28 :       { splice(__position, std::move(__x), __i); }</span>
+<span class="lineNum">    1465 </span>            : #endif
+<span class="lineNum">    1466 </span>            : 
+<span class="lineNum">    1467 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1468 </span>            :       /**
+<span class="lineNum">    1469 </span>            :        *  @brief  Insert range from another %list.
+<span class="lineNum">    1470 </span>            :        *  @param  __position  Const_iterator referencing the element to
+<span class="lineNum">    1471 </span>            :        *                      insert before.
+<span class="lineNum">    1472 </span>            :        *  @param  __x  Source list.
+<span class="lineNum">    1473 </span>            :        *  @param  __first  Const_iterator referencing the start of range in x.
+<span class="lineNum">    1474 </span>            :        *  @param  __last  Const_iterator referencing the end of range in x.
+<span class="lineNum">    1475 </span>            :        *
+<span class="lineNum">    1476 </span>            :        *  Removes elements in the range [__first,__last) and inserts them
+<span class="lineNum">    1477 </span>            :        *  before @a __position in constant time.
+<span class="lineNum">    1478 </span>            :        *
+<span class="lineNum">    1479 </span>            :        *  Undefined if @a __position is in [__first,__last).
+<span class="lineNum">    1480 </span>            :        */
+<span class="lineNum">    1481 </span>            :       void
+<span class="lineNum">    1482 </span>            :       splice(const_iterator __position, list&amp;&amp; __x, const_iterator __first,
+<span class="lineNum">    1483 </span>            :              const_iterator __last) noexcept
+<span class="lineNum">    1484 </span>            : #else
+<span class="lineNum">    1485 </span>            :       /**
+<span class="lineNum">    1486 </span>            :        *  @brief  Insert range from another %list.
+<span class="lineNum">    1487 </span>            :        *  @param  __position  Iterator referencing the element to insert before.
+<span class="lineNum">    1488 </span>            :        *  @param  __x  Source list.
+<span class="lineNum">    1489 </span>            :        *  @param  __first  Iterator referencing the start of range in x.
+<span class="lineNum">    1490 </span>            :        *  @param  __last  Iterator referencing the end of range in x.
+<span class="lineNum">    1491 </span>            :        *
+<span class="lineNum">    1492 </span>            :        *  Removes elements in the range [__first,__last) and inserts them
+<span class="lineNum">    1493 </span>            :        *  before @a __position in constant time.
+<span class="lineNum">    1494 </span>            :        *
+<span class="lineNum">    1495 </span>            :        *  Undefined if @a __position is in [__first,__last).
+<span class="lineNum">    1496 </span>            :        */
+<span class="lineNum">    1497 </span>            :       void
+<span class="lineNum">    1498 </span>            :       splice(iterator __position, list&amp; __x, iterator __first,
+<span class="lineNum">    1499 </span>            :              iterator __last)
+<span class="lineNum">    1500 </span>            : #endif
+<span class="lineNum">    1501 </span>            :       {
+<span class="lineNum">    1502 </span>            :         if (__first != __last)
+<span class="lineNum">    1503 </span>            :           {
+<span class="lineNum">    1504 </span>            :             if (this != &amp;__x)
+<span class="lineNum">    1505 </span>            :               _M_check_equal_allocators(__x);
+<span class="lineNum">    1506 </span>            : 
+<span class="lineNum">    1507 </span>            :             size_t __n = this-&gt;_M_distance(__first._M_node, __last._M_node);
+<span class="lineNum">    1508 </span>            :             this-&gt;_M_inc_size(__n);
+<span class="lineNum">    1509 </span>            :             __x._M_dec_size(__n);
+<span class="lineNum">    1510 </span>            : 
+<span class="lineNum">    1511 </span>            :             this-&gt;_M_transfer(__position._M_const_cast(),
+<span class="lineNum">    1512 </span>            :                               __first._M_const_cast(),
+<span class="lineNum">    1513 </span>            :                               __last._M_const_cast());
+<span class="lineNum">    1514 </span>            :           }
+<span class="lineNum">    1515 </span>            :       }
+<span class="lineNum">    1516 </span>            : 
+<span class="lineNum">    1517 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1518 </span>            :       /**
+<span class="lineNum">    1519 </span>            :        *  @brief  Insert range from another %list.
+<span class="lineNum">    1520 </span>            :        *  @param  __position  Const_iterator referencing the element to
+<span class="lineNum">    1521 </span>            :        *                      insert before.
+<span class="lineNum">    1522 </span>            :        *  @param  __x  Source list.
+<span class="lineNum">    1523 </span>            :        *  @param  __first  Const_iterator referencing the start of range in x.
+<span class="lineNum">    1524 </span>            :        *  @param  __last  Const_iterator referencing the end of range in x.
+<span class="lineNum">    1525 </span>            :        *
+<span class="lineNum">    1526 </span>            :        *  Removes elements in the range [__first,__last) and inserts them
+<span class="lineNum">    1527 </span>            :        *  before @a __position in constant time.
+<span class="lineNum">    1528 </span>            :        *
+<span class="lineNum">    1529 </span>            :        *  Undefined if @a __position is in [__first,__last).
+<span class="lineNum">    1530 </span>            :        */
+<span class="lineNum">    1531 </span>            :       void
+<span class="lineNum">    1532 </span>            :       splice(const_iterator __position, list&amp; __x, const_iterator __first,
+<span class="lineNum">    1533 </span>            :              const_iterator __last) noexcept
+<span class="lineNum">    1534 </span>            :       { splice(__position, std::move(__x), __first, __last); }
+<span class="lineNum">    1535 </span>            : #endif
+<span class="lineNum">    1536 </span>            : 
+<span class="lineNum">    1537 </span>            :       /**
+<span class="lineNum">    1538 </span>            :        *  @brief  Remove all elements equal to value.
+<span class="lineNum">    1539 </span>            :        *  @param  __value  The value to remove.
+<span class="lineNum">    1540 </span>            :        *
+<span class="lineNum">    1541 </span>            :        *  Removes every element in the list equal to @a value.
+<span class="lineNum">    1542 </span>            :        *  Remaining elements stay in list order.  Note that this
+<span class="lineNum">    1543 </span>            :        *  function only erases the elements, and that if the elements
+<span class="lineNum">    1544 </span>            :        *  themselves are pointers, the pointed-to memory is not
+<span class="lineNum">    1545 </span>            :        *  touched in any way.  Managing the pointer is the user's
+<span class="lineNum">    1546 </span>            :        *  responsibility.
+<span class="lineNum">    1547 </span>            :        */
+<span class="lineNum">    1548 </span>            :       void
+<span class="lineNum">    1549 </span>            :       remove(const _Tp&amp; __value);
+<span class="lineNum">    1550 </span>            : 
+<span class="lineNum">    1551 </span>            :       /**
+<span class="lineNum">    1552 </span>            :        *  @brief  Remove all elements satisfying a predicate.
+<span class="lineNum">    1553 </span>            :        *  @tparam  _Predicate  Unary predicate function or object.
+<span class="lineNum">    1554 </span>            :        *
+<span class="lineNum">    1555 </span>            :        *  Removes every element in the list for which the predicate
+<span class="lineNum">    1556 </span>            :        *  returns true.  Remaining elements stay in list order.  Note
+<span class="lineNum">    1557 </span>            :        *  that this function only erases the elements, and that if the
+<span class="lineNum">    1558 </span>            :        *  elements themselves are pointers, the pointed-to memory is
+<span class="lineNum">    1559 </span>            :        *  not touched in any way.  Managing the pointer is the user's
+<span class="lineNum">    1560 </span>            :        *  responsibility.
+<span class="lineNum">    1561 </span>            :        */
+<span class="lineNum">    1562 </span>            :       template&lt;typename _Predicate&gt;
+<span class="lineNum">    1563 </span>            :         void
+<span class="lineNum">    1564 </span>            :         remove_if(_Predicate);
+<span class="lineNum">    1565 </span>            : 
+<span class="lineNum">    1566 </span>            :       /**
+<span class="lineNum">    1567 </span>            :        *  @brief  Remove consecutive duplicate elements.
+<span class="lineNum">    1568 </span>            :        *
+<span class="lineNum">    1569 </span>            :        *  For each consecutive set of elements with the same value,
+<span class="lineNum">    1570 </span>            :        *  remove all but the first one.  Remaining elements stay in
+<span class="lineNum">    1571 </span>            :        *  list order.  Note that this function only erases the
+<span class="lineNum">    1572 </span>            :        *  elements, and that if the elements themselves are pointers,
+<span class="lineNum">    1573 </span>            :        *  the pointed-to memory is not touched in any way.  Managing
+<span class="lineNum">    1574 </span>            :        *  the pointer is the user's responsibility.
+<span class="lineNum">    1575 </span>            :        */
+<span class="lineNum">    1576 </span>            :       void
+<span class="lineNum">    1577 </span>            :       unique();
+<span class="lineNum">    1578 </span>            : 
+<span class="lineNum">    1579 </span>            :       /**
+<span class="lineNum">    1580 </span>            :        *  @brief  Remove consecutive elements satisfying a predicate.
+<span class="lineNum">    1581 </span>            :        *  @tparam _BinaryPredicate  Binary predicate function or object.
+<span class="lineNum">    1582 </span>            :        *
+<span class="lineNum">    1583 </span>            :        *  For each consecutive set of elements [first,last) that
+<span class="lineNum">    1584 </span>            :        *  satisfy predicate(first,i) where i is an iterator in
+<span class="lineNum">    1585 </span>            :        *  [first,last), remove all but the first one.  Remaining
+<span class="lineNum">    1586 </span>            :        *  elements stay in list order.  Note that this function only
+<span class="lineNum">    1587 </span>            :        *  erases the elements, and that if the elements themselves are
+<span class="lineNum">    1588 </span>            :        *  pointers, the pointed-to memory is not touched in any way.
+<span class="lineNum">    1589 </span>            :        *  Managing the pointer is the user's responsibility.
+<span class="lineNum">    1590 </span>            :        */
+<span class="lineNum">    1591 </span>            :       template&lt;typename _BinaryPredicate&gt;
+<span class="lineNum">    1592 </span>            :         void
+<span class="lineNum">    1593 </span>            :         unique(_BinaryPredicate);
+<span class="lineNum">    1594 </span>            : 
+<span class="lineNum">    1595 </span>            :       /**
+<span class="lineNum">    1596 </span>            :        *  @brief  Merge sorted lists.
+<span class="lineNum">    1597 </span>            :        *  @param  __x  Sorted list to merge.
+<span class="lineNum">    1598 </span>            :        *
+<span class="lineNum">    1599 </span>            :        *  Assumes that both @a __x and this list are sorted according to
+<span class="lineNum">    1600 </span>            :        *  operator&lt;().  Merges elements of @a __x into this list in
+<span class="lineNum">    1601 </span>            :        *  sorted order, leaving @a __x empty when complete.  Elements in
+<span class="lineNum">    1602 </span>            :        *  this list precede elements in @a __x that are equal.
+<span class="lineNum">    1603 </span>            :        */
+<span class="lineNum">    1604 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1605 </span>            :       void
+<span class="lineNum">    1606 </span>            :       merge(list&amp;&amp; __x);
+<span class="lineNum">    1607 </span>            : 
+<span class="lineNum">    1608 </span>            :       void
+<span class="lineNum">    1609 </span>            :       merge(list&amp; __x)
+<span class="lineNum">    1610 </span><span class="lineCov">         30 :       { merge(std::move(__x)); }</span>
+<span class="lineNum">    1611 </span>            : #else
+<span class="lineNum">    1612 </span>            :       void
+<span class="lineNum">    1613 </span>            :       merge(list&amp; __x);
+<span class="lineNum">    1614 </span>            : #endif
+<span class="lineNum">    1615 </span>            : 
+<span class="lineNum">    1616 </span>            :       /**
+<span class="lineNum">    1617 </span>            :        *  @brief  Merge sorted lists according to comparison function.
+<span class="lineNum">    1618 </span>            :        *  @tparam _StrictWeakOrdering Comparison function defining
+<span class="lineNum">    1619 </span>            :        *  sort order.
+<span class="lineNum">    1620 </span>            :        *  @param  __x  Sorted list to merge.
+<span class="lineNum">    1621 </span>            :        *  @param  __comp  Comparison functor.
+<span class="lineNum">    1622 </span>            :        *
+<span class="lineNum">    1623 </span>            :        *  Assumes that both @a __x and this list are sorted according to
+<span class="lineNum">    1624 </span>            :        *  StrictWeakOrdering.  Merges elements of @a __x into this list
+<span class="lineNum">    1625 </span>            :        *  in sorted order, leaving @a __x empty when complete.  Elements
+<span class="lineNum">    1626 </span>            :        *  in this list precede elements in @a __x that are equivalent
+<span class="lineNum">    1627 </span>            :        *  according to StrictWeakOrdering().
+<span class="lineNum">    1628 </span>            :        */
+<span class="lineNum">    1629 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1630 </span>            :       template&lt;typename _StrictWeakOrdering&gt;
+<span class="lineNum">    1631 </span>            :         void
+<span class="lineNum">    1632 </span>            :         merge(list&amp;&amp; __x, _StrictWeakOrdering __comp);
+<span class="lineNum">    1633 </span>            : 
+<span class="lineNum">    1634 </span>            :       template&lt;typename _StrictWeakOrdering&gt;
+<span class="lineNum">    1635 </span>            :         void
+<span class="lineNum">    1636 </span>            :         merge(list&amp; __x, _StrictWeakOrdering __comp)
+<span class="lineNum">    1637 </span>            :         { merge(std::move(__x), __comp); }
+<span class="lineNum">    1638 </span>            : #else
+<span class="lineNum">    1639 </span>            :       template&lt;typename _StrictWeakOrdering&gt;
+<span class="lineNum">    1640 </span>            :         void
+<span class="lineNum">    1641 </span>            :         merge(list&amp; __x, _StrictWeakOrdering __comp);
+<span class="lineNum">    1642 </span>            : #endif
+<span class="lineNum">    1643 </span>            : 
+<span class="lineNum">    1644 </span>            :       /**
+<span class="lineNum">    1645 </span>            :        *  @brief  Reverse the elements in list.
+<span class="lineNum">    1646 </span>            :        *
+<span class="lineNum">    1647 </span>            :        *  Reverse the order of elements in the list in linear time.
+<span class="lineNum">    1648 </span>            :        */
+<span class="lineNum">    1649 </span>            :       void
+<span class="lineNum">    1650 </span>            :       reverse() _GLIBCXX_NOEXCEPT
+<span class="lineNum">    1651 </span>            :       { this-&gt;_M_impl._M_node._M_reverse(); }
+<span class="lineNum">    1652 </span>            : 
+<span class="lineNum">    1653 </span>            :       /**
+<span class="lineNum">    1654 </span>            :        *  @brief  Sort the elements.
+<span class="lineNum">    1655 </span>            :        *
+<span class="lineNum">    1656 </span>            :        *  Sorts the elements of this list in NlogN time.  Equivalent
+<span class="lineNum">    1657 </span>            :        *  elements remain in list order.
+<span class="lineNum">    1658 </span>            :        */
+<span class="lineNum">    1659 </span>            :       void
+<span class="lineNum">    1660 </span>            :       sort();
+<span class="lineNum">    1661 </span>            : 
+<span class="lineNum">    1662 </span>            :       /**
+<span class="lineNum">    1663 </span>            :        *  @brief  Sort the elements according to comparison function.
+<span class="lineNum">    1664 </span>            :        *
+<span class="lineNum">    1665 </span>            :        *  Sorts the elements of this list in NlogN time.  Equivalent
+<span class="lineNum">    1666 </span>            :        *  elements remain in list order.
+<span class="lineNum">    1667 </span>            :        */
+<span class="lineNum">    1668 </span>            :       template&lt;typename _StrictWeakOrdering&gt;
+<span class="lineNum">    1669 </span>            :         void
+<span class="lineNum">    1670 </span>            :         sort(_StrictWeakOrdering);
+<span class="lineNum">    1671 </span>            : 
+<span class="lineNum">    1672 </span>            :     protected:
+<span class="lineNum">    1673 </span>            :       // Internal constructor functions follow.
+<span class="lineNum">    1674 </span>            : 
+<span class="lineNum">    1675 </span>            :       // Called by the range constructor to implement [23.1.1]/9
+<span class="lineNum">    1676 </span>            : 
+<span class="lineNum">    1677 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">    1678 </span>            :       // 438. Ambiguity in the &quot;do the right thing&quot; clause
+<span class="lineNum">    1679 </span>            :       template&lt;typename _Integer&gt;
+<span class="lineNum">    1680 </span>            :         void
+<span class="lineNum">    1681 </span>            :         _M_initialize_dispatch(_Integer __n, _Integer __x, __true_type)
+<span class="lineNum">    1682 </span>            :         { _M_fill_initialize(static_cast&lt;size_type&gt;(__n), __x); }
+<span class="lineNum">    1683 </span>            : 
+<span class="lineNum">    1684 </span>            :       // Called by the range constructor to implement [23.1.1]/9
+<span class="lineNum">    1685 </span>            :       template&lt;typename _InputIterator&gt;
+<span class="lineNum">    1686 </span>            :         void
+<span class="lineNum">    1687 </span>            :         _M_initialize_dispatch(_InputIterator __first, _InputIterator __last,
+<span class="lineNum">    1688 </span>            :                                __false_type)
+<span class="lineNum">    1689 </span>            :         {
+<span class="lineNum">    1690 </span>            :           for (; __first != __last; ++__first)
+<span class="lineNum">    1691 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1692 </span>            :             emplace_back(*__first);
+<span class="lineNum">    1693 </span>            : #else
+<span class="lineNum">    1694 </span>            :             push_back(*__first);
+<span class="lineNum">    1695 </span>            : #endif
+<span class="lineNum">    1696 </span>            :         }
+<span class="lineNum">    1697 </span>            : 
+<span class="lineNum">    1698 </span>            :       // Called by list(n,v,a), and the range constructor when it turns out
+<span class="lineNum">    1699 </span>            :       // to be the same thing.
+<span class="lineNum">    1700 </span>            :       void
+<span class="lineNum">    1701 </span>            :       _M_fill_initialize(size_type __n, const value_type&amp; __x)
+<span class="lineNum">    1702 </span>            :       {
+<span class="lineNum">    1703 </span><span class="lineNoCov">          0 :         for (; __n; --__n)</span>
+<span class="lineNum">    1704 </span><span class="lineNoCov">          0 :           push_back(__x);</span>
+<span class="lineNum">    1705 </span>            :       }
+<span class="lineNum">    1706 </span>            : 
+<span class="lineNum">    1707 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1708 </span>            :       // Called by list(n).
+<span class="lineNum">    1709 </span>            :       void
+<span class="lineNum">    1710 </span>            :       _M_default_initialize(size_type __n)
+<span class="lineNum">    1711 </span>            :       {
+<span class="lineNum">    1712 </span>            :         for (; __n; --__n)
+<span class="lineNum">    1713 </span>            :           emplace_back();
+<span class="lineNum">    1714 </span>            :       }
+<span class="lineNum">    1715 </span>            : 
+<span class="lineNum">    1716 </span>            :       // Called by resize(sz).
+<span class="lineNum">    1717 </span>            :       void
+<span class="lineNum">    1718 </span>            :       _M_default_append(size_type __n);
+<span class="lineNum">    1719 </span>            : #endif
+<span class="lineNum">    1720 </span>            : 
+<span class="lineNum">    1721 </span>            :       // Internal assign functions follow.
+<span class="lineNum">    1722 </span>            : 
+<span class="lineNum">    1723 </span>            :       // Called by the range assign to implement [23.1.1]/9
+<span class="lineNum">    1724 </span>            : 
+<span class="lineNum">    1725 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">    1726 </span>            :       // 438. Ambiguity in the &quot;do the right thing&quot; clause
+<span class="lineNum">    1727 </span>            :       template&lt;typename _Integer&gt;
+<span class="lineNum">    1728 </span>            :         void
+<span class="lineNum">    1729 </span>            :         _M_assign_dispatch(_Integer __n, _Integer __val, __true_type)
+<span class="lineNum">    1730 </span>            :         { _M_fill_assign(__n, __val); }
+<span class="lineNum">    1731 </span>            : 
+<span class="lineNum">    1732 </span>            :       // Called by the range assign to implement [23.1.1]/9
+<span class="lineNum">    1733 </span>            :       template&lt;typename _InputIterator&gt;
+<span class="lineNum">    1734 </span>            :         void
+<span class="lineNum">    1735 </span>            :         _M_assign_dispatch(_InputIterator __first, _InputIterator __last,
+<span class="lineNum">    1736 </span>            :                            __false_type);
+<span class="lineNum">    1737 </span>            : 
+<span class="lineNum">    1738 </span>            :       // Called by assign(n,t), and the range assign when it turns out
+<span class="lineNum">    1739 </span>            :       // to be the same thing.
+<span class="lineNum">    1740 </span>            :       void
+<span class="lineNum">    1741 </span>            :       _M_fill_assign(size_type __n, const value_type&amp; __val);
+<span class="lineNum">    1742 </span>            : 
+<span class="lineNum">    1743 </span>            : 
+<span class="lineNum">    1744 </span>            :       // Moves the elements from [first,last) before position.
+<span class="lineNum">    1745 </span>            :       void
+<span class="lineNum">    1746 </span>            :       _M_transfer(iterator __position, iterator __first, iterator __last)
+<span class="lineNum">    1747 </span><span class="lineCov">         62 :       { __position._M_node-&gt;_M_transfer(__first._M_node, __last._M_node); }</span>
+<span class="lineNum">    1748 </span>            : 
+<span class="lineNum">    1749 </span>            :       // Inserts new element at position given and with value given.
+<span class="lineNum">    1750 </span>            : #if __cplusplus &lt; 201103L
+<span class="lineNum">    1751 </span>            :       void
+<span class="lineNum">    1752 </span>            :       _M_insert(iterator __position, const value_type&amp; __x)
+<span class="lineNum">    1753 </span>            :       {
+<span class="lineNum">    1754 </span>            :         _Node* __tmp = _M_create_node(__x);
+<span class="lineNum">    1755 </span>            :         __tmp-&gt;_M_hook(__position._M_node);
+<span class="lineNum">    1756 </span>            :         this-&gt;_M_inc_size(1);
+<span class="lineNum">    1757 </span>            :       }
+<span class="lineNum">    1758 </span>            : #else
+<a name="1759"><span class="lineNum">    1759 </span>            :      template&lt;typename... _Args&gt;</a>
+<span class="lineNum">    1760 </span>            :        void
+<span class="lineNum">    1761 </span><span class="lineCov">        215 :        _M_insert(iterator __position, _Args&amp;&amp;... __args)</span>
+<span class="lineNum">    1762 </span>            :        {
+<span class="lineNum">    1763 </span><span class="lineCov">        348 :          _Node* __tmp = _M_create_node(std::forward&lt;_Args&gt;(__args)...);</span>
+<span class="lineNum">    1764 </span><span class="lineCov">        215 :          __tmp-&gt;_M_hook(__position._M_node);</span>
+<span class="lineNum">    1765 </span><span class="lineCov">        430 :          this-&gt;_M_inc_size(1);</span>
+<span class="lineNum">    1766 </span><span class="lineCov">        215 :        }</span>
+<span class="lineNum">    1767 </span>            : #endif
+<span class="lineNum">    1768 </span>            : 
+<a name="1769"><span class="lineNum">    1769 </span>            :       // Erases element at position given.</a>
+<span class="lineNum">    1770 </span>            :       void
+<span class="lineNum">    1771 </span><span class="lineCov">         36 :       _M_erase(iterator __position) _GLIBCXX_NOEXCEPT</span>
+<span class="lineNum">    1772 </span>            :       {
+<span class="lineNum">    1773 </span><span class="lineCov">         76 :         this-&gt;_M_dec_size(1);</span>
+<span class="lineNum">    1774 </span><span class="lineCov">         38 :         __position._M_node-&gt;_M_unhook();</span>
+<span class="lineNum">    1775 </span><span class="lineCov">         38 :         _Node* __n = static_cast&lt;_Node*&gt;(__position._M_node);</span>
+<span class="lineNum">    1776 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">    1777 </span><span class="lineCov">         74 :         _M_get_Node_allocator().destroy(__n);</span>
+<span class="lineNum">    1778 </span>            : #else
+<span class="lineNum">    1779 </span>            :         _M_get_Tp_allocator().destroy(std::__addressof(__n-&gt;_M_data));
+<span class="lineNum">    1780 </span>            : #endif
+<span class="lineNum">    1781 </span><span class="lineCov">         76 :         _M_put_node(__n);</span>
+<span class="lineNum">    1782 </span><span class="lineCov">         36 :       }</span>
+<span class="lineNum">    1783 </span>            : 
+<span class="lineNum">    1784 </span>            :       // To implement the splice (and merge) bits of N1599.
+<span class="lineNum">    1785 </span>            :       void
+<span class="lineNum">    1786 </span>            :       _M_check_equal_allocators(list&amp; __x) _GLIBCXX_NOEXCEPT
+<span class="lineNum">    1787 </span>            :       {
+<span class="lineNum">    1788 </span>            :         if (std::__alloc_neq&lt;typename _Base::_Node_alloc_type&gt;::
+<span class="lineNum">    1789 </span><span class="lineCov">         30 :             _S_do_it(_M_get_Node_allocator(), __x._M_get_Node_allocator()))</span>
+<span class="lineNum">    1790 </span>            :           __builtin_abort();
+<span class="lineNum">    1791 </span>            :       }
+<span class="lineNum">    1792 </span>            :     };
+<span class="lineNum">    1793 </span>            : _GLIBCXX_END_NAMESPACE_CXX11
+<span class="lineNum">    1794 </span>            : 
+<span class="lineNum">    1795 </span>            :   /**
+<span class="lineNum">    1796 </span>            :    *  @brief  List equality comparison.
+<span class="lineNum">    1797 </span>            :    *  @param  __x  A %list.
+<span class="lineNum">    1798 </span>            :    *  @param  __y  A %list of the same type as @a __x.
+<span class="lineNum">    1799 </span>            :    *  @return  True iff the size and elements of the lists are equal.
+<span class="lineNum">    1800 </span>            :    *
+<span class="lineNum">    1801 </span>            :    *  This is an equivalence relation.  It is linear in the size of
+<span class="lineNum">    1802 </span>            :    *  the lists.  Lists are considered equivalent if their sizes are
+<span class="lineNum">    1803 </span>            :    *  equal, and if corresponding elements compare equal.
+<span class="lineNum">    1804 </span>            :   */
+<span class="lineNum">    1805 </span>            :   template&lt;typename _Tp, typename _Alloc&gt;
+<span class="lineNum">    1806 </span>            :     inline bool
+<span class="lineNum">    1807 </span>            :     operator==(const list&lt;_Tp, _Alloc&gt;&amp; __x, const list&lt;_Tp, _Alloc&gt;&amp; __y)
+<span class="lineNum">    1808 </span>            :     {
+<span class="lineNum">    1809 </span>            :       typedef typename list&lt;_Tp, _Alloc&gt;::const_iterator const_iterator;
+<span class="lineNum">    1810 </span>            :       const_iterator __end1 = __x.end();
+<span class="lineNum">    1811 </span>            :       const_iterator __end2 = __y.end();
+<span class="lineNum">    1812 </span>            : 
+<span class="lineNum">    1813 </span>            :       const_iterator __i1 = __x.begin();
+<span class="lineNum">    1814 </span>            :       const_iterator __i2 = __y.begin();
+<span class="lineNum">    1815 </span>            :       while (__i1 != __end1 &amp;&amp; __i2 != __end2 &amp;&amp; *__i1 == *__i2)
+<span class="lineNum">    1816 </span>            :         {
+<span class="lineNum">    1817 </span>            :           ++__i1;
+<span class="lineNum">    1818 </span>            :           ++__i2;
+<span class="lineNum">    1819 </span>            :         }
+<span class="lineNum">    1820 </span>            :       return __i1 == __end1 &amp;&amp; __i2 == __end2;
+<span class="lineNum">    1821 </span>            :     }
+<span class="lineNum">    1822 </span>            : 
+<span class="lineNum">    1823 </span>            :   /**
+<span class="lineNum">    1824 </span>            :    *  @brief  List ordering relation.
+<span class="lineNum">    1825 </span>            :    *  @param  __x  A %list.
+<span class="lineNum">    1826 </span>            :    *  @param  __y  A %list of the same type as @a __x.
+<span class="lineNum">    1827 </span>            :    *  @return  True iff @a __x is lexicographically less than @a __y.
+<span class="lineNum">    1828 </span>            :    *
+<span class="lineNum">    1829 </span>            :    *  This is a total ordering relation.  It is linear in the size of the
+<span class="lineNum">    1830 </span>            :    *  lists.  The elements must be comparable with @c &lt;.
+<span class="lineNum">    1831 </span>            :    *
+<span class="lineNum">    1832 </span>            :    *  See std::lexicographical_compare() for how the determination is made.
+<span class="lineNum">    1833 </span>            :   */
+<span class="lineNum">    1834 </span>            :   template&lt;typename _Tp, typename _Alloc&gt;
+<span class="lineNum">    1835 </span>            :     inline bool
+<span class="lineNum">    1836 </span>            :     operator&lt;(const list&lt;_Tp, _Alloc&gt;&amp; __x, const list&lt;_Tp, _Alloc&gt;&amp; __y)
+<span class="lineNum">    1837 </span>            :     { return std::lexicographical_compare(__x.begin(), __x.end(),
+<span class="lineNum">    1838 </span>            :                                           __y.begin(), __y.end()); }
+<span class="lineNum">    1839 </span>            : 
+<span class="lineNum">    1840 </span>            :   /// Based on operator==
+<span class="lineNum">    1841 </span>            :   template&lt;typename _Tp, typename _Alloc&gt;
+<span class="lineNum">    1842 </span>            :     inline bool
+<span class="lineNum">    1843 </span>            :     operator!=(const list&lt;_Tp, _Alloc&gt;&amp; __x, const list&lt;_Tp, _Alloc&gt;&amp; __y)
+<span class="lineNum">    1844 </span>            :     { return !(__x == __y); }
+<span class="lineNum">    1845 </span>            : 
+<span class="lineNum">    1846 </span>            :   /// Based on operator&lt;
+<span class="lineNum">    1847 </span>            :   template&lt;typename _Tp, typename _Alloc&gt;
+<span class="lineNum">    1848 </span>            :     inline bool
+<span class="lineNum">    1849 </span>            :     operator&gt;(const list&lt;_Tp, _Alloc&gt;&amp; __x, const list&lt;_Tp, _Alloc&gt;&amp; __y)
+<span class="lineNum">    1850 </span>            :     { return __y &lt; __x; }
+<span class="lineNum">    1851 </span>            : 
+<span class="lineNum">    1852 </span>            :   /// Based on operator&lt;
+<span class="lineNum">    1853 </span>            :   template&lt;typename _Tp, typename _Alloc&gt;
+<span class="lineNum">    1854 </span>            :     inline bool
+<span class="lineNum">    1855 </span>            :     operator&lt;=(const list&lt;_Tp, _Alloc&gt;&amp; __x, const list&lt;_Tp, _Alloc&gt;&amp; __y)
+<span class="lineNum">    1856 </span>            :     { return !(__y &lt; __x); }
+<span class="lineNum">    1857 </span>            : 
+<span class="lineNum">    1858 </span>            :   /// Based on operator&lt;
+<span class="lineNum">    1859 </span>            :   template&lt;typename _Tp, typename _Alloc&gt;
+<span class="lineNum">    1860 </span>            :     inline bool
+<span class="lineNum">    1861 </span>            :     operator&gt;=(const list&lt;_Tp, _Alloc&gt;&amp; __x, const list&lt;_Tp, _Alloc&gt;&amp; __y)
+<span class="lineNum">    1862 </span>            :     { return !(__x &lt; __y); }
+<span class="lineNum">    1863 </span>            : 
+<span class="lineNum">    1864 </span>            :   /// See std::list::swap().
+<span class="lineNum">    1865 </span>            :   template&lt;typename _Tp, typename _Alloc&gt;
+<span class="lineNum">    1866 </span>            :     inline void
+<span class="lineNum">    1867 </span>            :     swap(list&lt;_Tp, _Alloc&gt;&amp; __x, list&lt;_Tp, _Alloc&gt;&amp; __y)
+<span class="lineNum">    1868 </span>            :     { __x.swap(__y); }
+<span class="lineNum">    1869 </span>            : 
+<span class="lineNum">    1870 </span>            : _GLIBCXX_END_NAMESPACE_CONTAINER
+<span class="lineNum">    1871 </span>            : } // namespace std
+<span class="lineNum">    1872 </span>            : 
+<span class="lineNum">    1873 </span>            : #endif /* _STL_LIST_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,503 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/thread/pthread/condition_variable.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/thread/pthread</a> - condition_variable.hpp<span style="font-size: 80%;"> (source / <a href="condition_variable.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntryMed">82.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryMed">75.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef BOOST_THREAD_CONDITION_VARIABLE_PTHREAD_HPP</a>
+<span class="lineNum">       2 </span>            : #define BOOST_THREAD_CONDITION_VARIABLE_PTHREAD_HPP
+<span class="lineNum">       3 </span>            : // Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">       4 </span>            : // accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       5 </span>            : // http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       6 </span>            : // (C) Copyright 2007-10 Anthony Williams
+<span class="lineNum">       7 </span>            : // (C) Copyright 2011-2012 Vicente J. Botet Escriba
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : #include &lt;boost/thread/pthread/timespec.hpp&gt;
+<span class="lineNum">      10 </span>            : #include &lt;boost/thread/pthread/pthread_mutex_scoped_lock.hpp&gt;
+<span class="lineNum">      11 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">      12 </span>            : #include &lt;boost/thread/pthread/thread_data.hpp&gt;
+<span class="lineNum">      13 </span>            : #endif
+<span class="lineNum">      14 </span>            : #include &lt;boost/thread/pthread/condition_variable_fwd.hpp&gt;
+<span class="lineNum">      15 </span>            : #ifdef BOOST_THREAD_USES_CHRONO
+<span class="lineNum">      16 </span>            : #include &lt;boost/chrono/system_clocks.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/chrono/ceil.hpp&gt;
+<span class="lineNum">      18 </span>            : #endif
+<span class="lineNum">      19 </span>            : #include &lt;boost/thread/detail/delete.hpp&gt;
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : #include &lt;boost/config/abi_prefix.hpp&gt;
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : namespace boost
+<span class="lineNum">      24 </span>            : {
+<span class="lineNum">      25 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">      26 </span>            :     namespace this_thread
+<span class="lineNum">      27 </span>            :     {
+<span class="lineNum">      28 </span>            :         void BOOST_THREAD_DECL interruption_point();
+<span class="lineNum">      29 </span>            :     }
+<span class="lineNum">      30 </span>            : #endif
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            :     namespace thread_cv_detail
+<span class="lineNum">      33 </span>            :     {
+<span class="lineNum">      34 </span>            :         template&lt;typename MutexType&gt;
+<span class="lineNum">      35 </span>            :         struct lock_on_exit
+<span class="lineNum">      36 </span>            :         {
+<span class="lineNum">      37 </span>            :             MutexType* m;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            :             lock_on_exit():
+<span class="lineNum">      40 </span><span class="lineCov">         79 :                 m(0)</span>
+<span class="lineNum">      41 </span>            :             {}
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            :             void activate(MutexType&amp; m_)
+<span class="lineNum">      44 </span>            :             {
+<span class="lineNum">      45 </span><span class="lineCov">         79 :                 m_.unlock();</span>
+<span class="lineNum">      46 </span><span class="lineCov">         79 :                 m=&amp;m_;</span>
+<span class="lineNum">      47 </span>            :             }
+<span class="lineNum">      48 </span>            :             ~lock_on_exit()
+<span class="lineNum">      49 </span>            :             {
+<span class="lineNum">      50 </span><span class="lineCov">         79 :                 if(m)</span>
+<span class="lineNum">      51 </span>            :                 {
+<span class="lineNum">      52 </span><span class="lineCov">         79 :                     m-&gt;lock();</span>
+<span class="lineNum">      53 </span>            :                 }
+<span class="lineNum">      54 </span><span class="lineCov">         79 :            }</span>
+<span class="lineNum">      55 </span>            :         };
+<a name="56"><span class="lineNum">      56 </span>            :     }</a>
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span><span class="lineCov">         79 :     inline void condition_variable::wait(unique_lock&lt;mutex&gt;&amp; m)</span>
+<span class="lineNum">      59 </span>            :     {
+<span class="lineNum">      60 </span>            : #if defined BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+<span class="lineNum">      61 </span>            :         if(! m.owns_lock())
+<span class="lineNum">      62 </span>            :         {
+<span class="lineNum">      63 </span>            :             boost::throw_exception(condition_error(-1, &quot;boost::condition_variable::wait() failed precondition mutex not owned&quot;));
+<span class="lineNum">      64 </span>            :         }
+<span class="lineNum">      65 </span>            : #endif
+<span class="lineNum">      66 </span><span class="lineCov">         79 :         int res=0;</span>
+<span class="lineNum">      67 </span>            :         {
+<span class="lineNum">      68 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">      69 </span><span class="lineCov">        158 :             thread_cv_detail::lock_on_exit&lt;unique_lock&lt;mutex&gt; &gt; guard;</span>
+<span class="lineNum">      70 </span><span class="lineCov">        158 :             detail::interruption_checker check_for_interruption(&amp;internal_mutex,&amp;cond);</span>
+<span class="lineNum">      71 </span><span class="lineCov">         79 :             pthread_mutex_t* the_mutex = &amp;internal_mutex;</span>
+<span class="lineNum">      72 </span><span class="lineCov">         79 :             guard.activate(m);</span>
+<span class="lineNum">      73 </span>            : #else
+<span class="lineNum">      74 </span>            :             pthread_mutex_t* the_mutex = m.mutex()-&gt;native_handle();
+<span class="lineNum">      75 </span>            : #endif
+<span class="lineNum">      76 </span><span class="lineCov">         79 :             res = pthread_cond_wait(&amp;cond,the_mutex);</span>
+<span class="lineNum">      77 </span>            :         }
+<span class="lineNum">      78 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">      79 </span><span class="lineCov">         79 :         this_thread::interruption_point();</span>
+<span class="lineNum">      80 </span>            : #endif
+<span class="lineNum">      81 </span><span class="lineCov">         79 :         if(res &amp;&amp; res != EINTR)</span>
+<span class="lineNum">      82 </span>            :         {
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :             boost::throw_exception(condition_error(res, &quot;boost::condition_variable::wait failed in pthread_cond_wait&quot;));</span>
+<span class="lineNum">      84 </span>            :         }
+<span class="lineNum">      85 </span><span class="lineCov">         79 :     }</span>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :     inline bool condition_variable::do_wait_until(
+<span class="lineNum">      88 </span>            :                 unique_lock&lt;mutex&gt;&amp; m,
+<span class="lineNum">      89 </span>            :                 struct timespec const &amp;timeout)
+<span class="lineNum">      90 </span>            :     {
+<span class="lineNum">      91 </span>            : #if defined BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+<span class="lineNum">      92 </span>            :         if (!m.owns_lock())
+<span class="lineNum">      93 </span>            :         {
+<span class="lineNum">      94 </span>            :             boost::throw_exception(condition_error(EPERM, &quot;boost::condition_variable::do_wait_until() failed precondition mutex not owned&quot;));
+<span class="lineNum">      95 </span>            :         }
+<span class="lineNum">      96 </span>            : #endif
+<span class="lineNum">      97 </span>            :         int cond_res;
+<span class="lineNum">      98 </span>            :         {
+<span class="lineNum">      99 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">     100 </span>            :             thread_cv_detail::lock_on_exit&lt;unique_lock&lt;mutex&gt; &gt; guard;
+<span class="lineNum">     101 </span>            :             detail::interruption_checker check_for_interruption(&amp;internal_mutex,&amp;cond);
+<span class="lineNum">     102 </span>            :             pthread_mutex_t* the_mutex = &amp;internal_mutex;
+<span class="lineNum">     103 </span>            :             guard.activate(m);
+<span class="lineNum">     104 </span>            : #else
+<span class="lineNum">     105 </span>            :             pthread_mutex_t* the_mutex = m.mutex()-&gt;native_handle();
+<span class="lineNum">     106 </span>            : #endif
+<span class="lineNum">     107 </span>            :             cond_res=pthread_cond_timedwait(&amp;cond,the_mutex,&amp;timeout);
+<span class="lineNum">     108 </span>            :         }
+<span class="lineNum">     109 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">     110 </span>            :         this_thread::interruption_point();
+<span class="lineNum">     111 </span>            : #endif
+<span class="lineNum">     112 </span>            :         if(cond_res==ETIMEDOUT)
+<span class="lineNum">     113 </span>            :         {
+<span class="lineNum">     114 </span>            :             return false;
+<span class="lineNum">     115 </span>            :         }
+<span class="lineNum">     116 </span>            :         if(cond_res)
+<span class="lineNum">     117 </span>            :         {
+<span class="lineNum">     118 </span>            :             boost::throw_exception(condition_error(cond_res, &quot;boost::condition_variable::do_wait_until failed in pthread_cond_timedwait&quot;));
+<span class="lineNum">     119 </span>            :         }
+<span class="lineNum">     120 </span>            :         return true;
+<a name="121"><span class="lineNum">     121 </span>            :     }</a>
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span><span class="lineCov">     319857 :     inline void condition_variable::notify_one() BOOST_NOEXCEPT</span>
+<span class="lineNum">     124 </span>            :     {
+<span class="lineNum">     125 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">     126 </span><span class="lineCov">     639714 :         boost::pthread::pthread_mutex_scoped_lock internal_lock(&amp;internal_mutex);</span>
+<span class="lineNum">     127 </span>            : #endif
+<span class="lineNum">     128 </span><span class="lineCov">     319857 :         BOOST_VERIFY(!pthread_cond_signal(&amp;cond));</span>
+<a name="129"><span class="lineNum">     129 </span><span class="lineCov">     319857 :     }</span></a>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">     319857 :     inline void condition_variable::notify_all() BOOST_NOEXCEPT</span>
+<span class="lineNum">     132 </span>            :     {
+<span class="lineNum">     133 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">     134 </span><span class="lineCov">     639714 :         boost::pthread::pthread_mutex_scoped_lock internal_lock(&amp;internal_mutex);</span>
+<span class="lineNum">     135 </span>            : #endif
+<span class="lineNum">     136 </span><span class="lineCov">     319857 :         BOOST_VERIFY(!pthread_cond_broadcast(&amp;cond));</span>
+<span class="lineNum">     137 </span><span class="lineCov">     319857 :     }</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :     class condition_variable_any
+<span class="lineNum">     140 </span>            :     {
+<span class="lineNum">     141 </span>            :         pthread_mutex_t internal_mutex;
+<span class="lineNum">     142 </span>            :         pthread_cond_t cond;
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            :     public:
+<span class="lineNum">     145 </span>            :         BOOST_THREAD_NO_COPYABLE(condition_variable_any)
+<span class="lineNum">     146 </span>            :         condition_variable_any()
+<span class="lineNum">     147 </span>            :         {
+<span class="lineNum">     148 </span>            :             int const res=pthread_mutex_init(&amp;internal_mutex,NULL);
+<span class="lineNum">     149 </span>            :             if(res)
+<span class="lineNum">     150 </span>            :             {
+<span class="lineNum">     151 </span>            :                 boost::throw_exception(thread_resource_error(res, &quot;boost::condition_variable_any::condition_variable_any() failed in pthread_mutex_init&quot;));
+<span class="lineNum">     152 </span>            :             }
+<span class="lineNum">     153 </span>            :             int const res2 = detail::monotonic_pthread_cond_init(cond);
+<span class="lineNum">     154 </span>            :             if(res2)
+<span class="lineNum">     155 </span>            :             {
+<span class="lineNum">     156 </span>            :                 BOOST_VERIFY(!pthread_mutex_destroy(&amp;internal_mutex));
+<span class="lineNum">     157 </span>            :                 boost::throw_exception(thread_resource_error(res2, &quot;boost::condition_variable_any::condition_variable_any() failed in detail::monotonic_pthread_cond_init&quot;));
+<span class="lineNum">     158 </span>            :             }
+<span class="lineNum">     159 </span>            :         }
+<span class="lineNum">     160 </span>            :         ~condition_variable_any()
+<span class="lineNum">     161 </span>            :         {
+<span class="lineNum">     162 </span>            :             BOOST_VERIFY(!pthread_mutex_destroy(&amp;internal_mutex));
+<span class="lineNum">     163 </span>            :             BOOST_VERIFY(!pthread_cond_destroy(&amp;cond));
+<span class="lineNum">     164 </span>            :         }
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :         template&lt;typename lock_type&gt;
+<span class="lineNum">     167 </span>            :         void wait(lock_type&amp; m)
+<span class="lineNum">     168 </span>            :         {
+<span class="lineNum">     169 </span>            :             int res=0;
+<span class="lineNum">     170 </span>            :             {
+<span class="lineNum">     171 </span>            :                 thread_cv_detail::lock_on_exit&lt;lock_type&gt; guard;
+<span class="lineNum">     172 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">     173 </span>            :                 detail::interruption_checker check_for_interruption(&amp;internal_mutex,&amp;cond);
+<span class="lineNum">     174 </span>            : #else
+<span class="lineNum">     175 </span>            :                 boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&amp;internal_mutex);
+<span class="lineNum">     176 </span>            : #endif
+<span class="lineNum">     177 </span>            :                 guard.activate(m);
+<span class="lineNum">     178 </span>            :                 res=pthread_cond_wait(&amp;cond,&amp;internal_mutex);
+<span class="lineNum">     179 </span>            :             }
+<span class="lineNum">     180 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">     181 </span>            :             this_thread::interruption_point();
+<span class="lineNum">     182 </span>            : #endif
+<span class="lineNum">     183 </span>            :             if(res)
+<span class="lineNum">     184 </span>            :             {
+<span class="lineNum">     185 </span>            :                 boost::throw_exception(condition_error(res, &quot;boost::condition_variable_any::wait() failed in pthread_cond_wait&quot;));
+<span class="lineNum">     186 </span>            :             }
+<span class="lineNum">     187 </span>            :         }
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            :         template&lt;typename lock_type,typename predicate_type&gt;
+<span class="lineNum">     190 </span>            :         void wait(lock_type&amp; m,predicate_type pred)
+<span class="lineNum">     191 </span>            :         {
+<span class="lineNum">     192 </span>            :             while(!pred()) wait(m);
+<span class="lineNum">     193 </span>            :         }
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            : #if defined BOOST_THREAD_USES_DATETIME
+<span class="lineNum">     196 </span>            :         template&lt;typename lock_type&gt;
+<span class="lineNum">     197 </span>            :         bool timed_wait(lock_type&amp; m,boost::system_time const&amp; abs_time)
+<span class="lineNum">     198 </span>            :         {
+<span class="lineNum">     199 </span>            :             struct timespec const timeout=detail::to_timespec(abs_time);
+<span class="lineNum">     200 </span>            :             return do_wait_until(m, timeout);
+<span class="lineNum">     201 </span>            :         }
+<span class="lineNum">     202 </span>            :         template&lt;typename lock_type&gt;
+<span class="lineNum">     203 </span>            :         bool timed_wait(lock_type&amp; m,xtime const&amp; abs_time)
+<span class="lineNum">     204 </span>            :         {
+<span class="lineNum">     205 </span>            :             return timed_wait(m,system_time(abs_time));
+<span class="lineNum">     206 </span>            :         }
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            :         template&lt;typename lock_type,typename duration_type&gt;
+<span class="lineNum">     209 </span>            :         bool timed_wait(lock_type&amp; m,duration_type const&amp; wait_duration)
+<span class="lineNum">     210 </span>            :         {
+<span class="lineNum">     211 </span>            :             return timed_wait(m,get_system_time()+wait_duration);
+<span class="lineNum">     212 </span>            :         }
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            :         template&lt;typename lock_type,typename predicate_type&gt;
+<span class="lineNum">     215 </span>            :         bool timed_wait(lock_type&amp; m,boost::system_time const&amp; abs_time, predicate_type pred)
+<span class="lineNum">     216 </span>            :         {
+<span class="lineNum">     217 </span>            :             while (!pred())
+<span class="lineNum">     218 </span>            :             {
+<span class="lineNum">     219 </span>            :                 if(!timed_wait(m, abs_time))
+<span class="lineNum">     220 </span>            :                     return pred();
+<span class="lineNum">     221 </span>            :             }
+<span class="lineNum">     222 </span>            :             return true;
+<span class="lineNum">     223 </span>            :         }
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span>            :         template&lt;typename lock_type,typename predicate_type&gt;
+<span class="lineNum">     226 </span>            :         bool timed_wait(lock_type&amp; m,xtime const&amp; abs_time, predicate_type pred)
+<span class="lineNum">     227 </span>            :         {
+<span class="lineNum">     228 </span>            :             return timed_wait(m,system_time(abs_time),pred);
+<span class="lineNum">     229 </span>            :         }
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :         template&lt;typename lock_type,typename duration_type,typename predicate_type&gt;
+<span class="lineNum">     232 </span>            :         bool timed_wait(lock_type&amp; m,duration_type const&amp; wait_duration,predicate_type pred)
+<span class="lineNum">     233 </span>            :         {
+<span class="lineNum">     234 </span>            :             return timed_wait(m,get_system_time()+wait_duration,pred);
+<span class="lineNum">     235 </span>            :         }
+<span class="lineNum">     236 </span>            : #endif
+<span class="lineNum">     237 </span>            : #ifndef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            : #ifdef BOOST_THREAD_USES_CHRONO
+<span class="lineNum">     240 </span>            :         template &lt;class lock_type,class Duration&gt;
+<span class="lineNum">     241 </span>            :         cv_status
+<span class="lineNum">     242 </span>            :         wait_until(
+<span class="lineNum">     243 </span>            :                 lock_type&amp; lock,
+<span class="lineNum">     244 </span>            :                 const chrono::time_point&lt;chrono::system_clock, Duration&gt;&amp; t)
+<span class="lineNum">     245 </span>            :         {
+<span class="lineNum">     246 </span>            :           using namespace chrono;
+<span class="lineNum">     247 </span>            :           typedef time_point&lt;system_clock, nanoseconds&gt; nano_sys_tmpt;
+<span class="lineNum">     248 </span>            :           wait_until(lock,
+<span class="lineNum">     249 </span>            :                         nano_sys_tmpt(ceil&lt;nanoseconds&gt;(t.time_since_epoch())));
+<span class="lineNum">     250 </span>            :           return system_clock::now() &lt; t ? cv_status::no_timeout :
+<span class="lineNum">     251 </span>            :                                              cv_status::timeout;
+<span class="lineNum">     252 </span>            :         }
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            :         template &lt;class lock_type, class Clock, class Duration&gt;
+<span class="lineNum">     255 </span>            :         cv_status
+<span class="lineNum">     256 </span>            :         wait_until(
+<span class="lineNum">     257 </span>            :                 lock_type&amp; lock,
+<span class="lineNum">     258 </span>            :                 const chrono::time_point&lt;Clock, Duration&gt;&amp; t)
+<span class="lineNum">     259 </span>            :         {
+<span class="lineNum">     260 </span>            :           using namespace chrono;
+<span class="lineNum">     261 </span>            :           system_clock::time_point     s_now = system_clock::now();
+<span class="lineNum">     262 </span>            :           typename Clock::time_point  c_now = Clock::now();
+<span class="lineNum">     263 </span>            :           wait_until(lock, s_now + ceil&lt;nanoseconds&gt;(t - c_now));
+<span class="lineNum">     264 </span>            :           return Clock::now() &lt; t ? cv_status::no_timeout : cv_status::timeout;
+<span class="lineNum">     265 </span>            :         }
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span>            :         template &lt;class lock_type, class Rep, class Period&gt;
+<span class="lineNum">     268 </span>            :         cv_status
+<span class="lineNum">     269 </span>            :         wait_for(
+<span class="lineNum">     270 </span>            :                 lock_type&amp; lock,
+<span class="lineNum">     271 </span>            :                 const chrono::duration&lt;Rep, Period&gt;&amp; d)
+<span class="lineNum">     272 </span>            :         {
+<span class="lineNum">     273 </span>            :           using namespace chrono;
+<span class="lineNum">     274 </span>            :           system_clock::time_point s_now = system_clock::now();
+<span class="lineNum">     275 </span>            :           steady_clock::time_point c_now = steady_clock::now();
+<span class="lineNum">     276 </span>            :           wait_until(lock, s_now + ceil&lt;nanoseconds&gt;(d));
+<span class="lineNum">     277 </span>            :           return steady_clock::now() - c_now &lt; d ? cv_status::no_timeout :
+<span class="lineNum">     278 </span>            :                                                    cv_status::timeout;
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span>            :         }
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span>            :         template &lt;class lock_type&gt;
+<span class="lineNum">     283 </span>            :         cv_status wait_until(
+<span class="lineNum">     284 </span>            :             lock_type&amp; lk,
+<span class="lineNum">     285 </span>            :             chrono::time_point&lt;chrono::system_clock, chrono::nanoseconds&gt; tp)
+<span class="lineNum">     286 </span>            :         {
+<span class="lineNum">     287 </span>            :             using namespace chrono;
+<span class="lineNum">     288 </span>            :             nanoseconds d = tp.time_since_epoch();
+<span class="lineNum">     289 </span>            :             timespec ts = boost::detail::to_timespec(d);
+<span class="lineNum">     290 </span>            :             if (do_wait_until(lk, ts)) return cv_status::no_timeout;
+<span class="lineNum">     291 </span>            :             else return cv_status::timeout;
+<span class="lineNum">     292 </span>            :         }
+<span class="lineNum">     293 </span>            : #endif
+<span class="lineNum">     294 </span>            : #else // defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+<span class="lineNum">     295 </span>            : #ifdef BOOST_THREAD_USES_CHRONO
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            :         template &lt;class lock_type, class Duration&gt;
+<span class="lineNum">     298 </span>            :         cv_status
+<span class="lineNum">     299 </span>            :         wait_until(
+<span class="lineNum">     300 </span>            :             lock_type&amp; lock,
+<span class="lineNum">     301 </span>            :             const chrono::time_point&lt;chrono::steady_clock, Duration&gt;&amp; t)
+<span class="lineNum">     302 </span>            :         {
+<span class="lineNum">     303 </span>            :             using namespace chrono;
+<span class="lineNum">     304 </span>            :             typedef time_point&lt;steady_clock, nanoseconds&gt; nano_sys_tmpt;
+<span class="lineNum">     305 </span>            :             wait_until(lock,
+<span class="lineNum">     306 </span>            :                         nano_sys_tmpt(ceil&lt;nanoseconds&gt;(t.time_since_epoch())));
+<span class="lineNum">     307 </span>            :             return steady_clock::now() &lt; t ? cv_status::no_timeout :
+<span class="lineNum">     308 </span>            :                                              cv_status::timeout;
+<span class="lineNum">     309 </span>            :         }
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            :         template &lt;class lock_type, class Clock, class Duration&gt;
+<span class="lineNum">     312 </span>            :         cv_status
+<span class="lineNum">     313 </span>            :         wait_until(
+<span class="lineNum">     314 </span>            :             lock_type&amp; lock,
+<span class="lineNum">     315 </span>            :             const chrono::time_point&lt;Clock, Duration&gt;&amp; t)
+<span class="lineNum">     316 </span>            :         {
+<span class="lineNum">     317 </span>            :             using namespace chrono;
+<span class="lineNum">     318 </span>            :             steady_clock::time_point     s_now = steady_clock::now();
+<span class="lineNum">     319 </span>            :             typename Clock::time_point  c_now = Clock::now();
+<span class="lineNum">     320 </span>            :             wait_until(lock, s_now + ceil&lt;nanoseconds&gt;(t - c_now));
+<span class="lineNum">     321 </span>            :             return Clock::now() &lt; t ? cv_status::no_timeout : cv_status::timeout;
+<span class="lineNum">     322 </span>            :         }
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span>            :         template &lt;class lock_type, class Rep, class Period&gt;
+<span class="lineNum">     325 </span>            :         cv_status
+<span class="lineNum">     326 </span>            :         wait_for(
+<span class="lineNum">     327 </span>            :             lock_type&amp; lock,
+<span class="lineNum">     328 </span>            :             const chrono::duration&lt;Rep, Period&gt;&amp; d)
+<span class="lineNum">     329 </span>            :         {
+<span class="lineNum">     330 </span>            :             using namespace chrono;
+<span class="lineNum">     331 </span>            :             steady_clock::time_point c_now = steady_clock::now();
+<span class="lineNum">     332 </span>            :             wait_until(lock, c_now + ceil&lt;nanoseconds&gt;(d));
+<span class="lineNum">     333 </span>            :             return steady_clock::now() - c_now &lt; d ? cv_status::no_timeout :
+<span class="lineNum">     334 </span>            :                                                    cv_status::timeout;
+<span class="lineNum">     335 </span>            :         }
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span>            :         template &lt;class lock_type&gt;
+<span class="lineNum">     338 </span>            :         inline cv_status wait_until(
+<span class="lineNum">     339 </span>            :             lock_type&amp; lock,
+<span class="lineNum">     340 </span>            :             chrono::time_point&lt;chrono::steady_clock, chrono::nanoseconds&gt; tp)
+<span class="lineNum">     341 </span>            :         {
+<span class="lineNum">     342 </span>            :             using namespace chrono;
+<span class="lineNum">     343 </span>            :             nanoseconds d = tp.time_since_epoch();
+<span class="lineNum">     344 </span>            :             timespec ts = boost::detail::to_timespec(d);
+<span class="lineNum">     345 </span>            :             if (do_wait_until(lock, ts)) return cv_status::no_timeout;
+<span class="lineNum">     346 </span>            :             else return cv_status::timeout;
+<span class="lineNum">     347 </span>            :         }
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span>            : #endif
+<span class="lineNum">     350 </span>            : #endif // defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span>            : #ifdef BOOST_THREAD_USES_CHRONO
+<span class="lineNum">     353 </span>            :         template &lt;class lock_type, class Clock, class Duration, class Predicate&gt;
+<span class="lineNum">     354 </span>            :         bool
+<span class="lineNum">     355 </span>            :         wait_until(
+<span class="lineNum">     356 </span>            :                 lock_type&amp; lock,
+<span class="lineNum">     357 </span>            :                 const chrono::time_point&lt;Clock, Duration&gt;&amp; t,
+<span class="lineNum">     358 </span>            :                 Predicate pred)
+<span class="lineNum">     359 </span>            :         {
+<span class="lineNum">     360 </span>            :             while (!pred())
+<span class="lineNum">     361 </span>            :             {
+<span class="lineNum">     362 </span>            :                 if (wait_until(lock, t) == cv_status::timeout)
+<span class="lineNum">     363 </span>            :                     return pred();
+<span class="lineNum">     364 </span>            :             }
+<span class="lineNum">     365 </span>            :             return true;
+<span class="lineNum">     366 </span>            :         }
+<span class="lineNum">     367 </span>            : 
+<span class="lineNum">     368 </span>            :         template &lt;class lock_type, class Rep, class Period, class Predicate&gt;
+<span class="lineNum">     369 </span>            :         bool
+<span class="lineNum">     370 </span>            :         wait_for(
+<span class="lineNum">     371 </span>            :                 lock_type&amp; lock,
+<span class="lineNum">     372 </span>            :                 const chrono::duration&lt;Rep, Period&gt;&amp; d,
+<span class="lineNum">     373 </span>            :                 Predicate pred)
+<span class="lineNum">     374 </span>            :         {
+<span class="lineNum">     375 </span>            :           return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
+<span class="lineNum">     376 </span>            :         }
+<span class="lineNum">     377 </span>            : #endif
+<span class="lineNum">     378 </span>            : 
+<span class="lineNum">     379 </span>            :         void notify_one() BOOST_NOEXCEPT
+<span class="lineNum">     380 </span>            :         {
+<span class="lineNum">     381 </span>            :             boost::pthread::pthread_mutex_scoped_lock internal_lock(&amp;internal_mutex);
+<span class="lineNum">     382 </span>            :             BOOST_VERIFY(!pthread_cond_signal(&amp;cond));
+<a name="383"><span class="lineNum">     383 </span>            :         }</a>
+<span class="lineNum">     384 </span>            : 
+<span class="lineNum">     385 </span><span class="lineNoCov">          0 :         void notify_all() BOOST_NOEXCEPT</span>
+<span class="lineNum">     386 </span>            :         {
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 :             boost::pthread::pthread_mutex_scoped_lock internal_lock(&amp;internal_mutex);</span>
+<span class="lineNum">     388 </span><span class="lineNoCov">          0 :             BOOST_VERIFY(!pthread_cond_broadcast(&amp;cond));</span>
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :         }</span>
+<span class="lineNum">     390 </span>            :     private: // used by boost::thread::try_join_until
+<span class="lineNum">     391 </span>            : 
+<span class="lineNum">     392 </span>            :         template &lt;class lock_type&gt;
+<span class="lineNum">     393 </span>            :         bool do_wait_until(
+<span class="lineNum">     394 </span>            :           lock_type&amp; m,
+<span class="lineNum">     395 </span>            :           struct timespec const &amp;timeout)
+<span class="lineNum">     396 </span>            :         {
+<span class="lineNum">     397 </span>            :           int res=0;
+<span class="lineNum">     398 </span>            :           {
+<span class="lineNum">     399 </span>            :               thread_cv_detail::lock_on_exit&lt;lock_type&gt; guard;
+<span class="lineNum">     400 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">     401 </span>            :               detail::interruption_checker check_for_interruption(&amp;internal_mutex,&amp;cond);
+<span class="lineNum">     402 </span>            : #else
+<span class="lineNum">     403 </span>            :               boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&amp;internal_mutex);
+<span class="lineNum">     404 </span>            : #endif
+<span class="lineNum">     405 </span>            :               guard.activate(m);
+<span class="lineNum">     406 </span>            :               res=pthread_cond_timedwait(&amp;cond,&amp;internal_mutex,&amp;timeout);
+<span class="lineNum">     407 </span>            :           }
+<span class="lineNum">     408 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">     409 </span>            :           this_thread::interruption_point();
+<span class="lineNum">     410 </span>            : #endif
+<span class="lineNum">     411 </span>            :           if(res==ETIMEDOUT)
+<span class="lineNum">     412 </span>            :           {
+<span class="lineNum">     413 </span>            :               return false;
+<span class="lineNum">     414 </span>            :           }
+<span class="lineNum">     415 </span>            :           if(res)
+<span class="lineNum">     416 </span>            :           {
+<span class="lineNum">     417 </span>            :               boost::throw_exception(condition_error(res, &quot;boost::condition_variable_any::do_wait_until() failed in pthread_cond_timedwait&quot;));
+<span class="lineNum">     418 </span>            :           }
+<span class="lineNum">     419 </span>            :           return true;
+<span class="lineNum">     420 </span>            :         }
+<span class="lineNum">     421 </span>            :     };
+<span class="lineNum">     422 </span>            : 
+<span class="lineNum">     423 </span>            : }
+<span class="lineNum">     424 </span>            : 
+<span class="lineNum">     425 </span>            : #include &lt;boost/config/abi_suffix.hpp&gt;
+<span class="lineNum">     426 </span>            : 
+<span class="lineNum">     427 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

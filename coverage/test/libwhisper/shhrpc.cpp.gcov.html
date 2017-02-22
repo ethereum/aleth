@@ -1,0 +1,696 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libwhisper/shhrpc.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libwhisper</a> - shhrpc.cpp<span style="font-size: 80%;"> (source / <a href="shhrpc.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntryLo">35.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">66.7 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file shhrpc.cpp
+<span class="lineNum">      18 </span>            : * @author Vladislav Gluhovsky &lt;vlad@ethdev.com&gt;
+<span class="lineNum">      19 </span>            : * @date July 2015
+<span class="lineNum">      20 </span>            : */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/unit_test.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/lexical_cast.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;libdevcore/Log.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libdevcore/CommonIO.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libethcore/CommonJS.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libwebthree/WebThree.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libweb3jsonrpc/ModularServer.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libweb3jsonrpc/Whisper.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libweb3jsonrpc/Net.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libweb3jsonrpc/Web3.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libweb3jsonrpc/Eth.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;libweb3jsonrpc/AccountHolder.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;libweb3jsonrpc/SessionManager.h&gt;
+<span class="lineNum">      35 </span>            : #include &lt;libweb3jsonrpc/AdminNet.h&gt;
+<span class="lineNum">      36 </span>            : #include &lt;libweb3jsonrpc/AdminUtils.h&gt;
+<span class="lineNum">      37 </span>            : #include &lt;jsonrpccpp/server/connectors/httpserver.h&gt;
+<span class="lineNum">      38 </span>            : #include &lt;jsonrpccpp/client/connectors/httpclient.h&gt;
+<span class="lineNum">      39 </span>            : #include &lt;json_spirit/JsonSpiritHeaders.h&gt;
+<span class="lineNum">      40 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      41 </span>            : #include &lt;test/libweb3jsonrpc/WebThreeStubClient.h&gt;
+<span class="lineNum">      42 </span>            : #include &lt;libethcore/KeyManager.h&gt;
+<span class="lineNum">      43 </span>            : #include &lt;libp2p/Common.h&gt;
+<span class="lineNum">      44 </span>            : #include &lt;libwhisper/WhisperHost.h&gt;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : using namespace std;
+<span class="lineNum">      47 </span>            : using namespace dev;
+<span class="lineNum">      48 </span>            : using namespace dev::eth;
+<span class="lineNum">      49 </span>            : using namespace dev::p2p;
+<span class="lineNum">      50 </span>            : using namespace dev::shh;
+<span class="lineNum">      51 </span>            : using namespace dev::test;
+<span class="lineNum">      52 </span>            : namespace js = json_spirit;
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : WebThreeDirect* web3;
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span><span class="lineCov">          1 : unique_ptr&lt;ModularServer&lt;rpc::EthFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face, rpc::AdminNetFace, rpc::AdminUtilsFace&gt;&gt; modularServer;</span>
+<span class="lineNum">      57 </span>            : rpc::WhisperFace* whisperFace;
+<span class="lineNum">      58 </span>            : rpc::NetFace* netFace;
+<span class="lineNum">      59 </span>            : rpc::Web3Face* w3Face;
+<span class="lineNum">      60 </span><span class="lineCov">          1 : rpc::SessionManager sm;</span>
+<span class="lineNum">      61 </span>            : rpc::EthFace* ethFace;
+<span class="lineNum">      62 </span>            : rpc::AdminNetFace* adminNetFace;
+<span class="lineNum">      63 </span>            : rpc::AdminUtilsFace* adminUtilsFace;
+<span class="lineNum">      64 </span><span class="lineCov">          1 : unique_ptr&lt;AccountHolder&gt; accountHolder;</span>
+<span class="lineNum">      65 </span><span class="lineCov">          1 : unique_ptr&lt;WebThreeStubClient&gt; jsonrpcClient;</span>
+<span class="lineNum">      66 </span><span class="lineCov">          3 : static string const c_version(&quot;shhrpc-web3&quot;);</span>
+<span class="lineNum">      67 </span>            : static unsigned const c_ttl = 777000;
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : struct Setup: public TestOutputHelper
+<span class="lineNum">      70 </span>            : {
+<span class="lineNum">      71 </span>            :         Setup()
+<span class="lineNum">      72 </span>            :         {
+<span class="lineNum">      73 </span>            :                 dev::p2p::NodeIPEndpoint::test_allowLocal = true;
+<span class="lineNum">      74 </span>            :                 static bool setup = false;
+<span class="lineNum">      75 </span>            :                 if (!setup)
+<span class="lineNum">      76 </span>            :                 {
+<span class="lineNum">      77 </span>            :                         setup = true;
+<span class="lineNum">      78 </span>            :                         NetworkPreferences nprefs(&quot;127.0.0.1&quot;, 0, false);
+<span class="lineNum">      79 </span>            :                         web3 = new WebThreeDirect(c_version, &quot;&quot;, ChainParams(), WithExisting::Trust, {&quot;shh&quot;}, nprefs);
+<span class="lineNum">      80 </span>            :                         web3-&gt;setIdealPeerCount(9);
+<span class="lineNum">      81 </span>            :                         //auto server = new jsonrpc::HttpServer(8080);
+<span class="lineNum">      82 </span>            :                         KeyManager keyMan;
+<span class="lineNum">      83 </span>            :                         TrivialGasPricer gp;
+<span class="lineNum">      84 </span>            :                         accountHolder.reset(new FixedAccountHolder([&amp;](){return web3-&gt;ethereum();}, {}));
+<span class="lineNum">      85 </span>            :                         whisperFace = new rpc::Whisper(*web3, {});
+<span class="lineNum">      86 </span>            :                         //ethFace = new rpc::Eth(*web3-&gt;ethereum(), *accountHolder.get());
+<span class="lineNum">      87 </span>            :                         netFace = new rpc::Net(*web3);
+<span class="lineNum">      88 </span>            :                         w3Face = new rpc::Web3(web3-&gt;clientVersion());
+<span class="lineNum">      89 </span>            :                         adminNetFace = new rpc::AdminNet(*web3, sm);
+<span class="lineNum">      90 </span>            :                         adminUtilsFace = new rpc::AdminUtils(sm);
+<span class="lineNum">      91 </span>            :                         //modularServer.reset(new ModularServer&lt;rpc::EthFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face, rpc::AdminNetFace, rpc::AdminUtilsFace&gt;(ethFace, whisperFace, netFace, w3Face, adminNetFace, adminUtilsFace));
+<span class="lineNum">      92 </span>            :                         //modularServer-&gt;addConnector(server);
+<span class="lineNum">      93 </span>            :                         //modularServer-&gt;StartListening();
+<span class="lineNum">      94 </span>            :                         auto client = new jsonrpc::HttpClient(&quot;http://localhost:8080&quot;);
+<span class="lineNum">      95 </span>            :                         jsonrpcClient = unique_ptr&lt;WebThreeStubClient&gt;(new WebThreeStubClient(*client));
+<span class="lineNum">      96 </span>            :                 }
+<span class="lineNum">      97 </span>            :         }
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :         ~Setup()
+<span class="lineNum">     100 </span>            :         {
+<span class="lineNum">     101 </span>            :                 dev::p2p::NodeIPEndpoint::test_allowLocal = false;
+<span class="lineNum">     102 </span>            :         }
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :         TestOutputHelper testHelper;
+<a name="105"><span class="lineNum">     105 </span>            : };</a>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 : Json::Value createMessage(string const&amp; _from, string const&amp; _to, string const&amp; _topic = &quot;&quot;, string _payload = &quot;&quot;)</span>
+<span class="lineNum">     108 </span>            : {
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :         Json::Value msg;</span>
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :         msg[&quot;from&quot;] = _from;</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :         msg[&quot;to&quot;] = _to;</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :         msg[&quot;ttl&quot;] = toJS(c_ttl);</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :         if (_payload.empty())</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :                 _payload = string(&quot;0x&quot;) + h256::random().hex();</span>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :         msg[&quot;payload&quot;] = _payload;</span>
+<span class="lineNum">     118 </span>            :         
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :         if (!_topic.empty())</span>
+<span class="lineNum">     120 </span>            :         {
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :                 Json::Value t(Json::arrayValue);</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :                 t.append(_topic);</span>
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :                 msg[&quot;topics&quot;] = t;</span>
+<span class="lineNum">     124 </span>            :         }
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :         return msg;</span>
+<span class="lineNum">     127 </span>            : }
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span><span class="lineCov">          3 : BOOST_FIXTURE_TEST_SUITE(shhrpc, Setup)</span>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            : //
+<span class="lineNum">     132 </span>            : // Disabled tests as they are unstable and tend to stall the test suite.
+<span class="lineNum">     133 </span>            : //
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : //BOOST_AUTO_TEST_CASE(basic)
+<span class="lineNum">     136 </span>            : //{
+<span class="lineNum">     137 </span>            : //      cnote &lt;&lt; &quot;Testing web3 basic functionality...&quot;;
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : //      web3-&gt;startNetwork();
+<span class="lineNum">     140 </span>            : //      unsigned const step = 10;
+<span class="lineNum">     141 </span>            : //      for (unsigned i = 0; i &lt; 3000 &amp;&amp; !web3-&gt;haveNetwork(); i += step)
+<span class="lineNum">     142 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : //      BOOST_REQUIRE(web3-&gt;haveNetwork());
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            : //      NetworkPreferences prefs2(&quot;127.0.0.1&quot;, 0, false);
+<span class="lineNum">     147 </span>            : //      string const version2 = &quot;shhrpc-host2&quot;;
+<span class="lineNum">     148 </span>            : //      Host host2(version2, prefs2);
+<span class="lineNum">     149 </span>            : //      host2.start();
+<span class="lineNum">     150 </span>            : //      auto port2 = host2.listenPort();
+<span class="lineNum">     151 </span>            : //      BOOST_REQUIRE(port2);
+<span class="lineNum">     152 </span>            : //      BOOST_REQUIRE_NE(port2, web3-&gt;nodeInfo().port);
+<span class="lineNum">     153 </span>            : //      auto whost2 = host2.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            : //      for (unsigned i = 0; i &lt; 3000 &amp;&amp; !host2.haveNetwork(); i += step)
+<span class="lineNum">     156 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            : //      BOOST_REQUIRE(host2.haveNetwork());
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            : //      web3-&gt;addNode(host2.id(), NodeIPEndpoint(bi::address::from_string(&quot;127.0.0.1&quot;), port2, port2));
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            : //      for (unsigned i = 0; i &lt; 3000 &amp;&amp; (!web3-&gt;peerCount() || !host2.peerCount()); i += step)
+<span class="lineNum">     163 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : //      BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
+<span class="lineNum">     166 </span>            : //      BOOST_REQUIRE_EQUAL(web3-&gt;peerCount(), 1);
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : //      vector&lt;PeerSessionInfo&gt; vpeers = web3-&gt;peers();
+<span class="lineNum">     169 </span>            : //      BOOST_REQUIRE(!vpeers.empty());
+<span class="lineNum">     170 </span>            : //      PeerSessionInfo const&amp; peer = vpeers.back();
+<span class="lineNum">     171 </span>            : //      BOOST_REQUIRE_EQUAL(peer.id, host2.id());
+<span class="lineNum">     172 </span>            : //      BOOST_REQUIRE_EQUAL(peer.port, port2);
+<span class="lineNum">     173 </span>            : //      BOOST_REQUIRE_EQUAL(peer.clientVersion, version2);
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            : //      web3-&gt;stopNetwork();
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            : //      for (unsigned i = 0; i &lt; 3000 &amp;&amp; (web3-&gt;haveNetwork() || host2.haveNetwork()); i += step)
+<span class="lineNum">     178 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            : //      BOOST_REQUIRE(!web3-&gt;peerCount());
+<span class="lineNum">     181 </span>            : //      BOOST_REQUIRE(!host2.peerCount());
+<span class="lineNum">     182 </span>            : //}
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            : //BOOST_AUTO_TEST_CASE(send)
+<span class="lineNum">     185 </span>            : //{
+<span class="lineNum">     186 </span>            : //      cnote &lt;&lt; &quot;Testing web3 send...&quot;;
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            : //      bool sent = false;
+<span class="lineNum">     189 </span>            : //      bool ready = false;
+<span class="lineNum">     190 </span>            : //      unsigned result = 0;
+<span class="lineNum">     191 </span>            : //      unsigned const messageCount = 10;
+<span class="lineNum">     192 </span>            : //      unsigned const step = 10;
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            : //      Host host2(&quot;shhrpc-host2&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">     195 </span>            : //      host2.setIdealPeerCount(1);
+<span class="lineNum">     196 </span>            : //      auto whost2 = host2.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">     197 </span>            : //      host2.start();
+<span class="lineNum">     198 </span>            : //      web3-&gt;startNetwork();
+<span class="lineNum">     199 </span>            : //      auto port2 = host2.listenPort();
+<span class="lineNum">     200 </span>            : //      BOOST_REQUIRE(port2);
+<span class="lineNum">     201 </span>            : //      BOOST_REQUIRE_NE(port2, web3-&gt;nodeInfo().port);
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            : //      std::thread listener([&amp;]()
+<span class="lineNum">     204 </span>            : //      {
+<span class="lineNum">     205 </span>            : //              setThreadName(&quot;listener&quot;);
+<span class="lineNum">     206 </span>            : //              ready = true;
+<span class="lineNum">     207 </span>            : //              auto w = whost2-&gt;installWatch(BuildTopicMask(&quot;odd&quot;));
+<span class="lineNum">     208 </span>            : //              set&lt;unsigned&gt; received;
+<span class="lineNum">     209 </span>            : //              for (unsigned x = 0; x &lt; 7000 &amp;&amp; !sent; x += step)
+<span class="lineNum">     210 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            : //              for (unsigned x = 0, last = 0; x &lt; 100 &amp;&amp; received.size() &lt; messageCount; ++x)
+<span class="lineNum">     213 </span>            : //              {
+<span class="lineNum">     214 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     215 </span>            : //                      for (auto i: whost2-&gt;checkWatch(w))
+<span class="lineNum">     216 </span>            : //                      {
+<span class="lineNum">     217 </span>            : //                              Message msg = whost2-&gt;envelope(i).open(whost2-&gt;fullTopics(w));
+<span class="lineNum">     218 </span>            : //                              last = RLP(msg.payload()).toInt&lt;unsigned&gt;();
+<span class="lineNum">     219 </span>            : //                              if (received.insert(last).second)
+<span class="lineNum">     220 </span>            : //                                      result += last;
+<span class="lineNum">     221 </span>            : //                      }
+<span class="lineNum">     222 </span>            : //              }
+<span class="lineNum">     223 </span>            : //      });
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span>            : //      for (unsigned i = 0; i &lt; 2000 &amp;&amp; (!host2.haveNetwork() || !web3-&gt;haveNetwork()); i += step)
+<span class="lineNum">     226 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            : //      BOOST_REQUIRE(host2.haveNetwork());
+<span class="lineNum">     229 </span>            : //      BOOST_REQUIRE(web3-&gt;haveNetwork());
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            : //      web3-&gt;requirePeer(host2.id(), NodeIPEndpoint(bi::address::from_string(&quot;127.0.0.1&quot;), port2, port2));
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            : //      for (unsigned i = 0; i &lt; 3000 &amp;&amp; (!web3-&gt;peerCount() || !host2.peerCount()); i += step)
+<span class="lineNum">     234 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            : //      BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
+<span class="lineNum">     237 </span>            : //      BOOST_REQUIRE_EQUAL(web3-&gt;peerCount(), 1);
+<span class="lineNum">     238 </span>            :         
+<span class="lineNum">     239 </span>            : //      KeyPair us = KeyPair::create();
+<span class="lineNum">     240 </span>            : //      for (unsigned i = 0; i &lt; messageCount; ++i)
+<span class="lineNum">     241 </span>            : //      {
+<span class="lineNum">     242 </span>            : //              web3-&gt;whisper()-&gt;post(us.sec(), RLPStream().append(i * i).out(), BuildTopic(i)(i % 2 ? &quot;odd&quot; : &quot;even&quot;), 777000, 1);
+<span class="lineNum">     243 </span>            : //              this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     244 </span>            : //      }
+<span class="lineNum">     245 </span>            :         
+<span class="lineNum">     246 </span>            : //      sent = true;
+<span class="lineNum">     247 </span>            : //      auto messages = web3-&gt;whisper()-&gt;all();
+<span class="lineNum">     248 </span>            : //      BOOST_REQUIRE_EQUAL(messages.size(), messageCount);
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            : //      listener.join();
+<span class="lineNum">     251 </span>            : //      BOOST_REQUIRE_EQUAL(result, 1 + 9 + 25 + 49 + 81);
+<span class="lineNum">     252 </span>            : //}
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            : //BOOST_AUTO_TEST_CASE(receive)
+<span class="lineNum">     255 </span>            : //{
+<span class="lineNum">     256 </span>            : //      cnote &lt;&lt; &quot;Testing web3 receive...&quot;;
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            : //      bool sent = false;
+<span class="lineNum">     259 </span>            : //      bool ready = false;
+<span class="lineNum">     260 </span>            : //      unsigned result = 0;
+<span class="lineNum">     261 </span>            : //      unsigned const messageCount = 6;
+<span class="lineNum">     262 </span>            : //      unsigned const step = 10;
+<span class="lineNum">     263 </span>            : //      Host host2(&quot;shhrpc-host2&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">     264 </span>            : //      host2.setIdealPeerCount(1);
+<span class="lineNum">     265 </span>            : //      auto whost2 = host2.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">     266 </span>            : //      host2.start();
+<span class="lineNum">     267 </span>            : //      web3-&gt;startNetwork();
+<span class="lineNum">     268 </span>            : //      auto port2 = host2.listenPort();
+<span class="lineNum">     269 </span>            : //      BOOST_REQUIRE(port2);
+<span class="lineNum">     270 </span>            : //      BOOST_REQUIRE_NE(port2, web3-&gt;nodeInfo().port);
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            : //      std::thread listener([&amp;]()
+<span class="lineNum">     273 </span>            : //      {
+<span class="lineNum">     274 </span>            : //              setThreadName(&quot;listener&quot;);
+<span class="lineNum">     275 </span>            : //              ready = true;
+<span class="lineNum">     276 </span>            : //              auto w = web3-&gt;whisper()-&gt;installWatch(BuildTopicMask(&quot;odd&quot;));
+<span class="lineNum">     277 </span>            :                 
+<span class="lineNum">     278 </span>            : //              set&lt;unsigned&gt; received;
+<span class="lineNum">     279 </span>            : //              for (unsigned x = 0; x &lt; 7000 &amp;&amp; !sent; x += step)
+<span class="lineNum">     280 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span>            : //              for (unsigned x = 0, last = 0; x &lt; 100 &amp;&amp; received.size() &lt; messageCount; ++x)
+<span class="lineNum">     283 </span>            : //              {
+<span class="lineNum">     284 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     285 </span>            : //                      for (auto i: web3-&gt;whisper()-&gt;checkWatch(w))
+<span class="lineNum">     286 </span>            : //                      {
+<span class="lineNum">     287 </span>            : //                              Message msg = web3-&gt;whisper()-&gt;envelope(i).open(web3-&gt;whisper()-&gt;fullTopics(w));
+<span class="lineNum">     288 </span>            : //                              last = RLP(msg.payload()).toInt&lt;unsigned&gt;();
+<span class="lineNum">     289 </span>            : //                              if (received.insert(last).second)
+<span class="lineNum">     290 </span>            : //                                      result += last;
+<span class="lineNum">     291 </span>            : //                      }
+<span class="lineNum">     292 </span>            : //              }
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            : //              web3-&gt;whisper()-&gt;uninstallWatch(w);
+<span class="lineNum">     295 </span>            : //      });
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            : //      for (unsigned i = 0; i &lt; 2000 &amp;&amp; (!host2.haveNetwork() || !web3-&gt;haveNetwork()); i += step)
+<span class="lineNum">     298 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            : //      BOOST_REQUIRE(host2.haveNetwork());
+<span class="lineNum">     301 </span>            : //      BOOST_REQUIRE(web3-&gt;haveNetwork());
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span>            : //      auto port1 = web3-&gt;nodeInfo().port;
+<span class="lineNum">     304 </span>            : //      host2.addNode(web3-&gt;id(), NodeIPEndpoint(bi::address::from_string(&quot;127.0.0.1&quot;), port1, port1));
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span>            : //      for (unsigned i = 0; i &lt; 3000 &amp;&amp; (!web3-&gt;peerCount() || !host2.peerCount()); i += step)
+<span class="lineNum">     307 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span>            : //      BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
+<span class="lineNum">     310 </span>            : //      BOOST_REQUIRE_EQUAL(web3-&gt;peerCount(), 1);
+<span class="lineNum">     311 </span>            :         
+<span class="lineNum">     312 </span>            : //      KeyPair us = KeyPair::create();
+<span class="lineNum">     313 </span>            : //      for (unsigned i = 0; i &lt; messageCount; ++i)
+<span class="lineNum">     314 </span>            : //      {
+<span class="lineNum">     315 </span>            : //              web3-&gt;whisper()-&gt;post(us.sec(), RLPStream().append(i * i * i).out(), BuildTopic(i)(i % 2 ? &quot;odd&quot; : &quot;even&quot;), c_ttl, 1);
+<span class="lineNum">     316 </span>            : //              this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     317 </span>            : //      }
+<span class="lineNum">     318 </span>            :         
+<span class="lineNum">     319 </span>            : //      sent = true;
+<span class="lineNum">     320 </span>            : //      listener.join();
+<span class="lineNum">     321 </span>            : //      BOOST_REQUIRE_EQUAL(result, 1 + 27 + 125);
+<span class="lineNum">     322 </span>            : //}
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span>            : //BOOST_AUTO_TEST_CASE(serverBasic)
+<span class="lineNum">     325 </span>            : //{
+<span class="lineNum">     326 </span>            : //      cnote &lt;&lt; &quot;Testing basic jsonrpc server...&quot;;
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span>            : //      string s = w3Face-&gt;web3_clientVersion();
+<span class="lineNum">     329 </span>            : //      BOOST_REQUIRE_EQUAL(s, c_version);
+<span class="lineNum">     330 </span>            : 
+<span class="lineNum">     331 </span>            : //      s = netFace-&gt;net_version();
+<span class="lineNum">     332 </span>            : //      BOOST_REQUIRE(s.empty());
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span>            : //      s = w3Face-&gt;web3_sha3(&quot;some pseudo-random string here&quot;);
+<span class="lineNum">     335 </span>            : //      BOOST_REQUIRE_EQUAL(s.size(), h256::size * 2 + 2);
+<span class="lineNum">     336 </span>            : //      BOOST_REQUIRE('0' == s[0] &amp;&amp; 'x' == s[1]);
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            : //      s = netFace-&gt;net_peerCount();
+<span class="lineNum">     339 </span>            : //      BOOST_REQUIRE(!s.empty());
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span>            : //      KeyPair src = KeyPair::create();
+<span class="lineNum">     342 </span>            : //      KeyPair dst = KeyPair::create();
+<span class="lineNum">     343 </span>            : //      Json::Value t1 = createMessage(toJS(src.address()), toJS(dst.address()));
+<span class="lineNum">     344 </span>            : //      bool b = whisperFace-&gt;shh_post(t1);
+<span class="lineNum">     345 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span>            : //      string const id = whisperFace-&gt;shh_newIdentity();
+<span class="lineNum">     348 </span>            : //      BOOST_REQUIRE_EQUAL(id.size(), 130);
+<span class="lineNum">     349 </span>            : //      BOOST_REQUIRE('0' == id[0] &amp;&amp; 'x' == id[1]);
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span>            : //      b = whisperFace-&gt;shh_hasIdentity(id);
+<span class="lineNum">     352 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span>            : //      Json::Value t2 = createMessage(id, id);
+<span class="lineNum">     355 </span>            : //      b = whisperFace-&gt;shh_post(t2);
+<span class="lineNum">     356 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     357 </span>            : //}
+<span class="lineNum">     358 </span>            : 
+<span class="lineNum">     359 </span>            : //BOOST_AUTO_TEST_CASE(server)
+<span class="lineNum">     360 </span>            : //{
+<span class="lineNum">     361 </span>            : //      cnote &lt;&lt; &quot;Testing server functionality...&quot;;
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span>            : //      bool b;
+<span class="lineNum">     364 </span>            : //      string s;
+<span class="lineNum">     365 </span>            : //      Json::Value j;
+<span class="lineNum">     366 </span>            : //      rpc::SessionPermissions permissions;
+<span class="lineNum">     367 </span>            : //      permissions.privileges.insert(rpc::Privilege::Admin);
+<span class="lineNum">     368 </span>            : //      string const text = string(&quot;0x&quot;) + h256::random().hex(); // message must be in raw form
+<span class="lineNum">     369 </span>            : 
+<span class="lineNum">     370 </span>            : //      string sess1 = sm.newSession(permissions);
+<span class="lineNum">     371 </span>            : //      string sess2(&quot;session number two&quot;);
+<span class="lineNum">     372 </span>            : //      sm.addSession(sess2, permissions);
+<span class="lineNum">     373 </span>            :         
+<span class="lineNum">     374 </span>            : //      int newVerbosity = 10;
+<span class="lineNum">     375 </span>            : //      int oldVerbosity = g_logVerbosity;
+<span class="lineNum">     376 </span>            : //      b = adminUtilsFace-&gt;admin_setVerbosity(newVerbosity, sess1);
+<span class="lineNum">     377 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     378 </span>            : //      BOOST_REQUIRE_EQUAL(g_logVerbosity, newVerbosity);
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span>            : //      b = adminUtilsFace-&gt;admin_setVerbosity(oldVerbosity, sess1);
+<span class="lineNum">     381 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     382 </span>            : //      BOOST_REQUIRE_EQUAL(g_logVerbosity, oldVerbosity);
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span>            : //      b = adminNetFace-&gt;admin_net_start(sess1);
+<span class="lineNum">     385 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     386 </span>            : 
+<span class="lineNum">     387 </span>            : //      unsigned const step = 10;
+<span class="lineNum">     388 </span>            : //      for (unsigned i = 0; i &lt; 3000 &amp;&amp; !netFace-&gt;net_listening(); i += step)
+<span class="lineNum">     389 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span>            : //      b = netFace-&gt;net_listening();
+<span class="lineNum">     392 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     393 </span>            :         
+<span class="lineNum">     394 </span>            : //      b = adminNetFace-&gt;admin_net_stop(sess1);
+<span class="lineNum">     395 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span>            : //      b = netFace-&gt;net_listening();
+<span class="lineNum">     398 </span>            : //      BOOST_REQUIRE(!b);
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span>            : //      j = adminNetFace-&gt;admin_net_peers(sess1);
+<span class="lineNum">     401 </span>            : //      BOOST_REQUIRE(j.empty());
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span>            : //      j = adminNetFace-&gt;admin_net_nodeInfo(sess2);
+<span class="lineNum">     404 </span>            : //      BOOST_REQUIRE_EQUAL(j[&quot;id&quot;].asString(), web3-&gt;id().hex());
+<span class="lineNum">     405 </span>            : //      BOOST_REQUIRE_EQUAL(j[&quot;port&quot;].asUInt(), web3-&gt;nodeInfo().port);
+<span class="lineNum">     406 </span>            : 
+<span class="lineNum">     407 </span>            : //      Host host2(&quot;shhrpc-host2&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">     408 </span>            : //      host2.setIdealPeerCount(9);
+<span class="lineNum">     409 </span>            : //      auto whost2 = host2.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">     410 </span>            : //      host2.start();
+<span class="lineNum">     411 </span>            : //      auto port2 = host2.listenPort();
+<span class="lineNum">     412 </span>            : //      BOOST_REQUIRE(port2);
+<span class="lineNum">     413 </span>            : //      BOOST_REQUIRE_NE(port2, web3-&gt;nodeInfo().port);
+<span class="lineNum">     414 </span>            : 
+<span class="lineNum">     415 </span>            : //      b = adminNetFace-&gt;admin_net_start(sess2);
+<span class="lineNum">     416 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     417 </span>            :         
+<span class="lineNum">     418 </span>            : //      for (unsigned i = 0; i &lt; 2000 &amp;&amp; !host2.haveNetwork(); i += step)
+<span class="lineNum">     419 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     420 </span>            : 
+<span class="lineNum">     421 </span>            : //      for (unsigned i = 0; i &lt; 2000 &amp;&amp; !netFace-&gt;net_listening(); i += step)
+<span class="lineNum">     422 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     423 </span>            : 
+<span class="lineNum">     424 </span>            : //      BOOST_REQUIRE(host2.haveNetwork());
+<span class="lineNum">     425 </span>            : //      BOOST_REQUIRE(netFace-&gt;net_listening());
+<span class="lineNum">     426 </span>            : 
+<span class="lineNum">     427 </span>            : //      string node(&quot;enode://&quot;);
+<span class="lineNum">     428 </span>            : //      node += host2.id().hex();
+<span class="lineNum">     429 </span>            : //      node += &quot;@127.0.0.1:&quot;;
+<span class="lineNum">     430 </span>            : //      node += toString(port2);
+<span class="lineNum">     431 </span>            : //      b = adminNetFace-&gt;admin_net_connect(node, sess2);
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span>            : //      for (unsigned i = 0; i &lt; 3000 &amp;&amp; !host2.peerCount(); i += step)
+<span class="lineNum">     434 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     435 </span>            : 
+<span class="lineNum">     436 </span>            : //      BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
+<span class="lineNum">     437 </span>            : //      this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     438 </span>            : 
+<span class="lineNum">     439 </span>            : //      j = adminNetFace-&gt;admin_net_peers(sess2);
+<span class="lineNum">     440 </span>            : //      BOOST_REQUIRE_EQUAL(j.size(), 1);
+<span class="lineNum">     441 </span>            : //      Json::Value peer = j[0];
+<span class="lineNum">     442 </span>            : //      s = peer[&quot;id&quot;].asString();
+<span class="lineNum">     443 </span>            : //      BOOST_REQUIRE_EQUAL(s, host2.id().hex());
+<span class="lineNum">     444 </span>            : //      BOOST_REQUIRE_EQUAL(peer[&quot;port&quot;].asUInt(), port2);
+<span class="lineNum">     445 </span>            : 
+<span class="lineNum">     446 </span>            : //      s = netFace-&gt;net_peerCount();
+<span class="lineNum">     447 </span>            : //      BOOST_REQUIRE_EQUAL(s, &quot;0x1&quot;);
+<span class="lineNum">     448 </span>            : 
+<span class="lineNum">     449 </span>            : //      KeyPair src = KeyPair::create();
+<span class="lineNum">     450 </span>            : //      KeyPair dst = KeyPair::create();
+<span class="lineNum">     451 </span>            : 
+<span class="lineNum">     452 </span>            : //      Json::Value t1 = createMessage(toJS(src.address()), toJS(dst.address()));
+<span class="lineNum">     453 </span>            : //      b = whisperFace-&gt;shh_post(t1);
+<span class="lineNum">     454 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     455 </span>            : 
+<span class="lineNum">     456 </span>            : //      string const id = whisperFace-&gt;shh_newIdentity();
+<span class="lineNum">     457 </span>            : //      BOOST_REQUIRE_EQUAL(id.size(), 130);
+<span class="lineNum">     458 </span>            : //      BOOST_REQUIRE(whisperFace-&gt;shh_hasIdentity(id));
+<span class="lineNum">     459 </span>            : 
+<span class="lineNum">     460 </span>            : //      Json::Value t2 = createMessage(id, id);
+<span class="lineNum">     461 </span>            : //      b = whisperFace-&gt;shh_post(t2);
+<span class="lineNum">     462 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     463 </span>            : 
+<span class="lineNum">     464 </span>            : //      string const nonexistent = &quot;123456789&quot;;
+<span class="lineNum">     465 </span>            : //      b = whisperFace-&gt;shh_uninstallFilter(nonexistent);
+<span class="lineNum">     466 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     467 </span>            : 
+<span class="lineNum">     468 </span>            : //      j = whisperFace-&gt;shh_getMessages(nonexistent);
+<span class="lineNum">     469 </span>            : //      BOOST_REQUIRE(j.empty());
+<span class="lineNum">     470 </span>            : 
+<span class="lineNum">     471 </span>            : //      string const topic = &quot;unicorns&quot;;
+<span class="lineNum">     472 </span>            : //      Json::Value t(Json::arrayValue);
+<span class="lineNum">     473 </span>            : //      t.append(topic);
+<span class="lineNum">     474 </span>            : //      Json::Value f;
+<span class="lineNum">     475 </span>            : //      f[&quot;to&quot;] = id;
+<span class="lineNum">     476 </span>            : //      f[&quot;topics&quot;] = t;
+<span class="lineNum">     477 </span>            : //      string const filter = whisperFace-&gt;shh_newFilter(f);
+<span class="lineNum">     478 </span>            : 
+<span class="lineNum">     479 </span>            : //      j = whisperFace-&gt;shh_getFilterChanges(filter);
+<span class="lineNum">     480 </span>            : //      BOOST_REQUIRE(j.empty());
+<span class="lineNum">     481 </span>            : 
+<span class="lineNum">     482 </span>            : //      j = whisperFace-&gt;shh_getMessages(filter);
+<span class="lineNum">     483 </span>            : //      BOOST_REQUIRE(j.empty());
+<span class="lineNum">     484 </span>            : 
+<span class="lineNum">     485 </span>            : //      Json::Value msg = createMessage(id, id, topic, text);
+<span class="lineNum">     486 </span>            : //      b = whisperFace-&gt;shh_post(msg);
+<span class="lineNum">     487 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     488 </span>            : //      this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     489 </span>            : 
+<span class="lineNum">     490 </span>            : //      j = whisperFace-&gt;shh_getFilterChanges(filter);
+<span class="lineNum">     491 </span>            : //      BOOST_REQUIRE(!j.empty());
+<span class="lineNum">     492 </span>            : //      Json::Value m1 = j[0];
+<span class="lineNum">     493 </span>            : //      BOOST_REQUIRE_EQUAL(m1[&quot;ttl&quot;], toJS(c_ttl));
+<span class="lineNum">     494 </span>            : //      BOOST_REQUIRE_EQUAL(m1[&quot;from&quot;], id);
+<span class="lineNum">     495 </span>            : //      BOOST_REQUIRE_EQUAL(m1[&quot;to&quot;], id);
+<span class="lineNum">     496 </span>            : //      BOOST_REQUIRE_EQUAL(m1[&quot;payload&quot;], text);
+<span class="lineNum">     497 </span>            : 
+<span class="lineNum">     498 </span>            : //      j = whisperFace-&gt;shh_getMessages(filter);
+<span class="lineNum">     499 </span>            : //      BOOST_REQUIRE(!j.empty());
+<span class="lineNum">     500 </span>            : //      Json::Value m2 = j[0];
+<span class="lineNum">     501 </span>            : //      BOOST_REQUIRE_EQUAL(m2[&quot;ttl&quot;], toJS(c_ttl));
+<span class="lineNum">     502 </span>            : //      BOOST_REQUIRE_EQUAL(m2[&quot;from&quot;], id);
+<span class="lineNum">     503 </span>            : //      BOOST_REQUIRE_EQUAL(m2[&quot;to&quot;], id);
+<span class="lineNum">     504 </span>            : //      BOOST_REQUIRE_EQUAL(m2[&quot;payload&quot;], text);
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span>            : //      j = whisperFace-&gt;shh_getFilterChanges(filter);
+<span class="lineNum">     507 </span>            : //      BOOST_REQUIRE(j.empty());
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            : //      j = whisperFace-&gt;shh_getMessages(filter);
+<span class="lineNum">     510 </span>            : //      BOOST_REQUIRE(!j.empty());
+<span class="lineNum">     511 </span>            : //      m1 = j[0];
+<span class="lineNum">     512 </span>            : //      BOOST_REQUIRE_EQUAL(m1[&quot;ttl&quot;], toJS(c_ttl));
+<span class="lineNum">     513 </span>            : //      BOOST_REQUIRE_EQUAL(m1[&quot;from&quot;], id);
+<span class="lineNum">     514 </span>            : //      BOOST_REQUIRE_EQUAL(m1[&quot;to&quot;], id);
+<span class="lineNum">     515 </span>            : //      BOOST_REQUIRE_EQUAL(m1[&quot;payload&quot;], text);
+<span class="lineNum">     516 </span>            : //      cnote &lt;&lt; &quot;Testing web3 receive...&quot;;
+<span class="lineNum">     517 </span>            : 
+<span class="lineNum">     518 </span>            : //      bool sent = false;
+<span class="lineNum">     519 </span>            : //      bool ready = false;
+<span class="lineNum">     520 </span>            : //      unsigned result = 0;
+<span class="lineNum">     521 </span>            : //      unsigned const messageCount = 6;
+<span class="lineNum">     522 </span>            : //      unsigned const step = 10;
+<span class="lineNum">     523 </span>            : //      Host host2(&quot;shhrpc-host2&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">     524 </span>            : //      host2.setIdealPeerCount(1);
+<span class="lineNum">     525 </span>            : //      auto whost2 = host2.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">     526 </span>            : //      host2.start();
+<span class="lineNum">     527 </span>            : //      web3-&gt;startNetwork();
+<span class="lineNum">     528 </span>            : //      auto port2 = host2.listenPort();
+<span class="lineNum">     529 </span>            : //      BOOST_REQUIRE(port2);
+<span class="lineNum">     530 </span>            : //      BOOST_REQUIRE_NE(port2, web3-&gt;nodeInfo().port);
+<span class="lineNum">     531 </span>            : 
+<span class="lineNum">     532 </span>            : //      std::thread listener([&amp;]()
+<span class="lineNum">     533 </span>            : //      {
+<span class="lineNum">     534 </span>            : //              setThreadName(&quot;listener&quot;);
+<span class="lineNum">     535 </span>            : //              ready = true;
+<span class="lineNum">     536 </span>            : //              auto w = web3-&gt;whisper()-&gt;installWatch(BuildTopicMask(&quot;odd&quot;));
+<span class="lineNum">     537 </span>            : 
+<span class="lineNum">     538 </span>            : //              set&lt;unsigned&gt; received;
+<span class="lineNum">     539 </span>            : //              for (unsigned x = 0; x &lt; 7000 &amp;&amp; !sent; x += step)
+<span class="lineNum">     540 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     541 </span>            : 
+<span class="lineNum">     542 </span>            : //              for (unsigned x = 0, last = 0; x &lt; 100 &amp;&amp; received.size() &lt; messageCount; ++x)
+<span class="lineNum">     543 </span>            : //              {
+<span class="lineNum">     544 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     545 </span>            : //                      for (auto i: web3-&gt;whisper()-&gt;checkWatch(w))
+<span class="lineNum">     546 </span>            : //                      {
+<span class="lineNum">     547 </span>            : //                              Message msg = web3-&gt;whisper()-&gt;envelope(i).open(web3-&gt;whisper()-&gt;fullTopics(w));
+<span class="lineNum">     548 </span>            : //                              last = RLP(msg.payload()).toInt&lt;unsigned&gt;();
+<span class="lineNum">     549 </span>            : //                              if (received.insert(last).second)
+<span class="lineNum">     550 </span>            : //                                      result += last;
+<span class="lineNum">     551 </span>            : //                      }
+<span class="lineNum">     552 </span>            : //              }
+<span class="lineNum">     553 </span>            : 
+<span class="lineNum">     554 </span>            : //              web3-&gt;whisper()-&gt;uninstallWatch(w);
+<span class="lineNum">     555 </span>            : //      });
+<span class="lineNum">     556 </span>            : 
+<span class="lineNum">     557 </span>            : //      for (unsigned i = 0; i &lt; 2000 &amp;&amp; (!host2.haveNetwork() || !web3-&gt;haveNetwork()); i += step)
+<span class="lineNum">     558 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     559 </span>            : 
+<span class="lineNum">     560 </span>            : //      BOOST_REQUIRE(host2.haveNetwork());
+<span class="lineNum">     561 </span>            : //      BOOST_REQUIRE(web3-&gt;haveNetwork());
+<span class="lineNum">     562 </span>            : 
+<span class="lineNum">     563 </span>            : //      auto port1 = web3-&gt;nodeInfo().port;
+<span class="lineNum">     564 </span>            : //      host2.addNode(web3-&gt;id(), NodeIPEndpoint(bi::address::from_string(&quot;127.0.0.1&quot;), port1, port1));
+<span class="lineNum">     565 </span>            : 
+<span class="lineNum">     566 </span>            : //      for (unsigned i = 0; i &lt; 3000 &amp;&amp; (!web3-&gt;peerCount() || !host2.peerCount()); i += step)
+<span class="lineNum">     567 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     568 </span>            : 
+<span class="lineNum">     569 </span>            : //      BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
+<span class="lineNum">     570 </span>            : //      BOOST_REQUIRE_EQUAL(web3-&gt;peerCount(), 1);
+<span class="lineNum">     571 </span>            : 
+<span class="lineNum">     572 </span>            : //      KeyPair us = KeyPair::create();
+<span class="lineNum">     573 </span>            : //      for (unsigned i = 0; i &lt; messageCount; ++i)
+<span class="lineNum">     574 </span>            : //      {
+<span class="lineNum">     575 </span>            : //              web3-&gt;whisper()-&gt;post(us.sec(), RLPStream().append(i * i * i).out(), BuildTopic(i)(i % 2 ? &quot;odd&quot; : &quot;even&quot;), c_ttl, 1);
+<span class="lineNum">     576 </span>            : //              this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     577 </span>            : //      }
+<span class="lineNum">     578 </span>            : 
+<span class="lineNum">     579 </span>            : //      sent = true;
+<span class="lineNum">     580 </span>            : //      listener.join();
+<span class="lineNum">     581 </span>            : //      BOOST_REQUIRE_EQUAL(result, 1 + 27 + 125);
+<span class="lineNum">     582 </span>            : //      msg = createMessage(id, id, topic);
+<span class="lineNum">     583 </span>            : //      b = whisperFace-&gt;shh_post(msg);
+<span class="lineNum">     584 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     585 </span>            : //      this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     586 </span>            : 
+<span class="lineNum">     587 </span>            : //      j = whisperFace-&gt;shh_getFilterChanges(filter);
+<span class="lineNum">     588 </span>            : //      BOOST_REQUIRE_EQUAL(j.size(), 1);
+<span class="lineNum">     589 </span>            : 
+<span class="lineNum">     590 </span>            : //      j = whisperFace-&gt;shh_getMessages(filter);
+<span class="lineNum">     591 </span>            : //      BOOST_REQUIRE_EQUAL(j.size(), 2);
+<span class="lineNum">     592 </span>            : 
+<span class="lineNum">     593 </span>            : //      b = whisperFace-&gt;shh_uninstallFilter(filter);
+<span class="lineNum">     594 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     595 </span>            : 
+<span class="lineNum">     596 </span>            : //      j = whisperFace-&gt;shh_getFilterChanges(filter);
+<span class="lineNum">     597 </span>            : //      BOOST_REQUIRE(j.empty());
+<span class="lineNum">     598 </span>            : 
+<span class="lineNum">     599 </span>            : //      j = whisperFace-&gt;shh_getMessages(filter);
+<span class="lineNum">     600 </span>            : //      BOOST_REQUIRE(j.empty());
+<span class="lineNum">     601 </span>            : 
+<span class="lineNum">     602 </span>            : //      msg = createMessage(id, id, topic);
+<span class="lineNum">     603 </span>            : //      b = whisperFace-&gt;shh_post(msg);
+<span class="lineNum">     604 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     605 </span>            : //      this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     606 </span>            : 
+<span class="lineNum">     607 </span>            : //      j = whisperFace-&gt;shh_getFilterChanges(filter);
+<span class="lineNum">     608 </span>            : //      BOOST_REQUIRE(j.empty());
+<span class="lineNum">     609 </span>            : 
+<span class="lineNum">     610 </span>            : //      j = whisperFace-&gt;shh_getMessages(filter);
+<span class="lineNum">     611 </span>            : //      BOOST_REQUIRE(j.empty());
+<span class="lineNum">     612 </span>            : 
+<span class="lineNum">     613 </span>            : //      b = adminNetFace-&gt;admin_net_stop(sess2);
+<span class="lineNum">     614 </span>            : //      BOOST_REQUIRE(b);
+<span class="lineNum">     615 </span>            : 
+<span class="lineNum">     616 </span>            : //      b = netFace-&gt;net_listening();
+<span class="lineNum">     617 </span>            : //      BOOST_REQUIRE(!b);
+<a name="618"><span class="lineNum">     618 </span>            : //}</a>
+<span class="lineNum">     619 </span>            : 
+<span class="lineNum">     620 </span><span class="lineCov">          4 : BOOST_AUTO_TEST_SUITE_END()</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/multiprecision/cpp_int/limits.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/multiprecision/cpp_int</a> - limits.hpp<span style="font-size: 80%;"> (source / <a href="limits.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryMed">80.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : ///////////////////////////////////////////////////////////////</a>
+<span class="lineNum">       2 </span>            : //  Copyright 2012 John Maddock. Distributed under the Boost
+<span class="lineNum">       3 </span>            : //  Software License, Version 1.0. (See accompanying file
+<span class="lineNum">       4 </span>            : //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_
+<span class="lineNum">       5 </span>            : //
+<span class="lineNum">       6 </span>            : // Comparison operators for cpp_int_backend:
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : #ifndef BOOST_MP_CPP_INT_LIM_HPP
+<span class="lineNum">       9 </span>            : #define BOOST_MP_CPP_INT_LIM_HPP
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : namespace std{
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : namespace detail{
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifdef _MSC_VER
+<span class="lineNum">      16 </span>            : #pragma warning(push)
+<span class="lineNum">      17 </span>            : #pragma warning(disable:4307)
+<span class="lineNum">      18 </span>            : #endif
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">      21 </span>            : inline boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;
+<span class="lineNum">      22 </span>            :    get_min(const boost::mpl::true_&amp;, const boost::mpl::true_&amp;)
+<span class="lineNum">      23 </span>            : {
+<span class="lineNum">      24 </span>            :    // Bounded and signed.
+<span class="lineNum">      25 </span>            :    typedef boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt; result_type;
+<span class="lineNum">      26 </span>            :    typedef boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, Allocator&gt;, ExpressionTemplates&gt; ui_type;
+<span class="lineNum">      27 </span>            :    static const result_type val = -result_type(~ui_type(0));
+<span class="lineNum">      28 </span>            :    return val;
+<span class="lineNum">      29 </span>            : }
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">      32 </span>            : inline boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;
+<span class="lineNum">      33 </span>            :    get_min(const boost::mpl::true_&amp;, const boost::mpl::false_&amp;)
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span>            :    // Bounded and unsigned:
+<span class="lineNum">      36 </span>            :    static const boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt; val(0u);
+<span class="lineNum">      37 </span><span class="lineCov">          1 :    return val;</span>
+<span class="lineNum">      38 </span>            : }
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">      41 </span>            : inline boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;
+<span class="lineNum">      42 </span>            :    get_min(const boost::mpl::false_&amp;, const boost::mpl::true_&amp;)
+<span class="lineNum">      43 </span>            : {
+<span class="lineNum">      44 </span>            :    // Unbounded and signed.
+<span class="lineNum">      45 </span>            :    // There is no minimum value, just return 0:
+<span class="lineNum">      46 </span>            :    static const boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt; val(0u);
+<span class="lineNum">      47 </span>            :    return val;
+<span class="lineNum">      48 </span>            : }
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">      51 </span>            : inline boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;
+<span class="lineNum">      52 </span>            :    get_min(const boost::mpl::false_&amp;, const boost::mpl::false_&amp;)
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span>            :    // Unbound and unsigned:
+<span class="lineNum">      55 </span>            :    static const boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt; val(0u);
+<span class="lineNum">      56 </span>            :    return val;
+<span class="lineNum">      57 </span>            : }
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">      60 </span>            : inline boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;
+<span class="lineNum">      61 </span>            :    get_max(const boost::mpl::true_&amp;, const boost::mpl::true_&amp;)
+<span class="lineNum">      62 </span>            : {
+<span class="lineNum">      63 </span>            :    // Bounded and signed.
+<span class="lineNum">      64 </span>            :    typedef boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt; result_type;
+<span class="lineNum">      65 </span>            :    typedef boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, Allocator&gt;, ExpressionTemplates&gt; ui_type;
+<span class="lineNum">      66 </span>            :    static const result_type val = ~ui_type(0);
+<span class="lineNum">      67 </span>            :    return val;
+<span class="lineNum">      68 </span>            : }
+<span class="lineNum">      69 </span>            : 
+<a name="70"><span class="lineNum">      70 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;</a>
+<span class="lineNum">      71 </span>            : inline boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;
+<span class="lineNum">      72 </span><span class="lineCov">      35763 :    get_max(const boost::mpl::true_&amp;, const boost::mpl::false_&amp;)</span>
+<span class="lineNum">      73 </span>            : {
+<span class="lineNum">      74 </span>            :    // Bound and unsigned:
+<span class="lineNum">      75 </span>            :    typedef boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt; result_type;
+<span class="lineNum">      76 </span>            :    typedef boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, Allocator&gt;, ExpressionTemplates&gt; ui_type;
+<span class="lineNum">      77 </span><span class="lineCov">      35765 :    static const result_type val = ~ui_type(0);</span>
+<span class="lineNum">      78 </span><span class="lineCov">      35763 :    return val;</span>
+<span class="lineNum">      79 </span>            : }
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">      82 </span>            : inline boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;
+<span class="lineNum">      83 </span>            :    get_max(const boost::mpl::false_&amp;, const boost::mpl::true_&amp;)
+<span class="lineNum">      84 </span>            : {
+<span class="lineNum">      85 </span>            :    // Unbounded and signed.
+<span class="lineNum">      86 </span>            :    // There is no maximum value, just return 0:
+<span class="lineNum">      87 </span>            :    static const boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt; val(0u);
+<span class="lineNum">      88 </span>            :    return val;
+<span class="lineNum">      89 </span>            : }
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">      92 </span>            : inline boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;
+<span class="lineNum">      93 </span>            :    get_max(const boost::mpl::false_&amp;, const boost::mpl::false_&amp;)
+<span class="lineNum">      94 </span>            : {
+<span class="lineNum">      95 </span>            :    // Unbound and unsigned:
+<span class="lineNum">      96 </span>            :    static const boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt; val(0u);
+<span class="lineNum">      97 </span>            :    return val;
+<span class="lineNum">      98 </span>            : }
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : }
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     103 </span>            : class numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt; &gt;
+<span class="lineNum">     104 </span>            : {
+<span class="lineNum">     105 </span>            :    typedef boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt; backend_type;
+<span class="lineNum">     106 </span>            :    typedef boost::multiprecision::number&lt;backend_type, ExpressionTemplates&gt; number_type;
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :    struct inititializer
+<span class="lineNum">     109 </span>            :    {
+<span class="lineNum">     110 </span>            :       inititializer()
+<span class="lineNum">     111 </span>            :       {
+<span class="lineNum">     112 </span>            :          (std::numeric_limits&lt;number_type&gt;::max)();
+<span class="lineNum">     113 </span>            :          (std::numeric_limits&lt;number_type&gt;::min)();
+<span class="lineNum">     114 </span>            :       }
+<span class="lineNum">     115 </span>            :       void do_nothing()const{}
+<span class="lineNum">     116 </span>            :    };
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :    static const inititializer init;
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : public:
+<span class="lineNum">     121 </span>            :    BOOST_STATIC_CONSTEXPR bool is_specialized = true;
+<span class="lineNum">     122 </span>            :    //
+<span class="lineNum">     123 </span>            :    // Largest and smallest numbers are bounded only by available memory, set
+<span class="lineNum">     124 </span>            :    // to zero:
+<span class="lineNum">     125 </span>            :    //
+<span class="lineNum">     126 </span>            :    static number_type (min)()
+<span class="lineNum">     127 </span>            :    {
+<span class="lineNum">     128 </span><span class="lineCov">          1 :       init.do_nothing();</span>
+<span class="lineNum">     129 </span>            :       return detail::get_min&lt;MinBits, MaxBits, SignType, Checked, Allocator, ExpressionTemplates&gt;(boost::multiprecision::backends::is_fixed_precision&lt;backend_type&gt;(), boost::multiprecision::is_signed_number&lt;backend_type&gt;());
+<span class="lineNum">     130 </span>            :    }
+<span class="lineNum">     131 </span>            :    static number_type (max)() 
+<span class="lineNum">     132 </span>            :    { 
+<span class="lineNum">     133 </span><span class="lineCov">      35763 :       init.do_nothing();</span>
+<span class="lineNum">     134 </span><span class="lineCov">      35763 :       return detail::get_max&lt;MinBits, MaxBits, SignType, Checked, Allocator, ExpressionTemplates&gt;(boost::multiprecision::backends::is_fixed_precision&lt;backend_type&gt;(), boost::multiprecision::is_signed_number&lt;backend_type&gt;());</span>
+<span class="lineNum">     135 </span>            :    }
+<span class="lineNum">     136 </span>            :    static number_type lowest() { return (min)(); }
+<span class="lineNum">     137 </span>            :    BOOST_STATIC_CONSTEXPR int digits = boost::multiprecision::backends::max_precision&lt;backend_type&gt;::value == UINT_MAX ? INT_MAX : boost::multiprecision::backends::max_precision&lt;backend_type&gt;::value;
+<span class="lineNum">     138 </span>            :    BOOST_STATIC_CONSTEXPR int digits10 = (digits &gt; INT_MAX / 301) ? (digits / 1000) * 301L : (digits * 301) / 1000;
+<span class="lineNum">     139 </span>            :    BOOST_STATIC_CONSTEXPR int max_digits10 = digits10 + 3;
+<span class="lineNum">     140 </span>            :    BOOST_STATIC_CONSTEXPR bool is_signed = boost::multiprecision::is_signed_number&lt;backend_type&gt;::value;
+<span class="lineNum">     141 </span>            :    BOOST_STATIC_CONSTEXPR bool is_integer = true;
+<span class="lineNum">     142 </span>            :    BOOST_STATIC_CONSTEXPR bool is_exact = true;
+<span class="lineNum">     143 </span>            :    BOOST_STATIC_CONSTEXPR int radix = 2;
+<span class="lineNum">     144 </span>            :    static number_type epsilon() { return 0; }
+<span class="lineNum">     145 </span>            :    static number_type round_error() { return 0; }
+<span class="lineNum">     146 </span>            :    BOOST_STATIC_CONSTEXPR int min_exponent = 0;
+<span class="lineNum">     147 </span>            :    BOOST_STATIC_CONSTEXPR int min_exponent10 = 0;
+<span class="lineNum">     148 </span>            :    BOOST_STATIC_CONSTEXPR int max_exponent = 0;
+<span class="lineNum">     149 </span>            :    BOOST_STATIC_CONSTEXPR int max_exponent10 = 0;
+<span class="lineNum">     150 </span>            :    BOOST_STATIC_CONSTEXPR bool has_infinity = false;
+<span class="lineNum">     151 </span>            :    BOOST_STATIC_CONSTEXPR bool has_quiet_NaN = false;
+<span class="lineNum">     152 </span>            :    BOOST_STATIC_CONSTEXPR bool has_signaling_NaN = false;
+<span class="lineNum">     153 </span>            :    BOOST_STATIC_CONSTEXPR float_denorm_style has_denorm = denorm_absent;
+<span class="lineNum">     154 </span>            :    BOOST_STATIC_CONSTEXPR bool has_denorm_loss = false;
+<span class="lineNum">     155 </span>            :    static number_type infinity() { return 0; }
+<span class="lineNum">     156 </span>            :    static number_type quiet_NaN() { return 0; }
+<span class="lineNum">     157 </span>            :    static number_type signaling_NaN() { return 0; }
+<span class="lineNum">     158 </span>            :    static number_type denorm_min() { return 0; }
+<span class="lineNum">     159 </span>            :    BOOST_STATIC_CONSTEXPR bool is_iec559 = false;
+<span class="lineNum">     160 </span>            :    BOOST_STATIC_CONSTEXPR bool is_bounded = boost::multiprecision::backends::is_fixed_precision&lt;backend_type&gt;::value;
+<span class="lineNum">     161 </span>            :    BOOST_STATIC_CONSTEXPR bool is_modulo = (boost::multiprecision::backends::is_fixed_precision&lt;backend_type&gt;::value &amp;&amp; (Checked == boost::multiprecision::unchecked));
+<span class="lineNum">     162 </span>            :    BOOST_STATIC_CONSTEXPR bool traps = false;
+<span class="lineNum">     163 </span>            :    BOOST_STATIC_CONSTEXPR bool tinyness_before = false;
+<span class="lineNum">     164 </span>            :    BOOST_STATIC_CONSTEXPR float_round_style round_style = round_toward_zero;
+<span class="lineNum">     165 </span>            : };
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     168 </span><span class="lineCov">          5 : const typename numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt; &gt;::inititializer numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt; &gt;::init;</span>
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            : #ifndef BOOST_NO_INCLASS_MEMBER_INITIALIZATION
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     173 </span>            : BOOST_CONSTEXPR_OR_CONST int numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::digits;
+<span class="lineNum">     174 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     175 </span>            : BOOST_CONSTEXPR_OR_CONST int numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::digits10;
+<span class="lineNum">     176 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     177 </span>            : BOOST_CONSTEXPR_OR_CONST int numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::max_digits10;
+<span class="lineNum">     178 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     179 </span>            : BOOST_CONSTEXPR_OR_CONST bool numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::is_signed;
+<span class="lineNum">     180 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     181 </span>            : BOOST_CONSTEXPR_OR_CONST bool numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::is_integer;
+<span class="lineNum">     182 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     183 </span>            : BOOST_CONSTEXPR_OR_CONST bool numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::is_exact;
+<span class="lineNum">     184 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     185 </span>            : BOOST_CONSTEXPR_OR_CONST int numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::radix;
+<span class="lineNum">     186 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     187 </span>            : BOOST_CONSTEXPR_OR_CONST int numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::min_exponent;
+<span class="lineNum">     188 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     189 </span>            : BOOST_CONSTEXPR_OR_CONST int numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::min_exponent10;
+<span class="lineNum">     190 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     191 </span>            : BOOST_CONSTEXPR_OR_CONST int numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::max_exponent;
+<span class="lineNum">     192 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     193 </span>            : BOOST_CONSTEXPR_OR_CONST int numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::max_exponent10;
+<span class="lineNum">     194 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     195 </span>            : BOOST_CONSTEXPR_OR_CONST bool numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::has_infinity;
+<span class="lineNum">     196 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     197 </span>            : BOOST_CONSTEXPR_OR_CONST bool numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::has_quiet_NaN;
+<span class="lineNum">     198 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     199 </span>            : BOOST_CONSTEXPR_OR_CONST bool numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::has_signaling_NaN;
+<span class="lineNum">     200 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     201 </span>            : BOOST_CONSTEXPR_OR_CONST float_denorm_style numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::has_denorm;
+<span class="lineNum">     202 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     203 </span>            : BOOST_CONSTEXPR_OR_CONST bool numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::has_denorm_loss;
+<span class="lineNum">     204 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     205 </span>            : BOOST_CONSTEXPR_OR_CONST bool numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::is_iec559;
+<span class="lineNum">     206 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     207 </span>            : BOOST_CONSTEXPR_OR_CONST bool numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::is_bounded;
+<span class="lineNum">     208 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     209 </span>            : BOOST_CONSTEXPR_OR_CONST bool numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::is_modulo;
+<span class="lineNum">     210 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     211 </span>            : BOOST_CONSTEXPR_OR_CONST bool numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::traps;
+<span class="lineNum">     212 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     213 </span>            : BOOST_CONSTEXPR_OR_CONST bool numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::tinyness_before;
+<span class="lineNum">     214 </span>            : template &lt;unsigned MinBits, unsigned MaxBits, boost::multiprecision::cpp_integer_type SignType, boost::multiprecision::cpp_int_check_type Checked, class Allocator, boost::multiprecision::expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     215 </span>            : BOOST_CONSTEXPR_OR_CONST float_round_style numeric_limits&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;MinBits, MaxBits, SignType, Checked, Allocator&gt;, ExpressionTemplates&gt;  &gt;::round_style;
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            : #endif
+<span class="lineNum">     218 </span>            : #ifdef _MSC_VER
+<span class="lineNum">     219 </span>            : #pragma warning(pop)
+<span class="lineNum">     220 </span>            : #endif
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            : } // namespace std
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

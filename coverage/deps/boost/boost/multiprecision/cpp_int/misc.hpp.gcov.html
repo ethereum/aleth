@@ -1,0 +1,732 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/multiprecision/cpp_int/misc.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/multiprecision/cpp_int</a> - misc.hpp<span style="font-size: 80%;"> (source / <a href="misc.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntry">28</td>
+            <td class="headerCovTableEntryMed">89.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryLo">33.3 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : ///////////////////////////////////////////////////////////////</a>
+<span class="lineNum">       2 </span>            : //  Copyright 2012 John Maddock. Distributed under the Boost
+<span class="lineNum">       3 </span>            : //  Software License, Version 1.0. (See accompanying file
+<span class="lineNum">       4 </span>            : //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_
+<span class="lineNum">       5 </span>            : //
+<span class="lineNum">       6 </span>            : // Comparison operators for cpp_int_backend:
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : #ifndef BOOST_MP_CPP_INT_MISC_HPP
+<span class="lineNum">       9 </span>            : #define BOOST_MP_CPP_INT_MISC_HPP
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #include &lt;boost/multiprecision/detail/bitscan.hpp&gt; // lsb etc
+<span class="lineNum">      12 </span>            : #include &lt;boost/integer/common_factor_rt.hpp&gt; // gcd/lcm
+<span class="lineNum">      13 </span>            : #include &lt;boost/functional/hash_fwd.hpp&gt;
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">      16 </span>            : #pragma warning(push)
+<span class="lineNum">      17 </span>            : #pragma warning(disable:4702)
+<span class="lineNum">      18 </span>            : #pragma warning(disable:4127) // conditional expression is constant
+<span class="lineNum">      19 </span>            : #pragma warning(disable:4146) // unary minus operator applied to unsigned type, result still unsigned
+<span class="lineNum">      20 </span>            : #endif
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : namespace boost{ namespace multiprecision{ namespace backends{
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : template &lt;class R, class CppInt&gt;
+<span class="lineNum">      26 </span>            : void check_in_range(const CppInt&amp; val, const mpl::int_&lt;checked&gt;&amp;)
+<span class="lineNum">      27 </span>            : {
+<span class="lineNum">      28 </span>            :    typedef typename boost::multiprecision::detail::canonical&lt;R, CppInt&gt;::type cast_type;
+<span class="lineNum">      29 </span>            :    if(val.sign())
+<span class="lineNum">      30 </span>            :    {
+<span class="lineNum">      31 </span>            :       if(val.compare(static_cast&lt;cast_type&gt;((std::numeric_limits&lt;R&gt;::min)())) &lt; 0)
+<span class="lineNum">      32 </span>            :          BOOST_THROW_EXCEPTION(std::overflow_error(&quot;Could not convert to the target type - -value is out of range.&quot;));
+<span class="lineNum">      33 </span>            :    }
+<span class="lineNum">      34 </span>            :    else
+<span class="lineNum">      35 </span>            :    {
+<span class="lineNum">      36 </span>            :       if(val.compare(static_cast&lt;cast_type&gt;((std::numeric_limits&lt;R&gt;::max)())) &gt; 0)
+<span class="lineNum">      37 </span>            :          BOOST_THROW_EXCEPTION(std::overflow_error(&quot;Could not convert to the target type - -value is out of range.&quot;));
+<span class="lineNum">      38 </span>            :    }
+<span class="lineNum">      39 </span>            : }
+<span class="lineNum">      40 </span>            : template &lt;class R, class CppInt&gt;
+<span class="lineNum">      41 </span>            : inline void check_in_range(const CppInt&amp; /*val*/, const mpl::int_&lt;unchecked&gt;&amp;) BOOST_NOEXCEPT {}
+<a name="42"><span class="lineNum">      42 </span>            : </a>
+<span class="lineNum">      43 </span>            : inline void check_is_negative(const mpl::true_&amp;) BOOST_NOEXCEPT {}
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 : inline void check_is_negative(const mpl::false_&amp;)</span>
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span><span class="lineNoCov">          0 :    BOOST_THROW_EXCEPTION(std::range_error(&quot;Attempt to assign a negative value to an unsigned type.&quot;));</span>
+<span class="lineNum">      47 </span>            : }
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : template &lt;class Integer&gt;
+<span class="lineNum">      50 </span>            : inline Integer negate_integer(Integer i, const mpl::true_&amp;) BOOST_NOEXCEPT
+<span class="lineNum">      51 </span>            : {
+<span class="lineNum">      52 </span>            :    return -i;
+<span class="lineNum">      53 </span>            : }
+<span class="lineNum">      54 </span>            : template &lt;class Integer&gt;
+<span class="lineNum">      55 </span>            : inline Integer negate_integer(Integer i, const mpl::false_&amp;) BOOST_NOEXCEPT
+<span class="lineNum">      56 </span>            : {
+<span class="lineNum">      57 </span>            :    return ~(i-1);
+<span class="lineNum">      58 </span>            : }
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : template &lt;class R, unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">      61 </span>            : inline typename enable_if_c&lt;is_integral&lt;R&gt;::value &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value, void&gt;::type
+<span class="lineNum">      62 </span>            :    eval_convert_to(R* result, const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; backend) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">      63 </span>            : {
+<span class="lineNum">      64 </span>            :    typedef mpl::int_&lt;Checked1&gt; checked_type;
+<span class="lineNum">      65 </span><span class="lineCov">   61898040 :    check_in_range&lt;R&gt;(backend, checked_type());</span>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineCov">   66389325 :    *result = static_cast&lt;R&gt;(backend.limbs()[0]);</span>
+<span class="lineNum">      68 </span><span class="lineCov">   61898040 :    unsigned shift = cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::limb_bits;</span>
+<span class="lineNum">      69 </span><span class="lineCov">   61898040 :    for(unsigned i = 1; (i &lt; backend.size()) &amp;&amp; (shift &lt; static_cast&lt;unsigned&gt;(std::numeric_limits&lt;R&gt;::digits)); ++i)</span>
+<span class="lineNum">      70 </span>            :    {
+<span class="lineNum">      71 </span>            :       *result += static_cast&lt;R&gt;(backend.limbs()[i]) &lt;&lt; shift;
+<span class="lineNum">      72 </span>            :       shift += cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::limb_bits;
+<span class="lineNum">      73 </span>            :    }
+<span class="lineNum">      74 </span><span class="lineCov">   61898040 :    if(backend.sign())</span>
+<span class="lineNum">      75 </span>            :    {
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :       check_is_negative(boost::is_signed&lt;R&gt;());</span>
+<span class="lineNum">      77 </span>            :       *result = negate_integer(*result, boost::is_signed&lt;R&gt;());
+<span class="lineNum">      78 </span>            :    }
+<span class="lineNum">      79 </span>            : }
+<span class="lineNum">      80 </span>            : 
+<a name="81"><span class="lineNum">      81 </span>            : template &lt;class R, unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;</a>
+<span class="lineNum">      82 </span>            : inline typename enable_if_c&lt;is_floating_point&lt;R&gt;::value &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value, void&gt;::type
+<span class="lineNum">      83 </span><span class="lineCov">      13469 :    eval_convert_to(R* result, const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; backend) BOOST_MP_NOEXCEPT_IF(is_arithmetic&lt;R&gt;::value)</span>
+<span class="lineNum">      84 </span>            : {
+<span class="lineNum">      85 </span><span class="lineCov">      26938 :    typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::const_limb_pointer p = backend.limbs();</span>
+<span class="lineNum">      86 </span><span class="lineCov">      13469 :    unsigned shift = cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::limb_bits;</span>
+<span class="lineNum">      87 </span><span class="lineCov">      13469 :    *result = static_cast&lt;R&gt;(*p);</span>
+<span class="lineNum">      88 </span><span class="lineCov">      26948 :    for(unsigned i = 1; i &lt; backend.size(); ++i)</span>
+<span class="lineNum">      89 </span>            :    {
+<span class="lineNum">      90 </span><span class="lineCov">         10 :       *result += static_cast&lt;R&gt;(std::ldexp(static_cast&lt;long double&gt;(p[i]), shift));</span>
+<span class="lineNum">      91 </span><span class="lineCov">          5 :       shift += cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::limb_bits;</span>
+<span class="lineNum">      92 </span>            :    }
+<span class="lineNum">      93 </span><span class="lineCov">      13469 :    if(backend.sign())</span>
+<span class="lineNum">      94 </span>            :       *result = -*result;
+<span class="lineNum">      95 </span><span class="lineCov">      13469 : }</span>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">      98 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value, bool&gt;::type
+<span class="lineNum">      99 </span>            :    eval_is_zero(const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; val) BOOST_NOEXCEPT
+<span class="lineNum">     100 </span>            : {
+<span class="lineNum">     101 </span><span class="lineCov">   14537256 :    return (val.size() == 1) &amp;&amp; (val.limbs()[0] == 0);</span>
+<span class="lineNum">     102 </span>            : }
+<span class="lineNum">     103 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     104 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value, int&gt;::type
+<span class="lineNum">     105 </span>            :    eval_get_sign(const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; val) BOOST_NOEXCEPT
+<span class="lineNum">     106 </span>            : {
+<span class="lineNum">     107 </span><span class="lineCov">       1409 :    return eval_is_zero(val) ? 0 : val.sign() ? -1 : 1;</span>
+<span class="lineNum">     108 </span>            : }
+<span class="lineNum">     109 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     110 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type
+<span class="lineNum">     111 </span>            :    eval_abs(cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; val) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     112 </span>            : {
+<span class="lineNum">     113 </span><span class="lineCov">         28 :    result = val;</span>
+<span class="lineNum">     114 </span><span class="lineCov">         28 :    result.sign(false);</span>
+<span class="lineNum">     115 </span>            : }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            : //
+<span class="lineNum">     118 </span>            : // Get the location of the least-significant-bit:
+<span class="lineNum">     119 </span>            : //
+<span class="lineNum">     120 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     121 </span>            : inline typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value, unsigned&gt;::type
+<span class="lineNum">     122 </span>            :    eval_lsb(const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; a)
+<span class="lineNum">     123 </span>            : {
+<span class="lineNum">     124 </span>            :    using default_ops::eval_get_sign;
+<span class="lineNum">     125 </span>            :    if(eval_get_sign(a) == 0)
+<span class="lineNum">     126 </span>            :    {
+<span class="lineNum">     127 </span>            :       BOOST_THROW_EXCEPTION(std::range_error(&quot;No bits were set in the operand.&quot;));
+<span class="lineNum">     128 </span>            :    }
+<span class="lineNum">     129 </span>            :    if(a.sign())
+<span class="lineNum">     130 </span>            :    {
+<span class="lineNum">     131 </span>            :       BOOST_THROW_EXCEPTION(std::range_error(&quot;Testing individual bits in negative values is not supported - results are undefined.&quot;));
+<span class="lineNum">     132 </span>            :    }
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            :    //
+<span class="lineNum">     135 </span>            :    // Find the index of the least significant limb that is non-zero:
+<span class="lineNum">     136 </span>            :    //
+<span class="lineNum">     137 </span>            :    unsigned index = 0;
+<span class="lineNum">     138 </span>            :    while(!a.limbs()[index] &amp;&amp; (index &lt; a.size()))
+<span class="lineNum">     139 </span>            :       ++index;
+<span class="lineNum">     140 </span>            :    //
+<span class="lineNum">     141 </span>            :    // Find the index of the least significant bit within that limb:
+<span class="lineNum">     142 </span>            :    //
+<span class="lineNum">     143 </span>            :    unsigned result = boost::multiprecision::detail::find_lsb(a.limbs()[index]);
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            :    return result + index * cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::limb_bits;
+<span class="lineNum">     146 </span>            : }
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            : //
+<span class="lineNum">     149 </span>            : // Get the location of the most-significant-bit:
+<span class="lineNum">     150 </span>            : //
+<span class="lineNum">     151 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     152 </span>            : inline typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value, unsigned&gt;::type
+<span class="lineNum">     153 </span>            : eval_msb_imp(const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; a)
+<span class="lineNum">     154 </span>            : {
+<span class="lineNum">     155 </span>            :    //
+<span class="lineNum">     156 </span>            :    // Find the index of the most significant bit that is non-zero:
+<span class="lineNum">     157 </span>            :    //
+<span class="lineNum">     158 </span>            :    return (a.size() - 1) * cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::limb_bits + boost::multiprecision::detail::find_msb(a.limbs()[a.size() - 1]);
+<span class="lineNum">     159 </span>            : }
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     162 </span>            : inline typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value, unsigned&gt;::type
+<span class="lineNum">     163 </span>            :    eval_msb(const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; a)
+<span class="lineNum">     164 </span>            : {
+<span class="lineNum">     165 </span>            :    using default_ops::eval_get_sign;
+<span class="lineNum">     166 </span>            :    if(eval_get_sign(a) == 0)
+<span class="lineNum">     167 </span>            :    {
+<span class="lineNum">     168 </span>            :       BOOST_THROW_EXCEPTION(std::range_error(&quot;No bits were set in the operand.&quot;));
+<span class="lineNum">     169 </span>            :    }
+<span class="lineNum">     170 </span>            :    if(a.sign())
+<span class="lineNum">     171 </span>            :    {
+<span class="lineNum">     172 </span>            :       BOOST_THROW_EXCEPTION(std::range_error(&quot;Testing individual bits in negative values is not supported - results are undefined.&quot;));
+<span class="lineNum">     173 </span>            :    }
+<span class="lineNum">     174 </span>            :    return eval_msb_imp(a);
+<span class="lineNum">     175 </span>            : }
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     178 </span>            : inline typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value, bool&gt;::type
+<span class="lineNum">     179 </span>            :    eval_bit_test(const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; val, unsigned index) BOOST_NOEXCEPT
+<span class="lineNum">     180 </span>            : {
+<span class="lineNum">     181 </span><span class="lineCov">      15337 :    unsigned offset = index / cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::limb_bits;</span>
+<span class="lineNum">     182 </span><span class="lineCov">      15337 :    unsigned shift = index % cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::limb_bits;</span>
+<span class="lineNum">     183 </span><span class="lineCov">      15337 :    limb_type mask = shift ? limb_type(1u) &lt;&lt; shift : limb_type(1u);</span>
+<span class="lineNum">     184 </span><span class="lineCov">      30674 :    if(offset &gt;= val.size())</span>
+<span class="lineNum">     185 </span>            :       return false;
+<span class="lineNum">     186 </span><span class="lineCov">       1688 :    return val.limbs()[offset] &amp; mask ? true : false;</span>
+<span class="lineNum">     187 </span>            : }
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     190 </span>            : inline typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type
+<span class="lineNum">     191 </span>            :    eval_bit_set(cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; val, unsigned index)
+<span class="lineNum">     192 </span>            : {
+<span class="lineNum">     193 </span>            :    unsigned offset = index / cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::limb_bits;
+<span class="lineNum">     194 </span>            :    unsigned shift = index % cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::limb_bits;
+<span class="lineNum">     195 </span>            :    limb_type mask = shift ? limb_type(1u) &lt;&lt; shift : limb_type(1u);
+<span class="lineNum">     196 </span>            :    if(offset &gt;= val.size())
+<span class="lineNum">     197 </span>            :    {
+<span class="lineNum">     198 </span>            :       unsigned os = val.size();
+<span class="lineNum">     199 </span>            :       val.resize(offset + 1, offset + 1);
+<span class="lineNum">     200 </span>            :       if(offset &gt;= val.size())
+<span class="lineNum">     201 </span>            :          return;  // fixed precision overflow
+<span class="lineNum">     202 </span>            :       for(unsigned i = os; i &lt;= offset; ++i)
+<span class="lineNum">     203 </span>            :          val.limbs()[i] = 0;
+<span class="lineNum">     204 </span>            :    }
+<span class="lineNum">     205 </span>            :    val.limbs()[offset] |= mask;
+<span class="lineNum">     206 </span>            : }
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     209 </span>            : inline typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type
+<span class="lineNum">     210 </span>            :    eval_bit_unset(cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; val, unsigned index) BOOST_NOEXCEPT
+<span class="lineNum">     211 </span>            : {
+<span class="lineNum">     212 </span>            :    unsigned offset = index / cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::limb_bits;
+<span class="lineNum">     213 </span>            :    unsigned shift = index % cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::limb_bits;
+<span class="lineNum">     214 </span>            :    limb_type mask = shift ? limb_type(1u) &lt;&lt; shift : limb_type(1u);
+<span class="lineNum">     215 </span>            :    if(offset &gt;= val.size())
+<span class="lineNum">     216 </span>            :       return;
+<span class="lineNum">     217 </span>            :    val.limbs()[offset] &amp;= ~mask;
+<span class="lineNum">     218 </span>            :    val.normalize();
+<span class="lineNum">     219 </span>            : }
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     222 </span>            : inline typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type
+<span class="lineNum">     223 </span>            :    eval_bit_flip(cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; val, unsigned index)
+<span class="lineNum">     224 </span>            : {
+<span class="lineNum">     225 </span>            :    unsigned offset = index / cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::limb_bits;
+<span class="lineNum">     226 </span>            :    unsigned shift = index % cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::limb_bits;
+<span class="lineNum">     227 </span>            :    limb_type mask = shift ? limb_type(1u) &lt;&lt; shift : limb_type(1u);
+<span class="lineNum">     228 </span>            :    if(offset &gt;= val.size())
+<span class="lineNum">     229 </span>            :    {
+<span class="lineNum">     230 </span>            :       unsigned os = val.size();
+<span class="lineNum">     231 </span>            :       val.resize(offset + 1, offset + 1);
+<span class="lineNum">     232 </span>            :       if(offset &gt;= val.size())
+<span class="lineNum">     233 </span>            :          return;  // fixed precision overflow
+<span class="lineNum">     234 </span>            :       for(unsigned i = os; i &lt;= offset; ++i)
+<span class="lineNum">     235 </span>            :          val.limbs()[i] = 0;
+<span class="lineNum">     236 </span>            :    }
+<span class="lineNum">     237 </span>            :    val.limbs()[offset] ^= mask;
+<span class="lineNum">     238 </span>            :    val.normalize();
+<span class="lineNum">     239 </span>            : }
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     242 </span>            : inline typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type
+<span class="lineNum">     243 </span>            :    eval_qr(
+<span class="lineNum">     244 </span>            :       const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; x,
+<span class="lineNum">     245 </span>            :       const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; y,
+<span class="lineNum">     246 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; q,
+<span class="lineNum">     247 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; r) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     248 </span>            : {
+<span class="lineNum">     249 </span>            :    divide_unsigned_helper(&amp;q, x, y, r);
+<span class="lineNum">     250 </span>            :    q.sign(x.sign() != y.sign());
+<span class="lineNum">     251 </span>            :    r.sign(x.sign());
+<span class="lineNum">     252 </span>            : }
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     255 </span>            : inline typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type
+<span class="lineNum">     256 </span>            :    eval_qr(
+<span class="lineNum">     257 </span>            :       const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; x,
+<span class="lineNum">     258 </span>            :       limb_type y,
+<span class="lineNum">     259 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; q,
+<span class="lineNum">     260 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; r) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     261 </span>            : {
+<span class="lineNum">     262 </span>            :    divide_unsigned_helper(&amp;q, x, y, r);
+<span class="lineNum">     263 </span>            :    q.sign(x.sign());
+<span class="lineNum">     264 </span>            :    r.sign(x.sign());
+<span class="lineNum">     265 </span>            : }
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, class U&gt;
+<span class="lineNum">     268 </span>            : inline typename enable_if_c&lt;is_integral&lt;U&gt;::value&gt;::type eval_qr(
+<span class="lineNum">     269 </span>            :       const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; x,
+<span class="lineNum">     270 </span>            :       U y,
+<span class="lineNum">     271 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; q,
+<span class="lineNum">     272 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; r) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     273 </span>            : {
+<span class="lineNum">     274 </span>            :    using default_ops::eval_qr;
+<span class="lineNum">     275 </span>            :    cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; t;
+<span class="lineNum">     276 </span>            :    t = y;
+<span class="lineNum">     277 </span>            :    eval_qr(x, t, q, r);
+<span class="lineNum">     278 </span>            : }
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, class Integer&gt;
+<span class="lineNum">     281 </span>            : inline typename enable_if_c&lt;is_unsigned&lt;Integer&gt;::value &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value, Integer&gt;::type
+<span class="lineNum">     282 </span>            :    eval_integer_modulus(const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; x, Integer val)
+<span class="lineNum">     283 </span>            : {
+<span class="lineNum">     284 </span>            :    if((sizeof(Integer) &lt;= sizeof(limb_type)) || (val &lt;= (std::numeric_limits&lt;limb_type&gt;::max)()))
+<span class="lineNum">     285 </span>            :    {
+<span class="lineNum">     286 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; d;
+<span class="lineNum">     287 </span>            :       divide_unsigned_helper(static_cast&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;*&gt;(0), x, static_cast&lt;limb_type&gt;(val), d);
+<span class="lineNum">     288 </span>            :       return d.limbs()[0];
+<span class="lineNum">     289 </span>            :    }
+<span class="lineNum">     290 </span>            :    else
+<span class="lineNum">     291 </span>            :    {
+<span class="lineNum">     292 </span>            :       return default_ops::eval_integer_modulus(x, val);
+<span class="lineNum">     293 </span>            :    }
+<span class="lineNum">     294 </span>            : }
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, class Integer&gt;
+<span class="lineNum">     297 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_signed&lt;Integer&gt;::value &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value, Integer&gt;::type
+<span class="lineNum">     298 </span>            :    eval_integer_modulus(const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; x, Integer val)
+<span class="lineNum">     299 </span>            : {
+<span class="lineNum">     300 </span>            :    return eval_integer_modulus(x, boost::multiprecision::detail::unsigned_abs(val));
+<span class="lineNum">     301 </span>            : }
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span>            : inline limb_type integer_gcd_reduce(limb_type u, limb_type v)
+<span class="lineNum">     304 </span>            : {
+<span class="lineNum">     305 </span>            :    do
+<span class="lineNum">     306 </span>            :    {
+<span class="lineNum">     307 </span>            :       if(u &gt; v)
+<span class="lineNum">     308 </span>            :          std::swap(u, v);
+<span class="lineNum">     309 </span>            :       if(u == v)
+<span class="lineNum">     310 </span>            :          break;
+<span class="lineNum">     311 </span>            :       v -= u;
+<span class="lineNum">     312 </span>            :       v &gt;&gt;= boost::multiprecision::detail::find_lsb(v);
+<span class="lineNum">     313 </span>            :    } while(true);
+<span class="lineNum">     314 </span>            :    return u;
+<span class="lineNum">     315 </span>            : }
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            : inline double_limb_type integer_gcd_reduce(double_limb_type u, double_limb_type v)
+<span class="lineNum">     318 </span>            : {
+<span class="lineNum">     319 </span>            :    do
+<span class="lineNum">     320 </span>            :    {
+<span class="lineNum">     321 </span>            :       if(u &gt; v)
+<span class="lineNum">     322 </span>            :          std::swap(u, v);
+<span class="lineNum">     323 </span>            :       if(u == v)
+<span class="lineNum">     324 </span>            :          break;
+<span class="lineNum">     325 </span>            :       if(v &lt;= ~static_cast&lt;limb_type&gt;(0))
+<span class="lineNum">     326 </span>            :       {
+<span class="lineNum">     327 </span>            :          u = integer_gcd_reduce(static_cast&lt;limb_type&gt;(v), static_cast&lt;limb_type&gt;(u));
+<span class="lineNum">     328 </span>            :          break;
+<span class="lineNum">     329 </span>            :       }
+<span class="lineNum">     330 </span>            :       v -= u;
+<span class="lineNum">     331 </span>            : #ifdef __MSVC_RUNTIME_CHECKS
+<span class="lineNum">     332 </span>            :       while((v &amp; 1u) == 0)
+<span class="lineNum">     333 </span>            : #else
+<span class="lineNum">     334 </span>            :       while((static_cast&lt;unsigned&gt;(v) &amp; 1u) == 0)
+<span class="lineNum">     335 </span>            : #endif
+<span class="lineNum">     336 </span>            :          v &gt;&gt;= 1;
+<span class="lineNum">     337 </span>            :    } while(true);
+<span class="lineNum">     338 </span>            :    return u;
+<span class="lineNum">     339 </span>            : }
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     342 </span>            : inline typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type
+<span class="lineNum">     343 </span>            :    eval_gcd(
+<span class="lineNum">     344 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     345 </span>            :       const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; a, 
+<span class="lineNum">     346 </span>            :       limb_type v)
+<span class="lineNum">     347 </span>            : {
+<span class="lineNum">     348 </span>            :    using default_ops::eval_lsb;
+<span class="lineNum">     349 </span>            :    using default_ops::eval_is_zero;
+<span class="lineNum">     350 </span>            :    using default_ops::eval_get_sign;
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span>            :    int shift;
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span>            :    cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; u(a);
+<span class="lineNum">     355 </span>            : 
+<span class="lineNum">     356 </span>            :    int s = eval_get_sign(u);
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span>            :    /* GCD(0,x) := x */
+<span class="lineNum">     359 </span>            :    if(s &lt; 0)
+<span class="lineNum">     360 </span>            :    {
+<span class="lineNum">     361 </span>            :       u.negate();
+<span class="lineNum">     362 </span>            :    }
+<span class="lineNum">     363 </span>            :    else if(s == 0)
+<span class="lineNum">     364 </span>            :    {
+<span class="lineNum">     365 </span>            :       result = v;
+<span class="lineNum">     366 </span>            :       return;
+<span class="lineNum">     367 </span>            :    }
+<span class="lineNum">     368 </span>            :    if(v == 0)
+<span class="lineNum">     369 </span>            :    {
+<span class="lineNum">     370 </span>            :       result = u;
+<span class="lineNum">     371 </span>            :       return;
+<span class="lineNum">     372 </span>            :    }
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span>            :    /* Let shift := lg K, where K is the greatest power of 2
+<span class="lineNum">     375 </span>            :    dividing both u and v. */
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span>            :    unsigned us = eval_lsb(u);
+<span class="lineNum">     378 </span>            :    unsigned vs = boost::multiprecision::detail::find_lsb(v);
+<span class="lineNum">     379 </span>            :    shift = (std::min)(us, vs);
+<span class="lineNum">     380 </span>            :    eval_right_shift(u, us);
+<span class="lineNum">     381 </span>            :    if(vs)
+<span class="lineNum">     382 </span>            :       v &gt;&gt;= vs;
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span>            :    do 
+<span class="lineNum">     385 </span>            :    {
+<span class="lineNum">     386 </span>            :       /* Now u and v are both odd, so diff(u, v) is even.
+<span class="lineNum">     387 </span>            :       Let u = min(u, v), v = diff(u, v)/2. */
+<span class="lineNum">     388 </span>            :       if(u.size() &lt;= 2)
+<span class="lineNum">     389 </span>            :       {
+<span class="lineNum">     390 </span>            :          if(u.size() == 1)
+<span class="lineNum">     391 </span>            :             v = integer_gcd_reduce(*u.limbs(), v);
+<span class="lineNum">     392 </span>            :          else
+<span class="lineNum">     393 </span>            :          {
+<span class="lineNum">     394 </span>            :             double_limb_type i;
+<span class="lineNum">     395 </span>            :             i = u.limbs()[0] | (static_cast&lt;double_limb_type&gt;(u.limbs()[1]) &lt;&lt; sizeof(limb_type) * CHAR_BIT);
+<span class="lineNum">     396 </span>            :             v = static_cast&lt;limb_type&gt;(integer_gcd_reduce(i, static_cast&lt;double_limb_type&gt;(v)));
+<span class="lineNum">     397 </span>            :          }
+<span class="lineNum">     398 </span>            :          break;
+<span class="lineNum">     399 </span>            :       }
+<span class="lineNum">     400 </span>            :       eval_subtract(u, v);
+<span class="lineNum">     401 </span>            :       us = eval_lsb(u);
+<span class="lineNum">     402 </span>            :       eval_right_shift(u, us);
+<span class="lineNum">     403 </span>            :    } 
+<span class="lineNum">     404 </span>            :    while(true);
+<span class="lineNum">     405 </span>            : 
+<span class="lineNum">     406 </span>            :    result = v;
+<span class="lineNum">     407 </span>            :    eval_left_shift(result, shift);
+<span class="lineNum">     408 </span>            : }
+<span class="lineNum">     409 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, class Integer&gt;
+<span class="lineNum">     410 </span>            : inline typename enable_if_c&lt;is_unsigned&lt;Integer&gt;::value &amp;&amp; (sizeof(Integer) &lt;= sizeof(limb_type)) &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type
+<span class="lineNum">     411 </span>            :    eval_gcd(
+<span class="lineNum">     412 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     413 </span>            :       const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; a, 
+<span class="lineNum">     414 </span>            :       const Integer&amp; v)
+<span class="lineNum">     415 </span>            : {
+<span class="lineNum">     416 </span>            :    eval_gcd(result, a, static_cast&lt;limb_type&gt;(v));
+<span class="lineNum">     417 </span>            : }
+<span class="lineNum">     418 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, class Integer&gt;
+<span class="lineNum">     419 </span>            : inline typename enable_if_c&lt;is_signed&lt;Integer&gt;::value &amp;&amp; (sizeof(Integer) &lt;= sizeof(limb_type)) &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type
+<span class="lineNum">     420 </span>            :    eval_gcd(
+<span class="lineNum">     421 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     422 </span>            :       const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; a, 
+<span class="lineNum">     423 </span>            :       const Integer&amp; v)
+<span class="lineNum">     424 </span>            : {
+<span class="lineNum">     425 </span>            :    eval_gcd(result, a, static_cast&lt;limb_type&gt;(v &lt; 0 ? -v : v));
+<span class="lineNum">     426 </span>            : }
+<span class="lineNum">     427 </span>            : 
+<span class="lineNum">     428 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     429 </span>            : inline typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type
+<span class="lineNum">     430 </span>            :    eval_gcd(
+<span class="lineNum">     431 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     432 </span>            :       const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; a, 
+<span class="lineNum">     433 </span>            :       const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; b)
+<span class="lineNum">     434 </span>            : {
+<span class="lineNum">     435 </span>            :    using default_ops::eval_lsb;
+<span class="lineNum">     436 </span>            :    using default_ops::eval_is_zero;
+<span class="lineNum">     437 </span>            :    using default_ops::eval_get_sign;
+<span class="lineNum">     438 </span>            : 
+<span class="lineNum">     439 </span>            :    if(a.size() == 1)
+<span class="lineNum">     440 </span>            :    {
+<span class="lineNum">     441 </span>            :       eval_gcd(result, b, *a.limbs());
+<span class="lineNum">     442 </span>            :       return;
+<span class="lineNum">     443 </span>            :    }
+<span class="lineNum">     444 </span>            :    if(b.size() == 1)
+<span class="lineNum">     445 </span>            :    {
+<span class="lineNum">     446 </span>            :       eval_gcd(result, a, *b.limbs());
+<span class="lineNum">     447 </span>            :       return;
+<span class="lineNum">     448 </span>            :    }
+<span class="lineNum">     449 </span>            : 
+<span class="lineNum">     450 </span>            :    int shift;
+<span class="lineNum">     451 </span>            : 
+<span class="lineNum">     452 </span>            :    cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; u(a), v(b);
+<span class="lineNum">     453 </span>            : 
+<span class="lineNum">     454 </span>            :    int s = eval_get_sign(u);
+<span class="lineNum">     455 </span>            : 
+<span class="lineNum">     456 </span>            :    /* GCD(0,x) := x */
+<span class="lineNum">     457 </span>            :    if(s &lt; 0)
+<span class="lineNum">     458 </span>            :    {
+<span class="lineNum">     459 </span>            :       u.negate();
+<span class="lineNum">     460 </span>            :    }
+<span class="lineNum">     461 </span>            :    else if(s == 0)
+<span class="lineNum">     462 </span>            :    {
+<span class="lineNum">     463 </span>            :       result = v;
+<span class="lineNum">     464 </span>            :       return;
+<span class="lineNum">     465 </span>            :    }
+<span class="lineNum">     466 </span>            :    s = eval_get_sign(v);
+<span class="lineNum">     467 </span>            :    if(s &lt; 0)
+<span class="lineNum">     468 </span>            :    {
+<span class="lineNum">     469 </span>            :       v.negate();
+<span class="lineNum">     470 </span>            :    }
+<span class="lineNum">     471 </span>            :    else if(s == 0)
+<span class="lineNum">     472 </span>            :    {
+<span class="lineNum">     473 </span>            :       result = u;
+<span class="lineNum">     474 </span>            :       return;
+<span class="lineNum">     475 </span>            :    }
+<span class="lineNum">     476 </span>            : 
+<span class="lineNum">     477 </span>            :    /* Let shift := lg K, where K is the greatest power of 2
+<span class="lineNum">     478 </span>            :    dividing both u and v. */
+<span class="lineNum">     479 </span>            : 
+<span class="lineNum">     480 </span>            :    unsigned us = eval_lsb(u);
+<span class="lineNum">     481 </span>            :    unsigned vs = eval_lsb(v);
+<span class="lineNum">     482 </span>            :    shift = (std::min)(us, vs);
+<span class="lineNum">     483 </span>            :    eval_right_shift(u, us);
+<span class="lineNum">     484 </span>            :    eval_right_shift(v, vs);
+<span class="lineNum">     485 </span>            : 
+<span class="lineNum">     486 </span>            :    do 
+<span class="lineNum">     487 </span>            :    {
+<span class="lineNum">     488 </span>            :       /* Now u and v are both odd, so diff(u, v) is even.
+<span class="lineNum">     489 </span>            :       Let u = min(u, v), v = diff(u, v)/2. */
+<span class="lineNum">     490 </span>            :       s = u.compare(v);
+<span class="lineNum">     491 </span>            :       if(s &gt; 0)
+<span class="lineNum">     492 </span>            :          u.swap(v);
+<span class="lineNum">     493 </span>            :       if(s == 0)
+<span class="lineNum">     494 </span>            :          break;
+<span class="lineNum">     495 </span>            :       if(v.size() &lt;= 2)
+<span class="lineNum">     496 </span>            :       {
+<span class="lineNum">     497 </span>            :          if(v.size() == 1)
+<span class="lineNum">     498 </span>            :             u = integer_gcd_reduce(*v.limbs(), *u.limbs());
+<span class="lineNum">     499 </span>            :          else
+<span class="lineNum">     500 </span>            :          {
+<span class="lineNum">     501 </span>            :             double_limb_type i, j;
+<span class="lineNum">     502 </span>            :             i = v.limbs()[0] | (static_cast&lt;double_limb_type&gt;(v.limbs()[1]) &lt;&lt; sizeof(limb_type) * CHAR_BIT);
+<span class="lineNum">     503 </span>            :             j = (u.size() == 1) ? *u.limbs() : u.limbs()[0] | (static_cast&lt;double_limb_type&gt;(u.limbs()[1]) &lt;&lt; sizeof(limb_type) * CHAR_BIT);
+<span class="lineNum">     504 </span>            :             u = integer_gcd_reduce(i, j);
+<span class="lineNum">     505 </span>            :          }
+<span class="lineNum">     506 </span>            :          break;
+<span class="lineNum">     507 </span>            :       }
+<span class="lineNum">     508 </span>            :       eval_subtract(v, u);
+<span class="lineNum">     509 </span>            :       vs = eval_lsb(v);
+<span class="lineNum">     510 </span>            :       eval_right_shift(v, vs);
+<span class="lineNum">     511 </span>            :    } 
+<span class="lineNum">     512 </span>            :    while(true);
+<span class="lineNum">     513 </span>            : 
+<span class="lineNum">     514 </span>            :    result = u;
+<span class="lineNum">     515 </span>            :    eval_left_shift(result, shift);
+<span class="lineNum">     516 </span>            : }
+<span class="lineNum">     517 </span>            : //
+<span class="lineNum">     518 </span>            : // Now again for trivial backends:
+<span class="lineNum">     519 </span>            : //
+<span class="lineNum">     520 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     521 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type
+<span class="lineNum">     522 </span>            :    eval_gcd(cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; a, const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; b) BOOST_NOEXCEPT
+<span class="lineNum">     523 </span>            : {
+<span class="lineNum">     524 </span>            :    *result.limbs() = boost::integer::gcd(*a.limbs(), *b.limbs());
+<span class="lineNum">     525 </span>            : }
+<span class="lineNum">     526 </span>            : // This one is only enabled for unchecked cpp_int's, for checked int's we need the checking in the default version:
+<span class="lineNum">     527 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     528 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value &amp;&amp; (Checked1 == unchecked)&gt;::type
+<span class="lineNum">     529 </span>            :    eval_lcm(cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; a, const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; b) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     530 </span>            : {
+<span class="lineNum">     531 </span>            :    *result.limbs() = boost::integer::lcm(*a.limbs(), *b.limbs());
+<span class="lineNum">     532 </span>            :    result.normalize(); // result may overflow the specified number of bits
+<span class="lineNum">     533 </span>            : }
+<span class="lineNum">     534 </span>            : 
+<span class="lineNum">     535 </span>            : inline void conversion_overflow(const mpl::int_&lt;checked&gt;&amp;)
+<span class="lineNum">     536 </span>            : {
+<span class="lineNum">     537 </span>            :    BOOST_THROW_EXCEPTION(std::overflow_error(&quot;Overflow in conversion to narrower type&quot;));
+<span class="lineNum">     538 </span>            : }
+<span class="lineNum">     539 </span>            : inline void conversion_overflow(const mpl::int_&lt;unchecked&gt;&amp;){}
+<span class="lineNum">     540 </span>            : 
+<span class="lineNum">     541 </span>            : template &lt;class R, unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     542 </span>            : inline typename enable_if_c&lt;
+<span class="lineNum">     543 </span>            :             is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value
+<span class="lineNum">     544 </span>            :             &amp;&amp; is_signed_number&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value
+<span class="lineNum">     545 </span>            :             &amp;&amp; boost::is_convertible&lt;typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::local_limb_type, R&gt;::value
+<span class="lineNum">     546 </span>            :          &gt;::type
+<span class="lineNum">     547 </span>            :    eval_convert_to(R* result, const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; val)
+<span class="lineNum">     548 </span>            : {
+<span class="lineNum">     549 </span>            :    typedef typename common_type&lt;R, typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::local_limb_type&gt;::type common_type;
+<span class="lineNum">     550 </span>            :    if(std::numeric_limits&lt;R&gt;::is_specialized &amp;&amp; (static_cast&lt;common_type&gt;(*val.limbs()) &gt; static_cast&lt;common_type&gt;((std::numeric_limits&lt;R&gt;::max)())))
+<span class="lineNum">     551 </span>            :    {
+<span class="lineNum">     552 </span>            :       if(val.isneg())
+<span class="lineNum">     553 </span>            :       {
+<span class="lineNum">     554 </span>            :          if(static_cast&lt;common_type&gt;(*val.limbs()) &gt; -static_cast&lt;common_type&gt;((std::numeric_limits&lt;R&gt;::min)()))
+<span class="lineNum">     555 </span>            :             conversion_overflow(typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::checked_type());
+<span class="lineNum">     556 </span>            :          *result = (std::numeric_limits&lt;R&gt;::min)();
+<span class="lineNum">     557 </span>            :       }
+<span class="lineNum">     558 </span>            :       else
+<span class="lineNum">     559 </span>            :       {
+<span class="lineNum">     560 </span>            :          conversion_overflow(typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::checked_type());
+<span class="lineNum">     561 </span>            :          *result = (std::numeric_limits&lt;R&gt;::max)();
+<span class="lineNum">     562 </span>            :       }
+<span class="lineNum">     563 </span>            :    }
+<span class="lineNum">     564 </span>            :    else
+<span class="lineNum">     565 </span>            :    {
+<span class="lineNum">     566 </span>            :       *result = static_cast&lt;R&gt;(*val.limbs());
+<span class="lineNum">     567 </span>            :       if(val.isneg())
+<span class="lineNum">     568 </span>            :       {
+<span class="lineNum">     569 </span>            :          check_is_negative(mpl::bool_&lt;is_signed_number&lt;R&gt;::value || (number_category&lt;R&gt;::value == number_kind_floating_point)&gt;());
+<span class="lineNum">     570 </span>            :          *result = negate_integer(*result, mpl::bool_&lt;is_signed_number&lt;R&gt;::value || (number_category&lt;R&gt;::value == number_kind_floating_point)&gt;());
+<span class="lineNum">     571 </span>            :       }
+<span class="lineNum">     572 </span>            :    }
+<span class="lineNum">     573 </span>            : }
+<span class="lineNum">     574 </span>            : 
+<span class="lineNum">     575 </span>            : template &lt;class R, unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     576 </span>            : inline typename enable_if_c&lt;
+<span class="lineNum">     577 </span>            :             is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value
+<span class="lineNum">     578 </span>            :             &amp;&amp; is_unsigned_number&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value
+<span class="lineNum">     579 </span>            :             &amp;&amp; boost::is_convertible&lt;typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::local_limb_type, R&gt;::value
+<span class="lineNum">     580 </span>            :          &gt;::type
+<span class="lineNum">     581 </span>            :    eval_convert_to(R* result, const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; val)
+<span class="lineNum">     582 </span>            : {
+<span class="lineNum">     583 </span>            :    typedef typename common_type&lt;R, typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::local_limb_type&gt;::type common_type;
+<span class="lineNum">     584 </span><span class="lineCov">      15941 :    if(std::numeric_limits&lt;R&gt;::is_specialized &amp;&amp; (static_cast&lt;common_type&gt;(*val.limbs()) &gt; static_cast&lt;common_type&gt;((std::numeric_limits&lt;R&gt;::max)())))</span>
+<span class="lineNum">     585 </span>            :    {
+<span class="lineNum">     586 </span>            :       conversion_overflow(typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::checked_type());
+<span class="lineNum">     587 </span>            :       *result = (std::numeric_limits&lt;R&gt;::max)();
+<span class="lineNum">     588 </span>            :    }
+<span class="lineNum">     589 </span>            :    else
+<span class="lineNum">     590 </span><span class="lineCov">      15941 :       *result = static_cast&lt;R&gt;(*val.limbs());</span>
+<span class="lineNum">     591 </span>            : }
+<span class="lineNum">     592 </span>            : 
+<span class="lineNum">     593 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     594 </span>            : inline typename enable_if_c&lt;is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value, unsigned&gt;::type
+<span class="lineNum">     595 </span>            :    eval_lsb(const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; a)
+<span class="lineNum">     596 </span>            : {
+<span class="lineNum">     597 </span>            :    using default_ops::eval_get_sign;
+<span class="lineNum">     598 </span>            :    if(eval_get_sign(a) == 0)
+<span class="lineNum">     599 </span>            :    {
+<span class="lineNum">     600 </span>            :       BOOST_THROW_EXCEPTION(std::range_error(&quot;No bits were set in the operand.&quot;));
+<span class="lineNum">     601 </span>            :    }
+<span class="lineNum">     602 </span>            :    if(a.sign())
+<span class="lineNum">     603 </span>            :    {
+<span class="lineNum">     604 </span>            :       BOOST_THROW_EXCEPTION(std::range_error(&quot;Testing individual bits in negative values is not supported - results are undefined.&quot;));
+<span class="lineNum">     605 </span>            :    }
+<span class="lineNum">     606 </span>            :    //
+<span class="lineNum">     607 </span>            :    // Find the index of the least significant bit within that limb:
+<span class="lineNum">     608 </span>            :    //
+<span class="lineNum">     609 </span>            :    return boost::multiprecision::detail::find_lsb(*a.limbs());
+<span class="lineNum">     610 </span>            : }
+<span class="lineNum">     611 </span>            : 
+<span class="lineNum">     612 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     613 </span>            : inline typename enable_if_c&lt;is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value, unsigned&gt;::type
+<span class="lineNum">     614 </span>            : eval_msb_imp(const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; a)
+<span class="lineNum">     615 </span>            : {
+<span class="lineNum">     616 </span>            :    //
+<span class="lineNum">     617 </span>            :    // Find the index of the least significant bit within that limb:
+<span class="lineNum">     618 </span>            :    //
+<span class="lineNum">     619 </span>            :    return boost::multiprecision::detail::find_msb(*a.limbs());
+<span class="lineNum">     620 </span>            : }
+<span class="lineNum">     621 </span>            : 
+<span class="lineNum">     622 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     623 </span>            : inline typename enable_if_c&lt;is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value, unsigned&gt;::type
+<span class="lineNum">     624 </span>            :    eval_msb(const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; a)
+<span class="lineNum">     625 </span>            : {
+<span class="lineNum">     626 </span>            :    using default_ops::eval_get_sign;
+<span class="lineNum">     627 </span>            :    if(eval_get_sign(a) == 0)
+<span class="lineNum">     628 </span>            :    {
+<span class="lineNum">     629 </span>            :       BOOST_THROW_EXCEPTION(std::range_error(&quot;No bits were set in the operand.&quot;));
+<span class="lineNum">     630 </span>            :    }
+<span class="lineNum">     631 </span>            :    if(a.sign())
+<span class="lineNum">     632 </span>            :    {
+<span class="lineNum">     633 </span>            :       BOOST_THROW_EXCEPTION(std::range_error(&quot;Testing individual bits in negative values is not supported - results are undefined.&quot;));
+<span class="lineNum">     634 </span>            :    }
+<span class="lineNum">     635 </span>            :    return eval_msb_imp(a);
+<span class="lineNum">     636 </span>            : }
+<span class="lineNum">     637 </span>            : 
+<span class="lineNum">     638 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     639 </span>            : inline std::size_t hash_value(const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; val) BOOST_NOEXCEPT
+<span class="lineNum">     640 </span>            : {
+<span class="lineNum">     641 </span>            :    std::size_t result = 0;
+<span class="lineNum">     642 </span>            :    for(unsigned i = 0; i &lt; val.size(); ++i)
+<span class="lineNum">     643 </span>            :    {
+<span class="lineNum">     644 </span>            :       boost::hash_combine(result, val.limbs()[i]);
+<span class="lineNum">     645 </span>            :    }
+<span class="lineNum">     646 </span>            :    boost::hash_combine(result, val.sign());
+<span class="lineNum">     647 </span>            :    return result;
+<span class="lineNum">     648 </span>            : }
+<span class="lineNum">     649 </span>            : 
+<span class="lineNum">     650 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">     651 </span>            : #pragma warning(pop)
+<span class="lineNum">     652 </span>            : #endif
+<span class="lineNum">     653 </span>            : 
+<span class="lineNum">     654 </span>            : }}} // namespaces
+<span class="lineNum">     655 </span>            : 
+<span class="lineNum">     656 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

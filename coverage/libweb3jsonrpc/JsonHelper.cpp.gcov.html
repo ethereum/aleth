@@ -1,0 +1,634 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libweb3jsonrpc/JsonHelper.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libweb3jsonrpc</a> - JsonHelper.cpp<span style="font-size: 80%;"> (source / <a href="JsonHelper.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">316</td>
+            <td class="headerCovTableEntryLo">4.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">27</td>
+            <td class="headerCovTableEntryLo">11.1 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file JsonHelper.cpp
+<span class="lineNum">      18 </span>            :  * @authors:
+<span class="lineNum">      19 </span>            :  *   Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      20 </span>            :  * @date 2014
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;JsonHelper.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;libevmcore/Instruction.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libethcore/SealEngine.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libethereum/Client.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libwebthree/WebThree.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libethcore/CommonJS.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libethcore/ICAP.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libwhisper/Message.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libwhisper/WhisperHost.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;jsonrpccpp/common/exception.h&gt;
+<span class="lineNum">      34 </span>            : using namespace std;
+<span class="lineNum">      35 </span>            : using namespace dev;
+<span class="lineNum">      36 </span>            : using namespace eth;
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : namespace dev
+<a name="39"><span class="lineNum">      39 </span>            : {</a>
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span><span class="lineNoCov">          0 : Json::Value toJson(unordered_map&lt;u256, u256&gt; const&amp; _storage)</span>
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 :         Json::Value res(Json::objectValue);</span>
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :         for (auto i: _storage)</span>
+<span class="lineNum">      45 </span><span class="lineNoCov">          0 :                 res[toJS(i.first)] = toJS(i.second);</span>
+<span class="lineNum">      46 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="47"><span class="lineNum">      47 </span>            : }</a>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 : Json::Value toJson(map&lt;h256, pair&lt;u256, u256&gt;&gt; const&amp; _storage)</span>
+<span class="lineNum">      50 </span>            : {
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 :         Json::Value res(Json::objectValue);</span>
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :         for (auto i: _storage)</span>
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 :                 res[toJS(u256(i.second.first))] = toJS(i.second.second);</span>
+<span class="lineNum">      54 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="55"><span class="lineNum">      55 </span>            : }</a>
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 : Json::Value toJson(Address const&amp; _address)</span>
+<span class="lineNum">      58 </span>            : {
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :         return toJS(_address);</span>
+<span class="lineNum">      60 </span>            : }
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : // ////////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      63 </span>            : // p2p
+<span class="lineNum">      64 </span>            : // ////////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      65 </span>            : namespace p2p
+<a name="66"><span class="lineNum">      66 </span>            : {</a>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 : Json::Value toJson(p2p::PeerSessionInfo const&amp; _p)</span>
+<span class="lineNum">      69 </span>            : {
+<span class="lineNum">      70 </span>            :         //@todo localAddress
+<span class="lineNum">      71 </span>            :         //@todo protocols
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :         Json::Value ret;</span>
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :         ret[&quot;id&quot;] = _p.id.hex();</span>
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :         ret[&quot;name&quot;] = _p.clientVersion;</span>
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :         ret[&quot;network&quot;][&quot;remoteAddress&quot;] = _p.host + &quot;:&quot; + toString(_p.port);</span>
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :         ret[&quot;lastPing&quot;] = (int)chrono::duration_cast&lt;chrono::milliseconds&gt;(_p.lastPing).count();</span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :         for (auto const&amp; i: _p.notes)</span>
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :                 ret[&quot;notes&quot;][i.first] = i.second;</span>
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :         for (auto const&amp; i: _p.caps)</span>
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :                 ret[&quot;caps&quot;].append(i.first + &quot;/&quot; + toString((unsigned)i.second));</span>
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :         return ret;</span>
+<span class="lineNum">      82 </span>            : }
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : }
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            : // ////////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      87 </span>            : // eth
+<span class="lineNum">      88 </span>            : // ////////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : namespace eth
+<a name="91"><span class="lineNum">      91 </span>            : {</a>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 : Json::Value toJson(dev::eth::BlockHeader const&amp; _bi, SealEngineFace* _sealer)</span>
+<span class="lineNum">      94 </span>            : {
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :         Json::Value res;</span>
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :         if (_bi)</span>
+<span class="lineNum">      97 </span>            :         {
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :                 DEV_IGNORE_EXCEPTIONS(res[&quot;hash&quot;] = toJS(_bi.hash()));</span>
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :                 res[&quot;parentHash&quot;] = toJS(_bi.parentHash());</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :                 res[&quot;sha3Uncles&quot;] = toJS(_bi.sha3Uncles());</span>
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :                 res[&quot;author&quot;] = toJS(_bi.author());</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :                 res[&quot;stateRoot&quot;] = toJS(_bi.stateRoot());</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :                 res[&quot;transactionsRoot&quot;] = toJS(_bi.transactionsRoot());</span>
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :                 res[&quot;receiptsRoot&quot;] = toJS(_bi.receiptsRoot());</span>
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :                 res[&quot;number&quot;] = toJS(_bi.number());</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :                 res[&quot;gasUsed&quot;] = toJS(_bi.gasUsed());</span>
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :                 res[&quot;gasLimit&quot;] = toJS(_bi.gasLimit());</span>
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :                 res[&quot;extraData&quot;] = toJS(_bi.extraData());</span>
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :                 res[&quot;logsBloom&quot;] = toJS(_bi.logBloom());</span>
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :                 res[&quot;timestamp&quot;] = toJS(_bi.timestamp());</span>
+<span class="lineNum">     111 </span>            :                 // TODO: remove once JSONRPC spec is updated to use &quot;author&quot; over &quot;miner&quot;.
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :                 res[&quot;miner&quot;] = toJS(_bi.author());</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :                 if (_sealer)</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :                         for (auto const&amp; i: _sealer-&gt;jsInfo(_bi))</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :                                 res[i.first] = i.second;</span>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :         }
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="119"><span class="lineNum">     119 </span>            : }</a>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 : Json::Value toJson(dev::eth::Transaction const&amp; _t, std::pair&lt;h256, unsigned&gt; _location, BlockNumber _blockNumber)</span>
+<span class="lineNum">     122 </span>            : {
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :         Json::Value res;</span>
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :         if (_t)</span>
+<span class="lineNum">     125 </span>            :         {
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :                 res[&quot;hash&quot;] = toJS(_t.sha3());</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :                 res[&quot;input&quot;] = toJS(_t.data());</span>
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :                 res[&quot;to&quot;] = _t.isCreation() ? Json::Value() : toJS(_t.receiveAddress());</span>
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :                 res[&quot;from&quot;] = toJS(_t.safeSender());</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :                 res[&quot;gas&quot;] = toJS(_t.gas());</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :                 res[&quot;gasPrice&quot;] = toJS(_t.gasPrice());</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :                 res[&quot;nonce&quot;] = toJS(_t.nonce());</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :                 res[&quot;value&quot;] = toJS(_t.value());</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :                 res[&quot;blockHash&quot;] = toJS(_location.first);</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :                 res[&quot;transactionIndex&quot;] = toJS(_location.second);</span>
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :                 res[&quot;blockNumber&quot;] = toJS(_blockNumber);</span>
+<span class="lineNum">     137 </span>            :         }
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="139"><span class="lineNum">     139 </span>            : }</a>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 : Json::Value toJson(dev::eth::BlockHeader const&amp; _bi, BlockDetails const&amp; _bd, UncleHashes const&amp; _us, Transactions const&amp; _ts, SealEngineFace* _face)</span>
+<span class="lineNum">     142 </span>            : {
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :         Json::Value res = toJson(_bi, _face);</span>
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :         if (_bi)</span>
+<span class="lineNum">     145 </span>            :         {
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :                 res[&quot;totalDifficulty&quot;] = toJS(_bd.totalDifficulty);</span>
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :                 res[&quot;uncles&quot;] = Json::Value(Json::arrayValue);</span>
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :                 for (h256 h: _us)</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :                         res[&quot;uncles&quot;].append(toJS(h));</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :                 res[&quot;transactions&quot;] = Json::Value(Json::arrayValue);</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :                 for (unsigned i = 0; i &lt; _ts.size(); i++)</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :                         res[&quot;transactions&quot;].append(toJson(_ts[i], std::make_pair(_bi.hash(), i), (BlockNumber)_bi.number()));</span>
+<span class="lineNum">     153 </span>            :         }
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="155"><span class="lineNum">     155 </span>            : }</a>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 : Json::Value toJson(dev::eth::BlockHeader const&amp; _bi, BlockDetails const&amp; _bd, UncleHashes const&amp; _us, TransactionHashes const&amp; _ts, SealEngineFace* _face)</span>
+<span class="lineNum">     158 </span>            : {
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :         Json::Value res = toJson(_bi, _face);</span>
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :         if (_bi)</span>
+<span class="lineNum">     161 </span>            :         {
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :                 res[&quot;totalDifficulty&quot;] = toJS(_bd.totalDifficulty);</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :                 res[&quot;uncles&quot;] = Json::Value(Json::arrayValue);</span>
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :                 for (h256 h: _us)</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :                         res[&quot;uncles&quot;].append(toJS(h));</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :                 res[&quot;transactions&quot;] = Json::Value(Json::arrayValue);</span>
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :                 for (h256 const&amp; t: _ts)</span>
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :                         res[&quot;transactions&quot;].append(toJS(t));</span>
+<span class="lineNum">     169 </span>            :         }
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="171"><span class="lineNum">     171 </span>            : }</a>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 : Json::Value toJson(dev::eth::TransactionSkeleton const&amp; _t)</span>
+<span class="lineNum">     174 </span>            : {
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :         Json::Value res;</span>
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :         res[&quot;to&quot;] = _t.creation ? Json::Value() : toJS(_t.to);</span>
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :         res[&quot;from&quot;] = toJS(_t.from);</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :         res[&quot;gas&quot;] = toJS(_t.gas);</span>
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :         res[&quot;gasPrice&quot;] = toJS(_t.gasPrice);</span>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :         res[&quot;value&quot;] = toJS(_t.value);</span>
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :         res[&quot;data&quot;] = toJS(_t.data, 32);</span>
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="183"><span class="lineNum">     183 </span>            : }</a>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 : Json::Value toJson(dev::eth::TransactionReceipt const&amp; _t)</span>
+<span class="lineNum">     186 </span>            : {
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :         Json::Value res;</span>
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :         res[&quot;stateRoot&quot;] = toJS(_t.stateRoot());</span>
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :         res[&quot;gasUsed&quot;] = toJS(_t.gasUsed());</span>
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :         res[&quot;bloom&quot;] = toJS(_t.bloom());</span>
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :         res[&quot;log&quot;] = dev::toJson(_t.log());</span>
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="193"><span class="lineNum">     193 </span>            : }</a>
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 : Json::Value toJson(dev::eth::LocalisedTransactionReceipt const&amp; _t)</span>
+<span class="lineNum">     196 </span>            : {
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :         Json::Value res;</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :         res[&quot;transactionHash&quot;] = toJS(_t.hash());</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :         res[&quot;transactionIndex&quot;] = _t.transactionIndex();</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :         res[&quot;blockHash&quot;] = toJS(_t.blockHash());</span>
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :         res[&quot;blockNumber&quot;] = _t.blockNumber();</span>
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :         res[&quot;cumulativeGasUsed&quot;] = toJS(_t.gasUsed()); // TODO: check if this is fine</span>
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :         res[&quot;gasUsed&quot;] = toJS(_t.gasUsed());</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :         res[&quot;contractAddress&quot;] = toJS(_t.contractAddress());</span>
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :         res[&quot;logs&quot;] = dev::toJson(_t.localisedLogs());</span>
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="207"><span class="lineNum">     207 </span>            : }</a>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 : Json::Value toJson(dev::eth::Transaction const&amp; _t)</span>
+<span class="lineNum">     210 </span>            : {
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :         Json::Value res;</span>
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :         res[&quot;to&quot;] = _t.isCreation() ? Json::Value() : toJS(_t.to());</span>
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :         res[&quot;from&quot;] = toJS(_t.from());</span>
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :         res[&quot;gas&quot;] = toJS(_t.gas());</span>
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :         res[&quot;gasPrice&quot;] = toJS(_t.gasPrice());</span>
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :         res[&quot;value&quot;] = toJS(_t.value());</span>
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :         res[&quot;data&quot;] = toJS(_t.data(), 32);</span>
+<span class="lineNum">     218 </span><span class="lineNoCov">          0 :         res[&quot;nonce&quot;] = toJS(_t.nonce());</span>
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :         res[&quot;hash&quot;] = toJS(_t.sha3(WithSignature));</span>
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 :         res[&quot;sighash&quot;] = toJS(_t.sha3(WithoutSignature));</span>
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :         res[&quot;r&quot;] = toJS(_t.signature().r);</span>
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :         res[&quot;s&quot;] = toJS(_t.signature().s);</span>
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :         res[&quot;v&quot;] = toJS(_t.signature().v);</span>
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="225"><span class="lineNum">     225 </span>            : }</a>
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 : Json::Value toJson(dev::eth::LocalisedTransaction const&amp; _t)</span>
+<span class="lineNum">     228 </span>            : {
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :         Json::Value res;</span>
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :         if (_t)</span>
+<span class="lineNum">     231 </span>            :         {
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :                 res[&quot;hash&quot;] = toJS(_t.sha3());</span>
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :                 res[&quot;input&quot;] = toJS(_t.data());</span>
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :                 res[&quot;to&quot;] = _t.isCreation() ? Json::Value() : toJS(_t.receiveAddress());</span>
+<span class="lineNum">     235 </span><span class="lineNoCov">          0 :                 res[&quot;from&quot;] = toJS(_t.safeSender());</span>
+<span class="lineNum">     236 </span><span class="lineNoCov">          0 :                 res[&quot;gas&quot;] = toJS(_t.gas());</span>
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 :                 res[&quot;gasPrice&quot;] = toJS(_t.gasPrice());</span>
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :                 res[&quot;nonce&quot;] = toJS(_t.nonce());</span>
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :                 res[&quot;value&quot;] = toJS(_t.value());</span>
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :                 res[&quot;blockHash&quot;] = toJS(_t.blockHash());</span>
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :                 res[&quot;transactionIndex&quot;] = toJS(_t.transactionIndex());</span>
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :                 res[&quot;blockNumber&quot;] = toJS(_t.blockNumber());</span>
+<span class="lineNum">     243 </span>            :         }
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="245"><span class="lineNum">     245 </span>            : }</a>
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 : Json::Value toJson(dev::eth::LocalisedLogEntry const&amp; _e)</span>
+<span class="lineNum">     248 </span>            : {
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :         Json::Value res;</span>
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :         if (_e.isSpecial)</span>
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :                 res = toJS(_e.special);</span>
+<span class="lineNum">     253 </span>            :         else
+<span class="lineNum">     254 </span>            :         {
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :                 res = toJson(static_cast&lt;dev::eth::LogEntry const&amp;&gt;(_e));</span>
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :                 res[&quot;polarity&quot;] = _e.polarity == BlockPolarity::Live ? true : false;</span>
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :                 if (_e.mined)</span>
+<span class="lineNum">     258 </span>            :                 {
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :                         res[&quot;type&quot;] = &quot;mined&quot;;</span>
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :                         res[&quot;blockNumber&quot;] = _e.blockNumber;</span>
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :                         res[&quot;blockHash&quot;] = toJS(_e.blockHash);</span>
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :                         res[&quot;logIndex&quot;] = _e.logIndex;</span>
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :                         res[&quot;transactionHash&quot;] = toJS(_e.transactionHash);</span>
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :                         res[&quot;transactionIndex&quot;] = _e.transactionIndex;</span>
+<span class="lineNum">     265 </span>            :                 }
+<span class="lineNum">     266 </span>            :                 else
+<span class="lineNum">     267 </span>            :                 {
+<span class="lineNum">     268 </span><span class="lineNoCov">          0 :                         res[&quot;type&quot;] = &quot;pending&quot;;</span>
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :                         res[&quot;blockNumber&quot;] = Json::Value(Json::nullValue);</span>
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :                         res[&quot;blockHash&quot;] = Json::Value(Json::nullValue);</span>
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :                         res[&quot;logIndex&quot;] = Json::Value(Json::nullValue);</span>
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :                         res[&quot;transactionHash&quot;] = Json::Value(Json::nullValue);</span>
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :                         res[&quot;transactionIndex&quot;] = Json::Value(Json::nullValue);</span>
+<span class="lineNum">     274 </span>            :                 }
+<span class="lineNum">     275 </span>            :         }
+<span class="lineNum">     276 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="277"><span class="lineNum">     277 </span>            : }</a>
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 : Json::Value toJson(dev::eth::LogEntry const&amp; _e)</span>
+<span class="lineNum">     280 </span>            : {
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :         Json::Value res;</span>
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :         res[&quot;data&quot;] = toJS(_e.data);</span>
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :         res[&quot;address&quot;] = toJS(_e.address);</span>
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :         res[&quot;topics&quot;] = Json::Value(Json::arrayValue);</span>
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :         for (auto const&amp; t: _e.topics)</span>
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :                 res[&quot;topics&quot;].append(toJS(t));</span>
+<span class="lineNum">     287 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="288"><span class="lineNum">     288 </span>            : }</a>
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span><span class="lineNoCov">          0 : Json::Value toJson(std::unordered_map&lt;h256, dev::eth::LocalisedLogEntries&gt; const&amp; _entriesByBlock, vector&lt;h256&gt; const&amp; _order)</span>
+<span class="lineNum">     291 </span>            : {
+<span class="lineNum">     292 </span><span class="lineNoCov">          0 :         Json::Value res(Json::arrayValue);</span>
+<span class="lineNum">     293 </span><span class="lineNoCov">          0 :         for (auto const&amp; i: _order)</span>
+<span class="lineNum">     294 </span>            :         {
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :                 auto entries = _entriesByBlock.at(i);</span>
+<span class="lineNum">     296 </span><span class="lineNoCov">          0 :                 Json::Value currentBlock(Json::objectValue);</span>
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :                 LocalisedLogEntry entry = entries[0];</span>
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :                 if (entry.mined)</span>
+<span class="lineNum">     299 </span>            :                 {
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :                         currentBlock[&quot;blockNumber&quot;] = entry.blockNumber;</span>
+<span class="lineNum">     302 </span><span class="lineNoCov">          0 :                         currentBlock[&quot;blockHash&quot;] = toJS(entry.blockHash);</span>
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :                         currentBlock[&quot;type&quot;] = &quot;mined&quot;;</span>
+<span class="lineNum">     304 </span>            :                 }
+<span class="lineNum">     305 </span>            :                 else
+<span class="lineNum">     306 </span><span class="lineNoCov">          0 :                         currentBlock[&quot;type&quot;] = &quot;pending&quot;;</span>
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span><span class="lineNoCov">          0 :                 currentBlock[&quot;polarity&quot;] = entry.polarity == BlockPolarity::Live ? true : false;</span>
+<span class="lineNum">     309 </span><span class="lineNoCov">          0 :                 currentBlock[&quot;logs&quot;] = Json::Value(Json::arrayValue);</span>
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :                 for (LocalisedLogEntry const&amp; e: entries)</span>
+<span class="lineNum">     312 </span>            :                 {
+<span class="lineNum">     313 </span><span class="lineNoCov">          0 :                         Json::Value log(Json::objectValue);</span>
+<span class="lineNum">     314 </span><span class="lineNoCov">          0 :                         log[&quot;logIndex&quot;] = e.logIndex;</span>
+<span class="lineNum">     315 </span><span class="lineNoCov">          0 :                         log[&quot;transactionIndex&quot;] = e.transactionIndex;</span>
+<span class="lineNum">     316 </span><span class="lineNoCov">          0 :                         log[&quot;transactionHash&quot;] = toJS(e.transactionHash);</span>
+<span class="lineNum">     317 </span><span class="lineNoCov">          0 :                         log[&quot;address&quot;] = toJS(e.address);</span>
+<span class="lineNum">     318 </span><span class="lineNoCov">          0 :                         log[&quot;data&quot;] = toJS(e.data);</span>
+<span class="lineNum">     319 </span><span class="lineNoCov">          0 :                         log[&quot;topics&quot;] = Json::Value(Json::arrayValue);</span>
+<span class="lineNum">     320 </span><span class="lineNoCov">          0 :                         for (auto const&amp; t: e.topics)</span>
+<span class="lineNum">     321 </span><span class="lineNoCov">          0 :                                 log[&quot;topics&quot;].append(toJS(t));</span>
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span><span class="lineNoCov">          0 :                         currentBlock[&quot;logs&quot;].append(log);</span>
+<span class="lineNum">     324 </span>            :                 }
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span><span class="lineNoCov">          0 :                 res.append(currentBlock);</span>
+<span class="lineNum">     327 </span>            :         }
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="330"><span class="lineNum">     330 </span>            : }</a>
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 : Json::Value toJsonByBlock(LocalisedLogEntries const&amp; _entries)</span>
+<span class="lineNum">     333 </span>            : {
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :         vector&lt;h256&gt; order;</span>
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :         unordered_map &lt;h256, LocalisedLogEntries&gt; entriesByBlock;</span>
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span><span class="lineNoCov">          0 :         for (dev::eth::LocalisedLogEntry const&amp; e: _entries)</span>
+<span class="lineNum">     338 </span>            :         {
+<span class="lineNum">     339 </span><span class="lineNoCov">          0 :                 if (e.isSpecial) // skip special log</span>
+<span class="lineNum">     340 </span>            :                         continue;
+<span class="lineNum">     341 </span>            : 
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 :                 if (entriesByBlock.count(e.blockHash) == 0)</span>
+<span class="lineNum">     343 </span>            :                 {
+<span class="lineNum">     344 </span><span class="lineNoCov">          0 :                         entriesByBlock[e.blockHash] = LocalisedLogEntries();</span>
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :                         order.push_back(e.blockHash);</span>
+<span class="lineNum">     346 </span>            :                 }
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span><span class="lineNoCov">          0 :                 entriesByBlock[e.blockHash].push_back(e);</span>
+<span class="lineNum">     349 </span>            :         }
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span><span class="lineNoCov">          0 :         return toJson(entriesByBlock, order);</span>
+<a name="352"><span class="lineNum">     352 </span>            : }</a>
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span><span class="lineCov">          7 : TransactionSkeleton toTransactionSkeleton(Json::Value const&amp; _json)</span>
+<span class="lineNum">     355 </span>            : {
+<span class="lineNum">     356 </span><span class="lineCov">          7 :         TransactionSkeleton ret;</span>
+<span class="lineNum">     357 </span><span class="lineCov">          7 :         if (!_json.isObject() || _json.empty())</span>
+<span class="lineNum">     358 </span>            :                 return ret;
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span><span class="lineCov">          7 :         if (!_json[&quot;from&quot;].empty())</span>
+<span class="lineNum">     361 </span><span class="lineCov">         21 :                 ret.from = jsToAddress(_json[&quot;from&quot;].asString());</span>
+<span class="lineNum">     362 </span><span class="lineCov">         21 :         if (!_json[&quot;to&quot;].empty() &amp;&amp; _json[&quot;to&quot;].asString() != &quot;0x&quot;)</span>
+<span class="lineNum">     363 </span><span class="lineCov">         21 :                 ret.to = jsToAddress(_json[&quot;to&quot;].asString());</span>
+<span class="lineNum">     364 </span>            :         else
+<span class="lineNum">     365 </span><span class="lineNoCov">          0 :                 ret.creation = true;</span>
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span><span class="lineCov">          7 :         if (!_json[&quot;value&quot;].empty())</span>
+<span class="lineNum">     368 </span><span class="lineCov">         28 :                 ret.value = jsToU256(_json[&quot;value&quot;].asString());</span>
+<span class="lineNum">     369 </span>            : 
+<span class="lineNum">     370 </span><span class="lineCov">          7 :         if (!_json[&quot;gas&quot;].empty())</span>
+<span class="lineNum">     371 </span><span class="lineNoCov">          0 :                 ret.gas = jsToU256(_json[&quot;gas&quot;].asString());</span>
+<span class="lineNum">     372 </span>            : 
+<span class="lineNum">     373 </span><span class="lineCov">          7 :         if (!_json[&quot;gasPrice&quot;].empty())</span>
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 :                 ret.gasPrice = jsToU256(_json[&quot;gasPrice&quot;].asString());</span>
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span><span class="lineCov">          7 :         if (!_json[&quot;data&quot;].empty())                                                   // ethereum.js has preconstructed the data array</span>
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 :                 ret.data = jsToBytes(_json[&quot;data&quot;].asString(), OnFailed::Throw);</span>
+<span class="lineNum">     378 </span>            : 
+<span class="lineNum">     379 </span><span class="lineCov">          7 :         if (!_json[&quot;code&quot;].empty())</span>
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 :                 ret.data = jsToBytes(_json[&quot;code&quot;].asString(), OnFailed::Throw);</span>
+<span class="lineNum">     381 </span>            : 
+<span class="lineNum">     382 </span><span class="lineCov">          7 :         if (!_json[&quot;nonce&quot;].empty())</span>
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 :                 ret.nonce = jsToU256(_json[&quot;nonce&quot;].asString());</span>
+<span class="lineNum">     384 </span>            :         return ret;
+<a name="385"><span class="lineNum">     385 </span>            : }</a>
+<span class="lineNum">     386 </span>            : 
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 : dev::eth::LogFilter toLogFilter(Json::Value const&amp; _json)</span>
+<span class="lineNum">     388 </span>            : {
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :         dev::eth::LogFilter filter;</span>
+<span class="lineNum">     390 </span><span class="lineNoCov">          0 :         if (!_json.isObject() || _json.empty())</span>
+<span class="lineNum">     391 </span>            :                 return filter;
+<span class="lineNum">     392 </span>            : 
+<span class="lineNum">     393 </span>            :         // check only !empty. it should throw exceptions if input params are incorrect
+<span class="lineNum">     394 </span><span class="lineNoCov">          0 :         if (!_json[&quot;fromBlock&quot;].empty())</span>
+<span class="lineNum">     395 </span><span class="lineNoCov">          0 :                 filter.withEarliest(jsToFixed&lt;32&gt;(_json[&quot;fromBlock&quot;].asString()));</span>
+<span class="lineNum">     396 </span><span class="lineNoCov">          0 :         if (!_json[&quot;toBlock&quot;].empty())</span>
+<span class="lineNum">     397 </span><span class="lineNoCov">          0 :                 filter.withLatest(jsToFixed&lt;32&gt;(_json[&quot;toBlock&quot;].asString()));</span>
+<span class="lineNum">     398 </span><span class="lineNoCov">          0 :         if (!_json[&quot;address&quot;].empty())</span>
+<span class="lineNum">     399 </span>            :         {
+<span class="lineNum">     400 </span><span class="lineNoCov">          0 :                 if (_json[&quot;address&quot;].isArray())</span>
+<span class="lineNum">     401 </span><span class="lineNoCov">          0 :                         for (auto i : _json[&quot;address&quot;])</span>
+<span class="lineNum">     402 </span><span class="lineNoCov">          0 :                                 filter.address(jsToAddress(i.asString()));</span>
+<span class="lineNum">     403 </span>            :                 else
+<span class="lineNum">     404 </span><span class="lineNoCov">          0 :                         filter.address(jsToAddress(_json[&quot;address&quot;].asString()));</span>
+<span class="lineNum">     405 </span>            :         }
+<span class="lineNum">     406 </span><span class="lineNoCov">          0 :         if (!_json[&quot;topics&quot;].empty())</span>
+<span class="lineNum">     407 </span><span class="lineNoCov">          0 :                 for (unsigned i = 0; i &lt; _json[&quot;topics&quot;].size(); i++)</span>
+<span class="lineNum">     408 </span>            :                 {
+<span class="lineNum">     409 </span><span class="lineNoCov">          0 :                         if (_json[&quot;topics&quot;][i].isArray())</span>
+<span class="lineNum">     410 </span>            :                         {
+<span class="lineNum">     411 </span><span class="lineNoCov">          0 :                                 for (auto t: _json[&quot;topics&quot;][i])</span>
+<span class="lineNum">     412 </span><span class="lineNoCov">          0 :                                         if (!t.isNull())</span>
+<span class="lineNum">     413 </span><span class="lineNoCov">          0 :                                                 filter.topic(i, jsToFixed&lt;32&gt;(t.asString()));</span>
+<span class="lineNum">     414 </span>            :                         }
+<span class="lineNum">     415 </span><span class="lineNoCov">          0 :                         else if (!_json[&quot;topics&quot;][i].isNull()) // if it is anything else then string, it should and will fail</span>
+<span class="lineNum">     416 </span><span class="lineNoCov">          0 :                                 filter.topic(i, jsToFixed&lt;32&gt;(_json[&quot;topics&quot;][i].asString()));</span>
+<span class="lineNum">     417 </span>            :                 }
+<span class="lineNum">     418 </span>            :         return filter;
+<span class="lineNum">     419 </span>            : }
+<a name="420"><span class="lineNum">     420 </span>            : </a>
+<span class="lineNum">     421 </span>            : // TODO: this should be removed once we decide to remove backward compatibility with old log filters
+<span class="lineNum">     422 </span><span class="lineNoCov">          0 : dev::eth::LogFilter toLogFilter(Json::Value const&amp; _json, Interface const&amp; _client)     // commented to avoid warning. Uncomment once in use @ PoC-7.</span>
+<span class="lineNum">     423 </span>            : {
+<span class="lineNum">     424 </span><span class="lineNoCov">          0 :         dev::eth::LogFilter filter;</span>
+<span class="lineNum">     425 </span><span class="lineNoCov">          0 :         if (!_json.isObject() || _json.empty())</span>
+<span class="lineNum">     426 </span>            :                 return filter;
+<span class="lineNum">     427 </span>            : 
+<span class="lineNum">     428 </span>            :         // check only !empty. it should throw exceptions if input params are incorrect
+<span class="lineNum">     429 </span><span class="lineNoCov">          0 :         if (!_json[&quot;fromBlock&quot;].empty())</span>
+<span class="lineNum">     430 </span><span class="lineNoCov">          0 :                 filter.withEarliest(_client.hashFromNumber(jsToBlockNumber(_json[&quot;fromBlock&quot;].asString())));</span>
+<span class="lineNum">     431 </span><span class="lineNoCov">          0 :         if (!_json[&quot;toBlock&quot;].empty())</span>
+<span class="lineNum">     432 </span><span class="lineNoCov">          0 :                 filter.withLatest(_client.hashFromNumber(jsToBlockNumber(_json[&quot;toBlock&quot;].asString())));</span>
+<span class="lineNum">     433 </span><span class="lineNoCov">          0 :         if (!_json[&quot;address&quot;].empty())</span>
+<span class="lineNum">     434 </span>            :         {
+<span class="lineNum">     435 </span><span class="lineNoCov">          0 :                 if (_json[&quot;address&quot;].isArray())</span>
+<span class="lineNum">     436 </span><span class="lineNoCov">          0 :                         for (auto i : _json[&quot;address&quot;])</span>
+<span class="lineNum">     437 </span><span class="lineNoCov">          0 :                                 filter.address(jsToAddress(i.asString()));</span>
+<span class="lineNum">     438 </span>            :                 else
+<span class="lineNum">     439 </span><span class="lineNoCov">          0 :                         filter.address(jsToAddress(_json[&quot;address&quot;].asString()));</span>
+<span class="lineNum">     440 </span>            :         }
+<span class="lineNum">     441 </span><span class="lineNoCov">          0 :         if (!_json[&quot;topics&quot;].empty())</span>
+<span class="lineNum">     442 </span><span class="lineNoCov">          0 :                 for (unsigned i = 0; i &lt; _json[&quot;topics&quot;].size(); i++)</span>
+<span class="lineNum">     443 </span>            :                 {
+<span class="lineNum">     444 </span><span class="lineNoCov">          0 :                         if (_json[&quot;topics&quot;][i].isArray())</span>
+<span class="lineNum">     445 </span>            :                         {
+<span class="lineNum">     446 </span><span class="lineNoCov">          0 :                                 for (auto t: _json[&quot;topics&quot;][i])</span>
+<span class="lineNum">     447 </span><span class="lineNoCov">          0 :                                         if (!t.isNull())</span>
+<span class="lineNum">     448 </span><span class="lineNoCov">          0 :                                                 filter.topic(i, jsToFixed&lt;32&gt;(t.asString()));</span>
+<span class="lineNum">     449 </span>            :                         }
+<span class="lineNum">     450 </span><span class="lineNoCov">          0 :                         else if (!_json[&quot;topics&quot;][i].isNull()) // if it is anything else then string, it should and will fail</span>
+<span class="lineNum">     451 </span><span class="lineNoCov">          0 :                                 filter.topic(i, jsToFixed&lt;32&gt;(_json[&quot;topics&quot;][i].asString()));</span>
+<span class="lineNum">     452 </span>            :                 }
+<span class="lineNum">     453 </span>            :         return filter;
+<span class="lineNum">     454 </span>            : }
+<span class="lineNum">     455 </span>            : 
+<span class="lineNum">     456 </span>            : }
+<span class="lineNum">     457 </span>            : 
+<span class="lineNum">     458 </span>            : // ////////////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     459 </span>            : // shh
+<span class="lineNum">     460 </span>            : // ////////////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span>            : namespace shh
+<a name="463"><span class="lineNum">     463 </span>            : {</a>
+<span class="lineNum">     464 </span>            : 
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 : Json::Value toJson(h256 const&amp; _h, shh::Envelope const&amp; _e, shh::Message const&amp; _m)</span>
+<span class="lineNum">     466 </span>            : {
+<span class="lineNum">     467 </span><span class="lineNoCov">          0 :         Json::Value res;</span>
+<span class="lineNum">     468 </span><span class="lineNoCov">          0 :         res[&quot;hash&quot;] = toJS(_h);</span>
+<span class="lineNum">     469 </span><span class="lineNoCov">          0 :         res[&quot;expiry&quot;] = toJS(_e.expiry());</span>
+<span class="lineNum">     470 </span><span class="lineNoCov">          0 :         res[&quot;sent&quot;] = toJS(_e.sent());</span>
+<span class="lineNum">     471 </span><span class="lineNoCov">          0 :         res[&quot;ttl&quot;] = toJS(_e.ttl());</span>
+<span class="lineNum">     472 </span><span class="lineNoCov">          0 :         res[&quot;workProved&quot;] = toJS(_e.workProved());</span>
+<span class="lineNum">     473 </span><span class="lineNoCov">          0 :         res[&quot;topics&quot;] = Json::Value(Json::arrayValue);</span>
+<span class="lineNum">     474 </span><span class="lineNoCov">          0 :         for (auto const&amp; t: _e.topic())</span>
+<span class="lineNum">     475 </span><span class="lineNoCov">          0 :                 res[&quot;topics&quot;].append(toJS(t));</span>
+<span class="lineNum">     476 </span><span class="lineNoCov">          0 :         res[&quot;payload&quot;] = toJS(_m.payload());</span>
+<span class="lineNum">     477 </span><span class="lineNoCov">          0 :         res[&quot;from&quot;] = toJS(_m.from());</span>
+<span class="lineNum">     478 </span><span class="lineNoCov">          0 :         res[&quot;to&quot;] = toJS(_m.to());</span>
+<span class="lineNum">     479 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="480"><span class="lineNum">     480 </span>            : }</a>
+<span class="lineNum">     481 </span>            : 
+<span class="lineNum">     482 </span><span class="lineNoCov">          0 : shh::Message toMessage(Json::Value const&amp; _json)</span>
+<span class="lineNum">     483 </span>            : {
+<span class="lineNum">     484 </span><span class="lineNoCov">          0 :         shh::Message ret;</span>
+<span class="lineNum">     485 </span><span class="lineNoCov">          0 :         if (!_json[&quot;from&quot;].empty())</span>
+<span class="lineNum">     486 </span><span class="lineNoCov">          0 :                 ret.setFrom(jsToPublic(_json[&quot;from&quot;].asString()));</span>
+<span class="lineNum">     487 </span><span class="lineNoCov">          0 :         if (!_json[&quot;to&quot;].empty())</span>
+<span class="lineNum">     488 </span><span class="lineNoCov">          0 :                 ret.setTo(jsToPublic(_json[&quot;to&quot;].asString()));</span>
+<span class="lineNum">     489 </span><span class="lineNoCov">          0 :         if (!_json[&quot;payload&quot;].empty())</span>
+<span class="lineNum">     490 </span><span class="lineNoCov">          0 :                 ret.setPayload(jsToBytes(_json[&quot;payload&quot;].asString()));</span>
+<span class="lineNum">     491 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="492"><span class="lineNum">     492 </span>            : }</a>
+<span class="lineNum">     493 </span>            : 
+<span class="lineNum">     494 </span><span class="lineNoCov">          0 : shh::Envelope toSealed(Json::Value const&amp; _json, shh::Message const&amp; _m, Secret const&amp; _from)</span>
+<span class="lineNum">     495 </span>            : {
+<span class="lineNum">     496 </span><span class="lineNoCov">          0 :         unsigned ttl = 50;</span>
+<span class="lineNum">     497 </span><span class="lineNoCov">          0 :         unsigned workToProve = 50;</span>
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 :         shh::BuildTopic bt;</span>
+<span class="lineNum">     499 </span>            : 
+<span class="lineNum">     500 </span><span class="lineNoCov">          0 :         if (!_json[&quot;ttl&quot;].empty())</span>
+<span class="lineNum">     501 </span><span class="lineNoCov">          0 :                 ttl = jsToInt(_json[&quot;ttl&quot;].asString());</span>
+<span class="lineNum">     502 </span>            : 
+<span class="lineNum">     503 </span><span class="lineNoCov">          0 :         if (!_json[&quot;workToProve&quot;].empty())</span>
+<span class="lineNum">     504 </span><span class="lineNoCov">          0 :                 workToProve = jsToInt(_json[&quot;workToProve&quot;].asString());</span>
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span><span class="lineNoCov">          0 :         if (!_json[&quot;topics&quot;].empty())</span>
+<span class="lineNum">     507 </span><span class="lineNoCov">          0 :                 for (auto i: _json[&quot;topics&quot;])</span>
+<span class="lineNum">     508 </span>            :                 {
+<span class="lineNum">     509 </span><span class="lineNoCov">          0 :                         if (i.isArray())</span>
+<span class="lineNum">     510 </span>            :                         {
+<span class="lineNum">     511 </span><span class="lineNoCov">          0 :                                 for (auto j: i)</span>
+<span class="lineNum">     512 </span><span class="lineNoCov">          0 :                                         if (!j.isNull())</span>
+<span class="lineNum">     513 </span><span class="lineNoCov">          0 :                                                 bt.shift(jsToBytes(j.asString()));</span>
+<span class="lineNum">     514 </span>            :                         }
+<span class="lineNum">     515 </span><span class="lineNoCov">          0 :                         else if (!i.isNull()) // if it is anything else then string, it should and will fail</span>
+<span class="lineNum">     516 </span><span class="lineNoCov">          0 :                                 bt.shift(jsToBytes(i.asString()));</span>
+<span class="lineNum">     517 </span>            :                 }
+<span class="lineNum">     518 </span>            : 
+<span class="lineNum">     519 </span><span class="lineNoCov">          0 :         return _m.seal(_from, bt, ttl, workToProve);</span>
+<a name="520"><span class="lineNum">     520 </span>            : }</a>
+<span class="lineNum">     521 </span>            : 
+<span class="lineNum">     522 </span><span class="lineNoCov">          0 : pair&lt;shh::Topics, Public&gt; toWatch(Json::Value const&amp; _json)</span>
+<span class="lineNum">     523 </span>            : {
+<span class="lineNum">     524 </span><span class="lineNoCov">          0 :         shh::BuildTopic bt;</span>
+<span class="lineNum">     525 </span><span class="lineNoCov">          0 :         Public to;</span>
+<span class="lineNum">     526 </span>            : 
+<span class="lineNum">     527 </span><span class="lineNoCov">          0 :         if (!_json[&quot;to&quot;].empty())</span>
+<span class="lineNum">     528 </span><span class="lineNoCov">          0 :                 to = jsToPublic(_json[&quot;to&quot;].asString());</span>
+<span class="lineNum">     529 </span>            : 
+<span class="lineNum">     530 </span><span class="lineNoCov">          0 :         if (!_json[&quot;topics&quot;].empty())</span>
+<span class="lineNum">     531 </span><span class="lineNoCov">          0 :                 for (auto i: _json[&quot;topics&quot;])</span>
+<span class="lineNum">     532 </span><span class="lineNoCov">          0 :                         bt.shift(jsToBytes(i.asString()));</span>
+<span class="lineNum">     533 </span>            : 
+<span class="lineNum">     534 </span><span class="lineNoCov">          0 :         return make_pair(bt, to);</span>
+<span class="lineNum">     535 </span>            : }
+<span class="lineNum">     536 </span>            : 
+<span class="lineNum">     537 </span>            : }
+<span class="lineNum">     538 </span>            : 
+<span class="lineNum">     539 </span>            : // ////////////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     540 </span>            : // rpc
+<span class="lineNum">     541 </span>            : // ////////////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     542 </span>            : 
+<a name="543"><span class="lineNum">     543 </span>            : namespace rpc</a>
+<span class="lineNum">     544 </span>            : {
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 : h256 h256fromHex(string const&amp; _s)</span>
+<span class="lineNum">     546 </span>            : {
+<span class="lineNum">     547 </span>            :         try
+<span class="lineNum">     548 </span>            :         {
+<span class="lineNum">     549 </span><span class="lineNoCov">          0 :                 return h256(_s);</span>
+<span class="lineNum">     550 </span>            :         }
+<span class="lineNum">     551 </span><span class="lineNoCov">          0 :         catch (boost::exception const&amp;)</span>
+<span class="lineNum">     552 </span>            :         {
+<span class="lineNum">     553 </span><span class="lineNoCov">          0 :                 throw jsonrpc::JsonRpcException(&quot;Invalid hex-encoded string: &quot; + _s);</span>
+<span class="lineNum">     554 </span>            :         }
+<span class="lineNum">     555 </span>            : }
+<a name="556"><span class="lineNum">     556 </span>            : }</a>
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

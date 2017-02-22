@@ -1,0 +1,387 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libwebthree/WebThree.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libwebthree</a> - WebThree.h<span style="font-size: 80%;"> (source / <a href="WebThree.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryLo">27.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryLo">10.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file WebThree.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;thread&gt;
+<span class="lineNum">      25 </span>            : #include &lt;mutex&gt;
+<span class="lineNum">      26 </span>            : #include &lt;list&gt;
+<span class="lineNum">      27 </span>            : #include &lt;atomic&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/asio.hpp&gt; // Make sure boost/asio.hpp is included before windows.h.
+<span class="lineNum">      29 </span>            : #include &lt;boost/utility.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libdevcore/CommonIO.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libdevcore/Guards.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;libdevcore/Exceptions.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;libp2p/Host.h&gt;
+<span class="lineNum">      35 </span>            : #include &lt;libwhisper/WhisperHost.h&gt;
+<span class="lineNum">      36 </span>            : #include &lt;libethereum/Client.h&gt;
+<span class="lineNum">      37 </span>            : #include &lt;libethereum/ChainParams.h&gt;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : namespace dev
+<span class="lineNum">      40 </span>            : {
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : enum WorkState
+<span class="lineNum">      43 </span>            : {
+<span class="lineNum">      44 </span>            :         Active = 0,
+<span class="lineNum">      45 </span>            :         Deleting,
+<span class="lineNum">      46 </span>            :         Deleted
+<span class="lineNum">      47 </span>            : };
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : namespace eth { class Interface; }
+<span class="lineNum">      50 </span>            : namespace shh { class Interface; }
+<span class="lineNum">      51 </span>            : namespace bzz { class Interface; class Client; }
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : class Support;
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineCov">          1 : class NetworkFace</span>
+<span class="lineNum">      56 </span>            : {
+<span class="lineNum">      57 </span>            : public:
+<span class="lineNum">      58 </span>            :         /// Get information concerning this node.
+<span class="lineNum">      59 </span>            :         virtual p2p::NodeInfo nodeInfo() const = 0;
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            :         /// Get information on the current peer set.
+<span class="lineNum">      62 </span>            :         virtual std::vector&lt;p2p::PeerSessionInfo&gt; peers() = 0;
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :         /// Same as peers().size(), but more efficient.
+<span class="lineNum">      65 </span>            :         virtual size_t peerCount() const = 0;
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :         /// Generalised peer addition.
+<span class="lineNum">      68 </span>            :         virtual void addPeer(p2p::NodeSpec const&amp; _node, p2p::PeerType _t) = 0;
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            :         /// Add node to connect to.
+<span class="lineNum">      71 </span>            :         virtual void addNode(p2p::NodeID const&amp; _node, bi::tcp::endpoint const&amp; _hostEndpoint) = 0;
+<span class="lineNum">      72 </span>            :         
+<span class="lineNum">      73 </span>            :         /// Require connection to peer.
+<span class="lineNum">      74 </span>            :         virtual void requirePeer(p2p::NodeID const&amp; _node, bi::tcp::endpoint const&amp; _endpoint) = 0;
+<span class="lineNum">      75 </span>            :         
+<span class="lineNum">      76 </span>            :         /// Save peers
+<span class="lineNum">      77 </span>            :         virtual dev::bytes saveNetwork() = 0;
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :         /// Sets the ideal number of peers.
+<span class="lineNum">      80 </span>            :         virtual void setIdealPeerCount(size_t _n) = 0;
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :         virtual bool haveNetwork() const = 0;
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            :         virtual p2p::NetworkPreferences const&amp; networkPreferences() const = 0;
+<span class="lineNum">      85 </span>            :         virtual void setNetworkPreferences(p2p::NetworkPreferences const&amp; _n, bool _dropPeers) = 0;
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :         virtual p2p::NodeID id() const = 0;
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :         /// Get network id
+<span class="lineNum">      90 </span>            :         virtual u256 networkId() const = 0;
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :         /// Gets the nodes.
+<span class="lineNum">      93 </span>            :         virtual p2p::Peers nodes() const = 0;
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            :         /// Start the network subsystem.
+<span class="lineNum">      96 </span>            :         virtual void startNetwork() = 0;
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            :         /// Stop the network subsystem.
+<span class="lineNum">      99 </span>            :         virtual void stopNetwork() = 0;
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :         /// Is network working? there may not be any peers yet.
+<span class="lineNum">     102 </span>            :         virtual bool isNetworkStarted() const = 0;
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :         /// Get enode string.
+<span class="lineNum">     105 </span>            :         virtual std::string enode() const = 0;
+<span class="lineNum">     106 </span>            : };
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : /**
+<span class="lineNum">     110 </span>            :  * @brief Main API hub for interfacing with Web 3 components. This doesn't do any local multiplexing, so you can only have one
+<span class="lineNum">     111 </span>            :  * running on any given machine for the provided DB path.
+<span class="lineNum">     112 </span>            :  *
+<span class="lineNum">     113 </span>            :  * Keeps a libp2p Host going (administering the work thread with m_workNet).
+<span class="lineNum">     114 </span>            :  *
+<span class="lineNum">     115 </span>            :  * Encapsulates a bunch of P2P protocols (interfaces), each using the same underlying libp2p Host.
+<span class="lineNum">     116 </span>            :  *
+<span class="lineNum">     117 </span>            :  * Provides a baseline for the multiplexed multi-protocol session class, WebThree.
+<span class="lineNum">     118 </span>            :  */
+<span class="lineNum">     119 </span>            : class WebThreeDirect: public NetworkFace
+<span class="lineNum">     120 </span>            : {
+<span class="lineNum">     121 </span>            : public:
+<span class="lineNum">     122 </span>            :         /// Constructor for private instance. If there is already another process on the machine using @a _dbPath, then this will throw an exception.
+<span class="lineNum">     123 </span>            :         /// ethereum() may be safely static_cast()ed to a eth::Client*.
+<span class="lineNum">     124 </span>            :         WebThreeDirect(
+<span class="lineNum">     125 </span>            :                 std::string const&amp; _clientVersion,
+<span class="lineNum">     126 </span>            :                 std::string const&amp; _dbPath,
+<span class="lineNum">     127 </span>            :                 eth::ChainParams const&amp; _params,
+<span class="lineNum">     128 </span>            :                 WithExisting _we = WithExisting::Trust,
+<span class="lineNum">     129 </span>            :                 std::set&lt;std::string&gt; const&amp; _interfaces = {&quot;eth&quot;, &quot;shh&quot;, &quot;bzz&quot;},
+<span class="lineNum">     130 </span>            :                 p2p::NetworkPreferences const&amp; _n = p2p::NetworkPreferences(),
+<span class="lineNum">     131 </span>            :                 bytesConstRef _network = bytesConstRef(),
+<span class="lineNum">     132 </span>            :                 bool _testing = false
+<span class="lineNum">     133 </span>            :         );
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            :         /// Destructor.
+<span class="lineNum">     136 </span>            :         ~WebThreeDirect();
+<span class="lineNum">     137 </span>            : 
+<a name="138"><span class="lineNum">     138 </span>            :         // The mainline interfaces:</a>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span><span class="lineCov">         15 :         eth::Client* ethereum() const { if (!m_ethereum) BOOST_THROW_EXCEPTION(InterfaceNotSupported(&quot;eth&quot;)); return m_ethereum.get(); }</span>
+<span class="lineNum">     141 </span>            :         std::shared_ptr&lt;shh::WhisperHost&gt; whisper() const { auto w = m_whisper.lock(); if (!w) BOOST_THROW_EXCEPTION(InterfaceNotSupported(&quot;shh&quot;)); return w; }
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :         // Misc stuff:
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            :         static std::string composeClientVersion(std::string const&amp; _client);
+<span class="lineNum">     146 </span>            :         std::string const&amp; clientVersion() const { return m_clientVersion; }
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            :         // Network stuff:
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            :         /// Get information on the current peer set.
+<span class="lineNum">     151 </span>            :         std::vector&lt;p2p::PeerSessionInfo&gt; peers() override;
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :         /// Same as peers().size(), but more efficient.
+<span class="lineNum">     154 </span>            :         size_t peerCount() const override;
+<span class="lineNum">     155 </span>            :         
+<span class="lineNum">     156 </span>            :         /// Generalised peer addition.
+<span class="lineNum">     157 </span>            :         virtual void addPeer(p2p::NodeSpec const&amp; _node, p2p::PeerType _t) override;
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :         /// Add node to connect to.
+<span class="lineNum">     160 </span>            :         virtual void addNode(p2p::NodeID const&amp; _node, bi::tcp::endpoint const&amp; _hostEndpoint) override;
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :         /// Add node to connect to.
+<span class="lineNum">     163 </span>            :         void addNode(p2p::NodeID const&amp; _node, std::string const&amp; _hostString) { addNode(_node, p2p::Network::resolveHost(_hostString)); }
+<span class="lineNum">     164 </span>            :         
+<span class="lineNum">     165 </span>            :         /// Add node to connect to.
+<span class="lineNum">     166 </span>            :         void addNode(bi::tcp::endpoint const&amp; _endpoint) { addNode(p2p::NodeID(), _endpoint); }
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :         /// Add node to connect to.
+<span class="lineNum">     169 </span>            :         void addNode(std::string const&amp; _hostString) { addNode(p2p::NodeID(), _hostString); }
+<span class="lineNum">     170 </span>            :         
+<span class="lineNum">     171 </span>            :         /// Require connection to peer.
+<span class="lineNum">     172 </span>            :         void requirePeer(p2p::NodeID const&amp; _node, bi::tcp::endpoint const&amp; _endpoint) override;
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            :         /// Require connection to peer.
+<span class="lineNum">     175 </span>            :         void requirePeer(p2p::NodeID const&amp; _node, std::string const&amp; _hostString) { requirePeer(_node, p2p::Network::resolveHost(_hostString)); }
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :         /// Save peers
+<span class="lineNum">     178 </span>            :         dev::bytes saveNetwork() override;
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            :         /// Sets the ideal number of peers.
+<span class="lineNum">     181 </span>            :         void setIdealPeerCount(size_t _n) override;
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            :         /// Experimental. Sets ceiling for incoming connections to multiple of ideal peer count.
+<a name="184"><span class="lineNum">     184 </span>            :         void setPeerStretch(size_t _n);</a>
+<span class="lineNum">     185 </span>            :         
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :         bool haveNetwork() const override { return m_net.haveNetwork(); }</span>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :         p2p::NetworkPreferences const&amp; networkPreferences() const override;
+<span class="lineNum">     189 </span>            : 
+<a name="190"><span class="lineNum">     190 </span>            :         void setNetworkPreferences(p2p::NetworkPreferences const&amp; _n, bool _dropPeers = false) override;</a>
+<span class="lineNum">     191 </span>            : 
+<a name="192"><span class="lineNum">     192 </span><span class="lineNoCov">          0 :         p2p::NodeInfo nodeInfo() const override { return m_net.nodeInfo(); }</span></a>
+<span class="lineNum">     193 </span>            : 
+<a name="194"><span class="lineNum">     194 </span><span class="lineNoCov">          0 :         p2p::NodeID id() const override { return m_net.id(); }</span></a>
+<span class="lineNum">     195 </span>            : 
+<a name="196"><span class="lineNum">     196 </span><span class="lineNoCov">          0 :         u256 networkId() const override { return m_ethereum.get()-&gt;networkId(); }</span></a>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :         std::string enode() const override { return m_net.enode(); }</span>
+<a name="199"><span class="lineNum">     199 </span>            : </a>
+<span class="lineNum">     200 </span>            :         /// Gets the nodes.
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :         p2p::Peers nodes() const override { return m_net.getPeers(); }</span>
+<a name="202"><span class="lineNum">     202 </span>            : </a>
+<span class="lineNum">     203 </span>            :         /// Start the network subsystem.
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :         void startNetwork() override { m_net.start(); }</span>
+<a name="205"><span class="lineNum">     205 </span>            : </a>
+<span class="lineNum">     206 </span>            :         /// Stop the network subsystem.
+<span class="lineNum">     207 </span><span class="lineCov">          1 :         void stopNetwork() override { m_net.stop(); }</span>
+<a name="208"><span class="lineNum">     208 </span>            : </a>
+<span class="lineNum">     209 </span>            :         /// Is network working? there may not be any peers yet.
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :         bool isNetworkStarted() const override { return m_net.isStarted(); }</span>
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            : private:
+<span class="lineNum">     213 </span>            :         std::string m_clientVersion;                                    ///&lt; Our end-application client's name/version.
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            :         p2p::Host m_net;                                                                ///&lt; Should run in background and send us events when blocks found and allow us to send blocks as required.
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :         std::unique_ptr&lt;eth::Client&gt; m_ethereum;          ///&lt; Client for Ethereum (&quot;eth&quot;) protocol.
+<span class="lineNum">     218 </span>            :         std::weak_ptr&lt;shh::WhisperHost&gt; m_whisper;                ///&lt; Client for Whisper (&quot;shh&quot;) protocol.
+<span class="lineNum">     219 </span>            : };
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            : // TODO, probably move into libdevrpc:
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            : class RPCSlave {};
+<span class="lineNum">     224 </span>            : class RPCMaster {};
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            : // TODO, probably move into eth:
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            : class EthereumSlave: public eth::Interface
+<span class="lineNum">     229 </span>            : {
+<span class="lineNum">     230 </span>            : public:
+<span class="lineNum">     231 </span>            :         EthereumSlave(RPCSlave*) {}
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            :         // TODO: implement all of the virtuals with the RLPClient link.
+<span class="lineNum">     234 </span>            : };
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            : class EthereumMaster
+<span class="lineNum">     237 </span>            : {
+<span class="lineNum">     238 </span>            : public:
+<span class="lineNum">     239 </span>            :         EthereumMaster(RPCMaster*) {}
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            :         // TODO: implement the master-end of whatever the RLPClient link will send over.
+<span class="lineNum">     242 </span>            : };
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            : // TODO, probably move into shh:
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            : class WhisperSlave: public shh::Interface
+<span class="lineNum">     247 </span>            : {
+<span class="lineNum">     248 </span>            : public:
+<span class="lineNum">     249 </span>            :         WhisperSlave(RPCSlave*) {}
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            :         // TODO: implement all of the virtuals with the RLPClient link.
+<span class="lineNum">     252 </span>            : };
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            : class WhisperMaster
+<span class="lineNum">     255 </span>            : {
+<span class="lineNum">     256 </span>            : public:
+<span class="lineNum">     257 </span>            :         WhisperMaster(RPCMaster*) {}
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            :         // TODO: implement the master-end of whatever the RLPClient link will send over.
+<span class="lineNum">     260 </span>            : };
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span>            : /**
+<span class="lineNum">     263 </span>            :  * @brief Main API hub for interfacing with Web 3 components.
+<span class="lineNum">     264 </span>            :  *
+<span class="lineNum">     265 </span>            :  * This does transparent local multiplexing, so you can have as many running on the
+<span class="lineNum">     266 </span>            :  * same machine all working from a single DB path.
+<span class="lineNum">     267 </span>            :  */
+<span class="lineNum">     268 </span>            : class WebThree
+<span class="lineNum">     269 </span>            : {
+<span class="lineNum">     270 </span>            : public:
+<span class="lineNum">     271 </span>            :         /// Constructor for public instance. This will be shared across the local machine.
+<span class="lineNum">     272 </span>            :         WebThree();
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            :         /// Destructor.
+<span class="lineNum">     275 </span>            :         ~WebThree();
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            :         // The mainline interfaces.
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            :         eth::Interface* ethereum() const { if (!m_ethereum) BOOST_THROW_EXCEPTION(InterfaceNotSupported(&quot;eth&quot;)); return m_ethereum; }
+<span class="lineNum">     280 </span>            :         shh::Interface* whisper() const { if (!m_whisper) BOOST_THROW_EXCEPTION(InterfaceNotSupported(&quot;shh&quot;)); return m_whisper; }
+<span class="lineNum">     281 </span>            :         bzz::Interface* swarm() const { BOOST_THROW_EXCEPTION(InterfaceNotSupported(&quot;bzz&quot;)); }
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span>            :         // Peer network stuff - forward through RPCSlave, probably with P2PNetworkSlave/Master classes like Whisper &amp; Ethereum.
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span>            :         /// Get information on the current peer set.
+<span class="lineNum">     286 </span>            :         std::vector&lt;p2p::PeerSessionInfo&gt; peers();
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            :         /// Same as peers().size(), but more efficient.
+<span class="lineNum">     289 </span>            :         size_t peerCount() const;
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            :         /// Connect to a particular peer.
+<span class="lineNum">     292 </span>            :         void connect(std::string const&amp; _seedHost, unsigned short _port = 30303);
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            :         /// Is the network subsystem up?
+<span class="lineNum">     295 </span>            :         bool haveNetwork();
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            :         /// Save peers
+<span class="lineNum">     298 </span>            :         dev::bytes savePeers();
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            :         /// Restore peers
+<span class="lineNum">     301 </span>            :         void restorePeers(bytesConstRef _saved);
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span>            : private:
+<span class="lineNum">     304 </span>            :         EthereumSlave* m_ethereum = nullptr;
+<span class="lineNum">     305 </span>            :         WhisperSlave* m_whisper = nullptr;
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            :         // TODO:
+<span class="lineNum">     308 </span>            :         RPCSlave m_rpcSlave;
+<span class="lineNum">     309 </span>            : };
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

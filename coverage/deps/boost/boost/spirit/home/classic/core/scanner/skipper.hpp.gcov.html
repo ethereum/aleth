@@ -1,0 +1,273 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/spirit/home/classic/core/scanner/skipper.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/spirit/home/classic/core/scanner</a> - skipper.hpp<span style="font-size: 80%;"> (source / <a href="skipper.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryLo">7.1 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*=============================================================================</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 1998-2003 Joel de Guzman
+<span class="lineNum">       3 </span>            :     http://spirit.sourceforge.net/
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :   Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       6 </span>            :   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       7 </span>            : =============================================================================*/
+<span class="lineNum">       8 </span>            : #if !defined(BOOST_SPIRIT_SKIPPER_HPP)
+<span class="lineNum">       9 </span>            : #define BOOST_SPIRIT_SKIPPER_HPP
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      12 </span>            : #include &lt;cctype&gt;
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &lt;boost/spirit/home/classic/namespace.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/spirit/home/classic/core/scanner/scanner.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/spirit/home/classic/core/primitives/impl/primitives.ipp&gt;
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/spirit/home/classic/core/scanner/skipper_fwd.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : namespace boost { namespace spirit {
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      25 </span>            :     //
+<span class="lineNum">      26 </span>            :     //  skipper_iteration_policy class
+<span class="lineNum">      27 </span>            :     //
+<span class="lineNum">      28 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      29 </span>            :     template &lt;typename BaseT&gt;
+<span class="lineNum">      30 </span>            :     struct skipper_iteration_policy : public BaseT
+<span class="lineNum">      31 </span>            :     {
+<span class="lineNum">      32 </span>            :         typedef BaseT base_t;
+<span class="lineNum">      33 </span>            :     
+<span class="lineNum">      34 </span>            :         skipper_iteration_policy()
+<span class="lineNum">      35 </span>            :         : BaseT() {}
+<span class="lineNum">      36 </span>            :     
+<span class="lineNum">      37 </span>            :         template &lt;typename PolicyT&gt;
+<span class="lineNum">      38 </span>            :         skipper_iteration_policy(PolicyT const&amp; other)
+<span class="lineNum">      39 </span>            :         : BaseT(other) {}
+<span class="lineNum">      40 </span>            :     
+<span class="lineNum">      41 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">      42 </span>            :         void
+<span class="lineNum">      43 </span>            :         advance(ScannerT const&amp; scan) const
+<span class="lineNum">      44 </span>            :         {
+<span class="lineNum">      45 </span><span class="lineCov">     855777 :             BaseT::advance(scan);</span>
+<span class="lineNum">      46 </span><span class="lineCov">     855777 :             scan.skip(scan);</span>
+<span class="lineNum">      47 </span>            :         }
+<span class="lineNum">      48 </span>            :     
+<span class="lineNum">      49 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">      50 </span>            :         bool
+<span class="lineNum">      51 </span>            :         at_end(ScannerT const&amp; scan) const
+<span class="lineNum">      52 </span>            :         {
+<span class="lineNum">      53 </span><span class="lineCov">  637572845 :             scan.skip(scan);</span>
+<span class="lineNum">      54 </span><span class="lineCov"> 1275145690 :             return BaseT::at_end(scan);</span>
+<span class="lineNum">      55 </span>            :         }
+<span class="lineNum">      56 </span>            :     
+<a name="57"><span class="lineNum">      57 </span>            :         template &lt;typename ScannerT&gt;</a>
+<span class="lineNum">      58 </span>            :         void
+<span class="lineNum">      59 </span><span class="lineCov">   16498483 :         skip(ScannerT const&amp; scan) const</span>
+<span class="lineNum">      60 </span>            :         {
+<span class="lineNum">      61 </span><span class="lineCov">  118222120 :             while (!BaseT::at_end(scan) &amp;&amp; impl::isspace_(BaseT::get(scan)))</span>
+<span class="lineNum">      62 </span><span class="lineCov">   13057047 :                 BaseT::advance(scan);</span>
+<span class="lineNum">      63 </span><span class="lineCov">   16498483 :         }</span>
+<span class="lineNum">      64 </span>            :     };
+<span class="lineNum">      65 </span>            :     
+<span class="lineNum">      66 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      67 </span>            :     //
+<span class="lineNum">      68 </span>            :     //  no_skipper_iteration_policy class
+<span class="lineNum">      69 </span>            :     //
+<span class="lineNum">      70 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      71 </span>            :     template &lt;typename BaseT&gt;
+<span class="lineNum">      72 </span>            :     struct no_skipper_iteration_policy : public BaseT
+<span class="lineNum">      73 </span>            :     {
+<span class="lineNum">      74 </span>            :         typedef BaseT base_t;
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            :         no_skipper_iteration_policy()
+<span class="lineNum">      77 </span>            :         : BaseT() {}
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :         template &lt;typename PolicyT&gt;
+<span class="lineNum">      80 </span>            :         no_skipper_iteration_policy(PolicyT const&amp; other)
+<span class="lineNum">      81 </span><span class="lineCov">    5645094 :         : BaseT(other) {}</span>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">      84 </span>            :         void
+<span class="lineNum">      85 </span>            :         skip(ScannerT const&amp; /*scan*/) const {}
+<span class="lineNum">      86 </span>            :     };
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      89 </span>            :     //
+<span class="lineNum">      90 </span>            :     //  skip_parser_iteration_policy class
+<span class="lineNum">      91 </span>            :     //
+<span class="lineNum">      92 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      93 </span>            :     namespace impl
+<span class="lineNum">      94 </span>            :     {
+<span class="lineNum">      95 </span>            :         template &lt;typename ST, typename ScannerT, typename BaseT&gt;
+<span class="lineNum">      96 </span>            :         void
+<span class="lineNum">      97 </span>            :         skipper_skip(
+<span class="lineNum">      98 </span>            :             ST const&amp; s,
+<span class="lineNum">      99 </span>            :             ScannerT const&amp; scan,
+<span class="lineNum">     100 </span>            :             skipper_iteration_policy&lt;BaseT&gt; const&amp;);
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :         template &lt;typename ST, typename ScannerT, typename BaseT&gt;
+<span class="lineNum">     103 </span>            :         void
+<span class="lineNum">     104 </span>            :         skipper_skip(
+<span class="lineNum">     105 </span>            :             ST const&amp; s,
+<span class="lineNum">     106 </span>            :             ScannerT const&amp; scan,
+<span class="lineNum">     107 </span>            :             no_skipper_iteration_policy&lt;BaseT&gt; const&amp;);
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            :         template &lt;typename ST, typename ScannerT&gt;
+<span class="lineNum">     110 </span>            :         void
+<span class="lineNum">     111 </span>            :         skipper_skip(
+<span class="lineNum">     112 </span>            :             ST const&amp; s,
+<span class="lineNum">     113 </span>            :             ScannerT const&amp; scan,
+<span class="lineNum">     114 </span>            :             iteration_policy const&amp;);
+<span class="lineNum">     115 </span>            :     }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :     template &lt;typename ParserT, typename BaseT&gt;
+<span class="lineNum">     118 </span>            :     class skip_parser_iteration_policy : public skipper_iteration_policy&lt;BaseT&gt;
+<span class="lineNum">     119 </span>            :     {
+<span class="lineNum">     120 </span>            :     public:
+<span class="lineNum">     121 </span>            :     
+<span class="lineNum">     122 </span>            :         typedef skipper_iteration_policy&lt;BaseT&gt; base_t;
+<span class="lineNum">     123 </span>            :     
+<span class="lineNum">     124 </span>            :         skip_parser_iteration_policy(
+<span class="lineNum">     125 </span>            :             ParserT const&amp; skip_parser,
+<span class="lineNum">     126 </span>            :             base_t const&amp; base = base_t())
+<span class="lineNum">     127 </span>            :         : base_t(base), subject(skip_parser) {}
+<span class="lineNum">     128 </span>            :     
+<span class="lineNum">     129 </span>            :         template &lt;typename PolicyT&gt;
+<span class="lineNum">     130 </span>            :         skip_parser_iteration_policy(PolicyT const&amp; other)
+<span class="lineNum">     131 </span>            :         : base_t(other), subject(other.skipper()) {}
+<span class="lineNum">     132 </span>            :     
+<span class="lineNum">     133 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">     134 </span>            :         void
+<span class="lineNum">     135 </span>            :         skip(ScannerT const&amp; scan) const
+<span class="lineNum">     136 </span>            :         {
+<span class="lineNum">     137 </span>            :             impl::skipper_skip(subject, scan, scan);
+<span class="lineNum">     138 </span>            :         }
+<span class="lineNum">     139 </span>            :     
+<span class="lineNum">     140 </span>            :         ParserT const&amp;
+<span class="lineNum">     141 </span>            :         skipper() const
+<span class="lineNum">     142 </span>            :         { 
+<span class="lineNum">     143 </span>            :             return subject; 
+<span class="lineNum">     144 </span>            :         }
+<span class="lineNum">     145 </span>            :     
+<span class="lineNum">     146 </span>            :     private:
+<span class="lineNum">     147 </span>            :     
+<span class="lineNum">     148 </span>            :         ParserT const&amp; subject;
+<span class="lineNum">     149 </span>            :     };
+<span class="lineNum">     150 </span>            :     
+<span class="lineNum">     151 </span>            :     ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     152 </span>            :     //
+<span class="lineNum">     153 </span>            :     //  Free parse functions using the skippers
+<span class="lineNum">     154 </span>            :     //
+<span class="lineNum">     155 </span>            :     ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     156 </span>            :     template &lt;typename IteratorT, typename ParserT, typename SkipT&gt;
+<span class="lineNum">     157 </span>            :     parse_info&lt;IteratorT&gt;
+<span class="lineNum">     158 </span>            :     parse(
+<span class="lineNum">     159 </span>            :         IteratorT const&amp;        first,
+<span class="lineNum">     160 </span>            :         IteratorT const&amp;        last,
+<span class="lineNum">     161 </span>            :         parser&lt;ParserT&gt; const&amp;  p,
+<span class="lineNum">     162 </span>            :         parser&lt;SkipT&gt; const&amp;    skip);
+<span class="lineNum">     163 </span>            :     
+<span class="lineNum">     164 </span>            :     ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     165 </span>            :     //
+<span class="lineNum">     166 </span>            :     //  Parse function for null terminated strings using the skippers
+<span class="lineNum">     167 </span>            :     //
+<span class="lineNum">     168 </span>            :     ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     169 </span>            :     template &lt;typename CharT, typename ParserT, typename SkipT&gt;
+<span class="lineNum">     170 </span>            :     parse_info&lt;CharT const*&gt;
+<span class="lineNum">     171 </span>            :     parse(
+<span class="lineNum">     172 </span>            :         CharT const*            str,
+<span class="lineNum">     173 </span>            :         parser&lt;ParserT&gt; const&amp;  p,
+<span class="lineNum">     174 </span>            :         parser&lt;SkipT&gt; const&amp;    skip);
+<span class="lineNum">     175 </span>            :     
+<span class="lineNum">     176 </span>            :     ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     177 </span>            :     //
+<span class="lineNum">     178 </span>            :     //  phrase_scanner_t and wide_phrase_scanner_t
+<span class="lineNum">     179 </span>            :     //
+<span class="lineNum">     180 </span>            :     //      The most common scanners. Use these typedefs when you need
+<span class="lineNum">     181 </span>            :     //      a scanner that skips white spaces.
+<span class="lineNum">     182 </span>            :     //
+<span class="lineNum">     183 </span>            :     ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     184 </span>            :     typedef skipper_iteration_policy&lt;&gt;                  iter_policy_t;
+<span class="lineNum">     185 </span>            :     typedef scanner_policies&lt;iter_policy_t&gt;             scanner_policies_t;
+<span class="lineNum">     186 </span>            :     typedef scanner&lt;char const*, scanner_policies_t&gt;    phrase_scanner_t;
+<span class="lineNum">     187 </span>            :     typedef scanner&lt;wchar_t const*, scanner_policies_t&gt; wide_phrase_scanner_t;
+<span class="lineNum">     188 </span>            :     
+<span class="lineNum">     189 </span>            :     ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_END
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : }} // namespace BOOST_SPIRIT_CLASSIC_NS
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            : #include &lt;boost/spirit/home/classic/core/scanner/impl/skipper.ipp&gt;
+<span class="lineNum">     196 </span>            : #endif
+<span class="lineNum">     197 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

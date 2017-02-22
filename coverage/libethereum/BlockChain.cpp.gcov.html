@@ -1,0 +1,1630 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/BlockChain.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - BlockChain.cpp<span style="font-size: 80%;"> (source / <a href="BlockChain.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">540</td>
+            <td class="headerCovTableEntry">792</td>
+            <td class="headerCovTableEntryLo">68.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntry">47</td>
+            <td class="headerCovTableEntryLo">74.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file BlockChain.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;BlockChain.h&quot;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #if ETH_PROFILING_GPERF
+<span class="lineNum">      25 </span>            : #include &lt;gperftools/profiler.h&gt;
+<span class="lineNum">      26 </span>            : #endif
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #include &lt;boost/timer.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/filesystem.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;json_spirit/JsonSpiritHeaders.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libdevcore/Assertions.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;libdevcore/RLP.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;libdevcore/TrieHash.h&gt;
+<span class="lineNum">      35 </span>            : #include &lt;libdevcore/FileSystem.h&gt;
+<span class="lineNum">      36 </span>            : #include &lt;libethcore/Exceptions.h&gt;
+<span class="lineNum">      37 </span>            : #include &lt;libethcore/BlockHeader.h&gt;
+<span class="lineNum">      38 </span>            : #include &quot;GenesisInfo.h&quot;
+<span class="lineNum">      39 </span>            : #include &quot;State.h&quot;
+<span class="lineNum">      40 </span>            : #include &quot;Block.h&quot;
+<span class="lineNum">      41 </span>            : #include &quot;Defaults.h&quot;
+<span class="lineNum">      42 </span>            : using namespace std;
+<span class="lineNum">      43 </span>            : using namespace dev;
+<span class="lineNum">      44 </span>            : using namespace dev::eth;
+<span class="lineNum">      45 </span>            : namespace js = json_spirit;
+<span class="lineNum">      46 </span>            : namespace fs = boost::filesystem;
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : #define ETH_CATCH 1
+<span class="lineNum">      49 </span>            : #define ETH_TIMED_IMPORTS 1
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : #if defined(_WIN32)
+<span class="lineNum">      52 </span>            : const char* BlockChainDebug::name() { return EthBlue &quot;8&quot; EthWhite &quot; &lt;&gt;&quot;; }
+<span class="lineNum">      53 </span>            : const char* BlockChainWarn::name() { return EthBlue &quot;8&quot; EthOnRed EthBlackBold &quot; X&quot;; }
+<span class="lineNum">      54 </span>            : const char* BlockChainNote::name() { return EthBlue &quot;8&quot; EthBlue &quot; i&quot;; }
+<a name="55"><span class="lineNum">      55 </span>            : const char* BlockChainChat::name() { return EthBlue &quot;8&quot; EthWhite &quot; o&quot;; }</a>
+<a name="56"><span class="lineNum">      56 </span>            : #else</a>
+<a name="57"><span class="lineNum">      57 </span><span class="lineCov">          1 : const char* BlockChainDebug::name() { return EthBlue &quot;☍&quot; EthWhite &quot; ◇&quot;; }</span></a>
+<a name="58"><span class="lineNum">      58 </span><span class="lineCov">          1 : const char* BlockChainWarn::name() { return EthBlue &quot;☍&quot; EthOnRed EthBlackBold &quot; ✘&quot;; }</span></a>
+<span class="lineNum">      59 </span><span class="lineCov">          1 : const char* BlockChainNote::name() { return EthBlue &quot;☍&quot; EthBlue &quot; ℹ&quot;; }</span>
+<span class="lineNum">      60 </span><span class="lineCov">          1 : const char* BlockChainChat::name() { return EthBlue &quot;☍&quot; EthWhite &quot; ◌&quot;; }</span>
+<a name="61"><span class="lineNum">      61 </span>            : #endif</a>
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineCov">          1 : std::ostream&amp; dev::eth::operator&lt;&lt;(std::ostream&amp; _out, BlockChain const&amp; _bc)</span>
+<span class="lineNum">      64 </span>            : {
+<span class="lineNum">      65 </span><span class="lineCov">          3 :         string cmp = toBigEndianString(_bc.currentHash());</span>
+<span class="lineNum">      66 </span><span class="lineCov">          1 :         auto it = _bc.m_blocksDB-&gt;NewIterator(_bc.m_readOptions);</span>
+<span class="lineNum">      67 </span><span class="lineCov">          2 :         for (it-&gt;SeekToFirst(); it-&gt;Valid(); it-&gt;Next())</span>
+<span class="lineNum">      68 </span><span class="lineCov">          4 :                 if (it-&gt;key().ToString() != &quot;best&quot;)</span>
+<span class="lineNum">      69 </span>            :                 {
+<span class="lineNum">      70 </span>            :                         try {
+<span class="lineNum">      71 </span><span class="lineCov">          3 :                                 BlockHeader d(bytesConstRef(it-&gt;value()));</span>
+<span class="lineNum">      72 </span><span class="lineCov">         10 :                                 _out &lt;&lt; toHex(it-&gt;key().ToString()) &lt;&lt; &quot;:   &quot; &lt;&lt; d.number() &lt;&lt; &quot; @ &quot; &lt;&lt; d.parentHash() &lt;&lt; (cmp == it-&gt;key().ToString() ? &quot;  BEST&quot; : &quot;&quot;) &lt;&lt; std::endl;</span>
+<span class="lineNum">      73 </span>            :                         }
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :                         catch (...) {</span>
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :                                 cwarn &lt;&lt; &quot;Invalid DB entry:&quot; &lt;&lt; toHex(it-&gt;key().ToString()) &lt;&lt; &quot; -&gt; &quot; &lt;&lt; toHex(bytesConstRef(it-&gt;value()));</span>
+<span class="lineNum">      76 </span>            :                         }
+<span class="lineNum">      77 </span>            :                 }
+<span class="lineNum">      78 </span><span class="lineCov">          1 :         delete it;</span>
+<span class="lineNum">      79 </span><span class="lineCov">          2 :         return _out;</span>
+<a name="80"><span class="lineNum">      80 </span>            : }</a>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span><span class="lineCov">      61083 : ldb::Slice dev::eth::toSlice(h256 const&amp; _h, unsigned _sub)</span>
+<span class="lineNum">      83 </span>            : {
+<span class="lineNum">      84 </span>            : #if ALL_COMPILERS_ARE_CPP11_COMPLIANT
+<span class="lineNum">      85 </span>            :         static thread_local FixedHash&lt;33&gt; h = _h;
+<span class="lineNum">      86 </span>            :         h[32] = (uint8_t)_sub;
+<span class="lineNum">      87 </span>            :         return (ldb::Slice)h.ref();
+<span class="lineNum">      88 </span>            : #else
+<span class="lineNum">      89 </span><span class="lineCov">      61083 :         static boost::thread_specific_ptr&lt;FixedHash&lt;33&gt;&gt; t_h;</span>
+<span class="lineNum">      90 </span><span class="lineCov">      61083 :         if (!t_h.get())</span>
+<span class="lineNum">      91 </span><span class="lineCov">          2 :                 t_h.reset(new FixedHash&lt;33&gt;);</span>
+<span class="lineNum">      92 </span><span class="lineCov">      61083 :         *t_h = FixedHash&lt;33&gt;(_h);</span>
+<span class="lineNum">      93 </span><span class="lineCov">     122166 :         (*t_h)[32] = (uint8_t)_sub;</span>
+<span class="lineNum">      94 </span><span class="lineCov">     183249 :         return (ldb::Slice)t_h-&gt;ref();</span>
+<span class="lineNum">      95 </span>            : #endif //ALL_COMPILERS_ARE_CPP11_COMPLIANT
+<a name="96"><span class="lineNum">      96 </span>            : }</a>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 : ldb::Slice dev::eth::toSlice(uint64_t _n, unsigned _sub)</span>
+<span class="lineNum">      99 </span>            : {
+<span class="lineNum">     100 </span>            : #if ALL_COMPILERS_ARE_CPP11_COMPLIANT
+<span class="lineNum">     101 </span>            :         static thread_local FixedHash&lt;33&gt; h;
+<span class="lineNum">     102 </span>            :         toBigEndian(_n, bytesRef(h.data() + 24, 8));
+<span class="lineNum">     103 </span>            :         h[32] = (uint8_t)_sub;
+<span class="lineNum">     104 </span>            :         return (ldb::Slice)h.ref();
+<span class="lineNum">     105 </span>            : #else
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :         static boost::thread_specific_ptr&lt;FixedHash&lt;33&gt;&gt; t_h;</span>
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :         if (!t_h.get())</span>
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :                 t_h.reset(new FixedHash&lt;33&gt;);</span>
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :         bytesRef ref(t_h-&gt;data() + 24, 8);</span>
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :         toBigEndian(_n, ref);</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :         (*t_h)[32] = (uint8_t)_sub;</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :         return (ldb::Slice)t_h-&gt;ref();</span>
+<span class="lineNum">     113 </span>            : #endif
+<span class="lineNum">     114 </span>            : }
+<span class="lineNum">     115 </span>            : 
+<a name="116"><span class="lineNum">     116 </span>            : namespace dev</a>
+<span class="lineNum">     117 </span>            : {
+<a name="118"><span class="lineNum">     118 </span><span class="lineNoCov">          0 : class WriteBatchNoter: public ldb::WriteBatch::Handler</span></a>
+<a name="119"><span class="lineNum">     119 </span>            : {</a>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :         virtual void Put(ldb::Slice const&amp; _key, ldb::Slice const&amp; _value) { cnote &lt;&lt; &quot;Put&quot; &lt;&lt; toHex(bytesConstRef(_key)) &lt;&lt; &quot;=&gt;&quot; &lt;&lt; toHex(bytesConstRef(_value)); }</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :         virtual void Delete(ldb::Slice const&amp; _key) { cnote &lt;&lt; &quot;Delete&quot; &lt;&lt; toHex(bytesConstRef(_key)); }</span>
+<span class="lineNum">     122 </span>            : };
+<span class="lineNum">     123 </span>            : }
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            : #if ETH_DEBUG&amp;&amp;0
+<span class="lineNum">     126 </span>            : static const chrono::system_clock::duration c_collectionDuration = chrono::seconds(15);
+<span class="lineNum">     127 </span>            : static const unsigned c_collectionQueueSize = 2;
+<span class="lineNum">     128 </span>            : static const unsigned c_maxCacheSize = 1024 * 1024 * 1;
+<span class="lineNum">     129 </span>            : static const unsigned c_minCacheSize = 1;
+<span class="lineNum">     130 </span>            : #else
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            : /// Duration between flushes.
+<span class="lineNum">     133 </span>            : static const chrono::system_clock::duration c_collectionDuration = chrono::seconds(60);
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : /// Length of death row (total time in cache is multiple of this and collection duration).
+<span class="lineNum">     136 </span>            : static const unsigned c_collectionQueueSize = 20;
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            : /// Max size, above which we start forcing cache reduction.
+<span class="lineNum">     139 </span>            : static const unsigned c_maxCacheSize = 1024 * 1024 * 64;
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            : /// Min size, below which we don't bother flushing it.
+<span class="lineNum">     142 </span>            : static const unsigned c_minCacheSize = 1024 * 1024 * 32;
+<span class="lineNum">     143 </span>            : 
+<a name="144"><span class="lineNum">     144 </span>            : #endif</a>
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineCov">       1310 : BlockChain::BlockChain(ChainParams const&amp; _p, std::string const&amp; _dbPath, WithExisting _we, ProgressCallback const&amp; _pc):</span>
+<span class="lineNum">     147 </span><span class="lineCov">      28836 :         m_dbPath(_dbPath)</span>
+<span class="lineNum">     148 </span>            : {
+<span class="lineNum">     149 </span><span class="lineCov">       1310 :         init(_p);</span>
+<span class="lineNum">     150 </span><span class="lineCov">       1310 :         open(_dbPath, _we, _pc);</span>
+<a name="151"><span class="lineNum">     151 </span><span class="lineCov">       1309 : }</span></a>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineCov">      19635 : BlockChain::~BlockChain()</span>
+<span class="lineNum">     154 </span>            : {
+<span class="lineNum">     155 </span><span class="lineCov">       1309 :         close();</span>
+<a name="156"><span class="lineNum">     156 </span><span class="lineCov">       1309 : }</span></a>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineCov">       1310 : BlockHeader const&amp; BlockChain::genesis() const</span>
+<span class="lineNum">     159 </span>            : {
+<span class="lineNum">     160 </span><span class="lineCov">       3930 :         UpgradableGuard l(x_genesis);</span>
+<span class="lineNum">     161 </span><span class="lineCov">       2620 :         if (!m_genesis)</span>
+<span class="lineNum">     162 </span>            :         {
+<span class="lineNum">     163 </span><span class="lineCov">       2620 :                 auto gb = m_params.genesisBlock();</span>
+<span class="lineNum">     164 </span><span class="lineCov">       2620 :                 UpgradeGuard ul(l);</span>
+<span class="lineNum">     165 </span><span class="lineCov">       2620 :                 m_genesis = BlockHeader(gb);</span>
+<span class="lineNum">     166 </span><span class="lineCov">       5240 :                 m_genesisHeaderBytes = BlockHeader::extractHeader(&amp;gb).data().toBytes();</span>
+<span class="lineNum">     167 </span><span class="lineCov">       1310 :                 m_genesisHash = m_genesis.hash();</span>
+<span class="lineNum">     168 </span>            :         }
+<span class="lineNum">     169 </span><span class="lineCov">       2620 :         return m_genesis;</span>
+<a name="170"><span class="lineNum">     170 </span>            : }</a>
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span><span class="lineCov">       1310 : void BlockChain::init(ChainParams const&amp; _p)</span>
+<span class="lineNum">     173 </span>            : {
+<span class="lineNum">     174 </span>            :         // initialise deathrow.
+<span class="lineNum">     175 </span><span class="lineCov">       1310 :         m_cacheUsage.resize(c_collectionQueueSize);</span>
+<span class="lineNum">     176 </span><span class="lineCov">       1310 :         m_lastCollection = chrono::system_clock::now();</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :         // Initialise with the genesis as the last block on the longest chain.
+<span class="lineNum">     179 </span><span class="lineCov">       1310 :         m_params = _p;</span>
+<span class="lineNum">     180 </span><span class="lineCov">       1310 :         m_sealEngine.reset(m_params.createSealEngine());</span>
+<span class="lineNum">     181 </span><span class="lineCov">       1310 :         m_genesis.clear();</span>
+<span class="lineNum">     182 </span><span class="lineCov">       1310 :         genesis();</span>
+<span class="lineNum">     183 </span><span class="lineCov">       1310 : }</span>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span><span class="lineCov">       1310 : unsigned BlockChain::open(std::string const&amp; _path, WithExisting _we)</span>
+<span class="lineNum">     186 </span>            : {
+<span class="lineNum">     187 </span><span class="lineCov">       3930 :         string path = _path.empty() ? Defaults::get()-&gt;m_dbPath : _path;</span>
+<span class="lineNum">     188 </span><span class="lineCov">       7860 :         string chainPath = path + &quot;/&quot; + toHex(m_genesisHash.ref().cropped(0, 4));</span>
+<span class="lineNum">     189 </span><span class="lineCov">       5240 :         string extrasPath = chainPath + &quot;/&quot; + toString(c_databaseVersion);</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">       3930 :         fs::create_directories(extrasPath);</span>
+<span class="lineNum">     192 </span><span class="lineCov">       3930 :         DEV_IGNORE_EXCEPTIONS(fs::permissions(extrasPath, fs::owner_all));</span>
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineCov">       3930 :         bytes status = contents(extrasPath + &quot;/minor&quot;);</span>
+<span class="lineNum">     195 </span><span class="lineCov">       1310 :         unsigned lastMinor = c_minorProtocolVersion;</span>
+<span class="lineNum">     196 </span><span class="lineCov">       1310 :         if (!status.empty())</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :                 DEV_IGNORE_EXCEPTIONS(lastMinor = (unsigned)RLP(status));</span>
+<span class="lineNum">     198 </span><span class="lineCov">       1310 :         if (c_minorProtocolVersion != lastMinor)</span>
+<span class="lineNum">     199 </span>            :         {
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :                 cnote &lt;&lt; &quot;Killing extras database (DB minor version:&quot; &lt;&lt; lastMinor &lt;&lt; &quot; != our miner version: &quot; &lt;&lt; c_minorProtocolVersion &lt;&lt; &quot;).&quot;;</span>
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :                 DEV_IGNORE_EXCEPTIONS(boost::filesystem::remove_all(extrasPath + &quot;/details.old&quot;));</span>
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :                 boost::filesystem::rename(extrasPath + &quot;/extras&quot;, extrasPath + &quot;/extras.old&quot;);</span>
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :                 boost::filesystem::remove_all(extrasPath + &quot;/state&quot;);</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :                 writeFile(extrasPath + &quot;/minor&quot;, rlp(c_minorProtocolVersion));</span>
+<span class="lineNum">     205 </span><span class="lineCov">          1 :                 lastMinor = (unsigned)RLP(status);</span>
+<span class="lineNum">     206 </span>            :         }
+<span class="lineNum">     207 </span><span class="lineCov">       1310 :         if (_we == WithExisting::Kill)</span>
+<span class="lineNum">     208 </span>            :         {
+<span class="lineNum">     209 </span><span class="lineCov">       1307 :                 cnote &lt;&lt; &quot;Killing blockchain &amp; extras database (WithExisting::Kill).&quot;;</span>
+<span class="lineNum">     210 </span><span class="lineCov">       6535 :                 boost::filesystem::remove_all(chainPath + &quot;/blocks&quot;);</span>
+<span class="lineNum">     211 </span><span class="lineCov">       6535 :                 boost::filesystem::remove_all(extrasPath + &quot;/extras&quot;);</span>
+<span class="lineNum">     212 </span>            :         }
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span><span class="lineCov">       1310 :         ldb::Options o;</span>
+<span class="lineNum">     215 </span><span class="lineCov">       1310 :         o.create_if_missing = true;</span>
+<span class="lineNum">     216 </span><span class="lineCov">       1310 :         o.max_open_files = 256;</span>
+<span class="lineNum">     217 </span><span class="lineCov">       3930 :         ldb::DB::Open(o, chainPath + &quot;/blocks&quot;, &amp;m_blocksDB);</span>
+<span class="lineNum">     218 </span><span class="lineCov">       3930 :         ldb::DB::Open(o, extrasPath + &quot;/extras&quot;, &amp;m_extrasDB);</span>
+<span class="lineNum">     219 </span><span class="lineCov">       1310 :         if (!m_blocksDB || !m_extrasDB)</span>
+<span class="lineNum">     220 </span>            :         {
+<span class="lineNum">     221 </span><span class="lineCov">          5 :                 if (boost::filesystem::space(chainPath + &quot;/blocks&quot;).available &lt; 1024)</span>
+<span class="lineNum">     222 </span>            :                 {
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :                         cwarn &lt;&lt; &quot;Not enough available space found on hard drive. Please free some up and then re-run. Bailing.&quot;;</span>
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(NotEnoughAvailableSpace());</span>
+<span class="lineNum">     225 </span>            :                 }
+<span class="lineNum">     226 </span>            :                 else
+<span class="lineNum">     227 </span>            :                 {
+<span class="lineNum">     228 </span>            :                         cwarn &lt;&lt;
+<span class="lineNum">     229 </span><span class="lineCov">          2 :                                 &quot;Database &quot; &lt;&lt;</span>
+<span class="lineNum">     230 </span><span class="lineCov">          3 :                                 (chainPath + &quot;/blocks&quot;) &lt;&lt;</span>
+<span class="lineNum">     231 </span><span class="lineCov">          1 :                                 &quot;or &quot; &lt;&lt;</span>
+<span class="lineNum">     232 </span><span class="lineCov">          3 :                                 (extrasPath + &quot;/extras&quot;) &lt;&lt;</span>
+<span class="lineNum">     233 </span><span class="lineCov">          1 :                                 &quot;already open. You appear to have another instance of ethereum running. Bailing.&quot;;</span>
+<span class="lineNum">     234 </span><span class="lineCov">          3 :                         BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());</span>
+<span class="lineNum">     235 </span>            :                 }
+<span class="lineNum">     236 </span>            :         }
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span>            : //      m_writeOptions.sync = true;
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span><span class="lineCov">       5236 :         if (_we != WithExisting::Verify &amp;&amp; !details(m_genesisHash))</span>
+<span class="lineNum">     241 </span>            :         {
+<span class="lineNum">     242 </span><span class="lineCov">       5237 :                 BlockHeader gb(m_params.genesisBlock());</span>
+<span class="lineNum">     243 </span>            :                 // Insert details of genesis block.
+<span class="lineNum">     244 </span><span class="lineCov">       9163 :                 m_details[m_genesisHash] = BlockDetails(0, gb.difficulty(), h256(), {});</span>
+<span class="lineNum">     245 </span><span class="lineCov">       3927 :                 auto r = m_details[m_genesisHash].rlp();</span>
+<span class="lineNum">     246 </span><span class="lineCov">       5236 :                 m_extrasDB-&gt;Put(m_writeOptions, toSlice(m_genesisHash, ExtraDetails), (ldb::Slice)dev::ref(r));</span>
+<span class="lineNum">     247 </span><span class="lineCov">       1309 :                 assert(isKnown(gb.hash()));</span>
+<span class="lineNum">     248 </span>            :         }
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            : #if ETH_PARANOIA
+<span class="lineNum">     251 </span>            :         checkConsistency();
+<span class="lineNum">     252 </span>            : #endif
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            :         // TODO: Implement ability to rebuild details map from DB.
+<span class="lineNum">     255 </span><span class="lineCov">       2618 :         std::string l;</span>
+<span class="lineNum">     256 </span><span class="lineCov">       3927 :         m_extrasDB-&gt;Get(m_readOptions, ldb::Slice(&quot;best&quot;), &amp;l);</span>
+<span class="lineNum">     257 </span><span class="lineCov">       1309 :         m_lastBlockHash = l.empty() ? m_genesisHash : *(h256*)l.data();</span>
+<span class="lineNum">     258 </span><span class="lineCov">       1309 :         m_lastBlockNumber = number(m_lastBlockHash);</span>
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span><span class="lineCov">       1309 :         ctrace &lt;&lt; &quot;Opened blockchain DB. Latest: &quot; &lt;&lt; currentHash() &lt;&lt; (lastMinor == c_minorProtocolVersion ? &quot;(rebuild not needed)&quot; : &quot;*** REBUILD NEEDED ***&quot;);</span>
+<span class="lineNum">     261 </span><span class="lineCov">       2618 :         return lastMinor;</span>
+<a name="262"><span class="lineNum">     262 </span>            : }</a>
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span><span class="lineCov">       1310 : void BlockChain::open(std::string const&amp; _path, WithExisting _we, ProgressCallback const&amp; _pc)</span>
+<span class="lineNum">     265 </span>            : {
+<span class="lineNum">     266 </span><span class="lineCov">       1310 :         if (open(_path, _we) != c_minorProtocolVersion || _we == WithExisting::Verify)</span>
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :                 rebuild(_path, _pc);</span>
+<a name="268"><span class="lineNum">     268 </span><span class="lineCov">       1309 : }</span></a>
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 : void BlockChain::reopen(ChainParams const&amp; _p, WithExisting _we, ProgressCallback const&amp; _pc)</span>
+<span class="lineNum">     271 </span>            : {
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :         close();</span>
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :         init(_p);</span>
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :         open(m_dbPath, _we, _pc);</span>
+<a name="275"><span class="lineNum">     275 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span><span class="lineCov">       1309 : void BlockChain::close()</span>
+<span class="lineNum">     278 </span>            : {
+<span class="lineNum">     279 </span><span class="lineCov">       1309 :         ctrace &lt;&lt; &quot;Closing blockchain DB&quot;;</span>
+<span class="lineNum">     280 </span>            :         // Not thread safe...
+<span class="lineNum">     281 </span><span class="lineCov">       1309 :         delete m_extrasDB;</span>
+<span class="lineNum">     282 </span><span class="lineCov">       1309 :         delete m_blocksDB;</span>
+<span class="lineNum">     283 </span><span class="lineCov">       1309 :         m_lastBlockHash = m_genesisHash;</span>
+<span class="lineNum">     284 </span><span class="lineCov">       1309 :         m_lastBlockNumber = 0;</span>
+<span class="lineNum">     285 </span><span class="lineCov">       2618 :         m_details.clear();</span>
+<span class="lineNum">     286 </span><span class="lineCov">       2618 :         m_blocks.clear();</span>
+<span class="lineNum">     287 </span><span class="lineCov">       2618 :         m_logBlooms.clear();</span>
+<span class="lineNum">     288 </span><span class="lineCov">       2618 :         m_receipts.clear();</span>
+<span class="lineNum">     289 </span><span class="lineCov">       2618 :         m_transactionAddresses.clear();</span>
+<span class="lineNum">     290 </span><span class="lineCov">       2618 :         m_blockHashes.clear();</span>
+<span class="lineNum">     291 </span><span class="lineCov">       2618 :         m_blocksBlooms.clear();</span>
+<span class="lineNum">     292 </span><span class="lineCov">       2618 :         m_cacheUsage.clear();</span>
+<span class="lineNum">     293 </span><span class="lineCov">       2618 :         m_inUse.clear();</span>
+<span class="lineNum">     294 </span><span class="lineCov">       2618 :         m_lastLastHashes.clear();</span>
+<a name="295"><span class="lineNum">     295 </span><span class="lineCov">       1309 : }</span></a>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 : void BlockChain::rebuild(std::string const&amp; _path, std::function&lt;void(unsigned, unsigned)&gt; const&amp; _progress)</span>
+<span class="lineNum">     298 </span>            : {
+<span class="lineNum">     299 </span><span class="lineNoCov">          0 :         string path = _path.empty() ? Defaults::get()-&gt;m_dbPath : _path;</span>
+<span class="lineNum">     300 </span><span class="lineNoCov">          0 :         string chainPath = path + &quot;/&quot; + toHex(m_genesisHash.ref().cropped(0, 4));</span>
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :         string extrasPath = chainPath + &quot;/&quot; + toString(c_databaseVersion);</span>
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span>            : #if ETH_PROFILING_GPERF
+<span class="lineNum">     304 </span>            :         ProfilerStart(&quot;BlockChain_rebuild.log&quot;);
+<span class="lineNum">     305 </span>            : #endif
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span><span class="lineNoCov">          0 :         unsigned originalNumber = m_lastBlockNumber;</span>
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span>            :         ///////////////////////////////
+<span class="lineNum">     310 </span>            :         // TODO
+<span class="lineNum">     311 </span>            :         // - KILL ALL STATE/CHAIN
+<span class="lineNum">     312 </span>            :         // - REINSERT ALL BLOCKS
+<span class="lineNum">     313 </span>            :         ///////////////////////////////
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span>            :         // Keep extras DB around, but under a temp name
+<span class="lineNum">     316 </span><span class="lineNoCov">          0 :         delete m_extrasDB;</span>
+<span class="lineNum">     317 </span><span class="lineNoCov">          0 :         m_extrasDB = nullptr;</span>
+<span class="lineNum">     318 </span><span class="lineNoCov">          0 :         boost::filesystem::rename(extrasPath + &quot;/extras&quot;, extrasPath + &quot;/extras.old&quot;);</span>
+<span class="lineNum">     319 </span>            :         ldb::DB* oldExtrasDB;
+<span class="lineNum">     320 </span><span class="lineNoCov">          0 :         ldb::Options o;</span>
+<span class="lineNum">     321 </span><span class="lineNoCov">          0 :         o.create_if_missing = true;</span>
+<span class="lineNum">     322 </span><span class="lineNoCov">          0 :         ldb::DB::Open(o, extrasPath + &quot;/extras.old&quot;, &amp;oldExtrasDB);</span>
+<span class="lineNum">     323 </span><span class="lineNoCov">          0 :         ldb::DB::Open(o, extrasPath + &quot;/extras&quot;, &amp;m_extrasDB);</span>
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span>            :         // Open a fresh state DB
+<span class="lineNum">     326 </span><span class="lineNoCov">          0 :         Block s = genesisBlock(State::openDB(path, m_genesisHash, WithExisting::Kill));</span>
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span>            :         // Clear all memos ready for replay.
+<span class="lineNum">     329 </span><span class="lineNoCov">          0 :         m_details.clear();</span>
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 :         m_logBlooms.clear();</span>
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 :         m_receipts.clear();</span>
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 :         m_transactionAddresses.clear();</span>
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :         m_blockHashes.clear();</span>
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :         m_blocksBlooms.clear();</span>
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :         m_lastLastHashes.clear();</span>
+<span class="lineNum">     336 </span><span class="lineNoCov">          0 :         m_lastBlockHash = genesisHash();</span>
+<span class="lineNum">     337 </span><span class="lineNoCov">          0 :         m_lastBlockNumber = 0;</span>
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span><span class="lineNoCov">          0 :         m_details[m_lastBlockHash].totalDifficulty = s.info().difficulty();</span>
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span><span class="lineNoCov">          0 :         m_extrasDB-&gt;Put(m_writeOptions, toSlice(m_lastBlockHash, ExtraDetails), (ldb::Slice)dev::ref(m_details[m_lastBlockHash].rlp()));</span>
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span><span class="lineNoCov">          0 :         h256 lastHash = m_lastBlockHash;</span>
+<span class="lineNum">     344 </span><span class="lineNoCov">          0 :         Timer t;</span>
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :         for (unsigned d = 1; d &lt;= originalNumber; ++d)</span>
+<span class="lineNum">     346 </span>            :         {
+<span class="lineNum">     347 </span><span class="lineNoCov">          0 :                 if (!(d % 1000))</span>
+<span class="lineNum">     348 </span>            :                 {
+<span class="lineNum">     349 </span><span class="lineNoCov">          0 :                         cerr &lt;&lt; &quot;\n1000 blocks in &quot; &lt;&lt; t.elapsed() &lt;&lt; &quot;s = &quot; &lt;&lt; (1000.0 / t.elapsed()) &lt;&lt; &quot;b/s&quot; &lt;&lt; endl;</span>
+<span class="lineNum">     350 </span>            :                         t.restart();
+<span class="lineNum">     351 </span>            :                 }
+<span class="lineNum">     352 </span>            :                 try
+<span class="lineNum">     353 </span>            :                 {
+<span class="lineNum">     354 </span><span class="lineNoCov">          0 :                         bytes b = block(queryExtras&lt;BlockHash, uint64_t, ExtraBlockHash&gt;(d, m_blockHashes, x_blockHashes, NullBlockHash, oldExtrasDB).value);</span>
+<span class="lineNum">     355 </span>            : 
+<span class="lineNum">     356 </span><span class="lineNoCov">          0 :                         BlockHeader bi(&amp;b);</span>
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :                         if (bi.parentHash() != lastHash)</span>
+<span class="lineNum">     359 </span>            :                         {
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :                                 cwarn &lt;&lt; &quot;DISJOINT CHAIN DETECTED; &quot; &lt;&lt; bi.hash() &lt;&lt; &quot;#&quot; &lt;&lt; d &lt;&lt; &quot; -&gt; parent is&quot; &lt;&lt; bi.parentHash() &lt;&lt; &quot;; expected&quot; &lt;&lt; lastHash &lt;&lt; &quot;#&quot; &lt;&lt; (d - 1);</span>
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :                                 return;</span>
+<span class="lineNum">     362 </span>            :                         }
+<span class="lineNum">     363 </span><span class="lineNoCov">          0 :                         lastHash = bi.hash();</span>
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :                         import(b, s.db(), 0);</span>
+<span class="lineNum">     365 </span>            :                 }
+<span class="lineNum">     366 </span><span class="lineNoCov">          0 :                 catch (...)</span>
+<span class="lineNum">     367 </span>            :                 {
+<span class="lineNum">     368 </span>            :                         // Failed to import - stop here.
+<span class="lineNum">     369 </span>            :                         break;
+<span class="lineNum">     370 </span>            :                 }
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span><span class="lineNoCov">          0 :                 if (_progress)</span>
+<span class="lineNum">     373 </span><span class="lineNoCov">          0 :                         _progress(d, originalNumber);</span>
+<span class="lineNum">     374 </span>            :         }
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span>            : #if ETH_PROFILING_GPERF
+<span class="lineNum">     377 </span>            :         ProfilerStop();
+<span class="lineNum">     378 </span>            : #endif
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 :         delete oldExtrasDB;</span>
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 :         boost::filesystem::remove_all(path + &quot;/extras.old&quot;);</span>
+<a name="382"><span class="lineNum">     382 </span>            : }</a>
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span><span class="lineCov">          4 : string BlockChain::dumpDatabase() const</span>
+<span class="lineNum">     385 </span>            : {
+<span class="lineNum">     386 </span><span class="lineCov">          8 :         stringstream ss;</span>
+<span class="lineNum">     387 </span>            : 
+<span class="lineNum">     388 </span><span class="lineCov">          8 :         ss &lt;&lt; m_lastBlockHash &lt;&lt; endl;</span>
+<span class="lineNum">     389 </span><span class="lineCov">          4 :         ldb::Iterator* i = m_extrasDB-&gt;NewIterator(m_readOptions);</span>
+<span class="lineNum">     390 </span><span class="lineCov">         56 :         for (i-&gt;SeekToFirst(); i-&gt;Valid(); i-&gt;Next())</span>
+<span class="lineNum">     391 </span><span class="lineCov">        468 :                 ss &lt;&lt; toHex(bytesConstRef(i-&gt;key())) &lt;&lt; &quot;/&quot; &lt;&lt; toHex(bytesConstRef(i-&gt;value())) &lt;&lt; endl;</span>
+<span class="lineNum">     392 </span><span class="lineCov">          8 :         return ss.str();</span>
+<a name="393"><span class="lineNum">     393 </span>            : }</a>
+<span class="lineNum">     394 </span>            : 
+<span class="lineNum">     395 </span><span class="lineCov">       5046 : LastHashes BlockChain::lastHashes(h256 const&amp; _parent) const</span>
+<span class="lineNum">     396 </span>            : {
+<span class="lineNum">     397 </span><span class="lineCov">      15138 :         Guard l(x_lastLastHashes);</span>
+<span class="lineNum">     398 </span><span class="lineCov">      14688 :         if (m_lastLastHashes.empty() || m_lastLastHashes.back() != _parent)</span>
+<span class="lineNum">     399 </span>            :         {
+<span class="lineNum">     400 </span><span class="lineCov">       5046 :                 m_lastLastHashes.resize(256);</span>
+<span class="lineNum">     401 </span><span class="lineCov">       5046 :                 m_lastLastHashes[0] = _parent;</span>
+<span class="lineNum">     402 </span><span class="lineCov">       5046 :                 for (unsigned i = 0; i &lt; 255; ++i)</span>
+<span class="lineNum">     403 </span><span class="lineCov">    6393409 :                         m_lastLastHashes[i + 1] = m_lastLastHashes[i] ? info(m_lastLastHashes[i]).parentHash() : h256();</span>
+<span class="lineNum">     404 </span>            :         }
+<span class="lineNum">     405 </span><span class="lineCov">      10092 :         return m_lastLastHashes;</span>
+<a name="406"><span class="lineNum">     406 </span>            : }</a>
+<span class="lineNum">     407 </span>            : 
+<span class="lineNum">     408 </span><span class="lineCov">          1 : tuple&lt;ImportRoute, bool, unsigned&gt; BlockChain::sync(BlockQueue&amp; _bq, OverlayDB const&amp; _stateDB, unsigned _max)</span>
+<span class="lineNum">     409 </span>            : {
+<span class="lineNum">     410 </span>            : //      _bq.tick(*this);
+<span class="lineNum">     411 </span>            : 
+<span class="lineNum">     412 </span><span class="lineCov">          2 :         VerifiedBlocks blocks;</span>
+<span class="lineNum">     413 </span><span class="lineCov">          1 :         _bq.drain(blocks, _max);</span>
+<span class="lineNum">     414 </span>            : 
+<span class="lineNum">     415 </span><span class="lineCov">          2 :         h256s fresh;</span>
+<span class="lineNum">     416 </span><span class="lineCov">          2 :         h256s dead;</span>
+<span class="lineNum">     417 </span><span class="lineCov">          2 :         h256s badBlocks;</span>
+<span class="lineNum">     418 </span><span class="lineCov">          2 :         Transactions goodTransactions;</span>
+<span class="lineNum">     419 </span><span class="lineCov">          1 :         unsigned count = 0;</span>
+<span class="lineNum">     420 </span><span class="lineCov">          4 :         for (VerifiedBlock const&amp; block: blocks)</span>
+<span class="lineNum">     421 </span>            :         {
+<span class="lineNum">     422 </span>            :                 do {
+<span class="lineNum">     423 </span>            :                         try
+<span class="lineNum">     424 </span>            :                         {
+<span class="lineNum">     425 </span>            :                                 // Nonce &amp; uncle nonces already verified in verification thread at this point.
+<span class="lineNum">     426 </span><span class="lineNoCov">          0 :                                 ImportRoute r;</span>
+<span class="lineNum">     427 </span><span class="lineNoCov">          0 :                                 DEV_TIMED_ABOVE(&quot;Block import &quot; + toString(block.verified.info.number()), 500)</span>
+<span class="lineNum">     428 </span><span class="lineNoCov">          0 :                                         r = import(block.verified, _stateDB, (ImportRequirements::Everything &amp; ~ImportRequirements::ValidSeal &amp; ~ImportRequirements::CheckUncles) != 0);</span>
+<span class="lineNum">     429 </span><span class="lineNoCov">          0 :                                 fresh += r.liveBlocks;</span>
+<span class="lineNum">     430 </span><span class="lineNoCov">          0 :                                 dead += r.deadBlocks;</span>
+<span class="lineNum">     431 </span><span class="lineNoCov">          0 :                                 goodTransactions.reserve(goodTransactions.size() + r.goodTranactions.size());</span>
+<span class="lineNum">     432 </span><span class="lineNoCov">          0 :                                 std::move(std::begin(r.goodTranactions), std::end(r.goodTranactions), std::back_inserter(goodTransactions));</span>
+<span class="lineNum">     433 </span><span class="lineNoCov">          0 :                                 ++count;</span>
+<span class="lineNum">     434 </span>            :                         }
+<span class="lineNum">     435 </span><span class="lineNoCov">          0 :                         catch (dev::eth::AlreadyHaveBlock const&amp;)</span>
+<span class="lineNum">     436 </span>            :                         {
+<span class="lineNum">     437 </span><span class="lineNoCov">          0 :                                 cwarn &lt;&lt; &quot;ODD: Import queue contains already imported block&quot;;</span>
+<span class="lineNum">     438 </span>            :                                 continue;
+<span class="lineNum">     439 </span>            :                         }
+<span class="lineNum">     440 </span><span class="lineNoCov">          0 :                         catch (dev::eth::UnknownParent)</span>
+<span class="lineNum">     441 </span>            :                         {
+<span class="lineNum">     442 </span><span class="lineNoCov">          0 :                                 cwarn &lt;&lt; &quot;ODD: Import queue contains block with unknown parent.&quot;;// &lt;&lt; LogTag::Error &lt;&lt; boost::current_exception_diagnostic_information();</span>
+<span class="lineNum">     443 </span>            :                                 // NOTE: don't reimport since the queue should guarantee everything in the right order.
+<span class="lineNum">     444 </span>            :                                 // Can't continue - chain bad.
+<span class="lineNum">     445 </span><span class="lineNoCov">          0 :                                 badBlocks.push_back(block.verified.info.hash());</span>
+<span class="lineNum">     446 </span>            :                         }
+<span class="lineNum">     447 </span><span class="lineNoCov">          0 :                         catch (dev::eth::FutureTime)</span>
+<span class="lineNum">     448 </span>            :                         {
+<span class="lineNum">     449 </span><span class="lineNoCov">          0 :                                 cwarn &lt;&lt; &quot;ODD: Import queue contains a block with future time.&quot;;</span>
+<span class="lineNum">     450 </span><span class="lineNoCov">          0 :                                 this_thread::sleep_for(chrono::seconds(1));</span>
+<span class="lineNum">     451 </span>            :                                 continue;
+<span class="lineNum">     452 </span>            :                         }
+<span class="lineNum">     453 </span><span class="lineNoCov">          0 :                         catch (dev::eth::TransientError)</span>
+<span class="lineNum">     454 </span>            :                         {
+<span class="lineNum">     455 </span><span class="lineNoCov">          0 :                                 this_thread::sleep_for(chrono::milliseconds(100));</span>
+<span class="lineNum">     456 </span>            :                                 continue;
+<span class="lineNum">     457 </span>            :                         }
+<span class="lineNum">     458 </span><span class="lineNoCov">          0 :                         catch (Exception&amp; ex)</span>
+<span class="lineNum">     459 </span>            :                         {
+<span class="lineNum">     460 </span>            : //                              cnote &lt;&lt; &quot;Exception while importing block. Someone (Jeff? That you?) seems to be giving us dodgy blocks!&quot;;// &lt;&lt; LogTag::Error &lt;&lt; diagnostic_information(ex);
+<span class="lineNum">     461 </span><span class="lineNoCov">          0 :                                 if (m_onBad)</span>
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 :                                         m_onBad(ex);</span>
+<span class="lineNum">     463 </span>            :                                 // NOTE: don't reimport since the queue should guarantee everything in the right order.
+<span class="lineNum">     464 </span>            :                                 // Can't continue - chain  bad.
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :                                 badBlocks.push_back(block.verified.info.hash());</span>
+<span class="lineNum">     466 </span>            :                         }
+<span class="lineNum">     467 </span>            :                 } while (false);
+<span class="lineNum">     468 </span>            :         }
+<span class="lineNum">     469 </span><span class="lineCov">          3 :         return make_tuple(ImportRoute{dead, fresh, goodTransactions}, _bq.doneDrain(badBlocks), count);</span>
+<a name="470"><span class="lineNum">     470 </span>            : }</a>
+<span class="lineNum">     471 </span>            : 
+<span class="lineNum">     472 </span><span class="lineCov">          4 : pair&lt;ImportResult, ImportRoute&gt; BlockChain::attemptImport(bytes const&amp; _block, OverlayDB const&amp; _stateDB, bool _mustBeNew) noexcept</span>
+<span class="lineNum">     473 </span>            : {
+<span class="lineNum">     474 </span>            :         try
+<span class="lineNum">     475 </span>            :         {
+<span class="lineNum">     476 </span><span class="lineCov">         12 :                 return make_pair(ImportResult::Success, import(verifyBlock(&amp;_block, m_onBad, ImportRequirements::OutOfOrderChecks), _stateDB, _mustBeNew));</span>
+<span class="lineNum">     477 </span>            :         }
+<span class="lineNum">     478 </span><span class="lineNoCov">          0 :         catch (UnknownParent&amp;)</span>
+<span class="lineNum">     479 </span>            :         {
+<span class="lineNum">     480 </span><span class="lineNoCov">          0 :                 return make_pair(ImportResult::UnknownParent, ImportRoute());</span>
+<span class="lineNum">     481 </span>            :         }
+<span class="lineNum">     482 </span><span class="lineCov">          2 :         catch (AlreadyHaveBlock&amp;)</span>
+<span class="lineNum">     483 </span>            :         {
+<span class="lineNum">     484 </span><span class="lineCov">          3 :                 return make_pair(ImportResult::AlreadyKnown, ImportRoute());</span>
+<span class="lineNum">     485 </span>            :         }
+<span class="lineNum">     486 </span><span class="lineCov">          2 :         catch (FutureTime&amp;)</span>
+<span class="lineNum">     487 </span>            :         {
+<span class="lineNum">     488 </span><span class="lineCov">          3 :                 return make_pair(ImportResult::FutureTimeKnown, ImportRoute());</span>
+<span class="lineNum">     489 </span>            :         }
+<span class="lineNum">     490 </span><span class="lineCov">          2 :         catch (Exception&amp; ex)</span>
+<span class="lineNum">     491 </span>            :         {
+<span class="lineNum">     492 </span><span class="lineCov">          2 :                 if (m_onBad)</span>
+<span class="lineNum">     493 </span><span class="lineCov">          1 :                         m_onBad(ex);</span>
+<span class="lineNum">     494 </span><span class="lineCov">          3 :                 return make_pair(ImportResult::Malformed, ImportRoute());</span>
+<span class="lineNum">     495 </span>            :         }
+<a name="496"><span class="lineNum">     496 </span>            : }</a>
+<span class="lineNum">     497 </span>            : 
+<span class="lineNum">     498 </span><span class="lineCov">       5141 : ImportRoute BlockChain::import(bytes const&amp; _block, OverlayDB const&amp; _db, bool _mustBeNew)</span>
+<span class="lineNum">     499 </span>            : {
+<span class="lineNum">     500 </span>            :         // VERIFY: populates from the block and checks the block is internally coherent.
+<span class="lineNum">     501 </span><span class="lineCov">      10282 :         VerifiedBlockRef block;</span>
+<span class="lineNum">     502 </span>            : 
+<span class="lineNum">     503 </span>            : #if ETH_CATCH
+<span class="lineNum">     504 </span>            :         try
+<span class="lineNum">     505 </span>            : #endif
+<span class="lineNum">     506 </span>            :         {
+<span class="lineNum">     507 </span><span class="lineCov">      15423 :                 block = verifyBlock(&amp;_block, m_onBad, ImportRequirements::OutOfOrderChecks);</span>
+<span class="lineNum">     508 </span>            :         }
+<span class="lineNum">     509 </span>            : #if ETH_CATCH
+<span class="lineNum">     510 </span><span class="lineCov">        164 :         catch (Exception&amp; ex)</span>
+<span class="lineNum">     511 </span>            :         {
+<span class="lineNum">     512 </span>            : //              clog(BlockChainNote) &lt;&lt; &quot;   Malformed block: &quot; &lt;&lt; diagnostic_information(ex);
+<span class="lineNum">     513 </span><span class="lineCov">        328 :                 ex &lt;&lt; errinfo_phase(2);</span>
+<span class="lineNum">     514 </span><span class="lineCov">        328 :                 ex &lt;&lt; errinfo_now(time(0));</span>
+<span class="lineNum">     515 </span><span class="lineCov">         82 :                 throw;</span>
+<span class="lineNum">     516 </span>            :         }
+<span class="lineNum">     517 </span>            : #endif
+<span class="lineNum">     518 </span>            : 
+<span class="lineNum">     519 </span><span class="lineCov">       9983 :         return import(block, _db, _mustBeNew);</span>
+<a name="520"><span class="lineNum">     520 </span>            : }</a>
+<span class="lineNum">     521 </span>            : 
+<span class="lineNum">     522 </span><span class="lineCov">          6 : void BlockChain::insert(bytes const&amp; _block, bytesConstRef _receipts, bool _mustBeNew)</span>
+<span class="lineNum">     523 </span>            : {
+<span class="lineNum">     524 </span>            :         // VERIFY: populates from the block and checks the block is internally coherent.
+<span class="lineNum">     525 </span><span class="lineCov">         12 :         VerifiedBlockRef block;</span>
+<span class="lineNum">     526 </span>            : 
+<span class="lineNum">     527 </span>            : #if ETH_CATCH
+<span class="lineNum">     528 </span>            :         try
+<span class="lineNum">     529 </span>            : #endif
+<span class="lineNum">     530 </span>            :         {
+<span class="lineNum">     531 </span><span class="lineCov">         18 :                 block = verifyBlock(&amp;_block, m_onBad, ImportRequirements::OutOfOrderChecks);</span>
+<span class="lineNum">     532 </span>            :         }
+<span class="lineNum">     533 </span>            : #if ETH_CATCH
+<span class="lineNum">     534 </span><span class="lineCov">          2 :         catch (Exception&amp; ex)</span>
+<span class="lineNum">     535 </span>            :         {
+<span class="lineNum">     536 </span>            : //              clog(BlockChainNote) &lt;&lt; &quot;   Malformed block: &quot; &lt;&lt; diagnostic_information(ex);
+<span class="lineNum">     537 </span><span class="lineCov">          4 :                 ex &lt;&lt; errinfo_phase(2);</span>
+<span class="lineNum">     538 </span><span class="lineCov">          4 :                 ex &lt;&lt; errinfo_now(time(0));</span>
+<span class="lineNum">     539 </span><span class="lineCov">          1 :                 throw;</span>
+<span class="lineNum">     540 </span>            :         }
+<span class="lineNum">     541 </span>            : #endif
+<span class="lineNum">     542 </span>            : 
+<span class="lineNum">     543 </span><span class="lineCov">         10 :         insert(block, _receipts, _mustBeNew);</span>
+<span class="lineNum">     544 </span><span class="lineCov">          2 : }</span>
+<span class="lineNum">     545 </span>            : 
+<span class="lineNum">     546 </span><span class="lineCov">          5 : void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _mustBeNew)</span>
+<span class="lineNum">     547 </span>            : {
+<span class="lineNum">     548 </span>            :         // Check block doesn't already exist first!
+<span class="lineNum">     549 </span><span class="lineCov">          5 :         if (isKnown(_block.info.hash()) &amp;&amp; _mustBeNew)</span>
+<span class="lineNum">     550 </span>            :         {
+<span class="lineNum">     551 </span><span class="lineCov">          2 :                 clog(BlockChainNote) &lt;&lt; _block.info.hash() &lt;&lt; &quot;: Not new.&quot;;</span>
+<span class="lineNum">     552 </span><span class="lineCov">          3 :                 BOOST_THROW_EXCEPTION(AlreadyHaveBlock());</span>
+<span class="lineNum">     553 </span>            :         }
+<span class="lineNum">     554 </span>            : 
+<span class="lineNum">     555 </span>            :         // Work out its number as the parent's number + 1
+<span class="lineNum">     556 </span><span class="lineCov">          8 :         if (!isKnown(_block.info.parentHash(), false))</span>
+<span class="lineNum">     557 </span>            :         {
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 :                 clog(BlockChainNote) &lt;&lt; _block.info.hash() &lt;&lt; &quot;: Unknown parent &quot; &lt;&lt; _block.info.parentHash();</span>
+<span class="lineNum">     559 </span>            :                 // We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
+<span class="lineNum">     560 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(UnknownParent());</span>
+<span class="lineNum">     561 </span>            :         }
+<span class="lineNum">     562 </span>            : 
+<span class="lineNum">     563 </span>            :         // Check receipts
+<span class="lineNum">     564 </span><span class="lineCov">          8 :         vector&lt;bytesConstRef&gt; receipts;</span>
+<span class="lineNum">     565 </span><span class="lineCov">         22 :         for (auto i: RLP(_receipts))</span>
+<span class="lineNum">     566 </span><span class="lineCov">         12 :                 receipts.push_back(i.data());</span>
+<span class="lineNum">     567 </span><span class="lineCov">          4 :         h256 receiptsRoot = orderedTrieRoot(receipts);</span>
+<span class="lineNum">     568 </span><span class="lineCov">          8 :         if (_block.info.receiptsRoot() != receiptsRoot)</span>
+<span class="lineNum">     569 </span>            :         {
+<span class="lineNum">     570 </span><span class="lineCov">          5 :                 clog(BlockChainNote) &lt;&lt; _block.info.hash() &lt;&lt; &quot;: Invalid receipts root &quot; &lt;&lt; _block.info.receiptsRoot() &lt;&lt; &quot; not &quot; &lt;&lt; receiptsRoot;</span>
+<span class="lineNum">     571 </span>            :                 // We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
+<span class="lineNum">     572 </span><span class="lineCov">          3 :                 BOOST_THROW_EXCEPTION(InvalidReceiptsStateRoot());</span>
+<span class="lineNum">     573 </span>            :         }
+<span class="lineNum">     574 </span>            : 
+<span class="lineNum">     575 </span><span class="lineCov">          9 :         auto pd = details(_block.info.parentHash());</span>
+<span class="lineNum">     576 </span><span class="lineCov">          3 :         if (!pd)</span>
+<span class="lineNum">     577 </span>            :         {
+<span class="lineNum">     578 </span><span class="lineNoCov">          0 :                 auto pdata = pd.rlp();</span>
+<span class="lineNum">     579 </span><span class="lineNoCov">          0 :                 clog(BlockChainDebug) &lt;&lt; &quot;Details is returning false despite block known:&quot; &lt;&lt; RLP(pdata);</span>
+<span class="lineNum">     580 </span><span class="lineNoCov">          0 :                 auto parentBlock = block(_block.info.parentHash());</span>
+<span class="lineNum">     581 </span><span class="lineNoCov">          0 :                 clog(BlockChainDebug) &lt;&lt; &quot;isKnown:&quot; &lt;&lt; isKnown(_block.info.parentHash());</span>
+<span class="lineNum">     582 </span><span class="lineNoCov">          0 :                 clog(BlockChainDebug) &lt;&lt; &quot;last/number:&quot; &lt;&lt; m_lastBlockNumber &lt;&lt; m_lastBlockHash &lt;&lt; _block.info.number();</span>
+<span class="lineNum">     583 </span><span class="lineNoCov">          0 :                 clog(BlockChainDebug) &lt;&lt; &quot;Block:&quot; &lt;&lt; BlockHeader(&amp;parentBlock);</span>
+<span class="lineNum">     584 </span><span class="lineNoCov">          0 :                 clog(BlockChainDebug) &lt;&lt; &quot;RLP:&quot; &lt;&lt; RLP(parentBlock);</span>
+<span class="lineNum">     585 </span><span class="lineNoCov">          0 :                 clog(BlockChainDebug) &lt;&lt; &quot;DATABASE CORRUPTION: CRITICAL FAILURE&quot;;</span>
+<span class="lineNum">     586 </span><span class="lineNoCov">          0 :                 exit(-1);</span>
+<span class="lineNum">     587 </span>            :         }
+<span class="lineNum">     588 </span>            : 
+<span class="lineNum">     589 </span>            :         // Check it's not crazy
+<span class="lineNum">     590 </span><span class="lineCov">          9 :         if (_block.info.timestamp() &gt; utcTime() &amp;&amp; !m_params.otherParams.count(&quot;allowFutureBlocks&quot;))</span>
+<span class="lineNum">     591 </span>            :         {
+<span class="lineNum">     592 </span><span class="lineCov">          4 :                 clog(BlockChainChat) &lt;&lt; _block.info.hash() &lt;&lt; &quot;: Future time &quot; &lt;&lt; _block.info.timestamp() &lt;&lt; &quot; (now at &quot; &lt;&lt; utcTime() &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">     593 </span>            :                 // Block has a timestamp in the future. This is no good.
+<span class="lineNum">     594 </span><span class="lineCov">          3 :                 BOOST_THROW_EXCEPTION(FutureTime());</span>
+<span class="lineNum">     595 </span>            :         }
+<span class="lineNum">     596 </span>            : 
+<span class="lineNum">     597 </span>            :         // Verify parent-critical parts
+<span class="lineNum">     598 </span><span class="lineCov">          4 :         verifyBlock(_block.block, m_onBad, ImportRequirements::InOrderChecks);</span>
+<span class="lineNum">     599 </span>            : 
+<span class="lineNum">     600 </span>            :         // OK - we're happy. Insert into database.
+<span class="lineNum">     601 </span><span class="lineCov">          4 :         ldb::WriteBatch blocksBatch;</span>
+<span class="lineNum">     602 </span><span class="lineCov">          4 :         ldb::WriteBatch extrasBatch;</span>
+<span class="lineNum">     603 </span>            : 
+<span class="lineNum">     604 </span><span class="lineCov">          4 :         BlockLogBlooms blb;</span>
+<span class="lineNum">     605 </span><span class="lineCov">          8 :         for (auto i: RLP(_receipts))</span>
+<span class="lineNum">     606 </span><span class="lineCov">          2 :                 blb.blooms.push_back(TransactionReceipt(i.data()).bloom());</span>
+<span class="lineNum">     607 </span>            : 
+<span class="lineNum">     608 </span>            :         // ensure parent is cached for later addition.
+<span class="lineNum">     609 </span>            :         // TODO: this is a bit horrible would be better refactored into an enveloping UpgradableGuard
+<span class="lineNum">     610 </span>            :         // together with an &quot;ensureCachedWithUpdatableLock(l)&quot; method.
+<span class="lineNum">     611 </span>            :         // This is safe in practice since the caches don't get flushed nearly often enough to be
+<span class="lineNum">     612 </span>            :         // done here.
+<span class="lineNum">     613 </span><span class="lineCov">          6 :         details(_block.info.parentHash());</span>
+<span class="lineNum">     614 </span><span class="lineCov">         10 :         DEV_WRITE_GUARDED(x_details)</span>
+<span class="lineNum">     615 </span>            :         {
+<span class="lineNum">     616 </span><span class="lineCov">          6 :                 if (!dev::contains(m_details[_block.info.parentHash()].children, _block.info.hash()))</span>
+<span class="lineNum">     617 </span><span class="lineCov">          6 :                         m_details[_block.info.parentHash()].children.push_back(_block.info.hash());</span>
+<span class="lineNum">     618 </span>            :         }
+<span class="lineNum">     619 </span>            : 
+<span class="lineNum">     620 </span><span class="lineCov">          4 :         blocksBatch.Put(toSlice(_block.info.hash()), ldb::Slice(_block.block));</span>
+<span class="lineNum">     621 </span><span class="lineCov">         10 :         DEV_READ_GUARDED(x_details)</span>
+<span class="lineNum">     622 </span><span class="lineCov">         10 :                 extrasBatch.Put(toSlice(_block.info.parentHash(), ExtraDetails), (ldb::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));</span>
+<span class="lineNum">     623 </span>            : 
+<span class="lineNum">     624 </span><span class="lineCov">         10 :         BlockDetails bd((unsigned)pd.number + 1, pd.totalDifficulty + _block.info.difficulty(), _block.info.parentHash(), {});</span>
+<span class="lineNum">     625 </span><span class="lineCov">          8 :         extrasBatch.Put(toSlice(_block.info.hash(), ExtraDetails), (ldb::Slice)dev::ref(bd.rlp()));</span>
+<span class="lineNum">     626 </span><span class="lineCov">          8 :         extrasBatch.Put(toSlice(_block.info.hash(), ExtraLogBlooms), (ldb::Slice)dev::ref(blb.rlp()));</span>
+<span class="lineNum">     627 </span><span class="lineCov">          2 :         extrasBatch.Put(toSlice(_block.info.hash(), ExtraReceipts), (ldb::Slice)_receipts);</span>
+<span class="lineNum">     628 </span>            : 
+<span class="lineNum">     629 </span><span class="lineCov">          4 :         ldb::Status o = m_blocksDB-&gt;Write(m_writeOptions, &amp;blocksBatch);</span>
+<span class="lineNum">     630 </span><span class="lineCov">          2 :         if (!o.ok())</span>
+<span class="lineNum">     631 </span>            :         {
+<span class="lineNum">     632 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Error writing to blockchain database: &quot; &lt;&lt; o.ToString();</span>
+<span class="lineNum">     633 </span><span class="lineNoCov">          0 :                 WriteBatchNoter n;</span>
+<span class="lineNum">     634 </span><span class="lineNoCov">          0 :                 blocksBatch.Iterate(&amp;n);</span>
+<span class="lineNum">     635 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Fail writing to blockchain database. Bombing out.&quot;;</span>
+<span class="lineNum">     636 </span><span class="lineNoCov">          0 :                 exit(-1);</span>
+<span class="lineNum">     637 </span>            :         }
+<span class="lineNum">     638 </span>            : 
+<span class="lineNum">     639 </span><span class="lineCov">          4 :         o = m_extrasDB-&gt;Write(m_writeOptions, &amp;extrasBatch);</span>
+<span class="lineNum">     640 </span><span class="lineCov">          2 :         if (!o.ok())</span>
+<span class="lineNum">     641 </span>            :         {
+<span class="lineNum">     642 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Error writing to extras database: &quot; &lt;&lt; o.ToString();</span>
+<span class="lineNum">     643 </span><span class="lineNoCov">          0 :                 WriteBatchNoter n;</span>
+<span class="lineNum">     644 </span><span class="lineNoCov">          0 :                 extrasBatch.Iterate(&amp;n);</span>
+<span class="lineNum">     645 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Fail writing to extras database. Bombing out.&quot;;</span>
+<span class="lineNum">     646 </span><span class="lineNoCov">          0 :                 exit(-1);</span>
+<span class="lineNum">     647 </span>            :         }
+<span class="lineNum">     648 </span><span class="lineCov">          2 : }</span>
+<span class="lineNum">     649 </span>            : 
+<span class="lineNum">     650 </span><span class="lineCov">       5062 : ImportRoute BlockChain::import(VerifiedBlockRef const&amp; _block, OverlayDB const&amp; _db, bool _mustBeNew)</span>
+<span class="lineNum">     651 </span>            : {
+<span class="lineNum">     652 </span>            :         //@tidy This is a behemoth of a method - could do to be split into a few smaller ones.
+<span class="lineNum">     653 </span>            : 
+<span class="lineNum">     654 </span>            : #if ETH_TIMED_IMPORTS
+<span class="lineNum">     655 </span><span class="lineCov">       5062 :         Timer total;</span>
+<span class="lineNum">     656 </span>            :         double preliminaryChecks;
+<span class="lineNum">     657 </span>            :         double enactment;
+<span class="lineNum">     658 </span>            :         double collation;
+<span class="lineNum">     659 </span>            :         double writing;
+<span class="lineNum">     660 </span>            :         double checkBest;
+<span class="lineNum">     661 </span><span class="lineCov">       5062 :         Timer t;</span>
+<span class="lineNum">     662 </span>            : #endif
+<span class="lineNum">     663 </span>            : 
+<span class="lineNum">     664 </span>            :         // Check block doesn't already exist first!
+<span class="lineNum">     665 </span><span class="lineCov">       5062 :         if (isKnown(_block.info.hash()) &amp;&amp; _mustBeNew)</span>
+<span class="lineNum">     666 </span>            :         {
+<span class="lineNum">     667 </span><span class="lineCov">          2 :                 clog(BlockChainNote) &lt;&lt; _block.info.hash() &lt;&lt; &quot;: Not new.&quot;;</span>
+<span class="lineNum">     668 </span><span class="lineCov">          8 :                 BOOST_THROW_EXCEPTION(AlreadyHaveBlock() &lt;&lt; errinfo_block(_block.block.toBytes()));</span>
+<span class="lineNum">     669 </span>            :         }
+<span class="lineNum">     670 </span>            : 
+<span class="lineNum">     671 </span>            :         // Work out its number as the parent's number + 1
+<span class="lineNum">     672 </span><span class="lineCov">      10122 :         if (!isKnown(_block.info.parentHash(), false))  // doesn't have to be current.</span>
+<span class="lineNum">     673 </span>            :         {
+<span class="lineNum">     674 </span><span class="lineCov">         16 :                 clog(BlockChainNote) &lt;&lt; _block.info.hash() &lt;&lt; &quot;: Unknown parent &quot; &lt;&lt; _block.info.parentHash();</span>
+<span class="lineNum">     675 </span>            :                 // We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
+<span class="lineNum">     676 </span><span class="lineCov">         40 :                 BOOST_THROW_EXCEPTION(UnknownParent() &lt;&lt; errinfo_hash256(_block.info.parentHash()));</span>
+<span class="lineNum">     677 </span>            :         }
+<span class="lineNum">     678 </span>            : 
+<span class="lineNum">     679 </span><span class="lineCov">      15159 :         auto pd = details(_block.info.parentHash());</span>
+<span class="lineNum">     680 </span><span class="lineCov">       5053 :         if (!pd)</span>
+<span class="lineNum">     681 </span>            :         {
+<span class="lineNum">     682 </span><span class="lineNoCov">          0 :                 auto pdata = pd.rlp();</span>
+<span class="lineNum">     683 </span><span class="lineNoCov">          0 :                 clog(BlockChainDebug) &lt;&lt; &quot;Details is returning false despite block known:&quot; &lt;&lt; RLP(pdata);</span>
+<span class="lineNum">     684 </span><span class="lineNoCov">          0 :                 auto parentBlock = block(_block.info.parentHash());</span>
+<span class="lineNum">     685 </span><span class="lineNoCov">          0 :                 clog(BlockChainDebug) &lt;&lt; &quot;isKnown:&quot; &lt;&lt; isKnown(_block.info.parentHash());</span>
+<span class="lineNum">     686 </span><span class="lineNoCov">          0 :                 clog(BlockChainDebug) &lt;&lt; &quot;last/number:&quot; &lt;&lt; m_lastBlockNumber &lt;&lt; m_lastBlockHash &lt;&lt; _block.info.number();</span>
+<span class="lineNum">     687 </span><span class="lineNoCov">          0 :                 clog(BlockChainDebug) &lt;&lt; &quot;Block:&quot; &lt;&lt; BlockHeader(&amp;parentBlock);</span>
+<span class="lineNum">     688 </span><span class="lineNoCov">          0 :                 clog(BlockChainDebug) &lt;&lt; &quot;RLP:&quot; &lt;&lt; RLP(parentBlock);</span>
+<span class="lineNum">     689 </span><span class="lineNoCov">          0 :                 clog(BlockChainDebug) &lt;&lt; &quot;DATABASE CORRUPTION: CRITICAL FAILURE&quot;;</span>
+<span class="lineNum">     690 </span><span class="lineNoCov">          0 :                 exit(-1);</span>
+<span class="lineNum">     691 </span>            :         }
+<span class="lineNum">     692 </span>            : 
+<span class="lineNum">     693 </span>            :         // Check it's not crazy
+<span class="lineNum">     694 </span><span class="lineCov">      10109 :         if (_block.info.timestamp() &gt; utcTime() &amp;&amp; !m_params.otherParams.count(&quot;allowFutureBlocks&quot;))</span>
+<span class="lineNum">     695 </span>            :         {
+<span class="lineNum">     696 </span><span class="lineCov">        131 :                 clog(BlockChainChat) &lt;&lt; _block.info.hash() &lt;&lt; &quot;: Future time &quot; &lt;&lt; _block.info.timestamp() &lt;&lt; &quot; (now at &quot; &lt;&lt; utcTime() &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">     697 </span>            :                 // Block has a timestamp in the future. This is no good.
+<span class="lineNum">     698 </span><span class="lineCov">          3 :                 BOOST_THROW_EXCEPTION(FutureTime());</span>
+<span class="lineNum">     699 </span>            :         }
+<span class="lineNum">     700 </span>            : 
+<span class="lineNum">     701 </span>            :         // Verify parent-critical parts
+<span class="lineNum">     702 </span><span class="lineCov">      10045 :         verifyBlock(_block.block, m_onBad, ImportRequirements::InOrderChecks);</span>
+<span class="lineNum">     703 </span>            : 
+<span class="lineNum">     704 </span><span class="lineCov">      10114 :         clog(BlockChainChat) &lt;&lt; &quot;Attempting import of &quot; &lt;&lt; _block.info.hash() &lt;&lt; &quot;...&quot;;</span>
+<span class="lineNum">     705 </span>            : 
+<span class="lineNum">     706 </span>            : #if ETH_TIMED_IMPORTS
+<span class="lineNum">     707 </span><span class="lineCov">       4993 :         preliminaryChecks = t.elapsed();</span>
+<span class="lineNum">     708 </span><span class="lineCov">       4993 :         t.restart();</span>
+<span class="lineNum">     709 </span>            : #endif
+<span class="lineNum">     710 </span>            : 
+<span class="lineNum">     711 </span><span class="lineCov">       9986 :         ldb::WriteBatch blocksBatch;</span>
+<span class="lineNum">     712 </span><span class="lineCov">       9986 :         ldb::WriteBatch extrasBatch;</span>
+<span class="lineNum">     713 </span><span class="lineCov">       4993 :         h256 newLastBlockHash = currentHash();</span>
+<span class="lineNum">     714 </span><span class="lineCov">       4993 :         unsigned newLastBlockNumber = number();</span>
+<span class="lineNum">     715 </span>            : 
+<span class="lineNum">     716 </span><span class="lineCov">       9986 :         BlockLogBlooms blb;</span>
+<span class="lineNum">     717 </span><span class="lineCov">       9986 :         BlockReceipts br;</span>
+<span class="lineNum">     718 </span>            : 
+<span class="lineNum">     719 </span><span class="lineCov">       4993 :         u256 td;</span>
+<span class="lineNum">     720 </span><span class="lineCov">       9986 :         Transactions goodTransactions;</span>
+<span class="lineNum">     721 </span>            : #if ETH_CATCH
+<span class="lineNum">     722 </span>            :         try
+<span class="lineNum">     723 </span>            : #endif
+<span class="lineNum">     724 </span>            :         {
+<span class="lineNum">     725 </span>            :                 // Check transactions are valid and that they result in a state equivalent to our state_root.
+<span class="lineNum">     726 </span>            :                 // Get total difficulty increase and update state, checking it.
+<span class="lineNum">     727 </span><span class="lineCov">       9986 :                 Block s(*this, _db);</span>
+<span class="lineNum">     728 </span><span class="lineCov">       4993 :                 auto tdIncrease = s.enactOn(_block, *this);</span>
+<span class="lineNum">     729 </span>            : 
+<span class="lineNum">     730 </span><span class="lineCov">      23107 :                 for (unsigned i = 0; i &lt; s.pending().size(); ++i)</span>
+<span class="lineNum">     731 </span>            :                 {
+<span class="lineNum">     732 </span><span class="lineCov">       8838 :                         blb.blooms.push_back(s.receipt(i).bloom());</span>
+<span class="lineNum">     733 </span><span class="lineCov">       4419 :                         br.receipts.push_back(s.receipt(i));</span>
+<span class="lineNum">     734 </span><span class="lineCov">       8838 :                         goodTransactions.push_back(s.pending()[i]);</span>
+<span class="lineNum">     735 </span>            :                 }
+<span class="lineNum">     736 </span>            : 
+<span class="lineNum">     737 </span><span class="lineCov">       4925 :                 s.cleanup(true);</span>
+<span class="lineNum">     738 </span>            : 
+<span class="lineNum">     739 </span><span class="lineCov">       9850 :                 td = pd.totalDifficulty + tdIncrease;</span>
+<span class="lineNum">     740 </span>            : 
+<span class="lineNum">     741 </span>            : #if ETH_TIMED_IMPORTS
+<span class="lineNum">     742 </span><span class="lineCov">       4925 :                 enactment = t.elapsed();</span>
+<span class="lineNum">     743 </span><span class="lineCov">       4925 :                 t.restart();</span>
+<span class="lineNum">     744 </span>            : #endif // ETH_TIMED_IMPORTS
+<span class="lineNum">     745 </span>            : 
+<span class="lineNum">     746 </span>            : #if ETH_PARANOIA
+<span class="lineNum">     747 </span>            :                 checkConsistency();
+<span class="lineNum">     748 </span>            : #endif // ETH_PARANOIA
+<span class="lineNum">     749 </span>            : 
+<span class="lineNum">     750 </span>            :                 // All ok - insert into DB
+<span class="lineNum">     751 </span>            : 
+<span class="lineNum">     752 </span>            :                 // ensure parent is cached for later addition.
+<span class="lineNum">     753 </span>            :                 // TODO: this is a bit horrible would be better refactored into an enveloping UpgradableGuard
+<span class="lineNum">     754 </span>            :                 // together with an &quot;ensureCachedWithUpdatableLock(l)&quot; method.
+<span class="lineNum">     755 </span>            :                 // This is safe in practice since the caches don't get flushed nearly often enough to be
+<span class="lineNum">     756 </span>            :                 // done here.
+<span class="lineNum">     757 </span><span class="lineCov">      14775 :                 details(_block.info.parentHash());</span>
+<span class="lineNum">     758 </span><span class="lineCov">      24625 :                 DEV_WRITE_GUARDED(x_details)</span>
+<span class="lineNum">     759 </span><span class="lineCov">      14775 :                         m_details[_block.info.parentHash()].children.push_back(_block.info.hash());</span>
+<span class="lineNum">     760 </span>            : 
+<span class="lineNum">     761 </span>            : #if ETH_TIMED_IMPORTS
+<span class="lineNum">     762 </span><span class="lineCov">       4925 :                 collation = t.elapsed();</span>
+<span class="lineNum">     763 </span><span class="lineCov">       4925 :                 t.restart();</span>
+<span class="lineNum">     764 </span>            : #endif // ETH_TIMED_IMPORTS
+<span class="lineNum">     765 </span>            : 
+<span class="lineNum">     766 </span><span class="lineCov">       9918 :                 blocksBatch.Put(toSlice(_block.info.hash()), ldb::Slice(_block.block));</span>
+<span class="lineNum">     767 </span><span class="lineCov">      24625 :                 DEV_READ_GUARDED(x_details)</span>
+<span class="lineNum">     768 </span><span class="lineCov">      24625 :                         extrasBatch.Put(toSlice(_block.info.parentHash(), ExtraDetails), (ldb::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));</span>
+<span class="lineNum">     769 </span>            : 
+<span class="lineNum">     770 </span><span class="lineCov">      39400 :                 extrasBatch.Put(toSlice(_block.info.hash(), ExtraDetails), (ldb::Slice)dev::ref(BlockDetails((unsigned)pd.number + 1, td, _block.info.parentHash(), {}).rlp()));</span>
+<span class="lineNum">     771 </span><span class="lineCov">      19700 :                 extrasBatch.Put(toSlice(_block.info.hash(), ExtraLogBlooms), (ldb::Slice)dev::ref(blb.rlp()));</span>
+<span class="lineNum">     772 </span><span class="lineCov">      19700 :                 extrasBatch.Put(toSlice(_block.info.hash(), ExtraReceipts), (ldb::Slice)dev::ref(br.rlp()));</span>
+<span class="lineNum">     773 </span>            : 
+<span class="lineNum">     774 </span>            : #if ETH_TIMED_IMPORTS
+<span class="lineNum">     775 </span><span class="lineCov">       4925 :                 writing = t.elapsed();</span>
+<span class="lineNum">     776 </span><span class="lineCov">       4925 :                 t.restart();</span>
+<span class="lineNum">     777 </span>            : #endif // ETH_TIMED_IMPORTS
+<span class="lineNum">     778 </span>            :         }
+<span class="lineNum">     779 </span>            : 
+<span class="lineNum">     780 </span>            : #if ETH_CATCH
+<span class="lineNum">     781 </span><span class="lineNoCov">          0 :         catch (BadRoot&amp; ex)</span>
+<span class="lineNum">     782 </span>            :         {
+<span class="lineNum">     783 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;*** BadRoot error! Trying to import&quot; &lt;&lt; _block.info.hash() &lt;&lt; &quot;needed root&quot; &lt;&lt; ex.root;</span>
+<span class="lineNum">     784 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; _block.info;</span>
+<span class="lineNum">     785 </span>            :                 // Attempt in import later.
+<span class="lineNum">     786 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(TransientError());</span>
+<span class="lineNum">     787 </span>            :         }
+<span class="lineNum">     788 </span><span class="lineCov">        136 :         catch (Exception&amp; ex)</span>
+<span class="lineNum">     789 </span>            :         {
+<span class="lineNum">     790 </span><span class="lineCov">        272 :                 ex &lt;&lt; errinfo_now(time(0));</span>
+<span class="lineNum">     791 </span><span class="lineCov">        408 :                 ex &lt;&lt; errinfo_block(_block.block.toBytes());</span>
+<span class="lineNum">     792 </span>            :                 // only populate extraData if we actually managed to extract it. otherwise,
+<span class="lineNum">     793 </span>            :                 // we might be clobbering the existing one.
+<span class="lineNum">     794 </span><span class="lineCov">        136 :                 if (!_block.info.extraData().empty())</span>
+<span class="lineNum">     795 </span><span class="lineCov">         15 :                         ex &lt;&lt; errinfo_extraData(_block.info.extraData());</span>
+<span class="lineNum">     796 </span><span class="lineCov">         68 :                 throw;</span>
+<span class="lineNum">     797 </span>            :         }
+<span class="lineNum">     798 </span>            : #endif // ETH_CATCH
+<span class="lineNum">     799 </span>            : 
+<span class="lineNum">     800 </span><span class="lineCov">       9850 :         h256s route;</span>
+<span class="lineNum">     801 </span><span class="lineCov">       4925 :         h256 common;</span>
+<span class="lineNum">     802 </span>            :         // This might be the new best block...
+<span class="lineNum">     803 </span><span class="lineCov">       4925 :         h256 last = currentHash();</span>
+<span class="lineNum">     804 </span><span class="lineCov">      19700 :         if (td &gt; details(last).totalDifficulty || (m_sealEngine-&gt;chainParams().tieBreakingGas &amp;&amp; td == details(last).totalDifficulty &amp;&amp; _block.info.gasUsed() &gt; info(last).gasUsed()))</span>
+<span class="lineNum">     805 </span>            :         {
+<span class="lineNum">     806 </span>            :                 // don't include bi.hash() in treeRoute, since it's not yet in details DB...
+<span class="lineNum">     807 </span>            :                 // just tack it on afterwards.
+<span class="lineNum">     808 </span>            :                 unsigned commonIndex;
+<span class="lineNum">     809 </span><span class="lineCov">      10556 :                 tie(route, common, commonIndex) = treeRoute(last, _block.info.parentHash());</span>
+<span class="lineNum">     810 </span><span class="lineCov">       5278 :                 route.push_back(_block.info.hash());</span>
+<span class="lineNum">     811 </span>            : 
+<span class="lineNum">     812 </span>            :                 // Most of the time these two will be equal - only when we're doing a chain revert will they not be
+<span class="lineNum">     813 </span><span class="lineCov">       2639 :                 if (common != last)</span>
+<span class="lineNum">     814 </span><span class="lineCov">        156 :                         clearCachesDuringChainReversion(number(common) + 1);</span>
+<span class="lineNum">     815 </span>            : 
+<span class="lineNum">     816 </span>            :                 // Go through ret backwards (i.e. from new head to common) until hash != last.parent and
+<span class="lineNum">     817 </span>            :                 // update m_transactionAddresses, m_blockHashes
+<span class="lineNum">     818 </span><span class="lineCov">      30125 :                 for (auto i = route.rbegin(); i != route.rend() &amp;&amp; *i != common; ++i)</span>
+<span class="lineNum">     819 </span>            :                 {
+<span class="lineNum">     820 </span><span class="lineCov">       6772 :                         BlockHeader tbi;</span>
+<span class="lineNum">     821 </span><span class="lineCov">      10158 :                         if (*i == _block.info.hash())</span>
+<span class="lineNum">     822 </span><span class="lineCov">       2639 :                                 tbi = _block.info;</span>
+<span class="lineNum">     823 </span>            :                         else
+<span class="lineNum">     824 </span><span class="lineCov">       2988 :                                 tbi = BlockHeader(block(*i));</span>
+<span class="lineNum">     825 </span>            : 
+<span class="lineNum">     826 </span>            :                         // Collate logs into blooms.
+<span class="lineNum">     827 </span><span class="lineCov">       6772 :                         h256s alteredBlooms;</span>
+<span class="lineNum">     828 </span>            :                         {
+<span class="lineNum">     829 </span><span class="lineCov">       3386 :                                 LogBloom blockBloom = tbi.logBloom();</span>
+<span class="lineNum">     830 </span><span class="lineCov">      10158 :                                 blockBloom.shiftBloom&lt;3&gt;(sha3(tbi.author().ref()));</span>
+<span class="lineNum">     831 </span>            : 
+<span class="lineNum">     832 </span>            :                                 // Pre-memoize everything we need before locking x_blocksBlooms
+<span class="lineNum">     833 </span><span class="lineCov">      13544 :                                 for (unsigned level = 0, index = (unsigned)tbi.number(); level &lt; c_bloomIndexLevels; level++, index /= c_bloomIndexSize)</span>
+<span class="lineNum">     834 </span><span class="lineCov">      20316 :                                         blocksBlooms(chunkId(level, index / c_bloomIndexSize));</span>
+<span class="lineNum">     835 </span>            : 
+<span class="lineNum">     836 </span><span class="lineCov">      10158 :                                 WriteGuard l(x_blocksBlooms);</span>
+<span class="lineNum">     837 </span><span class="lineCov">      13544 :                                 for (unsigned level = 0, index = (unsigned)tbi.number(); level &lt; c_bloomIndexLevels; level++, index /= c_bloomIndexSize)</span>
+<span class="lineNum">     838 </span>            :                                 {
+<span class="lineNum">     839 </span><span class="lineCov">       6772 :                                         unsigned i = index / c_bloomIndexSize;</span>
+<span class="lineNum">     840 </span><span class="lineCov">       6772 :                                         unsigned o = index % c_bloomIndexSize;</span>
+<span class="lineNum">     841 </span><span class="lineCov">      13544 :                                         alteredBlooms.push_back(chunkId(level, i));</span>
+<span class="lineNum">     842 </span><span class="lineCov">      33860 :                                         m_blocksBlooms[alteredBlooms.back()].blooms[o] |= blockBloom;</span>
+<span class="lineNum">     843 </span>            :                                 }
+<span class="lineNum">     844 </span>            :                         }
+<span class="lineNum">     845 </span>            :                         // Collate transaction hashes and remember who they were.
+<span class="lineNum">     846 </span>            :                         //h256s newTransactionAddresses;
+<span class="lineNum">     847 </span>            :                         {
+<span class="lineNum">     848 </span><span class="lineCov">       6772 :                                 bytes blockBytes;</span>
+<span class="lineNum">     849 </span><span class="lineCov">      13146 :                                 RLP blockRLP(*i == _block.info.hash() ? _block.block : &amp;(blockBytes = block(*i)));</span>
+<span class="lineNum">     850 </span><span class="lineCov">       3386 :                                 TransactionAddress ta;</span>
+<span class="lineNum">     851 </span><span class="lineCov">       3386 :                                 ta.blockHash = tbi.hash();</span>
+<span class="lineNum">     852 </span><span class="lineCov">       6367 :                                 for (ta.index = 0; ta.index &lt; blockRLP[1].itemCount(); ++ta.index)</span>
+<span class="lineNum">     853 </span><span class="lineCov">      14905 :                                         extrasBatch.Put(toSlice(sha3(blockRLP[1][ta.index].data()), ExtraTransactionAddress), (ldb::Slice)dev::ref(ta.rlp()));</span>
+<span class="lineNum">     854 </span>            :                         }
+<span class="lineNum">     855 </span>            : 
+<span class="lineNum">     856 </span>            :                         // Update database with them.
+<span class="lineNum">     857 </span><span class="lineCov">      10158 :                         ReadGuard l1(x_blocksBlooms);</span>
+<span class="lineNum">     858 </span><span class="lineCov">      20316 :                         for (auto const&amp; h: alteredBlooms)</span>
+<span class="lineNum">     859 </span><span class="lineCov">      40632 :                                 extrasBatch.Put(toSlice(h, ExtraBlocksBlooms), (ldb::Slice)dev::ref(m_blocksBlooms[h].rlp()));</span>
+<span class="lineNum">     860 </span><span class="lineCov">      20316 :                         extrasBatch.Put(toSlice(h256(tbi.number()), ExtraBlockHash), (ldb::Slice)dev::ref(BlockHash(tbi.hash()).rlp()));</span>
+<span class="lineNum">     861 </span>            :                 }
+<span class="lineNum">     862 </span>            : 
+<span class="lineNum">     863 </span>            :                 // FINALLY! change our best hash.
+<span class="lineNum">     864 </span>            :                 {
+<span class="lineNum">     865 </span><span class="lineCov">       2639 :                         newLastBlockHash = _block.info.hash();</span>
+<span class="lineNum">     866 </span><span class="lineCov">       5278 :                         newLastBlockNumber = (unsigned)_block.info.number();</span>
+<span class="lineNum">     867 </span>            :                 }
+<span class="lineNum">     868 </span>            : 
+<span class="lineNum">     869 </span><span class="lineCov">      15834 :                 clog(BlockChainNote) &lt;&lt; &quot;   Imported and best&quot; &lt;&lt; td &lt;&lt; &quot; (#&quot; &lt;&lt; _block.info.number() &lt;&lt; &quot;). Has&quot; &lt;&lt; (details(_block.info.parentHash()).children.size() - 1) &lt;&lt; &quot;siblings. Route:&quot; &lt;&lt; route;</span>
+<span class="lineNum">     870 </span>            : 
+<span class="lineNum">     871 </span>            :         }
+<span class="lineNum">     872 </span>            :         else
+<span class="lineNum">     873 </span>            :         {
+<span class="lineNum">     874 </span><span class="lineCov">      16002 :                 clog(BlockChainChat) &lt;&lt; &quot;   Imported but not best (oTD:&quot; &lt;&lt; details(last).totalDifficulty &lt;&lt; &quot; &gt; TD:&quot; &lt;&lt; td &lt;&lt; &quot;; &quot; &lt;&lt; details(last).number &lt;&lt; &quot;..&quot; &lt;&lt; _block.info.number() &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">     875 </span>            :         }
+<span class="lineNum">     876 </span>            : 
+<span class="lineNum">     877 </span><span class="lineCov">       9850 :         ldb::Status o = m_blocksDB-&gt;Write(m_writeOptions, &amp;blocksBatch);</span>
+<span class="lineNum">     878 </span><span class="lineCov">       4925 :         if (!o.ok())</span>
+<span class="lineNum">     879 </span>            :         {
+<span class="lineNum">     880 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Error writing to blockchain database: &quot; &lt;&lt; o.ToString();</span>
+<span class="lineNum">     881 </span><span class="lineNoCov">          0 :                 WriteBatchNoter n;</span>
+<span class="lineNum">     882 </span><span class="lineNoCov">          0 :                 blocksBatch.Iterate(&amp;n);</span>
+<span class="lineNum">     883 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Fail writing to blockchain database. Bombing out.&quot;;</span>
+<span class="lineNum">     884 </span><span class="lineNoCov">          0 :                 exit(-1);</span>
+<span class="lineNum">     885 </span>            :         }
+<span class="lineNum">     886 </span>            :         
+<span class="lineNum">     887 </span><span class="lineCov">       9850 :         o = m_extrasDB-&gt;Write(m_writeOptions, &amp;extrasBatch);</span>
+<span class="lineNum">     888 </span><span class="lineCov">       4925 :         if (!o.ok())</span>
+<span class="lineNum">     889 </span>            :         {
+<span class="lineNum">     890 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Error writing to extras database: &quot; &lt;&lt; o.ToString();</span>
+<span class="lineNum">     891 </span><span class="lineNoCov">          0 :                 WriteBatchNoter n;</span>
+<span class="lineNum">     892 </span><span class="lineNoCov">          0 :                 extrasBatch.Iterate(&amp;n);</span>
+<span class="lineNum">     893 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Fail writing to extras database. Bombing out.&quot;;</span>
+<span class="lineNum">     894 </span><span class="lineNoCov">          0 :                 exit(-1);</span>
+<span class="lineNum">     895 </span>            :         }
+<span class="lineNum">     896 </span>            : 
+<span class="lineNum">     897 </span>            : #if ETH_PARANOIA
+<span class="lineNum">     898 </span>            :         if (isKnown(_block.info.hash()) &amp;&amp; !details(_block.info.hash()))
+<span class="lineNum">     899 </span>            :         {
+<span class="lineNum">     900 </span>            :                 clog(BlockChainDebug) &lt;&lt; &quot;Known block just inserted has no details.&quot;;
+<span class="lineNum">     901 </span>            :                 clog(BlockChainDebug) &lt;&lt; &quot;Block:&quot; &lt;&lt; _block.info;
+<span class="lineNum">     902 </span>            :                 clog(BlockChainDebug) &lt;&lt; &quot;DATABASE CORRUPTION: CRITICAL FAILURE&quot;;
+<span class="lineNum">     903 </span>            :                 exit(-1);
+<span class="lineNum">     904 </span>            :         }
+<span class="lineNum">     905 </span>            : 
+<span class="lineNum">     906 </span>            :         try
+<span class="lineNum">     907 </span>            :         {
+<span class="lineNum">     908 </span>            :                 State canary(_db, BaseState::Empty);
+<span class="lineNum">     909 </span>            :                 canary.populateFromChain(*this, _block.info.hash());
+<span class="lineNum">     910 </span>            :         }
+<span class="lineNum">     911 </span>            :         catch (...)
+<span class="lineNum">     912 </span>            :         {
+<span class="lineNum">     913 </span>            :                 clog(BlockChainDebug) &lt;&lt; &quot;Failed to initialise State object form imported block.&quot;;
+<span class="lineNum">     914 </span>            :                 clog(BlockChainDebug) &lt;&lt; &quot;Block:&quot; &lt;&lt; _block.info;
+<span class="lineNum">     915 </span>            :                 clog(BlockChainDebug) &lt;&lt; &quot;DATABASE CORRUPTION: CRITICAL FAILURE&quot;;
+<span class="lineNum">     916 </span>            :                 exit(-1);
+<span class="lineNum">     917 </span>            :         }
+<span class="lineNum">     918 </span>            : #endif // ETH_PARANOIA
+<span class="lineNum">     919 </span>            : 
+<span class="lineNum">     920 </span><span class="lineCov">       9850 :         if (m_lastBlockHash != newLastBlockHash)</span>
+<span class="lineNum">     921 </span><span class="lineCov">      13195 :                 DEV_WRITE_GUARDED(x_lastBlockHash)</span>
+<span class="lineNum">     922 </span>            :                 {
+<span class="lineNum">     923 </span><span class="lineCov">       2639 :                         m_lastBlockHash = newLastBlockHash;</span>
+<span class="lineNum">     924 </span><span class="lineCov">       2639 :                         m_lastBlockNumber = newLastBlockNumber;</span>
+<span class="lineNum">     925 </span><span class="lineCov">      10556 :                         o = m_extrasDB-&gt;Put(m_writeOptions, ldb::Slice(&quot;best&quot;), ldb::Slice((char const*)&amp;m_lastBlockHash, 32));</span>
+<span class="lineNum">     926 </span><span class="lineCov">       2639 :                         if (!o.ok())</span>
+<span class="lineNum">     927 </span>            :                         {
+<span class="lineNum">     928 </span><span class="lineNoCov">          0 :                                 cwarn &lt;&lt; &quot;Error writing to extras database: &quot; &lt;&lt; o.ToString();</span>
+<span class="lineNum">     929 </span><span class="lineNoCov">          0 :                                 cout &lt;&lt; &quot;Put&quot; &lt;&lt; toHex(bytesConstRef(ldb::Slice(&quot;best&quot;))) &lt;&lt; &quot;=&gt;&quot; &lt;&lt; toHex(bytesConstRef(ldb::Slice((char const*)&amp;m_lastBlockHash, 32)));</span>
+<span class="lineNum">     930 </span><span class="lineNoCov">          0 :                                 cwarn &lt;&lt; &quot;Fail writing to extras database. Bombing out.&quot;;</span>
+<span class="lineNum">     931 </span><span class="lineNoCov">          0 :                                 exit(-1);</span>
+<span class="lineNum">     932 </span>            :                         }
+<span class="lineNum">     933 </span>            :                 }
+<span class="lineNum">     934 </span>            : 
+<span class="lineNum">     935 </span>            : #if ETH_PARANOIA
+<span class="lineNum">     936 </span>            :         checkConsistency();
+<span class="lineNum">     937 </span>            : #endif // ETH_PARANOIA
+<span class="lineNum">     938 </span>            : 
+<span class="lineNum">     939 </span>            : #if ETH_TIMED_IMPORTS
+<span class="lineNum">     940 </span><span class="lineCov">       4925 :         checkBest = t.elapsed();</span>
+<span class="lineNum">     941 </span><span class="lineCov">       4925 :         if (total.elapsed() &gt; 0.5)</span>
+<span class="lineNum">     942 </span>            :         {
+<span class="lineNum">     943 </span><span class="lineCov">          4 :                 unsigned const gasPerSecond = static_cast&lt;double&gt;(_block.info.gasUsed()) / enactment;</span>
+<span class="lineNum">     944 </span><span class="lineCov">          4 :                 cnote &lt;&lt; &quot;SLOW IMPORT: &quot; </span>
+<span class="lineNum">     945 </span><span class="lineCov">          6 :                         &lt;&lt; &quot;{ \&quot;blockHash\&quot;: \&quot;&quot; &lt;&lt; _block.info.hash() &lt;&lt; &quot;\&quot;, &quot;</span>
+<span class="lineNum">     946 </span><span class="lineCov">          6 :                         &lt;&lt; &quot;\&quot;blockNumber\&quot;: &quot; &lt;&lt; _block.info.number() &lt;&lt; &quot;, &quot; </span>
+<span class="lineNum">     947 </span><span class="lineCov">          6 :                         &lt;&lt; &quot;\&quot;importTime\&quot;: &quot; &lt;&lt; total.elapsed() &lt;&lt; &quot;, &quot;</span>
+<span class="lineNum">     948 </span><span class="lineCov">          2 :                         &lt;&lt; &quot;\&quot;gasPerSecond\&quot;: &quot; &lt;&lt; gasPerSecond &lt;&lt; &quot;, &quot;</span>
+<span class="lineNum">     949 </span><span class="lineCov">          2 :                         &lt;&lt; &quot;\&quot;preliminaryChecks\&quot;:&quot; &lt;&lt; preliminaryChecks &lt;&lt; &quot;, &quot;</span>
+<span class="lineNum">     950 </span><span class="lineCov">          2 :                         &lt;&lt; &quot;\&quot;enactment\&quot;:&quot; &lt;&lt; enactment &lt;&lt; &quot;, &quot;</span>
+<span class="lineNum">     951 </span><span class="lineCov">          2 :                         &lt;&lt; &quot;\&quot;collation\&quot;:&quot; &lt;&lt; collation &lt;&lt; &quot;, &quot;</span>
+<span class="lineNum">     952 </span><span class="lineCov">          2 :                         &lt;&lt; &quot;\&quot;writing\&quot;:&quot; &lt;&lt; writing &lt;&lt; &quot;, &quot;</span>
+<span class="lineNum">     953 </span><span class="lineCov">          2 :                         &lt;&lt; &quot;\&quot;checkBest\&quot;:&quot; &lt;&lt; checkBest &lt;&lt; &quot;, &quot;</span>
+<span class="lineNum">     954 </span><span class="lineCov">          8 :                         &lt;&lt; &quot;\&quot;transactions\&quot;:&quot; &lt;&lt; _block.transactions.size() &lt;&lt; &quot;, &quot;</span>
+<span class="lineNum">     955 </span><span class="lineCov">          6 :                         &lt;&lt; &quot;\&quot;gasUsed\&quot;:&quot; &lt;&lt; _block.info.gasUsed() &lt;&lt; &quot; }&quot;;</span>
+<span class="lineNum">     956 </span>            :         }
+<span class="lineNum">     957 </span>            : #endif // ETH_TIMED_IMPORTS
+<span class="lineNum">     958 </span>            : 
+<span class="lineNum">     959 </span><span class="lineCov">       4925 :         if (!route.empty())</span>
+<span class="lineNum">     960 </span>            :                 noteCanonChanged();
+<span class="lineNum">     961 </span>            : 
+<span class="lineNum">     962 </span><span class="lineCov">       9850 :         h256s fresh;</span>
+<span class="lineNum">     963 </span><span class="lineCov">       9850 :         h256s dead;</span>
+<span class="lineNum">     964 </span><span class="lineCov">       4925 :         bool isOld = true;</span>
+<span class="lineNum">     965 </span><span class="lineCov">      26495 :         for (auto const&amp; h: route)</span>
+<span class="lineNum">     966 </span><span class="lineCov">       6795 :                 if (h == common)</span>
+<span class="lineNum">     967 </span>            :                         isOld = false;
+<span class="lineNum">     968 </span><span class="lineCov">       4156 :                 else if (isOld)</span>
+<span class="lineNum">     969 </span><span class="lineCov">        770 :                         dead.push_back(h);</span>
+<span class="lineNum">     970 </span>            :                 else
+<span class="lineNum">     971 </span><span class="lineCov">       3386 :                         fresh.push_back(h);</span>
+<span class="lineNum">     972 </span><span class="lineCov">      14775 :         return ImportRoute{dead, fresh, move(goodTransactions)};</span>
+<a name="973"><span class="lineNum">     973 </span>            : }</a>
+<span class="lineNum">     974 </span>            : 
+<span class="lineNum">     975 </span><span class="lineCov">        156 : void BlockChain::clearBlockBlooms(unsigned _begin, unsigned _end)</span>
+<span class="lineNum">     976 </span>            : {
+<span class="lineNum">     977 </span>            :         //   ... c c c c c c c c c c C o o o o o o
+<span class="lineNum">     978 </span>            :         //   ...                               /=15        /=21
+<span class="lineNum">     979 </span>            :         // L0...| ' | ' | ' | ' | ' | ' | ' | 'b|x'x|x'x|x'e| /=11
+<span class="lineNum">     980 </span>            :         // L1...|   '   |   '   |   '   |   ' b | x ' x | x ' e |   /=6
+<span class="lineNum">     981 </span>            :         // L2...|       '       |       '   b   |   x   '   x   |   e   /=3
+<span class="lineNum">     982 </span>            :         // L3...|               '       b       |       x       '       e
+<span class="lineNum">     983 </span>            :         // model: c_bloomIndexLevels = 4, c_bloomIndexSize = 2
+<span class="lineNum">     984 </span>            : 
+<span class="lineNum">     985 </span>            :         //   ...                               /=15        /=21
+<span class="lineNum">     986 </span>            :         // L0...| ' ' ' | ' ' ' | ' ' ' | ' ' 'b|x'x'x'x|x'e' ' |
+<span class="lineNum">     987 </span>            :         // L1...|       '       '       '   b   |   x   '   x   '   e   '       |
+<span class="lineNum">     988 </span>            :         // L2...|               b               '               x               '                e              '                               |
+<span class="lineNum">     989 </span>            :         // model: c_bloomIndexLevels = 2, c_bloomIndexSize = 4
+<span class="lineNum">     990 </span>            : 
+<span class="lineNum">     991 </span>            :         // algorithm doesn't have the best memoisation coherence, but eh well...
+<span class="lineNum">     992 </span>            : 
+<span class="lineNum">     993 </span><span class="lineCov">        156 :         unsigned beginDirty = _begin;</span>
+<span class="lineNum">     994 </span><span class="lineCov">        156 :         unsigned endDirty = _end;</span>
+<span class="lineNum">     995 </span><span class="lineCov">        468 :         for (unsigned level = 0; level &lt; c_bloomIndexLevels; level++, beginDirty /= c_bloomIndexSize, endDirty = (endDirty - 1) / c_bloomIndexSize + 1)</span>
+<span class="lineNum">     996 </span>            :         {
+<span class="lineNum">     997 </span>            :                 // compute earliest &amp; latest index for each level, rebuild from previous levels.
+<span class="lineNum">     998 </span><span class="lineCov">       2188 :                 for (unsigned item = beginDirty; item != endDirty; ++item)</span>
+<span class="lineNum">     999 </span>            :                 {
+<span class="lineNum">    1000 </span><span class="lineCov">        938 :                         unsigned bunch = item / c_bloomIndexSize;</span>
+<span class="lineNum">    1001 </span><span class="lineCov">        938 :                         unsigned offset = item % c_bloomIndexSize;</span>
+<span class="lineNum">    1002 </span><span class="lineCov">        938 :                         auto id = chunkId(level, bunch);</span>
+<span class="lineNum">    1003 </span><span class="lineCov">        938 :                         LogBloom acc;</span>
+<span class="lineNum">    1004 </span><span class="lineCov">        938 :                         if (!!level)</span>
+<span class="lineNum">    1005 </span>            :                         {
+<span class="lineNum">    1006 </span>            :                                 // rebuild the bloom from the previous (lower) level (if there is one).
+<span class="lineNum">    1007 </span><span class="lineCov">        336 :                                 auto lowerChunkId = chunkId(level - 1, item);</span>
+<span class="lineNum">    1008 </span><span class="lineCov">       5544 :                                 for (auto const&amp; bloom: blocksBlooms(lowerChunkId).blooms)</span>
+<span class="lineNum">    1009 </span><span class="lineCov">       2688 :                                         acc |= bloom;</span>
+<span class="lineNum">    1010 </span>            :                         }
+<span class="lineNum">    1011 </span><span class="lineCov">        938 :                         blocksBlooms(id);       // make sure it has been memoized.</span>
+<span class="lineNum">    1012 </span><span class="lineCov">       2814 :                         m_blocksBlooms[id].blooms[offset] = acc;</span>
+<span class="lineNum">    1013 </span>            :                 }
+<span class="lineNum">    1014 </span>            :         }
+<a name="1015"><span class="lineNum">    1015 </span><span class="lineCov">        156 : }</span></a>
+<span class="lineNum">    1016 </span>            : 
+<span class="lineNum">    1017 </span><span class="lineNoCov">          0 : void BlockChain::rescue(OverlayDB const&amp; _db)</span>
+<span class="lineNum">    1018 </span>            : {
+<span class="lineNum">    1019 </span><span class="lineNoCov">          0 :         cout &lt;&lt; &quot;Rescuing database...&quot; &lt;&lt; endl;</span>
+<span class="lineNum">    1020 </span>            : 
+<span class="lineNum">    1021 </span><span class="lineNoCov">          0 :         unsigned u = 1;</span>
+<span class="lineNum">    1022 </span><span class="lineNoCov">          0 :         while (true)</span>
+<span class="lineNum">    1023 </span>            :         {
+<span class="lineNum">    1024 </span>            :                 try {
+<span class="lineNum">    1025 </span><span class="lineNoCov">          0 :                         if (isKnown(numberHash(u)))</span>
+<span class="lineNum">    1026 </span><span class="lineNoCov">          0 :                                 u *= 2;</span>
+<span class="lineNum">    1027 </span>            :                         else
+<span class="lineNum">    1028 </span>            :                                 break;
+<span class="lineNum">    1029 </span>            :                 }
+<span class="lineNum">    1030 </span><span class="lineNoCov">          0 :                 catch (...)</span>
+<span class="lineNum">    1031 </span>            :                 {
+<span class="lineNum">    1032 </span>            :                         break;
+<span class="lineNum">    1033 </span>            :                 }
+<span class="lineNum">    1034 </span>            :         }
+<span class="lineNum">    1035 </span><span class="lineNoCov">          0 :         unsigned l = u / 2;</span>
+<span class="lineNum">    1036 </span><span class="lineNoCov">          0 :         cout &lt;&lt; &quot;Finding last likely block number...&quot; &lt;&lt; endl;</span>
+<span class="lineNum">    1037 </span><span class="lineNoCov">          0 :         while (u - l &gt; 1)</span>
+<span class="lineNum">    1038 </span>            :         {
+<span class="lineNum">    1039 </span><span class="lineNoCov">          0 :                 unsigned m = (u + l) / 2;</span>
+<span class="lineNum">    1040 </span><span class="lineNoCov">          0 :                 cout &lt;&lt; &quot; &quot; &lt;&lt; m &lt;&lt; flush;</span>
+<span class="lineNum">    1041 </span><span class="lineNoCov">          0 :                 if (isKnown(numberHash(m)))</span>
+<span class="lineNum">    1042 </span>            :                         l = m;
+<span class="lineNum">    1043 </span>            :                 else
+<span class="lineNum">    1044 </span><span class="lineNoCov">          0 :                         u = m;</span>
+<span class="lineNum">    1045 </span>            :         }
+<span class="lineNum">    1046 </span><span class="lineNoCov">          0 :         cout &lt;&lt; &quot;  lowest is &quot; &lt;&lt; l &lt;&lt; endl;</span>
+<span class="lineNum">    1047 </span><span class="lineNoCov">          0 :         for (; l &gt; 0; --l)</span>
+<span class="lineNum">    1048 </span>            :         {
+<span class="lineNum">    1049 </span><span class="lineNoCov">          0 :                 h256 h = numberHash(l);</span>
+<span class="lineNum">    1050 </span><span class="lineNoCov">          0 :                 cout &lt;&lt; &quot;Checking validity of &quot; &lt;&lt; l &lt;&lt; &quot; (&quot; &lt;&lt; h &lt;&lt; &quot;)...&quot; &lt;&lt; flush;</span>
+<span class="lineNum">    1051 </span>            :                 try
+<span class="lineNum">    1052 </span>            :                 {
+<span class="lineNum">    1053 </span><span class="lineNoCov">          0 :                         cout &lt;&lt; &quot;block...&quot; &lt;&lt; flush;</span>
+<span class="lineNum">    1054 </span><span class="lineNoCov">          0 :                         BlockHeader bi(block(h));</span>
+<span class="lineNum">    1055 </span><span class="lineNoCov">          0 :                         cout &lt;&lt; &quot;extras...&quot; &lt;&lt; flush;</span>
+<span class="lineNum">    1056 </span><span class="lineNoCov">          0 :                         details(h);</span>
+<span class="lineNum">    1057 </span><span class="lineNoCov">          0 :                         cout &lt;&lt; &quot;state...&quot; &lt;&lt; flush;</span>
+<span class="lineNum">    1058 </span><span class="lineNoCov">          0 :                         if (_db.exists(bi.stateRoot()))</span>
+<span class="lineNum">    1059 </span>            :                                 break;
+<span class="lineNum">    1060 </span>            :                 }
+<span class="lineNum">    1061 </span><span class="lineNoCov">          0 :                 catch (...) {}</span>
+<span class="lineNum">    1062 </span>            :         }
+<span class="lineNum">    1063 </span><span class="lineNoCov">          0 :         cout &lt;&lt; &quot;OK.&quot; &lt;&lt; endl;</span>
+<span class="lineNum">    1064 </span><span class="lineNoCov">          0 :         rewind(l);</span>
+<a name="1065"><span class="lineNum">    1065 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">    1066 </span>            : 
+<span class="lineNum">    1067 </span><span class="lineNoCov">          0 : void BlockChain::rewind(unsigned _newHead)</span>
+<span class="lineNum">    1068 </span>            : {
+<span class="lineNum">    1069 </span><span class="lineNoCov">          0 :         DEV_WRITE_GUARDED(x_lastBlockHash)</span>
+<span class="lineNum">    1070 </span>            :         {
+<span class="lineNum">    1071 </span><span class="lineNoCov">          0 :                 if (_newHead &gt;= m_lastBlockNumber)</span>
+<span class="lineNum">    1072 </span><span class="lineNoCov">          0 :                         return;</span>
+<span class="lineNum">    1073 </span><span class="lineNoCov">          0 :                 clearCachesDuringChainReversion(_newHead + 1);</span>
+<span class="lineNum">    1074 </span><span class="lineNoCov">          0 :                 m_lastBlockHash = numberHash(_newHead);</span>
+<span class="lineNum">    1075 </span><span class="lineNoCov">          0 :                 m_lastBlockNumber = _newHead;</span>
+<span class="lineNum">    1076 </span><span class="lineNoCov">          0 :                 auto o = m_extrasDB-&gt;Put(m_writeOptions, ldb::Slice(&quot;best&quot;), ldb::Slice((char const*)&amp;m_lastBlockHash, 32));</span>
+<span class="lineNum">    1077 </span><span class="lineNoCov">          0 :                 if (!o.ok())</span>
+<span class="lineNum">    1078 </span>            :                 {
+<span class="lineNum">    1079 </span><span class="lineNoCov">          0 :                         cwarn &lt;&lt; &quot;Error writing to extras database: &quot; &lt;&lt; o.ToString();</span>
+<span class="lineNum">    1080 </span><span class="lineNoCov">          0 :                         cout &lt;&lt; &quot;Put&quot; &lt;&lt; toHex(bytesConstRef(ldb::Slice(&quot;best&quot;))) &lt;&lt; &quot;=&gt;&quot; &lt;&lt; toHex(bytesConstRef(ldb::Slice((char const*)&amp;m_lastBlockHash, 32)));</span>
+<span class="lineNum">    1081 </span><span class="lineNoCov">          0 :                         cwarn &lt;&lt; &quot;Fail writing to extras database. Bombing out.&quot;;</span>
+<span class="lineNum">    1082 </span><span class="lineNoCov">          0 :                         exit(-1);</span>
+<span class="lineNum">    1083 </span>            :                 }
+<span class="lineNum">    1084 </span><span class="lineNoCov">          0 :                 noteCanonChanged();</span>
+<span class="lineNum">    1085 </span>            :         }
+<a name="1086"><span class="lineNum">    1086 </span>            : }</a>
+<span class="lineNum">    1087 </span>            : 
+<span class="lineNum">    1088 </span><span class="lineCov">       2639 : tuple&lt;h256s, h256, unsigned&gt; BlockChain::treeRoute(h256 const&amp; _from, h256 const&amp; _to, bool _common, bool _pre, bool _post) const</span>
+<span class="lineNum">    1089 </span>            : {
+<span class="lineNum">    1090 </span>            : //      cdebug &lt;&lt; &quot;treeRoute&quot; &lt;&lt; _from &lt;&lt; &quot;...&quot; &lt;&lt; _to;
+<span class="lineNum">    1091 </span><span class="lineCov">       5278 :         if (!_from || !_to)</span>
+<span class="lineNum">    1092 </span><span class="lineNoCov">          0 :                 return make_tuple(h256s(), h256(), 0);</span>
+<span class="lineNum">    1093 </span><span class="lineCov">       2639 :         h256s ret;</span>
+<span class="lineNum">    1094 </span><span class="lineCov">       5278 :         h256s back;</span>
+<span class="lineNum">    1095 </span><span class="lineCov">       5278 :         unsigned fn = details(_from).number;</span>
+<span class="lineNum">    1096 </span><span class="lineCov">       5278 :         unsigned tn = details(_to).number;</span>
+<span class="lineNum">    1097 </span>            : //      cdebug &lt;&lt; &quot;treeRoute&quot; &lt;&lt; fn &lt;&lt; &quot;...&quot; &lt;&lt; tn;
+<span class="lineNum">    1098 </span><span class="lineCov">       2639 :         h256 from = _from;</span>
+<span class="lineNum">    1099 </span><span class="lineCov">       2687 :         while (fn &gt; tn)</span>
+<span class="lineNum">    1100 </span>            :         {
+<span class="lineNum">    1101 </span><span class="lineCov">         24 :                 if (_pre)</span>
+<span class="lineNum">    1102 </span><span class="lineCov">         24 :                         ret.push_back(from);</span>
+<span class="lineNum">    1103 </span><span class="lineCov">         48 :                 from = details(from).parent;</span>
+<span class="lineNum">    1104 </span><span class="lineCov">         24 :                 fn--;</span>
+<span class="lineNum">    1105 </span>            : //              cdebug &lt;&lt; &quot;from:&quot; &lt;&lt; fn &lt;&lt; _from;
+<span class="lineNum">    1106 </span>            :         }
+<span class="lineNum">    1107 </span><span class="lineCov">       2639 :         h256 to = _to;</span>
+<span class="lineNum">    1108 </span><span class="lineCov">       2641 :         while (fn &lt; tn)</span>
+<span class="lineNum">    1109 </span>            :         {
+<span class="lineNum">    1110 </span><span class="lineCov">          1 :                 if (_post)</span>
+<span class="lineNum">    1111 </span><span class="lineCov">          1 :                         back.push_back(to);</span>
+<span class="lineNum">    1112 </span><span class="lineCov">          2 :                 to = details(to).parent;</span>
+<span class="lineNum">    1113 </span><span class="lineCov">          1 :                 tn--;</span>
+<span class="lineNum">    1114 </span>            : //              cdebug &lt;&lt; &quot;to:&quot; &lt;&lt; tn &lt;&lt; _to;
+<span class="lineNum">    1115 </span>            :         }
+<span class="lineNum">    1116 </span><span class="lineCov">       2984 :         for (;; from = details(from).parent, to = details(to).parent)</span>
+<span class="lineNum">    1117 </span>            :         {
+<span class="lineNum">    1118 </span><span class="lineCov">       6770 :                 if (_pre &amp;&amp; (from != to || _common))</span>
+<span class="lineNum">    1119 </span><span class="lineCov">       3385 :                         ret.push_back(from);</span>
+<span class="lineNum">    1120 </span><span class="lineCov">       6770 :                 if (_post &amp;&amp; (from != to || (!_pre &amp;&amp; _common)))</span>
+<span class="lineNum">    1121 </span><span class="lineCov">        746 :                         back.push_back(to);</span>
+<span class="lineNum">    1122 </span><span class="lineCov">       3385 :                 fn--;</span>
+<span class="lineNum">    1123 </span><span class="lineCov">       3385 :                 tn--;</span>
+<span class="lineNum">    1124 </span>            : //              cdebug &lt;&lt; &quot;from:&quot; &lt;&lt; fn &lt;&lt; _from &lt;&lt; &quot;; to:&quot; &lt;&lt; tn &lt;&lt; _to;
+<span class="lineNum">    1125 </span><span class="lineCov">       3385 :                 if (from == to)</span>
+<span class="lineNum">    1126 </span>            :                         break;
+<span class="lineNum">    1127 </span><span class="lineCov">        746 :                 if (!from)</span>
+<span class="lineNum">    1128 </span><span class="lineNoCov">          0 :                         assert(from);</span>
+<span class="lineNum">    1129 </span><span class="lineCov">        746 :                 if (!to)</span>
+<span class="lineNum">    1130 </span><span class="lineNoCov">          0 :                         assert(to);</span>
+<span class="lineNum">    1131 </span>            :         }
+<span class="lineNum">    1132 </span><span class="lineCov">       5278 :         ret.reserve(ret.size() + back.size());</span>
+<span class="lineNum">    1133 </span><span class="lineCov">       7917 :         unsigned i = ret.size() - (int)(_common &amp;&amp; !ret.empty() &amp;&amp; !back.empty());</span>
+<span class="lineNum">    1134 </span><span class="lineCov">       6772 :         for (auto it = back.rbegin(); it != back.rend(); ++it)</span>
+<span class="lineNum">    1135 </span><span class="lineCov">        747 :                 ret.push_back(*it);</span>
+<span class="lineNum">    1136 </span><span class="lineCov">       2639 :         return make_tuple(ret, from, i);</span>
+<a name="1137"><span class="lineNum">    1137 </span>            : }</a>
+<span class="lineNum">    1138 </span>            : 
+<span class="lineNum">    1139 </span><span class="lineCov">       9108 : void BlockChain::noteUsed(h256 const&amp; _h, unsigned _extra) const</span>
+<span class="lineNum">    1140 </span>            : {
+<span class="lineNum">    1141 </span><span class="lineCov">       9108 :         auto id = CacheID(_h, _extra);</span>
+<span class="lineNum">    1142 </span><span class="lineCov">      27324 :         Guard l(x_cacheUsage);</span>
+<span class="lineNum">    1143 </span><span class="lineCov">      27324 :         m_cacheUsage[0].insert(id);</span>
+<span class="lineNum">    1144 </span><span class="lineCov">      27324 :         if (m_cacheUsage[1].count(id))</span>
+<span class="lineNum">    1145 </span><span class="lineNoCov">          0 :                 m_cacheUsage[1].erase(id);</span>
+<span class="lineNum">    1146 </span>            :         else
+<span class="lineNum">    1147 </span><span class="lineCov">       9108 :                 m_inUse.insert(id);</span>
+<span class="lineNum">    1148 </span><span class="lineCov">       9108 : }</span>
+<span class="lineNum">    1149 </span>            : 
+<span class="lineNum">    1150 </span>            : template &lt;class K, class T&gt; static unsigned getHashSize(unordered_map&lt;K, T&gt; const&amp; _map)
+<span class="lineNum">    1151 </span>            : {
+<span class="lineNum">    1152 </span><span class="lineCov">         24 :         unsigned ret = 0;</span>
+<span class="lineNum">    1153 </span><span class="lineCov">         80 :         for (auto const&amp; i: _map)</span>
+<span class="lineNum">    1154 </span><span class="lineCov">          8 :                 ret += i.second.size + 64;</span>
+<span class="lineNum">    1155 </span>            :         return ret;
+<a name="1156"><span class="lineNum">    1156 </span>            : }</a>
+<span class="lineNum">    1157 </span>            : 
+<span class="lineNum">    1158 </span><span class="lineCov">          4 : void BlockChain::updateStats() const</span>
+<span class="lineNum">    1159 </span>            : {
+<span class="lineNum">    1160 </span><span class="lineCov">          4 :         m_lastStats.memBlocks = 0;</span>
+<span class="lineNum">    1161 </span><span class="lineCov">         20 :         DEV_READ_GUARDED(x_blocks)</span>
+<span class="lineNum">    1162 </span><span class="lineCov">         14 :                 for (auto const&amp; i: m_blocks)</span>
+<span class="lineNum">    1163 </span><span class="lineCov">          4 :                         m_lastStats.memBlocks += i.second.size() + 64;</span>
+<span class="lineNum">    1164 </span><span class="lineCov">         20 :         DEV_READ_GUARDED(x_details)</span>
+<span class="lineNum">    1165 </span><span class="lineCov">          8 :                 m_lastStats.memDetails = getHashSize(m_details);</span>
+<span class="lineNum">    1166 </span><span class="lineCov">         20 :         DEV_READ_GUARDED(x_logBlooms)</span>
+<span class="lineNum">    1167 </span><span class="lineCov">         20 :                 DEV_READ_GUARDED(x_blocksBlooms)</span>
+<span class="lineNum">    1168 </span><span class="lineCov">         12 :                         m_lastStats.memLogBlooms = getHashSize(m_logBlooms) + getHashSize(m_blocksBlooms);</span>
+<span class="lineNum">    1169 </span><span class="lineCov">         20 :         DEV_READ_GUARDED(x_receipts)</span>
+<span class="lineNum">    1170 </span><span class="lineCov">          8 :                 m_lastStats.memReceipts = getHashSize(m_receipts);</span>
+<span class="lineNum">    1171 </span><span class="lineCov">         20 :         DEV_READ_GUARDED(x_blockHashes)</span>
+<span class="lineNum">    1172 </span><span class="lineCov">          8 :                 m_lastStats.memBlockHashes = getHashSize(m_blockHashes);</span>
+<span class="lineNum">    1173 </span><span class="lineCov">         20 :         DEV_READ_GUARDED(x_transactionAddresses)</span>
+<span class="lineNum">    1174 </span><span class="lineCov">          8 :                 m_lastStats.memTransactionAddresses = getHashSize(m_transactionAddresses);</span>
+<a name="1175"><span class="lineNum">    1175 </span><span class="lineCov">          4 : }</span></a>
+<span class="lineNum">    1176 </span>            : 
+<span class="lineNum">    1177 </span><span class="lineCov">          3 : void BlockChain::garbageCollect(bool _force)</span>
+<span class="lineNum">    1178 </span>            : {
+<span class="lineNum">    1179 </span><span class="lineCov">          3 :         updateStats();</span>
+<span class="lineNum">    1180 </span>            : 
+<span class="lineNum">    1181 </span><span class="lineCov">          9 :         if (!_force &amp;&amp; chrono::system_clock::now() &lt; m_lastCollection + c_collectionDuration &amp;&amp; m_lastStats.memTotal() &lt; c_maxCacheSize)</span>
+<span class="lineNum">    1182 </span><span class="lineCov">          3 :                 return;</span>
+<span class="lineNum">    1183 </span><span class="lineCov">          2 :         if (m_lastStats.memTotal() &lt; c_minCacheSize)</span>
+<span class="lineNum">    1184 </span>            :                 return;
+<span class="lineNum">    1185 </span>            : 
+<span class="lineNum">    1186 </span><span class="lineNoCov">          0 :         m_lastCollection = chrono::system_clock::now();</span>
+<span class="lineNum">    1187 </span>            : 
+<span class="lineNum">    1188 </span><span class="lineNoCov">          0 :         Guard l(x_cacheUsage);</span>
+<span class="lineNum">    1189 </span><span class="lineNoCov">          0 :         WriteGuard l1(x_blocks);</span>
+<span class="lineNum">    1190 </span><span class="lineNoCov">          0 :         WriteGuard l2(x_details);</span>
+<span class="lineNum">    1191 </span><span class="lineNoCov">          0 :         WriteGuard l3(x_blockHashes);</span>
+<span class="lineNum">    1192 </span><span class="lineNoCov">          0 :         WriteGuard l4(x_receipts);</span>
+<span class="lineNum">    1193 </span><span class="lineNoCov">          0 :         WriteGuard l5(x_logBlooms);</span>
+<span class="lineNum">    1194 </span><span class="lineNoCov">          0 :         WriteGuard l6(x_transactionAddresses);</span>
+<span class="lineNum">    1195 </span><span class="lineNoCov">          0 :         WriteGuard l7(x_blocksBlooms);</span>
+<span class="lineNum">    1196 </span><span class="lineNoCov">          0 :         for (CacheID const&amp; id: m_cacheUsage.back())</span>
+<span class="lineNum">    1197 </span>            :         {
+<span class="lineNum">    1198 </span><span class="lineNoCov">          0 :                 m_inUse.erase(id);</span>
+<span class="lineNum">    1199 </span>            :                 // kill i from cache.
+<span class="lineNum">    1200 </span><span class="lineNoCov">          0 :                 switch (id.second)</span>
+<span class="lineNum">    1201 </span>            :                 {
+<span class="lineNum">    1202 </span>            :                 case (unsigned)-1:
+<span class="lineNum">    1203 </span><span class="lineNoCov">          0 :                         m_blocks.erase(id.first);</span>
+<span class="lineNum">    1204 </span>            :                         break;
+<span class="lineNum">    1205 </span>            :                 case ExtraDetails:
+<span class="lineNum">    1206 </span><span class="lineNoCov">          0 :                         m_details.erase(id.first);</span>
+<span class="lineNum">    1207 </span>            :                         break;
+<span class="lineNum">    1208 </span>            :                 case ExtraReceipts:
+<span class="lineNum">    1209 </span><span class="lineNoCov">          0 :                         m_receipts.erase(id.first);</span>
+<span class="lineNum">    1210 </span>            :                         break;
+<span class="lineNum">    1211 </span>            :                 case ExtraLogBlooms:
+<span class="lineNum">    1212 </span><span class="lineNoCov">          0 :                         m_logBlooms.erase(id.first);</span>
+<span class="lineNum">    1213 </span>            :                         break;
+<span class="lineNum">    1214 </span>            :                 case ExtraTransactionAddress:
+<span class="lineNum">    1215 </span><span class="lineNoCov">          0 :                         m_transactionAddresses.erase(id.first);</span>
+<span class="lineNum">    1216 </span>            :                         break;
+<span class="lineNum">    1217 </span>            :                 case ExtraBlocksBlooms:
+<span class="lineNum">    1218 </span><span class="lineNoCov">          0 :                         m_blocksBlooms.erase(id.first);</span>
+<span class="lineNum">    1219 </span>            :                         break;
+<span class="lineNum">    1220 </span>            :                 }
+<span class="lineNum">    1221 </span>            :         }
+<span class="lineNum">    1222 </span><span class="lineNoCov">          0 :         m_cacheUsage.pop_back();</span>
+<span class="lineNum">    1223 </span><span class="lineNoCov">          0 :         m_cacheUsage.push_front(std::unordered_set&lt;CacheID&gt;{});</span>
+<a name="1224"><span class="lineNum">    1224 </span>            : }</a>
+<span class="lineNum">    1225 </span>            : 
+<span class="lineNum">    1226 </span><span class="lineNoCov">          0 : void BlockChain::checkConsistency()</span>
+<span class="lineNum">    1227 </span>            : {
+<span class="lineNum">    1228 </span><span class="lineNoCov">          0 :         DEV_WRITE_GUARDED(x_details)</span>
+<span class="lineNum">    1229 </span><span class="lineNoCov">          0 :                 m_details.clear();</span>
+<span class="lineNum">    1230 </span><span class="lineNoCov">          0 :         ldb::Iterator* it = m_blocksDB-&gt;NewIterator(m_readOptions);</span>
+<span class="lineNum">    1231 </span><span class="lineNoCov">          0 :         for (it-&gt;SeekToFirst(); it-&gt;Valid(); it-&gt;Next())</span>
+<span class="lineNum">    1232 </span><span class="lineNoCov">          0 :                 if (it-&gt;key().size() == 32)</span>
+<span class="lineNum">    1233 </span>            :                 {
+<span class="lineNum">    1234 </span><span class="lineNoCov">          0 :                         h256 h((byte const*)it-&gt;key().data(), h256::ConstructFromPointer);</span>
+<span class="lineNum">    1235 </span><span class="lineNoCov">          0 :                         auto dh = details(h);</span>
+<span class="lineNum">    1236 </span><span class="lineNoCov">          0 :                         auto p = dh.parent;</span>
+<span class="lineNum">    1237 </span><span class="lineNoCov">          0 :                         if (p != h256() &amp;&amp; p != m_genesisHash)  // TODO: for some reason the genesis details with the children get squished. not sure why.</span>
+<span class="lineNum">    1238 </span>            :                         {
+<span class="lineNum">    1239 </span><span class="lineNoCov">          0 :                                 auto dp = details(p);</span>
+<span class="lineNum">    1240 </span><span class="lineNoCov">          0 :                                 if (asserts(contains(dp.children, h)))</span>
+<span class="lineNum">    1241 </span><span class="lineNoCov">          0 :                                         cnote &lt;&lt; &quot;Apparently the database is corrupt. Not much we can do at this stage...&quot;;</span>
+<span class="lineNum">    1242 </span><span class="lineNoCov">          0 :                                 if (assertsEqual(dp.number, dh.number - 1))</span>
+<span class="lineNum">    1243 </span><span class="lineNoCov">          0 :                                         cnote &lt;&lt; &quot;Apparently the database is corrupt. Not much we can do at this stage...&quot;;</span>
+<span class="lineNum">    1244 </span>            :                         }
+<span class="lineNum">    1245 </span>            :                 }
+<span class="lineNum">    1246 </span><span class="lineNoCov">          0 :         delete it;</span>
+<a name="1247"><span class="lineNum">    1247 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">    1248 </span>            : 
+<span class="lineNum">    1249 </span><span class="lineCov">        156 : void BlockChain::clearCachesDuringChainReversion(unsigned _firstInvalid)</span>
+<span class="lineNum">    1250 </span>            : {
+<span class="lineNum">    1251 </span><span class="lineCov">        156 :         unsigned end = number() + 1;</span>
+<span class="lineNum">    1252 </span><span class="lineCov">        780 :         DEV_WRITE_GUARDED(x_blockHashes)</span>
+<span class="lineNum">    1253 </span><span class="lineCov">       1696 :                 for (auto i = _firstInvalid; i &lt; end; ++i)</span>
+<span class="lineNum">    1254 </span><span class="lineCov">       1540 :                         m_blockHashes.erase(i);</span>
+<span class="lineNum">    1255 </span><span class="lineCov">        780 :         DEV_WRITE_GUARDED(x_transactionAddresses)</span>
+<span class="lineNum">    1256 </span><span class="lineCov">        312 :                 m_transactionAddresses.clear(); // TODO: could perhaps delete them individually?</span>
+<span class="lineNum">    1257 </span>            : 
+<span class="lineNum">    1258 </span>            :         // If we are reverting previous blocks, we need to clear their blooms (in particular, to
+<span class="lineNum">    1259 </span>            :         // rebuild any higher level blooms that they contributed to).
+<span class="lineNum">    1260 </span><span class="lineCov">        156 :         clearBlockBlooms(_firstInvalid, end);</span>
+<span class="lineNum">    1261 </span><span class="lineCov">        156 : }</span>
+<span class="lineNum">    1262 </span>            : 
+<span class="lineNum">    1263 </span><span class="lineNoCov">          0 : static inline unsigned upow(unsigned a, unsigned b) { if (!b) return 1; while (--b &gt; 0) a *= a; return a; }</span>
+<span class="lineNum">    1264 </span><span class="lineNoCov">          0 : static inline unsigned ceilDiv(unsigned n, unsigned d) { return (n + d - 1) / d; }</span>
+<span class="lineNum">    1265 </span>            : //static inline unsigned floorDivPow(unsigned n, unsigned a, unsigned b) { return n / upow(a, b); }
+<span class="lineNum">    1266 </span>            : //static inline unsigned ceilDivPow(unsigned n, unsigned a, unsigned b) { return ceilDiv(n, upow(a, b)); }
+<span class="lineNum">    1267 </span>            : 
+<span class="lineNum">    1268 </span>            : // Level 1
+<span class="lineNum">    1269 </span>            : // [xxx.            ]
+<span class="lineNum">    1270 </span>            : 
+<span class="lineNum">    1271 </span>            : // Level 0
+<span class="lineNum">    1272 </span>            : // [.x............F.]
+<span class="lineNum">    1273 </span>            : // [........x.......]
+<span class="lineNum">    1274 </span>            : // [T.............x.]
+<span class="lineNum">    1275 </span>            : // [............    ]
+<span class="lineNum">    1276 </span>            : 
+<a name="1277"><span class="lineNum">    1277 </span>            : // F = 14. T = 32</a>
+<span class="lineNum">    1278 </span>            : 
+<span class="lineNum">    1279 </span><span class="lineNoCov">          0 : vector&lt;unsigned&gt; BlockChain::withBlockBloom(LogBloom const&amp; _b, unsigned _earliest, unsigned _latest) const</span>
+<span class="lineNum">    1280 </span>            : {
+<span class="lineNum">    1281 </span><span class="lineNoCov">          0 :         vector&lt;unsigned&gt; ret;</span>
+<span class="lineNum">    1282 </span>            : 
+<span class="lineNum">    1283 </span>            :         // start from the top-level
+<span class="lineNum">    1284 </span><span class="lineNoCov">          0 :         unsigned u = upow(c_bloomIndexSize, c_bloomIndexLevels);</span>
+<span class="lineNum">    1285 </span>            : 
+<span class="lineNum">    1286 </span>            :         // run through each of the top-level blockbloom blocks
+<span class="lineNum">    1287 </span><span class="lineNoCov">          0 :         for (unsigned index = _earliest / u; index &lt;= ceilDiv(_latest, u); ++index)                          // 0</span>
+<span class="lineNum">    1288 </span><span class="lineNoCov">          0 :                 ret += withBlockBloom(_b, _earliest, _latest, c_bloomIndexLevels - 1, index);</span>
+<span class="lineNum">    1289 </span>            : 
+<span class="lineNum">    1290 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="1291"><span class="lineNum">    1291 </span>            : }</a>
+<span class="lineNum">    1292 </span>            : 
+<span class="lineNum">    1293 </span><span class="lineNoCov">          0 : vector&lt;unsigned&gt; BlockChain::withBlockBloom(LogBloom const&amp; _b, unsigned _earliest, unsigned _latest, unsigned _level, unsigned _index) const</span>
+<span class="lineNum">    1294 </span>            : {
+<span class="lineNum">    1295 </span>            :         // 14, 32, 1, 0
+<span class="lineNum">    1296 </span>            :                 // 14, 32, 0, 0
+<span class="lineNum">    1297 </span>            :                 // 14, 32, 0, 1
+<span class="lineNum">    1298 </span>            :                 // 14, 32, 0, 2
+<span class="lineNum">    1299 </span>            : 
+<span class="lineNum">    1300 </span><span class="lineNoCov">          0 :         vector&lt;unsigned&gt; ret;</span>
+<span class="lineNum">    1301 </span>            : 
+<span class="lineNum">    1302 </span><span class="lineNoCov">          0 :         unsigned uCourse = upow(c_bloomIndexSize, _level + 1);</span>
+<span class="lineNum">    1303 </span>            :         // 256
+<span class="lineNum">    1304 </span>            :                 // 16
+<span class="lineNum">    1305 </span><span class="lineNoCov">          0 :         unsigned uFine = upow(c_bloomIndexSize, _level);</span>
+<span class="lineNum">    1306 </span>            :         // 16
+<span class="lineNum">    1307 </span>            :                 // 1
+<span class="lineNum">    1308 </span>            : 
+<span class="lineNum">    1309 </span><span class="lineNoCov">          0 :         unsigned obegin = _index == _earliest / uCourse ? _earliest / uFine % c_bloomIndexSize : 0;</span>
+<span class="lineNum">    1310 </span>            :         // 0
+<span class="lineNum">    1311 </span>            :                 // 14
+<span class="lineNum">    1312 </span>            :                 // 0
+<span class="lineNum">    1313 </span>            :                 // 0
+<span class="lineNum">    1314 </span><span class="lineNoCov">          0 :         unsigned oend = _index == _latest / uCourse ? (_latest / uFine) % c_bloomIndexSize + 1 : c_bloomIndexSize;</span>
+<span class="lineNum">    1315 </span>            :         // 3
+<span class="lineNum">    1316 </span>            :                 // 16
+<span class="lineNum">    1317 </span>            :                 // 16
+<span class="lineNum">    1318 </span>            :                 // 1
+<span class="lineNum">    1319 </span>            : 
+<span class="lineNum">    1320 </span><span class="lineNoCov">          0 :         BlocksBlooms bb = blocksBlooms(_level, _index);</span>
+<span class="lineNum">    1321 </span><span class="lineNoCov">          0 :         for (unsigned o = obegin; o &lt; oend; ++o)</span>
+<span class="lineNum">    1322 </span><span class="lineNoCov">          0 :                 if (bb.blooms[o].contains(_b))</span>
+<span class="lineNum">    1323 </span>            :                 {
+<span class="lineNum">    1324 </span>            :                         // This level has something like what we want.
+<span class="lineNum">    1325 </span><span class="lineNoCov">          0 :                         if (_level &gt; 0)</span>
+<span class="lineNum">    1326 </span><span class="lineNoCov">          0 :                                 ret += withBlockBloom(_b, _earliest, _latest, _level - 1, o + _index * c_bloomIndexSize);</span>
+<span class="lineNum">    1327 </span>            :                         else
+<span class="lineNum">    1328 </span><span class="lineNoCov">          0 :                                 ret.push_back(o + _index * c_bloomIndexSize);</span>
+<span class="lineNum">    1329 </span>            :                 }
+<span class="lineNum">    1330 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="1331"><span class="lineNum">    1331 </span>            : }</a>
+<span class="lineNum">    1332 </span>            : 
+<span class="lineNum">    1333 </span><span class="lineCov">       4982 : h256Hash BlockChain::allKinFrom(h256 const&amp; _parent, unsigned _generations) const</span>
+<span class="lineNum">    1334 </span>            : {
+<span class="lineNum">    1335 </span>            :         // Get all uncles cited given a parent (i.e. featured as uncles/main in parent, parent + 1, ... parent + 5).
+<span class="lineNum">    1336 </span><span class="lineCov">       4982 :         h256 p = _parent;</span>
+<span class="lineNum">    1337 </span><span class="lineCov">      19928 :         h256Hash ret = { p };</span>
+<span class="lineNum">    1338 </span>            :         // p and (details(p).parent: i == 5) is likely to be overkill, but can't hurt to be cautious.
+<span class="lineNum">    1339 </span><span class="lineCov">      78465 :         for (unsigned i = 0; i &lt; _generations &amp;&amp; p != m_genesisHash; ++i, p = details(p).parent)</span>
+<span class="lineNum">    1340 </span>            :         {
+<span class="lineNum">    1341 </span><span class="lineCov">      52935 :                 ret.insert(details(p).parent);</span>
+<span class="lineNum">    1342 </span><span class="lineCov">      35290 :                 auto b = block(p);</span>
+<span class="lineNum">    1343 </span><span class="lineCov">      53577 :                 for (auto i: RLP(b)[2])</span>
+<span class="lineNum">    1344 </span><span class="lineCov">        642 :                         ret.insert(sha3(i.data()));</span>
+<span class="lineNum">    1345 </span>            :         }
+<span class="lineNum">    1346 </span><span class="lineCov">       4982 :         return ret;</span>
+<a name="1347"><span class="lineNum">    1347 </span>            : }</a>
+<span class="lineNum">    1348 </span>            : 
+<span class="lineNum">    1349 </span><span class="lineCov">      13561 : bool BlockChain::isKnown(h256 const&amp; _hash, bool _isCurrent) const</span>
+<span class="lineNum">    1350 </span>            : {
+<span class="lineNum">    1351 </span><span class="lineCov">      27122 :         if (_hash == m_genesisHash)</span>
+<span class="lineNum">    1352 </span>            :                 return true;
+<span class="lineNum">    1353 </span>            : 
+<span class="lineNum">    1354 </span><span class="lineCov">      32395 :         DEV_READ_GUARDED(x_blocks)</span>
+<span class="lineNum">    1355 </span><span class="lineCov">      19048 :                 if (!m_blocks.count(_hash))</span>
+<span class="lineNum">    1356 </span>            :                 {
+<span class="lineNum">    1357 </span><span class="lineCov">       7481 :                         string d;</span>
+<span class="lineNum">    1358 </span><span class="lineCov">      12556 :                         m_blocksDB-&gt;Get(m_readOptions, toSlice(_hash), &amp;d);</span>
+<span class="lineNum">    1359 </span><span class="lineCov">       6278 :                         if (d.empty())</span>
+<span class="lineNum">    1360 </span><span class="lineCov">      10150 :                                 return false;</span>
+<span class="lineNum">    1361 </span>            :                 }
+<span class="lineNum">    1362 </span><span class="lineCov">      22245 :         DEV_READ_GUARDED(x_details)</span>
+<span class="lineNum">    1363 </span><span class="lineCov">       8898 :                 if (!m_details.count(_hash))</span>
+<span class="lineNum">    1364 </span>            :                 {
+<span class="lineNum">    1365 </span><span class="lineCov">       8050 :                         string d;</span>
+<span class="lineNum">    1366 </span><span class="lineCov">       8050 :                         m_extrasDB-&gt;Get(m_readOptions, toSlice(_hash, ExtraDetails), &amp;d);</span>
+<span class="lineNum">    1367 </span><span class="lineCov">       4025 :                         if (d.empty())</span>
+<span class="lineNum">    1368 </span><span class="lineNoCov">          0 :                                 return false;</span>
+<span class="lineNum">    1369 </span>            :                 }
+<span class="lineNum">    1370 </span>            : //      return true;
+<span class="lineNum">    1371 </span><span class="lineCov">       4815 :         return !_isCurrent || details(_hash).number &lt;= m_lastBlockNumber;            // to allow rewind functionality.</span>
+<a name="1372"><span class="lineNum">    1372 </span>            : }</a>
+<span class="lineNum">    1373 </span>            : 
+<span class="lineNum">    1374 </span><span class="lineCov">      26499 : bytes BlockChain::block(h256 const&amp; _hash) const</span>
+<span class="lineNum">    1375 </span>            : {
+<span class="lineNum">    1376 </span><span class="lineCov">      52998 :         if (_hash == m_genesisHash)</span>
+<span class="lineNum">    1377 </span><span class="lineCov">         10 :                 return m_params.genesisBlock();</span>
+<span class="lineNum">    1378 </span>            : 
+<span class="lineNum">    1379 </span>            :         {
+<span class="lineNum">    1380 </span><span class="lineCov">      56574 :                 ReadGuard l(x_blocks);</span>
+<span class="lineNum">    1381 </span><span class="lineCov">      52978 :                 auto it = m_blocks.find(_hash);</span>
+<span class="lineNum">    1382 </span><span class="lineCov">      52978 :                 if (it != m_blocks.end())</span>
+<span class="lineNum">    1383 </span><span class="lineCov">      45786 :                         return it-&gt;second;</span>
+<span class="lineNum">    1384 </span>            :         }
+<span class="lineNum">    1385 </span>            : 
+<span class="lineNum">    1386 </span><span class="lineCov">       3596 :         string d;</span>
+<span class="lineNum">    1387 </span><span class="lineCov">      10788 :         m_blocksDB-&gt;Get(m_readOptions, toSlice(_hash), &amp;d);</span>
+<span class="lineNum">    1388 </span>            : 
+<span class="lineNum">    1389 </span><span class="lineCov">       3596 :         if (d.empty())</span>
+<span class="lineNum">    1390 </span>            :         {
+<span class="lineNum">    1391 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Couldn't find requested block:&quot; &lt;&lt; _hash;</span>
+<span class="lineNum">    1392 </span>            :                 return bytes();
+<span class="lineNum">    1393 </span>            :         }
+<span class="lineNum">    1394 </span>            : 
+<span class="lineNum">    1395 </span><span class="lineCov">       3596 :         noteUsed(_hash);</span>
+<span class="lineNum">    1396 </span>            : 
+<span class="lineNum">    1397 </span><span class="lineCov">       7192 :         WriteGuard l(x_blocks);</span>
+<span class="lineNum">    1398 </span><span class="lineCov">       7192 :         m_blocks[_hash].resize(d.size());</span>
+<span class="lineNum">    1399 </span><span class="lineCov">      17980 :         memcpy(m_blocks[_hash].data(), d.data(), d.size());</span>
+<span class="lineNum">    1400 </span>            : 
+<span class="lineNum">    1401 </span><span class="lineCov">       7192 :         return m_blocks[_hash];</span>
+<a name="1402"><span class="lineNum">    1402 </span>            : }</a>
+<span class="lineNum">    1403 </span>            : 
+<span class="lineNum">    1404 </span><span class="lineCov">      62482 : bytes BlockChain::headerData(h256 const&amp; _hash) const</span>
+<span class="lineNum">    1405 </span>            : {
+<span class="lineNum">    1406 </span><span class="lineCov">     124964 :         if (_hash == m_genesisHash)</span>
+<span class="lineNum">    1407 </span><span class="lineCov">       8086 :                 return m_genesisHeaderBytes;</span>
+<span class="lineNum">    1408 </span>            : 
+<span class="lineNum">    1409 </span>            :         {
+<span class="lineNum">    1410 </span><span class="lineCov">     110017 :                 ReadGuard l(x_blocks);</span>
+<span class="lineNum">    1411 </span><span class="lineCov">     108792 :                 auto it = m_blocks.find(_hash);</span>
+<span class="lineNum">    1412 </span><span class="lineCov">     108792 :                 if (it != m_blocks.end())</span>
+<span class="lineNum">    1413 </span><span class="lineCov">     159513 :                         return BlockHeader::extractHeader(&amp;it-&gt;second).data().toBytes();</span>
+<span class="lineNum">    1414 </span>            :         }
+<span class="lineNum">    1415 </span>            : 
+<span class="lineNum">    1416 </span><span class="lineCov">       1225 :         string d;</span>
+<span class="lineNum">    1417 </span><span class="lineCov">       2450 :         m_blocksDB-&gt;Get(m_readOptions, toSlice(_hash), &amp;d);</span>
+<span class="lineNum">    1418 </span>            : 
+<span class="lineNum">    1419 </span><span class="lineCov">       1225 :         if (d.empty())</span>
+<span class="lineNum">    1420 </span>            :         {
+<span class="lineNum">    1421 </span><span class="lineCov">          8 :                 cwarn &lt;&lt; &quot;Couldn't find requested block:&quot; &lt;&lt; _hash;</span>
+<span class="lineNum">    1422 </span>            :                 return bytes();
+<span class="lineNum">    1423 </span>            :         }
+<span class="lineNum">    1424 </span>            : 
+<span class="lineNum">    1425 </span><span class="lineCov">       1217 :         noteUsed(_hash);</span>
+<span class="lineNum">    1426 </span>            : 
+<span class="lineNum">    1427 </span><span class="lineCov">       2434 :         WriteGuard l(x_blocks);</span>
+<span class="lineNum">    1428 </span><span class="lineCov">       2434 :         m_blocks[_hash].resize(d.size());</span>
+<span class="lineNum">    1429 </span><span class="lineCov">       6085 :         memcpy(m_blocks[_hash].data(), d.data(), d.size());</span>
+<span class="lineNum">    1430 </span>            : 
+<span class="lineNum">    1431 </span><span class="lineCov">       4868 :         return BlockHeader::extractHeader(&amp;m_blocks[_hash]).data().toBytes();</span>
+<a name="1432"><span class="lineNum">    1432 </span>            : }</a>
+<span class="lineNum">    1433 </span>            : 
+<span class="lineNum">    1434 </span><span class="lineCov">       2499 : Block BlockChain::genesisBlock(OverlayDB const&amp; _db) const</span>
+<span class="lineNum">    1435 </span>            : {
+<span class="lineNum">    1436 </span><span class="lineCov">       7497 :         h256 r = BlockHeader(m_params.genesisBlock()).stateRoot();</span>
+<span class="lineNum">    1437 </span><span class="lineCov">       2499 :         Block ret(*this, _db, BaseState::Empty);</span>
+<span class="lineNum">    1438 </span><span class="lineCov">       2499 :         if (!_db.exists(r))</span>
+<span class="lineNum">    1439 </span>            :         {
+<span class="lineNum">    1440 </span><span class="lineCov">         16 :                 ret.noteChain(*this);</span>
+<span class="lineNum">    1441 </span><span class="lineCov">         32 :                 dev::eth::commit(m_params.genesisState, ret.mutableState().m_state);            // bit horrible. maybe consider a better way of constructing it?</span>
+<span class="lineNum">    1442 </span><span class="lineCov">         32 :                 ret.mutableState().db().commit();                                                                                       // have to use this db() since it's the one that has been altered with the above commit.</span>
+<span class="lineNum">    1443 </span><span class="lineCov">         48 :                 if (ret.mutableState().rootHash() != r)</span>
+<span class="lineNum">    1444 </span>            :                 {
+<span class="lineNum">    1445 </span><span class="lineNoCov">          0 :                         cwarn &lt;&lt; &quot;Hinted genesis block's state root hash is incorrect!&quot;;</span>
+<span class="lineNum">    1446 </span><span class="lineNoCov">          0 :                         cwarn &lt;&lt; &quot;Hinted&quot; &lt;&lt; r &lt;&lt; &quot;, computed&quot; &lt;&lt; ret.mutableState().rootHash();</span>
+<span class="lineNum">    1447 </span>            :                         // TODO: maybe try to fix it by altering the m_params's genesis block?
+<span class="lineNum">    1448 </span><span class="lineNoCov">          0 :                         exit(-1);</span>
+<span class="lineNum">    1449 </span>            :                 }
+<span class="lineNum">    1450 </span>            :         }
+<span class="lineNum">    1451 </span><span class="lineCov">       7497 :         ret.m_previousBlock = BlockHeader(m_params.genesisBlock());</span>
+<span class="lineNum">    1452 </span><span class="lineCov">       4998 :         ret.resetCurrent();</span>
+<span class="lineNum">    1453 </span><span class="lineCov">       2499 :         return ret;</span>
+<span class="lineNum">    1454 </span>            : }
+<span class="lineNum">    1455 </span>            : 
+<span class="lineNum">    1456 </span><span class="lineCov">      10209 : VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function&lt;void(Exception&amp;)&gt; const&amp; _onBad, ImportRequirements::value _ir) const</span>
+<span class="lineNum">    1457 </span>            : {
+<span class="lineNum">    1458 </span><span class="lineCov">      10209 :         VerifiedBlockRef res;</span>
+<span class="lineNum">    1459 </span><span class="lineCov">      20418 :         BlockHeader h;</span>
+<span class="lineNum">    1460 </span>            :         try
+<span class="lineNum">    1461 </span>            :         {
+<span class="lineNum">    1462 </span><span class="lineCov">      10289 :                 h = BlockHeader(_block);</span>
+<span class="lineNum">    1463 </span><span class="lineCov">      10209 :                 if (!!(_ir &amp; ImportRequirements::PostGenesis) &amp;&amp; (!h.parentHash() || h.number() == 0))</span>
+<span class="lineNum">    1464 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(InvalidParentHash() &lt;&lt; errinfo_required_h256(h.parentHash()) &lt;&lt; errinfo_currentNumber(h.number()));</span>
+<span class="lineNum">    1465 </span>            : 
+<span class="lineNum">    1466 </span><span class="lineCov">      20414 :                 BlockHeader parent;</span>
+<span class="lineNum">    1467 </span><span class="lineCov">      10207 :                 if (!!(_ir &amp; ImportRequirements::Parent))</span>
+<span class="lineNum">    1468 </span>            :                 {
+<span class="lineNum">    1469 </span><span class="lineCov">      10108 :                         bytes parentHeader(headerData(h.parentHash()));</span>
+<span class="lineNum">    1470 </span><span class="lineCov">       5054 :                         if (parentHeader.empty())</span>
+<span class="lineNum">    1471 </span><span class="lineNoCov">          0 :                                 BOOST_THROW_EXCEPTION(InvalidParentHash() &lt;&lt; errinfo_required_h256(h.parentHash()) &lt;&lt; errinfo_currentNumber(h.number()));</span>
+<span class="lineNum">    1472 </span><span class="lineCov">      10108 :                         parent = BlockHeader(parentHeader, HeaderData, h.parentHash());</span>
+<span class="lineNum">    1473 </span>            :                 }
+<span class="lineNum">    1474 </span><span class="lineCov">      10207 :                 sealEngine()-&gt;verify((_ir &amp; ImportRequirements::ValidSeal) ? Strictness::CheckEverything : Strictness::QuickNonce, h, parent, _block);</span>
+<span class="lineNum">    1475 </span><span class="lineCov">      10129 :                 res.info = h;</span>
+<span class="lineNum">    1476 </span>            :         }
+<span class="lineNum">    1477 </span><span class="lineCov">        160 :         catch (Exception&amp; ex)</span>
+<span class="lineNum">    1478 </span>            :         {
+<span class="lineNum">    1479 </span><span class="lineCov">        320 :                 ex &lt;&lt; errinfo_phase(1);</span>
+<span class="lineNum">    1480 </span><span class="lineCov">        320 :                 ex &lt;&lt; errinfo_now(time(0));</span>
+<span class="lineNum">    1481 </span><span class="lineCov">        400 :                 ex &lt;&lt; errinfo_block(_block.toBytes());</span>
+<span class="lineNum">    1482 </span>            :                 // only populate extraData if we actually managed to extract it. otherwise,
+<span class="lineNum">    1483 </span>            :                 // we might be clobbering the existing one.
+<span class="lineNum">    1484 </span><span class="lineCov">        160 :                 if (!h.extraData().empty())</span>
+<span class="lineNum">    1485 </span><span class="lineCov">         40 :                         ex &lt;&lt; errinfo_extraData(h.extraData());</span>
+<span class="lineNum">    1486 </span><span class="lineCov">         80 :                 if (_onBad)</span>
+<span class="lineNum">    1487 </span>            :                         _onBad(ex);
+<span class="lineNum">    1488 </span><span class="lineCov">         80 :                 throw;</span>
+<span class="lineNum">    1489 </span>            :         }
+<span class="lineNum">    1490 </span>            : 
+<span class="lineNum">    1491 </span><span class="lineCov">      10129 :         RLP r(_block);</span>
+<span class="lineNum">    1492 </span><span class="lineCov">      10129 :         unsigned i = 0;</span>
+<span class="lineNum">    1493 </span><span class="lineCov">      10129 :         if (_ir &amp; (ImportRequirements::UncleBasic | ImportRequirements::UncleParent | ImportRequirements::UncleSeals))</span>
+<span class="lineNum">    1494 </span><span class="lineCov">      31895 :                 for (auto const&amp; uncle: r[2])</span>
+<span class="lineNum">    1495 </span>            :                 {
+<span class="lineNum">    1496 </span><span class="lineCov">       1239 :                         BlockHeader uh(uncle.data(), HeaderData);</span>
+<span class="lineNum">    1497 </span>            :                         try
+<span class="lineNum">    1498 </span>            :                         {
+<span class="lineNum">    1499 </span><span class="lineCov">       1096 :                                 BlockHeader parent;</span>
+<span class="lineNum">    1500 </span><span class="lineCov">        548 :                                 if (!!(_ir &amp; ImportRequirements::UncleParent))</span>
+<span class="lineNum">    1501 </span>            :                                 {
+<span class="lineNum">    1502 </span><span class="lineCov">        528 :                                         bytes parentHeader(headerData(uh.parentHash()));</span>
+<span class="lineNum">    1503 </span><span class="lineCov">        264 :                                         if (parentHeader.empty())</span>
+<span class="lineNum">    1504 </span><span class="lineCov">         96 :                                                 BOOST_THROW_EXCEPTION(InvalidUncleParentHash() &lt;&lt; errinfo_required_h256(uh.parentHash()) &lt;&lt; errinfo_currentNumber(h.number()) &lt;&lt; errinfo_uncleNumber(uh.number()));</span>
+<span class="lineNum">    1505 </span><span class="lineCov">        512 :                                         parent = BlockHeader(parentHeader, HeaderData, uh.parentHash());</span>
+<span class="lineNum">    1506 </span>            :                                 }
+<span class="lineNum">    1507 </span><span class="lineCov">       1142 :                                 sealEngine()-&gt;verify((_ir &amp; ImportRequirements::UncleSeals) ? Strictness::CheckEverything : Strictness::IgnoreSeal, uh, parent);</span>
+<span class="lineNum">    1508 </span>            :                         }
+<span class="lineNum">    1509 </span><span class="lineCov">        124 :                         catch (Exception&amp; ex)</span>
+<span class="lineNum">    1510 </span>            :                         {
+<span class="lineNum">    1511 </span><span class="lineCov">        248 :                                 ex &lt;&lt; errinfo_phase(1);</span>
+<span class="lineNum">    1512 </span><span class="lineCov">        186 :                                 ex &lt;&lt; errinfo_uncleIndex(i);</span>
+<span class="lineNum">    1513 </span><span class="lineCov">        248 :                                 ex &lt;&lt; errinfo_now(time(0));</span>
+<span class="lineNum">    1514 </span><span class="lineCov">        310 :                                 ex &lt;&lt; errinfo_block(_block.toBytes());</span>
+<span class="lineNum">    1515 </span>            :                                 // only populate extraData if we actually managed to extract it. otherwise,
+<span class="lineNum">    1516 </span>            :                                 // we might be clobbering the existing one.
+<span class="lineNum">    1517 </span><span class="lineCov">        124 :                                 if (!uh.extraData().empty())</span>
+<span class="lineNum">    1518 </span><span class="lineCov">         12 :                                         ex &lt;&lt; errinfo_extraData(uh.extraData());</span>
+<span class="lineNum">    1519 </span><span class="lineCov">         62 :                                 if (_onBad)</span>
+<span class="lineNum">    1520 </span>            :                                         _onBad(ex);
+<span class="lineNum">    1521 </span><span class="lineCov">         62 :                                 throw;</span>
+<span class="lineNum">    1522 </span>            :                         }
+<span class="lineNum">    1523 </span><span class="lineCov">        486 :                         ++i;</span>
+<span class="lineNum">    1524 </span>            :                 }
+<span class="lineNum">    1525 </span><span class="lineCov">      10067 :         i = 0;</span>
+<span class="lineNum">    1526 </span><span class="lineCov">      10067 :         if (_ir &amp; (ImportRequirements::TransactionBasic | ImportRequirements::TransactionSignatures))</span>
+<span class="lineNum">    1527 </span><span class="lineCov">      28912 :                 for (RLP const&amp; tr: r[1])</span>
+<span class="lineNum">    1528 </span>            :                 {
+<span class="lineNum">    1529 </span><span class="lineCov">       4567 :                         bytesConstRef d = tr.data();</span>
+<span class="lineNum">    1530 </span>            :                         try
+<span class="lineNum">    1531 </span>            :                         {
+<span class="lineNum">    1532 </span><span class="lineCov">       9134 :                                 Transaction t(d, (_ir &amp; ImportRequirements::TransactionSignatures) ? CheckTransaction::Everything : CheckTransaction::None);</span>
+<span class="lineNum">    1533 </span><span class="lineCov">       4567 :                                 m_sealEngine-&gt;verifyTransaction(_ir, t, h);</span>
+<span class="lineNum">    1534 </span><span class="lineCov">       4566 :                                 res.transactions.push_back(t);</span>
+<span class="lineNum">    1535 </span>            :                         }
+<span class="lineNum">    1536 </span><span class="lineCov">          2 :                         catch (Exception&amp; ex)</span>
+<span class="lineNum">    1537 </span>            :                         {
+<span class="lineNum">    1538 </span><span class="lineCov">          4 :                                 ex &lt;&lt; errinfo_phase(1);</span>
+<span class="lineNum">    1539 </span><span class="lineCov">          3 :                                 ex &lt;&lt; errinfo_transactionIndex(i);</span>
+<span class="lineNum">    1540 </span><span class="lineCov">          5 :                                 ex &lt;&lt; errinfo_transaction(d.toBytes());</span>
+<span class="lineNum">    1541 </span><span class="lineCov">          5 :                                 ex &lt;&lt; errinfo_block(_block.toBytes());</span>
+<span class="lineNum">    1542 </span>            :                                 // only populate extraData if we actually managed to extract it. otherwise,
+<span class="lineNum">    1543 </span>            :                                 // we might be clobbering the existing one.
+<span class="lineNum">    1544 </span><span class="lineCov">          2 :                                 if (!h.extraData().empty())</span>
+<span class="lineNum">    1545 </span><span class="lineNoCov">          0 :                                         ex &lt;&lt; errinfo_extraData(h.extraData());</span>
+<span class="lineNum">    1546 </span><span class="lineCov">          1 :                                 if (_onBad)</span>
+<span class="lineNum">    1547 </span>            :                                         _onBad(ex);
+<span class="lineNum">    1548 </span><span class="lineCov">          1 :                                 throw;</span>
+<span class="lineNum">    1549 </span>            :                         }
+<span class="lineNum">    1550 </span><span class="lineCov">       4566 :                         ++i;</span>
+<span class="lineNum">    1551 </span>            :                 }
+<a name="1552"><span class="lineNum">    1552 </span><span class="lineCov">      10066 :         res.block = bytesConstRef(_block);</span></a>
+<span class="lineNum">    1553 </span><span class="lineCov">      10066 :         return res;</span>
+<span class="lineNum">    1554 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

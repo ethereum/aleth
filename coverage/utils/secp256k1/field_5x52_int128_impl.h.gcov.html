@@ -1,0 +1,353 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - utils/secp256k1/field_5x52_int128_impl.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">utils/secp256k1</a> - field_5x52_int128_impl.h<span style="font-size: 80%;"> (source / <a href="field_5x52_int128_impl.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">84</td>
+            <td class="headerCovTableEntry">84</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /**********************************************************************</a>
+<span class="lineNum">       2 </span>            :  * Copyright (c) 2013, 2014 Pieter Wuille                             *
+<span class="lineNum">       3 </span>            :  * Distributed under the MIT software license, see the accompanying   *
+<span class="lineNum">       4 </span>            :  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+<span class="lineNum">       5 </span>            :  **********************************************************************/
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #ifndef _SECP256K1_FIELD_INNER5X52_IMPL_H_
+<span class="lineNum">       8 </span>            : #define _SECP256K1_FIELD_INNER5X52_IMPL_H_
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #include &lt;stdint.h&gt;
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #ifdef VERIFY
+<span class="lineNum">      13 </span>            : #define VERIFY_BITS(x, n) VERIFY_CHECK(((x) &gt;&gt; (n)) == 0)
+<span class="lineNum">      14 </span>            : #else
+<span class="lineNum">      15 </span>            : #define VERIFY_BITS(x, n) do { } while(0)
+<a name="16"><span class="lineNum">      16 </span>            : #endif</a>
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span><span class="lineCov">   49250411 : SECP256K1_INLINE static void secp256k1_fe_mul_inner(uint64_t *r, const uint64_t *a, const uint64_t * SECP256K1_RESTRICT b) {</span>
+<span class="lineNum">      19 </span>            :     uint128_t c, d;
+<span class="lineNum">      20 </span>            :     uint64_t t3, t4, tx, u0;
+<span class="lineNum">      21 </span><span class="lineCov">   49250411 :     uint64_t a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4];</span>
+<span class="lineNum">      22 </span><span class="lineCov">   49250411 :     const uint64_t M = 0xFFFFFFFFFFFFFULL, R = 0x1000003D10ULL;</span>
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            :     VERIFY_BITS(a[0], 56);
+<span class="lineNum">      25 </span>            :     VERIFY_BITS(a[1], 56);
+<span class="lineNum">      26 </span>            :     VERIFY_BITS(a[2], 56);
+<span class="lineNum">      27 </span>            :     VERIFY_BITS(a[3], 56);
+<span class="lineNum">      28 </span>            :     VERIFY_BITS(a[4], 52);
+<span class="lineNum">      29 </span>            :     VERIFY_BITS(b[0], 56);
+<span class="lineNum">      30 </span>            :     VERIFY_BITS(b[1], 56);
+<span class="lineNum">      31 </span>            :     VERIFY_BITS(b[2], 56);
+<span class="lineNum">      32 </span>            :     VERIFY_BITS(b[3], 56);
+<span class="lineNum">      33 </span>            :     VERIFY_BITS(b[4], 52);
+<span class="lineNum">      34 </span>            :     VERIFY_CHECK(r != b);
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            :     /*  [... a b c] is a shorthand for ... + a&lt;&lt;104 + b&lt;&lt;52 + c&lt;&lt;0 mod n.
+<span class="lineNum">      37 </span>            :      *  px is a shorthand for sum(a[i]*b[x-i], i=0..x).
+<span class="lineNum">      38 </span>            :      *  Note that [x 0 0 0 0 0] = [x*R].
+<span class="lineNum">      39 </span>            :      */
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span><span class="lineCov">   98500822 :     d  = (uint128_t)a0 * b[3]</span>
+<span class="lineNum">      42 </span><span class="lineCov">   49250411 :        + (uint128_t)a1 * b[2]</span>
+<span class="lineNum">      43 </span><span class="lineCov">   49250411 :        + (uint128_t)a2 * b[1]</span>
+<span class="lineNum">      44 </span><span class="lineCov">   98500822 :        + (uint128_t)a3 * b[0];</span>
+<span class="lineNum">      45 </span>            :     VERIFY_BITS(d, 114);
+<span class="lineNum">      46 </span>            :     /* [d 0 0 0] = [p3 0 0 0] */
+<span class="lineNum">      47 </span><span class="lineCov">   49250411 :     c  = (uint128_t)a4 * b[4];</span>
+<span class="lineNum">      48 </span>            :     VERIFY_BITS(c, 112);
+<span class="lineNum">      49 </span>            :     /* [c 0 0 0 0 d 0 0 0] = [p8 0 0 0 0 p3 0 0 0] */
+<span class="lineNum">      50 </span><span class="lineCov">   49250411 :     d += (c &amp; M) * R; c &gt;&gt;= 52;</span>
+<span class="lineNum">      51 </span>            :     VERIFY_BITS(d, 115);
+<span class="lineNum">      52 </span>            :     VERIFY_BITS(c, 60);
+<span class="lineNum">      53 </span>            :     /* [c 0 0 0 0 0 d 0 0 0] = [p8 0 0 0 0 p3 0 0 0] */
+<span class="lineNum">      54 </span><span class="lineCov">   49250411 :     t3 = d &amp; M; d &gt;&gt;= 52;</span>
+<span class="lineNum">      55 </span>            :     VERIFY_BITS(t3, 52);
+<span class="lineNum">      56 </span>            :     VERIFY_BITS(d, 63);
+<span class="lineNum">      57 </span>            :     /* [c 0 0 0 0 d t3 0 0 0] = [p8 0 0 0 0 p3 0 0 0] */
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineCov">   98500822 :     d += (uint128_t)a0 * b[4]</span>
+<span class="lineNum">      60 </span><span class="lineCov">   49250411 :        + (uint128_t)a1 * b[3]</span>
+<span class="lineNum">      61 </span><span class="lineCov">   49250411 :        + (uint128_t)a2 * b[2]</span>
+<span class="lineNum">      62 </span><span class="lineCov">   98500822 :        + (uint128_t)a3 * b[1]</span>
+<span class="lineNum">      63 </span><span class="lineCov">   49250411 :        + (uint128_t)a4 * b[0];</span>
+<span class="lineNum">      64 </span>            :     VERIFY_BITS(d, 115);
+<span class="lineNum">      65 </span>            :     /* [c 0 0 0 0 d t3 0 0 0] = [p8 0 0 0 p4 p3 0 0 0] */
+<span class="lineNum">      66 </span><span class="lineCov">   49250411 :     d += c * R;</span>
+<span class="lineNum">      67 </span>            :     VERIFY_BITS(d, 116);
+<span class="lineNum">      68 </span>            :     /* [d t3 0 0 0] = [p8 0 0 0 p4 p3 0 0 0] */
+<span class="lineNum">      69 </span><span class="lineCov">   49250411 :     t4 = d &amp; M; d &gt;&gt;= 52;</span>
+<span class="lineNum">      70 </span>            :     VERIFY_BITS(t4, 52);
+<span class="lineNum">      71 </span>            :     VERIFY_BITS(d, 64);
+<span class="lineNum">      72 </span>            :     /* [d t4 t3 0 0 0] = [p8 0 0 0 p4 p3 0 0 0] */
+<span class="lineNum">      73 </span><span class="lineCov">   49250411 :     tx = (t4 &gt;&gt; 48); t4 &amp;= (M &gt;&gt; 4);</span>
+<span class="lineNum">      74 </span>            :     VERIFY_BITS(tx, 4);
+<span class="lineNum">      75 </span>            :     VERIFY_BITS(t4, 48);
+<span class="lineNum">      76 </span>            :     /* [d t4+(tx&lt;&lt;48) t3 0 0 0] = [p8 0 0 0 p4 p3 0 0 0] */
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span><span class="lineCov">   49250411 :     c  = (uint128_t)a0 * b[0];</span>
+<span class="lineNum">      79 </span>            :     VERIFY_BITS(c, 112);
+<span class="lineNum">      80 </span>            :     /* [d t4+(tx&lt;&lt;48) t3 0 0 c] = [p8 0 0 0 p4 p3 0 0 p0] */
+<span class="lineNum">      81 </span><span class="lineCov">   98500822 :     d += (uint128_t)a1 * b[4]</span>
+<span class="lineNum">      82 </span><span class="lineCov">   49250411 :        + (uint128_t)a2 * b[3]</span>
+<span class="lineNum">      83 </span><span class="lineCov">   49250411 :        + (uint128_t)a3 * b[2]</span>
+<span class="lineNum">      84 </span><span class="lineCov">   98500822 :        + (uint128_t)a4 * b[1];</span>
+<span class="lineNum">      85 </span>            :     VERIFY_BITS(d, 115);
+<span class="lineNum">      86 </span>            :     /* [d t4+(tx&lt;&lt;48) t3 0 0 c] = [p8 0 0 p5 p4 p3 0 0 p0] */
+<span class="lineNum">      87 </span><span class="lineCov">   49250411 :     u0 = d &amp; M; d &gt;&gt;= 52;</span>
+<span class="lineNum">      88 </span>            :     VERIFY_BITS(u0, 52);
+<span class="lineNum">      89 </span>            :     VERIFY_BITS(d, 63);
+<span class="lineNum">      90 </span>            :     /* [d u0 t4+(tx&lt;&lt;48) t3 0 0 c] = [p8 0 0 p5 p4 p3 0 0 p0] */
+<span class="lineNum">      91 </span>            :     /* [d 0 t4+(tx&lt;&lt;48)+(u0&lt;&lt;52) t3 0 0 c] = [p8 0 0 p5 p4 p3 0 0 p0] */
+<span class="lineNum">      92 </span><span class="lineCov">   49250411 :     u0 = (u0 &lt;&lt; 4) | tx;</span>
+<span class="lineNum">      93 </span>            :     VERIFY_BITS(u0, 56);
+<span class="lineNum">      94 </span>            :     /* [d 0 t4+(u0&lt;&lt;48) t3 0 0 c] = [p8 0 0 p5 p4 p3 0 0 p0] */
+<span class="lineNum">      95 </span><span class="lineCov">   49250411 :     c += (uint128_t)u0 * (R &gt;&gt; 4);</span>
+<span class="lineNum">      96 </span>            :     VERIFY_BITS(c, 115);
+<span class="lineNum">      97 </span>            :     /* [d 0 t4 t3 0 0 c] = [p8 0 0 p5 p4 p3 0 0 p0] */
+<span class="lineNum">      98 </span><span class="lineCov">   49250411 :     r[0] = c &amp; M; c &gt;&gt;= 52;</span>
+<span class="lineNum">      99 </span>            :     VERIFY_BITS(r[0], 52);
+<span class="lineNum">     100 </span>            :     VERIFY_BITS(c, 61);
+<span class="lineNum">     101 </span>            :     /* [d 0 t4 t3 0 c r0] = [p8 0 0 p5 p4 p3 0 0 p0] */
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">   98500822 :     c += (uint128_t)a0 * b[1]</span>
+<span class="lineNum">     104 </span><span class="lineCov">   49250411 :        + (uint128_t)a1 * b[0];</span>
+<span class="lineNum">     105 </span>            :     VERIFY_BITS(c, 114);
+<span class="lineNum">     106 </span>            :     /* [d 0 t4 t3 0 c r0] = [p8 0 0 p5 p4 p3 0 p1 p0] */
+<span class="lineNum">     107 </span><span class="lineCov">   98500822 :     d += (uint128_t)a2 * b[4]</span>
+<span class="lineNum">     108 </span><span class="lineCov">   49250411 :        + (uint128_t)a3 * b[3]</span>
+<span class="lineNum">     109 </span><span class="lineCov">   49250411 :        + (uint128_t)a4 * b[2];</span>
+<span class="lineNum">     110 </span>            :     VERIFY_BITS(d, 114);
+<span class="lineNum">     111 </span>            :     /* [d 0 t4 t3 0 c r0] = [p8 0 p6 p5 p4 p3 0 p1 p0] */
+<span class="lineNum">     112 </span><span class="lineCov">   49250411 :     c += (d &amp; M) * R; d &gt;&gt;= 52;</span>
+<span class="lineNum">     113 </span>            :     VERIFY_BITS(c, 115);
+<span class="lineNum">     114 </span>            :     VERIFY_BITS(d, 62);
+<span class="lineNum">     115 </span>            :     /* [d 0 0 t4 t3 0 c r0] = [p8 0 p6 p5 p4 p3 0 p1 p0] */
+<span class="lineNum">     116 </span><span class="lineCov">   49250411 :     r[1] = c &amp; M; c &gt;&gt;= 52;</span>
+<span class="lineNum">     117 </span>            :     VERIFY_BITS(r[1], 52);
+<span class="lineNum">     118 </span>            :     VERIFY_BITS(c, 63);
+<span class="lineNum">     119 </span>            :     /* [d 0 0 t4 t3 c r1 r0] = [p8 0 p6 p5 p4 p3 0 p1 p0] */
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineCov">   98500822 :     c += (uint128_t)a0 * b[2]</span>
+<span class="lineNum">     122 </span><span class="lineCov">   49250411 :        + (uint128_t)a1 * b[1]</span>
+<span class="lineNum">     123 </span><span class="lineCov">   49250411 :        + (uint128_t)a2 * b[0];</span>
+<span class="lineNum">     124 </span>            :     VERIFY_BITS(c, 114);
+<span class="lineNum">     125 </span>            :     /* [d 0 0 t4 t3 c r1 r0] = [p8 0 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     126 </span><span class="lineCov">   98500822 :     d += (uint128_t)a3 * b[4]</span>
+<span class="lineNum">     127 </span><span class="lineCov">   49250411 :        + (uint128_t)a4 * b[3];</span>
+<span class="lineNum">     128 </span>            :     VERIFY_BITS(d, 114);
+<span class="lineNum">     129 </span>            :     /* [d 0 0 t4 t3 c t1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     130 </span><span class="lineCov">   49250411 :     c += (d &amp; M) * R; d &gt;&gt;= 52;</span>
+<span class="lineNum">     131 </span>            :     VERIFY_BITS(c, 115);
+<span class="lineNum">     132 </span>            :     VERIFY_BITS(d, 62);
+<span class="lineNum">     133 </span>            :     /* [d 0 0 0 t4 t3 c r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            :     /* [d 0 0 0 t4 t3 c r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     136 </span><span class="lineCov">   49250411 :     r[2] = c &amp; M; c &gt;&gt;= 52;</span>
+<span class="lineNum">     137 </span>            :     VERIFY_BITS(r[2], 52);
+<span class="lineNum">     138 </span>            :     VERIFY_BITS(c, 63);
+<span class="lineNum">     139 </span>            :     /* [d 0 0 0 t4 t3+c r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     140 </span><span class="lineCov">   49250411 :     c   += d * R + t3;;</span>
+<span class="lineNum">     141 </span>            :     VERIFY_BITS(c, 100);
+<span class="lineNum">     142 </span>            :     /* [t4 c r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     143 </span><span class="lineCov">   49250411 :     r[3] = c &amp; M; c &gt;&gt;= 52;</span>
+<span class="lineNum">     144 </span>            :     VERIFY_BITS(r[3], 52);
+<span class="lineNum">     145 </span>            :     VERIFY_BITS(c, 48);
+<span class="lineNum">     146 </span>            :     /* [t4+c r3 r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     147 </span><span class="lineCov">   49250411 :     c   += t4;</span>
+<span class="lineNum">     148 </span>            :     VERIFY_BITS(c, 49);
+<span class="lineNum">     149 </span>            :     /* [c r3 r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     150 </span><span class="lineCov">   49250411 :     r[4] = c;</span>
+<span class="lineNum">     151 </span>            :     VERIFY_BITS(r[4], 49);
+<span class="lineNum">     152 </span>            :     /* [r4 r3 r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<a name="153"><span class="lineNum">     153 </span><span class="lineCov">   49250411 : }</span></a>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">   49771862 : SECP256K1_INLINE static void secp256k1_fe_sqr_inner(uint64_t *r, const uint64_t *a) {</span>
+<span class="lineNum">     156 </span>            :     uint128_t c, d;
+<span class="lineNum">     157 </span><span class="lineCov">   49771862 :     uint64_t a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4];</span>
+<span class="lineNum">     158 </span>            :     int64_t t3, t4, tx, u0;
+<span class="lineNum">     159 </span><span class="lineCov">   49771862 :     const uint64_t M = 0xFFFFFFFFFFFFFULL, R = 0x1000003D10ULL;</span>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :     VERIFY_BITS(a[0], 56);
+<span class="lineNum">     162 </span>            :     VERIFY_BITS(a[1], 56);
+<span class="lineNum">     163 </span>            :     VERIFY_BITS(a[2], 56);
+<span class="lineNum">     164 </span>            :     VERIFY_BITS(a[3], 56);
+<span class="lineNum">     165 </span>            :     VERIFY_BITS(a[4], 52);
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            :     /**  [... a b c] is a shorthand for ... + a&lt;&lt;104 + b&lt;&lt;52 + c&lt;&lt;0 mod n.
+<span class="lineNum">     168 </span>            :      *  px is a shorthand for sum(a[i]*a[x-i], i=0..x).
+<span class="lineNum">     169 </span>            :      *  Note that [x 0 0 0 0 0] = [x*R].
+<span class="lineNum">     170 </span>            :      */
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span><span class="lineCov">   99543724 :     d  = (uint128_t)(a0*2) * a3</span>
+<span class="lineNum">     173 </span><span class="lineCov">   49771862 :        + (uint128_t)(a1*2) * a2;</span>
+<span class="lineNum">     174 </span>            :     VERIFY_BITS(d, 114);
+<span class="lineNum">     175 </span>            :     /* [d 0 0 0] = [p3 0 0 0] */
+<span class="lineNum">     176 </span><span class="lineCov">   49771862 :     c  = (uint128_t)a4 * a4;</span>
+<span class="lineNum">     177 </span>            :     VERIFY_BITS(c, 112);
+<span class="lineNum">     178 </span>            :     /* [c 0 0 0 0 d 0 0 0] = [p8 0 0 0 0 p3 0 0 0] */
+<span class="lineNum">     179 </span><span class="lineCov">   49771862 :     d += (c &amp; M) * R; c &gt;&gt;= 52;</span>
+<span class="lineNum">     180 </span>            :     VERIFY_BITS(d, 115);
+<span class="lineNum">     181 </span>            :     VERIFY_BITS(c, 60);
+<span class="lineNum">     182 </span>            :     /* [c 0 0 0 0 0 d 0 0 0] = [p8 0 0 0 0 p3 0 0 0] */
+<span class="lineNum">     183 </span><span class="lineCov">   49771862 :     t3 = d &amp; M; d &gt;&gt;= 52;</span>
+<span class="lineNum">     184 </span>            :     VERIFY_BITS(t3, 52);
+<span class="lineNum">     185 </span>            :     VERIFY_BITS(d, 63);
+<span class="lineNum">     186 </span>            :     /* [c 0 0 0 0 d t3 0 0 0] = [p8 0 0 0 0 p3 0 0 0] */
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span><span class="lineCov">   49771862 :     a4 *= 2;</span>
+<span class="lineNum">     189 </span><span class="lineCov">   99543724 :     d += (uint128_t)a0 * a4</span>
+<span class="lineNum">     190 </span><span class="lineCov">   49771862 :        + (uint128_t)(a1*2) * a3</span>
+<span class="lineNum">     191 </span><span class="lineCov">   49771862 :        + (uint128_t)a2 * a2;</span>
+<span class="lineNum">     192 </span>            :     VERIFY_BITS(d, 115);
+<span class="lineNum">     193 </span>            :     /* [c 0 0 0 0 d t3 0 0 0] = [p8 0 0 0 p4 p3 0 0 0] */
+<span class="lineNum">     194 </span><span class="lineCov">   49771862 :     d += c * R;</span>
+<span class="lineNum">     195 </span>            :     VERIFY_BITS(d, 116);
+<span class="lineNum">     196 </span>            :     /* [d t3 0 0 0] = [p8 0 0 0 p4 p3 0 0 0] */
+<span class="lineNum">     197 </span><span class="lineCov">   49771862 :     t4 = d &amp; M; d &gt;&gt;= 52;</span>
+<span class="lineNum">     198 </span>            :     VERIFY_BITS(t4, 52);
+<span class="lineNum">     199 </span>            :     VERIFY_BITS(d, 64);
+<span class="lineNum">     200 </span>            :     /* [d t4 t3 0 0 0] = [p8 0 0 0 p4 p3 0 0 0] */
+<span class="lineNum">     201 </span><span class="lineCov">   49771862 :     tx = (t4 &gt;&gt; 48); t4 &amp;= (M &gt;&gt; 4);</span>
+<span class="lineNum">     202 </span>            :     VERIFY_BITS(tx, 4);
+<span class="lineNum">     203 </span>            :     VERIFY_BITS(t4, 48);
+<span class="lineNum">     204 </span>            :     /* [d t4+(tx&lt;&lt;48) t3 0 0 0] = [p8 0 0 0 p4 p3 0 0 0] */
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span><span class="lineCov">   49771862 :     c  = (uint128_t)a0 * a0;</span>
+<span class="lineNum">     207 </span>            :     VERIFY_BITS(c, 112);
+<span class="lineNum">     208 </span>            :     /* [d t4+(tx&lt;&lt;48) t3 0 0 c] = [p8 0 0 0 p4 p3 0 0 p0] */
+<span class="lineNum">     209 </span><span class="lineCov">   99543724 :     d += (uint128_t)a1 * a4</span>
+<span class="lineNum">     210 </span><span class="lineCov">   49771862 :        + (uint128_t)(a2*2) * a3;</span>
+<span class="lineNum">     211 </span>            :     VERIFY_BITS(d, 114);
+<span class="lineNum">     212 </span>            :     /* [d t4+(tx&lt;&lt;48) t3 0 0 c] = [p8 0 0 p5 p4 p3 0 0 p0] */
+<span class="lineNum">     213 </span><span class="lineCov">   49771862 :     u0 = d &amp; M; d &gt;&gt;= 52;</span>
+<span class="lineNum">     214 </span>            :     VERIFY_BITS(u0, 52);
+<span class="lineNum">     215 </span>            :     VERIFY_BITS(d, 62);
+<span class="lineNum">     216 </span>            :     /* [d u0 t4+(tx&lt;&lt;48) t3 0 0 c] = [p8 0 0 p5 p4 p3 0 0 p0] */
+<span class="lineNum">     217 </span>            :     /* [d 0 t4+(tx&lt;&lt;48)+(u0&lt;&lt;52) t3 0 0 c] = [p8 0 0 p5 p4 p3 0 0 p0] */
+<span class="lineNum">     218 </span><span class="lineCov">   49771862 :     u0 = (u0 &lt;&lt; 4) | tx;</span>
+<span class="lineNum">     219 </span>            :     VERIFY_BITS(u0, 56);
+<span class="lineNum">     220 </span>            :     /* [d 0 t4+(u0&lt;&lt;48) t3 0 0 c] = [p8 0 0 p5 p4 p3 0 0 p0] */
+<span class="lineNum">     221 </span><span class="lineCov">   49771862 :     c += (uint128_t)u0 * (R &gt;&gt; 4);</span>
+<span class="lineNum">     222 </span>            :     VERIFY_BITS(c, 113);
+<span class="lineNum">     223 </span>            :     /* [d 0 t4 t3 0 0 c] = [p8 0 0 p5 p4 p3 0 0 p0] */
+<span class="lineNum">     224 </span><span class="lineCov">   49771862 :     r[0] = c &amp; M; c &gt;&gt;= 52;</span>
+<span class="lineNum">     225 </span>            :     VERIFY_BITS(r[0], 52);
+<span class="lineNum">     226 </span>            :     VERIFY_BITS(c, 61);
+<span class="lineNum">     227 </span>            :     /* [d 0 t4 t3 0 c r0] = [p8 0 0 p5 p4 p3 0 0 p0] */
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span><span class="lineCov">   49771862 :     a0 *= 2;</span>
+<span class="lineNum">     230 </span><span class="lineCov">   49771862 :     c += (uint128_t)a0 * a1;</span>
+<span class="lineNum">     231 </span>            :     VERIFY_BITS(c, 114);
+<span class="lineNum">     232 </span>            :     /* [d 0 t4 t3 0 c r0] = [p8 0 0 p5 p4 p3 0 p1 p0] */
+<span class="lineNum">     233 </span><span class="lineCov">   99543724 :     d += (uint128_t)a2 * a4</span>
+<span class="lineNum">     234 </span><span class="lineCov">   49771862 :        + (uint128_t)a3 * a3;</span>
+<span class="lineNum">     235 </span>            :     VERIFY_BITS(d, 114);
+<span class="lineNum">     236 </span>            :     /* [d 0 t4 t3 0 c r0] = [p8 0 p6 p5 p4 p3 0 p1 p0] */
+<span class="lineNum">     237 </span><span class="lineCov">   49771862 :     c += (d &amp; M) * R; d &gt;&gt;= 52;</span>
+<span class="lineNum">     238 </span>            :     VERIFY_BITS(c, 115);
+<span class="lineNum">     239 </span>            :     VERIFY_BITS(d, 62);
+<span class="lineNum">     240 </span>            :     /* [d 0 0 t4 t3 0 c r0] = [p8 0 p6 p5 p4 p3 0 p1 p0] */
+<span class="lineNum">     241 </span><span class="lineCov">   49771862 :     r[1] = c &amp; M; c &gt;&gt;= 52;</span>
+<span class="lineNum">     242 </span>            :     VERIFY_BITS(r[1], 52);
+<span class="lineNum">     243 </span>            :     VERIFY_BITS(c, 63);
+<span class="lineNum">     244 </span>            :     /* [d 0 0 t4 t3 c r1 r0] = [p8 0 p6 p5 p4 p3 0 p1 p0] */
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span><span class="lineCov">   99543724 :     c += (uint128_t)a0 * a2</span>
+<span class="lineNum">     247 </span><span class="lineCov">   49771862 :        + (uint128_t)a1 * a1;</span>
+<span class="lineNum">     248 </span>            :     VERIFY_BITS(c, 114);
+<span class="lineNum">     249 </span>            :     /* [d 0 0 t4 t3 c r1 r0] = [p8 0 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     250 </span><span class="lineCov">   49771862 :     d += (uint128_t)a3 * a4;</span>
+<span class="lineNum">     251 </span>            :     VERIFY_BITS(d, 114);
+<span class="lineNum">     252 </span>            :     /* [d 0 0 t4 t3 c r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     253 </span><span class="lineCov">   49771862 :     c += (d &amp; M) * R; d &gt;&gt;= 52;</span>
+<span class="lineNum">     254 </span>            :     VERIFY_BITS(c, 115);
+<span class="lineNum">     255 </span>            :     VERIFY_BITS(d, 62);
+<span class="lineNum">     256 </span>            :     /* [d 0 0 0 t4 t3 c r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     257 </span><span class="lineCov">   49771862 :     r[2] = c &amp; M; c &gt;&gt;= 52;</span>
+<span class="lineNum">     258 </span>            :     VERIFY_BITS(r[2], 52);
+<span class="lineNum">     259 </span>            :     VERIFY_BITS(c, 63);
+<span class="lineNum">     260 </span>            :     /* [d 0 0 0 t4 t3+c r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span><span class="lineCov">   49771862 :     c   += d * R + t3;;</span>
+<span class="lineNum">     263 </span>            :     VERIFY_BITS(c, 100);
+<span class="lineNum">     264 </span>            :     /* [t4 c r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     265 </span><span class="lineCov">   49771862 :     r[3] = c &amp; M; c &gt;&gt;= 52;</span>
+<span class="lineNum">     266 </span>            :     VERIFY_BITS(r[3], 52);
+<span class="lineNum">     267 </span>            :     VERIFY_BITS(c, 48);
+<span class="lineNum">     268 </span>            :     /* [t4+c r3 r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     269 </span><span class="lineCov">   49771862 :     c   += t4;</span>
+<span class="lineNum">     270 </span>            :     VERIFY_BITS(c, 49);
+<span class="lineNum">     271 </span>            :     /* [c r3 r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     272 </span><span class="lineCov">   49771862 :     r[4] = c;</span>
+<span class="lineNum">     273 </span>            :     VERIFY_BITS(r[4], 49);
+<span class="lineNum">     274 </span>            :     /* [r4 r3 r2 r1 r0] = [p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+<span class="lineNum">     275 </span><span class="lineCov">   49771862 : }</span>
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

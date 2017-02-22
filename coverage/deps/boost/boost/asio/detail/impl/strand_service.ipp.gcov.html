@@ -1,0 +1,254 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/detail/impl/strand_service.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/detail/impl</a> - strand_service.ipp<span style="font-size: 80%;"> (source / <a href="strand_service.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // detail/impl/strand_service.ipp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DETAIL_IMPL_STRAND_SERVICE_IPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DETAIL_IMPL_STRAND_SERVICE_IPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/asio/detail/call_stack.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/asio/detail/strand_service.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : namespace boost {
+<span class="lineNum">      25 </span>            : namespace asio {
+<span class="lineNum">      26 </span>            : namespace detail {
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : struct strand_service::on_do_complete_exit
+<span class="lineNum">      29 </span>            : {
+<span class="lineNum">      30 </span>            :   io_service_impl* owner_;
+<span class="lineNum">      31 </span>            :   strand_impl* impl_;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            :   ~on_do_complete_exit()
+<span class="lineNum">      34 </span>            :   {
+<span class="lineNum">      35 </span>            :     impl_-&gt;mutex_.lock();
+<span class="lineNum">      36 </span>            :     impl_-&gt;ready_queue_.push(impl_-&gt;waiting_queue_);
+<span class="lineNum">      37 </span>            :     bool more_handlers = impl_-&gt;locked_ = !impl_-&gt;ready_queue_.empty();
+<span class="lineNum">      38 </span>            :     impl_-&gt;mutex_.unlock();
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            :     if (more_handlers)
+<span class="lineNum">      41 </span>            :       owner_-&gt;post_immediate_completion(impl_, true);
+<span class="lineNum">      42 </span>            :   }
+<span class="lineNum">      43 </span>            : };
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : strand_service::strand_service(boost::asio::io_service&amp; io_service)
+<span class="lineNum">      46 </span>            :   : boost::asio::detail::service_base&lt;strand_service&gt;(io_service),
+<span class="lineNum">      47 </span>            :     io_service_(boost::asio::use_service&lt;io_service_impl&gt;(io_service)),
+<span class="lineNum">      48 </span>            :     mutex_(),
+<span class="lineNum">      49 </span>            :     salt_(0)
+<span class="lineNum">      50 </span>            : {
+<a name="51"><span class="lineNum">      51 </span>            : }</a>
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 : void strand_service::shutdown_service()</span>
+<span class="lineNum">      54 </span>            : {
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :   op_queue&lt;operation&gt; ops;</span>
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 :   boost::asio::detail::mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :   for (std::size_t i = 0; i &lt; num_implementations; ++i)</span>
+<span class="lineNum">      60 </span>            :   {
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :     if (strand_impl* impl = implementations_[i].get())</span>
+<span class="lineNum">      62 </span>            :     {
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :       ops.push(impl-&gt;waiting_queue_);</span>
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :       ops.push(impl-&gt;ready_queue_);</span>
+<span class="lineNum">      65 </span>            :     }
+<span class="lineNum">      66 </span>            :   }
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : void strand_service::construct(strand_service::implementation_type&amp; impl)
+<span class="lineNum">      70 </span>            : {
+<span class="lineNum">      71 </span>            :   boost::asio::detail::mutex::scoped_lock lock(mutex_);
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :   std::size_t salt = salt_++;
+<span class="lineNum">      74 </span>            : #if defined(BOOST_ASIO_ENABLE_SEQUENTIAL_STRAND_ALLOCATION)
+<span class="lineNum">      75 </span>            :   std::size_t index = salt;
+<span class="lineNum">      76 </span>            : #else // defined(BOOST_ASIO_ENABLE_SEQUENTIAL_STRAND_ALLOCATION)
+<span class="lineNum">      77 </span>            :   std::size_t index = reinterpret_cast&lt;std::size_t&gt;(&amp;impl);
+<span class="lineNum">      78 </span>            :   index += (reinterpret_cast&lt;std::size_t&gt;(&amp;impl) &gt;&gt; 3);
+<span class="lineNum">      79 </span>            :   index ^= salt + 0x9e3779b9 + (index &lt;&lt; 6) + (index &gt;&gt; 2);
+<span class="lineNum">      80 </span>            : #endif // defined(BOOST_ASIO_ENABLE_SEQUENTIAL_STRAND_ALLOCATION)
+<span class="lineNum">      81 </span>            :   index = index % num_implementations;
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :   if (!implementations_[index].get())
+<span class="lineNum">      84 </span>            :     implementations_[index].reset(new strand_impl);
+<span class="lineNum">      85 </span>            :   impl = implementations_[index].get();
+<span class="lineNum">      86 </span>            : }
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : bool strand_service::running_in_this_thread(
+<span class="lineNum">      89 </span>            :     const implementation_type&amp; impl) const
+<span class="lineNum">      90 </span>            : {
+<span class="lineNum">      91 </span>            :   return call_stack&lt;strand_impl&gt;::contains(impl) != 0;
+<span class="lineNum">      92 </span>            : }
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : bool strand_service::do_dispatch(implementation_type&amp; impl, operation* op)
+<span class="lineNum">      95 </span>            : {
+<span class="lineNum">      96 </span>            :   // If we are running inside the io_service, and no other handler already
+<span class="lineNum">      97 </span>            :   // holds the strand lock, then the handler can run immediately.
+<span class="lineNum">      98 </span>            :   bool can_dispatch = io_service_.can_dispatch();
+<span class="lineNum">      99 </span>            :   impl-&gt;mutex_.lock();
+<span class="lineNum">     100 </span>            :   if (can_dispatch &amp;&amp; !impl-&gt;locked_)
+<span class="lineNum">     101 </span>            :   {
+<span class="lineNum">     102 </span>            :     // Immediate invocation is allowed.
+<span class="lineNum">     103 </span>            :     impl-&gt;locked_ = true;
+<span class="lineNum">     104 </span>            :     impl-&gt;mutex_.unlock();
+<span class="lineNum">     105 </span>            :     return true;
+<span class="lineNum">     106 </span>            :   }
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :   if (impl-&gt;locked_)
+<span class="lineNum">     109 </span>            :   {
+<span class="lineNum">     110 </span>            :     // Some other handler already holds the strand lock. Enqueue for later.
+<span class="lineNum">     111 </span>            :     impl-&gt;waiting_queue_.push(op);
+<span class="lineNum">     112 </span>            :     impl-&gt;mutex_.unlock();
+<span class="lineNum">     113 </span>            :   }
+<span class="lineNum">     114 </span>            :   else
+<span class="lineNum">     115 </span>            :   {
+<span class="lineNum">     116 </span>            :     // The handler is acquiring the strand lock and so is responsible for
+<span class="lineNum">     117 </span>            :     // scheduling the strand.
+<span class="lineNum">     118 </span>            :     impl-&gt;locked_ = true;
+<span class="lineNum">     119 </span>            :     impl-&gt;mutex_.unlock();
+<span class="lineNum">     120 </span>            :     impl-&gt;ready_queue_.push(op);
+<span class="lineNum">     121 </span>            :     io_service_.post_immediate_completion(impl, false);
+<span class="lineNum">     122 </span>            :   }
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :   return false;
+<span class="lineNum">     125 </span>            : }
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : void strand_service::do_post(implementation_type&amp; impl,
+<span class="lineNum">     128 </span>            :     operation* op, bool is_continuation)
+<span class="lineNum">     129 </span>            : {
+<span class="lineNum">     130 </span>            :   impl-&gt;mutex_.lock();
+<span class="lineNum">     131 </span>            :   if (impl-&gt;locked_)
+<span class="lineNum">     132 </span>            :   {
+<span class="lineNum">     133 </span>            :     // Some other handler already holds the strand lock. Enqueue for later.
+<span class="lineNum">     134 </span>            :     impl-&gt;waiting_queue_.push(op);
+<span class="lineNum">     135 </span>            :     impl-&gt;mutex_.unlock();
+<span class="lineNum">     136 </span>            :   }
+<span class="lineNum">     137 </span>            :   else
+<span class="lineNum">     138 </span>            :   {
+<span class="lineNum">     139 </span>            :     // The handler is acquiring the strand lock and so is responsible for
+<span class="lineNum">     140 </span>            :     // scheduling the strand.
+<span class="lineNum">     141 </span>            :     impl-&gt;locked_ = true;
+<span class="lineNum">     142 </span>            :     impl-&gt;mutex_.unlock();
+<span class="lineNum">     143 </span>            :     impl-&gt;ready_queue_.push(op);
+<span class="lineNum">     144 </span>            :     io_service_.post_immediate_completion(impl, is_continuation);
+<span class="lineNum">     145 </span>            :   }
+<span class="lineNum">     146 </span>            : }
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            : void strand_service::do_complete(io_service_impl* owner, operation* base,
+<span class="lineNum">     149 </span>            :     const boost::system::error_code&amp; ec, std::size_t /*bytes_transferred*/)
+<span class="lineNum">     150 </span>            : {
+<span class="lineNum">     151 </span>            :   if (owner)
+<span class="lineNum">     152 </span>            :   {
+<span class="lineNum">     153 </span>            :     strand_impl* impl = static_cast&lt;strand_impl*&gt;(base);
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            :     // Indicate that this strand is executing on the current thread.
+<span class="lineNum">     156 </span>            :     call_stack&lt;strand_impl&gt;::context ctx(impl);
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            :     // Ensure the next handler, if any, is scheduled on block exit.
+<span class="lineNum">     159 </span>            :     on_do_complete_exit on_exit = { owner, impl };
+<span class="lineNum">     160 </span>            :     (void)on_exit;
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :     // Run all ready handlers. No lock is required since the ready queue is
+<span class="lineNum">     163 </span>            :     // accessed only within the strand.
+<span class="lineNum">     164 </span>            :     while (operation* o = impl-&gt;ready_queue_.front())
+<span class="lineNum">     165 </span>            :     {
+<span class="lineNum">     166 </span>            :       impl-&gt;ready_queue_.pop();
+<span class="lineNum">     167 </span>            :       o-&gt;complete(*owner, ec, 0);
+<span class="lineNum">     168 </span>            :     }
+<span class="lineNum">     169 </span>            :   }
+<span class="lineNum">     170 </span>            : }
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            : } // namespace detail
+<span class="lineNum">     173 </span>            : } // namespace asio
+<span class="lineNum">     174 </span>            : } // namespace boost
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            : #endif // BOOST_ASIO_DETAIL_IMPL_STRAND_SERVICE_IPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

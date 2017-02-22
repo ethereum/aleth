@@ -1,0 +1,436 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/iterator/iterator_adaptor.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/iterator</a> - iterator_adaptor.hpp<span style="font-size: 80%;"> (source / <a href="iterator_adaptor.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // (C) Copyright David Abrahams 2002.</a>
+<span class="lineNum">       2 </span>            : // (C) Copyright Jeremy Siek    2002.
+<span class="lineNum">       3 </span>            : // (C) Copyright Thomas Witt    2002.
+<span class="lineNum">       4 </span>            : // Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">       5 </span>            : // accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       6 </span>            : // http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       7 </span>            : #ifndef BOOST_ITERATOR_ADAPTOR_23022003THW_HPP
+<span class="lineNum">       8 </span>            : #define BOOST_ITERATOR_ADAPTOR_23022003THW_HPP
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #include &lt;boost/static_assert.hpp&gt;
+<span class="lineNum">      11 </span>            : #include &lt;boost/iterator.hpp&gt;
+<span class="lineNum">      12 </span>            : #include &lt;boost/detail/iterator.hpp&gt;
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &lt;boost/iterator/iterator_categories.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/iterator/iterator_facade.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/iterator/detail/enable_if.hpp&gt;
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/mpl/and.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/mpl/not.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/mpl/or.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;boost/type_traits/is_same.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/type_traits/is_convertible.hpp&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #ifdef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
+<span class="lineNum">      26 </span>            : # include &lt;boost/type_traits/remove_reference.hpp&gt;
+<span class="lineNum">      27 </span>            : #endif
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #include &lt;boost/type_traits/add_reference.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/iterator/detail/config_def.hpp&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &lt;boost/iterator/iterator_traits.hpp&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace boost {
+<span class="lineNum">      35 </span>            : namespace iterators {
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            :   // Used as a default template argument internally, merely to
+<span class="lineNum">      38 </span>            :   // indicate &quot;use the default&quot;, this can also be passed by users
+<span class="lineNum">      39 </span>            :   // explicitly in order to specify that the default should be used.
+<span class="lineNum">      40 </span>            :   struct use_default;
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : } // namespace iterators
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : using iterators::use_default;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : // the incompleteness of use_default causes massive problems for
+<span class="lineNum">      47 </span>            : // is_convertible (naturally).  This workaround is fortunately not
+<span class="lineNum">      48 </span>            : // needed for vc6/vc7.
+<span class="lineNum">      49 </span>            : template&lt;class To&gt;
+<span class="lineNum">      50 </span>            : struct is_convertible&lt;use_default,To&gt;
+<span class="lineNum">      51 </span>            :   : mpl::false_ {};
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : namespace iterators {
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :   namespace detail
+<span class="lineNum">      56 </span>            :   {
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            :     //
+<span class="lineNum">      59 </span>            :     // Result type used in enable_if_convertible meta function.
+<span class="lineNum">      60 </span>            :     // This can be an incomplete type, as only pointers to
+<span class="lineNum">      61 </span>            :     // enable_if_convertible&lt; ... &gt;::type are used.
+<span class="lineNum">      62 </span>            :     // We could have used void for this, but conversion to
+<span class="lineNum">      63 </span>            :     // void* is just to easy.
+<span class="lineNum">      64 </span>            :     //
+<span class="lineNum">      65 </span>            :     struct enable_type;
+<span class="lineNum">      66 </span>            :   }
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :   //
+<span class="lineNum">      70 </span>            :   // enable_if for use in adapted iterators constructors.
+<span class="lineNum">      71 </span>            :   //
+<span class="lineNum">      72 </span>            :   // In order to provide interoperability between adapted constant and
+<span class="lineNum">      73 </span>            :   // mutable iterators, adapted iterators will usually provide templated
+<span class="lineNum">      74 </span>            :   // conversion constructors of the following form
+<span class="lineNum">      75 </span>            :   //
+<span class="lineNum">      76 </span>            :   // template &lt;class BaseIterator&gt;
+<span class="lineNum">      77 </span>            :   // class adapted_iterator :
+<span class="lineNum">      78 </span>            :   //   public iterator_adaptor&lt; adapted_iterator&lt;Iterator&gt;, Iterator &gt;
+<span class="lineNum">      79 </span>            :   // {
+<span class="lineNum">      80 </span>            :   // public:
+<span class="lineNum">      81 </span>            :   //
+<span class="lineNum">      82 </span>            :   //   ...
+<span class="lineNum">      83 </span>            :   //
+<span class="lineNum">      84 </span>            :   //   template &lt;class OtherIterator&gt;
+<span class="lineNum">      85 </span>            :   //   adapted_iterator(
+<span class="lineNum">      86 </span>            :   //       OtherIterator const&amp; it
+<span class="lineNum">      87 </span>            :   //     , typename enable_if_convertible&lt;OtherIterator, Iterator&gt;::type* = 0);
+<span class="lineNum">      88 </span>            :   //
+<span class="lineNum">      89 </span>            :   //   ...
+<span class="lineNum">      90 </span>            :   // };
+<span class="lineNum">      91 </span>            :   //
+<span class="lineNum">      92 </span>            :   // enable_if_convertible is used to remove those overloads from the overload
+<span class="lineNum">      93 </span>            :   // set that cannot be instantiated. For all practical purposes only overloads
+<span class="lineNum">      94 </span>            :   // for constant/mutable interaction will remain. This has the advantage that
+<span class="lineNum">      95 </span>            :   // meta functions like boost::is_convertible do not return false positives,
+<span class="lineNum">      96 </span>            :   // as they can only look at the signature of the conversion constructor
+<span class="lineNum">      97 </span>            :   // and not at the actual instantiation.
+<span class="lineNum">      98 </span>            :   //
+<span class="lineNum">      99 </span>            :   // enable_if_interoperable can be safely used in user code. It falls back to
+<span class="lineNum">     100 </span>            :   // always enabled for compilers that don't support enable_if or is_convertible.
+<span class="lineNum">     101 </span>            :   // There is no need for compiler specific workarounds in user code.
+<span class="lineNum">     102 </span>            :   //
+<span class="lineNum">     103 </span>            :   // The operators implementation relies on boost::is_convertible not returning
+<span class="lineNum">     104 </span>            :   // false positives for user/library defined iterator types. See comments
+<span class="lineNum">     105 </span>            :   // on operator implementation for consequences.
+<span class="lineNum">     106 </span>            :   //
+<span class="lineNum">     107 </span>            : #  if defined(BOOST_NO_IS_CONVERTIBLE) || defined(BOOST_NO_SFINAE)
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            :   template &lt;class From, class To&gt;
+<span class="lineNum">     110 </span>            :   struct enable_if_convertible
+<span class="lineNum">     111 </span>            :   {
+<span class="lineNum">     112 </span>            :       typedef boost::iterators::detail::enable_type type;
+<span class="lineNum">     113 </span>            :   };
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : #  elif BOOST_WORKAROUND(_MSC_FULL_VER, BOOST_TESTED_AT(13102292))
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :   // For some reason vc7.1 needs us to &quot;cut off&quot; instantiation
+<span class="lineNum">     118 </span>            :   // of is_convertible in a few cases.
+<span class="lineNum">     119 </span>            :   template&lt;typename From, typename To&gt;
+<span class="lineNum">     120 </span>            :   struct enable_if_convertible
+<span class="lineNum">     121 </span>            :     : iterators::enable_if&lt;
+<span class="lineNum">     122 </span>            :         mpl::or_&lt;
+<span class="lineNum">     123 </span>            :             is_same&lt;From,To&gt;
+<span class="lineNum">     124 </span>            :           , is_convertible&lt;From, To&gt;
+<span class="lineNum">     125 </span>            :         &gt;
+<span class="lineNum">     126 </span>            :       , boost::iterators::detail::enable_type
+<span class="lineNum">     127 </span>            :     &gt;
+<span class="lineNum">     128 </span>            :   {};
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : #  else
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            :   template&lt;typename From, typename To&gt;
+<span class="lineNum">     133 </span>            :   struct enable_if_convertible
+<span class="lineNum">     134 </span>            :     : iterators::enable_if&lt;
+<span class="lineNum">     135 </span>            :           is_convertible&lt;From, To&gt;
+<span class="lineNum">     136 </span>            :         , boost::iterators::detail::enable_type
+<span class="lineNum">     137 </span>            :       &gt;
+<span class="lineNum">     138 </span>            :   {};
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : # endif
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            :   //
+<span class="lineNum">     143 </span>            :   // Default template argument handling for iterator_adaptor
+<span class="lineNum">     144 </span>            :   //
+<span class="lineNum">     145 </span>            :   namespace detail
+<span class="lineNum">     146 </span>            :   {
+<span class="lineNum">     147 </span>            :     // If T is use_default, return the result of invoking
+<span class="lineNum">     148 </span>            :     // DefaultNullaryFn, otherwise return T.
+<span class="lineNum">     149 </span>            :     template &lt;class T, class DefaultNullaryFn&gt;
+<span class="lineNum">     150 </span>            :     struct ia_dflt_help
+<span class="lineNum">     151 </span>            :       : mpl::eval_if&lt;
+<span class="lineNum">     152 </span>            :             is_same&lt;T, use_default&gt;
+<span class="lineNum">     153 </span>            :           , DefaultNullaryFn
+<span class="lineNum">     154 </span>            :           , mpl::identity&lt;T&gt;
+<span class="lineNum">     155 </span>            :         &gt;
+<span class="lineNum">     156 </span>            :     {
+<span class="lineNum">     157 </span>            :     };
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :     // A metafunction which computes an iterator_adaptor's base class,
+<span class="lineNum">     160 </span>            :     // a specialization of iterator_facade.
+<span class="lineNum">     161 </span>            :     template &lt;
+<span class="lineNum">     162 </span>            :         class Derived
+<span class="lineNum">     163 </span>            :       , class Base
+<span class="lineNum">     164 </span>            :       , class Value
+<span class="lineNum">     165 </span>            :       , class Traversal
+<span class="lineNum">     166 </span>            :       , class Reference
+<span class="lineNum">     167 </span>            :       , class Difference
+<span class="lineNum">     168 </span>            :     &gt;
+<span class="lineNum">     169 </span>            :     struct iterator_adaptor_base
+<span class="lineNum">     170 </span>            :     {
+<span class="lineNum">     171 </span>            :         typedef iterator_facade&lt;
+<span class="lineNum">     172 </span>            :             Derived
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : # ifdef BOOST_ITERATOR_REF_CONSTNESS_KILLS_WRITABILITY
+<span class="lineNum">     175 </span>            :           , typename boost::iterators::detail::ia_dflt_help&lt;
+<span class="lineNum">     176 </span>            :                 Value
+<span class="lineNum">     177 </span>            :               , mpl::eval_if&lt;
+<span class="lineNum">     178 </span>            :                     is_same&lt;Reference,use_default&gt;
+<span class="lineNum">     179 </span>            :                   , iterator_value&lt;Base&gt;
+<span class="lineNum">     180 </span>            :                   , remove_reference&lt;Reference&gt;
+<span class="lineNum">     181 </span>            :                 &gt;
+<span class="lineNum">     182 </span>            :             &gt;::type
+<span class="lineNum">     183 </span>            : # else
+<span class="lineNum">     184 </span>            :           , typename boost::iterators::detail::ia_dflt_help&lt;
+<span class="lineNum">     185 </span>            :                 Value, iterator_value&lt;Base&gt;
+<span class="lineNum">     186 </span>            :             &gt;::type
+<span class="lineNum">     187 </span>            : # endif
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            :           , typename boost::iterators::detail::ia_dflt_help&lt;
+<span class="lineNum">     190 </span>            :                 Traversal
+<span class="lineNum">     191 </span>            :               , iterator_traversal&lt;Base&gt;
+<span class="lineNum">     192 </span>            :             &gt;::type
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            :           , typename boost::iterators::detail::ia_dflt_help&lt;
+<span class="lineNum">     195 </span>            :                 Reference
+<span class="lineNum">     196 </span>            :               , mpl::eval_if&lt;
+<span class="lineNum">     197 </span>            :                     is_same&lt;Value,use_default&gt;
+<span class="lineNum">     198 </span>            :                   , iterator_reference&lt;Base&gt;
+<span class="lineNum">     199 </span>            :                   , add_reference&lt;Value&gt;
+<span class="lineNum">     200 </span>            :                 &gt;
+<span class="lineNum">     201 </span>            :             &gt;::type
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            :           , typename boost::iterators::detail::ia_dflt_help&lt;
+<span class="lineNum">     204 </span>            :                 Difference, iterator_difference&lt;Base&gt;
+<span class="lineNum">     205 </span>            :             &gt;::type
+<span class="lineNum">     206 </span>            :         &gt;
+<span class="lineNum">     207 </span>            :         type;
+<span class="lineNum">     208 </span>            :     };
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :     // workaround for aC++ CR JAGaf33512
+<span class="lineNum">     211 </span>            :     template &lt;class Tr1, class Tr2&gt;
+<span class="lineNum">     212 </span>            :     inline void iterator_adaptor_assert_traversal ()
+<span class="lineNum">     213 </span>            :     {
+<span class="lineNum">     214 </span>            :       BOOST_STATIC_ASSERT((is_convertible&lt;Tr1, Tr2&gt;::value));
+<span class="lineNum">     215 </span>            :     }
+<span class="lineNum">     216 </span>            :   }
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            :   //
+<span class="lineNum">     219 </span>            :   // Iterator Adaptor
+<span class="lineNum">     220 </span>            :   //
+<span class="lineNum">     221 </span>            :   // The parameter ordering changed slightly with respect to former
+<span class="lineNum">     222 </span>            :   // versions of iterator_adaptor The idea is that when the user needs
+<span class="lineNum">     223 </span>            :   // to fiddle with the reference type it is highly likely that the
+<span class="lineNum">     224 </span>            :   // iterator category has to be adjusted as well.  Any of the
+<span class="lineNum">     225 </span>            :   // following four template arguments may be ommitted or explicitly
+<span class="lineNum">     226 </span>            :   // replaced by use_default.
+<span class="lineNum">     227 </span>            :   //
+<span class="lineNum">     228 </span>            :   //   Value - if supplied, the value_type of the resulting iterator, unless
+<span class="lineNum">     229 </span>            :   //      const. If const, a conforming compiler strips constness for the
+<span class="lineNum">     230 </span>            :   //      value_type. If not supplied, iterator_traits&lt;Base&gt;::value_type is used
+<span class="lineNum">     231 </span>            :   //
+<span class="lineNum">     232 </span>            :   //   Category - the traversal category of the resulting iterator. If not
+<span class="lineNum">     233 </span>            :   //      supplied, iterator_traversal&lt;Base&gt;::type is used.
+<span class="lineNum">     234 </span>            :   //
+<span class="lineNum">     235 </span>            :   //   Reference - the reference type of the resulting iterator, and in
+<span class="lineNum">     236 </span>            :   //      particular, the result type of operator*(). If not supplied but
+<span class="lineNum">     237 </span>            :   //      Value is supplied, Value&amp; is used. Otherwise
+<span class="lineNum">     238 </span>            :   //      iterator_traits&lt;Base&gt;::reference is used.
+<span class="lineNum">     239 </span>            :   //
+<span class="lineNum">     240 </span>            :   //   Difference - the difference_type of the resulting iterator. If not
+<span class="lineNum">     241 </span>            :   //      supplied, iterator_traits&lt;Base&gt;::difference_type is used.
+<span class="lineNum">     242 </span>            :   //
+<span class="lineNum">     243 </span>            :   template &lt;
+<span class="lineNum">     244 </span>            :       class Derived
+<span class="lineNum">     245 </span>            :     , class Base
+<span class="lineNum">     246 </span>            :     , class Value        = use_default
+<span class="lineNum">     247 </span>            :     , class Traversal    = use_default
+<span class="lineNum">     248 </span>            :     , class Reference    = use_default
+<span class="lineNum">     249 </span>            :     , class Difference   = use_default
+<span class="lineNum">     250 </span>            :   &gt;
+<span class="lineNum">     251 </span><span class="lineCov">         28 :   class iterator_adaptor</span>
+<span class="lineNum">     252 </span>            :     : public boost::iterators::detail::iterator_adaptor_base&lt;
+<span class="lineNum">     253 </span>            :         Derived, Base, Value, Traversal, Reference, Difference
+<span class="lineNum">     254 </span>            :       &gt;::type
+<span class="lineNum">     255 </span>            :   {
+<span class="lineNum">     256 </span>            :       friend class iterator_core_access;
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            :    protected:
+<span class="lineNum">     259 </span>            :       typedef typename boost::iterators::detail::iterator_adaptor_base&lt;
+<span class="lineNum">     260 </span>            :           Derived, Base, Value, Traversal, Reference, Difference
+<span class="lineNum">     261 </span>            :       &gt;::type super_t;
+<span class="lineNum">     262 </span>            :    public:
+<span class="lineNum">     263 </span>            :       iterator_adaptor() {}
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :       explicit iterator_adaptor(Base const &amp;iter)
+<span class="lineNum">     266 </span><span class="lineCov">          4 :           : m_iterator(iter)</span>
+<span class="lineNum">     267 </span>            :       {
+<span class="lineNum">     268 </span>            :       }
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span>            :       typedef Base base_type;
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            :       Base const&amp; base() const
+<span class="lineNum">     273 </span><span class="lineCov">          4 :         { return m_iterator; }</span>
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            :    protected:
+<span class="lineNum">     276 </span>            :       // for convenience in derived classes
+<span class="lineNum">     277 </span>            :       typedef iterator_adaptor&lt;Derived,Base,Value,Traversal,Reference,Difference&gt; iterator_adaptor_;
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            :       //
+<span class="lineNum">     280 </span>            :       // lvalue access to the Base object for Derived
+<span class="lineNum">     281 </span>            :       //
+<span class="lineNum">     282 </span>            :       Base const&amp; base_reference() const
+<span class="lineNum">     283 </span>            :         { return m_iterator; }
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span>            :       Base&amp; base_reference()
+<span class="lineNum">     286 </span>            :         { return m_iterator; }
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            :    private:
+<span class="lineNum">     289 </span>            :       //
+<span class="lineNum">     290 </span>            :       // Core iterator interface for iterator_facade.  This is private
+<span class="lineNum">     291 </span>            :       // to prevent temptation for Derived classes to use it, which
+<span class="lineNum">     292 </span>            :       // will often result in an error.  Derived classes should use
+<span class="lineNum">     293 </span>            :       // base_reference(), above, to get direct access to m_iterator.
+<span class="lineNum">     294 </span>            :       //
+<span class="lineNum">     295 </span>            :       typename super_t::reference dereference() const
+<span class="lineNum">     296 </span>            :         { return *m_iterator; }
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            :       template &lt;
+<span class="lineNum">     299 </span>            :       class OtherDerived, class OtherIterator, class V, class C, class R, class D
+<span class="lineNum">     300 </span>            :       &gt;
+<span class="lineNum">     301 </span>            :       bool equal(iterator_adaptor&lt;OtherDerived, OtherIterator, V, C, R, D&gt; const&amp; x) const
+<span class="lineNum">     302 </span>            :       {
+<span class="lineNum">     303 </span>            :         // Maybe readd with same_distance
+<span class="lineNum">     304 </span>            :         //           BOOST_STATIC_ASSERT(
+<span class="lineNum">     305 </span>            :         //               (detail::same_category_and_difference&lt;Derived,OtherDerived&gt;::value)
+<span class="lineNum">     306 </span>            :         //               );
+<span class="lineNum">     307 </span><span class="lineCov">          8 :           return m_iterator == x.base();</span>
+<span class="lineNum">     308 </span>            :       }
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            :       typedef typename iterator_category_to_traversal&lt;
+<span class="lineNum">     311 </span>            :           typename super_t::iterator_category
+<span class="lineNum">     312 </span>            :       &gt;::type my_traversal;
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span>            : # define BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(cat) \
+<span class="lineNum">     315 </span>            :       boost::iterators::detail::iterator_adaptor_assert_traversal&lt;my_traversal, cat&gt;();
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            :       void advance(typename super_t::difference_type n)
+<span class="lineNum">     318 </span>            :       {
+<span class="lineNum">     319 </span>            :           BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(random_access_traversal_tag)
+<span class="lineNum">     320 </span>            :           m_iterator += n;
+<span class="lineNum">     321 </span>            :       }
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span><span class="lineCov">          6 :       void increment() { ++m_iterator; }</span>
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span>            :       void decrement()
+<span class="lineNum">     326 </span>            :       {
+<span class="lineNum">     327 </span>            :           BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(bidirectional_traversal_tag)
+<span class="lineNum">     328 </span>            :            --m_iterator;
+<span class="lineNum">     329 </span>            :       }
+<span class="lineNum">     330 </span>            : 
+<span class="lineNum">     331 </span>            :       template &lt;
+<span class="lineNum">     332 </span>            :           class OtherDerived, class OtherIterator, class V, class C, class R, class D
+<span class="lineNum">     333 </span>            :       &gt;
+<span class="lineNum">     334 </span>            :       typename super_t::difference_type distance_to(
+<span class="lineNum">     335 </span>            :           iterator_adaptor&lt;OtherDerived, OtherIterator, V, C, R, D&gt; const&amp; y) const
+<span class="lineNum">     336 </span>            :       {
+<span class="lineNum">     337 </span>            :           BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL(random_access_traversal_tag)
+<span class="lineNum">     338 </span>            :           // Maybe readd with same_distance
+<span class="lineNum">     339 </span>            :           //           BOOST_STATIC_ASSERT(
+<span class="lineNum">     340 </span>            :           //               (detail::same_category_and_difference&lt;Derived,OtherDerived&gt;::value)
+<span class="lineNum">     341 </span>            :           //               );
+<span class="lineNum">     342 </span>            :           return y.base() - m_iterator;
+<span class="lineNum">     343 </span>            :       }
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span>            : # undef BOOST_ITERATOR_ADAPTOR_ASSERT_TRAVERSAL
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span>            :    private: // data members
+<span class="lineNum">     348 </span>            :       Base m_iterator;
+<span class="lineNum">     349 </span>            :   };
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span>            : } // namespace iterators
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span>            : using iterators::iterator_adaptor;
+<span class="lineNum">     354 </span>            : using iterators::enable_if_convertible;
+<span class="lineNum">     355 </span>            : 
+<span class="lineNum">     356 </span>            : } // namespace boost
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span>            : #include &lt;boost/iterator/detail/config_undef.hpp&gt;
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span>            : #endif // BOOST_ITERATOR_ADAPTOR_23022003THW_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

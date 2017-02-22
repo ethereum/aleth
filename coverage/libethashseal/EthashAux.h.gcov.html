@@ -1,0 +1,189 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethashseal/EthashAux.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethashseal</a> - EthashAux.h<span style="font-size: 80%;"> (source / <a href="EthashAux.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file EthashAux.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;condition_variable&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libethash/ethash.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libdevcore/Log.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libdevcore/Worker.h&gt;
+<span class="lineNum">      28 </span>            : #include &quot;EthashProofOfWork.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;Ethash.h&quot;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : namespace dev
+<span class="lineNum">      32 </span>            : {
+<span class="lineNum">      33 </span>            : namespace eth
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : struct DAGChannel: public LogChannel { static const char* name(); static const int verbosity = 1; };
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : class BlockHeader;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : class EthashAux
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span>            : public:
+<span class="lineNum">      43 </span>            :         ~EthashAux();
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            :         static EthashAux* get();
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            :         struct LightAllocation
+<span class="lineNum">      48 </span>            :         {
+<span class="lineNum">      49 </span>            :                 LightAllocation(h256 const&amp; _seedHash);
+<span class="lineNum">      50 </span>            :                 ~LightAllocation();
+<span class="lineNum">      51 </span>            :                 bytesConstRef data() const;
+<span class="lineNum">      52 </span>            :                 EthashProofOfWork::Result compute(h256 const&amp; _headerHash, Nonce const&amp; _nonce) const;
+<span class="lineNum">      53 </span>            :                 ethash_light_t light;
+<span class="lineNum">      54 </span>            :                 uint64_t size;
+<span class="lineNum">      55 </span>            :         };
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :         struct FullAllocation
+<span class="lineNum">      58 </span>            :         {
+<span class="lineNum">      59 </span>            :                 FullAllocation(ethash_light_t _light, ethash_callback_t _cb);
+<span class="lineNum">      60 </span>            :                 ~FullAllocation();
+<span class="lineNum">      61 </span>            :                 EthashProofOfWork::Result compute(h256 const&amp; _headerHash, Nonce const&amp; _nonce) const;
+<span class="lineNum">      62 </span>            :                 bytesConstRef data() const;
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :                 uint64_t size() const { return ethash_full_dag_size(full); }</span>
+<span class="lineNum">      64 </span>            :                 ethash_full_t full;
+<span class="lineNum">      65 </span>            :         };
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :         using LightType = std::shared_ptr&lt;LightAllocation&gt;;
+<span class="lineNum">      68 </span>            :         using FullType = std::shared_ptr&lt;FullAllocation&gt;;
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            :         static h256 seedHash(unsigned _number);
+<span class="lineNum">      71 </span>            :         static uint64_t number(h256 const&amp; _seedHash);
+<span class="lineNum">      72 </span>            :         static uint64_t cacheSize(BlockHeader const&amp; _header);
+<span class="lineNum">      73 </span>            :         static uint64_t dataSize(uint64_t _blockNumber);
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            :         static LightType light(h256 const&amp; _seedHash);
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :         static const uint64_t NotGenerating = (uint64_t)-1;
+<span class="lineNum">      78 </span>            :         /// Kicks off generation of DAG for @a _seedHash and @returns false or @returns true if ready.
+<span class="lineNum">      79 </span>            :         static unsigned computeFull(h256 const&amp; _seedHash, bool _createIfMissing = true);
+<span class="lineNum">      80 </span>            :         /// Information on the generation progress.
+<span class="lineNum">      81 </span>            :         static std::pair&lt;uint64_t, unsigned&gt; fullGeneratingProgress() { return std::make_pair(get()-&gt;m_generatingFullNumber, get()-&gt;m_fullProgress); }
+<span class="lineNum">      82 </span>            :         /// Kicks off generation of DAG for @a _blocknumber and blocks until ready; @returns result or empty pointer if not existing and _createIfMissing is false.
+<span class="lineNum">      83 </span>            :         static FullType full(h256 const&amp; _seedHash, bool _createIfMissing = false, std::function&lt;int(unsigned)&gt; const&amp; _f = std::function&lt;int(unsigned)&gt;());
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            :         static EthashProofOfWork::Result eval(h256 const&amp; _seedHash, h256 const&amp; _headerHash, Nonce const&amp; _nonce);
+<a name="86"><span class="lineNum">      86 </span>            : </a>
+<span class="lineNum">      87 </span>            : private:
+<span class="lineNum">      88 </span><span class="lineCov">          9 :         EthashAux() {}</span>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            :         /// Kicks off generation of DAG for @a _blocknumber and blocks until ready; @returns result.
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :         void killCache(h256 const&amp; _s);
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :         static EthashAux* s_this;
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            :         SharedMutex x_lights;
+<span class="lineNum">      97 </span>            :         std::unordered_map&lt;h256, std::shared_ptr&lt;LightAllocation&gt;&gt; m_lights;
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :         Mutex x_fulls;
+<span class="lineNum">     100 </span>            :         std::condition_variable m_fullsChanged;
+<span class="lineNum">     101 </span>            :         std::unordered_map&lt;h256, std::weak_ptr&lt;FullAllocation&gt;&gt; m_fulls;
+<span class="lineNum">     102 </span>            :         FullType m_lastUsedFull;
+<span class="lineNum">     103 </span>            :         std::unique_ptr&lt;std::thread&gt; m_fullGenerator;
+<span class="lineNum">     104 </span>            :         uint64_t m_generatingFullNumber = NotGenerating;
+<span class="lineNum">     105 </span>            :         unsigned m_fullProgress;
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :         Mutex x_epochs;
+<span class="lineNum">     108 </span>            :         std::unordered_map&lt;h256, unsigned&gt; m_epochs;
+<span class="lineNum">     109 </span>            :         h256s m_seedHashes;
+<span class="lineNum">     110 </span>            : };
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            : }
+<span class="lineNum">     113 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

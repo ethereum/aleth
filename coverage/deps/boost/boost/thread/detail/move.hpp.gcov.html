@@ -1,0 +1,450 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/thread/detail/move.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/thread/detail</a> - move.hpp<span style="font-size: 80%;"> (source / <a href="move.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Distributed under the Boost Software License, Version 1.0. (See</a>
+<span class="lineNum">       2 </span>            : // accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       3 </span>            : // http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       4 </span>            : // (C) Copyright 2007-8 Anthony Williams
+<span class="lineNum">       5 </span>            : // (C) Copyright 2011-2012 Vicente J. Botet Escriba
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #ifndef BOOST_THREAD_MOVE_HPP
+<span class="lineNum">       8 </span>            : #define BOOST_THREAD_MOVE_HPP
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #include &lt;boost/thread/detail/config.hpp&gt;
+<span class="lineNum">      11 </span>            : #ifndef BOOST_NO_SFINAE
+<span class="lineNum">      12 </span>            : #include &lt;boost/core/enable_if.hpp&gt;
+<span class="lineNum">      13 </span>            : #include &lt;boost/type_traits/is_convertible.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/type_traits/remove_reference.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/type_traits/remove_cv.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/type_traits/decay.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/type_traits/conditional.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/type_traits/remove_extent.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/type_traits/is_array.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/type_traits/is_function.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/type_traits/remove_cv.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/type_traits/add_pointer.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/type_traits/decay.hpp&gt;
+<span class="lineNum">      24 </span>            : #endif
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;boost/thread/detail/delete.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/move/utility.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/move/traits.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/config/abi_prefix.hpp&gt;
+<span class="lineNum">      30 </span>            : #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">      31 </span>            : #include &lt;type_traits&gt;
+<span class="lineNum">      32 </span>            : #endif
+<span class="lineNum">      33 </span>            : namespace boost
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            :     namespace detail
+<span class="lineNum">      37 </span>            :     {
+<span class="lineNum">      38 </span>            :       template &lt;typename T&gt;
+<span class="lineNum">      39 </span>            :       struct enable_move_utility_emulation_dummy_specialization;
+<span class="lineNum">      40 </span>            :         template&lt;typename T&gt;
+<span class="lineNum">      41 </span>            :         struct thread_move_t
+<span class="lineNum">      42 </span>            :         {
+<span class="lineNum">      43 </span>            :             T&amp; t;
+<span class="lineNum">      44 </span>            :             explicit thread_move_t(T&amp; t_):
+<span class="lineNum">      45 </span>            :                 t(t_)
+<span class="lineNum">      46 </span>            :             {}
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            :             T&amp; operator*() const
+<span class="lineNum">      49 </span>            :             {
+<span class="lineNum">      50 </span>            :                 return t;
+<span class="lineNum">      51 </span>            :             }
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            :             T* operator-&gt;() const
+<span class="lineNum">      54 </span>            :             {
+<span class="lineNum">      55 </span>            :                 return &amp;t;
+<span class="lineNum">      56 </span>            :             }
+<span class="lineNum">      57 </span>            :         private:
+<span class="lineNum">      58 </span>            :             void operator=(thread_move_t&amp;);
+<span class="lineNum">      59 </span>            :         };
+<span class="lineNum">      60 </span>            :     }
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : #if !defined BOOST_THREAD_USES_MOVE
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : #ifndef BOOST_NO_SFINAE
+<span class="lineNum">      65 </span>            :     template&lt;typename T&gt;
+<span class="lineNum">      66 </span>            :     typename enable_if&lt;boost::is_convertible&lt;T&amp;,boost::detail::thread_move_t&lt;T&gt; &gt;, boost::detail::thread_move_t&lt;T&gt; &gt;::type move(T&amp; t)
+<span class="lineNum">      67 </span>            :     {
+<span class="lineNum">      68 </span>            :         return boost::detail::thread_move_t&lt;T&gt;(t);
+<span class="lineNum">      69 </span>            :     }
+<span class="lineNum">      70 </span>            : #endif
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :     template&lt;typename T&gt;
+<span class="lineNum">      73 </span>            :     boost::detail::thread_move_t&lt;T&gt; move(boost::detail::thread_move_t&lt;T&gt; t)
+<span class="lineNum">      74 </span>            :     {
+<span class="lineNum">      75 </span>            :         return t;
+<span class="lineNum">      76 </span>            :     }
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : #endif   //#if !defined BOOST_THREAD_USES_MOVE
+<span class="lineNum">      79 </span>            : }
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : #define BOOST_THREAD_COPY_ASSIGN_REF(TYPE) BOOST_COPY_ASSIGN_REF(TYPE)
+<span class="lineNum">      84 </span>            : #define BOOST_THREAD_RV_REF(TYPE) BOOST_RV_REF(TYPE)
+<span class="lineNum">      85 </span>            : #define BOOST_THREAD_RV_REF_2_TEMPL_ARGS(TYPE) BOOST_RV_REF_2_TEMPL_ARGS(TYPE)
+<span class="lineNum">      86 </span>            : #define BOOST_THREAD_RV_REF_BEG BOOST_RV_REF_BEG
+<span class="lineNum">      87 </span>            : #define BOOST_THREAD_RV_REF_END BOOST_RV_REF_END
+<span class="lineNum">      88 </span>            : #define BOOST_THREAD_RV(V) V
+<span class="lineNum">      89 </span>            : #define BOOST_THREAD_MAKE_RV_REF(RVALUE) RVALUE
+<span class="lineNum">      90 </span>            : #define BOOST_THREAD_FWD_REF(TYPE) BOOST_FWD_REF(TYPE)
+<span class="lineNum">      91 </span>            : #define BOOST_THREAD_DCL_MOVABLE(TYPE)
+<span class="lineNum">      92 </span>            : #define BOOST_THREAD_DCL_MOVABLE_BEG(T) \
+<span class="lineNum">      93 </span>            :   namespace detail { \
+<span class="lineNum">      94 </span>            :     template &lt;typename T&gt; \
+<span class="lineNum">      95 </span>            :     struct enable_move_utility_emulation_dummy_specialization&lt;
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : #define BOOST_THREAD_DCL_MOVABLE_BEG2(T1, T2) \
+<span class="lineNum">      98 </span>            :   namespace detail { \
+<span class="lineNum">      99 </span>            :     template &lt;typename T1, typename T2&gt; \
+<span class="lineNum">     100 </span>            :     struct enable_move_utility_emulation_dummy_specialization&lt;
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : #define BOOST_THREAD_DCL_MOVABLE_END &gt; \
+<span class="lineNum">     103 </span>            :       : integral_constant&lt;bool, false&gt; \
+<span class="lineNum">     104 </span>            :       {}; \
+<span class="lineNum">     105 </span>            :     }
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : #elif ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES &amp;&amp; defined  BOOST_MSVC
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : #define BOOST_THREAD_COPY_ASSIGN_REF(TYPE) BOOST_COPY_ASSIGN_REF(TYPE)
+<span class="lineNum">     110 </span>            : #define BOOST_THREAD_RV_REF(TYPE) BOOST_RV_REF(TYPE)
+<span class="lineNum">     111 </span>            : #define BOOST_THREAD_RV_REF_2_TEMPL_ARGS(TYPE) BOOST_RV_REF_2_TEMPL_ARGS(TYPE)
+<span class="lineNum">     112 </span>            : #define BOOST_THREAD_RV_REF_BEG BOOST_RV_REF_BEG
+<span class="lineNum">     113 </span>            : #define BOOST_THREAD_RV_REF_END BOOST_RV_REF_END
+<span class="lineNum">     114 </span>            : #define BOOST_THREAD_RV(V) V
+<span class="lineNum">     115 </span>            : #define BOOST_THREAD_MAKE_RV_REF(RVALUE) RVALUE
+<span class="lineNum">     116 </span>            : #define BOOST_THREAD_FWD_REF(TYPE) BOOST_FWD_REF(TYPE)
+<span class="lineNum">     117 </span>            : #define BOOST_THREAD_DCL_MOVABLE(TYPE)
+<span class="lineNum">     118 </span>            : #define BOOST_THREAD_DCL_MOVABLE_BEG(T) \
+<span class="lineNum">     119 </span>            :   namespace detail { \
+<span class="lineNum">     120 </span>            :     template &lt;typename T&gt; \
+<span class="lineNum">     121 </span>            :     struct enable_move_utility_emulation_dummy_specialization&lt;
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : #define BOOST_THREAD_DCL_MOVABLE_BEG2(T1, T2) \
+<span class="lineNum">     124 </span>            :   namespace detail { \
+<span class="lineNum">     125 </span>            :     template &lt;typename T1, typename T2&gt; \
+<span class="lineNum">     126 </span>            :     struct enable_move_utility_emulation_dummy_specialization&lt;
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : #define BOOST_THREAD_DCL_MOVABLE_END &gt; \
+<span class="lineNum">     129 </span>            :       : integral_constant&lt;bool, false&gt; \
+<span class="lineNum">     130 </span>            :       {}; \
+<span class="lineNum">     131 </span>            :     }
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            : #else
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : #if defined BOOST_THREAD_USES_MOVE
+<span class="lineNum">     136 </span>            : #define BOOST_THREAD_COPY_ASSIGN_REF(TYPE) BOOST_COPY_ASSIGN_REF(TYPE)
+<span class="lineNum">     137 </span>            : #define BOOST_THREAD_RV_REF(TYPE) BOOST_RV_REF(TYPE)
+<span class="lineNum">     138 </span>            : #define BOOST_THREAD_RV_REF_2_TEMPL_ARGS(TYPE) BOOST_RV_REF_2_TEMPL_ARGS(TYPE)
+<span class="lineNum">     139 </span>            : #define BOOST_THREAD_RV_REF_BEG BOOST_RV_REF_BEG
+<span class="lineNum">     140 </span>            : #define BOOST_THREAD_RV_REF_END BOOST_RV_REF_END
+<span class="lineNum">     141 </span>            : #define BOOST_THREAD_RV(V) V
+<span class="lineNum">     142 </span>            : #define BOOST_THREAD_FWD_REF(TYPE) BOOST_FWD_REF(TYPE)
+<span class="lineNum">     143 </span>            : #define BOOST_THREAD_DCL_MOVABLE(TYPE)
+<span class="lineNum">     144 </span>            : #define BOOST_THREAD_DCL_MOVABLE_BEG(T) \
+<span class="lineNum">     145 </span>            :   namespace detail { \
+<span class="lineNum">     146 </span>            :     template &lt;typename T&gt; \
+<span class="lineNum">     147 </span>            :     struct enable_move_utility_emulation_dummy_specialization&lt;
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            : #define BOOST_THREAD_DCL_MOVABLE_BEG2(T1, T2) \
+<span class="lineNum">     150 </span>            :   namespace detail { \
+<span class="lineNum">     151 </span>            :     template &lt;typename T1, typename T2&gt; \
+<span class="lineNum">     152 </span>            :     struct enable_move_utility_emulation_dummy_specialization&lt;
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            : #define BOOST_THREAD_DCL_MOVABLE_END &gt; \
+<span class="lineNum">     155 </span>            :       : integral_constant&lt;bool, false&gt; \
+<span class="lineNum">     156 </span>            :       {}; \
+<span class="lineNum">     157 </span>            :     }
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : #else
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            : #define BOOST_THREAD_COPY_ASSIGN_REF(TYPE) const TYPE&amp;
+<span class="lineNum">     162 </span>            : #define BOOST_THREAD_RV_REF(TYPE) boost::detail::thread_move_t&lt; TYPE &gt;
+<span class="lineNum">     163 </span>            : #define BOOST_THREAD_RV_REF_BEG boost::detail::thread_move_t&lt;
+<span class="lineNum">     164 </span>            : #define BOOST_THREAD_RV_REF_END &gt;
+<span class="lineNum">     165 </span>            : #define BOOST_THREAD_RV(V) (*V)
+<span class="lineNum">     166 </span>            : #define BOOST_THREAD_FWD_REF(TYPE) BOOST_FWD_REF(TYPE)
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : #define BOOST_THREAD_DCL_MOVABLE(TYPE) \
+<span class="lineNum">     169 </span>            : template &lt;&gt; \
+<span class="lineNum">     170 </span>            : struct enable_move_utility_emulation&lt; TYPE &gt; \
+<span class="lineNum">     171 </span>            : { \
+<span class="lineNum">     172 </span>            :    static const bool value = false; \
+<span class="lineNum">     173 </span>            : };
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            : #define BOOST_THREAD_DCL_MOVABLE_BEG(T) \
+<span class="lineNum">     176 </span>            : template &lt;typename T&gt; \
+<span class="lineNum">     177 </span>            : struct enable_move_utility_emulation&lt;
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            : #define BOOST_THREAD_DCL_MOVABLE_BEG2(T1, T2) \
+<span class="lineNum">     180 </span>            : template &lt;typename T1, typename T2&gt; \
+<span class="lineNum">     181 </span>            : struct enable_move_utility_emulation&lt;
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            : #define BOOST_THREAD_DCL_MOVABLE_END &gt; \
+<span class="lineNum">     184 </span>            : { \
+<span class="lineNum">     185 </span>            :    static const bool value = false; \
+<span class="lineNum">     186 </span>            : };
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            : #endif
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            : namespace boost
+<span class="lineNum">     191 </span>            : {
+<span class="lineNum">     192 </span>            : namespace detail
+<span class="lineNum">     193 </span>            : {
+<span class="lineNum">     194 </span>            :   template &lt;typename T&gt;
+<span class="lineNum">     195 </span>            :   BOOST_THREAD_RV_REF(typename ::boost::remove_cv&lt;typename ::boost::remove_reference&lt;T&gt;::type&gt;::type)
+<span class="lineNum">     196 </span>            :   make_rv_ref(T v)  BOOST_NOEXCEPT
+<span class="lineNum">     197 </span>            :   {
+<span class="lineNum">     198 </span>            :     return (BOOST_THREAD_RV_REF(typename ::boost::remove_cv&lt;typename ::boost::remove_reference&lt;T&gt;::type&gt;::type))(v);
+<span class="lineNum">     199 </span>            :   }
+<span class="lineNum">     200 </span>            : //  template &lt;typename T&gt;
+<span class="lineNum">     201 </span>            : //  BOOST_THREAD_RV_REF(typename ::boost::remove_cv&lt;typename ::boost::remove_reference&lt;T&gt;::type&gt;::type)
+<span class="lineNum">     202 </span>            : //  make_rv_ref(T &amp;v)  BOOST_NOEXCEPT
+<span class="lineNum">     203 </span>            : //  {
+<span class="lineNum">     204 </span>            : //    return (BOOST_THREAD_RV_REF(typename ::boost::remove_cv&lt;typename ::boost::remove_reference&lt;T&gt;::type&gt;::type))(v);
+<span class="lineNum">     205 </span>            : //  }
+<span class="lineNum">     206 </span>            : //  template &lt;typename T&gt;
+<span class="lineNum">     207 </span>            : //  const BOOST_THREAD_RV_REF(typename ::boost::remove_cv&lt;typename ::boost::remove_reference&lt;T&gt;::type&gt;::type)
+<span class="lineNum">     208 </span>            : //  make_rv_ref(T const&amp;v)  BOOST_NOEXCEPT
+<span class="lineNum">     209 </span>            : //  {
+<span class="lineNum">     210 </span>            : //    return (const BOOST_THREAD_RV_REF(typename ::boost::remove_cv&lt;typename ::boost::remove_reference&lt;T&gt;::type&gt;::type))(v);
+<span class="lineNum">     211 </span>            : //  }
+<span class="lineNum">     212 </span>            : }
+<span class="lineNum">     213 </span>            : }
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            : #define BOOST_THREAD_MAKE_RV_REF(RVALUE) RVALUE.move()
+<span class="lineNum">     216 </span>            : //#define BOOST_THREAD_MAKE_RV_REF(RVALUE) boost::detail::make_rv_ref(RVALUE)
+<span class="lineNum">     217 </span>            : #endif
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            : #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            : #define BOOST_THREAD_MOVABLE(TYPE)
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            : #define BOOST_THREAD_COPYABLE(TYPE)
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            : #else
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            : #if defined BOOST_THREAD_USES_MOVE
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            : #define BOOST_THREAD_MOVABLE(TYPE) \
+<span class="lineNum">     231 </span>            :     ::boost::rv&lt;TYPE&gt;&amp; move()  BOOST_NOEXCEPT \
+<span class="lineNum">     232 </span>            :     { \
+<span class="lineNum">     233 </span>            :       return *static_cast&lt; ::boost::rv&lt;TYPE&gt;* &gt;(this); \
+<span class="lineNum">     234 </span>            :     } \
+<span class="lineNum">     235 </span>            :     const ::boost::rv&lt;TYPE&gt;&amp; move() const BOOST_NOEXCEPT \
+<span class="lineNum">     236 </span>            :     { \
+<span class="lineNum">     237 </span>            :       return *static_cast&lt;const ::boost::rv&lt;TYPE&gt;* &gt;(this); \
+<span class="lineNum">     238 </span>            :     } \
+<span class="lineNum">     239 </span>            :     operator ::boost::rv&lt;TYPE&gt;&amp;() \
+<span class="lineNum">     240 </span>            :     { \
+<span class="lineNum">     241 </span>            :       return *static_cast&lt; ::boost::rv&lt;TYPE&gt;* &gt;(this); \
+<span class="lineNum">     242 </span>            :     } \
+<span class="lineNum">     243 </span>            :     operator const ::boost::rv&lt;TYPE&gt;&amp;() const \
+<span class="lineNum">     244 </span>            :     { \
+<span class="lineNum">     245 </span>            :       return *static_cast&lt;const ::boost::rv&lt;TYPE&gt;* &gt;(this); \
+<span class="lineNum">     246 </span>            :     }\
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            : #define BOOST_THREAD_COPYABLE(TYPE) \
+<span class="lineNum">     249 </span>            :   TYPE&amp; operator=(TYPE &amp;t)\
+<span class="lineNum">     250 </span>            :   {  this-&gt;operator=(static_cast&lt;const ::boost::rv&lt;TYPE&gt; &amp;&gt;(const_cast&lt;const TYPE &amp;&gt;(t))); return *this;}
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span>            : #else
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            : #define BOOST_THREAD_MOVABLE(TYPE) \
+<span class="lineNum">     256 </span>            :     operator ::boost::detail::thread_move_t&lt;TYPE&gt;() BOOST_NOEXCEPT \
+<span class="lineNum">     257 </span>            :     { \
+<span class="lineNum">     258 </span>            :         return move(); \
+<span class="lineNum">     259 </span>            :     } \
+<span class="lineNum">     260 </span>            :     ::boost::detail::thread_move_t&lt;TYPE&gt; move() BOOST_NOEXCEPT \
+<span class="lineNum">     261 </span>            :     { \
+<span class="lineNum">     262 </span>            :       ::boost::detail::thread_move_t&lt;TYPE&gt; x(*this); \
+<span class="lineNum">     263 </span>            :         return x; \
+<span class="lineNum">     264 </span>            :     } \
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            : #define BOOST_THREAD_COPYABLE(TYPE)
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            : #endif
+<span class="lineNum">     269 </span>            : #endif
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            : #define BOOST_THREAD_MOVABLE_ONLY(TYPE) \
+<span class="lineNum">     272 </span>            :   BOOST_THREAD_NO_COPYABLE(TYPE) \
+<span class="lineNum">     273 </span>            :   BOOST_THREAD_MOVABLE(TYPE) \
+<span class="lineNum">     274 </span>            :   typedef int boost_move_no_copy_constructor_or_assign; \
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            : #define BOOST_THREAD_COPYABLE_AND_MOVABLE(TYPE) \
+<span class="lineNum">     278 </span>            :     BOOST_THREAD_COPYABLE(TYPE) \
+<span class="lineNum">     279 </span>            :     BOOST_THREAD_MOVABLE(TYPE) \
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span>            : namespace boost
+<span class="lineNum">     284 </span>            : {
+<span class="lineNum">     285 </span>            :   namespace thread_detail
+<span class="lineNum">     286 </span>            :   {
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            : #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">     289 </span>            : #elif defined BOOST_THREAD_USES_MOVE
+<span class="lineNum">     290 </span>            :     template &lt;class T&gt;
+<span class="lineNum">     291 </span>            :     struct is_rv
+<span class="lineNum">     292 </span>            :        : ::boost::move_detail::is_rv&lt;T&gt;
+<span class="lineNum">     293 </span>            :     {};
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span>            : #else
+<span class="lineNum">     296 </span>            :     template &lt;class T&gt;
+<span class="lineNum">     297 </span>            :     struct is_rv
+<span class="lineNum">     298 </span>            :        : ::boost::integral_constant&lt;bool, false&gt;
+<span class="lineNum">     299 </span>            :     {};
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span>            :     template &lt;class T&gt;
+<span class="lineNum">     302 </span>            :     struct is_rv&lt; ::boost::detail::thread_move_t&lt;T&gt; &gt;
+<span class="lineNum">     303 </span>            :        : ::boost::integral_constant&lt;bool, true&gt;
+<span class="lineNum">     304 </span>            :     {};
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span>            :     template &lt;class T&gt;
+<span class="lineNum">     307 </span>            :     struct is_rv&lt; const ::boost::detail::thread_move_t&lt;T&gt; &gt;
+<span class="lineNum">     308 </span>            :        : ::boost::integral_constant&lt;bool, true&gt;
+<span class="lineNum">     309 </span>            :     {};
+<span class="lineNum">     310 </span>            : #endif
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span>            : #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">     313 </span>            :     template &lt;class Tp&gt;
+<span class="lineNum">     314 </span>            :     struct remove_reference : boost::remove_reference&lt;Tp&gt; {};
+<span class="lineNum">     315 </span>            :     template &lt;class Tp&gt;
+<span class="lineNum">     316 </span>            :     struct  decay : boost::decay&lt;Tp&gt; {};
+<span class="lineNum">     317 </span>            : #else
+<span class="lineNum">     318 </span>            :   template &lt;class Tp&gt;
+<span class="lineNum">     319 </span>            :   struct remove_reference
+<span class="lineNum">     320 </span>            :   {
+<span class="lineNum">     321 </span>            :     typedef Tp type;
+<span class="lineNum">     322 </span>            :   };
+<span class="lineNum">     323 </span>            :   template &lt;class Tp&gt;
+<span class="lineNum">     324 </span>            :   struct remove_reference&lt;Tp&amp;&gt;
+<span class="lineNum">     325 </span>            :   {
+<span class="lineNum">     326 </span>            :     typedef Tp type;
+<span class="lineNum">     327 </span>            :   };
+<span class="lineNum">     328 </span>            :   template &lt;class Tp&gt;
+<span class="lineNum">     329 </span>            :   struct remove_reference&lt; rv&lt;Tp&gt; &gt; {
+<span class="lineNum">     330 </span>            :     typedef Tp type;
+<span class="lineNum">     331 </span>            :   };
+<span class="lineNum">     332 </span>            : 
+<span class="lineNum">     333 </span>            :   template &lt;class Tp&gt;
+<span class="lineNum">     334 </span>            :   struct  decay
+<span class="lineNum">     335 </span>            :   {
+<span class="lineNum">     336 </span>            :   private:
+<span class="lineNum">     337 </span>            :     typedef typename boost::move_detail::remove_rvalue_reference&lt;Tp&gt;::type Up0;
+<span class="lineNum">     338 </span>            :     typedef typename boost::remove_reference&lt;Up0&gt;::type Up;
+<span class="lineNum">     339 </span>            :   public:
+<span class="lineNum">     340 </span>            :       typedef typename conditional
+<span class="lineNum">     341 </span>            :                        &lt;
+<span class="lineNum">     342 </span>            :                            is_array&lt;Up&gt;::value,
+<span class="lineNum">     343 </span>            :                            typename remove_extent&lt;Up&gt;::type*,
+<span class="lineNum">     344 </span>            :                            typename conditional
+<span class="lineNum">     345 </span>            :                            &lt;
+<span class="lineNum">     346 </span>            :                                 is_function&lt;Up&gt;::value,
+<span class="lineNum">     347 </span>            :                                 typename add_pointer&lt;Up&gt;::type,
+<span class="lineNum">     348 </span>            :                                 typename remove_cv&lt;Up&gt;::type
+<span class="lineNum">     349 </span>            :                            &gt;::type
+<span class="lineNum">     350 </span>            :                        &gt;::type type;
+<span class="lineNum">     351 </span>            :   };
+<span class="lineNum">     352 </span>            : #endif
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span>            : #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">     355 </span>            :       template &lt;class T&gt;
+<span class="lineNum">     356 </span>            :       typename decay&lt;T&gt;::type
+<span class="lineNum">     357 </span>            :       decay_copy(T&amp;&amp; t)
+<span class="lineNum">     358 </span>            :       {
+<span class="lineNum">     359 </span><span class="lineCov">         75 :           return boost::forward&lt;T&gt;(t);</span>
+<span class="lineNum">     360 </span>            :       }
+<span class="lineNum">     361 </span>            : #else
+<span class="lineNum">     362 </span>            :   template &lt;class T&gt;
+<span class="lineNum">     363 </span>            :   typename decay&lt;T&gt;::type
+<span class="lineNum">     364 </span>            :   decay_copy(BOOST_THREAD_FWD_REF(T) t)
+<span class="lineNum">     365 </span>            :   {
+<span class="lineNum">     366 </span>            :       return boost::forward&lt;T&gt;(t);
+<span class="lineNum">     367 </span>            :   }
+<span class="lineNum">     368 </span>            : #endif
+<span class="lineNum">     369 </span>            :   }
+<span class="lineNum">     370 </span>            : }
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span>            : #include &lt;boost/config/abi_suffix.hpp&gt;
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

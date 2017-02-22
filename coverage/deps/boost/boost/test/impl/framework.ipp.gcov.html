@@ -1,0 +1,1583 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/impl/framework.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/impl</a> - framework.ipp<span style="font-size: 80%;"> (source / <a href="framework.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">225</td>
+            <td class="headerCovTableEntry">496</td>
+            <td class="headerCovTableEntryLo">45.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">27</td>
+            <td class="headerCovTableEntry">63</td>
+            <td class="headerCovTableEntryLo">42.9 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : implements framework API - main driver for the test
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_FRAMEWORK_IPP_021005GER
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_FRAMEWORK_IPP_021005GER
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/framework.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/execution_monitor.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/test/debug.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/unit_test_parameters.hpp&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/unit_test_log.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/unit_test_log_formatter.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/test/unit_test_monitor.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/test/results_collector.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/test/progress_monitor.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/test/results_reporter.hpp&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : #include &lt;boost/test/tree/observer.hpp&gt;
+<span class="lineNum">      32 </span>            : #include &lt;boost/test/tree/test_unit.hpp&gt;
+<span class="lineNum">      33 </span>            : #include &lt;boost/test/tree/visitor.hpp&gt;
+<span class="lineNum">      34 </span>            : #include &lt;boost/test/tree/traverse.hpp&gt;
+<span class="lineNum">      35 </span>            : #include &lt;boost/test/tree/test_case_counter.hpp&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : #if BOOST_TEST_SUPPORT_TOKEN_ITERATOR
+<span class="lineNum">      38 </span>            : #include &lt;boost/test/utils/iterator/token_iterator.hpp&gt;
+<span class="lineNum">      39 </span>            : #endif
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : #include &lt;boost/test/utils/foreach.hpp&gt;
+<span class="lineNum">      42 </span>            : #include &lt;boost/test/utils/basic_cstring/io.hpp&gt;
+<span class="lineNum">      43 </span>            : #include &lt;boost/test/utils/basic_cstring/compare.hpp&gt;
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : #include &lt;boost/test/detail/global_typedef.hpp&gt;
+<span class="lineNum">      46 </span>            : #include &lt;boost/test/detail/throw_exception.hpp&gt;
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : // Boost
+<span class="lineNum">      49 </span>            : #include &lt;boost/timer.hpp&gt;
+<span class="lineNum">      50 </span>            : #include &lt;boost/bind.hpp&gt;
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : // STL
+<span class="lineNum">      53 </span>            : #include &lt;limits&gt;
+<span class="lineNum">      54 </span>            : #include &lt;map&gt;
+<span class="lineNum">      55 </span>            : #include &lt;set&gt;
+<span class="lineNum">      56 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      57 </span>            : #include &lt;ctime&gt;
+<span class="lineNum">      58 </span>            : #include &lt;numeric&gt;
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : #ifdef BOOST_NO_STDC_NAMESPACE
+<span class="lineNum">      61 </span>            : namespace std { using ::time; using ::srand; }
+<span class="lineNum">      62 </span>            : #endif
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : namespace boost {
+<span class="lineNum">      69 </span>            : namespace unit_test {
+<span class="lineNum">      70 </span>            : namespace framework {
+<span class="lineNum">      71 </span>            : namespace impl {
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : // ************************************************************************** //
+<span class="lineNum">      74 </span>            : // **************            order detection helpers           ************** //
+<span class="lineNum">      75 </span>            : // ************************************************************************** //
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">        732 : struct order_info {</span>
+<span class="lineNum">      78 </span><span class="lineCov">        732 :     order_info() : depth(-1) {}</span>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            :     int                         depth;
+<span class="lineNum">      81 </span>            :     std::vector&lt;test_unit_id&gt;   dependant_siblings;
+<span class="lineNum">      82 </span>            : };
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : typedef std::set&lt;test_unit_id&gt; tu_id_set;
+<span class="lineNum">      85 </span>            : typedef std::map&lt;test_unit_id,order_info&gt; order_info_per_tu; // !! ?? unordered map
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : static test_unit_id
+<span class="lineNum">      90 </span>            : get_tu_parent( test_unit_id tu_id )
+<span class="lineNum">      91 </span>            : {
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :     return framework::get( tu_id, TUT_ANY ).p_parent_id;</span>
+<span class="lineNum">      93 </span>            : }
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : //____________________________________________________________________________//
+<a name="96"><span class="lineNum">      96 </span>            : </a>
+<span class="lineNum">      97 </span>            : static int
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 : tu_depth( test_unit_id tu_id, test_unit_id master_tu_id, order_info_per_tu&amp; tuoi )</span>
+<span class="lineNum">      99 </span>            : {
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :     if( tu_id == master_tu_id )</span>
+<span class="lineNum">     101 </span>            :         return 0;
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :     order_info&amp; info = tuoi[tu_id];</span>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :     if( info.depth == -1 )</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :         info.depth = tu_depth( get_tu_parent( tu_id ), master_tu_id, tuoi ) + 1;</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :     return info.depth;</span>
+<span class="lineNum">     109 </span>            : }
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            : //____________________________________________________________________________//
+<a name="112"><span class="lineNum">     112 </span>            : </a>
+<span class="lineNum">     113 </span>            : static void
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 : collect_dependant_siblings( test_unit_id from, test_unit_id to, test_unit_id master_tu_id, order_info_per_tu&amp; tuoi )</span>
+<span class="lineNum">     115 </span>            : {
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :     int from_depth  = tu_depth( from, master_tu_id, tuoi );</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :     int to_depth    = tu_depth( to, master_tu_id, tuoi );</span>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :     while(from_depth &gt; to_depth) {</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :         from = get_tu_parent( from );</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :         --from_depth;</span>
+<span class="lineNum">     122 </span>            :     }
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :     while(from_depth &lt; to_depth) {</span>
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :         to = get_tu_parent( to );</span>
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :         --to_depth;</span>
+<span class="lineNum">     127 </span>            :     }
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :     while(true) {</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :         test_unit_id from_parent = get_tu_parent( from );</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :         test_unit_id to_parent = get_tu_parent( to );</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :         if( from_parent == to_parent )</span>
+<span class="lineNum">     133 </span>            :             break;
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :         from = from_parent;</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :         to   = to_parent;</span>
+<span class="lineNum">     136 </span>            :     }
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :     tuoi[from].dependant_siblings.push_back( to );</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            : //____________________________________________________________________________//
+<a name="142"><span class="lineNum">     142 </span>            : </a>
+<span class="lineNum">     143 </span>            : static counter_t
+<span class="lineNum">     144 </span><span class="lineCov">        366 : assign_sibling_rank( test_unit_id tu_id, order_info_per_tu&amp; tuoi )</span>
+<span class="lineNum">     145 </span>            : {
+<span class="lineNum">     146 </span><span class="lineCov">        366 :     test_unit&amp; tu = framework::get( tu_id, TUT_ANY );</span>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineCov">        732 :     BOOST_TEST_SETUP_ASSERT( tu.p_sibling_rank != (std::numeric_limits&lt;counter_t&gt;::max)(),</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :                              &quot;Cyclic dependency detected involving test unit \&quot;&quot; + tu.full_name() + &quot;\&quot;&quot; );</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineCov">        366 :     if( tu.p_sibling_rank != 0 )</span>
+<span class="lineNum">     152 </span>            :         return tu.p_sibling_rank;
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span><span class="lineCov">        366 :     order_info const&amp; info = tuoi[tu_id];</span>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :     // indicate in progress
+<span class="lineNum">     157 </span><span class="lineCov">        366 :     tu.p_sibling_rank.value = (std::numeric_limits&lt;counter_t&gt;::max)();</span>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineCov">        366 :     counter_t new_rank = 1;</span>
+<span class="lineNum">     160 </span><span class="lineCov">       2562 :     BOOST_TEST_FOREACH( test_unit_id, sibling_id, info.dependant_siblings )</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :         new_rank = (std::max)(new_rank, assign_sibling_rank( sibling_id, tuoi ) + 1);</span>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span><span class="lineCov">        366 :     return tu.p_sibling_rank.value = new_rank;</span>
+<span class="lineNum">     164 </span>            : }
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : // ************************************************************************** //
+<span class="lineNum">     169 </span>            : // **************            test_init call wrapper            ************** //
+<span class="lineNum">     170 </span>            : // ************************************************************************** //
+<a name="171"><span class="lineNum">     171 </span>            : </a>
+<span class="lineNum">     172 </span>            : static void
+<span class="lineNum">     173 </span><span class="lineCov">          1 : invoke_init_func( init_unit_test_func init_func )</span>
+<span class="lineNum">     174 </span>            : {
+<span class="lineNum">     175 </span>            : #ifdef BOOST_TEST_ALTERNATIVE_INIT_API
+<span class="lineNum">     176 </span>            :     BOOST_TEST_I_ASSRT( (*init_func)(), std::runtime_error( &quot;test module initialization failed&quot; ) );
+<span class="lineNum">     177 </span>            : #else
+<span class="lineNum">     178 </span><span class="lineCov">          1 :     test_suite*  manual_test_units = (*init_func)( framework::master_test_suite().argc, framework::master_test_suite().argv );</span>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">          1 :     if( manual_test_units )</span>
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :         framework::master_test_suite().add( manual_test_units );</span>
+<span class="lineNum">     182 </span>            : #endif
+<span class="lineNum">     183 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            : // ************************************************************************** //
+<span class="lineNum">     186 </span>            : // **************                  name_filter                 ************** //
+<a name="187"><span class="lineNum">     187 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">     188 </span>            : 
+<a name="189"><span class="lineNum">     189 </span><span class="lineNoCov">          0 : class name_filter : public test_tree_visitor {</span></a>
+<span class="lineNum">     190 </span>            :     struct component {
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :         component( const_string name ) // has to be implicit</span>
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :         {</span>
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :             if( name == &quot;*&quot; )</span>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :                 m_kind  = SFK_ALL;</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :             else if( first_char( name ) == '*' &amp;&amp; last_char( name ) == '*' ) {</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :                 m_kind  = SFK_SUBSTR;</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :                 m_name  = name.substr( 1, name.size()-1 );</span>
+<span class="lineNum">     198 </span>            :             }
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :             else if( first_char( name ) == '*' ) {</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :                 m_kind  = SFK_TRAILING;</span>
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :                 m_name  = name.substr( 1 );</span>
+<span class="lineNum">     202 </span>            :             }
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :             else if( last_char( name ) == '*' ) {</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :                 m_kind  = SFK_LEADING;</span>
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :                 m_name  = name.substr( 0, name.size()-1 );</span>
+<span class="lineNum">     206 </span>            :             }
+<span class="lineNum">     207 </span>            :             else {
+<span class="lineNum">     208 </span><span class="lineNoCov">          0 :                 m_kind  = SFK_MATCH;</span>
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 :                 m_name  = name;</span>
+<span class="lineNum">     210 </span>            :             }
+<a name="211"><span class="lineNum">     211 </span><span class="lineNoCov">          0 :         }</span></a>
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :         bool            pass( test_unit const&amp; tu ) const</span>
+<span class="lineNum">     214 </span>            :         {
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :             const_string name( tu.p_name );</span>
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :             switch( m_kind ) {</span>
+<span class="lineNum">     218 </span>            :             default:
+<span class="lineNum">     219 </span>            :             case SFK_ALL:
+<span class="lineNum">     220 </span>            :                 return true;
+<span class="lineNum">     221 </span>            :             case SFK_LEADING:
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :                 return name.substr( 0, m_name.size() ) == m_name;</span>
+<span class="lineNum">     223 </span>            :             case SFK_TRAILING:
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :                 return name.size() &gt;= m_name.size() &amp;&amp; name.substr( name.size() - m_name.size() ) == m_name;</span>
+<span class="lineNum">     225 </span>            :             case SFK_SUBSTR:
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :                 return name.find( m_name ) != const_string::npos;</span>
+<span class="lineNum">     227 </span>            :             case SFK_MATCH:
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :                 return m_name == tu.p_name.get();</span>
+<span class="lineNum">     229 </span>            :             }
+<span class="lineNum">     230 </span>            :         }
+<span class="lineNum">     231 </span>            :         enum kind { SFK_ALL, SFK_LEADING, SFK_TRAILING, SFK_SUBSTR, SFK_MATCH };
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            :         kind            m_kind;
+<span class="lineNum">     234 </span>            :         const_string    m_name;
+<span class="lineNum">     235 </span>            :     };
+<span class="lineNum">     236 </span>            : 
+<a name="237"><span class="lineNum">     237 </span>            : public:</a>
+<span class="lineNum">     238 </span>            :     // Constructor
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :     name_filter( test_unit_id_list&amp; targ_list, const_string filter_expr ) : m_targ_list( targ_list ), m_depth( 0 )</span>
+<span class="lineNum">     240 </span>            :     {
+<span class="lineNum">     241 </span>            : #ifdef BOOST_TEST_SUPPORT_TOKEN_ITERATOR
+<span class="lineNum">     242 </span>            :         utils::string_token_iterator tit( filter_expr, (utils::dropped_delimeters = &quot;/&quot;,
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :                                                         utils::kept_delimeters = utils::dt_none) );</span>
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :         while( tit != utils::string_token_iterator() ) {</span>
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :             m_components.push_back(</span>
+<span class="lineNum">     247 </span>            :                 std::vector&lt;component&gt;( utils::string_token_iterator( *tit, (utils::dropped_delimeters = &quot;,&quot;,
+<span class="lineNum">     248 </span>            :                                                                              utils::kept_delimeters = utils::dt_none) ),
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :                                         utils::string_token_iterator() ) );</span>
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            :             ++tit;
+<span class="lineNum">     252 </span>            :         }
+<span class="lineNum">     253 </span>            : #endif
+<span class="lineNum">     254 </span><span class="lineNoCov">          0 :     }</span>
+<a name="255"><span class="lineNum">     255 </span>            : </a>
+<span class="lineNum">     256 </span>            : private:
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :     bool            filter_unit( test_unit const&amp; tu )</span>
+<span class="lineNum">     258 </span>            :     {
+<span class="lineNum">     259 </span>            :         // skip master test suite
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :         if( m_depth == 0 )</span>
+<span class="lineNum">     261 </span>            :             return true;
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            :         // corresponding name filters are at level m_depth-1
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :         std::vector&lt;component&gt; const&amp; filters = m_components[m_depth-1];</span>
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            :         // look for match
+<span class="lineNum">     267 </span>            :         using namespace boost::placeholders;
+<span class="lineNum">     268 </span><span class="lineNoCov">          0 :         return std::find_if( filters.begin(), filters.end(), bind( &amp;component::pass, _1, boost::ref(tu) ) ) != filters.end();</span>
+<span class="lineNum">     269 </span>            :     }
+<a name="270"><span class="lineNum">     270 </span>            : </a>
+<span class="lineNum">     271 </span>            :     // test_tree_visitor interface
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :     virtual void    visit( test_case const&amp; tc )</span>
+<span class="lineNum">     273 </span>            :     {
+<span class="lineNum">     274 </span>            :         // make sure we only accept test cases if we match last component of the filter
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 :         if( m_depth == m_components.size() &amp;&amp; filter_unit( tc ) )</span>
+<a name="276"><span class="lineNum">     276 </span><span class="lineNoCov">          0 :             m_targ_list.push_back( tc.p_id ); // found a test case</span></a>
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :     virtual bool    test_suite_start( test_suite const&amp; ts )</span>
+<span class="lineNum">     279 </span>            :     {
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 :         if( !filter_unit( ts ) )</span>
+<span class="lineNum">     281 </span>            :             return false;
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :         if( m_depth &lt; m_components.size() ) {</span>
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :             ++m_depth;</span>
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :             return true;</span>
+<span class="lineNum">     286 </span>            :         }
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :         m_targ_list.push_back( ts.p_id ); // found a test suite</span>
+<span class="lineNum">     289 </span>            : 
+<a name="290"><span class="lineNum">     290 </span><span class="lineNoCov">          0 :         return false;</span></a>
+<span class="lineNum">     291 </span>            :     }
+<span class="lineNum">     292 </span><span class="lineNoCov">          0 :     virtual void    test_suite_finish( test_suite const&amp; /*ts*/ )</span>
+<span class="lineNum">     293 </span>            :     {
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 :         --m_depth;</span>
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            :     // Data members
+<span class="lineNum">     298 </span>            :     typedef std::vector&lt;std::vector&lt;component&gt; &gt; components_per_level;
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            :     components_per_level    m_components;
+<span class="lineNum">     301 </span>            :     test_unit_id_list&amp;      m_targ_list;
+<span class="lineNum">     302 </span>            :     unsigned                m_depth;
+<span class="lineNum">     303 </span>            : };
+<span class="lineNum">     304 </span>            : 
+<span class="lineNum">     305 </span>            : // ************************************************************************** //
+<span class="lineNum">     306 </span>            : // **************                 label_filter                 ************** //
+<a name="307"><span class="lineNum">     307 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span><span class="lineNoCov">          0 : class label_filter : public test_tree_visitor {</span>
+<span class="lineNum">     310 </span>            : public:
+<span class="lineNum">     311 </span>            :     label_filter( test_unit_id_list&amp; targ_list, const_string label )
+<span class="lineNum">     312 </span>            :     : m_targ_list( targ_list )
+<span class="lineNum">     313 </span><span class="lineNoCov">          0 :     , m_label( label )</span>
+<span class="lineNum">     314 </span>            :     {}
+<span class="lineNum">     315 </span>            : 
+<a name="316"><span class="lineNum">     316 </span>            : private:</a>
+<span class="lineNum">     317 </span>            :     // test_tree_visitor interface
+<span class="lineNum">     318 </span><span class="lineNoCov">          0 :     virtual bool    visit( test_unit const&amp; tu )</span>
+<span class="lineNum">     319 </span>            :     {
+<span class="lineNum">     320 </span><span class="lineNoCov">          0 :         if( tu.has_label( m_label ) ) {</span>
+<span class="lineNum">     321 </span>            :             // found a test unit; add it to list of tu to enable with children and stop recursion in case of suites
+<span class="lineNum">     322 </span><span class="lineNoCov">          0 :             m_targ_list.push_back( tu.p_id );</span>
+<span class="lineNum">     323 </span><span class="lineNoCov">          0 :             return false;</span>
+<span class="lineNum">     324 </span>            :         }
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span>            :         return true;
+<span class="lineNum">     327 </span>            :     }
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span>            :     // Data members
+<span class="lineNum">     330 </span>            :     test_unit_id_list&amp;  m_targ_list;
+<span class="lineNum">     331 </span>            :     const_string        m_label;
+<span class="lineNum">     332 </span>            : };
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span>            : // ************************************************************************** //
+<span class="lineNum">     335 </span>            : // **************                set_run_status                ************** //
+<a name="336"><span class="lineNum">     336 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span><span class="lineCov">          2 : class set_run_status : public test_tree_visitor {</span>
+<span class="lineNum">     339 </span>            : public:
+<span class="lineNum">     340 </span>            :     explicit set_run_status( test_unit::run_status rs, test_unit_id_list* dep_collector = 0 )
+<span class="lineNum">     341 </span>            :     : m_new_status( rs )
+<span class="lineNum">     342 </span><span class="lineCov">          2 :     , m_dep_collector( dep_collector )</span>
+<span class="lineNum">     343 </span>            :     {}
+<span class="lineNum">     344 </span>            : 
+<a name="345"><span class="lineNum">     345 </span>            : private:</a>
+<span class="lineNum">     346 </span>            :     // test_tree_visitor interface
+<span class="lineNum">     347 </span><span class="lineCov">        367 :     virtual bool    visit( test_unit const&amp; tu )</span>
+<span class="lineNum">     348 </span>            :     {
+<span class="lineNum">     349 </span><span class="lineCov">        367 :         const_cast&lt;test_unit&amp;&gt;(tu).p_run_status.value = m_new_status == test_unit::RS_INVALID ? tu.p_default_status : m_new_status;</span>
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span><span class="lineCov">        367 :         if( m_dep_collector ) {</span>
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :             BOOST_TEST_FOREACH( test_unit_id, dep_id, tu.p_dependencies.get() ) {</span>
+<span class="lineNum">     353 </span><span class="lineNoCov">          0 :                 test_unit const&amp; dep = framework::get( dep_id, TUT_ANY );</span>
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span><span class="lineNoCov">          0 :                 if( dep.p_run_status == tu.p_run_status )</span>
+<span class="lineNum">     356 </span>            :                     continue;
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :                 BOOST_TEST_FRAMEWORK_MESSAGE( &quot;Including test &quot; &lt;&lt; dep.p_type_name &lt;&lt; ' ' &lt;&lt; dep.full_name() &lt;&lt;</span>
+<span class="lineNum">     359 </span><span class="lineNoCov">          0 :                                               &quot; as a dependency of test &quot; &lt;&lt; tu.p_type_name &lt;&lt; ' ' &lt;&lt; tu.full_name() );</span>
+<span class="lineNum">     360 </span>            : 
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :                 m_dep_collector-&gt;push_back( dep_id );</span>
+<span class="lineNum">     362 </span>            :             }
+<span class="lineNum">     363 </span>            :         }
+<span class="lineNum">     364 </span><span class="lineCov">        367 :         return true;</span>
+<span class="lineNum">     365 </span>            :     }
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span>            :     // Data members
+<span class="lineNum">     368 </span>            :     test_unit::run_status   m_new_status;
+<span class="lineNum">     369 </span>            :     test_unit_id_list*      m_dep_collector;
+<span class="lineNum">     370 </span>            : };
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span>            : // ************************************************************************** //
+<span class="lineNum">     373 </span>            : // **************                 parse_filters                ************** //
+<span class="lineNum">     374 </span>            : // ************************************************************************** //
+<a name="375"><span class="lineNum">     375 </span>            : </a>
+<span class="lineNum">     376 </span>            : static void
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 : add_filtered_test_units( test_unit_id master_tu_id, const_string filter, test_unit_id_list&amp; targ )</span>
+<span class="lineNum">     378 </span>            : {
+<span class="lineNum">     379 </span>            :     // Choose between two kinds of filters
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 :     if( filter[0] == '@' ) {</span>
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 :         filter.trim_left( 1 );</span>
+<span class="lineNum">     382 </span><span class="lineNoCov">          0 :         label_filter lf( targ, filter );</span>
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 :         traverse_test_tree( master_tu_id, lf, true );</span>
+<span class="lineNum">     384 </span>            :     }
+<span class="lineNum">     385 </span>            :     else {
+<span class="lineNum">     386 </span><span class="lineNoCov">          0 :         name_filter nf( targ, filter );</span>
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 :         traverse_test_tree( master_tu_id, nf, true );</span>
+<span class="lineNum">     388 </span>            :     }
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span>            : //____________________________________________________________________________//
+<a name="392"><span class="lineNum">     392 </span>            : </a>
+<span class="lineNum">     393 </span>            : static bool
+<span class="lineNum">     394 </span><span class="lineNoCov">          0 : parse_filters( test_unit_id master_tu_id, test_unit_id_list&amp; tu_to_enable, test_unit_id_list&amp; tu_to_disable )</span>
+<span class="lineNum">     395 </span>            : {
+<span class="lineNum">     396 </span>            :     // 10. collect tu to enable and disable based on filters
+<span class="lineNum">     397 </span><span class="lineNoCov">          0 :     bool had_selector_filter = false;</span>
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span><span class="lineNoCov">          0 :     std::vector&lt;std::string&gt; const&amp; filters = runtime_config::get&lt;std::vector&lt;std::string&gt; &gt;( runtime_config::RUN_FILTERS );</span>
+<span class="lineNum">     400 </span>            : 
+<span class="lineNum">     401 </span><span class="lineNoCov">          0 :     BOOST_TEST_FOREACH( const_string, filter, filters ) {</span>
+<span class="lineNum">     402 </span><span class="lineNoCov">          0 :         BOOST_TEST_SETUP_ASSERT( !filter.is_empty(), &quot;Invalid filter specification&quot; );</span>
+<span class="lineNum">     403 </span>            : 
+<span class="lineNum">     404 </span>            :         // each --run_test command may also be separated by a ':' (environment variable)
+<span class="lineNum">     405 </span>            :         utils::string_token_iterator t_filter_it( filter, (utils::dropped_delimeters = &quot;:&quot;,
+<span class="lineNum">     406 </span><span class="lineNoCov">          0 :                                                            utils::kept_delimeters = utils::dt_none) );</span>
+<span class="lineNum">     407 </span>            : 
+<span class="lineNum">     408 </span><span class="lineNoCov">          0 :         while( t_filter_it != utils::string_token_iterator() ) {</span>
+<span class="lineNum">     409 </span><span class="lineNoCov">          0 :             const_string filter_token = *t_filter_it;</span>
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span><span class="lineNoCov">          0 :             enum { SELECTOR, ENABLER, DISABLER } filter_type = SELECTOR;</span>
+<span class="lineNum">     412 </span>            : 
+<span class="lineNum">     413 </span>            :             // 11. Deduce filter type
+<span class="lineNum">     414 </span><span class="lineNoCov">          0 :             if( filter_token[0] == '!' || filter_token[0] == '+' ) {</span>
+<span class="lineNum">     415 </span><span class="lineNoCov">          0 :                 filter_type = filter_token[0] == '+' ? ENABLER : DISABLER;</span>
+<span class="lineNum">     416 </span><span class="lineNoCov">          0 :                 filter_token.trim_left( 1 );</span>
+<span class="lineNum">     417 </span><span class="lineNoCov">          0 :                 BOOST_TEST_SETUP_ASSERT( !filter_token.is_empty(), &quot;Invalid filter specification&quot; );</span>
+<span class="lineNum">     418 </span>            :             }
+<span class="lineNum">     419 </span>            : 
+<span class="lineNum">     420 </span><span class="lineNoCov">          0 :             had_selector_filter |= filter_type == SELECTOR;</span>
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span>            :             // 12. Add test units to corresponding list
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 :             switch( filter_type ) {</span>
+<span class="lineNum">     424 </span>            :             case SELECTOR:
+<span class="lineNum">     425 </span><span class="lineNoCov">          0 :             case ENABLER:  add_filtered_test_units( master_tu_id, filter_token, tu_to_enable ); break;</span>
+<span class="lineNum">     426 </span><span class="lineNoCov">          0 :             case DISABLER: add_filtered_test_units( master_tu_id, filter_token, tu_to_disable ); break;</span>
+<span class="lineNum">     427 </span>            :             }
+<span class="lineNum">     428 </span>            : 
+<span class="lineNum">     429 </span><span class="lineNoCov">          0 :             ++t_filter_it;</span>
+<span class="lineNum">     430 </span>            :         }
+<span class="lineNum">     431 </span>            :     }
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span><span class="lineNoCov">          0 :     return had_selector_filter;</span>
+<span class="lineNum">     434 </span>            : }
+<span class="lineNum">     435 </span>            : 
+<span class="lineNum">     436 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     437 </span>            : 
+<span class="lineNum">     438 </span>            : } // namespace impl
+<span class="lineNum">     439 </span>            : 
+<span class="lineNum">     440 </span>            : // ************************************************************************** //
+<span class="lineNum">     441 </span>            : // **************               framework::state               ************** //
+<span class="lineNum">     442 </span>            : // ************************************************************************** //
+<span class="lineNum">     443 </span>            : 
+<span class="lineNum">     444 </span>            : unsigned const TIMEOUT_EXCEEDED = static_cast&lt;unsigned&gt;( -1 );
+<span class="lineNum">     445 </span>            : 
+<a name="446"><span class="lineNum">     446 </span>            : class state {</a>
+<span class="lineNum">     447 </span>            : public:
+<span class="lineNum">     448 </span><span class="lineCov">          1 :     state()</span>
+<span class="lineNum">     449 </span>            :     : m_curr_test_case( INV_TEST_UNIT_ID )
+<span class="lineNum">     450 </span>            :     , m_next_test_case_id( MIN_TEST_CASE_ID )
+<span class="lineNum">     451 </span>            :     , m_next_test_suite_id( MIN_TEST_SUITE_ID )
+<span class="lineNum">     452 </span>            :     , m_test_in_progress( false )
+<span class="lineNum">     453 </span>            :     , m_context_idx( 0 )
+<span class="lineNum">     454 </span>            :     , m_log_sinks( )
+<span class="lineNum">     455 </span><span class="lineCov">          8 :     , m_report_sink( std::cerr )</span>
+<span class="lineNum">     456 </span>            :     {
+<a name="457"><span class="lineNum">     457 </span><span class="lineCov">          1 :     }</span></a>
+<span class="lineNum">     458 </span>            : 
+<a name="459"><span class="lineNum">     459 </span><span class="lineCov">          6 :     ~state() { clear(); }</span></a>
+<span class="lineNum">     460 </span>            : 
+<span class="lineNum">     461 </span><span class="lineCov">          1 :     void            clear()</span>
+<span class="lineNum">     462 </span>            :     {
+<span class="lineNum">     463 </span><span class="lineCov">        736 :         while( !m_test_units.empty() ) {</span>
+<span class="lineNum">     464 </span><span class="lineCov">       1101 :             test_unit_store::value_type const&amp; tu     = *m_test_units.begin();</span>
+<span class="lineNum">     465 </span><span class="lineCov">        367 :             test_unit const*                   tu_ptr = tu.second;</span>
+<span class="lineNum">     466 </span>            : 
+<span class="lineNum">     467 </span>            :             // the delete will erase this element from map
+<span class="lineNum">     468 </span><span class="lineCov">        734 :             if( ut_detail::test_id_2_unit_type( tu.second-&gt;p_id ) == TUT_SUITE )</span>
+<span class="lineNum">     469 </span><span class="lineCov">         55 :                 delete static_cast&lt;test_suite const*&gt;(tu_ptr);</span>
+<span class="lineNum">     470 </span>            :             else
+<span class="lineNum">     471 </span><span class="lineCov">        312 :                 delete static_cast&lt;test_case const*&gt;(tu_ptr);</span>
+<span class="lineNum">     472 </span>            :         }
+<span class="lineNum">     473 </span><span class="lineCov">          1 :     }</span>
+<span class="lineNum">     474 </span>            : 
+<span class="lineNum">     475 </span><span class="lineCov">        367 :     void            set_tu_id( test_unit&amp; tu, test_unit_id id ) { tu.p_id.value = id; }</span>
+<span class="lineNum">     476 </span>            : 
+<span class="lineNum">     477 </span>            :     //////////////////////////////////////////////////////////////////
+<a name="478"><span class="lineNum">     478 </span>            : </a>
+<span class="lineNum">     479 </span>            :     // Validates the dependency graph and deduces the sibling dependency rank for each child
+<span class="lineNum">     480 </span><span class="lineCov">        367 :     void       deduce_siblings_order( test_unit_id tu_id, test_unit_id master_tu_id, impl::order_info_per_tu&amp; tuoi )</span>
+<span class="lineNum">     481 </span>            :     {
+<span class="lineNum">     482 </span><span class="lineCov">        367 :         test_unit&amp; tu = framework::get( tu_id, TUT_ANY );</span>
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span>            :         // collect all sibling dependancy from tu own list
+<span class="lineNum">     485 </span><span class="lineCov">       2569 :         BOOST_TEST_FOREACH( test_unit_id, dep_id, tu.p_dependencies.get() )</span>
+<span class="lineNum">     486 </span><span class="lineNoCov">          0 :             collect_dependant_siblings( tu_id, dep_id, master_tu_id, tuoi );</span>
+<span class="lineNum">     487 </span>            : 
+<span class="lineNum">     488 </span><span class="lineCov">        367 :         if( tu.p_type != TUT_SUITE )</span>
+<span class="lineNum">     489 </span>            :             return;
+<span class="lineNum">     490 </span>            : 
+<span class="lineNum">     491 </span><span class="lineCov">         55 :         test_suite&amp; ts = static_cast&lt;test_suite&amp;&gt;(tu);</span>
+<span class="lineNum">     492 </span>            : 
+<span class="lineNum">     493 </span>            :         // recursive call to children first
+<span class="lineNum">     494 </span><span class="lineCov">       2581 :         BOOST_TEST_FOREACH( test_unit_id, chld_id, ts.m_children )</span>
+<span class="lineNum">     495 </span><span class="lineCov">        366 :             deduce_siblings_order( chld_id, master_tu_id, tuoi );</span>
+<span class="lineNum">     496 </span>            : 
+<span class="lineNum">     497 </span><span class="lineCov">        110 :         ts.m_ranked_children.clear();</span>
+<span class="lineNum">     498 </span><span class="lineCov">       2581 :         BOOST_TEST_FOREACH( test_unit_id, chld_id, ts.m_children ) {</span>
+<span class="lineNum">     499 </span><span class="lineCov">        366 :             counter_t rank = assign_sibling_rank( chld_id, tuoi );</span>
+<span class="lineNum">     500 </span><span class="lineCov">       1098 :             ts.m_ranked_children.insert( std::make_pair( rank, chld_id ) );</span>
+<span class="lineNum">     501 </span>            :         }
+<span class="lineNum">     502 </span>            :     }
+<span class="lineNum">     503 </span>            : 
+<span class="lineNum">     504 </span>            :     //////////////////////////////////////////////////////////////////
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span>            :     // Finalize default run status:
+<a name="507"><span class="lineNum">     507 </span>            :     //  1) inherit run status from parent where applicable</a>
+<span class="lineNum">     508 </span>            :     //  2) if any of test units in test suite enabled enable it as well
+<span class="lineNum">     509 </span><span class="lineCov">        367 :     bool            finalize_default_run_status( test_unit_id tu_id, test_unit::run_status parent_status )</span>
+<span class="lineNum">     510 </span>            :     {
+<span class="lineNum">     511 </span><span class="lineCov">        367 :         test_unit&amp; tu = framework::get( tu_id, TUT_ANY );</span>
+<span class="lineNum">     512 </span>            : 
+<span class="lineNum">     513 </span><span class="lineCov">        734 :         if( tu.p_default_status == test_suite::RS_INHERIT )</span>
+<span class="lineNum">     514 </span><span class="lineCov">        366 :             tu.p_default_status.value = parent_status;</span>
+<span class="lineNum">     515 </span>            : 
+<span class="lineNum">     516 </span>            :         // go through list of children
+<span class="lineNum">     517 </span><span class="lineCov">        367 :         if( tu.p_type == TUT_SUITE ) {</span>
+<span class="lineNum">     518 </span><span class="lineCov">         55 :             bool has_enabled_child = false;</span>
+<span class="lineNum">     519 </span><span class="lineCov">       2581 :             BOOST_TEST_FOREACH( test_unit_id, chld_id, static_cast&lt;test_suite const&amp;&gt;(tu).m_children )</span>
+<span class="lineNum">     520 </span><span class="lineCov">        366 :                 has_enabled_child |= finalize_default_run_status( chld_id, tu.p_default_status );</span>
+<span class="lineNum">     521 </span>            : 
+<span class="lineNum">     522 </span><span class="lineCov">         55 :             tu.p_default_status.value = has_enabled_child ? test_suite::RS_ENABLED : test_suite::RS_DISABLED;</span>
+<span class="lineNum">     523 </span>            :         }
+<span class="lineNum">     524 </span>            : 
+<span class="lineNum">     525 </span><span class="lineCov">        734 :         return tu.p_default_status == test_suite::RS_ENABLED;</span>
+<span class="lineNum">     526 </span>            :     }
+<span class="lineNum">     527 </span>            : 
+<a name="528"><span class="lineNum">     528 </span>            :     //////////////////////////////////////////////////////////////////</a>
+<span class="lineNum">     529 </span>            : 
+<span class="lineNum">     530 </span><span class="lineCov">        367 :     bool            finalize_run_status( test_unit_id tu_id )</span>
+<span class="lineNum">     531 </span>            :     {
+<span class="lineNum">     532 </span><span class="lineCov">        367 :         test_unit&amp; tu = framework::get( tu_id, TUT_ANY );</span>
+<span class="lineNum">     533 </span>            : 
+<span class="lineNum">     534 </span>            :         // go through list of children
+<span class="lineNum">     535 </span><span class="lineCov">        367 :         if( tu.p_type == TUT_SUITE ) {</span>
+<span class="lineNum">     536 </span><span class="lineCov">         55 :             bool has_enabled_child = false;</span>
+<span class="lineNum">     537 </span><span class="lineCov">       2581 :             BOOST_TEST_FOREACH( test_unit_id, chld_id, static_cast&lt;test_suite const&amp;&gt;(tu).m_children)</span>
+<span class="lineNum">     538 </span><span class="lineCov">        366 :                 has_enabled_child |= finalize_run_status( chld_id );</span>
+<span class="lineNum">     539 </span>            : 
+<span class="lineNum">     540 </span><span class="lineCov">         55 :             tu.p_run_status.value = has_enabled_child ? test_suite::RS_ENABLED : test_suite::RS_DISABLED;</span>
+<span class="lineNum">     541 </span>            :         }
+<span class="lineNum">     542 </span>            : 
+<span class="lineNum">     543 </span><span class="lineCov">        367 :         return tu.is_enabled();</span>
+<span class="lineNum">     544 </span>            :     }
+<span class="lineNum">     545 </span>            : 
+<a name="546"><span class="lineNum">     546 </span>            :     //////////////////////////////////////////////////////////////////</a>
+<span class="lineNum">     547 </span>            : 
+<span class="lineNum">     548 </span><span class="lineCov">          1 :     void            deduce_run_status( test_unit_id master_tu_id )</span>
+<span class="lineNum">     549 </span>            :     {
+<span class="lineNum">     550 </span>            :         using namespace framework::impl;
+<span class="lineNum">     551 </span><span class="lineCov">          2 :         test_unit_id_list tu_to_enable;</span>
+<span class="lineNum">     552 </span><span class="lineCov">          2 :         test_unit_id_list tu_to_disable;</span>
+<span class="lineNum">     553 </span>            : 
+<span class="lineNum">     554 </span>            :         // 10. If there are any filters supplied, figure out lists of test units to enable/disable
+<span class="lineNum">     555 </span><span class="lineCov">          4 :         bool had_selector_filter = !runtime_config::get&lt;std::vector&lt;std::string&gt; &gt;( runtime_config::RUN_FILTERS ).empty() &amp;&amp;</span>
+<span class="lineNum">     556 </span><span class="lineCov">          1 :                                    parse_filters( master_tu_id, tu_to_enable, tu_to_disable );</span>
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span>            :         // 20. Set the stage: either use default run status or disable all test units
+<span class="lineNum">     559 </span><span class="lineCov">          3 :         set_run_status initial_setter( had_selector_filter ? test_unit::RS_DISABLED : test_unit::RS_INVALID );</span>
+<span class="lineNum">     560 </span><span class="lineCov">          1 :         traverse_test_tree( master_tu_id, initial_setter, true );</span>
+<span class="lineNum">     561 </span>            : 
+<span class="lineNum">     562 </span>            :         // 30. Apply all selectors and enablers.
+<span class="lineNum">     563 </span><span class="lineCov">          1 :         while( !tu_to_enable.empty() ) {</span>
+<span class="lineNum">     564 </span><span class="lineNoCov">          0 :             test_unit&amp; tu = framework::get( tu_to_enable.back(), TUT_ANY );</span>
+<span class="lineNum">     565 </span>            : 
+<span class="lineNum">     566 </span><span class="lineNoCov">          0 :             tu_to_enable.pop_back();</span>
+<span class="lineNum">     567 </span>            : 
+<span class="lineNum">     568 </span>            :             // 35. Ignore test units which already enabled
+<span class="lineNum">     569 </span><span class="lineNoCov">          0 :             if( tu.is_enabled() )</span>
+<span class="lineNum">     570 </span><span class="lineNoCov">          0 :                 continue;</span>
+<span class="lineNum">     571 </span>            : 
+<span class="lineNum">     572 </span>            :             // set new status and add all dependencies into tu_to_enable
+<span class="lineNum">     573 </span><span class="lineNoCov">          0 :             set_run_status enabler( test_unit::RS_ENABLED, &amp;tu_to_enable );</span>
+<span class="lineNum">     574 </span><span class="lineNoCov">          0 :             traverse_test_tree( tu.p_id, enabler, true );</span>
+<span class="lineNum">     575 </span>            :         }
+<span class="lineNum">     576 </span>            : 
+<span class="lineNum">     577 </span>            :         // 40. Apply all disablers
+<span class="lineNum">     578 </span><span class="lineCov">          1 :         while( !tu_to_disable.empty() ) {</span>
+<span class="lineNum">     579 </span><span class="lineNoCov">          0 :             test_unit const&amp; tu = framework::get( tu_to_disable.back(), TUT_ANY );</span>
+<span class="lineNum">     580 </span>            : 
+<span class="lineNum">     581 </span><span class="lineNoCov">          0 :             tu_to_disable.pop_back();</span>
+<span class="lineNum">     582 </span>            : 
+<span class="lineNum">     583 </span>            :             // 35. Ignore test units which already disabled
+<span class="lineNum">     584 </span><span class="lineNoCov">          0 :             if( !tu.is_enabled() )</span>
+<span class="lineNum">     585 </span><span class="lineNoCov">          0 :                 continue;</span>
+<span class="lineNum">     586 </span>            : 
+<span class="lineNum">     587 </span><span class="lineNoCov">          0 :             set_run_status disabler( test_unit::RS_DISABLED );</span>
+<span class="lineNum">     588 </span><span class="lineNoCov">          0 :             traverse_test_tree( tu.p_id, disabler, true );</span>
+<span class="lineNum">     589 </span>            :         }
+<span class="lineNum">     590 </span>            : 
+<span class="lineNum">     591 </span>            :         // 50. Make sure parents of enabled test units are also enabled
+<span class="lineNum">     592 </span><span class="lineCov">          1 :         finalize_run_status( master_tu_id );</span>
+<span class="lineNum">     593 </span><span class="lineCov">          1 :     }</span>
+<span class="lineNum">     594 </span>            : 
+<span class="lineNum">     595 </span>            :     //////////////////////////////////////////////////////////////////
+<span class="lineNum">     596 </span>            : 
+<span class="lineNum">     597 </span>            :     typedef unit_test_monitor_t::error_level execution_result;
+<span class="lineNum">     598 </span>            : 
+<span class="lineNum">     599 </span>            :     // Random generator using the std::rand function (seeded prior to the call)
+<span class="lineNum">     600 </span>            :     struct random_generator_helper {
+<span class="lineNum">     601 </span>            :       size_t operator()(size_t i) const {
+<span class="lineNum">     602 </span><span class="lineNoCov">          0 :         return std::rand() % i;</span>
+<span class="lineNum">     603 </span>            :       }
+<span class="lineNum">     604 </span>            :     };
+<a name="605"><span class="lineNum">     605 </span>            : </a>
+<span class="lineNum">     606 </span>            :       // Executed the test tree with the root at specified test unit
+<span class="lineNum">     607 </span><span class="lineCov">        367 :     execution_result execute_test_tree( test_unit_id tu_id,</span>
+<span class="lineNum">     608 </span>            :                                         unsigned timeout = 0,
+<span class="lineNum">     609 </span>            :                                         random_generator_helper const * const p_random_generator = 0)
+<span class="lineNum">     610 </span>            :     {
+<span class="lineNum">     611 </span><span class="lineCov">        367 :         test_unit const&amp; tu = framework::get( tu_id, TUT_ANY );</span>
+<span class="lineNum">     612 </span>            : 
+<span class="lineNum">     613 </span><span class="lineCov">        367 :         execution_result result = unit_test_monitor_t::test_ok;</span>
+<span class="lineNum">     614 </span>            : 
+<span class="lineNum">     615 </span><span class="lineCov">        367 :         if( !tu.is_enabled() )</span>
+<span class="lineNum">     616 </span>            :             return result;
+<span class="lineNum">     617 </span>            : 
+<span class="lineNum">     618 </span>            :         // 10. Check preconditions, including zero time left for execution and
+<span class="lineNum">     619 </span>            :         // successful execution of all dependencies
+<span class="lineNum">     620 </span><span class="lineCov">        363 :         if( timeout == TIMEOUT_EXCEEDED ) {</span>
+<span class="lineNum">     621 </span>            :             // notify all observers about skipped test unit
+<span class="lineNum">     622 </span><span class="lineNoCov">          0 :             BOOST_TEST_FOREACH( test_observer*, to, m_observers )</span>
+<span class="lineNum">     623 </span><span class="lineNoCov">          0 :                 to-&gt;test_unit_skipped( tu, &quot;timeout for the test unit is exceeded&quot; );</span>
+<span class="lineNum">     624 </span>            : 
+<span class="lineNum">     625 </span>            :             return unit_test_monitor_t::os_timeout;
+<span class="lineNum">     626 </span>            :         }
+<span class="lineNum">     627 </span><span class="lineCov">        363 :         else if( timeout == 0 || timeout &gt; tu.p_timeout ) // deduce timeout for this test unit</span>
+<span class="lineNum">     628 </span><span class="lineCov">        363 :             timeout = tu.p_timeout;</span>
+<span class="lineNum">     629 </span>            : 
+<span class="lineNum">     630 </span><span class="lineCov">        363 :         test_tools::assertion_result const precondition_res = tu.check_preconditions();</span>
+<span class="lineNum">     631 </span><span class="lineCov">        363 :         if( !precondition_res ) {</span>
+<span class="lineNum">     632 </span>            :             // notify all observers about skipped test unit
+<span class="lineNum">     633 </span><span class="lineNoCov">          0 :             BOOST_TEST_FOREACH( test_observer*, to, m_observers )</span>
+<span class="lineNum">     634 </span><span class="lineNoCov">          0 :                 to-&gt;test_unit_skipped( tu, precondition_res.message() );</span>
+<span class="lineNum">     635 </span>            : 
+<span class="lineNum">     636 </span>            :             return unit_test_monitor_t::precondition_failure;
+<span class="lineNum">     637 </span>            :         }
+<span class="lineNum">     638 </span>            : 
+<span class="lineNum">     639 </span>            :         // 20. Notify all observers about the start of the test unit
+<span class="lineNum">     640 </span><span class="lineCov">       6897 :         BOOST_TEST_FOREACH( test_observer*, to, m_observers )</span>
+<span class="lineNum">     641 </span><span class="lineCov">        726 :             to-&gt;test_unit_start( tu );</span>
+<span class="lineNum">     642 </span>            : 
+<span class="lineNum">     643 </span>            :         // 30. Execute setup fixtures if any; any failure here leads to test unit abortion
+<span class="lineNum">     644 </span><span class="lineCov">       2541 :         BOOST_TEST_FOREACH( test_unit_fixture_ptr, F, tu.p_fixtures.get() ) {</span>
+<span class="lineNum">     645 </span><span class="lineNoCov">          0 :             result = unit_test_monitor.execute_and_translate( boost::bind( &amp;test_unit_fixture::setup, F ) );</span>
+<span class="lineNum">     646 </span><span class="lineNoCov">          0 :             if( result != unit_test_monitor_t::test_ok )</span>
+<span class="lineNum">     647 </span>            :                 break;
+<span class="lineNum">     648 </span>            :         }
+<span class="lineNum">     649 </span>            : 
+<span class="lineNum">     650 </span>            :         // This is the time we are going to spend executing the test unit
+<span class="lineNum">     651 </span><span class="lineCov">        363 :         unsigned long elapsed = 0;</span>
+<span class="lineNum">     652 </span>            : 
+<span class="lineNum">     653 </span><span class="lineCov">        363 :         if( result == unit_test_monitor_t::test_ok ) {</span>
+<span class="lineNum">     654 </span>            :             // 40. We are going to time the execution
+<span class="lineNum">     655 </span><span class="lineCov">        363 :             boost::timer tu_timer;</span>
+<span class="lineNum">     656 </span>            : 
+<span class="lineNum">     657 </span><span class="lineCov">        363 :             if( tu.p_type == TUT_SUITE ) {</span>
+<span class="lineNum">     658 </span><span class="lineCov">         51 :                 test_suite const&amp; ts = static_cast&lt;test_suite const&amp;&gt;( tu );</span>
+<span class="lineNum">     659 </span>            : 
+<span class="lineNum">     660 </span><span class="lineCov">        102 :                 if( runtime_config::get&lt;unsigned&gt;( runtime_config::RANDOM_SEED ) == 0 ) {</span>
+<span class="lineNum">     661 </span>            :                     typedef std::pair&lt;counter_t,test_unit_id&gt; value_type;
+<span class="lineNum">     662 </span>            : 
+<span class="lineNum">     663 </span><span class="lineCov">       2553 :                     BOOST_TEST_FOREACH( value_type, chld, ts.m_ranked_children ) {</span>
+<span class="lineNum">     664 </span><span class="lineCov">        732 :                         unsigned chld_timeout = child_timeout( timeout, tu_timer.elapsed() );</span>
+<span class="lineNum">     665 </span>            : 
+<span class="lineNum">     666 </span><span class="lineCov">        732 :                         result = (std::min)( result, execute_test_tree( chld.second, chld_timeout ) );</span>
+<span class="lineNum">     667 </span>            : 
+<span class="lineNum">     668 </span><span class="lineCov">        366 :                         if( unit_test_monitor.is_critical_error( result ) )</span>
+<span class="lineNum">     669 </span>            :                             break;
+<span class="lineNum">     670 </span>            :                     }
+<span class="lineNum">     671 </span>            :                 }
+<span class="lineNum">     672 </span>            :                 else {
+<span class="lineNum">     673 </span>            :                     // Go through ranges of chldren with the same dependency rank and shuffle them
+<span class="lineNum">     674 </span>            :                     // independently. Execute each subtree in this order
+<span class="lineNum">     675 </span><span class="lineNoCov">          0 :                     test_unit_id_list children_with_the_same_rank;</span>
+<span class="lineNum">     676 </span>            : 
+<span class="lineNum">     677 </span>            :                     typedef test_suite::children_per_rank::const_iterator it_type;
+<span class="lineNum">     678 </span><span class="lineNoCov">          0 :                     it_type it = ts.m_ranked_children.begin();</span>
+<span class="lineNum">     679 </span><span class="lineNoCov">          0 :                     while( it != ts.m_ranked_children.end() ) {</span>
+<span class="lineNum">     680 </span><span class="lineNoCov">          0 :                         children_with_the_same_rank.clear();</span>
+<span class="lineNum">     681 </span>            : 
+<span class="lineNum">     682 </span><span class="lineNoCov">          0 :                         std::pair&lt;it_type,it_type&gt; range = ts.m_ranked_children.equal_range( it-&gt;first );</span>
+<span class="lineNum">     683 </span><span class="lineNoCov">          0 :                         it = range.first;</span>
+<span class="lineNum">     684 </span><span class="lineNoCov">          0 :                         while( it != range.second ) {</span>
+<span class="lineNum">     685 </span><span class="lineNoCov">          0 :                             children_with_the_same_rank.push_back( it-&gt;second );</span>
+<span class="lineNum">     686 </span><span class="lineNoCov">          0 :                             it++;</span>
+<span class="lineNum">     687 </span>            :                         }
+<span class="lineNum">     688 </span>            : 
+<span class="lineNum">     689 </span><span class="lineNoCov">          0 :                         const random_generator_helper&amp; rand_gen = p_random_generator ? *p_random_generator : random_generator_helper();</span>
+<span class="lineNum">     690 </span>            : 
+<span class="lineNum">     691 </span><span class="lineNoCov">          0 :                         std::random_shuffle( children_with_the_same_rank.begin(), children_with_the_same_rank.end(), rand_gen );</span>
+<span class="lineNum">     692 </span>            : 
+<span class="lineNum">     693 </span><span class="lineNoCov">          0 :                         BOOST_TEST_FOREACH( test_unit_id, chld, children_with_the_same_rank ) {</span>
+<span class="lineNum">     694 </span><span class="lineNoCov">          0 :                             unsigned chld_timeout = child_timeout( timeout, tu_timer.elapsed() );</span>
+<span class="lineNum">     695 </span>            : 
+<span class="lineNum">     696 </span><span class="lineNoCov">          0 :                             result = (std::min)( result, execute_test_tree( chld, chld_timeout, &amp;rand_gen ) );</span>
+<span class="lineNum">     697 </span>            : 
+<span class="lineNum">     698 </span><span class="lineNoCov">          0 :                             if( unit_test_monitor.is_critical_error( result ) )</span>
+<span class="lineNum">     699 </span>            :                                 break;
+<span class="lineNum">     700 </span>            :                         }
+<span class="lineNum">     701 </span>            :                     }
+<span class="lineNum">     702 </span>            :                 }
+<span class="lineNum">     703 </span>            : 
+<span class="lineNum">     704 </span><span class="lineCov">         51 :                 elapsed = static_cast&lt;unsigned long&gt;( tu_timer.elapsed() * 1e6 );</span>
+<span class="lineNum">     705 </span>            :             }
+<span class="lineNum">     706 </span>            :             else { // TUT_CASE
+<span class="lineNum">     707 </span><span class="lineCov">        312 :                 test_case const&amp; tc = static_cast&lt;test_case const&amp;&gt;( tu );</span>
+<span class="lineNum">     708 </span>            : 
+<span class="lineNum">     709 </span>            :                 // setup contexts
+<span class="lineNum">     710 </span><span class="lineCov">        312 :                 m_context_idx = 0;</span>
+<span class="lineNum">     711 </span>            : 
+<span class="lineNum">     712 </span>            :                 // setup current test case
+<span class="lineNum">     713 </span><span class="lineCov">        312 :                 test_unit_id bkup = m_curr_test_case;</span>
+<span class="lineNum">     714 </span><span class="lineCov">        312 :                 m_curr_test_case = tc.p_id;</span>
+<span class="lineNum">     715 </span>            : 
+<span class="lineNum">     716 </span>            :                 // execute the test case body
+<span class="lineNum">     717 </span><span class="lineCov">        624 :                 result = unit_test_monitor.execute_and_translate( tc.p_test_func, timeout );</span>
+<span class="lineNum">     718 </span><span class="lineCov">        312 :                 elapsed = static_cast&lt;unsigned long&gt;( tu_timer.elapsed() * 1e6 );</span>
+<span class="lineNum">     719 </span>            : 
+<span class="lineNum">     720 </span>            :                 // cleanup leftover context
+<span class="lineNum">     721 </span><span class="lineCov">        312 :                 m_context.clear();</span>
+<span class="lineNum">     722 </span>            : 
+<span class="lineNum">     723 </span>            :                 // restore state and abort if necessary
+<span class="lineNum">     724 </span><span class="lineCov">        312 :                 m_curr_test_case = bkup;</span>
+<span class="lineNum">     725 </span>            :             }
+<span class="lineNum">     726 </span>            :         }
+<span class="lineNum">     727 </span>            : 
+<span class="lineNum">     728 </span>            :         // if run error is critical skip teardown, who knows what the state of the program at this point
+<span class="lineNum">     729 </span><span class="lineCov">        363 :         if( !unit_test_monitor.is_critical_error( result ) ) {</span>
+<span class="lineNum">     730 </span>            :             // execute teardown fixtures if any in reverse order
+<span class="lineNum">     731 </span><span class="lineCov">       2541 :             BOOST_TEST_REVERSE_FOREACH( test_unit_fixture_ptr, F, tu.p_fixtures.get() ) {</span>
+<span class="lineNum">     732 </span><span class="lineNoCov">          0 :                 result = (std::min)( result, unit_test_monitor.execute_and_translate( boost::bind( &amp;test_unit_fixture::teardown, F ), 0 ) );</span>
+<span class="lineNum">     733 </span>            : 
+<span class="lineNum">     734 </span><span class="lineNoCov">          0 :                 if( unit_test_monitor.is_critical_error( result ) )</span>
+<span class="lineNum">     735 </span>            :                     break;
+<span class="lineNum">     736 </span>            :             }
+<span class="lineNum">     737 </span>            :         }
+<span class="lineNum">     738 </span>            : 
+<span class="lineNum">     739 </span>            :         // notify all observers about abortion
+<span class="lineNum">     740 </span><span class="lineCov">        363 :         if( unit_test_monitor.is_critical_error( result ) ) {</span>
+<span class="lineNum">     741 </span><span class="lineNoCov">          0 :             BOOST_TEST_FOREACH( test_observer*, to, m_observers )</span>
+<span class="lineNum">     742 </span><span class="lineNoCov">          0 :                 to-&gt;test_aborted();</span>
+<span class="lineNum">     743 </span>            :         }
+<span class="lineNum">     744 </span>            : 
+<span class="lineNum">     745 </span>            :         // notify all observers about completion
+<span class="lineNum">     746 </span><span class="lineCov">       6897 :         BOOST_TEST_REVERSE_FOREACH( test_observer*, to, m_observers )</span>
+<span class="lineNum">     747 </span><span class="lineCov">        726 :             to-&gt;test_unit_finish( tu, elapsed );</span>
+<span class="lineNum">     748 </span>            : 
+<span class="lineNum">     749 </span><span class="lineCov">        363 :         return result;</span>
+<span class="lineNum">     750 </span>            :     }
+<span class="lineNum">     751 </span>            : 
+<span class="lineNum">     752 </span>            :     //////////////////////////////////////////////////////////////////
+<span class="lineNum">     753 </span>            : 
+<span class="lineNum">     754 </span>            :     unsigned child_timeout( unsigned tu_timeout, double elapsed )
+<span class="lineNum">     755 </span>            :     {
+<span class="lineNum">     756 </span><span class="lineCov">        366 :       if( tu_timeout == 0U )</span>
+<span class="lineNum">     757 </span>            :           return 0U;
+<span class="lineNum">     758 </span>            : 
+<span class="lineNum">     759 </span><span class="lineNoCov">          0 :       unsigned elpsed_sec = static_cast&lt;unsigned&gt;(elapsed); // rounding to number of whole seconds</span>
+<span class="lineNum">     760 </span>            : 
+<span class="lineNum">     761 </span><span class="lineNoCov">          0 :       return tu_timeout &gt; elpsed_sec ? tu_timeout - elpsed_sec : TIMEOUT_EXCEEDED;</span>
+<span class="lineNum">     762 </span>            :     }
+<a name="763"><span class="lineNum">     763 </span>            : </a>
+<span class="lineNum">     764 </span>            :     struct priority_order {
+<span class="lineNum">     765 </span><span class="lineCov">          2 :         bool operator()( test_observer* lhs, test_observer* rhs ) const</span>
+<span class="lineNum">     766 </span>            :         {
+<span class="lineNum">     767 </span><span class="lineCov">          2 :             return (lhs-&gt;priority() &lt; rhs-&gt;priority()) || ((lhs-&gt;priority() == rhs-&gt;priority()) &amp;&amp; (lhs &lt; rhs));</span>
+<span class="lineNum">     768 </span>            :         }
+<span class="lineNum">     769 </span>            :     };
+<span class="lineNum">     770 </span>            : 
+<span class="lineNum">     771 </span>            :     // Data members
+<span class="lineNum">     772 </span>            :     typedef std::map&lt;test_unit_id,test_unit*&gt;       test_unit_store;
+<span class="lineNum">     773 </span>            :     typedef std::set&lt;test_observer*,priority_order&gt; observer_store;
+<span class="lineNum">     774 </span><span class="lineNoCov">          0 :     struct context_frame {</span>
+<span class="lineNum">     775 </span>            :         context_frame( std::string const&amp; d, int id, bool sticky )
+<span class="lineNum">     776 </span>            :         : descr( d )
+<span class="lineNum">     777 </span>            :         , frame_id( id )
+<span class="lineNum">     778 </span><span class="lineNoCov">          0 :         , is_sticky( sticky )</span>
+<span class="lineNum">     779 </span>            :         {}
+<span class="lineNum">     780 </span>            : 
+<span class="lineNum">     781 </span>            :         std::string descr;
+<span class="lineNum">     782 </span>            :         int         frame_id;
+<span class="lineNum">     783 </span>            :         bool        is_sticky;
+<span class="lineNum">     784 </span>            :     };
+<span class="lineNum">     785 </span>            :     typedef std::vector&lt;context_frame&gt; context_data;
+<span class="lineNum">     786 </span>            : 
+<span class="lineNum">     787 </span>            :     master_test_suite_t* m_master_test_suite;
+<span class="lineNum">     788 </span>            :     std::vector&lt;test_suite*&gt; m_auto_test_suites;
+<span class="lineNum">     789 </span>            : 
+<span class="lineNum">     790 </span>            :     test_unit_id    m_curr_test_case;
+<span class="lineNum">     791 </span>            :     test_unit_store m_test_units;
+<span class="lineNum">     792 </span>            : 
+<span class="lineNum">     793 </span>            :     test_unit_id    m_next_test_case_id;
+<span class="lineNum">     794 </span>            :     test_unit_id    m_next_test_suite_id;
+<span class="lineNum">     795 </span>            : 
+<span class="lineNum">     796 </span>            :     bool            m_test_in_progress;
+<span class="lineNum">     797 </span>            : 
+<span class="lineNum">     798 </span>            :     observer_store  m_observers;
+<span class="lineNum">     799 </span>            :     context_data    m_context;
+<span class="lineNum">     800 </span>            :     int             m_context_idx;
+<span class="lineNum">     801 </span>            : 
+<span class="lineNum">     802 </span>            :     boost::execution_monitor m_aux_em;
+<span class="lineNum">     803 </span>            : 
+<span class="lineNum">     804 </span>            :     std::map&lt;output_format, runtime_config::stream_holder&gt; m_log_sinks;
+<span class="lineNum">     805 </span>            :     runtime_config::stream_holder m_report_sink;
+<span class="lineNum">     806 </span>            : };
+<span class="lineNum">     807 </span>            : 
+<span class="lineNum">     808 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     809 </span>            : 
+<span class="lineNum">     810 </span>            : namespace impl {
+<span class="lineNum">     811 </span>            : namespace {
+<span class="lineNum">     812 </span>            : 
+<span class="lineNum">     813 </span>            : #if defined(__CYGWIN__)
+<a name="814"><span class="lineNum">     814 </span>            : framework::state&amp; s_frk_state() { static framework::state* the_inst = 0; if(!the_inst) the_inst = new framework::state; return *the_inst; }</a>
+<span class="lineNum">     815 </span>            : #else
+<span class="lineNum">     816 </span><span class="lineCov">    6369734 : framework::state&amp; s_frk_state() { static framework::state the_inst; return the_inst; }</span>
+<span class="lineNum">     817 </span>            : #endif
+<span class="lineNum">     818 </span>            : 
+<span class="lineNum">     819 </span>            : } // local namespace
+<a name="820"><span class="lineNum">     820 </span>            : </a>
+<span class="lineNum">     821 </span>            : void
+<span class="lineNum">     822 </span><span class="lineNoCov">          0 : setup_for_execution( test_unit const&amp; tu )</span>
+<span class="lineNum">     823 </span>            : {
+<span class="lineNum">     824 </span><span class="lineNoCov">          0 :     s_frk_state().deduce_run_status( tu.p_id );</span>
+<span class="lineNum">     825 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     826 </span>            : 
+<span class="lineNum">     827 </span>            : struct sum_to_first_only {
+<a name="828"><span class="lineNum">     828 </span><span class="lineNoCov">          0 :     sum_to_first_only() : is_first(true) {}</span></a>
+<span class="lineNum">     829 </span>            :     template &lt;class T, class U&gt;
+<span class="lineNum">     830 </span><span class="lineNoCov">          0 :     T operator()(T const&amp; l_, U const&amp; r_) {</span>
+<span class="lineNum">     831 </span><span class="lineNoCov">          0 :         if(is_first) {</span>
+<span class="lineNum">     832 </span><span class="lineNoCov">          0 :             is_first = false;</span>
+<span class="lineNum">     833 </span><span class="lineNoCov">          0 :             return l_ + r_.first;</span>
+<span class="lineNum">     834 </span>            :         }
+<span class="lineNum">     835 </span><span class="lineNoCov">          0 :         return l_ + &quot;, &quot; + r_.first;</span>
+<span class="lineNum">     836 </span>            :     }
+<span class="lineNum">     837 </span>            : 
+<span class="lineNum">     838 </span>            :     bool is_first;
+<span class="lineNum">     839 </span>            : };
+<a name="840"><span class="lineNum">     840 </span>            : </a>
+<span class="lineNum">     841 </span>            : void
+<span class="lineNum">     842 </span><span class="lineCov">          1 : setup_loggers()</span>
+<span class="lineNum">     843 </span>            : {
+<span class="lineNum">     844 </span>            : 
+<span class="lineNum">     845 </span>            :     BOOST_TEST_I_TRY {
+<span class="lineNum">     846 </span>            : 
+<span class="lineNum">     847 </span>            : #ifdef BOOST_TEST_SUPPORT_TOKEN_ITERATOR
+<span class="lineNum">     848 </span><span class="lineCov">          1 :         bool has_combined_logger = runtime_config::has( runtime_config::COMBINED_LOGGER )</span>
+<span class="lineNum">     849 </span><span class="lineCov">          5 :             &amp;&amp; !runtime_config::get&lt; std::vector&lt;std::string&gt; &gt;( runtime_config::COMBINED_LOGGER ).empty();</span>
+<span class="lineNum">     850 </span>            : #else
+<span class="lineNum">     851 </span>            :         bool has_combined_logger = false;
+<span class="lineNum">     852 </span>            : #endif
+<span class="lineNum">     853 </span>            : 
+<span class="lineNum">     854 </span><span class="lineCov">          1 :         if( !has_combined_logger ) {</span>
+<span class="lineNum">     855 </span><span class="lineCov">          2 :             unit_test_log.set_threshold_level( runtime_config::get&lt;log_level&gt;( runtime_config::LOG_LEVEL ) );</span>
+<span class="lineNum">     856 </span><span class="lineCov">          2 :             const output_format format = runtime_config::get&lt;output_format&gt;( runtime_config::LOG_FORMAT );</span>
+<span class="lineNum">     857 </span><span class="lineCov">          1 :             unit_test_log.set_format( format );</span>
+<span class="lineNum">     858 </span>            : 
+<span class="lineNum">     859 </span><span class="lineCov">          1 :             runtime_config::stream_holder&amp; stream_logger = s_frk_state().m_log_sinks[format];</span>
+<span class="lineNum">     860 </span><span class="lineCov">          2 :             if( runtime_config::has( runtime_config::LOG_SINK ) )</span>
+<span class="lineNum">     861 </span><span class="lineNoCov">          0 :                 stream_logger.setup( runtime_config::get&lt;std::string&gt;( runtime_config::LOG_SINK ) );</span>
+<span class="lineNum">     862 </span><span class="lineCov">          1 :             unit_test_log.set_stream( stream_logger.ref() );</span>
+<span class="lineNum">     863 </span>            :         }
+<span class="lineNum">     864 </span>            :         else
+<span class="lineNum">     865 </span>            :         {
+<span class="lineNum">     866 </span>            : 
+<span class="lineNum">     867 </span><span class="lineNoCov">          0 :             const std::vector&lt;std::string&gt;&amp; v_output_format = runtime_config::get&lt; std::vector&lt;std::string&gt; &gt;( runtime_config::COMBINED_LOGGER ) ;</span>
+<span class="lineNum">     868 </span>            : 
+<span class="lineNum">     869 </span>            :             static const std::pair&lt;const char*, log_level&gt; all_log_levels[] = {
+<span class="lineNum">     870 </span>            :                 std::make_pair( &quot;all&quot;           , log_successful_tests ),
+<span class="lineNum">     871 </span>            :                 std::make_pair( &quot;success&quot;       , log_successful_tests ),
+<span class="lineNum">     872 </span>            :                 std::make_pair( &quot;test_suite&quot;    , log_test_units ),
+<span class="lineNum">     873 </span>            :                 std::make_pair( &quot;unit_scope&quot;    , log_test_units ),
+<span class="lineNum">     874 </span>            :                 std::make_pair( &quot;message&quot;       , log_messages ),
+<span class="lineNum">     875 </span>            :                 std::make_pair( &quot;warning&quot;       , log_warnings ),
+<span class="lineNum">     876 </span>            :                 std::make_pair( &quot;error&quot;         , log_all_errors ),
+<span class="lineNum">     877 </span>            :                 std::make_pair( &quot;cpp_exception&quot; , log_cpp_exception_errors ),
+<span class="lineNum">     878 </span>            :                 std::make_pair( &quot;system_error&quot;  , log_system_errors ),
+<span class="lineNum">     879 </span>            :                 std::make_pair( &quot;fatal_error&quot;   , log_fatal_errors ),
+<span class="lineNum">     880 </span>            :                 std::make_pair( &quot;nothing&quot;       , log_nothing )
+<span class="lineNum">     881 </span>            :             };
+<span class="lineNum">     882 </span>            : 
+<span class="lineNum">     883 </span>            :             static const std::pair&lt;const char*, output_format&gt; all_formats[] = {
+<span class="lineNum">     884 </span>            :                 std::make_pair( &quot;HRF&quot;  , OF_CLF ),
+<span class="lineNum">     885 </span>            :                 std::make_pair( &quot;CLF&quot;  , OF_CLF ),
+<span class="lineNum">     886 </span>            :                 std::make_pair( &quot;XML&quot;  , OF_XML ),
+<span class="lineNum">     887 </span>            :                 std::make_pair( &quot;JUNIT&quot;, OF_JUNIT )
+<span class="lineNum">     888 </span>            :             };
+<span class="lineNum">     889 </span>            : 
+<span class="lineNum">     890 </span>            : 
+<span class="lineNum">     891 </span><span class="lineNoCov">          0 :             bool is_first = true;</span>
+<span class="lineNum">     892 </span>            : 
+<span class="lineNum">     893 </span><span class="lineNoCov">          0 :             BOOST_TEST_FOREACH( const_string, current_multi_config, v_output_format ) {</span>
+<span class="lineNum">     894 </span>            : 
+<span class="lineNum">     895 </span>            :     #ifdef BOOST_TEST_SUPPORT_TOKEN_ITERATOR
+<span class="lineNum">     896 </span>            : 
+<span class="lineNum">     897 </span>            :                 // ':' may be used for file names: C:/tmp/mylogsink.xml
+<span class="lineNum">     898 </span>            :                 // we merge the tokens that start with / or \ with the previous one.
+<span class="lineNum">     899 </span><span class="lineNoCov">          0 :                 std::vector&lt;std::string&gt; v_processed_tokens;</span>
+<span class="lineNum">     900 </span>            : 
+<span class="lineNum">     901 </span>            :                 {
+<span class="lineNum">     902 </span>            :                     utils::string_token_iterator current_config( current_multi_config, (utils::dropped_delimeters = &quot;:&quot;,
+<span class="lineNum">     903 </span><span class="lineNoCov">          0 :                                                                                         utils::kept_delimeters = utils::dt_none) );</span>
+<span class="lineNum">     904 </span>            : 
+<span class="lineNum">     905 </span><span class="lineNoCov">          0 :                     for( ; current_config != utils::string_token_iterator() ; ++current_config) {</span>
+<span class="lineNum">     906 </span><span class="lineNoCov">          0 :                         std::string str_copy(current_config-&gt;begin(), current_config-&gt;end());</span>
+<span class="lineNum">     907 </span><span class="lineNoCov">          0 :                         if( ( str_copy[0] == '\\' || str_copy[0] == '/' )</span>
+<span class="lineNum">     908 </span><span class="lineNoCov">          0 :                             &amp;&amp; v_processed_tokens.size() &gt; 0) {</span>
+<span class="lineNum">     909 </span><span class="lineNoCov">          0 :                             v_processed_tokens.back() += &quot;:&quot; + str_copy; // ':' has been eaten up</span>
+<span class="lineNum">     910 </span>            :                         }
+<span class="lineNum">     911 </span>            :                         else {
+<span class="lineNum">     912 </span><span class="lineNoCov">          0 :                             v_processed_tokens.push_back(str_copy);</span>
+<span class="lineNum">     913 </span>            :                         }
+<span class="lineNum">     914 </span>            :                     }
+<span class="lineNum">     915 </span>            :                 }
+<span class="lineNum">     916 </span>            : 
+<span class="lineNum">     917 </span><span class="lineNoCov">          0 :                 BOOST_TEST_FOREACH( std::string const&amp;, current_config, v_processed_tokens ) {</span>
+<span class="lineNum">     918 </span>            : 
+<span class="lineNum">     919 </span>            :                     utils::string_token_iterator current_format_specs( current_config, (utils::keep_empty_tokens,
+<span class="lineNum">     920 </span>            :                                                                                         utils::dropped_delimeters = &quot;,&quot;,
+<span class="lineNum">     921 </span><span class="lineNoCov">          0 :                                                                                         utils::kept_delimeters = utils::dt_none) );</span>
+<span class="lineNum">     922 </span>            : 
+<span class="lineNum">     923 </span><span class="lineNoCov">          0 :                     output_format format = OF_INVALID ; // default</span>
+<span class="lineNum">     924 </span><span class="lineNoCov">          0 :                     if( current_format_specs != utils::string_token_iterator() &amp;&amp;</span>
+<span class="lineNum">     925 </span><span class="lineNoCov">          0 :                         current_format_specs-&gt;size() ) {</span>
+<span class="lineNum">     926 </span>            : 
+<span class="lineNum">     927 </span><span class="lineNoCov">          0 :                         for(size_t elem=0; elem &lt; sizeof(all_formats)/sizeof(all_formats[0]); elem++) {</span>
+<span class="lineNum">     928 </span><span class="lineNoCov">          0 :                             if(const_string(all_formats[elem].first) == *current_format_specs) {</span>
+<span class="lineNum">     929 </span><span class="lineNoCov">          0 :                                 format = all_formats[elem].second;</span>
+<span class="lineNum">     930 </span><span class="lineNoCov">          0 :                                 break;</span>
+<span class="lineNum">     931 </span>            :                             }
+<span class="lineNum">     932 </span>            :                         }
+<span class="lineNum">     933 </span>            :                     }
+<span class="lineNum">     934 </span>            : 
+<span class="lineNum">     935 </span><span class="lineNoCov">          0 :                     BOOST_TEST_I_ASSRT( format != OF_INVALID,</span>
+<span class="lineNum">     936 </span>            :                                         boost::runtime::access_to_missing_argument()
+<span class="lineNum">     937 </span>            :                                             &lt;&lt; &quot;Unable to determine the logger type from '&quot;
+<span class="lineNum">     938 </span>            :                                             &lt;&lt; current_config
+<span class="lineNum">     939 </span>            :                                             &lt;&lt; &quot;'. Possible choices are: &quot;
+<span class="lineNum">     940 </span>            :                                             &lt;&lt; std::accumulate(all_formats,
+<span class="lineNum">     941 </span>            :                                                                all_formats + sizeof(all_formats)/sizeof(all_formats[0]),
+<span class="lineNum">     942 </span>            :                                                                std::string(&quot;&quot;),
+<span class="lineNum">     943 </span>            :                                                                sum_to_first_only())
+<span class="lineNum">     944 </span><span class="lineNoCov">          0 :                                       );</span>
+<span class="lineNum">     945 </span>            : 
+<span class="lineNum">     946 </span>            :                     // activates this format
+<span class="lineNum">     947 </span><span class="lineNoCov">          0 :                     if( is_first ) {</span>
+<span class="lineNum">     948 </span><span class="lineNoCov">          0 :                         unit_test_log.set_format( format );</span>
+<span class="lineNum">     949 </span>            :                     }
+<span class="lineNum">     950 </span>            :                     else {
+<span class="lineNum">     951 </span><span class="lineNoCov">          0 :                         unit_test_log.add_format( format );</span>
+<span class="lineNum">     952 </span>            :                     }
+<span class="lineNum">     953 </span><span class="lineNoCov">          0 :                     is_first = false;</span>
+<span class="lineNum">     954 </span>            : 
+<span class="lineNum">     955 </span><span class="lineNoCov">          0 :                     unit_test_log_formatter * const formatter = unit_test_log.get_formatter(format);</span>
+<span class="lineNum">     956 </span><span class="lineNoCov">          0 :                     BOOST_TEST_SETUP_ASSERT( formatter, &quot;Logger setup error&quot; );</span>
+<span class="lineNum">     957 </span>            : 
+<span class="lineNum">     958 </span><span class="lineNoCov">          0 :                     log_level formatter_log_level = invalid_log_level;</span>
+<span class="lineNum">     959 </span><span class="lineNoCov">          0 :                     ++current_format_specs ;</span>
+<span class="lineNum">     960 </span><span class="lineNoCov">          0 :                     if( !current_format_specs-&gt;size() ) {</span>
+<span class="lineNum">     961 </span><span class="lineNoCov">          0 :                         formatter_log_level = formatter-&gt;get_log_level(); // default log level given by the formatter</span>
+<span class="lineNum">     962 </span>            :                     }
+<span class="lineNum">     963 </span><span class="lineNoCov">          0 :                     else if( current_format_specs != utils::string_token_iterator() ) {</span>
+<span class="lineNum">     964 </span>            : 
+<span class="lineNum">     965 </span><span class="lineNoCov">          0 :                         for(size_t elem=0; elem &lt; sizeof(all_log_levels)/sizeof(all_log_levels[0]); elem++) {</span>
+<span class="lineNum">     966 </span><span class="lineNoCov">          0 :                             if(const_string(all_log_levels[elem].first) == *current_format_specs) {</span>
+<span class="lineNum">     967 </span><span class="lineNoCov">          0 :                                 formatter_log_level = all_log_levels[elem].second;</span>
+<span class="lineNum">     968 </span><span class="lineNoCov">          0 :                                 break;</span>
+<span class="lineNum">     969 </span>            :                             }
+<span class="lineNum">     970 </span>            :                         }
+<span class="lineNum">     971 </span>            :                     }
+<span class="lineNum">     972 </span>            : 
+<span class="lineNum">     973 </span>            : 
+<span class="lineNum">     974 </span><span class="lineNoCov">          0 :                     BOOST_TEST_I_ASSRT( formatter_log_level != invalid_log_level,</span>
+<span class="lineNum">     975 </span>            :                                         boost::runtime::access_to_missing_argument()
+<span class="lineNum">     976 </span>            :                                             &lt;&lt; &quot;Unable to determine the log level from '&quot;
+<span class="lineNum">     977 </span>            :                                             &lt;&lt; current_config
+<span class="lineNum">     978 </span>            :                                             &lt;&lt; &quot;'. Possible choices are: &quot;
+<span class="lineNum">     979 </span>            :                                             &lt;&lt; std::accumulate(all_log_levels,
+<span class="lineNum">     980 </span>            :                                                                all_log_levels + sizeof(all_log_levels)/sizeof(all_log_levels[0]),
+<span class="lineNum">     981 </span>            :                                                                std::string(&quot;&quot;),
+<span class="lineNum">     982 </span>            :                                                                sum_to_first_only())
+<span class="lineNum">     983 </span><span class="lineNoCov">          0 :                                        );</span>
+<span class="lineNum">     984 </span>            : 
+<span class="lineNum">     985 </span><span class="lineNoCov">          0 :                     unit_test_log.set_threshold_level( format, formatter_log_level );</span>
+<span class="lineNum">     986 </span>            : 
+<span class="lineNum">     987 </span><span class="lineNoCov">          0 :                     runtime_config::stream_holder&amp; stream_logger = s_frk_state().m_log_sinks[format];</span>
+<span class="lineNum">     988 </span><span class="lineNoCov">          0 :                     if( ++current_format_specs != utils::string_token_iterator() &amp;&amp;</span>
+<span class="lineNum">     989 </span><span class="lineNoCov">          0 :                         current_format_specs-&gt;size() ) {</span>
+<span class="lineNum">     990 </span><span class="lineNoCov">          0 :                         stream_logger.setup( *current_format_specs );</span>
+<span class="lineNum">     991 </span>            :                     }
+<span class="lineNum">     992 </span>            :                     else {
+<span class="lineNum">     993 </span><span class="lineNoCov">          0 :                         stream_logger.setup( formatter-&gt;get_default_stream_description() );</span>
+<span class="lineNum">     994 </span>            :                     }
+<span class="lineNum">     995 </span><span class="lineNoCov">          0 :                     unit_test_log.set_stream( format, stream_logger.ref() );</span>
+<span class="lineNum">     996 </span>            :                 }
+<span class="lineNum">     997 </span>            :     #endif
+<span class="lineNum">     998 </span>            :             } // for each logger
+<span class="lineNum">     999 </span>            : 
+<span class="lineNum">    1000 </span>            :         } // if/else new logger API
+<span class="lineNum">    1001 </span>            :     } // BOOST_TEST_I_TRY
+<span class="lineNum">    1002 </span><span class="lineNoCov">          0 :     BOOST_TEST_I_CATCH( boost::runtime::init_error, ex ) {</span>
+<span class="lineNum">    1003 </span><span class="lineNoCov">          0 :         BOOST_TEST_SETUP_ASSERT( false, ex.msg );</span>
+<span class="lineNum">    1004 </span>            :     }
+<span class="lineNum">    1005 </span><span class="lineNoCov">          0 :     BOOST_TEST_I_CATCH( boost::runtime::input_error, ex ) {</span>
+<span class="lineNum">    1006 </span><span class="lineNoCov">          0 :         std::cerr &lt;&lt; ex.msg &lt;&lt; &quot;\n\n&quot;;</span>
+<span class="lineNum">    1007 </span>            : 
+<span class="lineNum">    1008 </span><span class="lineNoCov">          0 :         BOOST_TEST_I_THROW( framework::nothing_to_test( boost::exit_exception_failure ) );</span>
+<span class="lineNum">    1009 </span>            :     }
+<span class="lineNum">    1010 </span>            : 
+<span class="lineNum">    1011 </span>            : 
+<span class="lineNum">    1012 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">    1013 </span>            : 
+<span class="lineNum">    1014 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1015 </span>            : 
+<span class="lineNum">    1016 </span>            : } // namespace impl
+<span class="lineNum">    1017 </span>            : 
+<span class="lineNum">    1018 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1019 </span>            : 
+<span class="lineNum">    1020 </span>            : // ************************************************************************** //
+<span class="lineNum">    1021 </span>            : // **************                framework::init               ************** //
+<span class="lineNum">    1022 </span>            : // ************************************************************************** //
+<a name="1023"><span class="lineNum">    1023 </span>            : </a>
+<span class="lineNum">    1024 </span>            : void
+<span class="lineNum">    1025 </span><span class="lineCov">          1 : init( init_unit_test_func init_func, int argc, char* argv[] )</span>
+<span class="lineNum">    1026 </span>            : {
+<span class="lineNum">    1027 </span>            :     using namespace impl;
+<span class="lineNum">    1028 </span>            : 
+<span class="lineNum">    1029 </span>            :     // 10. Set up runtime parameters
+<span class="lineNum">    1030 </span><span class="lineCov">          1 :     runtime_config::init( argc, argv );</span>
+<span class="lineNum">    1031 </span>            : 
+<span class="lineNum">    1032 </span>            :     // 20. Set the desired log level, format and sink
+<span class="lineNum">    1033 </span><span class="lineCov">          1 :     impl::setup_loggers();</span>
+<span class="lineNum">    1034 </span>            : 
+<span class="lineNum">    1035 </span>            :     // 30. Set the desired report level, format and sink
+<span class="lineNum">    1036 </span><span class="lineCov">          3 :     results_reporter::set_level( runtime_config::get&lt;report_level&gt;( runtime_config::REPORT_LEVEL ) );</span>
+<span class="lineNum">    1037 </span><span class="lineCov">          2 :     results_reporter::set_format( runtime_config::get&lt;output_format&gt;( runtime_config::REPORT_FORMAT ) );</span>
+<span class="lineNum">    1038 </span>            : 
+<span class="lineNum">    1039 </span><span class="lineCov">          2 :     if( runtime_config::has( runtime_config::REPORT_SINK ) )</span>
+<span class="lineNum">    1040 </span><span class="lineNoCov">          0 :         s_frk_state().m_report_sink.setup( runtime_config::get&lt;std::string&gt;( runtime_config::REPORT_SINK ) );</span>
+<span class="lineNum">    1041 </span><span class="lineCov">          1 :     results_reporter::set_stream( s_frk_state().m_report_sink.ref() );</span>
+<span class="lineNum">    1042 </span>            : 
+<span class="lineNum">    1043 </span>            :     // 40. Register default test observers
+<span class="lineNum">    1044 </span><span class="lineCov">          1 :     register_observer( results_collector );</span>
+<span class="lineNum">    1045 </span><span class="lineCov">          1 :     register_observer( unit_test_log );</span>
+<span class="lineNum">    1046 </span>            : 
+<span class="lineNum">    1047 </span><span class="lineCov">          2 :     if( runtime_config::get&lt;bool&gt;( runtime_config::SHOW_PROGRESS ) ) {</span>
+<span class="lineNum">    1048 </span><span class="lineNoCov">          0 :         progress_monitor.set_stream( std::cout ); // defaults to stdout</span>
+<span class="lineNum">    1049 </span><span class="lineNoCov">          0 :         register_observer( progress_monitor );</span>
+<span class="lineNum">    1050 </span>            :     }
+<span class="lineNum">    1051 </span>            : 
+<span class="lineNum">    1052 </span>            :     // 50. Set up memory leak detection
+<span class="lineNum">    1053 </span><span class="lineCov">          2 :     unsigned long detect_mem_leak = runtime_config::get&lt;unsigned long&gt;( runtime_config::DETECT_MEM_LEAKS );</span>
+<span class="lineNum">    1054 </span><span class="lineCov">          1 :     if( detect_mem_leak &gt; 0 ) {</span>
+<span class="lineNum">    1055 </span><span class="lineCov">          1 :         debug::detect_memory_leaks( true, runtime_config::get&lt;std::string&gt;( runtime_config::REPORT_MEM_LEAKS ) );</span>
+<span class="lineNum">    1056 </span>            :         debug::break_memory_alloc( (long)detect_mem_leak );
+<span class="lineNum">    1057 </span>            :     }
+<span class="lineNum">    1058 </span>            : 
+<span class="lineNum">    1059 </span>            :     // 60. Initialize master unit test suite
+<span class="lineNum">    1060 </span><span class="lineCov">          1 :     master_test_suite().argc = argc;</span>
+<span class="lineNum">    1061 </span><span class="lineCov">          1 :     master_test_suite().argv = argv;</span>
+<span class="lineNum">    1062 </span>            : 
+<span class="lineNum">    1063 </span>            :     // 70. Invoke test module initialization routine
+<span class="lineNum">    1064 </span>            :     BOOST_TEST_I_TRY {
+<span class="lineNum">    1065 </span><span class="lineCov">          3 :         s_frk_state().m_aux_em.vexecute( boost::bind( &amp;impl::invoke_init_func, init_func ) );</span>
+<span class="lineNum">    1066 </span>            :     }
+<span class="lineNum">    1067 </span><span class="lineNoCov">          0 :     BOOST_TEST_I_CATCH( execution_exception, ex )  {</span>
+<span class="lineNum">    1068 </span><span class="lineNoCov">          0 :         BOOST_TEST_SETUP_ASSERT( false, ex.what() );</span>
+<span class="lineNum">    1069 </span>            :     }
+<span class="lineNum">    1070 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">    1071 </span>            : 
+<span class="lineNum">    1072 </span>            : //____________________________________________________________________________//
+<a name="1073"><span class="lineNum">    1073 </span>            : </a>
+<span class="lineNum">    1074 </span>            : void
+<span class="lineNum">    1075 </span><span class="lineCov">          1 : finalize_setup_phase( test_unit_id master_tu_id )</span>
+<span class="lineNum">    1076 </span>            : {
+<span class="lineNum">    1077 </span><span class="lineCov">          1 :     if( master_tu_id == INV_TEST_UNIT_ID )</span>
+<span class="lineNum">    1078 </span><span class="lineCov">          1 :         master_tu_id = master_test_suite().p_id;</span>
+<a name="1079"><span class="lineNum">    1079 </span>            : </a>
+<span class="lineNum">    1080 </span>            :     // 10. Apply all decorators to the auto test units
+<span class="lineNum">    1081 </span><span class="lineCov">          2 :     class apply_decorators : public test_tree_visitor {</span>
+<a name="1082"><span class="lineNum">    1082 </span>            :     private:</a>
+<span class="lineNum">    1083 </span>            :         // test_tree_visitor interface
+<span class="lineNum">    1084 </span><span class="lineCov">        367 :         virtual bool    visit( test_unit const&amp; tu )</span>
+<span class="lineNum">    1085 </span>            :         {
+<span class="lineNum">    1086 </span><span class="lineCov">       2569 :             BOOST_TEST_FOREACH( decorator::base_ptr, d, tu.p_decorators.get() )</span>
+<span class="lineNum">    1087 </span><span class="lineNoCov">          0 :                 d-&gt;apply( const_cast&lt;test_unit&amp;&gt;(tu) );</span>
+<span class="lineNum">    1088 </span>            : 
+<span class="lineNum">    1089 </span><span class="lineCov">        367 :             return true;</span>
+<span class="lineNum">    1090 </span>            :         }
+<span class="lineNum">    1091 </span><span class="lineCov">          2 :     } ad;</span>
+<span class="lineNum">    1092 </span><span class="lineCov">          1 :     traverse_test_tree( master_tu_id, ad, true );</span>
+<span class="lineNum">    1093 </span>            : 
+<span class="lineNum">    1094 </span>            :     // 20. Finalize setup phase
+<span class="lineNum">    1095 </span><span class="lineCov">          2 :     impl::order_info_per_tu tuoi;</span>
+<span class="lineNum">    1096 </span><span class="lineCov">          1 :     impl::s_frk_state().deduce_siblings_order( master_tu_id, master_tu_id, tuoi );</span>
+<span class="lineNum">    1097 </span><span class="lineCov">          1 :     impl::s_frk_state().finalize_default_run_status( master_tu_id, test_unit::RS_INVALID );</span>
+<span class="lineNum">    1098 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">    1099 </span>            : 
+<span class="lineNum">    1100 </span>            : // ************************************************************************** //
+<span class="lineNum">    1101 </span>            : // **************               test_in_progress               ************** //
+<span class="lineNum">    1102 </span>            : // ************************************************************************** //
+<a name="1103"><span class="lineNum">    1103 </span>            : </a>
+<span class="lineNum">    1104 </span>            : bool
+<span class="lineNum">    1105 </span><span class="lineNoCov">          0 : test_in_progress()</span>
+<span class="lineNum">    1106 </span>            : {
+<span class="lineNum">    1107 </span><span class="lineCov">          1 :     return impl::s_frk_state().m_test_in_progress;</span>
+<span class="lineNum">    1108 </span>            : }
+<span class="lineNum">    1109 </span>            : 
+<span class="lineNum">    1110 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1111 </span>            : 
+<span class="lineNum">    1112 </span>            : // ************************************************************************** //
+<span class="lineNum">    1113 </span>            : // **************             framework::shutdown              ************** //
+<span class="lineNum">    1114 </span>            : // ************************************************************************** //
+<a name="1115"><span class="lineNum">    1115 </span>            : </a>
+<span class="lineNum">    1116 </span>            : void
+<span class="lineNum">    1117 </span><span class="lineNoCov">          0 : shutdown()</span>
+<span class="lineNum">    1118 </span>            : {
+<span class="lineNum">    1119 </span>            :     // eliminating some fake memory leak reports. See for more details:
+<span class="lineNum">    1120 </span>            :     // http://connect.microsoft.com/VisualStudio/feedback/details/106937/memory-leaks-reported-by-debug-crt-inside-typeinfo-name
+<span class="lineNum">    1121 </span>            : 
+<span class="lineNum">    1122 </span>            : #  if BOOST_WORKAROUND(BOOST_MSVC,  &lt;= 1600 ) &amp;&amp; !defined(_DLL) &amp;&amp; defined(_DEBUG)
+<span class="lineNum">    1123 </span>            : #  if BOOST_WORKAROUND(BOOST_MSVC,  &lt; 1600 )
+<span class="lineNum">    1124 </span>            : #define _Next next
+<span class="lineNum">    1125 </span>            : #define _MemPtr memPtr
+<span class="lineNum">    1126 </span>            : #endif
+<span class="lineNum">    1127 </span>            :    __type_info_node* pNode   = __type_info_root_node._Next;
+<span class="lineNum">    1128 </span>            :    __type_info_node* tmpNode = &amp;__type_info_root_node;
+<span class="lineNum">    1129 </span>            : 
+<span class="lineNum">    1130 </span>            :    for( ; pNode!=NULL; pNode = tmpNode ) {
+<span class="lineNum">    1131 </span>            :       tmpNode = pNode-&gt;_Next;
+<span class="lineNum">    1132 </span>            :       delete pNode-&gt;_MemPtr;
+<span class="lineNum">    1133 </span>            :       delete pNode;
+<span class="lineNum">    1134 </span>            :    }
+<span class="lineNum">    1135 </span>            : #  if BOOST_WORKAROUND(BOOST_MSVC,  &lt; 1600 )
+<span class="lineNum">    1136 </span>            : #undef _Next
+<span class="lineNum">    1137 </span>            : #undef _MemPtr
+<span class="lineNum">    1138 </span>            : #endif
+<span class="lineNum">    1139 </span>            : #  endif
+<span class="lineNum">    1140 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">    1141 </span>            : 
+<span class="lineNum">    1142 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1143 </span>            : 
+<span class="lineNum">    1144 </span>            : // ************************************************************************** //
+<span class="lineNum">    1145 </span>            : // **************              register_test_unit              ************** //
+<span class="lineNum">    1146 </span>            : // ************************************************************************** //
+<a name="1147"><span class="lineNum">    1147 </span>            : </a>
+<span class="lineNum">    1148 </span>            : void
+<span class="lineNum">    1149 </span><span class="lineCov">        312 : register_test_unit( test_case* tc )</span>
+<span class="lineNum">    1150 </span>            : {
+<span class="lineNum">    1151 </span><span class="lineCov">        624 :     BOOST_TEST_SETUP_ASSERT( tc-&gt;p_id == INV_TEST_UNIT_ID, BOOST_TEST_L( &quot;test case already registered&quot; ) );</span>
+<span class="lineNum">    1152 </span>            : 
+<span class="lineNum">    1153 </span><span class="lineCov">        312 :     test_unit_id new_id = impl::s_frk_state().m_next_test_case_id;</span>
+<span class="lineNum">    1154 </span>            : 
+<span class="lineNum">    1155 </span><span class="lineCov">        312 :     BOOST_TEST_SETUP_ASSERT( new_id != MAX_TEST_CASE_ID, BOOST_TEST_L( &quot;too many test cases&quot; ) );</span>
+<span class="lineNum">    1156 </span>            : 
+<span class="lineNum">    1157 </span>            :     typedef state::test_unit_store::value_type map_value_type;
+<span class="lineNum">    1158 </span>            : 
+<span class="lineNum">    1159 </span><span class="lineCov">        936 :     impl::s_frk_state().m_test_units.insert( map_value_type( new_id, tc ) );</span>
+<span class="lineNum">    1160 </span><span class="lineCov">        312 :     impl::s_frk_state().m_next_test_case_id++;</span>
+<span class="lineNum">    1161 </span>            : 
+<span class="lineNum">    1162 </span><span class="lineCov">        624 :     impl::s_frk_state().set_tu_id( *tc, new_id );</span>
+<span class="lineNum">    1163 </span><span class="lineCov">        312 : }</span>
+<span class="lineNum">    1164 </span>            : 
+<span class="lineNum">    1165 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1166 </span>            : 
+<span class="lineNum">    1167 </span>            : // ************************************************************************** //
+<span class="lineNum">    1168 </span>            : // **************              register_test_unit              ************** //
+<span class="lineNum">    1169 </span>            : // ************************************************************************** //
+<a name="1170"><span class="lineNum">    1170 </span>            : </a>
+<span class="lineNum">    1171 </span>            : void
+<span class="lineNum">    1172 </span><span class="lineCov">         55 : register_test_unit( test_suite* ts )</span>
+<span class="lineNum">    1173 </span>            : {
+<span class="lineNum">    1174 </span><span class="lineCov">        110 :     BOOST_TEST_SETUP_ASSERT( ts-&gt;p_id == INV_TEST_UNIT_ID, BOOST_TEST_L( &quot;test suite already registered&quot; ) );</span>
+<span class="lineNum">    1175 </span>            : 
+<span class="lineNum">    1176 </span><span class="lineCov">         55 :     test_unit_id new_id = impl::s_frk_state().m_next_test_suite_id;</span>
+<span class="lineNum">    1177 </span>            : 
+<span class="lineNum">    1178 </span><span class="lineCov">         55 :     BOOST_TEST_SETUP_ASSERT( new_id != MAX_TEST_SUITE_ID, BOOST_TEST_L( &quot;too many test suites&quot; ) );</span>
+<span class="lineNum">    1179 </span>            : 
+<span class="lineNum">    1180 </span>            :     typedef state::test_unit_store::value_type map_value_type;
+<span class="lineNum">    1181 </span>            : 
+<span class="lineNum">    1182 </span><span class="lineCov">        165 :     impl::s_frk_state().m_test_units.insert( map_value_type( new_id, ts ) );</span>
+<span class="lineNum">    1183 </span><span class="lineCov">         55 :     impl::s_frk_state().m_next_test_suite_id++;</span>
+<span class="lineNum">    1184 </span>            : 
+<span class="lineNum">    1185 </span><span class="lineCov">        110 :     impl::s_frk_state().set_tu_id( *ts, new_id );</span>
+<span class="lineNum">    1186 </span><span class="lineCov">         55 : }</span>
+<span class="lineNum">    1187 </span>            : 
+<span class="lineNum">    1188 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1189 </span>            : 
+<span class="lineNum">    1190 </span>            : // ************************************************************************** //
+<span class="lineNum">    1191 </span>            : // **************             deregister_test_unit             ************** //
+<span class="lineNum">    1192 </span>            : // ************************************************************************** //
+<a name="1193"><span class="lineNum">    1193 </span>            : </a>
+<span class="lineNum">    1194 </span>            : void
+<span class="lineNum">    1195 </span><span class="lineNoCov">          0 : deregister_test_unit( test_unit* tu )</span>
+<span class="lineNum">    1196 </span>            : {
+<span class="lineNum">    1197 </span><span class="lineCov">       1101 :     impl::s_frk_state().m_test_units.erase( tu-&gt;p_id );</span>
+<span class="lineNum">    1198 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">    1199 </span>            : 
+<span class="lineNum">    1200 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1201 </span>            : 
+<span class="lineNum">    1202 </span>            : // ************************************************************************** //
+<span class="lineNum">    1203 </span>            : // **************                     clear                    ************** //
+<span class="lineNum">    1204 </span>            : // ************************************************************************** //
+<a name="1205"><span class="lineNum">    1205 </span>            : </a>
+<span class="lineNum">    1206 </span>            : void
+<span class="lineNum">    1207 </span><span class="lineNoCov">          0 : clear()</span>
+<span class="lineNum">    1208 </span>            : {
+<span class="lineNum">    1209 </span><span class="lineNoCov">          0 :     impl::s_frk_state().clear();</span>
+<span class="lineNum">    1210 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">    1211 </span>            : 
+<span class="lineNum">    1212 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1213 </span>            : 
+<span class="lineNum">    1214 </span>            : // ************************************************************************** //
+<span class="lineNum">    1215 </span>            : // **************               register_observer              ************** //
+<span class="lineNum">    1216 </span>            : // ************************************************************************** //
+<a name="1217"><span class="lineNum">    1217 </span>            : </a>
+<span class="lineNum">    1218 </span>            : void
+<span class="lineNum">    1219 </span><span class="lineCov">          2 : register_observer( test_observer&amp; to )</span>
+<span class="lineNum">    1220 </span>            : {
+<span class="lineNum">    1221 </span><span class="lineCov">          4 :     impl::s_frk_state().m_observers.insert( &amp;to );</span>
+<span class="lineNum">    1222 </span><span class="lineCov">          2 : }</span>
+<span class="lineNum">    1223 </span>            : 
+<span class="lineNum">    1224 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1225 </span>            : 
+<span class="lineNum">    1226 </span>            : // ************************************************************************** //
+<span class="lineNum">    1227 </span>            : // **************              deregister_observer             ************** //
+<span class="lineNum">    1228 </span>            : // ************************************************************************** //
+<a name="1229"><span class="lineNum">    1229 </span>            : </a>
+<span class="lineNum">    1230 </span>            : void
+<span class="lineNum">    1231 </span><span class="lineNoCov">          0 : deregister_observer( test_observer&amp; to )</span>
+<span class="lineNum">    1232 </span>            : {
+<span class="lineNum">    1233 </span><span class="lineNoCov">          0 :     impl::s_frk_state().m_observers.erase( &amp;to );</span>
+<span class="lineNum">    1234 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">    1235 </span>            : 
+<span class="lineNum">    1236 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1237 </span>            : 
+<span class="lineNum">    1238 </span>            : // ************************************************************************** //
+<span class="lineNum">    1239 </span>            : // **************                  add_context                 ************** //
+<span class="lineNum">    1240 </span>            : // ************************************************************************** //
+<a name="1241"><span class="lineNum">    1241 </span>            : </a>
+<span class="lineNum">    1242 </span>            : int
+<span class="lineNum">    1243 </span><span class="lineNoCov">          0 : add_context( ::boost::unit_test::lazy_ostream const&amp; context_descr, bool sticky )</span>
+<span class="lineNum">    1244 </span>            : {
+<span class="lineNum">    1245 </span><span class="lineNoCov">          0 :     std::stringstream buffer;</span>
+<span class="lineNum">    1246 </span><span class="lineNoCov">          0 :     context_descr( buffer );</span>
+<span class="lineNum">    1247 </span><span class="lineNoCov">          0 :     int res_idx  = impl::s_frk_state().m_context_idx++;</span>
+<span class="lineNum">    1248 </span>            : 
+<span class="lineNum">    1249 </span><span class="lineNoCov">          0 :     impl::s_frk_state().m_context.push_back( state::context_frame( buffer.str(), res_idx, sticky ) );</span>
+<span class="lineNum">    1250 </span>            : 
+<span class="lineNum">    1251 </span><span class="lineNoCov">          0 :     return res_idx;</span>
+<span class="lineNum">    1252 </span>            : }
+<span class="lineNum">    1253 </span>            : 
+<span class="lineNum">    1254 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1255 </span>            : 
+<span class="lineNum">    1256 </span>            : // ************************************************************************** //
+<span class="lineNum">    1257 </span>            : // **************                 clear_context                ************** //
+<span class="lineNum">    1258 </span>            : // ************************************************************************** //
+<span class="lineNum">    1259 </span>            : 
+<span class="lineNum">    1260 </span>            : struct frame_with_id {
+<span class="lineNum">    1261 </span><span class="lineNoCov">          0 :     explicit frame_with_id( int id ) : m_id( id ) {}</span>
+<span class="lineNum">    1262 </span>            : 
+<span class="lineNum">    1263 </span>            :     bool    operator()( state::context_frame const&amp; f )
+<span class="lineNum">    1264 </span>            :     {
+<span class="lineNum">    1265 </span>            :         return f.frame_id == m_id;
+<span class="lineNum">    1266 </span>            :     }
+<span class="lineNum">    1267 </span>            :     int     m_id;
+<span class="lineNum">    1268 </span>            : };
+<span class="lineNum">    1269 </span>            : 
+<span class="lineNum">    1270 </span>            : //____________________________________________________________________________//
+<a name="1271"><span class="lineNum">    1271 </span>            : </a>
+<span class="lineNum">    1272 </span>            : void
+<span class="lineNum">    1273 </span><span class="lineCov">     302937 : clear_context( int frame_id )</span>
+<span class="lineNum">    1274 </span>            : {
+<span class="lineNum">    1275 </span><span class="lineCov">     302937 :     if( frame_id == -1 ) {   // clear all non sticky frames</span>
+<span class="lineNum">    1276 </span><span class="lineCov">     605874 :         for( int i=static_cast&lt;int&gt;(impl::s_frk_state().m_context.size())-1; i&gt;=0; i-- )</span>
+<span class="lineNum">    1277 </span><span class="lineNoCov">          0 :             if( !impl::s_frk_state().m_context[i].is_sticky )</span>
+<span class="lineNum">    1278 </span><span class="lineNoCov">          0 :                 impl::s_frk_state().m_context.erase( impl::s_frk_state().m_context.begin()+i );</span>
+<span class="lineNum">    1279 </span>            :     }
+<span class="lineNum">    1280 </span>            : 
+<span class="lineNum">    1281 </span>            :     else { // clear specific frame
+<span class="lineNum">    1282 </span>            :         state::context_data::iterator it =
+<span class="lineNum">    1283 </span><span class="lineNoCov">          0 :             std::find_if( impl::s_frk_state().m_context.begin(), impl::s_frk_state().m_context.end(), frame_with_id( frame_id ) );</span>
+<span class="lineNum">    1284 </span>            : 
+<span class="lineNum">    1285 </span><span class="lineNoCov">          0 :         if( it != impl::s_frk_state().m_context.end() ) // really an internal error if this is not true</span>
+<span class="lineNum">    1286 </span><span class="lineNoCov">          0 :             impl::s_frk_state().m_context.erase( it );</span>
+<span class="lineNum">    1287 </span>            :     }
+<span class="lineNum">    1288 </span><span class="lineCov">     302937 : }</span>
+<span class="lineNum">    1289 </span>            : 
+<span class="lineNum">    1290 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1291 </span>            : 
+<span class="lineNum">    1292 </span>            : // ************************************************************************** //
+<span class="lineNum">    1293 </span>            : // **************                  get_context                 ************** //
+<span class="lineNum">    1294 </span>            : // ************************************************************************** //
+<a name="1295"><span class="lineNum">    1295 </span>            : </a>
+<span class="lineNum">    1296 </span>            : context_generator
+<span class="lineNum">    1297 </span><span class="lineNoCov">          0 : get_context()</span>
+<span class="lineNum">    1298 </span>            : {
+<span class="lineNum">    1299 </span><span class="lineNoCov">          0 :     return context_generator();</span>
+<span class="lineNum">    1300 </span>            : }
+<span class="lineNum">    1301 </span>            : 
+<span class="lineNum">    1302 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1303 </span>            : 
+<span class="lineNum">    1304 </span>            : // ************************************************************************** //
+<span class="lineNum">    1305 </span>            : // **************               context_generator              ************** //
+<span class="lineNum">    1306 </span>            : // ************************************************************************** //
+<a name="1307"><span class="lineNum">    1307 </span>            : </a>
+<span class="lineNum">    1308 </span>            : bool
+<span class="lineNum">    1309 </span><span class="lineNoCov">          0 : context_generator::is_empty() const</span>
+<span class="lineNum">    1310 </span>            : {
+<span class="lineNum">    1311 </span><span class="lineNoCov">          0 :     return impl::s_frk_state().m_context.empty();</span>
+<span class="lineNum">    1312 </span>            : }
+<span class="lineNum">    1313 </span>            : 
+<span class="lineNum">    1314 </span>            : //____________________________________________________________________________//
+<a name="1315"><span class="lineNum">    1315 </span>            : </a>
+<span class="lineNum">    1316 </span>            : const_string
+<span class="lineNum">    1317 </span><span class="lineNoCov">          0 : context_generator::next() const</span>
+<span class="lineNum">    1318 </span>            : {
+<span class="lineNum">    1319 </span><span class="lineNoCov">          0 :     return m_curr_frame &lt; impl::s_frk_state().m_context.size() ? impl::s_frk_state().m_context[m_curr_frame++].descr : const_string();</span>
+<span class="lineNum">    1320 </span>            : }
+<span class="lineNum">    1321 </span>            : 
+<span class="lineNum">    1322 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1323 </span>            : 
+<span class="lineNum">    1324 </span>            : // ************************************************************************** //
+<span class="lineNum">    1325 </span>            : // **************               master_test_suite              ************** //
+<span class="lineNum">    1326 </span>            : // ************************************************************************** //
+<a name="1327"><span class="lineNum">    1327 </span>            : </a>
+<span class="lineNum">    1328 </span>            : master_test_suite_t&amp;
+<span class="lineNum">    1329 </span><span class="lineCov">         64 : master_test_suite()</span>
+<span class="lineNum">    1330 </span>            : {
+<span class="lineNum">    1331 </span><span class="lineCov">         64 :     if( !impl::s_frk_state().m_master_test_suite )</span>
+<span class="lineNum">    1332 </span><span class="lineCov">          1 :         impl::s_frk_state().m_master_test_suite = new master_test_suite_t;</span>
+<span class="lineNum">    1333 </span>            : 
+<span class="lineNum">    1334 </span><span class="lineCov">         64 :     return *impl::s_frk_state().m_master_test_suite;</span>
+<span class="lineNum">    1335 </span>            : }
+<span class="lineNum">    1336 </span>            : 
+<span class="lineNum">    1337 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1338 </span>            : 
+<span class="lineNum">    1339 </span>            : // ************************************************************************** //
+<span class="lineNum">    1340 </span>            : // **************            current_auto_test_suite           ************** //
+<span class="lineNum">    1341 </span>            : // ************************************************************************** //
+<a name="1342"><span class="lineNum">    1342 </span>            : </a>
+<span class="lineNum">    1343 </span>            : test_suite&amp;
+<span class="lineNum">    1344 </span><span class="lineCov">        544 : current_auto_test_suite( test_suite* ts, bool push_or_pop )</span>
+<span class="lineNum">    1345 </span>            : {
+<span class="lineNum">    1346 </span><span class="lineCov">       1088 :     if( impl::s_frk_state().m_auto_test_suites.empty() )</span>
+<span class="lineNum">    1347 </span><span class="lineCov">          2 :         impl::s_frk_state().m_auto_test_suites.push_back( &amp;framework::master_test_suite() );</span>
+<span class="lineNum">    1348 </span>            : 
+<span class="lineNum">    1349 </span><span class="lineCov">        544 :     if( !push_or_pop )</span>
+<span class="lineNum">    1350 </span><span class="lineCov">         58 :         impl::s_frk_state().m_auto_test_suites.pop_back();</span>
+<span class="lineNum">    1351 </span><span class="lineCov">        486 :     else if( ts )</span>
+<span class="lineNum">    1352 </span><span class="lineCov">         58 :         impl::s_frk_state().m_auto_test_suites.push_back( ts );</span>
+<span class="lineNum">    1353 </span>            : 
+<span class="lineNum">    1354 </span><span class="lineCov">       1088 :     return *impl::s_frk_state().m_auto_test_suites.back();</span>
+<span class="lineNum">    1355 </span>            : }
+<span class="lineNum">    1356 </span>            : 
+<span class="lineNum">    1357 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1358 </span>            : 
+<span class="lineNum">    1359 </span>            : // ************************************************************************** //
+<span class="lineNum">    1360 </span>            : // **************               current_test_case              ************** //
+<span class="lineNum">    1361 </span>            : // ************************************************************************** //
+<a name="1362"><span class="lineNum">    1362 </span>            : </a>
+<span class="lineNum">    1363 </span>            : test_case const&amp;
+<span class="lineNum">    1364 </span><span class="lineCov">        357 : current_test_case()</span>
+<span class="lineNum">    1365 </span>            : {
+<span class="lineNum">    1366 </span><span class="lineCov">        714 :     return get&lt;test_case&gt;( impl::s_frk_state().m_curr_test_case );</span>
+<span class="lineNum">    1367 </span>            : }
+<span class="lineNum">    1368 </span>            : 
+<span class="lineNum">    1369 </span>            : //____________________________________________________________________________//
+<a name="1370"><span class="lineNum">    1370 </span>            : </a>
+<span class="lineNum">    1371 </span>            : test_unit_id
+<span class="lineNum">    1372 </span><span class="lineNoCov">          0 : current_test_case_id()</span>
+<span class="lineNum">    1373 </span>            : {
+<span class="lineNum">    1374 </span><span class="lineCov">     605824 :     return impl::s_frk_state().m_curr_test_case;</span>
+<span class="lineNum">    1375 </span>            : }
+<span class="lineNum">    1376 </span>            : 
+<span class="lineNum">    1377 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1378 </span>            : 
+<span class="lineNum">    1379 </span>            : // ************************************************************************** //
+<span class="lineNum">    1380 </span>            : // **************                framework::get                ************** //
+<span class="lineNum">    1381 </span>            : // ************************************************************************** //
+<a name="1382"><span class="lineNum">    1382 </span>            : </a>
+<span class="lineNum">    1383 </span>            : test_unit&amp;
+<span class="lineNum">    1384 </span><span class="lineCov">       4981 : get( test_unit_id id, test_unit_type t )</span>
+<span class="lineNum">    1385 </span>            : {
+<span class="lineNum">    1386 </span><span class="lineCov">       4981 :     test_unit* res = impl::s_frk_state().m_test_units[id];</span>
+<span class="lineNum">    1387 </span>            : 
+<span class="lineNum">    1388 </span><span class="lineCov">       4981 :     BOOST_TEST_I_ASSRT( (res-&gt;p_type &amp; t) != 0, internal_error( &quot;Invalid test unit type&quot; ) );</span>
+<span class="lineNum">    1389 </span>            : 
+<span class="lineNum">    1390 </span><span class="lineCov">       4981 :     return *res;</span>
+<span class="lineNum">    1391 </span>            : }
+<span class="lineNum">    1392 </span>            : 
+<span class="lineNum">    1393 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1394 </span>            : 
+<span class="lineNum">    1395 </span>            : // ************************************************************************** //
+<span class="lineNum">    1396 </span>            : // **************                framework::run                ************** //
+<span class="lineNum">    1397 </span>            : // ************************************************************************** //
+<a name="1398"><span class="lineNum">    1398 </span>            : </a>
+<span class="lineNum">    1399 </span>            : void
+<span class="lineNum">    1400 </span><span class="lineCov">          1 : run( test_unit_id id, bool continue_test )</span>
+<span class="lineNum">    1401 </span>            : {
+<span class="lineNum">    1402 </span><span class="lineCov">          1 :     if( id == INV_TEST_UNIT_ID )</span>
+<span class="lineNum">    1403 </span><span class="lineCov">          1 :         id = master_test_suite().p_id;</span>
+<span class="lineNum">    1404 </span>            : 
+<span class="lineNum">    1405 </span>            :     // Figure out run status for execution phase
+<span class="lineNum">    1406 </span><span class="lineCov">          1 :     impl::s_frk_state().deduce_run_status( id );</span>
+<span class="lineNum">    1407 </span>            : 
+<span class="lineNum">    1408 </span><span class="lineCov">          2 :     test_case_counter tcc;</span>
+<span class="lineNum">    1409 </span><span class="lineCov">          1 :     traverse_test_tree( id, tcc );</span>
+<span class="lineNum">    1410 </span>            : 
+<span class="lineNum">    1411 </span><span class="lineCov">          1 :     BOOST_TEST_SETUP_ASSERT( tcc.p_count != 0 , runtime_config::get&lt;std::vector&lt;std::string&gt; &gt;( runtime_config::RUN_FILTERS ).empty()</span>
+<span class="lineNum">    1412 </span>            :         ? BOOST_TEST_L( &quot;test tree is empty&quot; )
+<span class="lineNum">    1413 </span><span class="lineNoCov">          0 :         : BOOST_TEST_L( &quot;no test cases matching filter or all test cases were disabled&quot; ) );</span>
+<span class="lineNum">    1414 </span>            : 
+<span class="lineNum">    1415 </span><span class="lineCov">          1 :     bool    was_in_progress     = framework::test_in_progress();</span>
+<span class="lineNum">    1416 </span><span class="lineCov">          1 :     bool    call_start_finish   = !continue_test || !was_in_progress;</span>
+<span class="lineNum">    1417 </span>            : 
+<span class="lineNum">    1418 </span><span class="lineCov">          1 :     impl::s_frk_state().m_test_in_progress = true;</span>
+<span class="lineNum">    1419 </span>            : 
+<span class="lineNum">    1420 </span><span class="lineCov">          1 :     if( call_start_finish ) {</span>
+<span class="lineNum">    1421 </span><span class="lineCov">         19 :         BOOST_TEST_FOREACH( test_observer*, to, impl::s_frk_state().m_observers ) {</span>
+<span class="lineNum">    1422 </span>            :             BOOST_TEST_I_TRY {
+<span class="lineNum">    1423 </span><span class="lineCov">          6 :                 impl::s_frk_state().m_aux_em.vexecute( boost::bind( &amp;test_observer::test_start, to, tcc.p_count ) );</span>
+<span class="lineNum">    1424 </span>            :             }
+<span class="lineNum">    1425 </span><span class="lineNoCov">          0 :             BOOST_TEST_I_CATCH( execution_exception, ex ) {</span>
+<span class="lineNum">    1426 </span><span class="lineNoCov">          0 :                 BOOST_TEST_SETUP_ASSERT( false, ex.what() );</span>
+<span class="lineNum">    1427 </span>            :             }
+<span class="lineNum">    1428 </span>            :         }
+<span class="lineNum">    1429 </span>            :     }
+<span class="lineNum">    1430 </span>            : 
+<span class="lineNum">    1431 </span><span class="lineCov">          2 :     unsigned seed = runtime_config::get&lt;unsigned&gt;( runtime_config::RANDOM_SEED );</span>
+<span class="lineNum">    1432 </span><span class="lineCov">          1 :     switch( seed ) {</span>
+<span class="lineNum">    1433 </span>            :     case 0:
+<span class="lineNum">    1434 </span>            :         break;
+<span class="lineNum">    1435 </span>            :     case 1:
+<span class="lineNum">    1436 </span><span class="lineNoCov">          0 :         seed = static_cast&lt;unsigned&gt;( std::rand() ^ std::time( 0 ) ); // better init using std::rand() ^ ...</span>
+<span class="lineNum">    1437 </span>            :     default:
+<span class="lineNum">    1438 </span><span class="lineNoCov">          0 :         BOOST_TEST_FRAMEWORK_MESSAGE( &quot;Test cases order is shuffled using seed: &quot; &lt;&lt; seed );</span>
+<span class="lineNum">    1439 </span><span class="lineNoCov">          0 :         std::srand( seed );</span>
+<span class="lineNum">    1440 </span>            :     }
+<span class="lineNum">    1441 </span>            : 
+<span class="lineNum">    1442 </span><span class="lineCov">          1 :     impl::s_frk_state().execute_test_tree( id );</span>
+<span class="lineNum">    1443 </span>            : 
+<span class="lineNum">    1444 </span><span class="lineCov">          1 :     if( call_start_finish ) {</span>
+<span class="lineNum">    1445 </span><span class="lineCov">         19 :         BOOST_TEST_REVERSE_FOREACH( test_observer*, to, impl::s_frk_state().m_observers )</span>
+<span class="lineNum">    1446 </span><span class="lineCov">          2 :             to-&gt;test_finish();</span>
+<span class="lineNum">    1447 </span>            :     }
+<span class="lineNum">    1448 </span>            : 
+<span class="lineNum">    1449 </span><span class="lineCov">          1 :     impl::s_frk_state().m_test_in_progress = was_in_progress;</span>
+<span class="lineNum">    1450 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">    1451 </span>            : 
+<span class="lineNum">    1452 </span>            : //____________________________________________________________________________//
+<a name="1453"><span class="lineNum">    1453 </span>            : </a>
+<span class="lineNum">    1454 </span>            : void
+<span class="lineNum">    1455 </span><span class="lineNoCov">          0 : run( test_unit const* tu, bool continue_test )</span>
+<span class="lineNum">    1456 </span>            : {
+<span class="lineNum">    1457 </span><span class="lineNoCov">          0 :     run( tu-&gt;p_id, continue_test );</span>
+<span class="lineNum">    1458 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">    1459 </span>            : 
+<span class="lineNum">    1460 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1461 </span>            : 
+<span class="lineNum">    1462 </span>            : // ************************************************************************** //
+<span class="lineNum">    1463 </span>            : // **************               assertion_result               ************** //
+<span class="lineNum">    1464 </span>            : // ************************************************************************** //
+<a name="1465"><span class="lineNum">    1465 </span>            : </a>
+<span class="lineNum">    1466 </span>            : void
+<span class="lineNum">    1467 </span><span class="lineCov">     302912 : assertion_result( unit_test::assertion_result ar )</span>
+<span class="lineNum">    1468 </span>            : {
+<span class="lineNum">    1469 </span><span class="lineCov">    5755328 :     BOOST_TEST_FOREACH( test_observer*, to, impl::s_frk_state().m_observers )</span>
+<span class="lineNum">    1470 </span><span class="lineCov">     605824 :         to-&gt;assertion_result( ar );</span>
+<span class="lineNum">    1471 </span><span class="lineCov">     302912 : }</span>
+<span class="lineNum">    1472 </span>            : 
+<span class="lineNum">    1473 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1474 </span>            : 
+<span class="lineNum">    1475 </span>            : // ************************************************************************** //
+<span class="lineNum">    1476 </span>            : // **************               exception_caught               ************** //
+<span class="lineNum">    1477 </span>            : // ************************************************************************** //
+<a name="1478"><span class="lineNum">    1478 </span>            : </a>
+<span class="lineNum">    1479 </span>            : void
+<span class="lineNum">    1480 </span><span class="lineNoCov">          0 : exception_caught( execution_exception const&amp; ex )</span>
+<span class="lineNum">    1481 </span>            : {
+<span class="lineNum">    1482 </span><span class="lineNoCov">          0 :     BOOST_TEST_FOREACH( test_observer*, to, impl::s_frk_state().m_observers )</span>
+<span class="lineNum">    1483 </span><span class="lineNoCov">          0 :         to-&gt;exception_caught( ex );</span>
+<span class="lineNum">    1484 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">    1485 </span>            : 
+<span class="lineNum">    1486 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1487 </span>            : 
+<span class="lineNum">    1488 </span>            : // ************************************************************************** //
+<span class="lineNum">    1489 </span>            : // **************               test_unit_aborted              ************** //
+<span class="lineNum">    1490 </span>            : // ************************************************************************** //
+<a name="1491"><span class="lineNum">    1491 </span>            : </a>
+<span class="lineNum">    1492 </span>            : void
+<span class="lineNum">    1493 </span><span class="lineNoCov">          0 : test_unit_aborted( test_unit const&amp; tu )</span>
+<span class="lineNum">    1494 </span>            : {
+<span class="lineNum">    1495 </span><span class="lineNoCov">          0 :     BOOST_TEST_FOREACH( test_observer*, to, impl::s_frk_state().m_observers )</span>
+<span class="lineNum">    1496 </span><span class="lineNoCov">          0 :         to-&gt;test_unit_aborted( tu );</span>
+<span class="lineNum">    1497 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">    1498 </span>            : 
+<span class="lineNum">    1499 </span>            : //____________________________________________________________________________//
+<span class="lineNum">    1500 </span>            : 
+<span class="lineNum">    1501 </span>            : } // namespace framework
+<span class="lineNum">    1502 </span>            : } // namespace unit_test
+<span class="lineNum">    1503 </span>            : } // namespace boost
+<span class="lineNum">    1504 </span>            : 
+<span class="lineNum">    1505 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">    1506 </span>            : 
+<span class="lineNum">    1507 </span>            : #endif // BOOST_TEST_FRAMEWORK_IPP_021005GER
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

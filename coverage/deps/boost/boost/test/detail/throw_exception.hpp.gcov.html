@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/detail/throw_exception.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/detail</a> - throw_exception.hpp<span style="font-size: 80%;"> (source / <a href="throw_exception.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //!@file
+<span class="lineNum">       9 </span>            : //!@brief contains wrappers, which allows to build Boost.Test with no exception
+<span class="lineNum">      10 </span>            : // ***************************************************************************
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #ifndef BOOST_TEST_DETAIL_THROW_EXCEPTION_HPP
+<span class="lineNum">      13 </span>            : #define BOOST_TEST_DETAIL_THROW_EXCEPTION_HPP
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : // Boost
+<span class="lineNum">      16 </span>            : #include &lt;boost/config.hpp&gt; // BOOST_NO_EXCEPTION
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #ifdef BOOST_NO_EXCEPTION
+<span class="lineNum">      19 </span>            : // C RUNTIME
+<span class="lineNum">      20 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #endif
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace boost {
+<span class="lineNum">      29 </span>            : namespace unit_test {
+<span class="lineNum">      30 </span>            : namespace ut_detail {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #ifdef BOOST_NO_EXCEPTIONS
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : template&lt;typename E&gt;
+<span class="lineNum">      35 </span>            : BOOST_NORETURN inline void
+<span class="lineNum">      36 </span>            : throw_exception(E const&amp; e) { abort(); }
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #define BOOST_TEST_I_TRY
+<span class="lineNum">      39 </span>            : #define BOOST_TEST_I_CATCH( T, var ) for(T const&amp; var = *(T*)0; false;)
+<span class="lineNum">      40 </span>            : #define BOOST_TEST_I_CATCH0( T ) if(0)
+<span class="lineNum">      41 </span>            : #define BOOST_TEST_I_CATCHALL() if(0)
+<span class="lineNum">      42 </span>            : #define BOOST_TEST_I_RETHROW
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : #else
+<span class="lineNum">      45 </span>            : 
+<a name="46"><span class="lineNum">      46 </span>            : template&lt;typename E&gt;</a>
+<span class="lineNum">      47 </span>            : BOOST_NORETURN inline void
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 : throw_exception(E const&amp; e) { throw e; }</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : #define BOOST_TEST_I_TRY try
+<span class="lineNum">      51 </span>            : #define BOOST_TEST_I_CATCH( T, var ) catch( T const&amp; var )
+<span class="lineNum">      52 </span>            : #define BOOST_TEST_I_CATCH0( T ) catch( T const&amp; )
+<span class="lineNum">      53 </span>            : #define BOOST_TEST_I_CATCHALL() catch(...)
+<span class="lineNum">      54 </span>            : #define BOOST_TEST_I_RETHROW throw
+<span class="lineNum">      55 </span>            : #endif
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : #define BOOST_TEST_I_THROW( E ) unit_test::ut_detail::throw_exception( E )
+<span class="lineNum">      60 </span>            : #define BOOST_TEST_I_ASSRT( cond, ex ) if( cond ) {} else BOOST_TEST_I_THROW( ex )
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : } // namespace ut_detail
+<span class="lineNum">      64 </span>            : } // namespace unit_test
+<span class="lineNum">      65 </span>            : } // namespace boost
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : #endif // BOOST_TEST_DETAIL_THROW_EXCEPTION_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

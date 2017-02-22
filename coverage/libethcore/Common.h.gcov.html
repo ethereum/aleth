@@ -1,0 +1,297 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethcore/Common.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethcore</a> - Common.h<span style="font-size: 80%;"> (source / <a href="Common.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntry">34</td>
+            <td class="headerCovTableEntryHi">91.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntryMed">75.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Common.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  *
+<span class="lineNum">      21 </span>            :  * Ethereum-specific data structures &amp; algorithms.
+<span class="lineNum">      22 </span>            :  */
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #pragma once
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;string&gt;
+<span class="lineNum">      27 </span>            : #include &lt;functional&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libdevcore/FixedHash.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libdevcrypto/Common.h&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace dev
+<span class="lineNum">      33 </span>            : {
+<span class="lineNum">      34 </span>            : namespace eth
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : /// Current protocol version.
+<span class="lineNum">      38 </span>            : extern const unsigned c_protocolVersion;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : /// Current minor protocol version.
+<span class="lineNum">      41 </span>            : extern const unsigned c_minorProtocolVersion;
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : /// Current database version.
+<span class="lineNum">      44 </span>            : extern const unsigned c_databaseVersion;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : /// User-friendly string representation of the amount _b in wei.
+<a name="47"><span class="lineNum">      47 </span>            : std::string formatBalance(bigint const&amp; _b);</a>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 : DEV_SIMPLE_EXCEPTION(InvalidAddress);</span>
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : /// Convert the given string into an address.
+<span class="lineNum">      52 </span>            : Address toAddress(std::string const&amp; _s);
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : /// Get information concerning the currency denominations.
+<span class="lineNum">      55 </span>            : std::vector&lt;std::pair&lt;u256, std::string&gt;&gt; const&amp; units();
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : /// The log bloom's size (2048-bit).
+<span class="lineNum">      58 </span>            : using LogBloom = h2048;
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : /// Many log blooms.
+<span class="lineNum">      61 </span>            : using LogBlooms = std::vector&lt;LogBloom&gt;;
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : // The various denominations; here for ease of use where needed within code.
+<span class="lineNum">      64 </span><span class="lineCov">        104 : static const u256 ether = exp10&lt;18&gt;();</span>
+<span class="lineNum">      65 </span><span class="lineCov">        104 : static const u256 finney = exp10&lt;15&gt;();</span>
+<span class="lineNum">      66 </span><span class="lineCov">        104 : static const u256 szabo = exp10&lt;12&gt;();</span>
+<span class="lineNum">      67 </span><span class="lineCov">        104 : static const u256 shannon = exp10&lt;9&gt;();</span>
+<span class="lineNum">      68 </span>            : static const u256 wei = exp10&lt;0&gt;();
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : using Nonce = h64;
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : using BlockNumber = unsigned;
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : static const BlockNumber LatestBlock = (BlockNumber)-2;
+<span class="lineNum">      75 </span>            : static const BlockNumber PendingBlock = (BlockNumber)-1;
+<span class="lineNum">      76 </span><span class="lineCov">          2 : static const h256 LatestBlockHash = h256(2);</span>
+<span class="lineNum">      77 </span><span class="lineCov">          2 : static const h256 EarliestBlockHash = h256(1);</span>
+<span class="lineNum">      78 </span><span class="lineCov">        104 : static const h256 PendingBlockHash = h256(0);</span>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">        206 : static const u256 DefaultBlockGasLimit = 4712388;</span>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : enum class RelativeBlock: BlockNumber
+<span class="lineNum">      83 </span>            : {
+<span class="lineNum">      84 </span>            :         Latest = LatestBlock,
+<span class="lineNum">      85 </span>            :         Pending = PendingBlock
+<span class="lineNum">      86 </span>            : };
+<span class="lineNum">      87 </span>            : 
+<a name="88"><span class="lineNum">      88 </span>            : class Transaction;</a>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineCov">      14864 : struct ImportRoute</span>
+<span class="lineNum">      91 </span>            : {
+<span class="lineNum">      92 </span>            :         h256s deadBlocks;
+<span class="lineNum">      93 </span>            :         h256s liveBlocks;
+<span class="lineNum">      94 </span>            :         std::vector&lt;Transaction&gt; goodTranactions;
+<span class="lineNum">      95 </span>            : };
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : enum class ImportResult
+<span class="lineNum">      98 </span>            : {
+<span class="lineNum">      99 </span>            :         Success = 0,
+<span class="lineNum">     100 </span>            :         UnknownParent,
+<span class="lineNum">     101 </span>            :         FutureTimeKnown,
+<span class="lineNum">     102 </span>            :         FutureTimeUnknown,
+<span class="lineNum">     103 </span>            :         AlreadyInChain,
+<span class="lineNum">     104 </span>            :         AlreadyKnown,
+<span class="lineNum">     105 </span>            :         Malformed,
+<span class="lineNum">     106 </span>            :         OverbidGasPrice,
+<span class="lineNum">     107 </span>            :         BadChain
+<span class="lineNum">     108 </span>            : };
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            : struct ImportRequirements
+<span class="lineNum">     111 </span>            : {
+<span class="lineNum">     112 </span>            :         using value = unsigned;
+<span class="lineNum">     113 </span>            :         enum
+<span class="lineNum">     114 </span>            :         {
+<span class="lineNum">     115 </span>            :                 ValidSeal = 1, ///&lt; Validate seal
+<span class="lineNum">     116 </span>            :                 UncleBasic = 4, ///&lt; Check the basic structure of the uncles.
+<span class="lineNum">     117 </span>            :                 TransactionBasic = 8, ///&lt; Check the basic structure of the transactions.
+<span class="lineNum">     118 </span>            :                 UncleSeals = 16, ///&lt; Check the basic structure of the uncles.
+<span class="lineNum">     119 </span>            :                 TransactionSignatures = 32, ///&lt; Check the basic structure of the transactions.
+<span class="lineNum">     120 </span>            :                 Parent = 64, ///&lt; Check parent block header.
+<span class="lineNum">     121 </span>            :                 UncleParent = 128, ///&lt; Check uncle parent block header.
+<span class="lineNum">     122 </span>            :                 PostGenesis = 256, ///&lt; Require block to be non-genesis.
+<span class="lineNum">     123 </span>            :                 CheckUncles = UncleBasic | UncleSeals, ///&lt; Check uncle seals.
+<span class="lineNum">     124 </span>            :                 CheckTransactions = TransactionBasic | TransactionSignatures, ///&lt; Check transaction signatures.
+<span class="lineNum">     125 </span>            :                 OutOfOrderChecks = ValidSeal | CheckUncles | CheckTransactions, ///&lt; Do all checks that can be done independently of prior blocks having been imported.
+<span class="lineNum">     126 </span>            :                 InOrderChecks = Parent | UncleParent, ///&lt; Do all checks that cannot be done independently of prior blocks having been imported.
+<span class="lineNum">     127 </span>            :                 Everything = ValidSeal | CheckUncles | CheckTransactions | Parent | UncleParent,
+<span class="lineNum">     128 </span>            :                 None = 0
+<span class="lineNum">     129 </span>            :         };
+<span class="lineNum">     130 </span>            : };
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            : /// Super-duper signal mechanism. TODO: replace with somthing a bit heavier weight.
+<span class="lineNum">     133 </span><span class="lineCov">     150952 : template&lt;typename... Args&gt; class Signal</span>
+<span class="lineNum">     134 </span>            : {
+<span class="lineNum">     135 </span>            : public:
+<span class="lineNum">     136 </span>            :         using Callback = std::function&lt;void(Args...)&gt;;
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :         class HandlerAux
+<span class="lineNum">     139 </span>            :         {
+<span class="lineNum">     140 </span>            :                 friend class Signal;
+<a name="141"><span class="lineNum">     141 </span>            : </a>
+<span class="lineNum">     142 </span>            :         public:
+<a name="143"><span class="lineNum">     143 </span><span class="lineCov">         15 :                 ~HandlerAux() { if (m_s) m_s-&gt;m_fire.erase(m_i); }</span></a>
+<span class="lineNum">     144 </span><span class="lineCov">          1 :                 void reset() { m_s = nullptr; }</span>
+<span class="lineNum">     145 </span><span class="lineCov">          2 :                 void fire(Args const&amp;... _args) { m_h(_args...); }</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            :         private:
+<span class="lineNum">     148 </span><span class="lineCov">          5 :                 HandlerAux(unsigned _i, Signal* _s, Callback const&amp; _h): m_i(_i), m_s(_s), m_h(_h) {}</span>
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            :                 unsigned m_i = 0;
+<span class="lineNum">     151 </span>            :                 Signal* m_s = nullptr;
+<span class="lineNum">     152 </span>            :                 Callback m_h;
+<a name="153"><span class="lineNum">     153 </span>            :         };</a>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">      75476 :         ~Signal()</span>
+<span class="lineNum">     156 </span>            :         {
+<span class="lineNum">     157 </span><span class="lineCov">     226429 :                 for (auto const&amp; h : m_fire)</span>
+<span class="lineNum">     158 </span><span class="lineCov">          4 :                         if (auto l = h.second.lock())</span>
+<span class="lineNum">     159 </span><span class="lineCov">          1 :                                 l-&gt;reset();</span>
+<a name="160"><span class="lineNum">     160 </span><span class="lineCov">     150952 :         }</span></a>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span><span class="lineCov">          5 :         std::shared_ptr&lt;HandlerAux&gt; add(Callback const&amp; _h)</span>
+<span class="lineNum">     163 </span>            :         {
+<span class="lineNum">     164 </span><span class="lineCov">         10 :                 auto n = m_fire.empty() ? 0 : (m_fire.rbegin()-&gt;first + 1);</span>
+<span class="lineNum">     165 </span><span class="lineCov">         15 :                 auto h =  std::shared_ptr&lt;HandlerAux&gt;(new HandlerAux(n, this, _h));</span>
+<span class="lineNum">     166 </span><span class="lineCov">         10 :                 m_fire[n] = h;</span>
+<span class="lineNum">     167 </span><span class="lineCov">          5 :                 return h;</span>
+<a name="168"><span class="lineNum">     168 </span>            :         }</a>
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span><span class="lineCov">      11353 :         void operator()(Args const&amp;... _args)</span>
+<span class="lineNum">     171 </span>            :         {
+<span class="lineNum">     172 </span><span class="lineCov">      56767 :                 for (auto const&amp; f: valuesOf(m_fire))</span>
+<span class="lineNum">     173 </span><span class="lineCov">          6 :                         if (auto h = f.lock())</span>
+<span class="lineNum">     174 </span><span class="lineCov">          2 :                                 h-&gt;fire(_args...);</span>
+<span class="lineNum">     175 </span><span class="lineCov">      11353 :         }</span>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            : private:
+<span class="lineNum">     178 </span>            :         std::map&lt;unsigned, std::weak_ptr&lt;typename Signal::HandlerAux&gt;&gt; m_fire;
+<span class="lineNum">     179 </span>            : };
+<span class="lineNum">     180 </span>            : 
+<a name="181"><span class="lineNum">     181 </span>            : template&lt;class... Args&gt; using Handler = std::shared_ptr&lt;typename Signal&lt;Args...&gt;::HandlerAux&gt;;</a>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineCov">        126 : struct TransactionSkeleton</span>
+<span class="lineNum">     184 </span>            : {
+<span class="lineNum">     185 </span>            :         bool creation = false;
+<span class="lineNum">     186 </span>            :         Address from;
+<span class="lineNum">     187 </span>            :         Address to;
+<span class="lineNum">     188 </span>            :         u256 value;
+<span class="lineNum">     189 </span>            :         bytes data;
+<span class="lineNum">     190 </span>            :         u256 nonce = Invalid256;
+<span class="lineNum">     191 </span>            :         u256 gas = Invalid256;
+<span class="lineNum">     192 </span>            :         u256 gasPrice = Invalid256;
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            :         std::string userReadable(bool _toProxy, std::function&lt;std::pair&lt;bool, std::string&gt;(TransactionSkeleton const&amp;)&gt; const&amp; _getNatSpec, std::function&lt;std::string(Address const&amp;)&gt; const&amp; _formatAddress) const;
+<span class="lineNum">     195 </span>            : };
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            : void badBlock(bytesConstRef _header, std::string const&amp; _err);
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 : inline void badBlock(bytes const&amp; _header, std::string const&amp; _err) { badBlock(&amp;_header, _err); }</span>
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            : // TODO: move back into a mining subsystem and have it be accessible from Sealant only via a dynamic_cast.
+<span class="lineNum">     202 </span>            : /**
+<span class="lineNum">     203 </span>            :  * @brief Describes the progress of a mining operation.
+<span class="lineNum">     204 </span>            :  */
+<span class="lineNum">     205 </span><span class="lineCov">      10371 : struct WorkingProgress</span>
+<span class="lineNum">     206 </span>            : {
+<span class="lineNum">     207 </span>            : //      MiningProgress&amp; operator+=(MiningProgress const&amp; _mp) { hashes += _mp.hashes; ms = std::max(ms, _mp.ms); return *this; }
+<span class="lineNum">     208 </span>            :         uint64_t hashes = 0;            ///&lt; Total number of hashes computed.
+<span class="lineNum">     209 </span>            :         uint64_t ms = 0;                        ///&lt; Total number of milliseconds of mining thus far.
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :         u256 rate() const { return ms == 0 ? 0 : hashes * 1000 / ms; }</span>
+<span class="lineNum">     211 </span>            : };
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            : /// Import transaction policy
+<span class="lineNum">     214 </span>            : enum class IfDropped
+<span class="lineNum">     215 </span>            : {
+<span class="lineNum">     216 </span>            :         Ignore, ///&lt; Don't import transaction that was previously dropped.
+<span class="lineNum">     217 </span>            :         Retry   ///&lt; Import transaction even if it was dropped before.
+<span class="lineNum">     218 </span>            : };
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            : }
+<span class="lineNum">     221 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

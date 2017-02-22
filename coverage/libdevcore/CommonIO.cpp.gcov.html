@@ -1,0 +1,258 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/CommonIO.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - CommonIO.cpp<span style="font-size: 80%;"> (source / <a href="CommonIO.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntry">71</td>
+            <td class="headerCovTableEntryLo">42.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryLo">70.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file CommonIO.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;CommonIO.h&quot;
+<span class="lineNum">      23 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      24 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      25 </span>            : #include &lt;fstream&gt;
+<span class="lineNum">      26 </span>            : #include &lt;stdio.h&gt;
+<span class="lineNum">      27 </span>            : #if defined(_WIN32)
+<span class="lineNum">      28 </span>            : #include &lt;windows.h&gt;
+<span class="lineNum">      29 </span>            : #else
+<span class="lineNum">      30 </span>            : #include &lt;termios.h&gt;
+<span class="lineNum">      31 </span>            : #endif
+<span class="lineNum">      32 </span>            : #include &lt;boost/filesystem.hpp&gt;
+<span class="lineNum">      33 </span>            : #include &quot;Exceptions.h&quot;
+<span class="lineNum">      34 </span>            : using namespace std;
+<a name="35"><span class="lineNum">      35 </span>            : using namespace dev;</a>
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span><span class="lineNoCov">          0 : string dev::memDump(bytes const&amp; _bytes, unsigned _width, bool _html)</span>
+<span class="lineNum">      38 </span>            : {
+<span class="lineNum">      39 </span><span class="lineNoCov">          0 :         stringstream ret;</span>
+<span class="lineNum">      40 </span><span class="lineNoCov">          0 :         if (_html)</span>
+<span class="lineNum">      41 </span><span class="lineNoCov">          0 :                 ret &lt;&lt; &quot;&lt;pre style=\&quot;font-family: Monospace,Lucida Console,Courier,Courier New,sans-serif; font-size: small\&quot;&gt;&quot;;</span>
+<span class="lineNum">      42 </span><span class="lineNoCov">          0 :         for (unsigned i = 0; i &lt; _bytes.size(); i += _width)</span>
+<span class="lineNum">      43 </span>            :         {
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :                 ret &lt;&lt; hex &lt;&lt; setw(4) &lt;&lt; setfill('0') &lt;&lt; i &lt;&lt; &quot; &quot;;</span>
+<span class="lineNum">      45 </span><span class="lineNoCov">          0 :                 for (unsigned j = i; j &lt; i + _width; ++j)</span>
+<span class="lineNum">      46 </span><span class="lineNoCov">          0 :                         if (j &lt; _bytes.size())</span>
+<span class="lineNum">      47 </span><span class="lineNoCov">          0 :                                 if (_bytes[j] &gt;= 32 &amp;&amp; _bytes[j] &lt; 127)</span>
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 :                                         if ((char)_bytes[j] == '&lt;' &amp;&amp; _html)</span>
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :                                                 ret &lt;&lt; &quot;&amp;lt;&quot;;</span>
+<span class="lineNum">      50 </span><span class="lineNoCov">          0 :                                         else if ((char)_bytes[j] == '&amp;' &amp;&amp; _html)</span>
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 :                                                 ret &lt;&lt; &quot;&amp;amp;&quot;;</span>
+<span class="lineNum">      52 </span>            :                                         else
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 :                                                 ret &lt;&lt; (char)_bytes[j];</span>
+<span class="lineNum">      54 </span>            :                                 else
+<span class="lineNum">      55 </span>            :                                         ret &lt;&lt; '?';
+<span class="lineNum">      56 </span>            :                         else
+<span class="lineNum">      57 </span>            :                                 ret &lt;&lt; ' ';
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :                 ret &lt;&lt; &quot; &quot;;</span>
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :                 for (unsigned j = i; j &lt; i + _width &amp;&amp; j &lt; _bytes.size(); ++j)</span>
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :                         ret &lt;&lt; setfill('0') &lt;&lt; setw(2) &lt;&lt; hex &lt;&lt; (unsigned)_bytes[j] &lt;&lt; &quot; &quot;;</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :                 ret &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">      62 </span>            :         }
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :         if (_html)</span>
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :                 ret &lt;&lt; &quot;&lt;/pre&gt;&quot;;</span>
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :         return ret.str();</span>
+<span class="lineNum">      66 </span>            : }
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : template &lt;typename _T&gt;
+<span class="lineNum">      69 </span><span class="lineCov">       3004 : inline _T contentsGeneric(std::string const&amp; _file)</span>
+<span class="lineNum">      70 </span>            : {
+<span class="lineNum">      71 </span><span class="lineCov">       3004 :         _T ret;</span>
+<span class="lineNum">      72 </span><span class="lineCov">       3004 :         size_t const c_elementSize = sizeof(typename _T::value_type);</span>
+<span class="lineNum">      73 </span><span class="lineCov">       6008 :         std::ifstream is(_file, std::ifstream::binary);</span>
+<span class="lineNum">      74 </span><span class="lineCov">       3004 :         if (!is)</span>
+<span class="lineNum">      75 </span>            :                 return ret;
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :         // get length of file:
+<span class="lineNum">      78 </span><span class="lineCov">       1692 :         is.seekg(0, is.end);</span>
+<span class="lineNum">      79 </span><span class="lineCov">       1692 :         streamoff length = is.tellg();</span>
+<span class="lineNum">      80 </span><span class="lineCov">       1692 :         if (length == 0)</span>
+<span class="lineNum">      81 </span>            :                 return ret; // do not read empty file (MSVC does not like it)
+<span class="lineNum">      82 </span><span class="lineCov">       1692 :         is.seekg(0, is.beg);</span>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span><span class="lineCov">       1730 :         ret.resize((length + c_elementSize - 1) / c_elementSize);</span>
+<span class="lineNum">      85 </span><span class="lineCov">       3346 :         is.read(const_cast&lt;char*&gt;(reinterpret_cast&lt;char const*&gt;(ret.data())), length);</span>
+<span class="lineNum">      86 </span>            :         return ret;
+<a name="87"><span class="lineNum">      87 </span>            : }</a>
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span><span class="lineCov">       2965 : bytes dev::contents(string const&amp; _file)</span>
+<span class="lineNum">      90 </span>            : {
+<span class="lineNum">      91 </span><span class="lineCov">       2965 :         return contentsGeneric&lt;bytes&gt;(_file);</span>
+<span class="lineNum">      92 </span>            : }
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 : bytesSec dev::contentsSec(string const&amp; _file)</span>
+<span class="lineNum">      95 </span>            : {
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :         bytes b = contentsGeneric&lt;bytes&gt;(_file);</span>
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :         bytesSec ret(b);</span>
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :         bytesRef(&amp;b).cleanse();</span>
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="100"><span class="lineNum">     100 </span>            : }</a>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span><span class="lineCov">         39 : string dev::contentsString(string const&amp; _file)</span>
+<span class="lineNum">     103 </span>            : {
+<span class="lineNum">     104 </span><span class="lineCov">         39 :         return contentsGeneric&lt;string&gt;(_file);</span>
+<span class="lineNum">     105 </span>            : }
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">         47 : void dev::writeFile(std::string const&amp; _file, bytesConstRef _data, bool _writeDeleteRename)</span>
+<span class="lineNum">     108 </span>            : {
+<span class="lineNum">     109 </span>            :         namespace fs = boost::filesystem;
+<span class="lineNum">     110 </span><span class="lineCov">         47 :         if (_writeDeleteRename)</span>
+<span class="lineNum">     111 </span>            :         {
+<span class="lineNum">     112 </span><span class="lineCov">        108 :                 fs::path tempPath = fs::unique_path(_file + &quot;-%%%%%%&quot;);</span>
+<span class="lineNum">     113 </span><span class="lineCov">         18 :                 writeFile(tempPath.string(), _data, false);</span>
+<span class="lineNum">     114 </span>            :                 // will delete _file if it exists
+<span class="lineNum">     115 </span><span class="lineCov">         53 :                 fs::rename(tempPath, _file);</span>
+<span class="lineNum">     116 </span>            :         }
+<span class="lineNum">     117 </span>            :         else
+<span class="lineNum">     118 </span>            :         {
+<span class="lineNum">     119 </span>            :                 // create directory if not existent
+<span class="lineNum">     120 </span><span class="lineCov">         58 :                 fs::path p(_file);</span>
+<span class="lineNum">     121 </span><span class="lineCov">         87 :                 if (!fs::exists(p.parent_path()))</span>
+<span class="lineNum">     122 </span>            :                 {
+<span class="lineNum">     123 </span><span class="lineCov">          3 :                         fs::create_directories(p.parent_path());</span>
+<span class="lineNum">     124 </span><span class="lineCov">          3 :                         DEV_IGNORE_EXCEPTIONS(fs::permissions(p.parent_path(), fs::owner_all));</span>
+<span class="lineNum">     125 </span>            :                 }
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span><span class="lineCov">         58 :                 ofstream s(_file, ios::trunc | ios::binary);</span>
+<span class="lineNum">     128 </span><span class="lineCov">         29 :                 s.write(reinterpret_cast&lt;char const*&gt;(_data.data()), _data.size());</span>
+<span class="lineNum">     129 </span><span class="lineCov">         29 :                 if (!s)</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(FileError() &lt;&lt; errinfo_comment(&quot;Could not write to file: &quot; + _file));</span>
+<span class="lineNum">     131 </span><span class="lineCov">        116 :                 DEV_IGNORE_EXCEPTIONS(fs::permissions(_file, fs::owner_read|fs::owner_write));</span>
+<span class="lineNum">     132 </span>            :         }
+<span class="lineNum">     133 </span><span class="lineCov">         46 : }</span>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 : std::string dev::getPassword(std::string const&amp; _prompt)</span>
+<span class="lineNum">     136 </span>            : {
+<span class="lineNum">     137 </span>            : #if defined(_WIN32)
+<span class="lineNum">     138 </span>            :         cout &lt;&lt; _prompt &lt;&lt; flush;
+<span class="lineNum">     139 </span>            :         // Get current Console input flags
+<span class="lineNum">     140 </span>            :         HANDLE hStdin;
+<span class="lineNum">     141 </span>            :         DWORD fdwSaveOldMode;
+<span class="lineNum">     142 </span>            :         if ((hStdin = GetStdHandle(STD_INPUT_HANDLE)) == INVALID_HANDLE_VALUE)
+<span class="lineNum">     143 </span>            :                 BOOST_THROW_EXCEPTION(ExternalFunctionFailure(&quot;GetStdHandle&quot;));
+<span class="lineNum">     144 </span>            :         if (!GetConsoleMode(hStdin, &amp;fdwSaveOldMode))
+<span class="lineNum">     145 </span>            :                 BOOST_THROW_EXCEPTION(ExternalFunctionFailure(&quot;GetConsoleMode&quot;));
+<span class="lineNum">     146 </span>            :         // Set console flags to no echo
+<span class="lineNum">     147 </span>            :         if (!SetConsoleMode(hStdin, fdwSaveOldMode &amp; (~ENABLE_ECHO_INPUT)))
+<span class="lineNum">     148 </span>            :                 BOOST_THROW_EXCEPTION(ExternalFunctionFailure(&quot;SetConsoleMode&quot;));
+<span class="lineNum">     149 </span>            :         // Read the string
+<span class="lineNum">     150 </span>            :         std::string ret;
+<span class="lineNum">     151 </span>            :         std::getline(cin, ret);
+<span class="lineNum">     152 </span>            :         // Restore old input mode
+<span class="lineNum">     153 </span>            :         if (!SetConsoleMode(hStdin, fdwSaveOldMode))
+<span class="lineNum">     154 </span>            :                 BOOST_THROW_EXCEPTION(ExternalFunctionFailure(&quot;SetConsoleMode&quot;));
+<span class="lineNum">     155 </span>            :         return ret;
+<span class="lineNum">     156 </span>            : #else
+<span class="lineNum">     157 </span>            :         struct termios oflags;
+<span class="lineNum">     158 </span>            :         struct termios nflags;
+<span class="lineNum">     159 </span>            :         char password[256];
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :         // disable echo in the terminal
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :         tcgetattr(fileno(stdin), &amp;oflags);</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :         nflags = oflags;</span>
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :         nflags.c_lflag &amp;= ~ECHO;</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :         nflags.c_lflag |= ECHONL;</span>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :         if (tcsetattr(fileno(stdin), TCSANOW, &amp;nflags) != 0)</span>
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(ExternalFunctionFailure(&quot;tcsetattr&quot;));</span>
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :         printf(&quot;%s&quot;, _prompt.c_str());</span>
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :         if (!fgets(password, sizeof(password), stdin))</span>
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(ExternalFunctionFailure(&quot;fgets&quot;));</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :         password[strlen(password) - 1] = 0;</span>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :         // restore terminal
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :         if (tcsetattr(fileno(stdin), TCSANOW, &amp;oflags) != 0)</span>
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(ExternalFunctionFailure(&quot;tcsetattr&quot;));</span>
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            : 
+<a name="180"><span class="lineNum">     180 </span><span class="lineNoCov">          0 :         return password;</span></a>
+<span class="lineNum">     181 </span>            : #endif
+<span class="lineNum">     182 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

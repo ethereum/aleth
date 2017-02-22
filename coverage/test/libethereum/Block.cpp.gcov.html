@@ -1,0 +1,330 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libethereum/Block.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libethereum</a> - Block.cpp<span style="font-size: 80%;"> (source / <a href="Block.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">119</td>
+            <td class="headerCovTableEntry">131</td>
+            <td class="headerCovTableEntryHi">90.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file block.cpp
+<span class="lineNum">      18 </span>            :  * @author Dimitry Khokhlov &lt;dimitry@ethdev.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  * Block test functions.
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;libethereum/BlockQueue.h&gt;
+<span class="lineNum">      24 </span>            : #include &lt;libethereum/Block.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;test/BlockChainHelper.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;test/JsonSpiritHeaders.h&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : using namespace std;
+<span class="lineNum">      30 </span>            : using namespace dev;
+<span class="lineNum">      31 </span>            : using namespace dev::eth;
+<span class="lineNum">      32 </span>            : using namespace dev::test;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span><span class="lineCov">          3 : BOOST_FIXTURE_TEST_SUITE(BlockSuite, TestOutputHelper)</span>
+<a name="35"><span class="lineNum">      35 </span>            : </a>
+<span class="lineNum">      36 </span>            : #if !defined(_WIN32)
+<span class="lineNum">      37 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(bStructures)</span>
+<span class="lineNum">      38 </span>            : {
+<span class="lineNum">      39 </span>            :         BlockChat chat;
+<span class="lineNum">      40 </span>            :         BlockTrace trace;
+<span class="lineNum">      41 </span>            :         BlockDetail details;
+<span class="lineNum">      42 </span>            :         BlockSafeExceptions exeptions;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span><span class="lineCov">         12 :         BOOST_REQUIRE(string(chat.name()).find(&quot;◌&quot;) != string::npos);</span>
+<span class="lineNum">      45 </span><span class="lineCov">         12 :         BOOST_REQUIRE(string(trace.name()).find(&quot;◎&quot;) != string::npos);</span>
+<span class="lineNum">      46 </span><span class="lineCov">         12 :         BOOST_REQUIRE(string(details.name()).find(&quot;◌&quot;) != string::npos);</span>
+<span class="lineNum">      47 </span><span class="lineCov">         12 :         BOOST_REQUIRE(string(exeptions.name()).find(&quot;ℹ&quot;) != string::npos);</span>
+<span class="lineNum">      48 </span><span class="lineCov">          1 : }</span>
+<a name="49"><span class="lineNum">      49 </span>            : #endif</a>
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(bStates)</span>
+<span class="lineNum">      52 </span>            : {
+<span class="lineNum">      53 </span>            :         try
+<span class="lineNum">      54 </span>            :         {
+<span class="lineNum">      55 </span><span class="lineCov">          2 :                 TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock());</span>
+<span class="lineNum">      56 </span><span class="lineCov">          1 :                 TestBlock const&amp; genesisBlock = testBlockchain.testGenesis();</span>
+<span class="lineNum">      57 </span><span class="lineCov">          2 :                 OverlayDB const&amp; genesisDB = genesisBlock.state().db();</span>
+<span class="lineNum">      58 </span><span class="lineCov">          1 :                 BlockChain const&amp; blockchain = testBlockchain.interface();</span>
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span><span class="lineCov">          2 :                 State stateBofore = testBlockchain.topBlock().state();</span>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span><span class="lineCov">          2 :                 TestBlock testBlock;</span>
+<span class="lineNum">      63 </span><span class="lineCov">          3 :                 TestTransaction transaction1 = TestTransaction::defaultTransaction(1);</span>
+<span class="lineNum">      64 </span><span class="lineCov">          1 :                 testBlock.addTransaction(transaction1);</span>
+<span class="lineNum">      65 </span><span class="lineCov">          6 :                 TestTransaction transaction2 = TestTransaction::defaultTransaction(2);</span>
+<span class="lineNum">      66 </span><span class="lineCov">          1 :                 testBlock.addTransaction(transaction2);</span>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">          1 :                 testBlock.mine(testBlockchain);</span>
+<span class="lineNum">      69 </span><span class="lineCov">          1 :                 testBlockchain.addBlock(testBlock);</span>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            :                 //Block2 is synced to latest blockchain block
+<span class="lineNum">      72 </span><span class="lineCov">          2 :                 Block block1 = blockchain.genesisBlock(genesisDB);</span>
+<span class="lineNum">      73 </span><span class="lineCov">          1 :                 block1.populateFromChain(blockchain, testBlock.blockHeader().hash());</span>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">          2 :                 Block block2 = blockchain.genesisBlock(genesisDB);</span>
+<span class="lineNum">      76 </span><span class="lineCov">          1 :                 block2.populateFromChain(blockchain, testBlock.blockHeader().hash());</span>
+<span class="lineNum">      77 </span><span class="lineCov">          2 :                 State stateAfterInsert = block2.fromPending(0); //get the state of blockchain on previous block</span>
+<span class="lineNum">      78 </span><span class="lineCov">          7 :                 BOOST_REQUIRE(ImportTest::compareStates(stateBofore, stateAfterInsert) == 0);</span>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">          2 :                 State stateAfterInsert1 = block2.fromPending(1); //get the state of blockchain on current block executed</span>
+<span class="lineNum">      81 </span><span class="lineCov">         10 :                 BOOST_REQUIRE(ImportTest::compareStates(stateAfterInsert, stateAfterInsert1, eth::AccountMaskMap(), WhenError::DontThrow) == 1);</span>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span><span class="lineCov">          2 :                 State stateAfterInsert2 = block2.fromPending(2); //get the state of blockchain on current block executed</span>
+<span class="lineNum">      84 </span><span class="lineCov">         10 :                 BOOST_REQUIRE(ImportTest::compareStates(stateBofore, stateAfterInsert2, eth::AccountMaskMap(), WhenError::DontThrow) == 1);</span>
+<span class="lineNum">      85 </span><span class="lineCov">         10 :                 BOOST_REQUIRE(ImportTest::compareStates(stateAfterInsert1, stateAfterInsert2, eth::AccountMaskMap(), WhenError::DontThrow) == 1);</span>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :                 //Block2 will start a new block on top of blockchain
+<span class="lineNum">      88 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(block1.info() == block2.info());</span>
+<span class="lineNum">      89 </span><span class="lineCov">          1 :                 block2.sync(blockchain);</span>
+<span class="lineNum">      90 </span><span class="lineCov">          9 :                 BOOST_REQUIRE(block1.info() != block2.info());</span>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :                 try
+<span class="lineNum">      93 </span>            :                 {
+<span class="lineNum">      94 </span><span class="lineCov">          2 :                         Block block(Block::Null);</span>
+<span class="lineNum">      95 </span>            :                         //Invalid state root exception if block not initialized by genesis root
+<span class="lineNum">      96 </span><span class="lineCov">          2 :                         block.populateFromChain(blockchain, testBlock.blockHeader().hash());</span>
+<span class="lineNum">      97 </span>            :                 }
+<span class="lineNum">      98 </span><span class="lineCov">          2 :                 catch (std::exception const&amp; _e)</span>
+<span class="lineNum">      99 </span>            :                 {
+<span class="lineNum">     100 </span><span class="lineCov">         12 :                         BOOST_REQUIRE(string(_e.what()).find(&quot;InvalidStateRoot&quot;) != string::npos);</span>
+<span class="lineNum">     101 </span>            :                 }
+<span class="lineNum">     102 </span>            :         }
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     104 </span>            :         {
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">     106 </span>            :         }
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     108 </span>            :         {
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">     110 </span>            :         }
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">     112 </span>            :         {
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Exception thrown when trying to mine or import a block!&quot;);</span>
+<span class="lineNum">     114 </span>            :         }
+<a name="115"><span class="lineNum">     115 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(bGasPricer)</span>
+<span class="lineNum">     118 </span>            : {
+<span class="lineNum">     119 </span><span class="lineCov">          3 :         TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock(63000));</span>
+<span class="lineNum">     120 </span><span class="lineCov">          1 :         TestBlock const&amp; genesisBlock = testBlockchain.testGenesis();</span>
+<span class="lineNum">     121 </span><span class="lineCov">          2 :         OverlayDB const&amp; genesisDB = genesisBlock.state().db();</span>
+<span class="lineNum">     122 </span><span class="lineCov">          1 :         BlockChain const&amp; blockchain = testBlockchain.interface();</span>
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span><span class="lineCov">          2 :         TestBlock testBlock;</span>
+<span class="lineNum">     125 </span><span class="lineCov">          6 :         TestTransaction transaction1 = TestTransaction::defaultTransaction(1, 1, 21000);</span>
+<span class="lineNum">     126 </span><span class="lineCov">          1 :         testBlock.addTransaction(transaction1);</span>
+<span class="lineNum">     127 </span><span class="lineCov">          6 :         TestTransaction transaction2 = TestTransaction::defaultTransaction(2, 1, 21000);</span>
+<span class="lineNum">     128 </span><span class="lineCov">          1 :         testBlock.addTransaction(transaction2);</span>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :         {
+<span class="lineNum">     131 </span>            :                 //Normal transaction input
+<span class="lineNum">     132 </span><span class="lineCov">          2 :                 ZeroGasPricer gp;</span>
+<span class="lineNum">     133 </span><span class="lineCov">          2 :                 Block block = blockchain.genesisBlock(genesisDB);</span>
+<span class="lineNum">     134 </span><span class="lineCov">          1 :                 block.sync(blockchain);</span>
+<span class="lineNum">     135 </span><span class="lineCov">          2 :                 TestBlock testBlockT = testBlock;</span>
+<span class="lineNum">     136 </span><span class="lineCov">          2 :                 block.sync(blockchain, testBlockT.transactionQueue(), gp);</span>
+<span class="lineNum">     137 </span><span class="lineCov">         11 :                 BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);</span>
+<span class="lineNum">     138 </span>            :         }
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :         {
+<span class="lineNum">     141 </span>            :                 //Block not synced to blockchain
+<span class="lineNum">     142 </span><span class="lineCov">          2 :                 TestBlock testBlockT = testBlock;</span>
+<span class="lineNum">     143 </span><span class="lineCov">          2 :                 ZeroGasPricer gp;</span>
+<span class="lineNum">     144 </span><span class="lineCov">          2 :                 Block block = blockchain.genesisBlock(genesisDB);</span>
+<span class="lineNum">     145 </span><span class="lineCov">          2 :                 block.sync(blockchain, testBlockT.transactionQueue(), gp);</span>
+<span class="lineNum">     146 </span><span class="lineCov">         11 :                 BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);</span>
+<span class="lineNum">     147 </span>            :         }
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            :         {
+<span class="lineNum">     150 </span>            :                 //Transactions valid but exceed block gasLimit - BlockGasLimitReached
+<span class="lineNum">     151 </span><span class="lineCov">          2 :                 TestBlock testBlockT = testBlock;</span>
+<span class="lineNum">     152 </span><span class="lineCov">          6 :                 TestTransaction transaction = TestTransaction::defaultTransaction(3, 1, 1500000);</span>
+<span class="lineNum">     153 </span><span class="lineCov">          1 :                 testBlockT.addTransaction(transaction);</span>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">          2 :                 ZeroGasPricer gp;</span>
+<span class="lineNum">     156 </span><span class="lineCov">          2 :                 Block block = blockchain.genesisBlock(genesisDB);</span>
+<span class="lineNum">     157 </span><span class="lineCov">          1 :                 block.sync(blockchain);</span>
+<span class="lineNum">     158 </span><span class="lineCov">          2 :                 block.sync(blockchain, testBlockT.transactionQueue(), gp);</span>
+<span class="lineNum">     159 </span><span class="lineCov">         11 :                 BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);</span>
+<span class="lineNum">     160 </span>            :         }
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :         {
+<span class="lineNum">     163 </span>            :                 //Temporary no gas left in the block
+<span class="lineNum">     164 </span><span class="lineCov">          2 :                 TestBlock testBlockT = testBlock;</span>
+<span class="lineNum">     165 </span><span class="lineCov">          8 :                 TestTransaction transaction = TestTransaction::defaultTransaction(3, 1, 25000, importByteArray(&quot;238479601324597364057623047523945623847562387450234857263485723459273645345234689563486749&quot;));</span>
+<span class="lineNum">     166 </span><span class="lineCov">          1 :                 testBlockT.addTransaction(transaction);</span>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span><span class="lineCov">          1 :                 ZeroGasPricer gp;</span>
+<span class="lineNum">     169 </span><span class="lineCov">          2 :                 Block block = blockchain.genesisBlock(genesisDB);</span>
+<span class="lineNum">     170 </span><span class="lineCov">          1 :                 block.sync(blockchain);</span>
+<span class="lineNum">     171 </span><span class="lineCov">          2 :                 block.sync(blockchain, testBlockT.transactionQueue(), gp);</span>
+<span class="lineNum">     172 </span><span class="lineCov">         11 :                 BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 3);</span>
+<span class="lineNum">     173 </span>            :         }
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :         {
+<span class="lineNum">     176 </span>            :                 //Invalid nonce - nonces ahead
+<span class="lineNum">     177 </span><span class="lineCov">          2 :                 TestBlock testBlockT = testBlock;</span>
+<span class="lineNum">     178 </span><span class="lineCov">          6 :                 TestTransaction transaction = TestTransaction::defaultTransaction(12, 1, 21000);</span>
+<span class="lineNum">     179 </span><span class="lineCov">          1 :                 testBlockT.addTransaction(transaction);</span>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineCov">          2 :                 ZeroGasPricer gp;</span>
+<span class="lineNum">     182 </span><span class="lineCov">          2 :                 Block block = blockchain.genesisBlock(genesisDB);</span>
+<span class="lineNum">     183 </span><span class="lineCov">          1 :                 block.sync(blockchain);</span>
+<span class="lineNum">     184 </span><span class="lineCov">          2 :                 block.sync(blockchain, testBlockT.transactionQueue(), gp);</span>
+<span class="lineNum">     185 </span><span class="lineCov">         11 :                 BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);</span>
+<span class="lineNum">     186 </span>            :         }
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :         {
+<span class="lineNum">     189 </span>            :                 //Invalid nonce - nonce too low
+<span class="lineNum">     190 </span><span class="lineCov">          2 :                 TestBlock testBlockT = testBlock;</span>
+<span class="lineNum">     191 </span><span class="lineCov">          6 :                 TestTransaction transaction = TestTransaction::defaultTransaction(0, 1, 21000);</span>
+<span class="lineNum">     192 </span><span class="lineCov">          1 :                 testBlockT.addTransaction(transaction);</span>
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineCov">          2 :                 ZeroGasPricer gp;</span>
+<span class="lineNum">     195 </span><span class="lineCov">          2 :                 Block block = blockchain.genesisBlock(genesisDB);</span>
+<span class="lineNum">     196 </span><span class="lineCov">          1 :                 block.sync(blockchain);</span>
+<span class="lineNum">     197 </span><span class="lineCov">          2 :                 block.sync(blockchain, testBlockT.transactionQueue(), gp);</span>
+<span class="lineNum">     198 </span><span class="lineCov">         11 :                 BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);</span>
+<span class="lineNum">     199 </span>            :         }
+<a name="200"><span class="lineNum">     200 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(bCopyOperator)</span>
+<span class="lineNum">     203 </span>            : {
+<span class="lineNum">     204 </span>            :         try
+<span class="lineNum">     205 </span>            :         {
+<span class="lineNum">     206 </span><span class="lineCov">          2 :                 TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock());</span>
+<span class="lineNum">     207 </span><span class="lineCov">          1 :                 TestBlock const&amp; genesisBlock = testBlockchain.testGenesis();</span>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineCov">          2 :                 OverlayDB const&amp; genesisDB = genesisBlock.state().db();</span>
+<span class="lineNum">     210 </span><span class="lineCov">          1 :                 BlockChain const&amp; blockchain = testBlockchain.interface();</span>
+<span class="lineNum">     211 </span><span class="lineCov">          2 :                 Block block = blockchain.genesisBlock(genesisDB);</span>
+<span class="lineNum">     212 </span><span class="lineCov">          1 :                 block.setAuthor(genesisBlock.beneficiary());</span>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span><span class="lineCov">          1 :                 block = block;</span>
+<span class="lineNum">     215 </span><span class="lineCov">          2 :                 Block block2 = block;</span>
+<span class="lineNum">     216 </span><span class="lineCov">         10 :                 BOOST_REQUIRE(ImportTest::compareStates(block.state(), block2.state()) == 0);</span>
+<span class="lineNum">     217 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(block2.pending() == block.pending());</span>
+<span class="lineNum">     218 </span><span class="lineCov">         11 :                 BOOST_REQUIRE(block2.author() == block.author());</span>
+<span class="lineNum">     219 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(block2.info() == block.info());</span>
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span><span class="lineCov">          2 :                 TestBlock testBlock;</span>
+<span class="lineNum">     222 </span><span class="lineCov">          6 :                 TestTransaction transaction1 = TestTransaction::defaultTransaction(1);</span>
+<span class="lineNum">     223 </span><span class="lineCov">          1 :                 testBlock.addTransaction(transaction1);</span>
+<span class="lineNum">     224 </span><span class="lineCov">          1 :                 testBlock.mine(testBlockchain);</span>
+<span class="lineNum">     225 </span><span class="lineCov">          1 :                 testBlockchain.addBlock(testBlock);</span>
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span><span class="lineCov">          2 :                 Block block3 = blockchain.genesisBlock(genesisDB);</span>
+<span class="lineNum">     228 </span><span class="lineCov">          1 :                 block3.populateFromChain(blockchain, testBlock.blockHeader().hash());</span>
+<span class="lineNum">     229 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(block3.info() == testBlock.blockHeader());</span>
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :                 //Genesis is populating wrong???
+<span class="lineNum">     232 </span>            :                 //Block block31 = blockchain.genesisBlock(genesisDB);
+<span class="lineNum">     233 </span>            :                 //block31.populateFromChain(blockchain, genesisBlock.getBlockHeader().hash());
+<span class="lineNum">     234 </span>            :                 //BOOST_REQUIRE(block31.info() == (BlockInfo)genesisBlock.getBlockHeader());
+<a name="235"><span class="lineNum">     235 </span>            : </a>
+<span class="lineNum">     236 </span><span class="lineCov">          2 :                 Block block32 = blockchain.genesisBlock(genesisDB);</span>
+<span class="lineNum">     237 </span><span class="lineCov">          5 :                 auto is_critical = []( std::exception const&amp; _e) { return string(_e.what()).find(&quot;BlockNotFound&quot;) != string::npos; };</span>
+<span class="lineNum">     238 </span><span class="lineCov">         12 :                 BOOST_CHECK_EXCEPTION(block32.populateFromChain(blockchain, h256(&quot;0x0000000000000000000000000000000000000000000000000000000000000001&quot;)), BlockNotFound, is_critical);</span>
+<span class="lineNum">     239 </span>            :         }
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     241 </span>            :         {
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">     243 </span>            :         }
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     245 </span>            :         {
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">     247 </span>            :         }
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">     249 </span>            :         {
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Exception thrown when trying to mine or import a block!&quot;);</span>
+<span class="lineNum">     251 </span>            :         }
+<a name="252"><span class="lineNum">     252 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span><span class="lineCov">          3 : BOOST_AUTO_TEST_SUITE_END()</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

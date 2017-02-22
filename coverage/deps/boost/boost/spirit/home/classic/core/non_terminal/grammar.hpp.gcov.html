@@ -1,0 +1,160 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/spirit/home/classic/core/non_terminal/grammar.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/spirit/home/classic/core/non_terminal</a> - grammar.hpp<span style="font-size: 80%;"> (source / <a href="grammar.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*=============================================================================</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 2001-2003 Joel de Guzman
+<span class="lineNum">       3 </span>            :     Copyright (c) 2002-2003 Martin Wille
+<span class="lineNum">       4 </span>            :     Copyright (c) 2003 Hartmut Kaiser
+<span class="lineNum">       5 </span>            :     http://spirit.sourceforge.net/
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :   Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            :   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : =============================================================================*/
+<span class="lineNum">      10 </span>            : #if !defined(BOOST_SPIRIT_GRAMMAR_HPP)
+<span class="lineNum">      11 </span>            : #define BOOST_SPIRIT_GRAMMAR_HPP
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      14 </span>            : #if defined(BOOST_SPIRIT_THREADSAFE) &amp;&amp; defined(BOOST_SPIRIT_SINGLE_GRAMMAR_INSTANCE)
+<span class="lineNum">      15 </span>            : #undef BOOST_SPIRIT_SINGLE_GRAMMAR_INSTANCE
+<span class="lineNum">      16 </span>            : #endif
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/spirit/home/classic/namespace.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/spirit/home/classic/core/parser.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/spirit/home/classic/core/non_terminal/parser_context.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/spirit/home/classic/core/non_terminal/impl/grammar.ipp&gt;
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      24 </span>            : namespace boost { namespace spirit {
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      29 </span>            : //
+<span class="lineNum">      30 </span>            : //  grammar class
+<span class="lineNum">      31 </span>            : //
+<span class="lineNum">      32 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      33 </span>            : template &lt;typename DerivedT, typename ContextT = parser_context&lt;&gt; &gt;
+<span class="lineNum">      34 </span>            : struct grammar
+<span class="lineNum">      35 </span>            :     : public parser&lt;DerivedT&gt;
+<span class="lineNum">      36 </span>            :     , public ContextT::base_t
+<span class="lineNum">      37 </span>            :     , public context_aux&lt;ContextT, DerivedT&gt;
+<span class="lineNum">      38 </span>            :     BOOST_SPIRIT_GRAMMAR_ID
+<span class="lineNum">      39 </span>            : {
+<span class="lineNum">      40 </span>            :     typedef grammar&lt;DerivedT, ContextT&gt;         self_t;
+<span class="lineNum">      41 </span>            :     typedef DerivedT const&amp;                     embed_t;
+<span class="lineNum">      42 </span>            :     typedef typename ContextT::context_linker_t context_t;
+<span class="lineNum">      43 </span>            :     typedef typename context_t::attr_t          attr_t;
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            :     template &lt;typename ScannerT&gt;
+<span class="lineNum">      46 </span>            :     struct result
+<span class="lineNum">      47 </span>            :     {
+<span class="lineNum">      48 </span>            :         typedef typename match_result&lt;ScannerT, attr_t&gt;::type type;
+<span class="lineNum">      49 </span>            :     };
+<a name="50"><span class="lineNum">      50 </span>            : </a>
+<span class="lineNum">      51 </span><span class="lineCov">     146262 :     grammar() {}</span>
+<span class="lineNum">      52 </span><span class="lineCov">     146262 :     ~grammar() { impl::grammar_destruct(this); }</span>
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            :     template &lt;typename ScannerT&gt;
+<span class="lineNum">      55 </span>            :     typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">      56 </span>            :     parse_main(ScannerT const&amp; scan) const
+<span class="lineNum">      57 </span><span class="lineCov">      48754 :     { return impl::grammar_parser_parse&lt;0&gt;(this, scan); }</span>
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            :     template &lt;typename ScannerT&gt;
+<span class="lineNum">      60 </span>            :     typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">      61 </span>            :     parse(ScannerT const&amp; scan) const
+<span class="lineNum">      62 </span>            :     {
+<span class="lineNum">      63 </span>            :         typedef typename parser_result&lt;self_t, ScannerT&gt;::type result_t;
+<span class="lineNum">      64 </span>            :         typedef parser_scanner_linker&lt;ScannerT&gt; scanner_t;
+<span class="lineNum">      65 </span><span class="lineCov">     292524 :         BOOST_SPIRIT_CONTEXT_PARSE(scan, *this, scanner_t, context_t, result_t)</span>
+<span class="lineNum">      66 </span>            :     }
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            :     template &lt;int N&gt;
+<span class="lineNum">      69 </span>            :     impl::entry_grammar&lt;DerivedT, N, ContextT&gt;
+<span class="lineNum">      70 </span>            :     use_parser() const
+<span class="lineNum">      71 </span>            :     { return impl::entry_grammar&lt;DerivedT, N, ContextT&gt;( this-&gt;derived()); }
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :     BOOST_SPIRIT_GRAMMAR_STATE
+<span class="lineNum">      74 </span>            : };
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      77 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_END
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : }} // namespace BOOST_SPIRIT_CLASSIC_NS
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : #undef BOOST_SPIRIT_GRAMMAR_ID
+<span class="lineNum">      82 </span>            : #undef BOOST_SPIRIT_GRAMMAR_STATE
+<span class="lineNum">      83 </span>            : #endif
+<span class="lineNum">      84 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

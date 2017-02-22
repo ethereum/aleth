@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/iostream</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5</a> - iostream<span style="font-size: 80%;"> (source / <a href="iostream.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Standard iostream objects -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 1997-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file include/iostream
+<span class="lineNum">      26 </span>            :  *  This is a Standard C++ Library header.
+<span class="lineNum">      27 </span>            :  */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : //
+<span class="lineNum">      30 </span>            : // ISO C++ 14882: 27.3  Standard iostream objects
+<span class="lineNum">      31 </span>            : //
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #ifndef _GLIBCXX_IOSTREAM
+<span class="lineNum">      34 </span>            : #define _GLIBCXX_IOSTREAM 1
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #pragma GCC system_header
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #include &lt;bits/c++config.h&gt;
+<span class="lineNum">      39 </span>            : #include &lt;ostream&gt;
+<span class="lineNum">      40 </span>            : #include &lt;istream&gt;
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      43 </span>            : {
+<span class="lineNum">      44 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :   /**
+<span class="lineNum">      47 </span>            :    *  @name Standard Stream Objects
+<span class="lineNum">      48 </span>            :    *
+<span class="lineNum">      49 </span>            :    *  The &amp;lt;iostream&amp;gt; header declares the eight &lt;em&gt;standard stream
+<span class="lineNum">      50 </span>            :    *  objects&lt;/em&gt;.  For other declarations, see
+<span class="lineNum">      51 </span>            :    *  http://gcc.gnu.org/onlinedocs/libstdc++/manual/io.html
+<span class="lineNum">      52 </span>            :    *  and the @link iosfwd I/O forward declarations @endlink
+<span class="lineNum">      53 </span>            :    *
+<span class="lineNum">      54 </span>            :    *  They are required by default to cooperate with the global C
+<span class="lineNum">      55 </span>            :    *  library's @c FILE streams, and to be available during program
+<span class="lineNum">      56 </span>            :    *  startup and termination. For more information, see the section of the
+<span class="lineNum">      57 </span>            :    *  manual linked to above.
+<span class="lineNum">      58 </span>            :   */
+<span class="lineNum">      59 </span>            :   //@{
+<span class="lineNum">      60 </span>            :   extern istream cin;           /// Linked to standard input
+<span class="lineNum">      61 </span>            :   extern ostream cout;          /// Linked to standard output
+<span class="lineNum">      62 </span>            :   extern ostream cerr;          /// Linked to standard error (unbuffered)
+<span class="lineNum">      63 </span>            :   extern ostream clog;          /// Linked to standard error (buffered)
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : #ifdef _GLIBCXX_USE_WCHAR_T
+<span class="lineNum">      66 </span>            :   extern wistream wcin;         /// Linked to standard input
+<span class="lineNum">      67 </span>            :   extern wostream wcout;        /// Linked to standard output
+<span class="lineNum">      68 </span>            :   extern wostream wcerr;        /// Linked to standard error (unbuffered)
+<span class="lineNum">      69 </span>            :   extern wostream wclog;        /// Linked to standard error (buffered)
+<span class="lineNum">      70 </span>            : #endif
+<span class="lineNum">      71 </span>            :   //@}
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :   // For construction of filebuffers for cout, cin, cerr, clog et. al.
+<span class="lineNum">      74 </span><span class="lineCov">        153 :   static ios_base::Init __ioinit;</span>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">      77 </span>            : } // namespace
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : #endif /* _GLIBCXX_IOSTREAM */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

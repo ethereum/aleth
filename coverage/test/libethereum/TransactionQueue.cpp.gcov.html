@@ -1,0 +1,376 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libethereum/TransactionQueue.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libethereum</a> - TransactionQueue.cpp<span style="font-size: 80%;"> (source / <a href="TransactionQueue.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">203</td>
+            <td class="headerCovTableEntry">203</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file transactionqueue.cpp
+<span class="lineNum">      18 </span>            :  * @author Christoph Jentzsch &lt;cj@ethdev.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  * TransactionQueue test functions.
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;libethereum/TransactionQueue.h&gt;
+<span class="lineNum">      24 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;test/BlockChainHelper.h&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : using namespace std;
+<span class="lineNum">      28 </span>            : using namespace dev;
+<span class="lineNum">      29 </span>            : using namespace dev::eth;
+<span class="lineNum">      30 </span>            : using namespace dev::test;
+<span class="lineNum">      31 </span>            : 
+<a name="32"><span class="lineNum">      32 </span><span class="lineCov">          3 : BOOST_FIXTURE_TEST_SUITE(TransactionQueueSuite, TestOutputHelper)</span></a>
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(tqMaxNonce)</span>
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span><span class="lineCov">          2 :         dev::eth::TransactionQueue txq;</span>
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            :         // from a94f5374fce5edbc8e2a8697c15331677e6ebf0b
+<span class="lineNum">      39 </span><span class="lineCov">          1 :         const u256 gasCost =  10 * szabo;</span>
+<span class="lineNum">      40 </span><span class="lineCov">          2 :         const u256 gas = 25000;</span>
+<span class="lineNum">      41 </span><span class="lineCov">          3 :         Address dest = Address(&quot;0x095e7baea6a6c7c4c2dfeb977efac326af552d87&quot;);</span>
+<span class="lineNum">      42 </span><span class="lineCov">          3 :         Address to = Address(&quot;0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b&quot;);</span>
+<span class="lineNum">      43 </span><span class="lineCov">          5 :         Secret sec = Secret(&quot;0x45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8&quot;);</span>
+<span class="lineNum">      44 </span><span class="lineCov">          7 :         Transaction tx0(0, gasCost, gas, dest, bytes(), 0, sec );</span>
+<span class="lineNum">      45 </span><span class="lineCov">          7 :         Transaction tx0_1(1, gasCost, gas, dest, bytes(), 0, sec );</span>
+<span class="lineNum">      46 </span><span class="lineCov">          7 :         Transaction tx1(0, gasCost, gas, dest, bytes(), 1, sec );</span>
+<span class="lineNum">      47 </span><span class="lineCov">          7 :         Transaction tx2(0, gasCost, gas, dest, bytes(), 2, sec );</span>
+<span class="lineNum">      48 </span><span class="lineCov">          7 :         Transaction tx9(0, gasCost, gas, dest, bytes(), 9, sec );</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">          1 :         txq.import(tx0);</span>
+<span class="lineNum">      51 </span><span class="lineCov">          9 :         BOOST_CHECK(1 == txq.maxNonce(to));</span>
+<span class="lineNum">      52 </span><span class="lineCov">          1 :         txq.import(tx0);</span>
+<span class="lineNum">      53 </span><span class="lineCov">          8 :         BOOST_CHECK(1 == txq.maxNonce(to));</span>
+<span class="lineNum">      54 </span><span class="lineCov">          1 :         txq.import(tx0_1);</span>
+<span class="lineNum">      55 </span><span class="lineCov">          8 :         BOOST_CHECK(1 == txq.maxNonce(to));</span>
+<span class="lineNum">      56 </span><span class="lineCov">          1 :         txq.import(tx1);</span>
+<span class="lineNum">      57 </span><span class="lineCov">          9 :         BOOST_CHECK(2 == txq.maxNonce(to));</span>
+<span class="lineNum">      58 </span><span class="lineCov">          1 :         txq.import(tx9);</span>
+<span class="lineNum">      59 </span><span class="lineCov">          9 :         BOOST_CHECK(10 == txq.maxNonce(to));</span>
+<span class="lineNum">      60 </span><span class="lineCov">          1 :         txq.import(tx2);</span>
+<span class="lineNum">      61 </span><span class="lineCov">          9 :         BOOST_CHECK(10 == txq.maxNonce(to));</span>
+<span class="lineNum">      62 </span>            : 
+<a name="63"><span class="lineNum">      63 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(tqPriority)</span>
+<span class="lineNum">      66 </span>            : {
+<span class="lineNum">      67 </span><span class="lineCov">          2 :         dev::eth::TransactionQueue txq;</span>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span><span class="lineCov">          1 :         const u256 gasCostCheap =  10 * szabo;</span>
+<span class="lineNum">      70 </span><span class="lineCov">          1 :         const u256 gasCostMed =  20 * szabo;</span>
+<span class="lineNum">      71 </span><span class="lineCov">          1 :         const u256 gasCostHigh =  30 * szabo;</span>
+<span class="lineNum">      72 </span><span class="lineCov">          2 :         const u256 gas = 25000;</span>
+<span class="lineNum">      73 </span><span class="lineCov">          3 :         Address dest = Address(&quot;0x095e7baea6a6c7c4c2dfeb977efac326af552d87&quot;);</span>
+<span class="lineNum">      74 </span><span class="lineCov">          5 :         Secret sender1 = Secret(&quot;0x3333333333333333333333333333333333333333333333333333333333333333&quot;);</span>
+<span class="lineNum">      75 </span><span class="lineCov">          5 :         Secret sender2 = Secret(&quot;0x4444444444444444444444444444444444444444444444444444444444444444&quot;);</span>
+<span class="lineNum">      76 </span><span class="lineCov">          7 :         Transaction tx0(0, gasCostCheap, gas, dest, bytes(), 0, sender1 );</span>
+<span class="lineNum">      77 </span><span class="lineCov">          7 :         Transaction tx0_1(1, gasCostMed, gas, dest, bytes(), 0, sender1 );</span>
+<span class="lineNum">      78 </span><span class="lineCov">          7 :         Transaction tx1(0, gasCostCheap, gas, dest, bytes(), 1, sender1 );</span>
+<span class="lineNum">      79 </span><span class="lineCov">          7 :         Transaction tx2(0, gasCostHigh, gas, dest, bytes(), 0, sender2 );</span>
+<span class="lineNum">      80 </span><span class="lineCov">          7 :         Transaction tx3(0, gasCostCheap + 1, gas, dest, bytes(), 1, sender2 );</span>
+<span class="lineNum">      81 </span><span class="lineCov">          7 :         Transaction tx4(0, gasCostHigh, gas, dest, bytes(), 2, sender1 );</span>
+<span class="lineNum">      82 </span><span class="lineCov">          6 :         Transaction tx5(0, gasCostMed, gas, dest, bytes(), 2, sender2 );</span>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span><span class="lineCov">          1 :         txq.import(tx0);</span>
+<span class="lineNum">      85 </span><span class="lineCov">         14 :         BOOST_CHECK(Transactions { tx0 } == txq.topTransactions(256));</span>
+<span class="lineNum">      86 </span><span class="lineCov">          1 :         txq.import(tx0);</span>
+<span class="lineNum">      87 </span><span class="lineCov">         14 :         BOOST_CHECK(Transactions { tx0 } == txq.topTransactions(256));</span>
+<span class="lineNum">      88 </span><span class="lineCov">          1 :         txq.import(tx0_1);</span>
+<span class="lineNum">      89 </span><span class="lineCov">         14 :         BOOST_CHECK(Transactions { tx0_1 } == txq.topTransactions(256));</span>
+<span class="lineNum">      90 </span><span class="lineCov">          1 :         txq.import(tx1);</span>
+<span class="lineNum">      91 </span><span class="lineCov">         15 :         BOOST_CHECK((Transactions { tx0_1, tx1 }) == txq.topTransactions(256));</span>
+<span class="lineNum">      92 </span><span class="lineCov">          1 :         txq.import(tx2);</span>
+<span class="lineNum">      93 </span><span class="lineCov">         16 :         BOOST_CHECK((Transactions { tx2, tx0_1, tx1 }) == txq.topTransactions(256));</span>
+<span class="lineNum">      94 </span><span class="lineCov">          1 :         txq.import(tx3);</span>
+<span class="lineNum">      95 </span><span class="lineCov">         17 :         BOOST_CHECK((Transactions { tx2, tx0_1, tx1, tx3 }) == txq.topTransactions(256));</span>
+<span class="lineNum">      96 </span><span class="lineCov">          1 :         txq.import(tx4);</span>
+<span class="lineNum">      97 </span><span class="lineCov">         18 :         BOOST_CHECK((Transactions { tx2, tx0_1, tx1, tx3, tx4 }) == txq.topTransactions(256));</span>
+<span class="lineNum">      98 </span><span class="lineCov">          1 :         txq.import(tx5);</span>
+<span class="lineNum">      99 </span><span class="lineCov">         19 :         BOOST_CHECK((Transactions { tx2, tx0_1, tx1, tx3, tx5, tx4 }) == txq.topTransactions(256));</span>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span><span class="lineCov">          1 :         txq.drop(tx0_1.sha3());</span>
+<span class="lineNum">     102 </span><span class="lineCov">         18 :         BOOST_CHECK((Transactions { tx2, tx1, tx3, tx5, tx4 }) == txq.topTransactions(256));</span>
+<span class="lineNum">     103 </span><span class="lineCov">          1 :         txq.drop(tx1.sha3());</span>
+<span class="lineNum">     104 </span><span class="lineCov">         17 :         BOOST_CHECK((Transactions { tx2, tx3, tx5, tx4 }) == txq.topTransactions(256));</span>
+<span class="lineNum">     105 </span><span class="lineCov">          1 :         txq.drop(tx5.sha3());</span>
+<span class="lineNum">     106 </span><span class="lineCov">         16 :         BOOST_CHECK((Transactions { tx2, tx3, tx4 }) == txq.topTransactions(256));</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span><span class="lineCov">          7 :         Transaction tx6(0, gasCostMed, gas, dest, bytes(), 20, sender1 );</span>
+<span class="lineNum">     109 </span><span class="lineCov">          1 :         txq.import(tx6);</span>
+<span class="lineNum">     110 </span><span class="lineCov">         17 :         BOOST_CHECK((Transactions { tx2, tx3, tx4, tx6 }) == txq.topTransactions(256));</span>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span><span class="lineCov">          7 :         Transaction tx7(0, gasCostMed, gas, dest, bytes(), 2, sender2 );</span>
+<span class="lineNum">     113 </span><span class="lineCov">          1 :         txq.import(tx7);</span>
+<span class="lineNum">     114 </span>            :         // deterministic signature: hash of tx5 and tx7 will be same
+<span class="lineNum">     115 </span><span class="lineCov">         17 :         BOOST_CHECK((Transactions { tx2, tx3, tx4, tx6 }) == txq.topTransactions(256));</span>
+<span class="lineNum">     116 </span>            : 
+<a name="117"><span class="lineNum">     117 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(tqFuture)</span>
+<span class="lineNum">     120 </span>            : {
+<span class="lineNum">     121 </span><span class="lineCov">          2 :         dev::eth::TransactionQueue txq;</span>
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            :         // from a94f5374fce5edbc8e2a8697c15331677e6ebf0b
+<span class="lineNum">     124 </span><span class="lineCov">          1 :         const u256 gasCostMed =  20 * szabo;</span>
+<span class="lineNum">     125 </span><span class="lineCov">          2 :         const u256 gas = 25000;</span>
+<span class="lineNum">     126 </span><span class="lineCov">          3 :         Address dest = Address(&quot;0x095e7baea6a6c7c4c2dfeb977efac326af552d87&quot;);</span>
+<span class="lineNum">     127 </span><span class="lineCov">          5 :         Secret sender = Secret(&quot;0x3333333333333333333333333333333333333333333333333333333333333333&quot;);</span>
+<span class="lineNum">     128 </span><span class="lineCov">          7 :         Transaction tx0(0, gasCostMed, gas, dest, bytes(), 0, sender );</span>
+<span class="lineNum">     129 </span><span class="lineCov">          7 :         Transaction tx1(0, gasCostMed, gas, dest, bytes(), 1, sender );</span>
+<span class="lineNum">     130 </span><span class="lineCov">          7 :         Transaction tx2(0, gasCostMed, gas, dest, bytes(), 2, sender );</span>
+<span class="lineNum">     131 </span><span class="lineCov">          7 :         Transaction tx3(0, gasCostMed, gas, dest, bytes(), 3, sender );</span>
+<span class="lineNum">     132 </span><span class="lineCov">          7 :         Transaction tx4(0, gasCostMed, gas, dest, bytes(), 4, sender );</span>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">          1 :         txq.import(tx0);</span>
+<span class="lineNum">     135 </span><span class="lineCov">          1 :         txq.import(tx1);</span>
+<span class="lineNum">     136 </span><span class="lineCov">          1 :         txq.import(tx2);</span>
+<span class="lineNum">     137 </span><span class="lineCov">          1 :         txq.import(tx3);</span>
+<span class="lineNum">     138 </span><span class="lineCov">          1 :         txq.import(tx4);</span>
+<span class="lineNum">     139 </span><span class="lineCov">         18 :         BOOST_CHECK((Transactions { tx0, tx1, tx2, tx3, tx4 }) == txq.topTransactions(256));</span>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineCov">          1 :         txq.setFuture(tx2.sha3());</span>
+<span class="lineNum">     142 </span><span class="lineCov">         15 :         BOOST_CHECK((Transactions { tx0, tx1 }) == txq.topTransactions(256));</span>
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineCov">          7 :         Transaction tx2_2(1, gasCostMed, gas, dest, bytes(), 2, sender );</span>
+<span class="lineNum">     145 </span><span class="lineCov">          1 :         txq.import(tx2_2);</span>
+<span class="lineNum">     146 </span><span class="lineCov">         18 :         BOOST_CHECK((Transactions { tx0, tx1, tx2_2, tx3, tx4 }) == txq.topTransactions(256));</span>
+<span class="lineNum">     147 </span><span class="lineCov">          1 : }</span>
+<a name="148"><span class="lineNum">     148 </span>            : </a>
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(tqLimits)</span>
+<span class="lineNum">     151 </span>            : {
+<span class="lineNum">     152 </span><span class="lineCov">          2 :         dev::eth::TransactionQueue txq(3, 3);</span>
+<span class="lineNum">     153 </span><span class="lineCov">          1 :         const u256 gasCostMed =  20 * szabo;</span>
+<span class="lineNum">     154 </span><span class="lineCov">          2 :         const u256 gas = 25000;</span>
+<span class="lineNum">     155 </span><span class="lineCov">          3 :         Address dest = Address(&quot;0x095e7baea6a6c7c4c2dfeb977efac326af552d87&quot;);</span>
+<span class="lineNum">     156 </span><span class="lineCov">          5 :         Secret sender = Secret(&quot;0x3333333333333333333333333333333333333333333333333333333333333333&quot;);</span>
+<span class="lineNum">     157 </span><span class="lineCov">          5 :         Secret sender2 = Secret(&quot;0x4444444444444444444444444444444444444444444444444444444444444444&quot;);</span>
+<span class="lineNum">     158 </span><span class="lineCov">          7 :         Transaction tx0(0, gasCostMed, gas, dest, bytes(), 0, sender );</span>
+<span class="lineNum">     159 </span><span class="lineCov">          7 :         Transaction tx1(0, gasCostMed, gas, dest, bytes(), 1, sender );</span>
+<span class="lineNum">     160 </span><span class="lineCov">          7 :         Transaction tx2(0, gasCostMed, gas, dest, bytes(), 2, sender );</span>
+<span class="lineNum">     161 </span><span class="lineCov">          7 :         Transaction tx3(0, gasCostMed, gas, dest, bytes(), 3, sender );</span>
+<span class="lineNum">     162 </span><span class="lineCov">          7 :         Transaction tx4(0, gasCostMed, gas, dest, bytes(), 4, sender );</span>
+<span class="lineNum">     163 </span><span class="lineCov">          7 :         Transaction tx5(0, gasCostMed + 1, gas, dest, bytes(), 0, sender2 );</span>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineCov">          1 :         txq.import(tx0);</span>
+<span class="lineNum">     166 </span><span class="lineCov">          1 :         txq.import(tx1);</span>
+<span class="lineNum">     167 </span><span class="lineCov">          1 :         txq.import(tx2);</span>
+<span class="lineNum">     168 </span><span class="lineCov">          1 :         txq.import(tx3);</span>
+<span class="lineNum">     169 </span><span class="lineCov">          1 :         txq.import(tx4);</span>
+<span class="lineNum">     170 </span><span class="lineCov">          1 :         txq.import(tx5);</span>
+<span class="lineNum">     171 </span><span class="lineCov">         16 :         BOOST_CHECK((Transactions { tx5, tx0, tx1 }) == txq.topTransactions(256));</span>
+<a name="172"><span class="lineNum">     172 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(tqOutput)</span>
+<span class="lineNum">     175 </span>            : {
+<span class="lineNum">     176 </span><span class="lineCov">         14 :         BOOST_REQUIRE(string(TransactionQueueChannel().name()) == string(EthCyan &quot;┉┅▶&quot;));</span>
+<span class="lineNum">     177 </span><span class="lineCov">          1 : }</span>
+<a name="178"><span class="lineNum">     178 </span>            : </a>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(tqImport)</span>
+<span class="lineNum">     181 </span>            : {
+<span class="lineNum">     182 </span><span class="lineCov">          6 :         TestTransaction testTransaction = TestTransaction::defaultTransaction();</span>
+<span class="lineNum">     183 </span><span class="lineCov">          2 :         TransactionQueue tq;</span>
+<span class="lineNum">     184 </span><span class="lineCov">          2 :         h256Hash known = tq.knownTransactions();</span>
+<span class="lineNum">     185 </span><span class="lineCov">          9 :         BOOST_REQUIRE(known.size() == 0);</span>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">          3 :         ImportResult ir = tq.import(testTransaction.transaction().rlp());</span>
+<span class="lineNum">     188 </span><span class="lineCov">          8 :         BOOST_REQUIRE(ir == ImportResult::Success);</span>
+<span class="lineNum">     189 </span><span class="lineCov">          3 :         known = tq.knownTransactions();</span>
+<span class="lineNum">     190 </span><span class="lineCov">          9 :         BOOST_REQUIRE(known.size() == 1);</span>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span><span class="lineCov">          3 :         ir = tq.import(testTransaction.transaction().rlp());</span>
+<span class="lineNum">     193 </span><span class="lineCov">          8 :         BOOST_REQUIRE(ir == ImportResult::AlreadyKnown);</span>
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span><span class="lineCov">          2 :         bytes rlp = testTransaction.transaction().rlp();</span>
+<span class="lineNum">     196 </span><span class="lineCov">          1 :         rlp.at(0) = 03;</span>
+<span class="lineNum">     197 </span><span class="lineCov">          1 :         ir = tq.import(rlp);</span>
+<span class="lineNum">     198 </span><span class="lineCov">          8 :         BOOST_REQUIRE(ir == ImportResult::Malformed);</span>
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span><span class="lineCov">          3 :         known = tq.knownTransactions();</span>
+<span class="lineNum">     201 </span><span class="lineCov">          9 :         BOOST_REQUIRE(known.size() == 1);</span>
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span><span class="lineCov">          6 :         TestTransaction testTransaction2 = TestTransaction::defaultTransaction(1, 2);</span>
+<span class="lineNum">     204 </span><span class="lineCov">          6 :         TestTransaction testTransaction3 = TestTransaction::defaultTransaction(1, 1);</span>
+<span class="lineNum">     205 </span><span class="lineCov">          6 :         TestTransaction testTransaction4 = TestTransaction::defaultTransaction(1, 4);</span>
+<span class="lineNum">     206 </span><span class="lineCov">          3 :         ir = tq.import(testTransaction2.transaction().rlp());</span>
+<span class="lineNum">     207 </span><span class="lineCov">          3 :         ir = tq.import(testTransaction3.transaction().rlp());</span>
+<span class="lineNum">     208 </span><span class="lineCov">          8 :         BOOST_REQUIRE(ir == ImportResult::OverbidGasPrice);</span>
+<span class="lineNum">     209 </span><span class="lineCov">          3 :         ir = tq.import(testTransaction4.transaction().rlp());</span>
+<span class="lineNum">     210 </span><span class="lineCov">          3 :         known = tq.knownTransactions();</span>
+<span class="lineNum">     211 </span><span class="lineCov">          9 :         BOOST_REQUIRE(known.size() == 1);</span>
+<span class="lineNum">     212 </span><span class="lineCov">          4 :         Transactions ts = tq.topTransactions(4);</span>
+<span class="lineNum">     213 </span><span class="lineCov">          9 :         BOOST_REQUIRE(ts.size() == 1);</span>
+<span class="lineNum">     214 </span><span class="lineCov">         13 :         BOOST_REQUIRE(Transaction(ts.at(0)).gasPrice() == 4);</span>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineCov">          3 :         tq.setFuture(Transaction(ts.at(0)).sha3());</span>
+<span class="lineNum">     217 </span><span class="lineCov">          4 :         Address from = Transaction(ts.at(0)).from();</span>
+<span class="lineNum">     218 </span><span class="lineCov">          4 :         ts = tq.topTransactions(4);</span>
+<span class="lineNum">     219 </span><span class="lineCov">          9 :         BOOST_REQUIRE(ts.size() == 0);</span>
+<span class="lineNum">     220 </span><span class="lineCov">          8 :         BOOST_REQUIRE(tq.waiting(from) == 1);</span>
+<a name="221"><span class="lineNum">     221 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(tqDrop)</span>
+<span class="lineNum">     224 </span>            : {
+<span class="lineNum">     225 </span><span class="lineCov">          2 :         TransactionQueue tq;</span>
+<span class="lineNum">     226 </span><span class="lineCov">          6 :         TestTransaction testTransaction = TestTransaction::defaultTransaction();</span>
+<span class="lineNum">     227 </span><span class="lineCov">          1 :         tq.dropGood(testTransaction.transaction());</span>
+<span class="lineNum">     228 </span><span class="lineCov">          3 :         tq.import(testTransaction.transaction().rlp());</span>
+<span class="lineNum">     229 </span><span class="lineCov">         11 :         BOOST_REQUIRE(tq.topTransactions(4).size() == 1);</span>
+<span class="lineNum">     230 </span><span class="lineCov">          1 :         tq.dropGood(testTransaction.transaction());</span>
+<span class="lineNum">     231 </span><span class="lineCov">         11 :         BOOST_REQUIRE(tq.topTransactions(4).size() == 0);</span>
+<a name="232"><span class="lineNum">     232 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(tqLimit)</span>
+<span class="lineNum">     235 </span>            : {
+<span class="lineNum">     236 </span><span class="lineCov">          2 :         TransactionQueue tq(5, 3);</span>
+<span class="lineNum">     237 </span><span class="lineCov">          1 :         Address from;</span>
+<span class="lineNum">     238 </span><span class="lineCov">          7 :         for (size_t i = 1; i &lt; 7; i++)</span>
+<span class="lineNum">     239 </span>            :         {
+<span class="lineNum">     240 </span><span class="lineCov">         36 :                 TestTransaction testTransaction = TestTransaction::defaultTransaction(i);</span>
+<span class="lineNum">     241 </span><span class="lineCov">          6 :                 ImportResult res = tq.import(testTransaction.transaction());</span>
+<span class="lineNum">     242 </span><span class="lineCov">         12 :                 from = testTransaction.transaction().from();</span>
+<span class="lineNum">     243 </span><span class="lineCov">         48 :                 BOOST_REQUIRE(res == ImportResult::Success);</span>
+<span class="lineNum">     244 </span>            :         }
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            :         //5 is imported and 6th is dropped
+<span class="lineNum">     247 </span><span class="lineCov">          8 :         BOOST_REQUIRE(tq.waiting(from) == 5);</span>
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span><span class="lineCov">          4 :         Transactions topTr = tq.topTransactions(10);</span>
+<span class="lineNum">     250 </span><span class="lineCov">          9 :         BOOST_REQUIRE(topTr.size() == 5);</span>
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span><span class="lineCov">          7 :         for (int i = topTr.size() - 1; i &gt;= 0 ; i--)</span>
+<span class="lineNum">     253 </span><span class="lineCov">         10 :                 tq.setFuture(topTr.at(i).sha3());</span>
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span><span class="lineCov">          4 :         topTr = tq.topTransactions(10);</span>
+<span class="lineNum">     256 </span><span class="lineCov">          9 :         BOOST_REQUIRE(topTr.size() == 0);</span>
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span><span class="lineCov">          6 :         TestTransaction testTransaction = TestTransaction::defaultTransaction(7);</span>
+<span class="lineNum">     259 </span><span class="lineCov">          8 :         BOOST_REQUIRE(tq.waiting(from) == 5);</span>
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            :         //Drop out of bound feauture
+<span class="lineNum">     262 </span><span class="lineCov">          1 :         ImportResult res = tq.import(testTransaction.transaction());</span>
+<span class="lineNum">     263 </span><span class="lineCov">          8 :         BOOST_REQUIRE(res == ImportResult::Success);</span>
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :         //future list size is now 3  + 1 imported transaction
+<span class="lineNum">     266 </span><span class="lineCov">          9 :         BOOST_REQUIRE(tq.waiting(testTransaction.transaction().from()) == 4);</span>
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span><span class="lineCov">          4 :         topTr = tq.topTransactions(10);</span>
+<span class="lineNum">     269 </span><span class="lineCov">          9 :         BOOST_REQUIRE(topTr.size() == 1); // 1 imported transaction</span>
+<a name="270"><span class="lineNum">     270 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(tqEqueue)</span>
+<span class="lineNum">     273 </span>            : {
+<span class="lineNum">     274 </span><span class="lineCov">          2 :         TransactionQueue tq;</span>
+<span class="lineNum">     275 </span><span class="lineCov">          6 :         TestTransaction testTransaction = TestTransaction::defaultTransaction();</span>
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span><span class="lineCov">          2 :         bytes payloadToDecode = testTransaction.transaction().rlp();</span>
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span><span class="lineCov">          2 :         RLPStream rlpStream(2);</span>
+<span class="lineNum">     280 </span><span class="lineCov">          1 :         rlpStream.appendRaw(payloadToDecode);</span>
+<span class="lineNum">     281 </span><span class="lineCov">          1 :         rlpStream.appendRaw(payloadToDecode);</span>
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span><span class="lineCov">          2 :         RLP tRlp(rlpStream.out());</span>
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span>            :         //check that Transaction could be recreated from the RLP
+<span class="lineNum">     286 </span><span class="lineCov">          1 :         Transaction tRlpTransaction(payloadToDecode, CheckTransaction::Cheap);</span>
+<span class="lineNum">     287 </span><span class="lineCov">          8 :         BOOST_REQUIRE(tRlpTransaction.data() == testTransaction.transaction().data());</span>
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            :         //try to import transactions
+<span class="lineNum">     290 </span><span class="lineCov">          3 :         string hashStr = &quot;01020304050607080910111213141516171819202122232425262728293031320102030405060708091011121314151617181920212223242526272829303132&quot;;</span>
+<span class="lineNum">     291 </span><span class="lineCov">          1 :         tq.enqueue(tRlp, h512(hashStr));</span>
+<span class="lineNum">     292 </span><span class="lineCov">          1 :         tq.enqueue(tRlp, h512(hashStr));</span>
+<span class="lineNum">     293 </span><span class="lineCov">          2 :         this_thread::sleep_for(chrono::seconds(1));</span>
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span>            :         //at least 1 transaction should be imported through RLP
+<span class="lineNum">     296 </span><span class="lineCov">          4 :         Transactions topTr = tq.topTransactions(10);</span>
+<span class="lineNum">     297 </span><span class="lineCov">          9 :         BOOST_REQUIRE(topTr.size() == 1);</span>
+<a name="298"><span class="lineNum">     298 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span><span class="lineCov">          3 : BOOST_AUTO_TEST_SUITE_END()</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

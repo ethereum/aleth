@@ -1,0 +1,487 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - utils/libscrypt/sha256.c</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">utils/libscrypt</a> - sha256.c<span style="font-size: 80%;"> (source / <a href="sha256.c.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">155</td>
+            <td class="headerCovTableEntry">170</td>
+            <td class="headerCovTableEntryHi">91.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryMed">77.8 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*-</a>
+<span class="lineNum">       2 </span>            :  * Copyright 2005,2007,2009 Colin Percival
+<span class="lineNum">       3 </span>            :  * All rights reserved.
+<span class="lineNum">       4 </span>            :  *
+<span class="lineNum">       5 </span>            :  * Redistribution and use in source and binary forms, with or without
+<span class="lineNum">       6 </span>            :  * modification, are permitted provided that the following conditions
+<span class="lineNum">       7 </span>            :  * are met:
+<span class="lineNum">       8 </span>            :  * 1. Redistributions of source code must retain the above copyright
+<span class="lineNum">       9 </span>            :  *    notice, this list of conditions and the following disclaimer.
+<span class="lineNum">      10 </span>            :  * 2. Redistributions in binary form must reproduce the above copyright
+<span class="lineNum">      11 </span>            :  *    notice, this list of conditions and the following disclaimer in the
+<span class="lineNum">      12 </span>            :  *    documentation and/or other materials provided with the distribution.
+<span class="lineNum">      13 </span>            :  *
+<span class="lineNum">      14 </span>            :  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+<span class="lineNum">      15 </span>            :  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+<span class="lineNum">      16 </span>            :  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+<span class="lineNum">      17 </span>            :  * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+<span class="lineNum">      18 </span>            :  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+<span class="lineNum">      19 </span>            :  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+<span class="lineNum">      20 </span>            :  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+<span class="lineNum">      21 </span>            :  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+<span class="lineNum">      22 </span>            :  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+<span class="lineNum">      23 </span>            :  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+<span class="lineNum">      24 </span>            :  * SUCH DAMAGE.
+<span class="lineNum">      25 </span>            :  */
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;sys/types.h&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #include &lt;stdint.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;string.h&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &quot;sysendian.h&quot;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #include &quot;sha256.h&quot;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : /*
+<span class="lineNum">      37 </span>            :  * Encode a length len/4 vector of (uint32_t) into a length len vector of
+<span class="lineNum">      38 </span>            :  * (unsigned char) in big-endian form.  Assumes len is a multiple of 4.
+<span class="lineNum">      39 </span>            :  */
+<span class="lineNum">      40 </span>            : static void
+<span class="lineNum">      41 </span>            : be32enc_vect(unsigned char *dst, const uint32_t *src, size_t len)
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span>            :         size_t i;
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">      20592 :         for (i = 0; i &lt; len / 4; i++)</span>
+<span class="lineNum">      46 </span><span class="lineCov">      34320 :                 be32enc(dst + i * 4, src[i]);</span>
+<span class="lineNum">      47 </span>            : }
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : /*
+<span class="lineNum">      50 </span>            :  * Decode a big-endian length len vector of (unsigned char) into a length
+<span class="lineNum">      51 </span>            :  * len/4 vector of (uint32_t).  Assumes len is a multiple of 4.
+<span class="lineNum">      52 </span>            :  */
+<span class="lineNum">      53 </span>            : static void
+<span class="lineNum">      54 </span>            : be32dec_vect(uint32_t *dst, const unsigned char *src, size_t len)
+<span class="lineNum">      55 </span>            : {
+<span class="lineNum">      56 </span>            :         size_t i;
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span><span class="lineCov">      38012 :         for (i = 0; i &lt; len / 4; i++)</span>
+<span class="lineNum">      59 </span><span class="lineCov">      71552 :                 dst[i] = be32dec(src + i * 4);</span>
+<span class="lineNum">      60 </span>            : }
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : /* Elementary functions used by SHA256 */
+<span class="lineNum">      63 </span>            : #define Ch(x, y, z)     ((x &amp; (y ^ z)) ^ z)
+<span class="lineNum">      64 </span>            : #define Maj(x, y, z)    ((x &amp; (y | z)) | (y &amp; z))
+<span class="lineNum">      65 </span>            : #define SHR(x, n)       (x &gt;&gt; n)
+<span class="lineNum">      66 </span>            : #define ROTR(x, n)      ((x &gt;&gt; n) | (x &lt;&lt; (32 - n)))
+<span class="lineNum">      67 </span>            : #define S0(x)           (ROTR(x, 2) ^ ROTR(x, 13) ^ ROTR(x, 22))
+<span class="lineNum">      68 </span>            : #define S1(x)           (ROTR(x, 6) ^ ROTR(x, 11) ^ ROTR(x, 25))
+<span class="lineNum">      69 </span>            : #define s0(x)           (ROTR(x, 7) ^ ROTR(x, 18) ^ SHR(x, 3))
+<span class="lineNum">      70 </span>            : #define s1(x)           (ROTR(x, 17) ^ ROTR(x, 19) ^ SHR(x, 10))
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : /* SHA256 round function */
+<span class="lineNum">      73 </span>            : #define RND(a, b, c, d, e, f, g, h, k)                  \
+<span class="lineNum">      74 </span>            :         t0 = h + S1(e) + Ch(e, f, g) + k;               \
+<span class="lineNum">      75 </span>            :         t1 = S0(a) + Maj(a, b, c);                      \
+<span class="lineNum">      76 </span>            :         d += t0;                                        \
+<span class="lineNum">      77 </span>            :         h  = t0 + t1;
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : /* Adjusted round function for rotating state */
+<span class="lineNum">      80 </span>            : #define RNDr(S, W, i, k)                        \
+<span class="lineNum">      81 </span>            :         RND(S[(64 - i) % 8], S[(65 - i) % 8],   \
+<span class="lineNum">      82 </span>            :             S[(66 - i) % 8], S[(67 - i) % 8],   \
+<span class="lineNum">      83 </span>            :             S[(68 - i) % 8], S[(69 - i) % 8],   \
+<span class="lineNum">      84 </span>            :             S[(70 - i) % 8], S[(71 - i) % 8],   \
+<span class="lineNum">      85 </span>            :             W[i] + k)
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : /*
+<span class="lineNum">      88 </span>            :  * SHA256 block compression function.  The 256-bit state is transformed via
+<span class="lineNum">      89 </span>            :  * the 512-bit input block to produce a new state.
+<a name="90"><span class="lineNum">      90 </span>            :  */</a>
+<span class="lineNum">      91 </span>            : static void
+<span class="lineNum">      92 </span><span class="lineCov">       2236 : SHA256_Transform(uint32_t * state, const unsigned char block[64])</span>
+<span class="lineNum">      93 </span>            : {
+<span class="lineNum">      94 </span>            :         uint32_t W[64];
+<span class="lineNum">      95 </span>            :         uint32_t S[8];
+<span class="lineNum">      96 </span>            :         uint32_t t0, t1;
+<span class="lineNum">      97 </span>            :         int i;
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :         /* 1. Prepare message schedule W. */
+<span class="lineNum">     100 </span>            :         be32dec_vect(W, block, 64);
+<span class="lineNum">     101 </span><span class="lineCov">     107328 :         for (i = 16; i &lt; 64; i++)</span>
+<span class="lineNum">     102 </span><span class="lineCov">     107328 :                 W[i] = s1(W[i - 2]) + W[i - 7] + s0(W[i - 15]) + W[i - 16];</span>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :         /* 2. Initialize working variables. */
+<span class="lineNum">     105 </span><span class="lineCov">       2236 :         memcpy(S, state, 32);</span>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :         /* 3. Mix. */
+<span class="lineNum">     108 </span><span class="lineCov">       2236 :         RNDr(S, W, 0, 0x428a2f98);</span>
+<span class="lineNum">     109 </span><span class="lineCov">       2236 :         RNDr(S, W, 1, 0x71374491);</span>
+<span class="lineNum">     110 </span><span class="lineCov">       2236 :         RNDr(S, W, 2, 0xb5c0fbcf);</span>
+<span class="lineNum">     111 </span><span class="lineCov">       2236 :         RNDr(S, W, 3, 0xe9b5dba5);</span>
+<span class="lineNum">     112 </span><span class="lineCov">       2236 :         RNDr(S, W, 4, 0x3956c25b);</span>
+<span class="lineNum">     113 </span><span class="lineCov">       2236 :         RNDr(S, W, 5, 0x59f111f1);</span>
+<span class="lineNum">     114 </span><span class="lineCov">       2236 :         RNDr(S, W, 6, 0x923f82a4);</span>
+<span class="lineNum">     115 </span><span class="lineCov">       2236 :         RNDr(S, W, 7, 0xab1c5ed5);</span>
+<span class="lineNum">     116 </span><span class="lineCov">       2236 :         RNDr(S, W, 8, 0xd807aa98);</span>
+<span class="lineNum">     117 </span><span class="lineCov">       2236 :         RNDr(S, W, 9, 0x12835b01);</span>
+<span class="lineNum">     118 </span><span class="lineCov">       2236 :         RNDr(S, W, 10, 0x243185be);</span>
+<span class="lineNum">     119 </span><span class="lineCov">       2236 :         RNDr(S, W, 11, 0x550c7dc3);</span>
+<span class="lineNum">     120 </span><span class="lineCov">       2236 :         RNDr(S, W, 12, 0x72be5d74);</span>
+<span class="lineNum">     121 </span><span class="lineCov">       2236 :         RNDr(S, W, 13, 0x80deb1fe);</span>
+<span class="lineNum">     122 </span><span class="lineCov">       2236 :         RNDr(S, W, 14, 0x9bdc06a7);</span>
+<span class="lineNum">     123 </span><span class="lineCov">       2236 :         RNDr(S, W, 15, 0xc19bf174);</span>
+<span class="lineNum">     124 </span><span class="lineCov">       2236 :         RNDr(S, W, 16, 0xe49b69c1);</span>
+<span class="lineNum">     125 </span><span class="lineCov">       2236 :         RNDr(S, W, 17, 0xefbe4786);</span>
+<span class="lineNum">     126 </span><span class="lineCov">       2236 :         RNDr(S, W, 18, 0x0fc19dc6);</span>
+<span class="lineNum">     127 </span><span class="lineCov">       2236 :         RNDr(S, W, 19, 0x240ca1cc);</span>
+<span class="lineNum">     128 </span><span class="lineCov">       2236 :         RNDr(S, W, 20, 0x2de92c6f);</span>
+<span class="lineNum">     129 </span><span class="lineCov">       2236 :         RNDr(S, W, 21, 0x4a7484aa);</span>
+<span class="lineNum">     130 </span><span class="lineCov">       2236 :         RNDr(S, W, 22, 0x5cb0a9dc);</span>
+<span class="lineNum">     131 </span><span class="lineCov">       2236 :         RNDr(S, W, 23, 0x76f988da);</span>
+<span class="lineNum">     132 </span><span class="lineCov">       2236 :         RNDr(S, W, 24, 0x983e5152);</span>
+<span class="lineNum">     133 </span><span class="lineCov">       2236 :         RNDr(S, W, 25, 0xa831c66d);</span>
+<span class="lineNum">     134 </span><span class="lineCov">       2236 :         RNDr(S, W, 26, 0xb00327c8);</span>
+<span class="lineNum">     135 </span><span class="lineCov">       2236 :         RNDr(S, W, 27, 0xbf597fc7);</span>
+<span class="lineNum">     136 </span><span class="lineCov">       2236 :         RNDr(S, W, 28, 0xc6e00bf3);</span>
+<span class="lineNum">     137 </span><span class="lineCov">       2236 :         RNDr(S, W, 29, 0xd5a79147);</span>
+<span class="lineNum">     138 </span><span class="lineCov">       2236 :         RNDr(S, W, 30, 0x06ca6351);</span>
+<span class="lineNum">     139 </span><span class="lineCov">       2236 :         RNDr(S, W, 31, 0x14292967);</span>
+<span class="lineNum">     140 </span><span class="lineCov">       2236 :         RNDr(S, W, 32, 0x27b70a85);</span>
+<span class="lineNum">     141 </span><span class="lineCov">       2236 :         RNDr(S, W, 33, 0x2e1b2138);</span>
+<span class="lineNum">     142 </span><span class="lineCov">       2236 :         RNDr(S, W, 34, 0x4d2c6dfc);</span>
+<span class="lineNum">     143 </span><span class="lineCov">       2236 :         RNDr(S, W, 35, 0x53380d13);</span>
+<span class="lineNum">     144 </span><span class="lineCov">       2236 :         RNDr(S, W, 36, 0x650a7354);</span>
+<span class="lineNum">     145 </span><span class="lineCov">       2236 :         RNDr(S, W, 37, 0x766a0abb);</span>
+<span class="lineNum">     146 </span><span class="lineCov">       2236 :         RNDr(S, W, 38, 0x81c2c92e);</span>
+<span class="lineNum">     147 </span><span class="lineCov">       2236 :         RNDr(S, W, 39, 0x92722c85);</span>
+<span class="lineNum">     148 </span><span class="lineCov">       2236 :         RNDr(S, W, 40, 0xa2bfe8a1);</span>
+<span class="lineNum">     149 </span><span class="lineCov">       2236 :         RNDr(S, W, 41, 0xa81a664b);</span>
+<span class="lineNum">     150 </span><span class="lineCov">       2236 :         RNDr(S, W, 42, 0xc24b8b70);</span>
+<span class="lineNum">     151 </span><span class="lineCov">       2236 :         RNDr(S, W, 43, 0xc76c51a3);</span>
+<span class="lineNum">     152 </span><span class="lineCov">       2236 :         RNDr(S, W, 44, 0xd192e819);</span>
+<span class="lineNum">     153 </span><span class="lineCov">       2236 :         RNDr(S, W, 45, 0xd6990624);</span>
+<span class="lineNum">     154 </span><span class="lineCov">       2236 :         RNDr(S, W, 46, 0xf40e3585);</span>
+<span class="lineNum">     155 </span><span class="lineCov">       2236 :         RNDr(S, W, 47, 0x106aa070);</span>
+<span class="lineNum">     156 </span><span class="lineCov">       2236 :         RNDr(S, W, 48, 0x19a4c116);</span>
+<span class="lineNum">     157 </span><span class="lineCov">       2236 :         RNDr(S, W, 49, 0x1e376c08);</span>
+<span class="lineNum">     158 </span><span class="lineCov">       2236 :         RNDr(S, W, 50, 0x2748774c);</span>
+<span class="lineNum">     159 </span><span class="lineCov">       2236 :         RNDr(S, W, 51, 0x34b0bcb5);</span>
+<span class="lineNum">     160 </span><span class="lineCov">       2236 :         RNDr(S, W, 52, 0x391c0cb3);</span>
+<span class="lineNum">     161 </span><span class="lineCov">       2236 :         RNDr(S, W, 53, 0x4ed8aa4a);</span>
+<span class="lineNum">     162 </span><span class="lineCov">       2236 :         RNDr(S, W, 54, 0x5b9cca4f);</span>
+<span class="lineNum">     163 </span><span class="lineCov">       2236 :         RNDr(S, W, 55, 0x682e6ff3);</span>
+<span class="lineNum">     164 </span><span class="lineCov">       2236 :         RNDr(S, W, 56, 0x748f82ee);</span>
+<span class="lineNum">     165 </span><span class="lineCov">       2236 :         RNDr(S, W, 57, 0x78a5636f);</span>
+<span class="lineNum">     166 </span><span class="lineCov">       2236 :         RNDr(S, W, 58, 0x84c87814);</span>
+<span class="lineNum">     167 </span><span class="lineCov">       2236 :         RNDr(S, W, 59, 0x8cc70208);</span>
+<span class="lineNum">     168 </span><span class="lineCov">       2236 :         RNDr(S, W, 60, 0x90befffa);</span>
+<span class="lineNum">     169 </span><span class="lineCov">       2236 :         RNDr(S, W, 61, 0xa4506ceb);</span>
+<span class="lineNum">     170 </span><span class="lineCov">       2236 :         RNDr(S, W, 62, 0xbef9a3f7);</span>
+<span class="lineNum">     171 </span><span class="lineCov">       2236 :         RNDr(S, W, 63, 0xc67178f2);</span>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :         /* 4. Mix local working variables into global state */
+<span class="lineNum">     174 </span><span class="lineCov">      20124 :         for (i = 0; i &lt; 8; i++)</span>
+<span class="lineNum">     175 </span><span class="lineCov">      17888 :                 state[i] += S[i];</span>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :         /* Clean the stack. */
+<span class="lineNum">     178 </span><span class="lineCov">       2236 :         memset(W, 0, 256);</span>
+<span class="lineNum">     179 </span><span class="lineCov">       2236 :         memset(S, 0, 32);</span>
+<span class="lineNum">     180 </span><span class="lineCov">       2236 :         t0 = t1 = 0;</span>
+<span class="lineNum">     181 </span><span class="lineCov">       2236 : }</span>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            : static unsigned char PAD[64] = {
+<span class="lineNum">     184 </span>            :         0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+<span class="lineNum">     185 </span>            :         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+<span class="lineNum">     186 </span>            :         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+<span class="lineNum">     187 </span>            :         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+<span class="lineNum">     188 </span>            : };
+<span class="lineNum">     189 </span>            : 
+<a name="190"><span class="lineNum">     190 </span>            : /* Add padding and terminating bit-count. */</a>
+<span class="lineNum">     191 </span>            : static void
+<span class="lineNum">     192 </span><span class="lineCov">       1716 : SHA256_Pad(SHA256_CTX * ctx)</span>
+<span class="lineNum">     193 </span>            : {
+<span class="lineNum">     194 </span>            :         unsigned char len[8];
+<span class="lineNum">     195 </span>            :         uint32_t r, plen;
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :         /*
+<span class="lineNum">     198 </span>            :          * Convert length to a vector of bytes -- we do this now rather
+<span class="lineNum">     199 </span>            :          * than later because the length will change after we pad.
+<span class="lineNum">     200 </span>            :          */
+<span class="lineNum">     201 </span><span class="lineCov">       3432 :         be32enc_vect(len, ctx-&gt;count, 8);</span>
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            :         /* Add 1--64 bytes so that the resulting length is 56 mod 64 */
+<span class="lineNum">     204 </span><span class="lineCov">       1716 :         r = (ctx-&gt;count[1] &gt;&gt; 3) &amp; 0x3f;</span>
+<span class="lineNum">     205 </span><span class="lineCov">       1716 :         plen = (r &lt; 56) ? (56 - r) : (120 - r);</span>
+<span class="lineNum">     206 </span><span class="lineCov">       1716 :         libscrypt_SHA256_Update(ctx, PAD, (size_t)plen);</span>
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            :         /* Add the terminating bit-count */
+<span class="lineNum">     209 </span><span class="lineCov">       1716 :         libscrypt_SHA256_Update(ctx, len, 8);</span>
+<span class="lineNum">     210 </span><span class="lineCov">       1716 : }</span>
+<span class="lineNum">     211 </span>            : 
+<a name="212"><span class="lineNum">     212 </span>            : /* SHA-256 initialization.  Begins a SHA-256 operation. */</a>
+<span class="lineNum">     213 </span>            : void
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 : libscrypt_SHA256_Init(SHA256_CTX * ctx)</span>
+<span class="lineNum">     215 </span>            : {
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :         /* Zero bits processed so far */
+<span class="lineNum">     218 </span><span class="lineCov">        104 :         ctx-&gt;count[0] = ctx-&gt;count[1] = 0;</span>
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            :         /* Magic initialization constants */
+<span class="lineNum">     221 </span><span class="lineCov">        104 :         ctx-&gt;state[0] = 0x6A09E667;</span>
+<span class="lineNum">     222 </span><span class="lineCov">        104 :         ctx-&gt;state[1] = 0xBB67AE85;</span>
+<span class="lineNum">     223 </span><span class="lineCov">        104 :         ctx-&gt;state[2] = 0x3C6EF372;</span>
+<span class="lineNum">     224 </span><span class="lineCov">        104 :         ctx-&gt;state[3] = 0xA54FF53A;</span>
+<span class="lineNum">     225 </span><span class="lineCov">        104 :         ctx-&gt;state[4] = 0x510E527F;</span>
+<span class="lineNum">     226 </span><span class="lineCov">        104 :         ctx-&gt;state[5] = 0x9B05688C;</span>
+<span class="lineNum">     227 </span><span class="lineCov">        104 :         ctx-&gt;state[6] = 0x1F83D9AB;</span>
+<span class="lineNum">     228 </span><span class="lineCov">        104 :         ctx-&gt;state[7] = 0x5BE0CD19;</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     230 </span>            : 
+<a name="231"><span class="lineNum">     231 </span>            : /* Add bytes into the hash */</a>
+<span class="lineNum">     232 </span>            : void
+<span class="lineNum">     233 </span><span class="lineCov">       5304 : libscrypt_SHA256_Update(SHA256_CTX * ctx, const void *in, size_t len)</span>
+<span class="lineNum">     234 </span>            : {
+<span class="lineNum">     235 </span>            :         uint32_t bitlen[2];
+<span class="lineNum">     236 </span>            :         uint32_t r;
+<span class="lineNum">     237 </span><span class="lineCov">       5304 :         const unsigned char *src = in;</span>
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            :         /* Number of bytes left in the buffer from previous updates */
+<span class="lineNum">     240 </span><span class="lineCov">       5304 :         r = (ctx-&gt;count[1] &gt;&gt; 3) &amp; 0x3f;</span>
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            :         /* Convert the length into a number of bits */
+<span class="lineNum">     243 </span><span class="lineCov">       5304 :         bitlen[1] = ((uint32_t)len) &lt;&lt; 3;</span>
+<span class="lineNum">     244 </span><span class="lineCov">       5304 :         bitlen[0] = (uint32_t)(len &gt;&gt; 29);</span>
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            :         /* Update number of bits */
+<span class="lineNum">     247 </span><span class="lineCov">       5304 :         if ((ctx-&gt;count[1] += bitlen[1]) &lt; bitlen[1])</span>
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :                 ctx-&gt;count[0]++;</span>
+<span class="lineNum">     249 </span><span class="lineCov">       5304 :         ctx-&gt;count[0] += bitlen[0];</span>
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            :         /* Handle the case where we don't need to perform any transforms */
+<span class="lineNum">     252 </span><span class="lineCov">       5304 :         if (len &lt; 64 - r) {</span>
+<span class="lineNum">     253 </span><span class="lineCov">       6916 :                 memcpy(&amp;ctx-&gt;buf[r], src, len);</span>
+<span class="lineNum">     254 </span>            :                 return;
+<span class="lineNum">     255 </span>            :         }
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            :         /* Finish the current block */
+<span class="lineNum">     258 </span><span class="lineCov">       3692 :         memcpy(&amp;ctx-&gt;buf[r], src, 64 - r);</span>
+<span class="lineNum">     259 </span><span class="lineCov">       1846 :         SHA256_Transform(ctx-&gt;state, ctx-&gt;buf);</span>
+<span class="lineNum">     260 </span><span class="lineCov">       1846 :         src += 64 - r;</span>
+<span class="lineNum">     261 </span><span class="lineCov">       1846 :         len -= 64 - r;</span>
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            :         /* Perform complete blocks */
+<span class="lineNum">     264 </span><span class="lineCov">       4082 :         while (len &gt;= 64) {</span>
+<span class="lineNum">     265 </span><span class="lineCov">        390 :                 SHA256_Transform(ctx-&gt;state, src);</span>
+<span class="lineNum">     266 </span><span class="lineCov">        390 :                 src += 64;</span>
+<span class="lineNum">     267 </span><span class="lineCov">        390 :                 len -= 64;</span>
+<span class="lineNum">     268 </span>            :         }
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span>            :         /* Copy left over data into buffer */
+<span class="lineNum">     271 </span><span class="lineCov">       3692 :         memcpy(ctx-&gt;buf, src, len);</span>
+<span class="lineNum">     272 </span>            : }
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            : /*
+<span class="lineNum">     275 </span>            :  * SHA-256 finalization.  Pads the input data, exports the hash value,
+<span class="lineNum">     276 </span>            :  * and clears the context state.
+<a name="277"><span class="lineNum">     277 </span>            :  */</a>
+<span class="lineNum">     278 </span>            : void
+<span class="lineNum">     279 </span><span class="lineCov">       1716 : libscrypt_SHA256_Final(unsigned char digest[32], SHA256_CTX * ctx)</span>
+<span class="lineNum">     280 </span>            : {
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span>            :         /* Add padding */
+<span class="lineNum">     283 </span><span class="lineCov">       1716 :         SHA256_Pad(ctx);</span>
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span>            :         /* Write the hash */
+<span class="lineNum">     286 </span><span class="lineCov">       3432 :         be32enc_vect(digest, ctx-&gt;state, 32);</span>
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            :         /* Clear the context state */
+<span class="lineNum">     289 </span><span class="lineCov">       1716 :         memset((void *)ctx, 0, sizeof(*ctx));</span>
+<span class="lineNum">     290 </span><span class="lineCov">       1716 : }</span>
+<span class="lineNum">     291 </span>            : 
+<a name="292"><span class="lineNum">     292 </span>            : /* Initialize an HMAC-SHA256 operation with the given key. */</a>
+<span class="lineNum">     293 </span>            : void
+<span class="lineNum">     294 </span><span class="lineCov">         52 : libscrypt_HMAC_SHA256_Init(HMAC_SHA256_CTX * ctx, const void * _K, size_t Klen)</span>
+<span class="lineNum">     295 </span>            : {
+<span class="lineNum">     296 </span>            :         unsigned char pad[64];
+<span class="lineNum">     297 </span>            :         unsigned char khash[32];
+<span class="lineNum">     298 </span><span class="lineCov">         52 :         const unsigned char * K = _K;</span>
+<span class="lineNum">     299 </span>            :         size_t i;
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span>            :         /* If Klen &gt; 64, the key is really SHA256(K). */
+<span class="lineNum">     302 </span><span class="lineCov">         52 :         if (Klen &gt; 64) {</span>
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :                 libscrypt_SHA256_Init(&amp;ctx-&gt;ictx);</span>
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 :                 libscrypt_SHA256_Update(&amp;ctx-&gt;ictx, K, Klen);</span>
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 :                 libscrypt_SHA256_Final(khash, &amp;ctx-&gt;ictx);</span>
+<span class="lineNum">     306 </span><span class="lineNoCov">          0 :                 K = khash;</span>
+<span class="lineNum">     307 </span><span class="lineNoCov">          0 :                 Klen = 32;</span>
+<span class="lineNum">     308 </span>            :         }
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            :         /* Inner SHA256 operation is SHA256(K xor [block of 0x36] || data). */
+<span class="lineNum">     311 </span><span class="lineCov">        104 :         libscrypt_SHA256_Init(&amp;ctx-&gt;ictx);</span>
+<span class="lineNum">     312 </span><span class="lineCov">         52 :         memset(pad, 0x36, 64);</span>
+<span class="lineNum">     313 </span><span class="lineCov">        320 :         for (i = 0; i &lt; Klen; i++)</span>
+<span class="lineNum">     314 </span><span class="lineCov">        268 :                 pad[i] ^= K[i];</span>
+<span class="lineNum">     315 </span><span class="lineCov">         52 :         libscrypt_SHA256_Update(&amp;ctx-&gt;ictx, pad, 64);</span>
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            :         /* Outer SHA256 operation is SHA256(K xor [block of 0x5c] || hash). */
+<span class="lineNum">     318 </span><span class="lineCov">        104 :         libscrypt_SHA256_Init(&amp;ctx-&gt;octx);</span>
+<span class="lineNum">     319 </span><span class="lineCov">         52 :         memset(pad, 0x5c, 64);</span>
+<span class="lineNum">     320 </span><span class="lineCov">        320 :         for (i = 0; i &lt; Klen; i++)</span>
+<span class="lineNum">     321 </span><span class="lineCov">        268 :                 pad[i] ^= K[i];</span>
+<span class="lineNum">     322 </span><span class="lineCov">         52 :         libscrypt_SHA256_Update(&amp;ctx-&gt;octx, pad, 64);</span>
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span>            :         /* Clean the stack. */
+<span class="lineNum">     325 </span><span class="lineCov">         52 :         memset(khash, 0, 32);</span>
+<span class="lineNum">     326 </span><span class="lineCov">         52 : }</span>
+<span class="lineNum">     327 </span>            : 
+<a name="328"><span class="lineNum">     328 </span>            : /* Add bytes to the HMAC-SHA256 operation. */</a>
+<span class="lineNum">     329 </span>            : void
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 : libscrypt_HMAC_SHA256_Update(HMAC_SHA256_CTX * ctx, const void *in, size_t len)</span>
+<span class="lineNum">     331 </span>            : {
+<span class="lineNum">     332 </span>            : 
+<span class="lineNum">     333 </span>            :         /* Feed data to the inner SHA256 operation. */
+<span class="lineNum">     334 </span><span class="lineCov">        910 :         libscrypt_SHA256_Update(&amp;ctx-&gt;ictx, in, len);</span>
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     336 </span>            : 
+<a name="337"><span class="lineNum">     337 </span>            : /* Finish an HMAC-SHA256 operation. */</a>
+<span class="lineNum">     338 </span>            : void
+<span class="lineNum">     339 </span><span class="lineCov">        858 : libscrypt_HMAC_SHA256_Final(unsigned char digest[32], HMAC_SHA256_CTX * ctx)</span>
+<span class="lineNum">     340 </span>            : {
+<span class="lineNum">     341 </span>            :         unsigned char ihash[32];
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span>            :         /* Finish the inner SHA256 operation. */
+<span class="lineNum">     344 </span><span class="lineCov">        858 :         libscrypt_SHA256_Final(ihash, &amp;ctx-&gt;ictx);</span>
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span>            :         /* Feed the inner hash to the outer SHA256 operation. */
+<span class="lineNum">     347 </span><span class="lineCov">        858 :         libscrypt_SHA256_Update(&amp;ctx-&gt;octx, ihash, 32);</span>
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span>            :         /* Finish the outer SHA256 operation. */
+<span class="lineNum">     350 </span><span class="lineCov">        858 :         libscrypt_SHA256_Final(digest, &amp;ctx-&gt;octx);</span>
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span>            :         /* Clean the stack. */
+<span class="lineNum">     353 </span><span class="lineCov">        858 :         memset(ihash, 0, 32);</span>
+<span class="lineNum">     354 </span><span class="lineCov">        858 : }</span>
+<span class="lineNum">     355 </span>            : 
+<span class="lineNum">     356 </span>            : /**
+<span class="lineNum">     357 </span>            :  * PBKDF2_SHA256(passwd, passwdlen, salt, saltlen, c, buf, dkLen):
+<span class="lineNum">     358 </span>            :  * Compute PBKDF2(passwd, salt, c, dkLen) using HMAC-SHA256 as the PRF, and
+<span class="lineNum">     359 </span>            :  * write the output to buf.  The value dkLen must be at most 32 * (2^32 - 1).
+<a name="360"><span class="lineNum">     360 </span>            :  */</a>
+<span class="lineNum">     361 </span>            : void
+<span class="lineNum">     362 </span><span class="lineCov">         52 : libscrypt_PBKDF2_SHA256(const uint8_t * passwd, size_t passwdlen, const uint8_t * salt,</span>
+<span class="lineNum">     363 </span>            :     size_t saltlen, uint64_t c, uint8_t * buf, size_t dkLen)
+<span class="lineNum">     364 </span>            : {
+<span class="lineNum">     365 </span>            :         HMAC_SHA256_CTX PShctx, hctx;
+<span class="lineNum">     366 </span>            :         size_t i;
+<span class="lineNum">     367 </span>            :         uint8_t ivec[4];
+<span class="lineNum">     368 </span>            :         uint8_t U[32];
+<span class="lineNum">     369 </span>            :         uint8_t T[32];
+<span class="lineNum">     370 </span>            :         uint64_t j;
+<span class="lineNum">     371 </span>            :         int k;
+<span class="lineNum">     372 </span>            :         size_t clen;
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span>            :         /* Compute HMAC state after processing P and S. */
+<span class="lineNum">     375 </span><span class="lineCov">         52 :         libscrypt_HMAC_SHA256_Init(&amp;PShctx, passwd, passwdlen);</span>
+<span class="lineNum">     376 </span><span class="lineCov">         52 :         libscrypt_HMAC_SHA256_Update(&amp;PShctx, salt, saltlen);</span>
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span>            :         /* Iterate through the blocks. */
+<span class="lineNum">     379 </span><span class="lineCov">        910 :         for (i = 0; i * 32 &lt; dkLen; i++) {</span>
+<span class="lineNum">     380 </span>            :                 /* Generate INT(i + 1). */
+<span class="lineNum">     381 </span><span class="lineCov">       1716 :                 be32enc(ivec, (uint32_t)(i + 1));</span>
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span>            :                 /* Compute U_1 = PRF(P, S || INT(i)). */
+<span class="lineNum">     384 </span><span class="lineCov">        858 :                 memcpy(&amp;hctx, &amp;PShctx, sizeof(HMAC_SHA256_CTX));</span>
+<span class="lineNum">     385 </span><span class="lineCov">        858 :                 libscrypt_HMAC_SHA256_Update(&amp;hctx, ivec, 4);</span>
+<span class="lineNum">     386 </span><span class="lineCov">        858 :                 libscrypt_HMAC_SHA256_Final(U, &amp;hctx);</span>
+<span class="lineNum">     387 </span>            : 
+<span class="lineNum">     388 </span>            :                 /* T_i = U_1 ... */
+<span class="lineNum">     389 </span><span class="lineCov">        858 :                 memcpy(T, U, 32);</span>
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span><span class="lineCov">        858 :                 for (j = 2; j &lt;= c; j++) {</span>
+<span class="lineNum">     392 </span>            :                         /* Compute U_j. */
+<span class="lineNum">     393 </span><span class="lineNoCov">          0 :                         libscrypt_HMAC_SHA256_Init(&amp;hctx, passwd, passwdlen);</span>
+<span class="lineNum">     394 </span><span class="lineNoCov">          0 :                         libscrypt_HMAC_SHA256_Update(&amp;hctx, U, 32);</span>
+<span class="lineNum">     395 </span><span class="lineNoCov">          0 :                         libscrypt_HMAC_SHA256_Final(U, &amp;hctx);</span>
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span>            :                         /* ... xor U_j ... */
+<span class="lineNum">     398 </span><span class="lineNoCov">          0 :                         for (k = 0; k &lt; 32; k++)</span>
+<span class="lineNum">     399 </span><span class="lineNoCov">          0 :                                 T[k] ^= U[k];</span>
+<span class="lineNum">     400 </span>            :                 }
+<span class="lineNum">     401 </span>            : 
+<span class="lineNum">     402 </span>            :                 /* Copy as many bytes as necessary into buf. */
+<span class="lineNum">     403 </span><span class="lineCov">        858 :                 clen = dkLen - i * 32;</span>
+<span class="lineNum">     404 </span><span class="lineCov">        858 :                 if (clen &gt; 32)</span>
+<span class="lineNum">     405 </span><span class="lineCov">        806 :                         clen = 32;</span>
+<span class="lineNum">     406 </span><span class="lineCov">       1716 :                 memcpy(&amp;buf[i * 32], T, clen);</span>
+<span class="lineNum">     407 </span>            :         }
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span>            :         /* Clean PShctx, since we never called _Final on it. */
+<span class="lineNum">     410 </span><span class="lineCov">         52 :         memset(&amp;PShctx, 0, sizeof(HMAC_SHA256_CTX));</span>
+<span class="lineNum">     411 </span><span class="lineCov">         52 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethcore/Transaction.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethcore</a> - Transaction.h<span style="font-size: 80%;"> (source / <a href="Transaction.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntryLo">61.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryHi">92.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file TransactionBase.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;libdevcore/RLP.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libdevcore/SHA3.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libethcore/Common.h&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace dev
+<span class="lineNum">      29 </span>            : {
+<span class="lineNum">      30 </span>            : namespace eth
+<span class="lineNum">      31 </span>            : {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : struct EVMSchedule;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : /// Named-boolean type to encode whether a signature be included in the serialisation process.
+<span class="lineNum">      36 </span>            : enum IncludeSignature
+<span class="lineNum">      37 </span>            : {
+<span class="lineNum">      38 </span>            :         WithoutSignature = 0,   ///&lt; Do not include a signature.
+<span class="lineNum">      39 </span>            :         WithSignature = 1,              ///&lt; Do include a signature.
+<span class="lineNum">      40 </span>            : };
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : enum class CheckTransaction
+<span class="lineNum">      43 </span>            : {
+<span class="lineNum">      44 </span>            :         None,
+<span class="lineNum">      45 </span>            :         Cheap,
+<span class="lineNum">      46 </span>            :         Everything
+<span class="lineNum">      47 </span>            : };
+<a name="48"><span class="lineNum">      48 </span>            : </a>
+<span class="lineNum">      49 </span>            : /// Encodes a transaction, ready to be exported to or freshly imported from RLP.
+<span class="lineNum">      50 </span><span class="lineCov">    6487236 : class TransactionBase</span>
+<span class="lineNum">      51 </span>            : {
+<a name="52"><span class="lineNum">      52 </span>            : public:</a>
+<span class="lineNum">      53 </span>            :         /// Constructs a null transaction.
+<span class="lineNum">      54 </span><span class="lineCov">    4977864 :         TransactionBase() {}</span>
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            :         /// Constructs a transaction from a transaction skeleton &amp; optional secret.
+<span class="lineNum">      57 </span>            :         TransactionBase(TransactionSkeleton const&amp; _ts, Secret const&amp; _s = Secret());
+<a name="58"><span class="lineNum">      58 </span>            : </a>
+<span class="lineNum">      59 </span>            :         /// Constructs a signed message-call transaction.
+<span class="lineNum">      60 </span><span class="lineCov">      11270 :         TransactionBase(u256 const&amp; _value, u256 const&amp; _gasPrice, u256 const&amp; _gas, Address const&amp; _dest, bytes const&amp; _data, u256 const&amp; _nonce, Secret const&amp; _secret): m_type(MessageCall), m_nonce(_nonce), m_value(_value), m_receiveAddress(_dest), m_gasPrice(_gasPrice), m_gas(_gas), m_data(_data) { sign(_secret); }</span>
+<a name="61"><span class="lineNum">      61 </span>            : </a>
+<span class="lineNum">      62 </span>            :         /// Constructs a signed contract-creation transaction.
+<span class="lineNum">      63 </span><span class="lineCov">       2080 :         TransactionBase(u256 const&amp; _value, u256 const&amp; _gasPrice, u256 const&amp; _gas, bytes const&amp; _data, u256 const&amp; _nonce, Secret const&amp; _secret): m_type(ContractCreation), m_nonce(_nonce), m_value(_value), m_gasPrice(_gasPrice), m_gas(_gas), m_data(_data) { sign(_secret); }</span>
+<a name="64"><span class="lineNum">      64 </span>            : </a>
+<span class="lineNum">      65 </span>            :         /// Constructs an unsigned message-call transaction.
+<span class="lineNum">      66 </span><span class="lineCov">        170 :         TransactionBase(u256 const&amp; _value, u256 const&amp; _gasPrice, u256 const&amp; _gas, Address const&amp; _dest, bytes const&amp; _data, u256 const&amp; _nonce = 0): m_type(MessageCall), m_nonce(_nonce), m_value(_value), m_receiveAddress(_dest), m_gasPrice(_gasPrice), m_gas(_gas), m_data(_data) {}</span>
+<a name="67"><span class="lineNum">      67 </span>            : </a>
+<span class="lineNum">      68 </span>            :         /// Constructs an unsigned contract-creation transaction.
+<span class="lineNum">      69 </span><span class="lineCov">         32 :         TransactionBase(u256 const&amp; _value, u256 const&amp; _gasPrice, u256 const&amp; _gas, bytes const&amp; _data, u256 const&amp; _nonce = 0): m_type(ContractCreation), m_nonce(_nonce), m_value(_value), m_gasPrice(_gasPrice), m_gas(_gas), m_data(_data) {}</span>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            :         /// Constructs a transaction from the given RLP.
+<span class="lineNum">      72 </span>            :         explicit TransactionBase(bytesConstRef _rlp, CheckTransaction _checkSig);
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :         /// Constructs a transaction from the given RLP.
+<span class="lineNum">      75 </span>            :         explicit TransactionBase(bytes const&amp; _rlp, CheckTransaction _checkSig): TransactionBase(&amp;_rlp, _checkSig) {}
+<a name="76"><span class="lineNum">      76 </span>            : </a>
+<span class="lineNum">      77 </span>            :         /// Checks equality of transactions.
+<span class="lineNum">      78 </span><span class="lineCov">      13461 :         bool operator==(TransactionBase const&amp; _c) const { return m_type == _c.m_type &amp;&amp; (m_type == ContractCreation || m_receiveAddress == _c.m_receiveAddress) &amp;&amp; m_value == _c.m_value &amp;&amp; m_data == _c.m_data; }</span>
+<span class="lineNum">      79 </span>            :         /// Checks inequality of transactions.
+<span class="lineNum">      80 </span>            :         bool operator!=(TransactionBase const&amp; _c) const { return !operator==(_c); }
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :         /// @returns sender of the transaction from the signature (and hash).
+<span class="lineNum">      83 </span>            :         Address const&amp; sender() const;
+<span class="lineNum">      84 </span>            :         /// Like sender() but will never throw. @returns a null Address if the signature is invalid.
+<span class="lineNum">      85 </span>            :         Address const&amp; safeSender() const noexcept;
+<span class="lineNum">      86 </span>            :         /// Force the sender to a particular value. This will result in an invalid transaction RLP.
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :         void forceSender(Address const&amp; _a) { m_sender = _a; }</span>
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :         /// @throws InvalidSValue if the signature has an invalid S value.
+<span class="lineNum">      90 </span>            :         void checkLowS() const;
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :         /// @throws InvalidSValue if the chain id is neither -4 nor equal to @a chainId
+<span class="lineNum">      93 </span>            :         /// Note that &quot;-4&quot; is the chain ID of the pre-155 rules, which should also be considered valid
+<span class="lineNum">      94 </span>            :         /// after EIP155
+<span class="lineNum">      95 </span>            :         void checkChainId(int chainId = -4) const;
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            :         /// @returns true if transaction is non-null.
+<span class="lineNum">      98 </span>            :         explicit operator bool() const { return m_type != NullTransaction; }
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :         /// @returns true if transaction is contract-creation.
+<span class="lineNum">     101 </span>            :         bool isCreation() const { return m_type == ContractCreation; }
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            :         /// Serialises this transaction to an RLPStream.
+<span class="lineNum">     104 </span>            :         void streamRLP(RLPStream&amp; _s, IncludeSignature _sig = WithSignature, bool _forEip155hash = false) const;
+<a name="105"><span class="lineNum">     105 </span>            : </a>
+<span class="lineNum">     106 </span>            :         /// @returns the RLP serialisation of this transaction.
+<span class="lineNum">     107 </span><span class="lineCov">      39986 :         bytes rlp(IncludeSignature _sig = WithSignature) const { RLPStream s; streamRLP(s, _sig); return s.out(); }</span>
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            :         /// @returns the SHA3 hash of the RLP serialisation of this transaction.
+<span class="lineNum">     110 </span>            :         h256 sha3(IncludeSignature _sig = WithSignature) const;
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            :         /// @returns the amount of ETH to be transferred by this (message-call) transaction, in Wei. Synonym for endowment().
+<span class="lineNum">     113 </span><span class="lineCov">      71488 :         u256 value() const { return m_value; }</span>
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            :         /// @returns the base fee and thus the implied exchange rate of ETH to GAS.
+<span class="lineNum">     116 </span><span class="lineCov">     704786 :         u256 gasPrice() const { return m_gasPrice; }</span>
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :         /// @returns the total gas to convert, paid for from sender's account. Any unused gas gets refunded once the contract is ended.
+<span class="lineNum">     119 </span><span class="lineCov">    1872244 :         u256 gas() const { return m_gas; }</span>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            :         /// @returns the receiving address of the message-call transaction (undefined for contract-creation transactions).
+<span class="lineNum">     122 </span><span class="lineCov">      20964 :         Address receiveAddress() const { return m_receiveAddress; }</span>
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :         /// Synonym for receiveAddress().
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :         Address to() const { return m_receiveAddress; }</span>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :         /// Synonym for safeSender().
+<span class="lineNum">     128 </span><span class="lineCov">      45413 :         Address from() const { return safeSender(); }</span>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :         /// @returns the data associated with this (message-call) transaction. Synonym for initCode().
+<span class="lineNum">     131 </span><span class="lineCov">       8676 :         bytes const&amp; data() const { return m_data; }</span>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            :         /// @returns the transaction-count of the sender.
+<span class="lineNum">     134 </span><span class="lineCov">     215426 :         u256 nonce() const { return m_nonce; }</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :         /// Sets the nonce to the given value. Clears any signature.
+<span class="lineNum">     137 </span>            :         void setNonce(u256 const&amp; _n) { clearSignature(); m_nonce = _n; }
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :         /// Clears the signature.
+<span class="lineNum">     140 </span>            :         void clearSignature() { m_vrs = SignatureStruct(); }
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            :         /// @returns the signature of the transaction. Encodes the sender.
+<span class="lineNum">     143 </span>            :         SignatureStruct const&amp; signature() const { return m_vrs; }
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            :         void sign(Secret const&amp; _priv);                     ///&lt; Sign the transaction.
+<a name="146"><span class="lineNum">     146 </span>            : </a>
+<span class="lineNum">     147 </span>            :         /// @returns true if the transaction contains enough gas for the basic payment.
+<span class="lineNum">     148 </span><span class="lineCov">      82604 :         bigint gasRequired(EVMSchedule const&amp; _es, u256 const&amp; _gas = 0) const { return gasRequired(m_type == TransactionBase::ContractCreation, &amp;m_data, _es, _gas); }</span>
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            :         /// Get the fee associated for a transaction with the given data.
+<span class="lineNum">     151 </span>            :         static bigint gasRequired(bool _contractCreation, bytesConstRef _data, EVMSchedule const&amp; _es, u256 const&amp; _gas = 0);
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            : protected:
+<span class="lineNum">     154 </span>            :         /// Type of transaction.
+<span class="lineNum">     155 </span>            :         enum Type
+<span class="lineNum">     156 </span>            :         {
+<span class="lineNum">     157 </span>            :                 NullTransaction,                                ///&lt; Null transaction.
+<span class="lineNum">     158 </span>            :                 ContractCreation,                               ///&lt; Transaction to create contracts - receiveAddress() is ignored.
+<span class="lineNum">     159 </span>            :                 MessageCall                                             ///&lt; Transaction to invoke a message call - receiveAddress() is used.
+<span class="lineNum">     160 </span>            :         };
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :         Type m_type = NullTransaction;          ///&lt; Is this a contract-creation transaction or a message-call transaction?
+<span class="lineNum">     163 </span>            :         u256 m_nonce;                                           ///&lt; The transaction-count of the sender.
+<span class="lineNum">     164 </span>            :         u256 m_value;                                           ///&lt; The amount of ETH to be transferred by this transaction. Called 'endowment' for contract-creation transactions.
+<span class="lineNum">     165 </span>            :         Address m_receiveAddress;                       ///&lt; The receiving address of the transaction.
+<span class="lineNum">     166 </span>            :         u256 m_gasPrice;                                        ///&lt; The base fee and thus the implied exchange rate of ETH to GAS.
+<span class="lineNum">     167 </span>            :         u256 m_gas;                                                     ///&lt; The total gas to convert, paid for from sender's account. Any unused gas gets refunded once the contract is ended.
+<span class="lineNum">     168 </span>            :         bytes m_data;                                           ///&lt; The data associated with the transaction, or the initialiser if it's a creation transaction.
+<span class="lineNum">     169 </span>            :         SignatureStruct m_vrs;                          ///&lt; The signature of the transaction. Encodes the sender.
+<span class="lineNum">     170 </span>            :         int m_chainId = -4;                                     ///&lt; EIP155 value for calculating transaction hash https://github.com/ethereum/EIPs/issues/155
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :         mutable h256 m_hashWith;                        ///&lt; Cached hash of transaction with signature.
+<span class="lineNum">     173 </span>            :         mutable Address m_sender;                       ///&lt; Cached sender, determined from signature.
+<span class="lineNum">     174 </span>            : };
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            : /// Nice name for vector of Transaction.
+<span class="lineNum">     177 </span>            : using TransactionBases = std::vector&lt;TransactionBase&gt;;
+<a name="178"><span class="lineNum">     178 </span>            : </a>
+<span class="lineNum">     179 </span>            : /// Simple human-readable stream-shift operator.
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 : inline std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, TransactionBase const&amp; _t)</span>
+<span class="lineNum">     181 </span>            : {
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :         _out &lt;&lt; _t.sha3().abridged() &lt;&lt; &quot;{&quot;;</span>
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :         if (_t.receiveAddress())</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :                 _out &lt;&lt; _t.receiveAddress().abridged();</span>
+<span class="lineNum">     185 </span>            :         else
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :                 _out &lt;&lt; &quot;[CREATE]&quot;;</span>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :         _out &lt;&lt; &quot;/&quot; &lt;&lt; _t.data().size() &lt;&lt; &quot;$&quot; &lt;&lt; _t.value() &lt;&lt; &quot;+&quot; &lt;&lt; _t.gas() &lt;&lt; &quot;@&quot; &lt;&lt; _t.gasPrice();</span>
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :         _out &lt;&lt; &quot;&lt;-&quot; &lt;&lt; _t.safeSender().abridged() &lt;&lt; &quot; #&quot; &lt;&lt; _t.nonce() &lt;&lt; &quot;}&quot;;</span>
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :         return _out;</span>
+<span class="lineNum">     191 </span>            : }
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : }
+<span class="lineNum">     194 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

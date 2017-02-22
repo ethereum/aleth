@@ -1,0 +1,261 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libevm/VM.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libevm</a> - VM.h<span style="font-size: 80%;"> (source / <a href="VM.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryMed">81.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryLo">66.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file VM.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;unordered_map&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libdevcore/Exceptions.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libethcore/Common.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libevmcore/Instruction.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libdevcore/SHA3.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libethcore/BlockHeader.h&gt;
+<span class="lineNum">      30 </span>            : #include &quot;VMFace.h&quot;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace dev
+<span class="lineNum">      33 </span>            : {
+<span class="lineNum">      34 </span>            : namespace eth
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            : 
+<a name="37"><span class="lineNum">      37 </span>            : // Convert from a 256-bit integer stack/memory entry into a 160-bit Address hash.</a>
+<span class="lineNum">      38 </span>            : // Currently we just pull out the right (low-order in BE) 160-bits.
+<span class="lineNum">      39 </span><span class="lineCov">     498491 : inline Address asAddress(u256 _item)</span>
+<span class="lineNum">      40 </span>            : {
+<span class="lineNum">      41 </span><span class="lineCov">     996982 :         return right160(h256(_item));</span>
+<span class="lineNum">      42 </span>            : }
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : inline u256 fromAddress(Address _a)
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span><span class="lineCov">     144862 :         return (u160)_a;</span>
+<span class="lineNum">      47 </span>            : }
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : struct InstructionMetric
+<span class="lineNum">      51 </span>            : {
+<span class="lineNum">      52 </span>            :         Tier gasPriceTier;
+<span class="lineNum">      53 </span>            :         int args;
+<span class="lineNum">      54 </span>            :         int ret;
+<span class="lineNum">      55 </span>            : };
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : 
+<a name="58"><span class="lineNum">      58 </span>            : /**</a>
+<span class="lineNum">      59 </span>            :  */
+<span class="lineNum">      60 </span><span class="lineCov">    4521145 : class VM: public VMFace</span>
+<span class="lineNum">      61 </span>            : {
+<span class="lineNum">      62 </span>            : public:
+<span class="lineNum">      63 </span>            :         virtual owning_bytes_ref exec(u256&amp; io_gas, ExtVMFace&amp; _ext, OnOpFunc const&amp; _onOp) override final;
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : #if EVM_JUMPS_AND_SUBS
+<span class="lineNum">      66 </span>            :         // invalid code will throw an exeption
+<span class="lineNum">      67 </span>            :         void validate(ExtVMFace&amp; _ext);
+<span class="lineNum">      68 </span>            :         void validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP);
+<span class="lineNum">      69 </span>            : #endif
+<a name="70"><span class="lineNum">      70 </span>            : </a>
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :         bytes const&amp; memory() const { return m_mem; }</span>
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :         u256s stack() const { assert(m_stack &lt;= m_sp + 1); return u256s(m_stack, m_sp + 1); };</span>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : private:
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            :         u256* io_gas = 0;
+<span class="lineNum">      77 </span>            :         uint64_t m_io_gas = 0;
+<span class="lineNum">      78 </span>            :         ExtVMFace* m_ext = 0;
+<span class="lineNum">      79 </span>            :         OnOpFunc m_onOp;
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            :         static std::array&lt;InstructionMetric, 256&gt; c_metrics;
+<span class="lineNum">      82 </span>            :         static void initMetrics();
+<span class="lineNum">      83 </span>            :         static u256 exp256(u256 _base, u256 _exponent);
+<span class="lineNum">      84 </span>            :         void copyCode(int);
+<span class="lineNum">      85 </span>            :         const void* const* c_jumpTable = 0;
+<span class="lineNum">      86 </span>            :         bool m_caseInit = false;
+<span class="lineNum">      87 </span>            :         
+<span class="lineNum">      88 </span>            :         typedef void (VM::*MemFnPtr)();
+<span class="lineNum">      89 </span>            :         MemFnPtr m_bounce = 0;
+<span class="lineNum">      90 </span>            :         MemFnPtr m_onFail = 0;
+<span class="lineNum">      91 </span>            :         uint64_t m_nSteps = 0;
+<span class="lineNum">      92 </span>            :         EVMSchedule const* m_schedule = nullptr;
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :         // return bytes
+<span class="lineNum">      95 </span>            :         owning_bytes_ref m_output;
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            :         // space for memory
+<span class="lineNum">      98 </span>            :         bytes m_mem;
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :         // space for code and pointer to data
+<span class="lineNum">     101 </span>            :         bytes m_codeSpace;
+<span class="lineNum">     102 </span>            :         byte* m_code = nullptr;
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :         // space for stack and pointer to data
+<span class="lineNum">     105 </span>            :         u256 m_stackSpace[1025];
+<span class="lineNum">     106 </span><span class="lineCov">     237955 :         u256* m_stack = m_stackSpace + 1;</span>
+<span class="lineNum">     107 </span>            :         ptrdiff_t stackSize() { return m_sp - m_stack; }
+<span class="lineNum">     108 </span>            :         
+<span class="lineNum">     109 </span>            : #if EVM_JUMPS_AND_SUBS
+<span class="lineNum">     110 </span>            :         // space for return stack and pointer to data
+<span class="lineNum">     111 </span>            :         uint64_t m_returnSpace[1025];
+<span class="lineNum">     112 </span>            :         uint64_t* m_return = m_returnSpace + 1;
+<span class="lineNum">     113 </span>            :         
+<span class="lineNum">     114 </span>            :         // mark PCs with frame size to detect cycles and stack mismatch
+<span class="lineNum">     115 </span>            :         std::vector&lt;size_t&gt; m_frameSize;
+<span class="lineNum">     116 </span>            : #endif
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :         // constant pool
+<span class="lineNum">     119 </span>            :         u256 m_pool[256];
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            :         // interpreter state
+<span class="lineNum">     122 </span>            :         Instruction m_op;                   // current operator
+<span class="lineNum">     123 </span>            :         uint64_t    m_pc = 0;               // program counter
+<span class="lineNum">     124 </span><span class="lineCov">     237955 :         u256*       m_sp = m_stack - 1;     // stack pointer</span>
+<span class="lineNum">     125 </span>            : #if EVM_JUMPS_AND_SUBS
+<span class="lineNum">     126 </span>            :         uint64_t*   m_rp = m_return - 1;    // return pointer
+<span class="lineNum">     127 </span>            : #endif
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            :         // metering and memory state
+<span class="lineNum">     130 </span>            :         uint64_t m_runGas = 0;
+<span class="lineNum">     131 </span>            :         uint64_t m_newMemSize = 0;
+<span class="lineNum">     132 </span>            :         uint64_t m_copyMemSize = 0;
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            :         // initialize interpreter
+<span class="lineNum">     135 </span>            :         void initEntry();
+<span class="lineNum">     136 </span>            :         void optimize();
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :         // interpreter loop &amp; switch
+<span class="lineNum">     139 </span>            :         void interpretCases();
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            :         // interpreter cases that call out
+<span class="lineNum">     142 </span>            :         void caseCreate();
+<span class="lineNum">     143 </span>            :         bool caseCallSetup(CallParameters*, bytesRef&amp; o_output);
+<span class="lineNum">     144 </span>            :         void caseCall();
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :         void copyDataToMemory(bytesConstRef _data, u256*&amp; m_sp);
+<span class="lineNum">     147 </span>            :         uint64_t memNeed(u256 _offset, u256 _size);
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            :         void throwOutOfGas();
+<span class="lineNum">     150 </span>            :         void throwBadInstruction();
+<span class="lineNum">     151 </span>            :         void throwBadJumpDestination();
+<span class="lineNum">     152 </span>            :         void throwBadStack(unsigned _size, unsigned _n, unsigned _d);
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            :         void reportStackUse();
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :         std::vector&lt;uint64_t&gt; m_beginSubs;
+<span class="lineNum">     157 </span>            :         std::vector&lt;uint64_t&gt; m_jumpDests;
+<span class="lineNum">     158 </span>            :         int64_t verifyJumpDest(u256 const&amp; _dest, bool _throw = true);
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            :         int poolConstant(const u256&amp;);
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :         void onOperation();
+<span class="lineNum">     163 </span>            :         void checkStack(unsigned _n, unsigned _d);
+<span class="lineNum">     164 </span>            :         uint64_t gasForMem(u512 _size);
+<span class="lineNum">     165 </span>            :         void updateIOGas();
+<span class="lineNum">     166 </span>            :         void updateGas();
+<span class="lineNum">     167 </span>            :         void updateMem();
+<span class="lineNum">     168 </span>            :         void logGasMem();
+<span class="lineNum">     169 </span>            :         void fetchInstruction();
+<span class="lineNum">     170 </span>            :         
+<span class="lineNum">     171 </span>            :         uint64_t decodeJumpDest(const byte* const _code, uint64_t&amp; _pc);
+<span class="lineNum">     172 </span>            :         uint64_t decodeJumpvDest(const byte* const _code, uint64_t&amp; _pc, u256*&amp; _sp);
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            :         template&lt;class T&gt; uint64_t toUint64(T v)
+<span class="lineNum">     175 </span>            :         {
+<span class="lineNum">     176 </span>            :                 // check for overflow
+<span class="lineNum">     177 </span><span class="lineCov">    2987259 :                 if (v &gt; 0x7FFFFFFFFFFFFFFF)</span>
+<span class="lineNum">     178 </span><span class="lineCov">        211 :                         throwOutOfGas();</span>
+<span class="lineNum">     179 </span><span class="lineCov">   12977125 :                 uint64_t w = uint64_t(v);</span>
+<span class="lineNum">     180 </span>            :                 return w;
+<span class="lineNum">     181 </span>            :         }
+<span class="lineNum">     182 </span>            :         };
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            : }
+<span class="lineNum">     185 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/array</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5</a> - array<span style="font-size: 80%;"> (source / <a href="array.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryMed">88.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // &lt;array&gt; -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2007-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file include/array
+<span class="lineNum">      26 </span>            :  *  This is a Standard C++ Library header.
+<span class="lineNum">      27 </span>            :  */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #ifndef _GLIBCXX_ARRAY
+<span class="lineNum">      30 </span>            : #define _GLIBCXX_ARRAY 1
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #pragma GCC system_header
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #if __cplusplus &lt; 201103L
+<span class="lineNum">      35 </span>            : # include &lt;bits/c++0x_warning.h&gt;
+<span class="lineNum">      36 </span>            : #else
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #include &lt;stdexcept&gt;
+<span class="lineNum">      39 </span>            : #include &lt;bits/stl_algobase.h&gt;
+<span class="lineNum">      40 </span>            : #include &lt;bits/range_access.h&gt;
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      43 </span>            : {
+<span class="lineNum">      44 </span>            : _GLIBCXX_BEGIN_NAMESPACE_CONTAINER
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :   template&lt;typename _Tp, std::size_t _Nm&gt;
+<span class="lineNum">      47 </span>            :     struct __array_traits
+<span class="lineNum">      48 </span>            :     {
+<span class="lineNum">      49 </span>            :       typedef _Tp _Type[_Nm];
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            :       static constexpr _Tp&amp;
+<span class="lineNum">      52 </span>            :       _S_ref(const _Type&amp; __t, std::size_t __n) noexcept
+<span class="lineNum">      53 </span><span class="lineCov">       6871 :       { return const_cast&lt;_Tp&amp;&gt;(__t[__n]); }</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :       static constexpr _Tp*
+<span class="lineNum">      56 </span>            :       _S_ptr(const _Type&amp; __t) noexcept
+<span class="lineNum">      57 </span>            :       { return const_cast&lt;_Tp*&gt;(__t); }
+<span class="lineNum">      58 </span>            :     };
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :  template&lt;typename _Tp&gt;
+<span class="lineNum">      61 </span>            :    struct __array_traits&lt;_Tp, 0&gt;
+<span class="lineNum">      62 </span>            :    {
+<span class="lineNum">      63 </span>            :      struct _Type { };
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            :      static constexpr _Tp&amp;
+<span class="lineNum">      66 </span>            :      _S_ref(const _Type&amp;, std::size_t) noexcept
+<span class="lineNum">      67 </span>            :      { return *static_cast&lt;_Tp*&gt;(nullptr); }
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :      static constexpr _Tp*
+<span class="lineNum">      70 </span>            :      _S_ptr(const _Type&amp;) noexcept
+<span class="lineNum">      71 </span>            :      { return nullptr; }
+<span class="lineNum">      72 </span>            :    };
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :   /**
+<span class="lineNum">      75 </span>            :    *  @brief A standard container for storing a fixed size sequence of elements.
+<span class="lineNum">      76 </span>            :    *
+<span class="lineNum">      77 </span>            :    *  @ingroup sequences
+<span class="lineNum">      78 </span>            :    *
+<span class="lineNum">      79 </span>            :    *  Meets the requirements of a &lt;a href=&quot;tables.html#65&quot;&gt;container&lt;/a&gt;, a
+<span class="lineNum">      80 </span>            :    *  &lt;a href=&quot;tables.html#66&quot;&gt;reversible container&lt;/a&gt;, and a
+<span class="lineNum">      81 </span>            :    *  &lt;a href=&quot;tables.html#67&quot;&gt;sequence&lt;/a&gt;.
+<span class="lineNum">      82 </span>            :    *
+<span class="lineNum">      83 </span>            :    *  Sets support random access iterators.
+<span class="lineNum">      84 </span>            :    *
+<span class="lineNum">      85 </span>            :    *  @tparam  Tp  Type of element. Required to be a complete type.
+<span class="lineNum">      86 </span>            :    *  @tparam  N  Number of elements.
+<a name="87"><span class="lineNum">      87 </span>            :   */</a>
+<span class="lineNum">      88 </span>            :   template&lt;typename _Tp, std::size_t _Nm&gt;
+<span class="lineNum">      89 </span><span class="lineCov">      28669 :     struct array</span>
+<span class="lineNum">      90 </span>            :     {
+<span class="lineNum">      91 </span>            :       typedef _Tp                                     value_type;
+<span class="lineNum">      92 </span>            :       typedef value_type*                             pointer;
+<span class="lineNum">      93 </span>            :       typedef const value_type*                       const_pointer;
+<span class="lineNum">      94 </span>            :       typedef value_type&amp;                                 reference;
+<span class="lineNum">      95 </span>            :       typedef const value_type&amp;                           const_reference;
+<span class="lineNum">      96 </span>            :       typedef value_type*                             iterator;
+<span class="lineNum">      97 </span>            :       typedef const value_type*                       const_iterator;
+<span class="lineNum">      98 </span>            :       typedef std::size_t                             size_type;
+<span class="lineNum">      99 </span>            :       typedef std::ptrdiff_t                          difference_type;
+<span class="lineNum">     100 </span>            :       typedef std::reverse_iterator&lt;iterator&gt;           reverse_iterator;
+<span class="lineNum">     101 </span>            :       typedef std::reverse_iterator&lt;const_iterator&gt;   const_reverse_iterator;
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            :       // Support for zero-sized arrays mandatory.
+<span class="lineNum">     104 </span>            :       typedef _GLIBCXX_STD_C::__array_traits&lt;_Tp, _Nm&gt; _AT_Type;
+<span class="lineNum">     105 </span>            :       typename _AT_Type::_Type                         _M_elems;
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :       // No explicit construct/copy/destroy for aggregate type.
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            :       // DR 776.
+<span class="lineNum">     110 </span>            :       void
+<span class="lineNum">     111 </span>            :       fill(const value_type&amp; __u)
+<span class="lineNum">     112 </span><span class="lineCov">   43496769 :       { std::fill_n(begin(), size(), __u); }</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :       void
+<span class="lineNum">     115 </span>            :       swap(array&amp; __other)
+<span class="lineNum">     116 </span>            :       noexcept(noexcept(swap(std::declval&lt;_Tp&amp;&gt;(), std::declval&lt;_Tp&amp;&gt;())))
+<span class="lineNum">     117 </span>            :       { std::swap_ranges(begin(), end(), __other.begin()); }
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :       // Iterators.
+<span class="lineNum">     120 </span>            :       iterator
+<span class="lineNum">     121 </span>            :       begin() noexcept
+<span class="lineNum">     122 </span><span class="lineCov">   14510605 :       { return iterator(data()); }</span>
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :       const_iterator
+<span class="lineNum">     125 </span>            :       begin() const noexcept
+<span class="lineNum">     126 </span><span class="lineCov">   11094324 :       { return const_iterator(data()); }</span>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            :       iterator
+<span class="lineNum">     129 </span>            :       end() noexcept
+<span class="lineNum">     130 </span><span class="lineCov">      11682 :       { return iterator(data() + _Nm); }</span>
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            :       const_iterator
+<span class="lineNum">     133 </span>            :       end() const noexcept
+<span class="lineNum">     134 </span><span class="lineCov">    7398816 :       { return const_iterator(data() + _Nm); }</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :       reverse_iterator 
+<span class="lineNum">     137 </span>            :       rbegin() noexcept
+<span class="lineNum">     138 </span>            :       { return reverse_iterator(end()); }
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :       const_reverse_iterator 
+<span class="lineNum">     141 </span>            :       rbegin() const noexcept
+<span class="lineNum">     142 </span>            :       { return const_reverse_iterator(end()); }
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            :       reverse_iterator 
+<span class="lineNum">     145 </span>            :       rend() noexcept
+<span class="lineNum">     146 </span>            :       { return reverse_iterator(begin()); }
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            :       const_reverse_iterator 
+<span class="lineNum">     149 </span>            :       rend() const noexcept
+<span class="lineNum">     150 </span>            :       { return const_reverse_iterator(begin()); }
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :       const_iterator
+<span class="lineNum">     153 </span>            :       cbegin() const noexcept
+<span class="lineNum">     154 </span><span class="lineCov">    4421372 :       { return const_iterator(data()); }</span>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :       const_iterator
+<span class="lineNum">     157 </span>            :       cend() const noexcept
+<span class="lineNum">     158 </span><span class="lineCov">    4421372 :       { return const_iterator(data() + _Nm); }</span>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            :       const_reverse_iterator 
+<span class="lineNum">     161 </span>            :       crbegin() const noexcept
+<span class="lineNum">     162 </span>            :       { return const_reverse_iterator(end()); }
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :       const_reverse_iterator 
+<span class="lineNum">     165 </span>            :       crend() const noexcept
+<span class="lineNum">     166 </span>            :       { return const_reverse_iterator(begin()); }
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :       // Capacity.
+<span class="lineNum">     169 </span>            :       constexpr size_type 
+<span class="lineNum">     170 </span>            :       size() const noexcept { return _Nm; }
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :       constexpr size_type 
+<span class="lineNum">     173 </span>            :       max_size() const noexcept { return _Nm; }
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :       constexpr bool 
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :       empty() const noexcept { return size() == 0; }</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :       // Element access.
+<span class="lineNum">     179 </span>            :       reference
+<span class="lineNum">     180 </span>            :       operator[](size_type __n) noexcept
+<span class="lineNum">     181 </span><span class="lineCov">   61859238 :       { return _AT_Type::_S_ref(_M_elems, __n); }</span>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            :       constexpr const_reference
+<span class="lineNum">     184 </span>            :       operator[](size_type __n) const noexcept
+<span class="lineNum">     185 </span><span class="lineCov">   99023380 :       { return _AT_Type::_S_ref(_M_elems, __n); }</span>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :       reference
+<span class="lineNum">     188 </span>            :       at(size_type __n)
+<span class="lineNum">     189 </span>            :       {
+<span class="lineNum">     190 </span>            :         if (__n &gt;= _Nm)
+<span class="lineNum">     191 </span>            :           std::__throw_out_of_range_fmt(__N(&quot;array::at: __n (which is %zu) &quot;
+<span class="lineNum">     192 </span>            :                                             &quot;&gt;= _Nm (which is %zu)&quot;),
+<span class="lineNum">     193 </span>            :                                         __n, _Nm);
+<span class="lineNum">     194 </span>            :         return _AT_Type::_S_ref(_M_elems, __n);
+<span class="lineNum">     195 </span>            :       }
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :       constexpr const_reference
+<span class="lineNum">     198 </span>            :       at(size_type __n) const
+<span class="lineNum">     199 </span>            :       {
+<span class="lineNum">     200 </span>            :         // Result of conditional expression must be an lvalue so use
+<span class="lineNum">     201 </span>            :         // boolean ? lvalue : (throw-expr, lvalue)
+<span class="lineNum">     202 </span>            :         return __n &lt; _Nm ? _AT_Type::_S_ref(_M_elems, __n)
+<span class="lineNum">     203 </span>            :           : (std::__throw_out_of_range_fmt(__N(&quot;array::at: __n (which is %zu) &quot;
+<span class="lineNum">     204 </span>            :                                                &quot;&gt;= _Nm (which is %zu)&quot;),
+<span class="lineNum">     205 </span>            :                                            __n, _Nm),
+<span class="lineNum">     206 </span>            :              _AT_Type::_S_ref(_M_elems, 0));
+<span class="lineNum">     207 </span>            :       }
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            :       reference 
+<span class="lineNum">     210 </span>            :       front() noexcept
+<span class="lineNum">     211 </span>            :       { return *begin(); }
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            :       constexpr const_reference 
+<span class="lineNum">     214 </span>            :       front() const noexcept
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :       { return _AT_Type::_S_ref(_M_elems, 0); }</span>
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :       reference 
+<span class="lineNum">     218 </span>            :       back() noexcept
+<span class="lineNum">     219 </span>            :       { return _Nm ? *(end() - 1) : *end(); }
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            :       constexpr const_reference 
+<span class="lineNum">     222 </span>            :       back() const noexcept
+<span class="lineNum">     223 </span>            :       { 
+<span class="lineNum">     224 </span>            :         return _Nm ? _AT_Type::_S_ref(_M_elems, _Nm - 1) 
+<span class="lineNum">     225 </span>            :                    : _AT_Type::_S_ref(_M_elems, 0);
+<span class="lineNum">     226 </span>            :       }
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :       pointer
+<span class="lineNum">     229 </span>            :       data() noexcept
+<span class="lineNum">     230 </span><span class="lineCov">   25783607 :       { return _AT_Type::_S_ptr(_M_elems); }</span>
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            :       const_pointer
+<span class="lineNum">     233 </span>            :       data() const noexcept
+<span class="lineNum">     234 </span><span class="lineCov">   49494225 :       { return _AT_Type::_S_ptr(_M_elems); }</span>
+<span class="lineNum">     235 </span>            :     };
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            :   // Array comparisons.
+<span class="lineNum">     238 </span>            :   template&lt;typename _Tp, std::size_t _Nm&gt;
+<span class="lineNum">     239 </span>            :     inline bool 
+<span class="lineNum">     240 </span>            :     operator==(const array&lt;_Tp, _Nm&gt;&amp; __one, const array&lt;_Tp, _Nm&gt;&amp; __two)
+<span class="lineNum">     241 </span><span class="lineCov">   14782032 :     { return std::equal(__one.begin(), __one.end(), __two.begin()); }</span>
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            :   template&lt;typename _Tp, std::size_t _Nm&gt;
+<span class="lineNum">     244 </span>            :     inline bool
+<span class="lineNum">     245 </span>            :     operator!=(const array&lt;_Tp, _Nm&gt;&amp; __one, const array&lt;_Tp, _Nm&gt;&amp; __two)
+<span class="lineNum">     246 </span><span class="lineCov">     379103 :     { return !(__one == __two); }</span>
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :   template&lt;typename _Tp, std::size_t _Nm&gt;
+<span class="lineNum">     249 </span>            :     inline bool
+<span class="lineNum">     250 </span>            :     operator&lt;(const array&lt;_Tp, _Nm&gt;&amp; __a, const array&lt;_Tp, _Nm&gt;&amp; __b)
+<span class="lineNum">     251 </span>            :     { 
+<span class="lineNum">     252 </span>            :       return std::lexicographical_compare(__a.begin(), __a.end(),
+<span class="lineNum">     253 </span>            :                                           __b.begin(), __b.end()); 
+<span class="lineNum">     254 </span>            :     }
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            :   template&lt;typename _Tp, std::size_t _Nm&gt;
+<span class="lineNum">     257 </span>            :     inline bool
+<span class="lineNum">     258 </span>            :     operator&gt;(const array&lt;_Tp, _Nm&gt;&amp; __one, const array&lt;_Tp, _Nm&gt;&amp; __two)
+<span class="lineNum">     259 </span>            :     { return __two &lt; __one; }
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            :   template&lt;typename _Tp, std::size_t _Nm&gt;
+<span class="lineNum">     262 </span>            :     inline bool
+<span class="lineNum">     263 </span>            :     operator&lt;=(const array&lt;_Tp, _Nm&gt;&amp; __one, const array&lt;_Tp, _Nm&gt;&amp; __two)
+<span class="lineNum">     264 </span>            :     { return !(__one &gt; __two); }
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            :   template&lt;typename _Tp, std::size_t _Nm&gt;
+<span class="lineNum">     267 </span>            :     inline bool
+<span class="lineNum">     268 </span>            :     operator&gt;=(const array&lt;_Tp, _Nm&gt;&amp; __one, const array&lt;_Tp, _Nm&gt;&amp; __two)
+<span class="lineNum">     269 </span>            :     { return !(__one &lt; __two); }
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            :   // Specialized algorithms.
+<span class="lineNum">     272 </span>            :   template&lt;typename _Tp, std::size_t _Nm&gt;
+<span class="lineNum">     273 </span>            :     inline void
+<span class="lineNum">     274 </span>            :     swap(array&lt;_Tp, _Nm&gt;&amp; __one, array&lt;_Tp, _Nm&gt;&amp; __two)
+<span class="lineNum">     275 </span>            :     noexcept(noexcept(__one.swap(__two)))
+<span class="lineNum">     276 </span>            :     { __one.swap(__two); }
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span>            :   template&lt;std::size_t _Int, typename _Tp, std::size_t _Nm&gt;
+<span class="lineNum">     279 </span>            :     constexpr _Tp&amp;
+<span class="lineNum">     280 </span>            :     get(array&lt;_Tp, _Nm&gt;&amp; __arr) noexcept
+<span class="lineNum">     281 </span>            :     {
+<span class="lineNum">     282 </span>            :       static_assert(_Int &lt; _Nm, &quot;index is out of bounds&quot;);
+<span class="lineNum">     283 </span>            :       return _GLIBCXX_STD_C::__array_traits&lt;_Tp, _Nm&gt;::
+<span class="lineNum">     284 </span>            :         _S_ref(__arr._M_elems, _Int);
+<span class="lineNum">     285 </span>            :     }
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            :   template&lt;std::size_t _Int, typename _Tp, std::size_t _Nm&gt;
+<span class="lineNum">     288 </span>            :     constexpr _Tp&amp;&amp;
+<span class="lineNum">     289 </span>            :     get(array&lt;_Tp, _Nm&gt;&amp;&amp; __arr) noexcept
+<span class="lineNum">     290 </span>            :     {
+<span class="lineNum">     291 </span>            :       static_assert(_Int &lt; _Nm, &quot;index is out of bounds&quot;);
+<span class="lineNum">     292 </span>            :       return std::move(_GLIBCXX_STD_C::get&lt;_Int&gt;(__arr));
+<span class="lineNum">     293 </span>            :     }
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span>            :   template&lt;std::size_t _Int, typename _Tp, std::size_t _Nm&gt;
+<span class="lineNum">     296 </span>            :     constexpr const _Tp&amp;
+<span class="lineNum">     297 </span>            :     get(const array&lt;_Tp, _Nm&gt;&amp; __arr) noexcept
+<span class="lineNum">     298 </span>            :     {
+<span class="lineNum">     299 </span>            :       static_assert(_Int &lt; _Nm, &quot;index is out of bounds&quot;);
+<span class="lineNum">     300 </span>            :       return _GLIBCXX_STD_C::__array_traits&lt;_Tp, _Nm&gt;::
+<span class="lineNum">     301 </span>            :         _S_ref(__arr._M_elems, _Int);
+<span class="lineNum">     302 </span>            :     }
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span>            : _GLIBCXX_END_NAMESPACE_CONTAINER
+<span class="lineNum">     305 </span>            : } // namespace std
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">     308 </span>            : {
+<span class="lineNum">     309 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            :   // Tuple interface to class template array.
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            :   /// tuple_size
+<span class="lineNum">     314 </span>            :   template&lt;typename _Tp&gt; 
+<span class="lineNum">     315 </span>            :     class tuple_size;
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            :   /// Partial specialization for std::array
+<span class="lineNum">     318 </span>            :   template&lt;typename _Tp, std::size_t _Nm&gt;
+<span class="lineNum">     319 </span>            :     struct tuple_size&lt;_GLIBCXX_STD_C::array&lt;_Tp, _Nm&gt;&gt;
+<span class="lineNum">     320 </span>            :     : public integral_constant&lt;std::size_t, _Nm&gt; { };
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span>            :   /// tuple_element
+<span class="lineNum">     323 </span>            :   template&lt;std::size_t _Int, typename _Tp&gt;
+<span class="lineNum">     324 </span>            :     class tuple_element;
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span>            :   /// Partial specialization for std::array
+<span class="lineNum">     327 </span>            :   template&lt;std::size_t _Int, typename _Tp, std::size_t _Nm&gt;
+<span class="lineNum">     328 </span>            :     struct tuple_element&lt;_Int, _GLIBCXX_STD_C::array&lt;_Tp, _Nm&gt;&gt;
+<span class="lineNum">     329 </span>            :     {
+<span class="lineNum">     330 </span>            :       static_assert(_Int &lt; _Nm, &quot;index is out of bounds&quot;);
+<span class="lineNum">     331 </span>            :       typedef _Tp type;
+<span class="lineNum">     332 </span>            :     };
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     335 </span>            : } // namespace std
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span>            : #ifdef _GLIBCXX_DEBUG
+<span class="lineNum">     338 </span>            : # include &lt;debug/array&gt;
+<span class="lineNum">     339 </span>            : #endif
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span>            : #ifdef _GLIBCXX_PROFILE
+<span class="lineNum">     342 </span>            : # include &lt;profile/array&gt;
+<span class="lineNum">     343 </span>            : #endif
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span>            : #endif // C++11
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span>            : #endif // _GLIBCXX_ARRAY
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

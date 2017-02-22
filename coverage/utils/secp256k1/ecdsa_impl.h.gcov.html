@@ -1,0 +1,339 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - utils/secp256k1/ecdsa_impl.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">utils/secp256k1</a> - ecdsa_impl.h<span style="font-size: 80%;"> (source / <a href="ecdsa_impl.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">79</td>
+            <td class="headerCovTableEntry">102</td>
+            <td class="headerCovTableEntryMed">77.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryMed">80.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /**********************************************************************</a>
+<span class="lineNum">       2 </span>            :  * Copyright (c) 2013, 2014 Pieter Wuille                               *
+<span class="lineNum">       3 </span>            :  * Distributed under the MIT software license, see the accompanying   *
+<span class="lineNum">       4 </span>            :  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+<span class="lineNum">       5 </span>            :  **********************************************************************/
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : 
+<span class="lineNum">       8 </span>            : #ifndef _SECP256K1_ECDSA_IMPL_H_
+<span class="lineNum">       9 </span>            : #define _SECP256K1_ECDSA_IMPL_H_
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #include &quot;scalar.h&quot;
+<span class="lineNum">      12 </span>            : #include &quot;field.h&quot;
+<span class="lineNum">      13 </span>            : #include &quot;group.h&quot;
+<span class="lineNum">      14 </span>            : #include &quot;ecmult.h&quot;
+<span class="lineNum">      15 </span>            : #include &quot;ecmult_gen.h&quot;
+<span class="lineNum">      16 </span>            : #include &quot;ecdsa.h&quot;
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : /** Group order for secp256k1 defined as 'n' in &quot;Standards for Efficient Cryptography&quot; (SEC2) 2.7.1
+<span class="lineNum">      19 </span>            :  *  sage: for t in xrange(1023, -1, -1):
+<span class="lineNum">      20 </span>            :  *     ..   p = 2**256 - 2**32 - t
+<span class="lineNum">      21 </span>            :  *     ..   if p.is_prime():
+<span class="lineNum">      22 </span>            :  *     ..     print '%x'%p
+<span class="lineNum">      23 </span>            :  *     ..     break
+<span class="lineNum">      24 </span>            :  *   'fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f'
+<span class="lineNum">      25 </span>            :  *  sage: a = 0
+<span class="lineNum">      26 </span>            :  *  sage: b = 7
+<span class="lineNum">      27 </span>            :  *  sage: F = FiniteField (p)
+<span class="lineNum">      28 </span>            :  *  sage: '%x' % (EllipticCurve ([F (a), F (b)]).order())
+<span class="lineNum">      29 </span>            :  *   'fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141'
+<span class="lineNum">      30 </span>            :  */
+<span class="lineNum">      31 </span>            : static const secp256k1_fe_t secp256k1_ecdsa_const_order_as_fe = SECP256K1_FE_CONST(
+<span class="lineNum">      32 </span>            :     0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFEUL,
+<span class="lineNum">      33 </span>            :     0xBAAEDCE6UL, 0xAF48A03BUL, 0xBFD25E8CUL, 0xD0364141UL
+<span class="lineNum">      34 </span>            : );
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : /** Difference between field and order, values 'p' and 'n' values defined in
+<span class="lineNum">      37 </span>            :  *  &quot;Standards for Efficient Cryptography&quot; (SEC2) 2.7.1.
+<span class="lineNum">      38 </span>            :  *  sage: p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
+<span class="lineNum">      39 </span>            :  *  sage: a = 0
+<span class="lineNum">      40 </span>            :  *  sage: b = 7
+<span class="lineNum">      41 </span>            :  *  sage: F = FiniteField (p)
+<span class="lineNum">      42 </span>            :  *  sage: '%x' % (p - EllipticCurve ([F (a), F (b)]).order())
+<span class="lineNum">      43 </span>            :  *   '14551231950b75fc4402da1722fc9baee'
+<span class="lineNum">      44 </span>            :  */
+<span class="lineNum">      45 </span>            : static const secp256k1_fe_t secp256k1_ecdsa_const_p_minus_order = SECP256K1_FE_CONST(
+<span class="lineNum">      46 </span>            :     0, 0, 0, 1, 0x45512319UL, 0x50B75FC4UL, 0x402DA172UL, 0x2FC9BAEEUL
+<a name="47"><span class="lineNum">      47 </span>            : );</a>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineCov">          2 : static int secp256k1_ecdsa_sig_parse(secp256k1_ecdsa_sig_t *r, const unsigned char *sig, int size) {</span>
+<span class="lineNum">      50 </span><span class="lineCov">          2 :     unsigned char ra[32] = {0}, sa[32] = {0};</span>
+<span class="lineNum">      51 </span>            :     const unsigned char *rp;
+<span class="lineNum">      52 </span>            :     const unsigned char *sp;
+<span class="lineNum">      53 </span>            :     int lenr;
+<span class="lineNum">      54 </span>            :     int lens;
+<span class="lineNum">      55 </span>            :     int overflow;
+<span class="lineNum">      56 </span><span class="lineCov">          2 :     if (sig[0] != 0x30) {</span>
+<span class="lineNum">      57 </span>            :         return 0;
+<span class="lineNum">      58 </span>            :     }
+<span class="lineNum">      59 </span><span class="lineCov">          2 :     lenr = sig[3];</span>
+<span class="lineNum">      60 </span><span class="lineCov">          2 :     if (5+lenr &gt;= size) {</span>
+<span class="lineNum">      61 </span>            :         return 0;
+<span class="lineNum">      62 </span>            :     }
+<span class="lineNum">      63 </span><span class="lineCov">          2 :     lens = sig[lenr+5];</span>
+<span class="lineNum">      64 </span><span class="lineCov">          2 :     if (sig[1] != lenr+lens+4) {</span>
+<span class="lineNum">      65 </span>            :         return 0;
+<span class="lineNum">      66 </span>            :     }
+<span class="lineNum">      67 </span><span class="lineCov">          2 :     if (lenr+lens+6 &gt; size) {</span>
+<span class="lineNum">      68 </span>            :         return 0;
+<span class="lineNum">      69 </span>            :     }
+<span class="lineNum">      70 </span><span class="lineCov">          2 :     if (sig[2] != 0x02) {</span>
+<span class="lineNum">      71 </span>            :         return 0;
+<span class="lineNum">      72 </span>            :     }
+<span class="lineNum">      73 </span><span class="lineCov">          2 :     if (lenr == 0) {</span>
+<span class="lineNum">      74 </span>            :         return 0;
+<span class="lineNum">      75 </span>            :     }
+<span class="lineNum">      76 </span><span class="lineCov">          2 :     if (sig[lenr+4] != 0x02) {</span>
+<span class="lineNum">      77 </span>            :         return 0;
+<span class="lineNum">      78 </span>            :     }
+<span class="lineNum">      79 </span><span class="lineCov">          2 :     if (lens == 0) {</span>
+<span class="lineNum">      80 </span>            :         return 0;
+<span class="lineNum">      81 </span>            :     }
+<span class="lineNum">      82 </span><span class="lineCov">          2 :     sp = sig + 6 + lenr;</span>
+<span class="lineNum">      83 </span><span class="lineCov">          6 :     while (lens &gt; 0 &amp;&amp; sp[0] == 0) {</span>
+<span class="lineNum">      84 </span><span class="lineCov">          2 :         lens--;</span>
+<span class="lineNum">      85 </span><span class="lineCov">          2 :         sp++;</span>
+<span class="lineNum">      86 </span>            :     }
+<span class="lineNum">      87 </span><span class="lineCov">          2 :     if (lens &gt; 32) {</span>
+<span class="lineNum">      88 </span>            :         return 0;
+<span class="lineNum">      89 </span>            :     }
+<span class="lineNum">      90 </span><span class="lineCov">          2 :     rp = sig + 4;</span>
+<span class="lineNum">      91 </span><span class="lineCov">          5 :     while (lenr &gt; 0 &amp;&amp; rp[0] == 0) {</span>
+<span class="lineNum">      92 </span><span class="lineCov">          1 :         lenr--;</span>
+<span class="lineNum">      93 </span><span class="lineCov">          1 :         rp++;</span>
+<span class="lineNum">      94 </span>            :     }
+<span class="lineNum">      95 </span><span class="lineCov">          2 :     if (lenr &gt; 32) {</span>
+<span class="lineNum">      96 </span>            :         return 0;
+<span class="lineNum">      97 </span>            :     }
+<span class="lineNum">      98 </span><span class="lineCov">          4 :     memcpy(ra + 32 - lenr, rp, lenr);</span>
+<span class="lineNum">      99 </span><span class="lineCov">          4 :     memcpy(sa + 32 - lens, sp, lens);</span>
+<span class="lineNum">     100 </span><span class="lineCov">          2 :     overflow = 0;</span>
+<span class="lineNum">     101 </span><span class="lineCov">          2 :     secp256k1_scalar_set_b32(&amp;r-&gt;r, ra, &amp;overflow);</span>
+<span class="lineNum">     102 </span><span class="lineCov">          2 :     if (overflow) {</span>
+<span class="lineNum">     103 </span>            :         return 0;
+<span class="lineNum">     104 </span>            :     }
+<span class="lineNum">     105 </span><span class="lineCov">          2 :     secp256k1_scalar_set_b32(&amp;r-&gt;s, sa, &amp;overflow);</span>
+<span class="lineNum">     106 </span><span class="lineCov">          2 :     if (overflow) {</span>
+<span class="lineNum">     107 </span>            :         return 0;
+<span class="lineNum">     108 </span>            :     }
+<span class="lineNum">     109 </span><span class="lineCov">          2 :     return 1;</span>
+<a name="110"><span class="lineNum">     110 </span>            : }</a>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 : static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, int *size, const secp256k1_ecdsa_sig_t *a) {</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :     unsigned char r[33] = {0}, s[33] = {0};</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :     unsigned char *rp = r, *sp = s;</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :     int lenR = 33, lenS = 33;</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :     secp256k1_scalar_get_b32(&amp;r[1], &amp;a-&gt;r);</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :     secp256k1_scalar_get_b32(&amp;s[1], &amp;a-&gt;s);</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :     while (lenR &gt; 1 &amp;&amp; rp[0] == 0 &amp;&amp; rp[1] &lt; 0x80) { lenR--; rp++; }</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :     while (lenS &gt; 1 &amp;&amp; sp[0] == 0 &amp;&amp; sp[1] &lt; 0x80) { lenS--; sp++; }</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :     if (*size &lt; 6+lenS+lenR) {</span>
+<span class="lineNum">     121 </span>            :         return 0;
+<span class="lineNum">     122 </span>            :     }
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :     *size = 6 + lenS + lenR;</span>
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :     sig[0] = 0x30;</span>
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :     sig[1] = 4 + lenS + lenR;</span>
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :     sig[2] = 0x02;</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :     sig[3] = lenR;</span>
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :     memcpy(sig+4, rp, lenR);</span>
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :     sig[4+lenR] = 0x02;</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :     sig[5+lenR] = lenS;</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :     memcpy(sig+lenR+6, sp, lenS);</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :     return 1;</span>
+<span class="lineNum">     133 </span>            : }
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineCov">          2 : static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context_t *ctx, const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message) {</span>
+<span class="lineNum">     136 </span>            :     unsigned char c[32];
+<span class="lineNum">     137 </span>            :     secp256k1_scalar_t sn, u1, u2;
+<span class="lineNum">     138 </span>            :     secp256k1_fe_t xr;
+<span class="lineNum">     139 </span>            :     secp256k1_gej_t pubkeyj;
+<span class="lineNum">     140 </span>            :     secp256k1_gej_t pr;
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span><span class="lineCov">          6 :     if (secp256k1_scalar_is_zero(&amp;sig-&gt;r) || secp256k1_scalar_is_zero(&amp;sig-&gt;s)) {</span>
+<span class="lineNum">     143 </span>            :         return 0;
+<span class="lineNum">     144 </span>            :     }
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineCov">          2 :     secp256k1_scalar_inverse_var(&amp;sn, &amp;sig-&gt;s);</span>
+<span class="lineNum">     147 </span><span class="lineCov">          2 :     secp256k1_scalar_mul(&amp;u1, &amp;sn, message);</span>
+<span class="lineNum">     148 </span><span class="lineCov">          4 :     secp256k1_scalar_mul(&amp;u2, &amp;sn, &amp;sig-&gt;r);</span>
+<span class="lineNum">     149 </span><span class="lineCov">          2 :     secp256k1_gej_set_ge(&amp;pubkeyj, pubkey);</span>
+<span class="lineNum">     150 </span><span class="lineCov">          2 :     secp256k1_ecmult(ctx, &amp;pr, &amp;pubkeyj, &amp;u2, &amp;u1);</span>
+<span class="lineNum">     151 </span><span class="lineCov">          2 :     if (secp256k1_gej_is_infinity(&amp;pr)) {</span>
+<span class="lineNum">     152 </span>            :         return 0;
+<span class="lineNum">     153 </span>            :     }
+<span class="lineNum">     154 </span><span class="lineCov">          2 :     secp256k1_scalar_get_b32(c, &amp;sig-&gt;r);</span>
+<span class="lineNum">     155 </span><span class="lineCov">          2 :     secp256k1_fe_set_b32(&amp;xr, c);</span>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            :     /** We now have the recomputed R point in pr, and its claimed x coordinate (modulo n)
+<span class="lineNum">     158 </span>            :      *  in xr. Naively, we would extract the x coordinate from pr (requiring a inversion modulo p),
+<span class="lineNum">     159 </span>            :      *  compute the remainder modulo n, and compare it to xr. However:
+<span class="lineNum">     160 </span>            :      *
+<span class="lineNum">     161 </span>            :      *        xr == X(pr) mod n
+<span class="lineNum">     162 </span>            :      *    &lt;=&gt; exists h. (xr + h * n &lt; p &amp;&amp; xr + h * n == X(pr))
+<span class="lineNum">     163 </span>            :      *    [Since 2 * n &gt; p, h can only be 0 or 1]
+<span class="lineNum">     164 </span>            :      *    &lt;=&gt; (xr == X(pr)) || (xr + n &lt; p &amp;&amp; xr + n == X(pr))
+<span class="lineNum">     165 </span>            :      *    [In Jacobian coordinates, X(pr) is pr.x / pr.z^2 mod p]
+<span class="lineNum">     166 </span>            :      *    &lt;=&gt; (xr == pr.x / pr.z^2 mod p) || (xr + n &lt; p &amp;&amp; xr + n == pr.x / pr.z^2 mod p)
+<span class="lineNum">     167 </span>            :      *    [Multiplying both sides of the equations by pr.z^2 mod p]
+<span class="lineNum">     168 </span>            :      *    &lt;=&gt; (xr * pr.z^2 mod p == pr.x) || (xr + n &lt; p &amp;&amp; (xr + n) * pr.z^2 mod p == pr.x)
+<span class="lineNum">     169 </span>            :      *
+<span class="lineNum">     170 </span>            :      *  Thus, we can avoid the inversion, but we have to check both cases separately.
+<span class="lineNum">     171 </span>            :      *  secp256k1_gej_eq_x implements the (xr * pr.z^2 mod p == pr.x) test.
+<span class="lineNum">     172 </span>            :      */
+<span class="lineNum">     173 </span><span class="lineCov">          2 :     if (secp256k1_gej_eq_x_var(&amp;xr, &amp;pr)) {</span>
+<span class="lineNum">     174 </span>            :         /* xr.x == xr * xr.z^2 mod p, so the signature is valid. */
+<span class="lineNum">     175 </span>            :         return 1;
+<span class="lineNum">     176 </span>            :     }
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :     if (secp256k1_fe_cmp_var(&amp;xr, &amp;secp256k1_ecdsa_const_p_minus_order) &gt;= 0) {</span>
+<span class="lineNum">     178 </span>            :         /* xr + p &gt;= n, so we can skip testing the second case. */
+<span class="lineNum">     179 </span>            :         return 0;
+<span class="lineNum">     180 </span>            :     }
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :     secp256k1_fe_add(&amp;xr, &amp;secp256k1_ecdsa_const_order_as_fe);</span>
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :     if (secp256k1_gej_eq_x_var(&amp;xr, &amp;pr)) {</span>
+<span class="lineNum">     183 </span>            :         /* (xr + n) * pr.z^2 mod p == pr.x, so the signature is valid. */
+<span class="lineNum">     184 </span>            :         return 1;
+<span class="lineNum">     185 </span>            :     }
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     187 </span>            : }
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span><span class="lineCov">      32036 : static int secp256k1_ecdsa_sig_recover(const secp256k1_ecmult_context_t *ctx, const secp256k1_ecdsa_sig_t *sig, secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message, int recid) {</span>
+<span class="lineNum">     190 </span>            :     unsigned char brx[32];
+<span class="lineNum">     191 </span>            :     secp256k1_fe_t fx;
+<span class="lineNum">     192 </span>            :     secp256k1_ge_t x;
+<span class="lineNum">     193 </span>            :     secp256k1_gej_t xj;
+<span class="lineNum">     194 </span>            :     secp256k1_scalar_t rn, u1, u2;
+<span class="lineNum">     195 </span>            :     secp256k1_gej_t qj;
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span><span class="lineCov">      96108 :     if (secp256k1_scalar_is_zero(&amp;sig-&gt;r) || secp256k1_scalar_is_zero(&amp;sig-&gt;s)) {</span>
+<span class="lineNum">     198 </span>            :         return 0;
+<span class="lineNum">     199 </span>            :     }
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span><span class="lineCov">      32036 :     secp256k1_scalar_get_b32(brx, &amp;sig-&gt;r);</span>
+<span class="lineNum">     202 </span><span class="lineCov">      32036 :     VERIFY_CHECK(secp256k1_fe_set_b32(&amp;fx, brx)); /* brx comes from a scalar, so is less than the order; certainly less than p */</span>
+<span class="lineNum">     203 </span><span class="lineCov">      32036 :     if (recid &amp; 2) {</span>
+<span class="lineNum">     204 </span><span class="lineCov">          4 :         if (secp256k1_fe_cmp_var(&amp;fx, &amp;secp256k1_ecdsa_const_p_minus_order) &gt;= 0) {</span>
+<span class="lineNum">     205 </span>            :             return 0;
+<span class="lineNum">     206 </span>            :         }
+<span class="lineNum">     207 </span>            :         secp256k1_fe_add(&amp;fx, &amp;secp256k1_ecdsa_const_order_as_fe);
+<span class="lineNum">     208 </span>            :     }
+<span class="lineNum">     209 </span><span class="lineCov">      32032 :     if (!secp256k1_ge_set_xo_var(&amp;x, &amp;fx, recid &amp; 1)) {</span>
+<span class="lineNum">     210 </span>            :         return 0;
+<span class="lineNum">     211 </span>            :     }
+<span class="lineNum">     212 </span><span class="lineCov">      32004 :     secp256k1_gej_set_ge(&amp;xj, &amp;x);</span>
+<span class="lineNum">     213 </span><span class="lineCov">      32004 :     secp256k1_scalar_inverse_var(&amp;rn, &amp;sig-&gt;r);</span>
+<span class="lineNum">     214 </span><span class="lineCov">      32004 :     secp256k1_scalar_mul(&amp;u1, &amp;rn, message);</span>
+<span class="lineNum">     215 </span><span class="lineCov">      32004 :     secp256k1_scalar_negate(&amp;u1, &amp;u1);</span>
+<span class="lineNum">     216 </span><span class="lineCov">      64008 :     secp256k1_scalar_mul(&amp;u2, &amp;rn, &amp;sig-&gt;s);</span>
+<span class="lineNum">     217 </span><span class="lineCov">      32004 :     secp256k1_ecmult(ctx, &amp;qj, &amp;xj, &amp;u2, &amp;u1);</span>
+<span class="lineNum">     218 </span><span class="lineCov">      32004 :     secp256k1_ge_set_gej_var(pubkey, &amp;qj);</span>
+<span class="lineNum">     219 </span><span class="lineCov">      32004 :     return !secp256k1_gej_is_infinity(&amp;qj);</span>
+<span class="lineNum">     220 </span>            : }
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span><span class="lineCov">       1952 : static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context_t *ctx, secp256k1_ecdsa_sig_t *sig, const secp256k1_scalar_t *seckey, const secp256k1_scalar_t *message, const secp256k1_scalar_t *nonce, int *recid) {</span>
+<span class="lineNum">     223 </span>            :     unsigned char b[32];
+<span class="lineNum">     224 </span>            :     secp256k1_gej_t rp;
+<span class="lineNum">     225 </span>            :     secp256k1_ge_t r;
+<span class="lineNum">     226 </span>            :     secp256k1_scalar_t n;
+<span class="lineNum">     227 </span><span class="lineCov">       1952 :     int overflow = 0;</span>
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span><span class="lineCov">       1952 :     secp256k1_ecmult_gen(ctx, &amp;rp, nonce);</span>
+<span class="lineNum">     230 </span><span class="lineCov">       1952 :     secp256k1_ge_set_gej(&amp;r, &amp;rp);</span>
+<span class="lineNum">     231 </span><span class="lineCov">       1952 :     secp256k1_fe_normalize(&amp;r.x);</span>
+<span class="lineNum">     232 </span><span class="lineCov">       1952 :     secp256k1_fe_normalize(&amp;r.y);</span>
+<span class="lineNum">     233 </span><span class="lineCov">       1952 :     secp256k1_fe_get_b32(b, &amp;r.x);</span>
+<span class="lineNum">     234 </span><span class="lineCov">       1952 :     secp256k1_scalar_set_b32(&amp;sig-&gt;r, b, &amp;overflow);</span>
+<span class="lineNum">     235 </span><span class="lineCov">       3904 :     if (secp256k1_scalar_is_zero(&amp;sig-&gt;r)) {</span>
+<span class="lineNum">     236 </span>            :         /* P.x = order is on the curve, so technically sig-&gt;r could end up zero, which would be an invalid signature. */
+<span class="lineNum">     237 </span>            :         secp256k1_gej_clear(&amp;rp);
+<span class="lineNum">     238 </span>            :         secp256k1_ge_clear(&amp;r);
+<span class="lineNum">     239 </span>            :         return 0;
+<span class="lineNum">     240 </span>            :     }
+<span class="lineNum">     241 </span><span class="lineCov">       1952 :     if (recid) {</span>
+<span class="lineNum">     242 </span><span class="lineCov">       3904 :         *recid = (overflow ? 2 : 0) | (secp256k1_fe_is_odd(&amp;r.y) ? 1 : 0);</span>
+<span class="lineNum">     243 </span>            :     }
+<span class="lineNum">     244 </span><span class="lineCov">       3904 :     secp256k1_scalar_mul(&amp;n, &amp;sig-&gt;r, seckey);</span>
+<span class="lineNum">     245 </span><span class="lineCov">       1952 :     secp256k1_scalar_add(&amp;n, &amp;n, message);</span>
+<span class="lineNum">     246 </span><span class="lineCov">       1952 :     secp256k1_scalar_inverse(&amp;sig-&gt;s, nonce);</span>
+<span class="lineNum">     247 </span><span class="lineCov">       3904 :     secp256k1_scalar_mul(&amp;sig-&gt;s, &amp;sig-&gt;s, &amp;n);</span>
+<span class="lineNum">     248 </span><span class="lineCov">       1952 :     secp256k1_scalar_clear(&amp;n);</span>
+<span class="lineNum">     249 </span><span class="lineCov">       1952 :     secp256k1_gej_clear(&amp;rp);</span>
+<span class="lineNum">     250 </span><span class="lineCov">       1952 :     secp256k1_ge_clear(&amp;r);</span>
+<span class="lineNum">     251 </span><span class="lineCov">       3904 :     if (secp256k1_scalar_is_zero(&amp;sig-&gt;s)) {</span>
+<span class="lineNum">     252 </span>            :         return 0;
+<span class="lineNum">     253 </span>            :     }
+<span class="lineNum">     254 </span><span class="lineCov">       1952 :     if (secp256k1_scalar_is_high(&amp;sig-&gt;s)) {</span>
+<span class="lineNum">     255 </span><span class="lineCov">       1085 :         secp256k1_scalar_negate(&amp;sig-&gt;s, &amp;sig-&gt;s);</span>
+<span class="lineNum">     256 </span><span class="lineCov">       1085 :         if (recid) {</span>
+<span class="lineNum">     257 </span><span class="lineCov">       1085 :             *recid ^= 1;</span>
+<span class="lineNum">     258 </span>            :         }
+<span class="lineNum">     259 </span>            :     }
+<span class="lineNum">     260 </span>            :     return 1;
+<span class="lineNum">     261 </span>            : }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

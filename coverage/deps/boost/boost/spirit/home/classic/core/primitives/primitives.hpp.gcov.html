@@ -1,0 +1,729 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/spirit/home/classic/core/primitives/primitives.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/spirit/home/classic/core/primitives</a> - primitives.hpp<span style="font-size: 80%;"> (source / <a href="primitives.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">49</td>
+            <td class="headerCovTableEntry">49</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*=============================================================================</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 1998-2003 Joel de Guzman
+<span class="lineNum">       3 </span>            :     Copyright (c) 2003 Martin Wille
+<span class="lineNum">       4 </span>            :     http://spirit.sourceforge.net/
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            :   Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       7 </span>            :   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            : =============================================================================*/
+<span class="lineNum">       9 </span>            : #if !defined(BOOST_SPIRIT_PRIMITIVES_HPP)
+<span class="lineNum">      10 </span>            : #define BOOST_SPIRIT_PRIMITIVES_HPP
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #include &lt;boost/ref.hpp&gt;
+<span class="lineNum">      13 </span>            : #include &lt;boost/spirit/home/classic/namespace.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/spirit/home/classic/core/assert.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/spirit/home/classic/core/parser.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/spirit/home/classic/core/composite/impl/directives.ipp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/spirit/home/classic/core/primitives/impl/primitives.ipp&gt;
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">      20 </span>            : #pragma warning (push)
+<span class="lineNum">      21 </span>            : #pragma warning(disable : 4512)
+<span class="lineNum">      22 </span>            : #endif
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : namespace boost { namespace spirit {
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      29 </span>            :     //
+<span class="lineNum">      30 </span>            :     //  char_parser class
+<span class="lineNum">      31 </span>            :     //
+<span class="lineNum">      32 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      33 </span>            :     template &lt;typename DerivedT&gt;
+<span class="lineNum">      34 </span><span class="lineCov">    1409545 :     struct char_parser : public parser&lt;DerivedT&gt;</span>
+<span class="lineNum">      35 </span>            :     {
+<span class="lineNum">      36 </span>            :         typedef DerivedT self_t;
+<span class="lineNum">      37 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">      38 </span>            :         struct result
+<span class="lineNum">      39 </span>            :         {
+<span class="lineNum">      40 </span>            :             typedef typename match_result&lt;
+<span class="lineNum">      41 </span>            :                 ScannerT,
+<span class="lineNum">      42 </span>            :                 typename ScannerT::value_t
+<span class="lineNum">      43 </span>            :             &gt;::type type;
+<span class="lineNum">      44 </span>            :         };
+<span class="lineNum">      45 </span>            : 
+<a name="46"><span class="lineNum">      46 </span>            :         template &lt;typename ScannerT&gt;</a>
+<span class="lineNum">      47 </span>            :         typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">      48 </span><span class="lineCov">    4553416 :         parse(ScannerT const&amp; scan) const</span>
+<span class="lineNum">      49 </span>            :         {
+<span class="lineNum">      50 </span>            :             typedef typename ScannerT::value_t value_t;
+<span class="lineNum">      51 </span>            :             typedef typename ScannerT::iterator_t iterator_t;
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineCov">  618536053 :             if (!scan.at_end())</span>
+<span class="lineNum">      54 </span>            :             {
+<span class="lineNum">      55 </span><span class="lineCov">  618536053 :                 value_t ch = *scan;</span>
+<span class="lineNum">      56 </span><span class="lineCov"> 1033804134 :                 if (this-&gt;derived().test(ch))</span>
+<span class="lineNum">      57 </span>            :                 {
+<span class="lineNum">      58 </span>            :                     iterator_t save(scan.first);
+<span class="lineNum">      59 </span><span class="lineCov">  427286996 :                     ++scan.first;</span>
+<span class="lineNum">      60 </span><span class="lineCov">  427286996 :                     return scan.create_match(1, ch, save, scan.first);</span>
+<span class="lineNum">      61 </span>            :                 }
+<span class="lineNum">      62 </span>            :             }
+<span class="lineNum">      63 </span><span class="lineCov">    2255718 :             return scan.no_match();</span>
+<span class="lineNum">      64 </span>            :         }
+<span class="lineNum">      65 </span>            :     };
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      68 </span>            :     //
+<span class="lineNum">      69 </span>            :     //  negation of char_parsers
+<span class="lineNum">      70 </span>            :     //
+<span class="lineNum">      71 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      72 </span>            :     template &lt;typename PositiveT&gt;
+<span class="lineNum">      73 </span>            :     struct negated_char_parser
+<span class="lineNum">      74 </span>            :     : public char_parser&lt;negated_char_parser&lt;PositiveT&gt; &gt;
+<span class="lineNum">      75 </span>            :     {
+<span class="lineNum">      76 </span>            :         typedef negated_char_parser&lt;PositiveT&gt; self_t;
+<span class="lineNum">      77 </span>            :         typedef PositiveT positive_t;
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :         negated_char_parser(positive_t const&amp; p)
+<span class="lineNum">      80 </span>            :         : positive(p.derived()) {}
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :         template &lt;typename T&gt;
+<span class="lineNum">      83 </span>            :         bool test(T ch) const
+<span class="lineNum">      84 </span>            :         {
+<span class="lineNum">      85 </span>            :             return !positive.test(ch);
+<span class="lineNum">      86 </span>            :         }
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            :         positive_t const positive;
+<span class="lineNum">      89 </span>            :     };
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            :     template &lt;typename ParserT&gt;
+<span class="lineNum">      92 </span>            :     inline negated_char_parser&lt;ParserT&gt;
+<span class="lineNum">      93 </span>            :     operator~(char_parser&lt;ParserT&gt; const&amp; p)
+<span class="lineNum">      94 </span>            :     {
+<span class="lineNum">      95 </span>            :         return negated_char_parser&lt;ParserT&gt;(p.derived());
+<span class="lineNum">      96 </span>            :     }
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            :     template &lt;typename ParserT&gt;
+<span class="lineNum">      99 </span>            :     inline ParserT
+<span class="lineNum">     100 </span>            :     operator~(negated_char_parser&lt;ParserT&gt; const&amp; n)
+<span class="lineNum">     101 </span>            :     {
+<span class="lineNum">     102 </span>            :         return n.positive;
+<span class="lineNum">     103 </span>            :     }
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     106 </span>            :     //
+<span class="lineNum">     107 </span>            :     //  chlit class
+<span class="lineNum">     108 </span>            :     //
+<span class="lineNum">     109 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     110 </span>            :     template &lt;typename CharT = char&gt;
+<span class="lineNum">     111 </span>            :     struct chlit : public char_parser&lt;chlit&lt;CharT&gt; &gt;
+<span class="lineNum">     112 </span>            :     {
+<span class="lineNum">     113 </span>            :         chlit(CharT ch_)
+<span class="lineNum">     114 </span><span class="lineCov">    1408752 :         : ch(ch_) {}</span>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            :         template &lt;typename T&gt;
+<span class="lineNum">     117 </span>            :         bool test(T ch_) const
+<span class="lineNum">     118 </span>            :         {
+<span class="lineNum">     119 </span><span class="lineCov">  415268081 :             return ch_ == ch;</span>
+<span class="lineNum">     120 </span>            :         }
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :         CharT   ch;
+<span class="lineNum">     123 </span>            :     };
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :     template &lt;typename CharT&gt;
+<span class="lineNum">     126 </span>            :     inline chlit&lt;CharT&gt;
+<span class="lineNum">     127 </span>            :     ch_p(CharT ch)
+<span class="lineNum">     128 </span>            :     {
+<span class="lineNum">     129 </span><span class="lineCov">    1943218 :         return chlit&lt;CharT&gt;(ch);</span>
+<span class="lineNum">     130 </span>            :     }
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            :     // This should take care of ch_p(&quot;a&quot;) &quot;bugs&quot;
+<span class="lineNum">     133 </span>            :     template &lt;typename CharT, std::size_t N&gt;
+<span class="lineNum">     134 </span>            :     inline chlit&lt;CharT&gt;
+<span class="lineNum">     135 </span>            :     ch_p(CharT const (&amp; str)[N])
+<span class="lineNum">     136 </span>            :     {
+<span class="lineNum">     137 </span>            :         //  ch_p's argument should be a single character or a null-terminated
+<span class="lineNum">     138 </span>            :         //  string with a single character
+<span class="lineNum">     139 </span>            :         BOOST_STATIC_ASSERT(N &lt; 3);
+<span class="lineNum">     140 </span>            :         return chlit&lt;CharT&gt;(str[0]);
+<span class="lineNum">     141 </span>            :     }
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     144 </span>            :     //
+<span class="lineNum">     145 </span>            :     //  range class
+<span class="lineNum">     146 </span>            :     //
+<span class="lineNum">     147 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     148 </span>            :     template &lt;typename CharT = char&gt;
+<span class="lineNum">     149 </span>            :     struct range : public char_parser&lt;range&lt;CharT&gt; &gt;
+<span class="lineNum">     150 </span>            :     {
+<span class="lineNum">     151 </span>            :         range(CharT first_, CharT last_)
+<span class="lineNum">     152 </span>            :         : first(first_), last(last_)
+<span class="lineNum">     153 </span>            :         {
+<span class="lineNum">     154 </span>            :             BOOST_SPIRIT_ASSERT(!(last &lt; first));
+<span class="lineNum">     155 </span>            :         }
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            :         template &lt;typename T&gt;
+<span class="lineNum">     158 </span>            :         bool test(T ch) const
+<span class="lineNum">     159 </span>            :         {
+<span class="lineNum">     160 </span>            :             return !(CharT(ch) &lt; first) &amp;&amp; !(last &lt; CharT(ch));
+<span class="lineNum">     161 </span>            :         }
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            :         CharT   first;
+<span class="lineNum">     164 </span>            :         CharT   last;
+<span class="lineNum">     165 </span>            :     };
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            :     template &lt;typename CharT&gt;
+<span class="lineNum">     168 </span>            :     inline range&lt;CharT&gt;
+<span class="lineNum">     169 </span>            :     range_p(CharT first, CharT last)
+<span class="lineNum">     170 </span>            :     {
+<span class="lineNum">     171 </span>            :         return range&lt;CharT&gt;(first, last);
+<span class="lineNum">     172 </span>            :     }
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     175 </span>            :     //
+<span class="lineNum">     176 </span>            :     //  chseq class
+<span class="lineNum">     177 </span>            :     //
+<span class="lineNum">     178 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     179 </span>            :     template &lt;typename IteratorT = char const*&gt;
+<span class="lineNum">     180 </span>            :     class chseq : public parser&lt;chseq&lt;IteratorT&gt; &gt;
+<span class="lineNum">     181 </span>            :     {
+<span class="lineNum">     182 </span>            :     public:
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            :         typedef chseq&lt;IteratorT&gt; self_t;
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :         chseq(IteratorT first_, IteratorT last_)
+<span class="lineNum">     187 </span>            :         : first(first_), last(last_) {}
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            :         chseq(IteratorT first_)
+<span class="lineNum">     190 </span><span class="lineCov">     195016 :         : first(first_), last(impl::get_last(first_)) {}</span>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">     193 </span>            :         typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">     194 </span>            :         parse(ScannerT const&amp; scan) const
+<span class="lineNum">     195 </span>            :         {
+<span class="lineNum">     196 </span>            :             typedef typename boost::unwrap_reference&lt;IteratorT&gt;::type striter_t;
+<span class="lineNum">     197 </span>            :             typedef typename parser_result&lt;self_t, ScannerT&gt;::type result_t;
+<span class="lineNum">     198 </span><span class="lineCov">      33600 :             return impl::string_parser_parse&lt;result_t&gt;(</span>
+<span class="lineNum">     199 </span>            :                 striter_t(first),
+<span class="lineNum">     200 </span>            :                 striter_t(last),
+<span class="lineNum">     201 </span><span class="lineCov">      33600 :                 scan);</span>
+<span class="lineNum">     202 </span>            :         }
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            :     private:
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            :         IteratorT first;
+<span class="lineNum">     207 </span>            :         IteratorT last;
+<span class="lineNum">     208 </span>            :     };
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :     template &lt;typename CharT&gt;
+<span class="lineNum">     211 </span>            :     inline chseq&lt;CharT const*&gt;
+<span class="lineNum">     212 </span>            :     chseq_p(CharT const* str)
+<span class="lineNum">     213 </span>            :     {
+<span class="lineNum">     214 </span>            :         return chseq&lt;CharT const*&gt;(str);
+<span class="lineNum">     215 </span>            :     }
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :     template &lt;typename IteratorT&gt;
+<span class="lineNum">     218 </span>            :     inline chseq&lt;IteratorT&gt;
+<span class="lineNum">     219 </span>            :     chseq_p(IteratorT first, IteratorT last)
+<span class="lineNum">     220 </span>            :     {
+<span class="lineNum">     221 </span>            :         return chseq&lt;IteratorT&gt;(first, last);
+<span class="lineNum">     222 </span>            :     }
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     225 </span>            :     //
+<span class="lineNum">     226 </span>            :     //  strlit class
+<span class="lineNum">     227 </span>            :     //
+<span class="lineNum">     228 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     229 </span>            :     template &lt;typename IteratorT = char const*&gt;
+<span class="lineNum">     230 </span>            :     class strlit : public parser&lt;strlit&lt;IteratorT&gt; &gt;
+<span class="lineNum">     231 </span>            :     {
+<span class="lineNum">     232 </span>            :     public:
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            :         typedef strlit&lt;IteratorT&gt; self_t;
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            :         strlit(IteratorT first, IteratorT last)
+<span class="lineNum">     237 </span>            :         : seq(first, last) {}
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            :         strlit(IteratorT first)
+<span class="lineNum">     240 </span><span class="lineCov">     195016 :         : seq(first) {}</span>
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">     243 </span>            :         typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">     244 </span>            :         parse(ScannerT const&amp; scan) const
+<span class="lineNum">     245 </span>            :         {
+<span class="lineNum">     246 </span>            :             typedef typename parser_result&lt;self_t, ScannerT&gt;::type result_t;
+<span class="lineNum">     247 </span>            :             return impl::contiguous_parser_parse&lt;result_t&gt;
+<span class="lineNum">     248 </span><span class="lineCov">      33600 :                 (seq, scan, scan);</span>
+<span class="lineNum">     249 </span>            :         }
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            :     private:
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span>            :         chseq&lt;IteratorT&gt; seq;
+<span class="lineNum">     254 </span>            :     };
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            :     template &lt;typename CharT&gt;
+<span class="lineNum">     257 </span>            :     inline strlit&lt;CharT const*&gt;
+<span class="lineNum">     258 </span>            :     str_p(CharT const* str)
+<span class="lineNum">     259 </span>            :     {
+<span class="lineNum">     260 </span><span class="lineCov">     146262 :         return strlit&lt;CharT const*&gt;(str);</span>
+<span class="lineNum">     261 </span>            :     }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            :     template &lt;typename CharT&gt;
+<span class="lineNum">     264 </span>            :     inline strlit&lt;CharT *&gt;
+<span class="lineNum">     265 </span>            :     str_p(CharT * str)
+<span class="lineNum">     266 </span>            :     {
+<span class="lineNum">     267 </span>            :         return strlit&lt;CharT *&gt;(str);
+<span class="lineNum">     268 </span>            :     }
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span>            :     template &lt;typename IteratorT&gt;
+<span class="lineNum">     271 </span>            :     inline strlit&lt;IteratorT&gt;
+<span class="lineNum">     272 </span>            :     str_p(IteratorT first, IteratorT last)
+<span class="lineNum">     273 </span>            :     {
+<span class="lineNum">     274 </span>            :         return strlit&lt;IteratorT&gt;(first, last);
+<span class="lineNum">     275 </span>            :     }
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            :     // This should take care of str_p('a') &quot;bugs&quot;
+<span class="lineNum">     278 </span>            :     template &lt;typename CharT&gt;
+<span class="lineNum">     279 </span>            :     inline chlit&lt;CharT&gt;
+<span class="lineNum">     280 </span>            :     str_p(CharT ch)
+<span class="lineNum">     281 </span>            :     {
+<span class="lineNum">     282 </span>            :         return chlit&lt;CharT&gt;(ch);
+<span class="lineNum">     283 </span>            :     }
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     286 </span>            :     //
+<span class="lineNum">     287 </span>            :     //  nothing_parser class
+<span class="lineNum">     288 </span>            :     //
+<span class="lineNum">     289 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     290 </span>            :     struct nothing_parser : public parser&lt;nothing_parser&gt;
+<span class="lineNum">     291 </span>            :     {
+<span class="lineNum">     292 </span>            :         typedef nothing_parser self_t;
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span><span class="lineCov">         61 :         nothing_parser() {}</span>
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">     297 </span>            :         typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">     298 </span>            :         parse(ScannerT const&amp; scan) const
+<span class="lineNum">     299 </span>            :         {
+<span class="lineNum">     300 </span>            :             return scan.no_match();
+<span class="lineNum">     301 </span>            :         }
+<span class="lineNum">     302 </span>            :     };
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span><span class="lineCov">         61 :     nothing_parser const nothing_p = nothing_parser();</span>
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     307 </span>            :     //
+<span class="lineNum">     308 </span>            :     //  anychar_parser class
+<span class="lineNum">     309 </span>            :     //
+<span class="lineNum">     310 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     311 </span>            :     struct anychar_parser : public char_parser&lt;anychar_parser&gt;
+<span class="lineNum">     312 </span>            :     {
+<span class="lineNum">     313 </span>            :         typedef anychar_parser self_t;
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span><span class="lineCov">         61 :         anychar_parser() {}</span>
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            :         template &lt;typename CharT&gt;
+<span class="lineNum">     318 </span>            :         bool test(CharT) const
+<span class="lineNum">     319 </span>            :         {
+<span class="lineNum">     320 </span>            :             return true;
+<span class="lineNum">     321 </span>            :         }
+<span class="lineNum">     322 </span>            :     };
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span><span class="lineCov">         61 :     anychar_parser const anychar_p = anychar_parser();</span>
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span>            :     inline nothing_parser
+<span class="lineNum">     327 </span>            :     operator~(anychar_parser)
+<span class="lineNum">     328 </span>            :     {
+<span class="lineNum">     329 </span>            :         return nothing_p;
+<span class="lineNum">     330 </span>            :     }
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     333 </span>            :     //
+<span class="lineNum">     334 </span>            :     //  alnum_parser class
+<span class="lineNum">     335 </span>            :     //
+<span class="lineNum">     336 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     337 </span>            :     struct alnum_parser : public char_parser&lt;alnum_parser&gt;
+<span class="lineNum">     338 </span>            :     {
+<span class="lineNum">     339 </span>            :         typedef alnum_parser self_t;
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span><span class="lineCov">         61 :         alnum_parser() {}</span>
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span>            :         template &lt;typename CharT&gt;
+<span class="lineNum">     344 </span>            :         bool test(CharT ch) const
+<span class="lineNum">     345 </span>            :         {
+<span class="lineNum">     346 </span>            :             return impl::isalnum_(ch);
+<span class="lineNum">     347 </span>            :         }
+<span class="lineNum">     348 </span>            :     };
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span><span class="lineCov">         61 :     alnum_parser const alnum_p = alnum_parser();</span>
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     353 </span>            :     //
+<span class="lineNum">     354 </span>            :     //  alpha_parser class
+<span class="lineNum">     355 </span>            :     //
+<span class="lineNum">     356 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     357 </span>            :     struct alpha_parser : public char_parser&lt;alpha_parser&gt;
+<span class="lineNum">     358 </span>            :     {
+<span class="lineNum">     359 </span>            :         typedef alpha_parser self_t;
+<span class="lineNum">     360 </span>            : 
+<span class="lineNum">     361 </span><span class="lineCov">         61 :         alpha_parser() {}</span>
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span>            :         template &lt;typename CharT&gt;
+<span class="lineNum">     364 </span>            :         bool test(CharT ch) const
+<span class="lineNum">     365 </span>            :         {
+<span class="lineNum">     366 </span>            :             return impl::isalpha_(ch);
+<span class="lineNum">     367 </span>            :         }
+<span class="lineNum">     368 </span>            :     };
+<span class="lineNum">     369 </span>            : 
+<span class="lineNum">     370 </span><span class="lineCov">         61 :     alpha_parser const alpha_p = alpha_parser();</span>
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     373 </span>            :     //
+<span class="lineNum">     374 </span>            :     //  cntrl_parser class
+<span class="lineNum">     375 </span>            :     //
+<span class="lineNum">     376 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     377 </span>            :     struct cntrl_parser : public char_parser&lt;cntrl_parser&gt;
+<span class="lineNum">     378 </span>            :     {
+<span class="lineNum">     379 </span>            :         typedef cntrl_parser self_t;
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span><span class="lineCov">         61 :         cntrl_parser() {}</span>
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span>            :         template &lt;typename CharT&gt;
+<span class="lineNum">     384 </span>            :         bool test(CharT ch) const
+<span class="lineNum">     385 </span>            :         {
+<span class="lineNum">     386 </span>            :             return impl::iscntrl_(ch);
+<span class="lineNum">     387 </span>            :         }
+<span class="lineNum">     388 </span>            :     };
+<span class="lineNum">     389 </span>            : 
+<span class="lineNum">     390 </span><span class="lineCov">         61 :     cntrl_parser const cntrl_p = cntrl_parser();</span>
+<span class="lineNum">     391 </span>            : 
+<span class="lineNum">     392 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     393 </span>            :     //
+<span class="lineNum">     394 </span>            :     //  digit_parser class
+<span class="lineNum">     395 </span>            :     //
+<span class="lineNum">     396 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     397 </span>            :     struct digit_parser : public char_parser&lt;digit_parser&gt;
+<span class="lineNum">     398 </span>            :     {
+<span class="lineNum">     399 </span>            :         typedef digit_parser self_t;
+<span class="lineNum">     400 </span>            : 
+<span class="lineNum">     401 </span><span class="lineCov">         61 :         digit_parser() {}</span>
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span>            :         template &lt;typename CharT&gt;
+<span class="lineNum">     404 </span>            :         bool test(CharT ch) const
+<span class="lineNum">     405 </span>            :         {
+<span class="lineNum">     406 </span>            :             return impl::isdigit_(ch);
+<span class="lineNum">     407 </span>            :         }
+<span class="lineNum">     408 </span>            :     };
+<span class="lineNum">     409 </span>            : 
+<span class="lineNum">     410 </span><span class="lineCov">         61 :     digit_parser const digit_p = digit_parser();</span>
+<span class="lineNum">     411 </span>            : 
+<span class="lineNum">     412 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     413 </span>            :     //
+<span class="lineNum">     414 </span>            :     //  graph_parser class
+<span class="lineNum">     415 </span>            :     //
+<span class="lineNum">     416 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     417 </span>            :     struct graph_parser : public char_parser&lt;graph_parser&gt;
+<span class="lineNum">     418 </span>            :     {
+<span class="lineNum">     419 </span>            :         typedef graph_parser self_t;
+<span class="lineNum">     420 </span>            : 
+<span class="lineNum">     421 </span><span class="lineCov">         61 :         graph_parser() {}</span>
+<span class="lineNum">     422 </span>            : 
+<span class="lineNum">     423 </span>            :         template &lt;typename CharT&gt;
+<span class="lineNum">     424 </span>            :         bool test(CharT ch) const
+<span class="lineNum">     425 </span>            :         {
+<span class="lineNum">     426 </span>            :             return impl::isgraph_(ch);
+<span class="lineNum">     427 </span>            :         }
+<span class="lineNum">     428 </span>            :     };
+<span class="lineNum">     429 </span>            : 
+<span class="lineNum">     430 </span><span class="lineCov">         61 :     graph_parser const graph_p = graph_parser();</span>
+<span class="lineNum">     431 </span>            : 
+<span class="lineNum">     432 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     433 </span>            :     //
+<span class="lineNum">     434 </span>            :     //  lower_parser class
+<span class="lineNum">     435 </span>            :     //
+<span class="lineNum">     436 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     437 </span>            :     struct lower_parser : public char_parser&lt;lower_parser&gt;
+<span class="lineNum">     438 </span>            :     {
+<span class="lineNum">     439 </span>            :         typedef lower_parser self_t;
+<span class="lineNum">     440 </span>            : 
+<span class="lineNum">     441 </span><span class="lineCov">         61 :         lower_parser() {}</span>
+<span class="lineNum">     442 </span>            : 
+<span class="lineNum">     443 </span>            :         template &lt;typename CharT&gt;
+<span class="lineNum">     444 </span>            :         bool test(CharT ch) const
+<span class="lineNum">     445 </span>            :         {
+<span class="lineNum">     446 </span>            :             return impl::islower_(ch);
+<span class="lineNum">     447 </span>            :         }
+<span class="lineNum">     448 </span>            :     };
+<span class="lineNum">     449 </span>            : 
+<span class="lineNum">     450 </span><span class="lineCov">         61 :     lower_parser const lower_p = lower_parser();</span>
+<span class="lineNum">     451 </span>            : 
+<span class="lineNum">     452 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     453 </span>            :     //
+<span class="lineNum">     454 </span>            :     //  print_parser class
+<span class="lineNum">     455 </span>            :     //
+<span class="lineNum">     456 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     457 </span>            :     struct print_parser : public char_parser&lt;print_parser&gt;
+<span class="lineNum">     458 </span>            :     {
+<span class="lineNum">     459 </span>            :         typedef print_parser self_t;
+<span class="lineNum">     460 </span>            : 
+<span class="lineNum">     461 </span><span class="lineCov">         61 :         print_parser() {}</span>
+<span class="lineNum">     462 </span>            : 
+<span class="lineNum">     463 </span>            :         template &lt;typename CharT&gt;
+<span class="lineNum">     464 </span>            :         bool test(CharT ch) const
+<span class="lineNum">     465 </span>            :         {
+<span class="lineNum">     466 </span>            :             return impl::isprint_(ch);
+<span class="lineNum">     467 </span>            :         }
+<span class="lineNum">     468 </span>            :     };
+<span class="lineNum">     469 </span>            : 
+<span class="lineNum">     470 </span><span class="lineCov">         61 :     print_parser const print_p = print_parser();</span>
+<span class="lineNum">     471 </span>            : 
+<span class="lineNum">     472 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     473 </span>            :     //
+<span class="lineNum">     474 </span>            :     //  punct_parser class
+<span class="lineNum">     475 </span>            :     //
+<span class="lineNum">     476 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     477 </span>            :     struct punct_parser : public char_parser&lt;punct_parser&gt;
+<span class="lineNum">     478 </span>            :     {
+<span class="lineNum">     479 </span>            :         typedef punct_parser self_t;
+<span class="lineNum">     480 </span>            : 
+<span class="lineNum">     481 </span><span class="lineCov">         61 :         punct_parser() {}</span>
+<span class="lineNum">     482 </span>            : 
+<span class="lineNum">     483 </span>            :         template &lt;typename CharT&gt;
+<span class="lineNum">     484 </span>            :         bool test(CharT ch) const
+<span class="lineNum">     485 </span>            :         {
+<span class="lineNum">     486 </span>            :             return impl::ispunct_(ch);
+<span class="lineNum">     487 </span>            :         }
+<span class="lineNum">     488 </span>            :     };
+<span class="lineNum">     489 </span>            : 
+<span class="lineNum">     490 </span><span class="lineCov">         61 :     punct_parser const punct_p = punct_parser();</span>
+<span class="lineNum">     491 </span>            : 
+<span class="lineNum">     492 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     493 </span>            :     //
+<span class="lineNum">     494 </span>            :     //  blank_parser class
+<span class="lineNum">     495 </span>            :     //
+<span class="lineNum">     496 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     497 </span>            :     struct blank_parser : public char_parser&lt;blank_parser&gt;
+<span class="lineNum">     498 </span>            :     {
+<span class="lineNum">     499 </span>            :         typedef blank_parser self_t;
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span><span class="lineCov">         61 :         blank_parser() {}</span>
+<span class="lineNum">     502 </span>            : 
+<span class="lineNum">     503 </span>            :         template &lt;typename CharT&gt;
+<span class="lineNum">     504 </span>            :         bool test(CharT ch) const
+<span class="lineNum">     505 </span>            :         {
+<span class="lineNum">     506 </span>            :             return impl::isblank_(ch);
+<span class="lineNum">     507 </span>            :         }
+<span class="lineNum">     508 </span>            :     };
+<span class="lineNum">     509 </span>            : 
+<span class="lineNum">     510 </span><span class="lineCov">         61 :     blank_parser const blank_p = blank_parser();</span>
+<span class="lineNum">     511 </span>            : 
+<span class="lineNum">     512 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     513 </span>            :     //
+<span class="lineNum">     514 </span>            :     //  space_parser class
+<span class="lineNum">     515 </span>            :     //
+<span class="lineNum">     516 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     517 </span>            :     struct space_parser : public char_parser&lt;space_parser&gt;
+<span class="lineNum">     518 </span>            :     {
+<span class="lineNum">     519 </span>            :         typedef space_parser self_t;
+<span class="lineNum">     520 </span>            : 
+<span class="lineNum">     521 </span><span class="lineCov">         61 :         space_parser() {}</span>
+<span class="lineNum">     522 </span>            : 
+<span class="lineNum">     523 </span>            :         template &lt;typename CharT&gt;
+<span class="lineNum">     524 </span>            :         bool test(CharT ch) const
+<span class="lineNum">     525 </span>            :         {
+<span class="lineNum">     526 </span>            :             return impl::isspace_(ch);
+<span class="lineNum">     527 </span>            :         }
+<span class="lineNum">     528 </span>            :     };
+<span class="lineNum">     529 </span>            : 
+<span class="lineNum">     530 </span><span class="lineCov">         61 :     space_parser const space_p = space_parser();</span>
+<span class="lineNum">     531 </span>            : 
+<span class="lineNum">     532 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     533 </span>            :     //
+<span class="lineNum">     534 </span>            :     //  upper_parser class
+<span class="lineNum">     535 </span>            :     //
+<span class="lineNum">     536 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     537 </span>            :     struct upper_parser : public char_parser&lt;upper_parser&gt;
+<span class="lineNum">     538 </span>            :     {
+<span class="lineNum">     539 </span>            :         typedef upper_parser self_t;
+<span class="lineNum">     540 </span>            : 
+<span class="lineNum">     541 </span><span class="lineCov">         61 :         upper_parser() {}</span>
+<span class="lineNum">     542 </span>            : 
+<span class="lineNum">     543 </span>            :         template &lt;typename CharT&gt;
+<span class="lineNum">     544 </span>            :         bool test(CharT ch) const
+<span class="lineNum">     545 </span>            :         {
+<span class="lineNum">     546 </span>            :             return impl::isupper_(ch);
+<span class="lineNum">     547 </span>            :         }
+<span class="lineNum">     548 </span>            :     };
+<span class="lineNum">     549 </span>            : 
+<span class="lineNum">     550 </span><span class="lineCov">         61 :     upper_parser const upper_p = upper_parser();</span>
+<span class="lineNum">     551 </span>            : 
+<span class="lineNum">     552 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     553 </span>            :     //
+<span class="lineNum">     554 </span>            :     //  xdigit_parser class
+<span class="lineNum">     555 </span>            :     //
+<span class="lineNum">     556 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     557 </span>            :     struct xdigit_parser : public char_parser&lt;xdigit_parser&gt;
+<span class="lineNum">     558 </span>            :     {
+<span class="lineNum">     559 </span>            :         typedef xdigit_parser self_t;
+<span class="lineNum">     560 </span>            : 
+<span class="lineNum">     561 </span><span class="lineCov">         61 :         xdigit_parser() {}</span>
+<span class="lineNum">     562 </span>            : 
+<span class="lineNum">     563 </span>            :         template &lt;typename CharT&gt;
+<span class="lineNum">     564 </span>            :         bool test(CharT ch) const
+<span class="lineNum">     565 </span>            :         {
+<span class="lineNum">     566 </span>            :             return impl::isxdigit_(ch);
+<span class="lineNum">     567 </span>            :         }
+<span class="lineNum">     568 </span>            :     };
+<span class="lineNum">     569 </span>            : 
+<span class="lineNum">     570 </span><span class="lineCov">         61 :     xdigit_parser const xdigit_p = xdigit_parser();</span>
+<span class="lineNum">     571 </span>            : 
+<span class="lineNum">     572 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     573 </span>            :     //
+<span class="lineNum">     574 </span>            :     //  eol_parser class (contributed by Martin Wille)
+<span class="lineNum">     575 </span>            :     //
+<span class="lineNum">     576 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     577 </span>            :     struct eol_parser : public parser&lt;eol_parser&gt;
+<span class="lineNum">     578 </span>            :     {
+<span class="lineNum">     579 </span>            :         typedef eol_parser self_t;
+<span class="lineNum">     580 </span>            : 
+<span class="lineNum">     581 </span><span class="lineCov">         61 :         eol_parser() {}</span>
+<span class="lineNum">     582 </span>            : 
+<span class="lineNum">     583 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">     584 </span>            :         typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">     585 </span>            :         parse(ScannerT const&amp; scan) const
+<span class="lineNum">     586 </span>            :         {
+<span class="lineNum">     587 </span>            :             typename ScannerT::iterator_t save = scan.first;
+<span class="lineNum">     588 </span>            :             std::size_t len = 0;
+<span class="lineNum">     589 </span>            : 
+<span class="lineNum">     590 </span>            :             if (!scan.at_end() &amp;&amp; *scan == '\r')    // CR
+<span class="lineNum">     591 </span>            :             {
+<span class="lineNum">     592 </span>            :                 ++scan.first;
+<span class="lineNum">     593 </span>            :                 ++len;
+<span class="lineNum">     594 </span>            :             }
+<span class="lineNum">     595 </span>            : 
+<span class="lineNum">     596 </span>            :             // Don't call skipper here
+<span class="lineNum">     597 </span>            :             if (scan.first != scan.last &amp;&amp; *scan == '\n')    // LF
+<span class="lineNum">     598 </span>            :             {
+<span class="lineNum">     599 </span>            :                 ++scan.first;
+<span class="lineNum">     600 </span>            :                 ++len;
+<span class="lineNum">     601 </span>            :             }
+<span class="lineNum">     602 </span>            : 
+<span class="lineNum">     603 </span>            :             if (len)
+<span class="lineNum">     604 </span>            :                 return scan.create_match(len, nil_t(), save, scan.first);
+<span class="lineNum">     605 </span>            :             return scan.no_match();
+<span class="lineNum">     606 </span>            :         }
+<span class="lineNum">     607 </span>            :     };
+<span class="lineNum">     608 </span>            : 
+<span class="lineNum">     609 </span><span class="lineCov">         61 :     eol_parser const eol_p = eol_parser();</span>
+<span class="lineNum">     610 </span>            : 
+<span class="lineNum">     611 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     612 </span>            :     //
+<span class="lineNum">     613 </span>            :     //  end_parser class (suggested by Markus Schoepflin)
+<span class="lineNum">     614 </span>            :     //
+<span class="lineNum">     615 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     616 </span>            :     struct end_parser : public parser&lt;end_parser&gt;
+<span class="lineNum">     617 </span>            :     {
+<span class="lineNum">     618 </span>            :         typedef end_parser self_t;
+<span class="lineNum">     619 </span>            : 
+<span class="lineNum">     620 </span><span class="lineCov">         61 :         end_parser() {}</span>
+<span class="lineNum">     621 </span>            : 
+<span class="lineNum">     622 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">     623 </span>            :         typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">     624 </span>            :         parse(ScannerT const&amp; scan) const
+<span class="lineNum">     625 </span>            :         {
+<span class="lineNum">     626 </span>            :             if (scan.at_end())
+<span class="lineNum">     627 </span>            :                 return scan.empty_match();
+<span class="lineNum">     628 </span>            :             return scan.no_match();
+<span class="lineNum">     629 </span>            :         }
+<span class="lineNum">     630 </span>            :     };
+<span class="lineNum">     631 </span>            : 
+<span class="lineNum">     632 </span><span class="lineCov">         61 :     end_parser const end_p = end_parser();</span>
+<span class="lineNum">     633 </span>            : 
+<span class="lineNum">     634 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     635 </span>            :     //
+<span class="lineNum">     636 </span>            :     //  the pizza_p parser :-)
+<span class="lineNum">     637 </span>            :     //
+<span class="lineNum">     638 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     639 </span>            :     inline strlit&lt;char const*&gt; const
+<span class="lineNum">     640 </span>            :     pizza_p(char const* your_favorite_pizza)
+<span class="lineNum">     641 </span>            :     {
+<span class="lineNum">     642 </span>            :         return your_favorite_pizza;
+<span class="lineNum">     643 </span>            :     }
+<span class="lineNum">     644 </span>            : 
+<span class="lineNum">     645 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_END
+<span class="lineNum">     646 </span>            : 
+<span class="lineNum">     647 </span>            : }} // namespace BOOST_SPIRIT_CLASSIC_NS
+<span class="lineNum">     648 </span>            : 
+<span class="lineNum">     649 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">     650 </span>            : #pragma warning (pop)
+<span class="lineNum">     651 </span>            : #endif
+<span class="lineNum">     652 </span>            : 
+<span class="lineNum">     653 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

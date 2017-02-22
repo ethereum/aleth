@@ -1,0 +1,366 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/impl/compiler_log_formatter.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/impl</a> - compiler_log_formatter.ipp<span style="font-size: 80%;"> (source / <a href="compiler_log_formatter.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">106</td>
+            <td class="headerCovTableEntryLo">8.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryLo">11.8 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : implements compiler like Log formatter
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_COMPILER_LOG_FORMATTER_IPP_020105GER
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_COMPILER_LOG_FORMATTER_IPP_020105GER
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/output/compiler_log_formatter.hpp&gt;
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : #include &lt;boost/test/framework.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/execution_monitor.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/test/unit_test_parameters.hpp&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/tree/test_unit.hpp&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;boost/test/utils/basic_cstring/io.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/test/utils/lazy_ostream.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/test/utils/setcolor.hpp&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : // Boost
+<span class="lineNum">      33 </span>            : #include &lt;boost/version.hpp&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : // STL
+<span class="lineNum">      36 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : namespace boost {
+<span class="lineNum">      43 </span>            : namespace unit_test {
+<span class="lineNum">      44 </span>            : namespace output {
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : // ************************************************************************** //
+<span class="lineNum">      47 </span>            : // **************            compiler_log_formatter            ************** //
+<span class="lineNum">      48 </span>            : // ************************************************************************** //
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : namespace {
+<a name="51"><span class="lineNum">      51 </span>            : </a>
+<span class="lineNum">      52 </span>            : std::string
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 : test_phase_identifier()</span>
+<span class="lineNum">      54 </span>            : {
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :     return framework::test_in_progress() ? framework::current_test_case().full_name() : std::string( &quot;Test setup&quot; );</span>
+<span class="lineNum">      56 </span>            : }
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : } // local namespace
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : //____________________________________________________________________________//
+<a name="61"><span class="lineNum">      61 </span>            : </a>
+<span class="lineNum">      62 </span>            : void
+<span class="lineNum">      63 </span><span class="lineCov">          1 : compiler_log_formatter::log_start( std::ostream&amp; output, counter_t test_cases_amount )</span>
+<span class="lineNum">      64 </span>            : {
+<span class="lineNum">      65 </span><span class="lineCov">          2 :     m_color_output = runtime_config::get&lt;bool&gt;( runtime_config::COLOR_OUTPUT );</span>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineCov">          1 :     if( test_cases_amount &gt; 0 )</span>
+<span class="lineNum">      68 </span><span class="lineCov">          3 :         output  &lt;&lt; &quot;Running &quot; &lt;&lt; test_cases_amount &lt;&lt; &quot; test &quot;</span>
+<span class="lineNum">      69 </span><span class="lineCov">          2 :                 &lt;&lt; (test_cases_amount &gt; 1 ? &quot;cases&quot; : &quot;case&quot;) &lt;&lt; &quot;...\n&quot;;</span>
+<span class="lineNum">      70 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : //____________________________________________________________________________//
+<a name="73"><span class="lineNum">      73 </span>            : </a>
+<span class="lineNum">      74 </span>            : void
+<span class="lineNum">      75 </span><span class="lineCov">          1 : compiler_log_formatter::log_finish( std::ostream&amp; ostr )</span>
+<span class="lineNum">      76 </span>            : {
+<span class="lineNum">      77 </span><span class="lineCov">          1 :     ostr.flush();</span>
+<span class="lineNum">      78 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : //____________________________________________________________________________//
+<a name="81"><span class="lineNum">      81 </span>            : </a>
+<span class="lineNum">      82 </span>            : void
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 : compiler_log_formatter::log_build_info( std::ostream&amp; output )</span>
+<span class="lineNum">      84 </span>            : {
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :     output  &lt;&lt; &quot;Platform: &quot; &lt;&lt; BOOST_PLATFORM            &lt;&lt; '\n'</span>
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot;Compiler: &quot; &lt;&lt; BOOST_COMPILER            &lt;&lt; '\n'</span>
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot;STL     : &quot; &lt;&lt; BOOST_STDLIB              &lt;&lt; '\n'</span>
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot;Boost   : &quot; &lt;&lt; BOOST_VERSION/100000      &lt;&lt; &quot;.&quot;</span>
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 :                             &lt;&lt; BOOST_VERSION/100 % 1000  &lt;&lt; &quot;.&quot;</span>
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 :                             &lt;&lt; BOOST_VERSION % 100       &lt;&lt; std::endl;</span>
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : //____________________________________________________________________________//
+<a name="94"><span class="lineNum">      94 </span>            : </a>
+<span class="lineNum">      95 </span>            : void
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 : compiler_log_formatter::test_unit_start( std::ostream&amp; output, test_unit const&amp; tu )</span>
+<span class="lineNum">      97 </span>            : {
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :     BOOST_TEST_SCOPE_SETCOLOR( m_color_output, output, term_attr::BRIGHT, term_color::BLUE );</span>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :     print_prefix( output, tu.p_file_name, tu.p_line_num );</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :     output &lt;&lt; &quot;Entering test &quot; &lt;&lt; tu.p_type_name &lt;&lt; &quot; \&quot;&quot; &lt;&lt; tu.p_name &lt;&lt; &quot;\&quot;&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : //____________________________________________________________________________//
+<a name="106"><span class="lineNum">     106 </span>            : </a>
+<span class="lineNum">     107 </span>            : void
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 : compiler_log_formatter::test_unit_finish( std::ostream&amp; output, test_unit const&amp; tu, unsigned long elapsed )</span>
+<span class="lineNum">     109 </span>            : {
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :     BOOST_TEST_SCOPE_SETCOLOR( m_color_output, output, term_attr::BRIGHT, term_color::BLUE );</span>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :     print_prefix( output, tu.p_file_name, tu.p_line_num );</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :     output &lt;&lt; &quot;Leaving test &quot; &lt;&lt; tu.p_type_name &lt;&lt; &quot; \&quot;&quot; &lt;&lt; tu.p_name &lt;&lt; &quot;\&quot;&quot;;</span>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :     if( elapsed &gt; 0 ) {</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :         output &lt;&lt; &quot;; testing time: &quot;;</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :         if( elapsed % 1000 == 0 )</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :             output &lt;&lt; elapsed/1000 &lt;&lt; &quot;ms&quot;;</span>
+<span class="lineNum">     120 </span>            :         else
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :             output &lt;&lt; elapsed &lt;&lt; &quot;us&quot;;</span>
+<span class="lineNum">     122 </span>            :     }
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :     output &lt;&lt; std::endl;</span>
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : //____________________________________________________________________________//
+<a name="128"><span class="lineNum">     128 </span>            : </a>
+<span class="lineNum">     129 </span>            : void
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 : compiler_log_formatter::test_unit_skipped( std::ostream&amp; output, test_unit const&amp; tu, const_string reason )</span>
+<span class="lineNum">     131 </span>            : {
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :     BOOST_TEST_SCOPE_SETCOLOR( m_color_output, output, term_attr::BRIGHT, term_color::YELLOW );</span>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :     print_prefix( output, tu.p_file_name, tu.p_line_num );</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :     output  &lt;&lt; &quot;Test &quot; &lt;&lt; tu.p_type_name &lt;&lt; &quot; \&quot;&quot; &lt;&lt; tu.full_name() &lt;&lt; &quot;\&quot;&quot; &lt;&lt; &quot; is skipped because &quot; &lt;&lt; reason &lt;&lt; std::endl;</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : //____________________________________________________________________________//
+<a name="140"><span class="lineNum">     140 </span>            : </a>
+<span class="lineNum">     141 </span>            : void
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 : compiler_log_formatter::log_exception_start( std::ostream&amp; output, log_checkpoint_data const&amp; checkpoint_data, execution_exception const&amp; ex )</span>
+<span class="lineNum">     143 </span>            : {
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :     execution_exception::location const&amp; loc = ex.where();</span>
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :     print_prefix( output, loc.m_file_name, loc.m_line_num );</span>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            :     {
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :         BOOST_TEST_SCOPE_SETCOLOR( m_color_output, output, term_attr::UNDERLINE, term_color::RED );</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :         output &lt;&lt; &quot;fatal error: in \&quot;&quot; &lt;&lt; (loc.m_function.is_empty() ? test_phase_identifier() : loc.m_function ) &lt;&lt; &quot;\&quot;: &quot;</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :                &lt;&lt; ex.what();</span>
+<span class="lineNum">     153 </span>            :     }
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :     if( !checkpoint_data.m_file_name.is_empty() ) {</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :         output &lt;&lt; '\n';</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :         print_prefix( output, checkpoint_data.m_file_name, checkpoint_data.m_line_num );</span>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :         BOOST_TEST_SCOPE_SETCOLOR( m_color_output, output, term_attr::BRIGHT, term_color::CYAN );</span>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :         output &lt;&lt; &quot;last checkpoint&quot;;</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :         if( !checkpoint_data.m_message.empty() )</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :             output &lt;&lt; &quot;: &quot; &lt;&lt; checkpoint_data.m_message;</span>
+<span class="lineNum">     164 </span>            :     }
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            : //____________________________________________________________________________//
+<a name="168"><span class="lineNum">     168 </span>            : </a>
+<span class="lineNum">     169 </span>            : void
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 : compiler_log_formatter::log_exception_finish( std::ostream&amp; output )</span>
+<span class="lineNum">     171 </span>            : {
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :     output &lt;&lt; std::endl;</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            : //____________________________________________________________________________//
+<a name="176"><span class="lineNum">     176 </span>            : </a>
+<span class="lineNum">     177 </span>            : void
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 : compiler_log_formatter::log_entry_start( std::ostream&amp; output, log_entry_data const&amp; entry_data, log_entry_types let )</span>
+<span class="lineNum">     179 </span>            : {
+<span class="lineNum">     180 </span>            :     using namespace utils;
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :     switch( let ) {</span>
+<span class="lineNum">     183 </span>            :         case BOOST_UTL_ET_INFO:
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :             print_prefix( output, entry_data.m_file_name, entry_data.m_line_num );</span>
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :             if( m_color_output )</span>
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :                 output &lt;&lt; setcolor( term_attr::BRIGHT, term_color::GREEN );</span>
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :             output &lt;&lt; &quot;info: &quot;;</span>
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     189 </span>            :         case BOOST_UTL_ET_MESSAGE:
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :             if( m_color_output )</span>
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :                 output &lt;&lt; setcolor( term_attr::BRIGHT, term_color::CYAN );</span>
+<span class="lineNum">     192 </span>            :             break;
+<span class="lineNum">     193 </span>            :         case BOOST_UTL_ET_WARNING:
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :             print_prefix( output, entry_data.m_file_name, entry_data.m_line_num );</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :             if( m_color_output )</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :                 output &lt;&lt; setcolor( term_attr::BRIGHT, term_color::YELLOW );</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :             output &lt;&lt; &quot;warning: in \&quot;&quot; &lt;&lt; test_phase_identifier() &lt;&lt; &quot;\&quot;: &quot;;</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     199 </span>            :         case BOOST_UTL_ET_ERROR:
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :             print_prefix( output, entry_data.m_file_name, entry_data.m_line_num );</span>
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :             if( m_color_output )</span>
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :                 output &lt;&lt; setcolor( term_attr::BRIGHT, term_color::RED );</span>
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :             output &lt;&lt; &quot;error: in \&quot;&quot; &lt;&lt; test_phase_identifier() &lt;&lt; &quot;\&quot;: &quot;;</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     205 </span>            :         case BOOST_UTL_ET_FATAL_ERROR:
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :             print_prefix( output, entry_data.m_file_name, entry_data.m_line_num );</span>
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :             if( m_color_output )</span>
+<span class="lineNum">     208 </span><span class="lineNoCov">          0 :                 output &lt;&lt; setcolor( term_attr::UNDERLINE, term_color::RED );</span>
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 :             output &lt;&lt; &quot;fatal error: in \&quot;&quot; &lt;&lt; test_phase_identifier() &lt;&lt; &quot;\&quot;: &quot;;</span>
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     211 </span>            :     }
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : //____________________________________________________________________________//
+<a name="215"><span class="lineNum">     215 </span>            : </a>
+<span class="lineNum">     216 </span>            : void
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 : compiler_log_formatter::log_entry_value( std::ostream&amp; output, const_string value )</span>
+<span class="lineNum">     218 </span>            : {
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :     output &lt;&lt; value;</span>
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            : //____________________________________________________________________________//
+<a name="223"><span class="lineNum">     223 </span>            : </a>
+<span class="lineNum">     224 </span>            : void
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 : compiler_log_formatter::log_entry_value( std::ostream&amp; output, lazy_ostream const&amp; value )</span>
+<span class="lineNum">     226 </span>            : {
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :     output &lt;&lt; value;</span>
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            : //____________________________________________________________________________//
+<a name="231"><span class="lineNum">     231 </span>            : </a>
+<span class="lineNum">     232 </span>            : void
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 : compiler_log_formatter::log_entry_finish( std::ostream&amp; output )</span>
+<span class="lineNum">     234 </span>            : {
+<span class="lineNum">     235 </span><span class="lineNoCov">          0 :     if( m_color_output )</span>
+<span class="lineNum">     236 </span><span class="lineNoCov">          0 :         output &lt;&lt; utils::setcolor();</span>
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :     output &lt;&lt; std::endl;</span>
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            : //____________________________________________________________________________//
+<a name="243"><span class="lineNum">     243 </span>            : </a>
+<span class="lineNum">     244 </span>            : void
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 : compiler_log_formatter::print_prefix( std::ostream&amp; output, const_string file_name, std::size_t line_num )</span>
+<span class="lineNum">     246 </span>            : {
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 :     if( !file_name.empty() ) {</span>
+<span class="lineNum">     248 </span>            : #ifdef __APPLE_CC__
+<span class="lineNum">     249 </span>            :         // Xcode-compatible logging format, idea by Richard Dingwall at
+<span class="lineNum">     250 </span>            :         // &lt;http://richarddingwall.name/2008/06/01/using-the-boost-unit-test-framework-with-xcode-3/&gt;.
+<span class="lineNum">     251 </span>            :         output &lt;&lt; file_name &lt;&lt; ':' &lt;&lt; line_num &lt;&lt; &quot;: &quot;;
+<span class="lineNum">     252 </span>            : #else
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :         output &lt;&lt; file_name &lt;&lt; '(' &lt;&lt; line_num &lt;&lt; &quot;): &quot;;</span>
+<span class="lineNum">     254 </span>            : #endif
+<span class="lineNum">     255 </span>            :     }
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            : //____________________________________________________________________________//
+<a name="259"><span class="lineNum">     259 </span>            : </a>
+<span class="lineNum">     260 </span>            : void
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 : compiler_log_formatter::entry_context_start( std::ostream&amp; output, log_level l )</span>
+<span class="lineNum">     262 </span>            : {
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :     output &lt;&lt; (l == log_successful_tests ? &quot;\nAssertion&quot; : &quot;\nFailure&quot; ) &lt;&lt; &quot; occurred in a following context:&quot;;</span>
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            : //____________________________________________________________________________//
+<a name="267"><span class="lineNum">     267 </span>            : </a>
+<span class="lineNum">     268 </span>            : void
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 : compiler_log_formatter::entry_context_finish( std::ostream&amp; output )</span>
+<span class="lineNum">     270 </span>            : {
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :     output.flush();</span>
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            : //____________________________________________________________________________//
+<a name="275"><span class="lineNum">     275 </span>            : </a>
+<span class="lineNum">     276 </span>            : void
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 : compiler_log_formatter::log_entry_context( std::ostream&amp; output, const_string context_descr )</span>
+<span class="lineNum">     278 </span>            : {
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :     output &lt;&lt; &quot;\n    &quot; &lt;&lt; context_descr;</span>
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            : } // namespace output
+<span class="lineNum">     285 </span>            : } // namespace unit_test
+<span class="lineNum">     286 </span>            : } // namespace boost
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            : #endif // BOOST_TEST_COMPILER_LOG_FORMATTER_IPP_020105GER
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

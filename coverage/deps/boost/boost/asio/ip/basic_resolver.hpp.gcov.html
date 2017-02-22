@@ -1,0 +1,346 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/ip/basic_resolver.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/ip</a> - basic_resolver.hpp<span style="font-size: 80%;"> (source / <a href="basic_resolver.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // ip/basic_resolver.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_IP_BASIC_RESOLVER_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_IP_BASIC_RESOLVER_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/asio/basic_io_object.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/asio/detail/handler_type_requirements.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/asio/detail/throw_error.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/asio/error.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/asio/ip/basic_resolver_iterator.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/ip/basic_resolver_query.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/ip/resolver_service.hpp&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace boost {
+<span class="lineNum">      30 </span>            : namespace asio {
+<span class="lineNum">      31 </span>            : namespace ip {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : /// Provides endpoint resolution functionality.
+<span class="lineNum">      34 </span>            : /**
+<span class="lineNum">      35 </span>            :  * The basic_resolver class template provides the ability to resolve a query
+<span class="lineNum">      36 </span>            :  * to a list of endpoints.
+<span class="lineNum">      37 </span>            :  *
+<span class="lineNum">      38 </span>            :  * @par Thread Safety
+<span class="lineNum">      39 </span>            :  * @e Distinct @e objects: Safe.@n
+<span class="lineNum">      40 </span>            :  * @e Shared @e objects: Unsafe.
+<span class="lineNum">      41 </span>            :  */
+<span class="lineNum">      42 </span>            : template &lt;typename InternetProtocol,
+<span class="lineNum">      43 </span>            :     typename ResolverService = resolver_service&lt;InternetProtocol&gt; &gt;
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 : class basic_resolver</span>
+<span class="lineNum">      45 </span>            :   : public basic_io_object&lt;ResolverService&gt;
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span>            : public:
+<span class="lineNum">      48 </span>            :   /// The protocol type.
+<span class="lineNum">      49 </span>            :   typedef InternetProtocol protocol_type;
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            :   /// The endpoint type.
+<span class="lineNum">      52 </span>            :   typedef typename InternetProtocol::endpoint endpoint_type;
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            :   /// The query type.
+<span class="lineNum">      55 </span>            :   typedef basic_resolver_query&lt;InternetProtocol&gt; query;
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :   /// The iterator type.
+<span class="lineNum">      58 </span>            :   typedef basic_resolver_iterator&lt;InternetProtocol&gt; iterator;
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :   /// Constructor.
+<span class="lineNum">      61 </span>            :   /**
+<span class="lineNum">      62 </span>            :    * This constructor creates a basic_resolver.
+<span class="lineNum">      63 </span>            :    *
+<span class="lineNum">      64 </span>            :    * @param io_service The io_service object that the resolver will use to
+<span class="lineNum">      65 </span>            :    * dispatch handlers for any asynchronous operations performed on the timer.
+<span class="lineNum">      66 </span>            :    */
+<span class="lineNum">      67 </span>            :   explicit basic_resolver(boost::asio::io_service&amp; io_service)
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :     : basic_io_object&lt;ResolverService&gt;(io_service)</span>
+<span class="lineNum">      69 </span>            :   {
+<span class="lineNum">      70 </span>            :   }
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :   /// Cancel any asynchronous operations that are waiting on the resolver.
+<span class="lineNum">      73 </span>            :   /**
+<span class="lineNum">      74 </span>            :    * This function forces the completion of any pending asynchronous
+<span class="lineNum">      75 </span>            :    * operations on the host resolver. The handler for each cancelled operation
+<span class="lineNum">      76 </span>            :    * will be invoked with the boost::asio::error::operation_aborted error code.
+<span class="lineNum">      77 </span>            :    */
+<span class="lineNum">      78 </span>            :   void cancel()
+<span class="lineNum">      79 </span>            :   {
+<span class="lineNum">      80 </span>            :     return this-&gt;service.cancel(this-&gt;implementation);
+<span class="lineNum">      81 </span>            :   }
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :   /// Perform forward resolution of a query to a list of entries.
+<span class="lineNum">      84 </span>            :   /**
+<span class="lineNum">      85 </span>            :    * This function is used to resolve a query into a list of endpoint entries.
+<span class="lineNum">      86 </span>            :    *
+<span class="lineNum">      87 </span>            :    * @param q A query object that determines what endpoints will be returned.
+<span class="lineNum">      88 </span>            :    *
+<span class="lineNum">      89 </span>            :    * @returns A forward-only iterator that can be used to traverse the list
+<span class="lineNum">      90 </span>            :    * of endpoint entries.
+<span class="lineNum">      91 </span>            :    *
+<span class="lineNum">      92 </span>            :    * @throws boost::system::system_error Thrown on failure.
+<span class="lineNum">      93 </span>            :    *
+<span class="lineNum">      94 </span>            :    * @note A default constructed iterator represents the end of the list.
+<span class="lineNum">      95 </span>            :    *
+<span class="lineNum">      96 </span>            :    * A successful call to this function is guaranteed to return at least one
+<span class="lineNum">      97 </span>            :    * entry.
+<span class="lineNum">      98 </span>            :    */
+<span class="lineNum">      99 </span>            :   iterator resolve(const query&amp; q)
+<span class="lineNum">     100 </span>            :   {
+<span class="lineNum">     101 </span>            :     boost::system::error_code ec;
+<span class="lineNum">     102 </span>            :     iterator i = this-&gt;service.resolve(this-&gt;implementation, q, ec);
+<span class="lineNum">     103 </span>            :     boost::asio::detail::throw_error(ec, &quot;resolve&quot;);
+<span class="lineNum">     104 </span>            :     return i;
+<span class="lineNum">     105 </span>            :   }
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :   /// Perform forward resolution of a query to a list of entries.
+<span class="lineNum">     108 </span>            :   /**
+<span class="lineNum">     109 </span>            :    * This function is used to resolve a query into a list of endpoint entries.
+<span class="lineNum">     110 </span>            :    *
+<span class="lineNum">     111 </span>            :    * @param q A query object that determines what endpoints will be returned.
+<span class="lineNum">     112 </span>            :    *
+<span class="lineNum">     113 </span>            :    * @param ec Set to indicate what error occurred, if any.
+<span class="lineNum">     114 </span>            :    *
+<span class="lineNum">     115 </span>            :    * @returns A forward-only iterator that can be used to traverse the list
+<span class="lineNum">     116 </span>            :    * of endpoint entries. Returns a default constructed iterator if an error
+<span class="lineNum">     117 </span>            :    * occurs.
+<span class="lineNum">     118 </span>            :    *
+<span class="lineNum">     119 </span>            :    * @note A default constructed iterator represents the end of the list.
+<span class="lineNum">     120 </span>            :    *
+<span class="lineNum">     121 </span>            :    * A successful call to this function is guaranteed to return at least one
+<span class="lineNum">     122 </span>            :    * entry.
+<span class="lineNum">     123 </span>            :    */
+<span class="lineNum">     124 </span>            :   iterator resolve(const query&amp; q, boost::system::error_code&amp; ec)
+<span class="lineNum">     125 </span>            :   {
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :     return this-&gt;service.resolve(this-&gt;implementation, q, ec);</span>
+<span class="lineNum">     127 </span>            :   }
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            :   /// Asynchronously perform forward resolution of a query to a list of entries.
+<span class="lineNum">     130 </span>            :   /**
+<span class="lineNum">     131 </span>            :    * This function is used to asynchronously resolve a query into a list of
+<span class="lineNum">     132 </span>            :    * endpoint entries.
+<span class="lineNum">     133 </span>            :    *
+<span class="lineNum">     134 </span>            :    * @param q A query object that determines what endpoints will be returned.
+<span class="lineNum">     135 </span>            :    *
+<span class="lineNum">     136 </span>            :    * @param handler The handler to be called when the resolve operation
+<span class="lineNum">     137 </span>            :    * completes. Copies will be made of the handler as required. The function
+<span class="lineNum">     138 </span>            :    * signature of the handler must be:
+<span class="lineNum">     139 </span>            :    * @code void handler(
+<span class="lineNum">     140 </span>            :    *   const boost::system::error_code&amp; error, // Result of operation.
+<span class="lineNum">     141 </span>            :    *   resolver::iterator iterator             // Forward-only iterator that can
+<span class="lineNum">     142 </span>            :    *                                           // be used to traverse the list
+<span class="lineNum">     143 </span>            :    *                                           // of endpoint entries.
+<span class="lineNum">     144 </span>            :    * ); @endcode
+<span class="lineNum">     145 </span>            :    * Regardless of whether the asynchronous operation completes immediately or
+<span class="lineNum">     146 </span>            :    * not, the handler will not be invoked from within this function. Invocation
+<span class="lineNum">     147 </span>            :    * of the handler will be performed in a manner equivalent to using
+<span class="lineNum">     148 </span>            :    * boost::asio::io_service::post().
+<span class="lineNum">     149 </span>            :    *
+<span class="lineNum">     150 </span>            :    * @note A default constructed iterator represents the end of the list.
+<span class="lineNum">     151 </span>            :    *
+<span class="lineNum">     152 </span>            :    * A successful resolve operation is guaranteed to pass at least one entry to
+<span class="lineNum">     153 </span>            :    * the handler.
+<span class="lineNum">     154 </span>            :    */
+<span class="lineNum">     155 </span>            :   template &lt;typename ResolveHandler&gt;
+<span class="lineNum">     156 </span>            :   BOOST_ASIO_INITFN_RESULT_TYPE(ResolveHandler,
+<span class="lineNum">     157 </span>            :       void (boost::system::error_code, iterator))
+<span class="lineNum">     158 </span>            :   async_resolve(const query&amp; q,
+<span class="lineNum">     159 </span>            :       BOOST_ASIO_MOVE_ARG(ResolveHandler) handler)
+<span class="lineNum">     160 </span>            :   {
+<span class="lineNum">     161 </span>            :     // If you get an error on the following line it means that your handler does
+<span class="lineNum">     162 </span>            :     // not meet the documented type requirements for a ResolveHandler.
+<span class="lineNum">     163 </span>            :     BOOST_ASIO_RESOLVE_HANDLER_CHECK(
+<span class="lineNum">     164 </span>            :         ResolveHandler, handler, iterator) type_check;
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :     return this-&gt;service.async_resolve(this-&gt;implementation, q,
+<span class="lineNum">     167 </span>            :         BOOST_ASIO_MOVE_CAST(ResolveHandler)(handler));
+<span class="lineNum">     168 </span>            :   }
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :   /// Perform reverse resolution of an endpoint to a list of entries.
+<span class="lineNum">     171 </span>            :   /**
+<span class="lineNum">     172 </span>            :    * This function is used to resolve an endpoint into a list of endpoint
+<span class="lineNum">     173 </span>            :    * entries.
+<span class="lineNum">     174 </span>            :    *
+<span class="lineNum">     175 </span>            :    * @param e An endpoint object that determines what endpoints will be
+<span class="lineNum">     176 </span>            :    * returned.
+<span class="lineNum">     177 </span>            :    *
+<span class="lineNum">     178 </span>            :    * @returns A forward-only iterator that can be used to traverse the list
+<span class="lineNum">     179 </span>            :    * of endpoint entries.
+<span class="lineNum">     180 </span>            :    *
+<span class="lineNum">     181 </span>            :    * @throws boost::system::system_error Thrown on failure.
+<span class="lineNum">     182 </span>            :    *
+<span class="lineNum">     183 </span>            :    * @note A default constructed iterator represents the end of the list.
+<span class="lineNum">     184 </span>            :    *
+<span class="lineNum">     185 </span>            :    * A successful call to this function is guaranteed to return at least one
+<span class="lineNum">     186 </span>            :    * entry.
+<span class="lineNum">     187 </span>            :    */
+<span class="lineNum">     188 </span>            :   iterator resolve(const endpoint_type&amp; e)
+<span class="lineNum">     189 </span>            :   {
+<span class="lineNum">     190 </span>            :     boost::system::error_code ec;
+<span class="lineNum">     191 </span>            :     iterator i = this-&gt;service.resolve(this-&gt;implementation, e, ec);
+<span class="lineNum">     192 </span>            :     boost::asio::detail::throw_error(ec, &quot;resolve&quot;);
+<span class="lineNum">     193 </span>            :     return i;
+<span class="lineNum">     194 </span>            :   }
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            :   /// Perform reverse resolution of an endpoint to a list of entries.
+<span class="lineNum">     197 </span>            :   /**
+<span class="lineNum">     198 </span>            :    * This function is used to resolve an endpoint into a list of endpoint
+<span class="lineNum">     199 </span>            :    * entries.
+<span class="lineNum">     200 </span>            :    *
+<span class="lineNum">     201 </span>            :    * @param e An endpoint object that determines what endpoints will be
+<span class="lineNum">     202 </span>            :    * returned.
+<span class="lineNum">     203 </span>            :    *
+<span class="lineNum">     204 </span>            :    * @param ec Set to indicate what error occurred, if any.
+<span class="lineNum">     205 </span>            :    *
+<span class="lineNum">     206 </span>            :    * @returns A forward-only iterator that can be used to traverse the list
+<span class="lineNum">     207 </span>            :    * of endpoint entries. Returns a default constructed iterator if an error
+<span class="lineNum">     208 </span>            :    * occurs.
+<span class="lineNum">     209 </span>            :    *
+<span class="lineNum">     210 </span>            :    * @note A default constructed iterator represents the end of the list.
+<span class="lineNum">     211 </span>            :    *
+<span class="lineNum">     212 </span>            :    * A successful call to this function is guaranteed to return at least one
+<span class="lineNum">     213 </span>            :    * entry.
+<span class="lineNum">     214 </span>            :    */
+<span class="lineNum">     215 </span>            :   iterator resolve(const endpoint_type&amp; e, boost::system::error_code&amp; ec)
+<span class="lineNum">     216 </span>            :   {
+<span class="lineNum">     217 </span>            :     return this-&gt;service.resolve(this-&gt;implementation, e, ec);
+<span class="lineNum">     218 </span>            :   }
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            :   /// Asynchronously perform reverse resolution of an endpoint to a list of
+<span class="lineNum">     221 </span>            :   /// entries.
+<span class="lineNum">     222 </span>            :   /**
+<span class="lineNum">     223 </span>            :    * This function is used to asynchronously resolve an endpoint into a list of
+<span class="lineNum">     224 </span>            :    * endpoint entries.
+<span class="lineNum">     225 </span>            :    *
+<span class="lineNum">     226 </span>            :    * @param e An endpoint object that determines what endpoints will be
+<span class="lineNum">     227 </span>            :    * returned.
+<span class="lineNum">     228 </span>            :    *
+<span class="lineNum">     229 </span>            :    * @param handler The handler to be called when the resolve operation
+<span class="lineNum">     230 </span>            :    * completes. Copies will be made of the handler as required. The function
+<span class="lineNum">     231 </span>            :    * signature of the handler must be:
+<span class="lineNum">     232 </span>            :    * @code void handler(
+<span class="lineNum">     233 </span>            :    *   const boost::system::error_code&amp; error, // Result of operation.
+<span class="lineNum">     234 </span>            :    *   resolver::iterator iterator             // Forward-only iterator that can
+<span class="lineNum">     235 </span>            :    *                                           // be used to traverse the list
+<span class="lineNum">     236 </span>            :    *                                           // of endpoint entries.
+<span class="lineNum">     237 </span>            :    * ); @endcode
+<span class="lineNum">     238 </span>            :    * Regardless of whether the asynchronous operation completes immediately or
+<span class="lineNum">     239 </span>            :    * not, the handler will not be invoked from within this function. Invocation
+<span class="lineNum">     240 </span>            :    * of the handler will be performed in a manner equivalent to using
+<span class="lineNum">     241 </span>            :    * boost::asio::io_service::post().
+<span class="lineNum">     242 </span>            :    *
+<span class="lineNum">     243 </span>            :    * @note A default constructed iterator represents the end of the list.
+<span class="lineNum">     244 </span>            :    *
+<span class="lineNum">     245 </span>            :    * A successful resolve operation is guaranteed to pass at least one entry to
+<span class="lineNum">     246 </span>            :    * the handler.
+<span class="lineNum">     247 </span>            :    */
+<span class="lineNum">     248 </span>            :   template &lt;typename ResolveHandler&gt;
+<span class="lineNum">     249 </span>            :   BOOST_ASIO_INITFN_RESULT_TYPE(ResolveHandler,
+<span class="lineNum">     250 </span>            :       void (boost::system::error_code, iterator))
+<span class="lineNum">     251 </span>            :   async_resolve(const endpoint_type&amp; e,
+<span class="lineNum">     252 </span>            :       BOOST_ASIO_MOVE_ARG(ResolveHandler) handler)
+<span class="lineNum">     253 </span>            :   {
+<span class="lineNum">     254 </span>            :     // If you get an error on the following line it means that your handler does
+<span class="lineNum">     255 </span>            :     // not meet the documented type requirements for a ResolveHandler.
+<span class="lineNum">     256 </span>            :     BOOST_ASIO_RESOLVE_HANDLER_CHECK(
+<span class="lineNum">     257 </span>            :         ResolveHandler, handler, iterator) type_check;
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            :     return this-&gt;service.async_resolve(this-&gt;implementation, e,
+<span class="lineNum">     260 </span>            :         BOOST_ASIO_MOVE_CAST(ResolveHandler)(handler));
+<span class="lineNum">     261 </span>            :   }
+<span class="lineNum">     262 </span>            : };
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            : } // namespace ip
+<span class="lineNum">     265 </span>            : } // namespace asio
+<span class="lineNum">     266 </span>            : } // namespace boost
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span>            : #endif // BOOST_ASIO_IP_BASIC_RESOLVER_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

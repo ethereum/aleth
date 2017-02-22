@@ -1,0 +1,1265 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/function/function_template.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/function</a> - function_template.hpp<span style="font-size: 80%;"> (source / <a href="function_template.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">80</td>
+            <td class="headerCovTableEntry">94</td>
+            <td class="headerCovTableEntryMed">85.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">46</td>
+            <td class="headerCovTableEntry">143</td>
+            <td class="headerCovTableEntryLo">32.2 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Boost.Function library</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : //  Copyright Douglas Gregor 2001-2006
+<span class="lineNum">       4 </span>            : //  Copyright Emil Dotchevski 2007
+<span class="lineNum">       5 </span>            : //  Use, modification and distribution is subject to the Boost Software License, Version 1.0.
+<span class="lineNum">       6 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       7 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : // For more information, see http://www.boost.org
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // Note: this header is a header template and must NOT have multiple-inclusion
+<span class="lineNum">      12 </span>            : // protection.
+<span class="lineNum">      13 </span>            : #include &lt;boost/function/detail/prologue.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/detail/no_exceptions_support.hpp&gt;
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #if defined(BOOST_MSVC)
+<span class="lineNum">      17 </span>            : #   pragma warning( push )
+<span class="lineNum">      18 </span>            : #   pragma warning( disable : 4127 ) // &quot;conditional expression is constant&quot;
+<span class="lineNum">      19 </span>            : #endif
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : #define BOOST_FUNCTION_TEMPLATE_PARMS BOOST_PP_ENUM_PARAMS(BOOST_FUNCTION_NUM_ARGS, typename T)
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #define BOOST_FUNCTION_TEMPLATE_ARGS BOOST_PP_ENUM_PARAMS(BOOST_FUNCTION_NUM_ARGS, T)
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #define BOOST_FUNCTION_PARM(J,I,D) BOOST_PP_CAT(T,I) BOOST_PP_CAT(a,I)
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #define BOOST_FUNCTION_PARMS BOOST_PP_ENUM(BOOST_FUNCTION_NUM_ARGS,BOOST_FUNCTION_PARM,BOOST_PP_EMPTY)
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">      30 </span>            : #   define BOOST_FUNCTION_ARGS BOOST_PP_ENUM_PARAMS(BOOST_FUNCTION_NUM_ARGS, a)
+<span class="lineNum">      31 </span>            : #else
+<span class="lineNum">      32 </span>            : #   include &lt;boost/move/utility_core.hpp&gt;
+<span class="lineNum">      33 </span>            : #   define BOOST_FUNCTION_ARG(J,I,D) ::boost::forward&lt; BOOST_PP_CAT(T,I) &gt;(BOOST_PP_CAT(a,I))
+<span class="lineNum">      34 </span>            : #   define BOOST_FUNCTION_ARGS BOOST_PP_ENUM(BOOST_FUNCTION_NUM_ARGS,BOOST_FUNCTION_ARG,BOOST_PP_EMPTY)
+<span class="lineNum">      35 </span>            : #endif
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : #define BOOST_FUNCTION_ARG_TYPE(J,I,D) \
+<span class="lineNum">      38 </span>            :   typedef BOOST_PP_CAT(T,I) BOOST_PP_CAT(BOOST_PP_CAT(arg, BOOST_PP_INC(I)),_type);
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : #define BOOST_FUNCTION_ARG_TYPES BOOST_PP_REPEAT(BOOST_FUNCTION_NUM_ARGS,BOOST_FUNCTION_ARG_TYPE,BOOST_PP_EMPTY)
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : // Comma if nonzero number of arguments
+<span class="lineNum">      43 </span>            : #if BOOST_FUNCTION_NUM_ARGS == 0
+<span class="lineNum">      44 </span>            : #  define BOOST_FUNCTION_COMMA
+<span class="lineNum">      45 </span>            : #else
+<span class="lineNum">      46 </span>            : #  define BOOST_FUNCTION_COMMA ,
+<span class="lineNum">      47 </span>            : #endif // BOOST_FUNCTION_NUM_ARGS &gt; 0
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : // Class names used in this version of the code
+<span class="lineNum">      50 </span>            : #define BOOST_FUNCTION_FUNCTION BOOST_JOIN(function,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      51 </span>            : #define BOOST_FUNCTION_FUNCTION_INVOKER \
+<span class="lineNum">      52 </span>            :   BOOST_JOIN(function_invoker,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      53 </span>            : #define BOOST_FUNCTION_VOID_FUNCTION_INVOKER \
+<span class="lineNum">      54 </span>            :   BOOST_JOIN(void_function_invoker,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      55 </span>            : #define BOOST_FUNCTION_FUNCTION_OBJ_INVOKER \
+<span class="lineNum">      56 </span>            :   BOOST_JOIN(function_obj_invoker,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      57 </span>            : #define BOOST_FUNCTION_VOID_FUNCTION_OBJ_INVOKER \
+<span class="lineNum">      58 </span>            :   BOOST_JOIN(void_function_obj_invoker,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      59 </span>            : #define BOOST_FUNCTION_FUNCTION_REF_INVOKER \
+<span class="lineNum">      60 </span>            :   BOOST_JOIN(function_ref_invoker,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      61 </span>            : #define BOOST_FUNCTION_VOID_FUNCTION_REF_INVOKER \
+<span class="lineNum">      62 </span>            :   BOOST_JOIN(void_function_ref_invoker,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      63 </span>            : #define BOOST_FUNCTION_MEMBER_INVOKER \
+<span class="lineNum">      64 </span>            :   BOOST_JOIN(function_mem_invoker,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      65 </span>            : #define BOOST_FUNCTION_VOID_MEMBER_INVOKER \
+<span class="lineNum">      66 </span>            :   BOOST_JOIN(function_void_mem_invoker,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      67 </span>            : #define BOOST_FUNCTION_GET_FUNCTION_INVOKER \
+<span class="lineNum">      68 </span>            :   BOOST_JOIN(get_function_invoker,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      69 </span>            : #define BOOST_FUNCTION_GET_FUNCTION_OBJ_INVOKER \
+<span class="lineNum">      70 </span>            :   BOOST_JOIN(get_function_obj_invoker,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      71 </span>            : #define BOOST_FUNCTION_GET_FUNCTION_REF_INVOKER \
+<span class="lineNum">      72 </span>            :   BOOST_JOIN(get_function_ref_invoker,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      73 </span>            : #define BOOST_FUNCTION_GET_MEMBER_INVOKER \
+<span class="lineNum">      74 </span>            :   BOOST_JOIN(get_member_invoker,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      75 </span>            : #define BOOST_FUNCTION_GET_INVOKER \
+<span class="lineNum">      76 </span>            :   BOOST_JOIN(get_invoker,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      77 </span>            : #define BOOST_FUNCTION_VTABLE BOOST_JOIN(basic_vtable,BOOST_FUNCTION_NUM_ARGS)
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : #ifndef BOOST_NO_VOID_RETURNS
+<span class="lineNum">      80 </span>            : #  define BOOST_FUNCTION_VOID_RETURN_TYPE void
+<span class="lineNum">      81 </span>            : #  define BOOST_FUNCTION_RETURN(X) X
+<span class="lineNum">      82 </span>            : #else
+<span class="lineNum">      83 </span>            : #  define BOOST_FUNCTION_VOID_RETURN_TYPE boost::detail::function::unusable
+<span class="lineNum">      84 </span>            : #  define BOOST_FUNCTION_RETURN(X) X; return BOOST_FUNCTION_VOID_RETURN_TYPE ()
+<span class="lineNum">      85 </span>            : #endif
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : namespace boost {
+<span class="lineNum">      88 </span>            :   namespace detail {
+<span class="lineNum">      89 </span>            :     namespace function {
+<span class="lineNum">      90 </span>            :       template&lt;
+<span class="lineNum">      91 </span>            :         typename FunctionPtr,
+<span class="lineNum">      92 </span>            :         typename R BOOST_FUNCTION_COMMA
+<span class="lineNum">      93 </span>            :         BOOST_FUNCTION_TEMPLATE_PARMS
+<span class="lineNum">      94 </span>            :         &gt;
+<span class="lineNum">      95 </span>            :       struct BOOST_FUNCTION_FUNCTION_INVOKER
+<span class="lineNum">      96 </span>            :       {
+<span class="lineNum">      97 </span>            :         static R invoke(function_buffer&amp; function_ptr BOOST_FUNCTION_COMMA
+<span class="lineNum">      98 </span>            :                         BOOST_FUNCTION_PARMS)
+<span class="lineNum">      99 </span>            :         {
+<span class="lineNum">     100 </span>            :           FunctionPtr f = reinterpret_cast&lt;FunctionPtr&gt;(function_ptr.members.func_ptr);
+<span class="lineNum">     101 </span>            :           return f(BOOST_FUNCTION_ARGS);
+<span class="lineNum">     102 </span>            :         }
+<span class="lineNum">     103 </span>            :       };
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            :       template&lt;
+<span class="lineNum">     106 </span>            :         typename FunctionPtr,
+<span class="lineNum">     107 </span>            :         typename R BOOST_FUNCTION_COMMA
+<span class="lineNum">     108 </span>            :         BOOST_FUNCTION_TEMPLATE_PARMS
+<span class="lineNum">     109 </span>            :         &gt;
+<span class="lineNum">     110 </span>            :       struct BOOST_FUNCTION_VOID_FUNCTION_INVOKER
+<a name="111"><span class="lineNum">     111 </span>            :       {</a>
+<span class="lineNum">     112 </span>            :         static BOOST_FUNCTION_VOID_RETURN_TYPE
+<span class="lineNum">     113 </span><span class="lineCov">        312 :         invoke(function_buffer&amp; function_ptr BOOST_FUNCTION_COMMA</span>
+<span class="lineNum">     114 </span>            :                BOOST_FUNCTION_PARMS)
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            :         {
+<span class="lineNum">     117 </span><span class="lineCov">        312 :           FunctionPtr f = reinterpret_cast&lt;FunctionPtr&gt;(function_ptr.members.func_ptr);</span>
+<span class="lineNum">     118 </span><span class="lineCov">        312 :           BOOST_FUNCTION_RETURN(f(BOOST_FUNCTION_ARGS));</span>
+<span class="lineNum">     119 </span><span class="lineCov">        312 :         }</span>
+<span class="lineNum">     120 </span>            :       };
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :       template&lt;
+<span class="lineNum">     123 </span>            :         typename FunctionObj,
+<span class="lineNum">     124 </span>            :         typename R BOOST_FUNCTION_COMMA
+<span class="lineNum">     125 </span>            :         BOOST_FUNCTION_TEMPLATE_PARMS
+<span class="lineNum">     126 </span>            :       &gt;
+<a name="127"><span class="lineNum">     127 </span>            :       struct BOOST_FUNCTION_FUNCTION_OBJ_INVOKER</a>
+<span class="lineNum">     128 </span>            :       {
+<span class="lineNum">     129 </span><span class="lineCov">        319 :         static R invoke(function_buffer&amp; function_obj_ptr BOOST_FUNCTION_COMMA</span>
+<span class="lineNum">     130 </span>            :                         BOOST_FUNCTION_PARMS)
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            :         {
+<span class="lineNum">     133 </span>            :           FunctionObj* f;
+<span class="lineNum">     134 </span>            :           if (function_allows_small_object_optimization&lt;FunctionObj&gt;::value)
+<span class="lineNum">     135 </span><span class="lineCov">        315 :             f = reinterpret_cast&lt;FunctionObj*&gt;(function_obj_ptr.data);</span>
+<span class="lineNum">     136 </span>            :           else
+<span class="lineNum">     137 </span><span class="lineCov">          4 :             f = reinterpret_cast&lt;FunctionObj*&gt;(function_obj_ptr.members.obj_ptr);</span>
+<span class="lineNum">     138 </span><span class="lineCov">        319 :           return (*f)(BOOST_FUNCTION_ARGS);</span>
+<span class="lineNum">     139 </span>            :         }
+<span class="lineNum">     140 </span>            :       };
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            :       template&lt;
+<span class="lineNum">     143 </span>            :         typename FunctionObj,
+<span class="lineNum">     144 </span>            :         typename R BOOST_FUNCTION_COMMA
+<span class="lineNum">     145 </span>            :         BOOST_FUNCTION_TEMPLATE_PARMS
+<span class="lineNum">     146 </span>            :       &gt;
+<span class="lineNum">     147 </span>            :       struct BOOST_FUNCTION_VOID_FUNCTION_OBJ_INVOKER
+<a name="148"><span class="lineNum">     148 </span>            :       {</a>
+<span class="lineNum">     149 </span>            :         static BOOST_FUNCTION_VOID_RETURN_TYPE
+<span class="lineNum">     150 </span><span class="lineCov">    3791103 :         invoke(function_buffer&amp; function_obj_ptr BOOST_FUNCTION_COMMA</span>
+<span class="lineNum">     151 </span>            :                BOOST_FUNCTION_PARMS)
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :         {
+<span class="lineNum">     154 </span>            :           FunctionObj* f;
+<span class="lineNum">     155 </span>            :           if (function_allows_small_object_optimization&lt;FunctionObj&gt;::value)
+<span class="lineNum">     156 </span><span class="lineCov">    3791101 :             f = reinterpret_cast&lt;FunctionObj*&gt;(function_obj_ptr.data);</span>
+<span class="lineNum">     157 </span>            :           else
+<span class="lineNum">     158 </span><span class="lineCov">          2 :             f = reinterpret_cast&lt;FunctionObj*&gt;(function_obj_ptr.members.obj_ptr);</span>
+<span class="lineNum">     159 </span><span class="lineCov">    7582203 :           BOOST_FUNCTION_RETURN((*f)(BOOST_FUNCTION_ARGS));</span>
+<span class="lineNum">     160 </span><span class="lineCov">    3791103 :         }</span>
+<span class="lineNum">     161 </span>            :       };
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            :       template&lt;
+<span class="lineNum">     164 </span>            :         typename FunctionObj,
+<span class="lineNum">     165 </span>            :         typename R BOOST_FUNCTION_COMMA
+<span class="lineNum">     166 </span>            :         BOOST_FUNCTION_TEMPLATE_PARMS
+<span class="lineNum">     167 </span>            :       &gt;
+<span class="lineNum">     168 </span>            :       struct BOOST_FUNCTION_FUNCTION_REF_INVOKER
+<span class="lineNum">     169 </span>            :       {
+<span class="lineNum">     170 </span>            :         static R invoke(function_buffer&amp; function_obj_ptr BOOST_FUNCTION_COMMA
+<span class="lineNum">     171 </span>            :                         BOOST_FUNCTION_PARMS)
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :         {
+<span class="lineNum">     174 </span>            :           FunctionObj* f =
+<span class="lineNum">     175 </span>            :             reinterpret_cast&lt;FunctionObj*&gt;(function_obj_ptr.members.obj_ptr);
+<span class="lineNum">     176 </span>            :           return (*f)(BOOST_FUNCTION_ARGS);
+<span class="lineNum">     177 </span>            :         }
+<span class="lineNum">     178 </span>            :       };
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            :       template&lt;
+<span class="lineNum">     181 </span>            :         typename FunctionObj,
+<span class="lineNum">     182 </span>            :         typename R BOOST_FUNCTION_COMMA
+<span class="lineNum">     183 </span>            :         BOOST_FUNCTION_TEMPLATE_PARMS
+<span class="lineNum">     184 </span>            :       &gt;
+<span class="lineNum">     185 </span>            :       struct BOOST_FUNCTION_VOID_FUNCTION_REF_INVOKER
+<span class="lineNum">     186 </span>            :       {
+<span class="lineNum">     187 </span>            :         static BOOST_FUNCTION_VOID_RETURN_TYPE
+<span class="lineNum">     188 </span>            :         invoke(function_buffer&amp; function_obj_ptr BOOST_FUNCTION_COMMA
+<span class="lineNum">     189 </span>            :                BOOST_FUNCTION_PARMS)
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            :         {
+<span class="lineNum">     192 </span>            :           FunctionObj* f =
+<span class="lineNum">     193 </span>            :             reinterpret_cast&lt;FunctionObj*&gt;(function_obj_ptr.members.obj_ptr);
+<span class="lineNum">     194 </span>            :           BOOST_FUNCTION_RETURN((*f)(BOOST_FUNCTION_ARGS));
+<span class="lineNum">     195 </span>            :         }
+<span class="lineNum">     196 </span>            :       };
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            : #if BOOST_FUNCTION_NUM_ARGS &gt; 0
+<span class="lineNum">     199 </span>            :       /* Handle invocation of member pointers. */
+<span class="lineNum">     200 </span>            :       template&lt;
+<span class="lineNum">     201 </span>            :         typename MemberPtr,
+<span class="lineNum">     202 </span>            :         typename R BOOST_FUNCTION_COMMA
+<span class="lineNum">     203 </span>            :         BOOST_FUNCTION_TEMPLATE_PARMS
+<span class="lineNum">     204 </span>            :       &gt;
+<span class="lineNum">     205 </span>            :       struct BOOST_FUNCTION_MEMBER_INVOKER
+<span class="lineNum">     206 </span>            :       {
+<span class="lineNum">     207 </span>            :         static R invoke(function_buffer&amp; function_obj_ptr BOOST_FUNCTION_COMMA
+<span class="lineNum">     208 </span>            :                         BOOST_FUNCTION_PARMS)
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :         {
+<span class="lineNum">     211 </span>            :           MemberPtr* f =
+<span class="lineNum">     212 </span>            :             reinterpret_cast&lt;MemberPtr*&gt;(function_obj_ptr.data);
+<span class="lineNum">     213 </span>            :           return boost::mem_fn(*f)(BOOST_FUNCTION_ARGS);
+<span class="lineNum">     214 </span>            :         }
+<span class="lineNum">     215 </span>            :       };
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :       template&lt;
+<span class="lineNum">     218 </span>            :         typename MemberPtr,
+<span class="lineNum">     219 </span>            :         typename R BOOST_FUNCTION_COMMA
+<span class="lineNum">     220 </span>            :         BOOST_FUNCTION_TEMPLATE_PARMS
+<span class="lineNum">     221 </span>            :       &gt;
+<span class="lineNum">     222 </span>            :       struct BOOST_FUNCTION_VOID_MEMBER_INVOKER
+<span class="lineNum">     223 </span>            :       {
+<span class="lineNum">     224 </span>            :         static BOOST_FUNCTION_VOID_RETURN_TYPE
+<span class="lineNum">     225 </span>            :         invoke(function_buffer&amp; function_obj_ptr BOOST_FUNCTION_COMMA
+<span class="lineNum">     226 </span>            :                BOOST_FUNCTION_PARMS)
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :         {
+<span class="lineNum">     229 </span>            :           MemberPtr* f =
+<span class="lineNum">     230 </span>            :             reinterpret_cast&lt;MemberPtr*&gt;(function_obj_ptr.data);
+<span class="lineNum">     231 </span>            :           BOOST_FUNCTION_RETURN(boost::mem_fn(*f)(BOOST_FUNCTION_ARGS));
+<span class="lineNum">     232 </span>            :         }
+<span class="lineNum">     233 </span>            :       };
+<span class="lineNum">     234 </span>            : #endif
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            :       template&lt;
+<span class="lineNum">     237 </span>            :         typename FunctionPtr,
+<span class="lineNum">     238 </span>            :         typename R BOOST_FUNCTION_COMMA
+<span class="lineNum">     239 </span>            :         BOOST_FUNCTION_TEMPLATE_PARMS
+<span class="lineNum">     240 </span>            :       &gt;
+<span class="lineNum">     241 </span>            :       struct BOOST_FUNCTION_GET_FUNCTION_INVOKER
+<span class="lineNum">     242 </span>            :       {
+<span class="lineNum">     243 </span>            :         typedef typename mpl::if_c&lt;(is_void&lt;R&gt;::value),
+<span class="lineNum">     244 </span>            :                             BOOST_FUNCTION_VOID_FUNCTION_INVOKER&lt;
+<span class="lineNum">     245 </span>            :                             FunctionPtr,
+<span class="lineNum">     246 </span>            :                             R BOOST_FUNCTION_COMMA
+<span class="lineNum">     247 </span>            :                             BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     248 </span>            :                           &gt;,
+<span class="lineNum">     249 </span>            :                           BOOST_FUNCTION_FUNCTION_INVOKER&lt;
+<span class="lineNum">     250 </span>            :                             FunctionPtr,
+<span class="lineNum">     251 </span>            :                             R BOOST_FUNCTION_COMMA
+<span class="lineNum">     252 </span>            :                             BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     253 </span>            :                           &gt;
+<span class="lineNum">     254 </span>            :                        &gt;::type type;
+<span class="lineNum">     255 </span>            :       };
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            :       template&lt;
+<span class="lineNum">     258 </span>            :         typename FunctionObj,
+<span class="lineNum">     259 </span>            :         typename R BOOST_FUNCTION_COMMA
+<span class="lineNum">     260 </span>            :         BOOST_FUNCTION_TEMPLATE_PARMS
+<span class="lineNum">     261 </span>            :        &gt;
+<span class="lineNum">     262 </span>            :       struct BOOST_FUNCTION_GET_FUNCTION_OBJ_INVOKER
+<span class="lineNum">     263 </span>            :       {
+<span class="lineNum">     264 </span>            :         typedef typename mpl::if_c&lt;(is_void&lt;R&gt;::value),
+<span class="lineNum">     265 </span>            :                             BOOST_FUNCTION_VOID_FUNCTION_OBJ_INVOKER&lt;
+<span class="lineNum">     266 </span>            :                             FunctionObj,
+<span class="lineNum">     267 </span>            :                             R BOOST_FUNCTION_COMMA
+<span class="lineNum">     268 </span>            :                             BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     269 </span>            :                           &gt;,
+<span class="lineNum">     270 </span>            :                           BOOST_FUNCTION_FUNCTION_OBJ_INVOKER&lt;
+<span class="lineNum">     271 </span>            :                             FunctionObj,
+<span class="lineNum">     272 </span>            :                             R BOOST_FUNCTION_COMMA
+<span class="lineNum">     273 </span>            :                             BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     274 </span>            :                           &gt;
+<span class="lineNum">     275 </span>            :                        &gt;::type type;
+<span class="lineNum">     276 </span>            :       };
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span>            :       template&lt;
+<span class="lineNum">     279 </span>            :         typename FunctionObj,
+<span class="lineNum">     280 </span>            :         typename R BOOST_FUNCTION_COMMA
+<span class="lineNum">     281 </span>            :         BOOST_FUNCTION_TEMPLATE_PARMS
+<span class="lineNum">     282 </span>            :        &gt;
+<span class="lineNum">     283 </span>            :       struct BOOST_FUNCTION_GET_FUNCTION_REF_INVOKER
+<span class="lineNum">     284 </span>            :       {
+<span class="lineNum">     285 </span>            :         typedef typename mpl::if_c&lt;(is_void&lt;R&gt;::value),
+<span class="lineNum">     286 </span>            :                             BOOST_FUNCTION_VOID_FUNCTION_REF_INVOKER&lt;
+<span class="lineNum">     287 </span>            :                             FunctionObj,
+<span class="lineNum">     288 </span>            :                             R BOOST_FUNCTION_COMMA
+<span class="lineNum">     289 </span>            :                             BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     290 </span>            :                           &gt;,
+<span class="lineNum">     291 </span>            :                           BOOST_FUNCTION_FUNCTION_REF_INVOKER&lt;
+<span class="lineNum">     292 </span>            :                             FunctionObj,
+<span class="lineNum">     293 </span>            :                             R BOOST_FUNCTION_COMMA
+<span class="lineNum">     294 </span>            :                             BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     295 </span>            :                           &gt;
+<span class="lineNum">     296 </span>            :                        &gt;::type type;
+<span class="lineNum">     297 </span>            :       };
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span>            : #if BOOST_FUNCTION_NUM_ARGS &gt; 0
+<span class="lineNum">     300 </span>            :       /* Retrieve the appropriate invoker for a member pointer.  */
+<span class="lineNum">     301 </span>            :       template&lt;
+<span class="lineNum">     302 </span>            :         typename MemberPtr,
+<span class="lineNum">     303 </span>            :         typename R BOOST_FUNCTION_COMMA
+<span class="lineNum">     304 </span>            :         BOOST_FUNCTION_TEMPLATE_PARMS
+<span class="lineNum">     305 </span>            :        &gt;
+<span class="lineNum">     306 </span>            :       struct BOOST_FUNCTION_GET_MEMBER_INVOKER
+<span class="lineNum">     307 </span>            :       {
+<span class="lineNum">     308 </span>            :         typedef typename mpl::if_c&lt;(is_void&lt;R&gt;::value),
+<span class="lineNum">     309 </span>            :                             BOOST_FUNCTION_VOID_MEMBER_INVOKER&lt;
+<span class="lineNum">     310 </span>            :                             MemberPtr,
+<span class="lineNum">     311 </span>            :                             R BOOST_FUNCTION_COMMA
+<span class="lineNum">     312 </span>            :                             BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     313 </span>            :                           &gt;,
+<span class="lineNum">     314 </span>            :                           BOOST_FUNCTION_MEMBER_INVOKER&lt;
+<span class="lineNum">     315 </span>            :                             MemberPtr,
+<span class="lineNum">     316 </span>            :                             R BOOST_FUNCTION_COMMA
+<span class="lineNum">     317 </span>            :                             BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     318 </span>            :                           &gt;
+<span class="lineNum">     319 </span>            :                        &gt;::type type;
+<span class="lineNum">     320 </span>            :       };
+<span class="lineNum">     321 </span>            : #endif
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span>            :       /* Given the tag returned by get_function_tag, retrieve the
+<span class="lineNum">     324 </span>            :          actual invoker that will be used for the given function
+<span class="lineNum">     325 </span>            :          object.
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span>            :          Each specialization contains an &quot;apply&quot; nested class template
+<span class="lineNum">     328 </span>            :          that accepts the function object, return type, function
+<span class="lineNum">     329 </span>            :          argument types, and allocator. The resulting &quot;apply&quot; class
+<span class="lineNum">     330 </span>            :          contains two typedefs, &quot;invoker_type&quot; and &quot;manager_type&quot;,
+<span class="lineNum">     331 </span>            :          which correspond to the invoker and manager types. */
+<span class="lineNum">     332 </span>            :       template&lt;typename Tag&gt;
+<span class="lineNum">     333 </span>            :       struct BOOST_FUNCTION_GET_INVOKER { };
+<span class="lineNum">     334 </span>            : 
+<span class="lineNum">     335 </span>            :       /* Retrieve the invoker for a function pointer. */
+<span class="lineNum">     336 </span>            :       template&lt;&gt;
+<span class="lineNum">     337 </span>            :       struct BOOST_FUNCTION_GET_INVOKER&lt;function_ptr_tag&gt;
+<span class="lineNum">     338 </span>            :       {
+<span class="lineNum">     339 </span>            :         template&lt;typename FunctionPtr,
+<span class="lineNum">     340 </span>            :                  typename R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_PARMS&gt;
+<span class="lineNum">     341 </span>            :         struct apply
+<span class="lineNum">     342 </span>            :         {
+<span class="lineNum">     343 </span>            :           typedef typename BOOST_FUNCTION_GET_FUNCTION_INVOKER&lt;
+<span class="lineNum">     344 </span>            :                              FunctionPtr,
+<span class="lineNum">     345 </span>            :                              R BOOST_FUNCTION_COMMA
+<span class="lineNum">     346 </span>            :                              BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     347 </span>            :                            &gt;::type
+<span class="lineNum">     348 </span>            :             invoker_type;
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span>            :           typedef functor_manager&lt;FunctionPtr&gt; manager_type;
+<span class="lineNum">     351 </span>            :         };
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span>            :         template&lt;typename FunctionPtr,
+<span class="lineNum">     354 </span>            :                  typename R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_PARMS,
+<span class="lineNum">     355 </span>            :                  typename Allocator&gt;
+<span class="lineNum">     356 </span>            :         struct apply_a
+<span class="lineNum">     357 </span>            :         {
+<span class="lineNum">     358 </span>            :           typedef typename BOOST_FUNCTION_GET_FUNCTION_INVOKER&lt;
+<span class="lineNum">     359 </span>            :                              FunctionPtr,
+<span class="lineNum">     360 </span>            :                              R BOOST_FUNCTION_COMMA
+<span class="lineNum">     361 </span>            :                              BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     362 </span>            :                            &gt;::type
+<span class="lineNum">     363 </span>            :             invoker_type;
+<span class="lineNum">     364 </span>            : 
+<span class="lineNum">     365 </span>            :           typedef functor_manager&lt;FunctionPtr&gt; manager_type;
+<span class="lineNum">     366 </span>            :         };
+<span class="lineNum">     367 </span>            :       };
+<span class="lineNum">     368 </span>            : 
+<span class="lineNum">     369 </span>            : #if BOOST_FUNCTION_NUM_ARGS &gt; 0
+<span class="lineNum">     370 </span>            :       /* Retrieve the invoker for a member pointer. */
+<span class="lineNum">     371 </span>            :       template&lt;&gt;
+<span class="lineNum">     372 </span>            :       struct BOOST_FUNCTION_GET_INVOKER&lt;member_ptr_tag&gt;
+<span class="lineNum">     373 </span>            :       {
+<span class="lineNum">     374 </span>            :         template&lt;typename MemberPtr,
+<span class="lineNum">     375 </span>            :                  typename R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_PARMS&gt;
+<span class="lineNum">     376 </span>            :         struct apply
+<span class="lineNum">     377 </span>            :         {
+<span class="lineNum">     378 </span>            :           typedef typename BOOST_FUNCTION_GET_MEMBER_INVOKER&lt;
+<span class="lineNum">     379 </span>            :                              MemberPtr,
+<span class="lineNum">     380 </span>            :                              R BOOST_FUNCTION_COMMA
+<span class="lineNum">     381 </span>            :                              BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     382 </span>            :                            &gt;::type
+<span class="lineNum">     383 </span>            :             invoker_type;
+<span class="lineNum">     384 </span>            : 
+<span class="lineNum">     385 </span>            :           typedef functor_manager&lt;MemberPtr&gt; manager_type;
+<span class="lineNum">     386 </span>            :         };
+<span class="lineNum">     387 </span>            : 
+<span class="lineNum">     388 </span>            :         template&lt;typename MemberPtr,
+<span class="lineNum">     389 </span>            :                  typename R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_PARMS,
+<span class="lineNum">     390 </span>            :                  typename Allocator&gt;
+<span class="lineNum">     391 </span>            :         struct apply_a
+<span class="lineNum">     392 </span>            :         {
+<span class="lineNum">     393 </span>            :           typedef typename BOOST_FUNCTION_GET_MEMBER_INVOKER&lt;
+<span class="lineNum">     394 </span>            :                              MemberPtr,
+<span class="lineNum">     395 </span>            :                              R BOOST_FUNCTION_COMMA
+<span class="lineNum">     396 </span>            :                              BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     397 </span>            :                            &gt;::type
+<span class="lineNum">     398 </span>            :             invoker_type;
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span>            :           typedef functor_manager&lt;MemberPtr&gt; manager_type;
+<span class="lineNum">     401 </span>            :         };
+<span class="lineNum">     402 </span>            :       };
+<span class="lineNum">     403 </span>            : #endif
+<span class="lineNum">     404 </span>            : 
+<span class="lineNum">     405 </span>            :       /* Retrieve the invoker for a function object. */
+<span class="lineNum">     406 </span>            :       template&lt;&gt;
+<span class="lineNum">     407 </span>            :       struct BOOST_FUNCTION_GET_INVOKER&lt;function_obj_tag&gt;
+<span class="lineNum">     408 </span>            :       {
+<span class="lineNum">     409 </span>            :         template&lt;typename FunctionObj,
+<span class="lineNum">     410 </span>            :                  typename R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_PARMS&gt;
+<span class="lineNum">     411 </span>            :         struct apply
+<span class="lineNum">     412 </span>            :         {
+<span class="lineNum">     413 </span>            :           typedef typename BOOST_FUNCTION_GET_FUNCTION_OBJ_INVOKER&lt;
+<span class="lineNum">     414 </span>            :                              FunctionObj,
+<span class="lineNum">     415 </span>            :                              R BOOST_FUNCTION_COMMA
+<span class="lineNum">     416 </span>            :                              BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     417 </span>            :                            &gt;::type
+<span class="lineNum">     418 </span>            :             invoker_type;
+<span class="lineNum">     419 </span>            : 
+<span class="lineNum">     420 </span>            :           typedef functor_manager&lt;FunctionObj&gt; manager_type;
+<span class="lineNum">     421 </span>            :         };
+<span class="lineNum">     422 </span>            : 
+<span class="lineNum">     423 </span>            :         template&lt;typename FunctionObj,
+<span class="lineNum">     424 </span>            :                  typename R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_PARMS,
+<span class="lineNum">     425 </span>            :                  typename Allocator&gt;
+<span class="lineNum">     426 </span>            :         struct apply_a
+<span class="lineNum">     427 </span>            :         {
+<span class="lineNum">     428 </span>            :           typedef typename BOOST_FUNCTION_GET_FUNCTION_OBJ_INVOKER&lt;
+<span class="lineNum">     429 </span>            :                              FunctionObj,
+<span class="lineNum">     430 </span>            :                              R BOOST_FUNCTION_COMMA
+<span class="lineNum">     431 </span>            :                              BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     432 </span>            :                            &gt;::type
+<span class="lineNum">     433 </span>            :             invoker_type;
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span>            :           typedef functor_manager_a&lt;FunctionObj, Allocator&gt; manager_type;
+<span class="lineNum">     436 </span>            :         };
+<span class="lineNum">     437 </span>            :       };
+<span class="lineNum">     438 </span>            : 
+<span class="lineNum">     439 </span>            :       /* Retrieve the invoker for a reference to a function object. */
+<span class="lineNum">     440 </span>            :       template&lt;&gt;
+<span class="lineNum">     441 </span>            :       struct BOOST_FUNCTION_GET_INVOKER&lt;function_obj_ref_tag&gt;
+<span class="lineNum">     442 </span>            :       {
+<span class="lineNum">     443 </span>            :         template&lt;typename RefWrapper,
+<span class="lineNum">     444 </span>            :                  typename R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_PARMS&gt;
+<span class="lineNum">     445 </span>            :         struct apply
+<span class="lineNum">     446 </span>            :         {
+<span class="lineNum">     447 </span>            :           typedef typename BOOST_FUNCTION_GET_FUNCTION_REF_INVOKER&lt;
+<span class="lineNum">     448 </span>            :                              typename RefWrapper::type,
+<span class="lineNum">     449 </span>            :                              R BOOST_FUNCTION_COMMA
+<span class="lineNum">     450 </span>            :                              BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     451 </span>            :                            &gt;::type
+<span class="lineNum">     452 </span>            :             invoker_type;
+<span class="lineNum">     453 </span>            : 
+<span class="lineNum">     454 </span>            :           typedef reference_manager&lt;typename RefWrapper::type&gt; manager_type;
+<span class="lineNum">     455 </span>            :         };
+<span class="lineNum">     456 </span>            : 
+<span class="lineNum">     457 </span>            :         template&lt;typename RefWrapper,
+<span class="lineNum">     458 </span>            :                  typename R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_PARMS,
+<span class="lineNum">     459 </span>            :                  typename Allocator&gt;
+<span class="lineNum">     460 </span>            :         struct apply_a
+<span class="lineNum">     461 </span>            :         {
+<span class="lineNum">     462 </span>            :           typedef typename BOOST_FUNCTION_GET_FUNCTION_REF_INVOKER&lt;
+<span class="lineNum">     463 </span>            :                              typename RefWrapper::type,
+<span class="lineNum">     464 </span>            :                              R BOOST_FUNCTION_COMMA
+<span class="lineNum">     465 </span>            :                              BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">     466 </span>            :                            &gt;::type
+<span class="lineNum">     467 </span>            :             invoker_type;
+<span class="lineNum">     468 </span>            : 
+<span class="lineNum">     469 </span>            :           typedef reference_manager&lt;typename RefWrapper::type&gt; manager_type;
+<span class="lineNum">     470 </span>            :         };
+<span class="lineNum">     471 </span>            :       };
+<span class="lineNum">     472 </span>            : 
+<span class="lineNum">     473 </span>            : 
+<span class="lineNum">     474 </span>            :       /**
+<span class="lineNum">     475 </span>            :        * vtable for a specific boost::function instance. This
+<span class="lineNum">     476 </span>            :        * structure must be an aggregate so that we can use static
+<span class="lineNum">     477 </span>            :        * initialization in boost::function's assign_to and assign_to_a
+<span class="lineNum">     478 </span>            :        * members. It therefore cannot have any constructors,
+<span class="lineNum">     479 </span>            :        * destructors, base classes, etc.
+<span class="lineNum">     480 </span>            :        */
+<span class="lineNum">     481 </span>            :       template&lt;typename R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_PARMS&gt;
+<span class="lineNum">     482 </span>            :       struct BOOST_FUNCTION_VTABLE
+<span class="lineNum">     483 </span>            :       {
+<span class="lineNum">     484 </span>            : #ifndef BOOST_NO_VOID_RETURNS
+<span class="lineNum">     485 </span>            :         typedef R         result_type;
+<span class="lineNum">     486 </span>            : #else
+<span class="lineNum">     487 </span>            :         typedef typename function_return_type&lt;R&gt;::type result_type;
+<span class="lineNum">     488 </span>            : #endif // BOOST_NO_VOID_RETURNS
+<span class="lineNum">     489 </span>            : 
+<span class="lineNum">     490 </span>            :         typedef result_type (*invoker_type)(function_buffer&amp;
+<span class="lineNum">     491 </span>            :                                             BOOST_FUNCTION_COMMA
+<span class="lineNum">     492 </span>            :                                             BOOST_FUNCTION_TEMPLATE_ARGS);
+<a name="493"><span class="lineNum">     493 </span>            : </a>
+<span class="lineNum">     494 </span>            :         template&lt;typename F&gt;
+<span class="lineNum">     495 </span><span class="lineCov">     585051 :         bool assign_to(F f, function_buffer&amp; functor) const</span>
+<span class="lineNum">     496 </span>            :         {
+<span class="lineNum">     497 </span>            :           typedef typename get_function_tag&lt;F&gt;::type tag;
+<span class="lineNum">     498 </span><span class="lineCov">    1171377 :           return assign_to(f, functor, tag());</span>
+<span class="lineNum">     499 </span>            :         }
+<span class="lineNum">     500 </span>            :         template&lt;typename F,typename Allocator&gt;
+<span class="lineNum">     501 </span>            :         bool assign_to_a(F f, function_buffer&amp; functor, Allocator a) const
+<span class="lineNum">     502 </span>            :         {
+<span class="lineNum">     503 </span>            :           typedef typename get_function_tag&lt;F&gt;::type tag;
+<span class="lineNum">     504 </span>            :           return assign_to_a(f, functor, a, tag());
+<span class="lineNum">     505 </span>            :         }
+<span class="lineNum">     506 </span>            : 
+<span class="lineNum">     507 </span>            :         void clear(function_buffer&amp; functor) const
+<span class="lineNum">     508 </span>            :         {
+<span class="lineNum">     509 </span><span class="lineCov">          7 :           if (base.manager)</span>
+<span class="lineNum">     510 </span><span class="lineCov">        328 :             base.manager(functor, functor, destroy_functor_tag);</span>
+<span class="lineNum">     511 </span>            :         }
+<span class="lineNum">     512 </span>            : 
+<span class="lineNum">     513 </span>            :       private:
+<span class="lineNum">     514 </span>            :         // Function pointers
+<span class="lineNum">     515 </span>            :         template&lt;typename FunctionPtr&gt;
+<span class="lineNum">     516 </span>            :         bool
+<span class="lineNum">     517 </span>            :         assign_to(FunctionPtr f, function_buffer&amp; functor, function_ptr_tag) const
+<span class="lineNum">     518 </span>            :         {
+<span class="lineNum">     519 </span><span class="lineCov">        642 :           this-&gt;clear(functor);</span>
+<span class="lineNum">     520 </span><span class="lineCov">          9 :           if (f) {</span>
+<span class="lineNum">     521 </span>            :             // should be a reinterpret cast, but some compilers insist
+<span class="lineNum">     522 </span>            :             // on giving cv-qualifiers to free functions
+<span class="lineNum">     523 </span><span class="lineCov">        321 :             functor.members.func_ptr = reinterpret_cast&lt;void (*)()&gt;(f);</span>
+<span class="lineNum">     524 </span>            :             return true;
+<span class="lineNum">     525 </span>            :           } else {
+<span class="lineNum">     526 </span>            :             return false;
+<span class="lineNum">     527 </span>            :           }
+<span class="lineNum">     528 </span>            :         }
+<span class="lineNum">     529 </span>            :         template&lt;typename FunctionPtr,typename Allocator&gt;
+<span class="lineNum">     530 </span>            :         bool
+<span class="lineNum">     531 </span>            :         assign_to_a(FunctionPtr f, function_buffer&amp; functor, Allocator, function_ptr_tag) const
+<span class="lineNum">     532 </span>            :         {
+<span class="lineNum">     533 </span>            :           return assign_to(f,functor,function_ptr_tag());
+<span class="lineNum">     534 </span>            :         }
+<span class="lineNum">     535 </span>            : 
+<span class="lineNum">     536 </span>            :         // Member pointers
+<span class="lineNum">     537 </span>            : #if BOOST_FUNCTION_NUM_ARGS &gt; 0
+<span class="lineNum">     538 </span>            :         template&lt;typename MemberPtr&gt;
+<span class="lineNum">     539 </span>            :         bool assign_to(MemberPtr f, function_buffer&amp; functor, member_ptr_tag) const
+<span class="lineNum">     540 </span>            :         {
+<span class="lineNum">     541 </span>            :           // DPG TBD: Add explicit support for member function
+<span class="lineNum">     542 </span>            :           // objects, so we invoke through mem_fn() but we retain the
+<span class="lineNum">     543 </span>            :           // right target_type() values.
+<span class="lineNum">     544 </span>            :           if (f) {
+<span class="lineNum">     545 </span>            :             this-&gt;assign_to(boost::mem_fn(f), functor);
+<span class="lineNum">     546 </span>            :             return true;
+<span class="lineNum">     547 </span>            :           } else {
+<span class="lineNum">     548 </span>            :             return false;
+<span class="lineNum">     549 </span>            :           }
+<span class="lineNum">     550 </span>            :         }
+<span class="lineNum">     551 </span>            :         template&lt;typename MemberPtr,typename Allocator&gt;
+<span class="lineNum">     552 </span>            :         bool assign_to_a(MemberPtr f, function_buffer&amp; functor, Allocator a, member_ptr_tag) const
+<span class="lineNum">     553 </span>            :         {
+<span class="lineNum">     554 </span>            :           // DPG TBD: Add explicit support for member function
+<span class="lineNum">     555 </span>            :           // objects, so we invoke through mem_fn() but we retain the
+<span class="lineNum">     556 </span>            :           // right target_type() values.
+<span class="lineNum">     557 </span>            :           if (f) {
+<span class="lineNum">     558 </span>            :             this-&gt;assign_to_a(boost::mem_fn(f), functor, a);
+<span class="lineNum">     559 </span>            :             return true;
+<span class="lineNum">     560 </span>            :           } else {
+<span class="lineNum">     561 </span>            :             return false;
+<span class="lineNum">     562 </span>            :           }
+<span class="lineNum">     563 </span>            :         }
+<span class="lineNum">     564 </span>            : #endif // BOOST_FUNCTION_NUM_ARGS &gt; 0
+<span class="lineNum">     565 </span>            : 
+<span class="lineNum">     566 </span>            :         // Function objects
+<span class="lineNum">     567 </span>            :         // Assign to a function object using the small object optimization
+<span class="lineNum">     568 </span>            :         template&lt;typename FunctionObj&gt;
+<span class="lineNum">     569 </span>            :         void
+<span class="lineNum">     570 </span>            :         assign_functor(FunctionObj f, function_buffer&amp; functor, mpl::true_) const
+<span class="lineNum">     571 </span>            :         {
+<span class="lineNum">     572 </span><span class="lineCov">     585364 :           new (reinterpret_cast&lt;void*&gt;(functor.data)) FunctionObj(f);</span>
+<span class="lineNum">     573 </span>            :         }
+<span class="lineNum">     574 </span>            :         template&lt;typename FunctionObj,typename Allocator&gt;
+<span class="lineNum">     575 </span>            :         void
+<span class="lineNum">     576 </span>            :         assign_functor_a(FunctionObj f, function_buffer&amp; functor, Allocator, mpl::true_) const
+<span class="lineNum">     577 </span>            :         {
+<span class="lineNum">     578 </span>            :           assign_functor(f,functor,mpl::true_());
+<span class="lineNum">     579 </span>            :         }
+<span class="lineNum">     580 </span>            : 
+<span class="lineNum">     581 </span>            :         // Assign to a function object allocated on the heap.
+<a name="582"><span class="lineNum">     582 </span>            :         template&lt;typename FunctionObj&gt;</a>
+<span class="lineNum">     583 </span>            :         void
+<span class="lineNum">     584 </span><span class="lineCov">          1 :         assign_functor(FunctionObj f, function_buffer&amp; functor, mpl::false_) const</span>
+<span class="lineNum">     585 </span>            :         {
+<span class="lineNum">     586 </span><span class="lineCov">          4 :           functor.members.obj_ptr = new FunctionObj(f);</span>
+<span class="lineNum">     587 </span><span class="lineCov">          1 :         }</span>
+<span class="lineNum">     588 </span>            :         template&lt;typename FunctionObj,typename Allocator&gt;
+<span class="lineNum">     589 </span>            :         void
+<span class="lineNum">     590 </span>            :         assign_functor_a(FunctionObj f, function_buffer&amp; functor, Allocator a, mpl::false_) const
+<span class="lineNum">     591 </span>            :         {
+<span class="lineNum">     592 </span>            :           typedef functor_wrapper&lt;FunctionObj,Allocator&gt; functor_wrapper_type;
+<span class="lineNum">     593 </span>            :           typedef typename Allocator::template rebind&lt;functor_wrapper_type&gt;::other
+<span class="lineNum">     594 </span>            :             wrapper_allocator_type;
+<span class="lineNum">     595 </span>            :           typedef typename wrapper_allocator_type::pointer wrapper_allocator_pointer_type;
+<span class="lineNum">     596 </span>            :           wrapper_allocator_type wrapper_allocator(a);
+<span class="lineNum">     597 </span>            :           wrapper_allocator_pointer_type copy = wrapper_allocator.allocate(1);
+<span class="lineNum">     598 </span>            :           wrapper_allocator.construct(copy, functor_wrapper_type(f,a));
+<span class="lineNum">     599 </span>            :           functor_wrapper_type* new_f = static_cast&lt;functor_wrapper_type*&gt;(copy);
+<span class="lineNum">     600 </span>            :           functor.members.obj_ptr = new_f;
+<span class="lineNum">     601 </span>            :         }
+<span class="lineNum">     602 </span>            : 
+<a name="603"><span class="lineNum">     603 </span>            :         template&lt;typename FunctionObj&gt;</a>
+<span class="lineNum">     604 </span>            :         bool
+<span class="lineNum">     605 </span><span class="lineCov">          1 :         assign_to(FunctionObj f, function_buffer&amp; functor, function_obj_tag) const</span>
+<span class="lineNum">     606 </span>            :         {
+<span class="lineNum">     607 </span><span class="lineCov">     585368 :           if (!boost::detail::function::has_empty_target(boost::addressof(f))) {</span>
+<span class="lineNum">     608 </span><span class="lineCov">     585368 :             assign_functor(f, functor,</span>
+<span class="lineNum">     609 </span>            :                            mpl::bool_&lt;(function_allows_small_object_optimization&lt;FunctionObj&gt;::value)&gt;());
+<span class="lineNum">     610 </span>            :             return true;
+<span class="lineNum">     611 </span>            :           } else {
+<span class="lineNum">     612 </span>            :             return false;
+<span class="lineNum">     613 </span>            :           }
+<span class="lineNum">     614 </span>            :         }
+<span class="lineNum">     615 </span>            :         template&lt;typename FunctionObj,typename Allocator&gt;
+<span class="lineNum">     616 </span>            :         bool
+<span class="lineNum">     617 </span>            :         assign_to_a(FunctionObj f, function_buffer&amp; functor, Allocator a, function_obj_tag) const
+<span class="lineNum">     618 </span>            :         {
+<span class="lineNum">     619 </span>            :           if (!boost::detail::function::has_empty_target(boost::addressof(f))) {
+<span class="lineNum">     620 </span>            :             assign_functor_a(f, functor, a,
+<span class="lineNum">     621 </span>            :                            mpl::bool_&lt;(function_allows_small_object_optimization&lt;FunctionObj&gt;::value)&gt;());
+<span class="lineNum">     622 </span>            :             return true;
+<span class="lineNum">     623 </span>            :           } else {
+<span class="lineNum">     624 </span>            :             return false;
+<span class="lineNum">     625 </span>            :           }
+<span class="lineNum">     626 </span>            :         }
+<span class="lineNum">     627 </span>            : 
+<span class="lineNum">     628 </span>            :         // Reference to a function object
+<span class="lineNum">     629 </span>            :         template&lt;typename FunctionObj&gt;
+<span class="lineNum">     630 </span>            :         bool
+<span class="lineNum">     631 </span>            :         assign_to(const reference_wrapper&lt;FunctionObj&gt;&amp; f,
+<span class="lineNum">     632 </span>            :                   function_buffer&amp; functor, function_obj_ref_tag) const
+<span class="lineNum">     633 </span>            :         {
+<span class="lineNum">     634 </span>            :           functor.members.obj_ref.obj_ptr = (void *)(f.get_pointer());
+<span class="lineNum">     635 </span>            :           functor.members.obj_ref.is_const_qualified = is_const&lt;FunctionObj&gt;::value;
+<span class="lineNum">     636 </span>            :           functor.members.obj_ref.is_volatile_qualified = is_volatile&lt;FunctionObj&gt;::value;
+<span class="lineNum">     637 </span>            :           return true;
+<span class="lineNum">     638 </span>            :         }
+<span class="lineNum">     639 </span>            :         template&lt;typename FunctionObj,typename Allocator&gt;
+<span class="lineNum">     640 </span>            :         bool
+<span class="lineNum">     641 </span>            :         assign_to_a(const reference_wrapper&lt;FunctionObj&gt;&amp; f,
+<span class="lineNum">     642 </span>            :                   function_buffer&amp; functor, Allocator, function_obj_ref_tag) const
+<span class="lineNum">     643 </span>            :         {
+<span class="lineNum">     644 </span>            :           return assign_to(f,functor,function_obj_ref_tag());
+<span class="lineNum">     645 </span>            :         }
+<span class="lineNum">     646 </span>            : 
+<span class="lineNum">     647 </span>            :       public:
+<span class="lineNum">     648 </span>            :         vtable_base base;
+<span class="lineNum">     649 </span>            :         invoker_type invoker;
+<span class="lineNum">     650 </span>            :       };
+<span class="lineNum">     651 </span>            :     } // end namespace function
+<span class="lineNum">     652 </span>            :   } // end namespace detail
+<span class="lineNum">     653 </span>            : 
+<span class="lineNum">     654 </span>            :   template&lt;
+<span class="lineNum">     655 </span>            :     typename R BOOST_FUNCTION_COMMA
+<span class="lineNum">     656 </span>            :     BOOST_FUNCTION_TEMPLATE_PARMS
+<span class="lineNum">     657 </span>            :   &gt;
+<span class="lineNum">     658 </span>            :   class BOOST_FUNCTION_FUNCTION : public function_base
+<span class="lineNum">     659 </span>            : 
+<span class="lineNum">     660 </span>            : #if BOOST_FUNCTION_NUM_ARGS == 1
+<span class="lineNum">     661 </span>            : 
+<span class="lineNum">     662 </span>            :     , public std::unary_function&lt;T0,R&gt;
+<span class="lineNum">     663 </span>            : 
+<span class="lineNum">     664 </span>            : #elif BOOST_FUNCTION_NUM_ARGS == 2
+<span class="lineNum">     665 </span>            : 
+<span class="lineNum">     666 </span>            :     , public std::binary_function&lt;T0,T1,R&gt;
+<span class="lineNum">     667 </span>            : 
+<span class="lineNum">     668 </span>            : #endif
+<span class="lineNum">     669 </span>            : 
+<span class="lineNum">     670 </span>            :   {
+<span class="lineNum">     671 </span>            :   public:
+<span class="lineNum">     672 </span>            : #ifndef BOOST_NO_VOID_RETURNS
+<span class="lineNum">     673 </span>            :     typedef R         result_type;
+<span class="lineNum">     674 </span>            : #else
+<span class="lineNum">     675 </span>            :     typedef  typename boost::detail::function::function_return_type&lt;R&gt;::type
+<span class="lineNum">     676 </span>            :       result_type;
+<span class="lineNum">     677 </span>            : #endif // BOOST_NO_VOID_RETURNS
+<span class="lineNum">     678 </span>            : 
+<span class="lineNum">     679 </span>            :   private:
+<span class="lineNum">     680 </span>            :     typedef boost::detail::function::BOOST_FUNCTION_VTABLE&lt;
+<span class="lineNum">     681 </span>            :               R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_ARGS&gt;
+<span class="lineNum">     682 </span>            :       vtable_type;
+<span class="lineNum">     683 </span>            : 
+<span class="lineNum">     684 </span>            :     vtable_type* get_vtable() const {
+<span class="lineNum">     685 </span>            :       return reinterpret_cast&lt;vtable_type*&gt;(
+<span class="lineNum">     686 </span><span class="lineCov">    3791745 :                reinterpret_cast&lt;std::size_t&gt;(vtable) &amp; ~static_cast&lt;std::size_t&gt;(0x01));</span>
+<span class="lineNum">     687 </span>            :     }
+<span class="lineNum">     688 </span>            : 
+<span class="lineNum">     689 </span>            :     struct clear_type {};
+<span class="lineNum">     690 </span>            : 
+<span class="lineNum">     691 </span>            :   public:
+<span class="lineNum">     692 </span>            :     BOOST_STATIC_CONSTANT(int, args = BOOST_FUNCTION_NUM_ARGS);
+<span class="lineNum">     693 </span>            : 
+<span class="lineNum">     694 </span>            :     // add signature for boost::lambda
+<span class="lineNum">     695 </span>            :     template&lt;typename Args&gt;
+<span class="lineNum">     696 </span>            :     struct sig
+<span class="lineNum">     697 </span>            :     {
+<span class="lineNum">     698 </span>            :       typedef result_type type;
+<span class="lineNum">     699 </span>            :     };
+<span class="lineNum">     700 </span>            : 
+<span class="lineNum">     701 </span>            : #if BOOST_FUNCTION_NUM_ARGS == 1
+<span class="lineNum">     702 </span>            :     typedef T0 argument_type;
+<span class="lineNum">     703 </span>            : #elif BOOST_FUNCTION_NUM_ARGS == 2
+<span class="lineNum">     704 </span>            :     typedef T0 first_argument_type;
+<span class="lineNum">     705 </span>            :     typedef T1 second_argument_type;
+<span class="lineNum">     706 </span>            : #endif
+<span class="lineNum">     707 </span>            : 
+<span class="lineNum">     708 </span>            :     BOOST_STATIC_CONSTANT(int, arity = BOOST_FUNCTION_NUM_ARGS);
+<span class="lineNum">     709 </span>            :     BOOST_FUNCTION_ARG_TYPES
+<span class="lineNum">     710 </span>            : 
+<span class="lineNum">     711 </span>            :     typedef BOOST_FUNCTION_FUNCTION self_type;
+<span class="lineNum">     712 </span>            : 
+<span class="lineNum">     713 </span><span class="lineCov">         96 :     BOOST_FUNCTION_FUNCTION() : function_base() { }</span>
+<span class="lineNum">     714 </span>            : 
+<span class="lineNum">     715 </span>            :     // MSVC chokes if the following two constructors are collapsed into
+<a name="716"><span class="lineNum">     716 </span>            :     // one with a default parameter.</a>
+<span class="lineNum">     717 </span>            :     template&lt;typename Functor&gt;
+<span class="lineNum">     718 </span><span class="lineCov">     585051 :     BOOST_FUNCTION_FUNCTION(Functor BOOST_FUNCTION_TARGET_FIX(const &amp;) f</span>
+<span class="lineNum">     719 </span>            : #ifndef BOOST_NO_SFINAE
+<span class="lineNum">     720 </span>            :                             ,typename boost::enable_if_c&lt;
+<span class="lineNum">     721 </span>            :                              !(is_integral&lt;Functor&gt;::value),
+<span class="lineNum">     722 </span>            :                                         int&gt;::type = 0
+<span class="lineNum">     723 </span>            : #endif // BOOST_NO_SFINAE
+<span class="lineNum">     724 </span>            :                             ) :
+<span class="lineNum">     725 </span><span class="lineCov">    1171378 :       function_base()</span>
+<span class="lineNum">     726 </span>            :     {
+<span class="lineNum">     727 </span><span class="lineCov">     585691 :       this-&gt;assign_to(f);</span>
+<span class="lineNum">     728 </span><span class="lineCov">     585051 :     }</span>
+<span class="lineNum">     729 </span>            :     template&lt;typename Functor,typename Allocator&gt;
+<span class="lineNum">     730 </span>            :     BOOST_FUNCTION_FUNCTION(Functor BOOST_FUNCTION_TARGET_FIX(const &amp;) f, Allocator a
+<span class="lineNum">     731 </span>            : #ifndef BOOST_NO_SFINAE
+<span class="lineNum">     732 </span>            :                             ,typename boost::enable_if_c&lt;
+<span class="lineNum">     733 </span>            :                               !(is_integral&lt;Functor&gt;::value),
+<span class="lineNum">     734 </span>            :                                         int&gt;::type = 0
+<span class="lineNum">     735 </span>            : #endif // BOOST_NO_SFINAE
+<span class="lineNum">     736 </span>            :                             ) :
+<span class="lineNum">     737 </span>            :       function_base()
+<span class="lineNum">     738 </span>            :     {
+<span class="lineNum">     739 </span>            :       this-&gt;assign_to_a(f,a);
+<span class="lineNum">     740 </span>            :     }
+<span class="lineNum">     741 </span>            : 
+<span class="lineNum">     742 </span>            : #ifndef BOOST_NO_SFINAE
+<span class="lineNum">     743 </span>            :     BOOST_FUNCTION_FUNCTION(clear_type*) : function_base() { }
+<span class="lineNum">     744 </span>            : #else
+<span class="lineNum">     745 </span>            :     BOOST_FUNCTION_FUNCTION(int zero) : function_base()
+<span class="lineNum">     746 </span>            :     {
+<span class="lineNum">     747 </span>            :       BOOST_ASSERT(zero == 0);
+<span class="lineNum">     748 </span>            :     }
+<a name="749"><span class="lineNum">     749 </span>            : #endif</a>
+<span class="lineNum">     750 </span>            : 
+<span class="lineNum">     751 </span><span class="lineCov">    4973604 :     BOOST_FUNCTION_FUNCTION(const BOOST_FUNCTION_FUNCTION&amp; f) : function_base()</span>
+<span class="lineNum">     752 </span>            :     {
+<span class="lineNum">     753 </span><span class="lineCov">    2486802 :       this-&gt;assign_to_own(f);</span>
+<span class="lineNum">     754 </span><span class="lineCov">    2486802 :     }</span>
+<span class="lineNum">     755 </span>            : 
+<span class="lineNum">     756 </span>            : #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">     757 </span><span class="lineCov">         56 :     BOOST_FUNCTION_FUNCTION(BOOST_FUNCTION_FUNCTION&amp;&amp; f) : function_base()</span>
+<span class="lineNum">     758 </span>            :     {
+<span class="lineNum">     759 </span><span class="lineCov">         28 :       this-&gt;move_assign(f);</span>
+<span class="lineNum">     760 </span>            :     }
+<span class="lineNum">     761 </span>            : #endif
+<span class="lineNum">     762 </span>            : 
+<a name="763"><span class="lineNum">     763 </span><span class="lineCov">    3072567 :     ~BOOST_FUNCTION_FUNCTION() { clear(); }</span></a>
+<span class="lineNum">     764 </span>            : 
+<span class="lineNum">     765 </span><span class="lineCov">    3791734 :     result_type operator()(BOOST_FUNCTION_PARMS) const</span>
+<span class="lineNum">     766 </span>            :     {
+<span class="lineNum">     767 </span><span class="lineCov">    3791734 :       if (this-&gt;empty())</span>
+<span class="lineNum">     768 </span><span class="lineNoCov">          0 :         boost::throw_exception(bad_function_call());</span>
+<span class="lineNum">     769 </span>            : 
+<span class="lineNum">     770 </span><span class="lineCov">    3791734 :       return get_vtable()-&gt;invoker</span>
+<span class="lineNum">     771 </span><span class="lineCov">    3791734 :                (this-&gt;functor BOOST_FUNCTION_COMMA BOOST_FUNCTION_ARGS);</span>
+<span class="lineNum">     772 </span>            :     }
+<span class="lineNum">     773 </span>            : 
+<span class="lineNum">     774 </span>            :     // The distinction between when to use BOOST_FUNCTION_FUNCTION and
+<span class="lineNum">     775 </span>            :     // when to use self_type is obnoxious. MSVC cannot handle self_type as
+<span class="lineNum">     776 </span>            :     // the return type of these assignment operators, but Borland C++ cannot
+<span class="lineNum">     777 </span>            :     // handle BOOST_FUNCTION_FUNCTION as the type of the temporary to
+<span class="lineNum">     778 </span>            :     // construct.
+<span class="lineNum">     779 </span>            :     template&lt;typename Functor&gt;
+<span class="lineNum">     780 </span>            : #ifndef BOOST_NO_SFINAE
+<span class="lineNum">     781 </span>            :     typename boost::enable_if_c&lt;
+<span class="lineNum">     782 </span>            :                   !(is_integral&lt;Functor&gt;::value),
+<span class="lineNum">     783 </span>            :                BOOST_FUNCTION_FUNCTION&amp;&gt;::type
+<span class="lineNum">     784 </span>            : #else
+<span class="lineNum">     785 </span>            :     BOOST_FUNCTION_FUNCTION&amp;
+<span class="lineNum">     786 </span>            : #endif
+<span class="lineNum">     787 </span>            :     operator=(Functor BOOST_FUNCTION_TARGET_FIX(const &amp;) f)
+<span class="lineNum">     788 </span>            :     {
+<span class="lineNum">     789 </span>            :       this-&gt;clear();
+<span class="lineNum">     790 </span>            :       BOOST_TRY  {
+<span class="lineNum">     791 </span>            :         this-&gt;assign_to(f);
+<span class="lineNum">     792 </span>            :       } BOOST_CATCH (...) {
+<span class="lineNum">     793 </span>            :         vtable = 0;
+<span class="lineNum">     794 </span>            :         BOOST_RETHROW;
+<span class="lineNum">     795 </span>            :       }
+<span class="lineNum">     796 </span>            :       BOOST_CATCH_END
+<span class="lineNum">     797 </span>            :       return *this;
+<span class="lineNum">     798 </span>            :     }
+<span class="lineNum">     799 </span>            :     template&lt;typename Functor,typename Allocator&gt;
+<span class="lineNum">     800 </span>            :     void assign(Functor BOOST_FUNCTION_TARGET_FIX(const &amp;) f, Allocator a)
+<span class="lineNum">     801 </span>            :     {
+<span class="lineNum">     802 </span>            :       this-&gt;clear();
+<span class="lineNum">     803 </span>            :       BOOST_TRY{
+<span class="lineNum">     804 </span>            :         this-&gt;assign_to_a(f,a);
+<span class="lineNum">     805 </span>            :       } BOOST_CATCH (...) {
+<span class="lineNum">     806 </span>            :         vtable = 0;
+<span class="lineNum">     807 </span>            :         BOOST_RETHROW;
+<span class="lineNum">     808 </span>            :       }
+<span class="lineNum">     809 </span>            :       BOOST_CATCH_END
+<span class="lineNum">     810 </span>            :     }
+<span class="lineNum">     811 </span>            : 
+<span class="lineNum">     812 </span>            : #ifndef BOOST_NO_SFINAE
+<span class="lineNum">     813 </span>            :     BOOST_FUNCTION_FUNCTION&amp; operator=(clear_type*)
+<span class="lineNum">     814 </span>            :     {
+<span class="lineNum">     815 </span>            :       this-&gt;clear();
+<span class="lineNum">     816 </span>            :       return *this;
+<span class="lineNum">     817 </span>            :     }
+<span class="lineNum">     818 </span>            : #else
+<span class="lineNum">     819 </span>            :     BOOST_FUNCTION_FUNCTION&amp; operator=(int zero)
+<span class="lineNum">     820 </span>            :     {
+<span class="lineNum">     821 </span>            :       BOOST_ASSERT(zero == 0);
+<span class="lineNum">     822 </span>            :       this-&gt;clear();
+<span class="lineNum">     823 </span>            :       return *this;
+<span class="lineNum">     824 </span>            :     }
+<span class="lineNum">     825 </span>            : #endif
+<span class="lineNum">     826 </span>            : 
+<span class="lineNum">     827 </span>            :     // Assignment from another BOOST_FUNCTION_FUNCTION
+<span class="lineNum">     828 </span>            :     BOOST_FUNCTION_FUNCTION&amp; operator=(const BOOST_FUNCTION_FUNCTION&amp; f)
+<span class="lineNum">     829 </span>            :     {
+<span class="lineNum">     830 </span>            :       if (&amp;f == this)
+<span class="lineNum">     831 </span>            :         return *this;
+<span class="lineNum">     832 </span>            : 
+<span class="lineNum">     833 </span>            :       this-&gt;clear();
+<span class="lineNum">     834 </span>            :       BOOST_TRY {
+<span class="lineNum">     835 </span>            :         this-&gt;assign_to_own(f);
+<span class="lineNum">     836 </span>            :       } BOOST_CATCH (...) {
+<span class="lineNum">     837 </span>            :         vtable = 0;
+<span class="lineNum">     838 </span>            :         BOOST_RETHROW;
+<span class="lineNum">     839 </span>            :       }
+<span class="lineNum">     840 </span>            :       BOOST_CATCH_END
+<span class="lineNum">     841 </span>            :       return *this;
+<span class="lineNum">     842 </span>            :     }
+<span class="lineNum">     843 </span>            : 
+<span class="lineNum">     844 </span>            : #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">     845 </span>            :     // Move assignment from another BOOST_FUNCTION_FUNCTION
+<span class="lineNum">     846 </span>            :     BOOST_FUNCTION_FUNCTION&amp; operator=(BOOST_FUNCTION_FUNCTION&amp;&amp; f)
+<span class="lineNum">     847 </span>            :     {
+<span class="lineNum">     848 </span>            :       if (&amp;f == this)
+<span class="lineNum">     849 </span>            :         return *this;
+<span class="lineNum">     850 </span>            : 
+<span class="lineNum">     851 </span>            :       this-&gt;clear();
+<span class="lineNum">     852 </span>            :       BOOST_TRY {
+<span class="lineNum">     853 </span>            :         this-&gt;move_assign(f);
+<span class="lineNum">     854 </span>            :       } BOOST_CATCH (...) {
+<span class="lineNum">     855 </span>            :         vtable = 0;
+<span class="lineNum">     856 </span>            :         BOOST_RETHROW;
+<span class="lineNum">     857 </span>            :       }
+<span class="lineNum">     858 </span>            :       BOOST_CATCH_END
+<span class="lineNum">     859 </span>            :       return *this;
+<span class="lineNum">     860 </span>            :     }
+<a name="861"><span class="lineNum">     861 </span>            : #endif</a>
+<span class="lineNum">     862 </span>            : 
+<span class="lineNum">     863 </span><span class="lineCov">         10 :     void swap(BOOST_FUNCTION_FUNCTION&amp; other)</span>
+<span class="lineNum">     864 </span>            :     {
+<span class="lineNum">     865 </span><span class="lineCov">         10 :       if (&amp;other == this)</span>
+<span class="lineNum">     866 </span><span class="lineNoCov">          0 :         return;</span>
+<span class="lineNum">     867 </span>            : 
+<span class="lineNum">     868 </span><span class="lineCov">         20 :       BOOST_FUNCTION_FUNCTION tmp;</span>
+<span class="lineNum">     869 </span><span class="lineCov">         10 :       tmp.move_assign(*this);</span>
+<span class="lineNum">     870 </span><span class="lineCov">         10 :       this-&gt;move_assign(other);</span>
+<span class="lineNum">     871 </span><span class="lineCov">         10 :       other.move_assign(tmp);</span>
+<span class="lineNum">     872 </span>            :     }
+<span class="lineNum">     873 </span>            : 
+<span class="lineNum">     874 </span>            :     // Clear out a target, if there is one
+<span class="lineNum">     875 </span>            :     void clear()
+<span class="lineNum">     876 </span>            :     {
+<span class="lineNum">     877 </span><span class="lineCov">    3072604 :       if (vtable) {</span>
+<span class="lineNum">     878 </span><span class="lineCov">    6144920 :         if (!this-&gt;has_trivial_copy_and_destroy())</span>
+<span class="lineNum">     879 </span><span class="lineCov">         14 :           get_vtable()-&gt;clear(this-&gt;functor);</span>
+<span class="lineNum">     880 </span><span class="lineCov">    3023389 :         vtable = 0;</span>
+<span class="lineNum">     881 </span>            :       }
+<span class="lineNum">     882 </span>            :     }
+<span class="lineNum">     883 </span>            : 
+<span class="lineNum">     884 </span>            : #if (defined __SUNPRO_CC) &amp;&amp; (__SUNPRO_CC &lt;= 0x530) &amp;&amp; !(defined BOOST_NO_COMPILER_CONFIG)
+<span class="lineNum">     885 </span>            :     // Sun C++ 5.3 can't handle the safe_bool idiom, so don't use it
+<span class="lineNum">     886 </span>            :     operator bool () const { return !this-&gt;empty(); }
+<span class="lineNum">     887 </span>            : #else
+<a name="888"><span class="lineNum">     888 </span>            :   private:</a>
+<span class="lineNum">     889 </span>            :     struct dummy {
+<span class="lineNum">     890 </span><span class="lineNoCov">          0 :       void nonnull() {}</span>
+<span class="lineNum">     891 </span>            :     };
+<span class="lineNum">     892 </span>            : 
+<span class="lineNum">     893 </span>            :     typedef void (dummy::*safe_bool)();
+<span class="lineNum">     894 </span>            : 
+<span class="lineNum">     895 </span>            :   public:
+<span class="lineNum">     896 </span>            :     operator safe_bool () const
+<span class="lineNum">     897 </span><span class="lineNoCov">          0 :       { return (this-&gt;empty())? 0 : &amp;dummy::nonnull; }</span>
+<span class="lineNum">     898 </span>            : 
+<span class="lineNum">     899 </span>            :     bool operator!() const
+<span class="lineNum">     900 </span><span class="lineCov">         23 :       { return this-&gt;empty(); }</span>
+<span class="lineNum">     901 </span>            : #endif
+<span class="lineNum">     902 </span>            : 
+<span class="lineNum">     903 </span>            :   private:
+<span class="lineNum">     904 </span>            :     void assign_to_own(const BOOST_FUNCTION_FUNCTION&amp; f)
+<span class="lineNum">     905 </span>            :     {
+<span class="lineNum">     906 </span><span class="lineCov">    2486802 :       if (!f.empty()) {</span>
+<span class="lineNum">     907 </span><span class="lineCov">    2486771 :         this-&gt;vtable = f.vtable;</span>
+<span class="lineNum">     908 </span><span class="lineCov">    4973542 :         if (this-&gt;has_trivial_copy_and_destroy())</span>
+<span class="lineNum">     909 </span><span class="lineCov">    2486767 :           this-&gt;functor = f.functor;</span>
+<span class="lineNum">     910 </span>            :         else
+<span class="lineNum">     911 </span><span class="lineCov">          8 :           get_vtable()-&gt;base.manager(f.functor, this-&gt;functor,</span>
+<span class="lineNum">     912 </span>            :                                      boost::detail::function::clone_functor_tag);
+<span class="lineNum">     913 </span>            :       }
+<span class="lineNum">     914 </span>            :     }
+<a name="915"><span class="lineNum">     915 </span>            : </a>
+<span class="lineNum">     916 </span>            :     template&lt;typename Functor&gt;
+<span class="lineNum">     917 </span><span class="lineCov">          1 :     void assign_to(Functor f)</span>
+<span class="lineNum">     918 </span>            :     {
+<span class="lineNum">     919 </span>            :       using boost::detail::function::vtable_base;
+<span class="lineNum">     920 </span>            : 
+<span class="lineNum">     921 </span>            :       typedef typename boost::detail::function::get_function_tag&lt;Functor&gt;::type tag;
+<span class="lineNum">     922 </span>            :       typedef boost::detail::function::BOOST_FUNCTION_GET_INVOKER&lt;tag&gt; get_invoker;
+<span class="lineNum">     923 </span>            :       typedef typename get_invoker::
+<span class="lineNum">     924 </span>            :                          template apply&lt;Functor, R BOOST_FUNCTION_COMMA
+<span class="lineNum">     925 </span>            :                         BOOST_FUNCTION_TEMPLATE_ARGS&gt;
+<span class="lineNum">     926 </span>            :         handler_type;
+<span class="lineNum">     927 </span>            : 
+<span class="lineNum">     928 </span>            :       typedef typename handler_type::invoker_type invoker_type;
+<span class="lineNum">     929 </span>            :       typedef typename handler_type::manager_type manager_type;
+<span class="lineNum">     930 </span>            : 
+<span class="lineNum">     931 </span>            :       // Note: it is extremely important that this initialization use
+<span class="lineNum">     932 </span>            :       // static initialization. Otherwise, we will have a race
+<span class="lineNum">     933 </span>            :       // condition here in multi-threaded code. See
+<span class="lineNum">     934 </span>            :       // http://thread.gmane.org/gmane.comp.lib.boost.devel/164902/.
+<span class="lineNum">     935 </span>            :       static const vtable_type stored_vtable =
+<span class="lineNum">     936 </span>            :         { { &amp;manager_type::manage }, &amp;invoker_type::invoke };
+<span class="lineNum">     937 </span>            : 
+<span class="lineNum">     938 </span><span class="lineCov">     586329 :       if (stored_vtable.assign_to(f, functor)) {</span>
+<span class="lineNum">     939 </span><span class="lineCov">     585689 :         std::size_t value = reinterpret_cast&lt;std::size_t&gt;(&amp;stored_vtable.base);</span>
+<span class="lineNum">     940 </span>            :         // coverity[pointless_expression]: suppress coverity warnings on apparant if(const).
+<span class="lineNum">     941 </span>            :         if (boost::has_trivial_copy_constructor&lt;Functor&gt;::value &amp;&amp;
+<span class="lineNum">     942 </span>            :             boost::has_trivial_destructor&lt;Functor&gt;::value &amp;&amp;
+<span class="lineNum">     943 </span>            :             boost::detail::function::function_allows_small_object_optimization&lt;Functor&gt;::value)
+<span class="lineNum">     944 </span><span class="lineCov">     585686 :           value |= static_cast&lt;std::size_t&gt;(0x01);</span>
+<span class="lineNum">     945 </span><span class="lineCov">     585689 :         vtable = reinterpret_cast&lt;boost::detail::function::vtable_base *&gt;(value);</span>
+<span class="lineNum">     946 </span>            :       } else
+<span class="lineNum">     947 </span><span class="lineNoCov">          0 :         vtable = 0;</span>
+<span class="lineNum">     948 </span><span class="lineCov">          1 :     }</span>
+<span class="lineNum">     949 </span>            : 
+<span class="lineNum">     950 </span>            :     template&lt;typename Functor,typename Allocator&gt;
+<span class="lineNum">     951 </span>            :     void assign_to_a(Functor f,Allocator a)
+<span class="lineNum">     952 </span>            :     {
+<span class="lineNum">     953 </span>            :       using boost::detail::function::vtable_base;
+<span class="lineNum">     954 </span>            : 
+<span class="lineNum">     955 </span>            :       typedef typename boost::detail::function::get_function_tag&lt;Functor&gt;::type tag;
+<span class="lineNum">     956 </span>            :       typedef boost::detail::function::BOOST_FUNCTION_GET_INVOKER&lt;tag&gt; get_invoker;
+<span class="lineNum">     957 </span>            :       typedef typename get_invoker::
+<span class="lineNum">     958 </span>            :                          template apply_a&lt;Functor, R BOOST_FUNCTION_COMMA
+<span class="lineNum">     959 </span>            :                          BOOST_FUNCTION_TEMPLATE_ARGS,
+<span class="lineNum">     960 </span>            :                          Allocator&gt;
+<span class="lineNum">     961 </span>            :         handler_type;
+<span class="lineNum">     962 </span>            : 
+<span class="lineNum">     963 </span>            :       typedef typename handler_type::invoker_type invoker_type;
+<span class="lineNum">     964 </span>            :       typedef typename handler_type::manager_type manager_type;
+<span class="lineNum">     965 </span>            : 
+<span class="lineNum">     966 </span>            :       // Note: it is extremely important that this initialization use
+<span class="lineNum">     967 </span>            :       // static initialization. Otherwise, we will have a race
+<span class="lineNum">     968 </span>            :       // condition here in multi-threaded code. See
+<span class="lineNum">     969 </span>            :       // http://thread.gmane.org/gmane.comp.lib.boost.devel/164902/.
+<span class="lineNum">     970 </span>            :       static const vtable_type stored_vtable =
+<span class="lineNum">     971 </span>            :         { { &amp;manager_type::manage }, &amp;invoker_type::invoke };
+<span class="lineNum">     972 </span>            : 
+<span class="lineNum">     973 </span>            :       if (stored_vtable.assign_to_a(f, functor, a)) {
+<span class="lineNum">     974 </span>            :         std::size_t value = reinterpret_cast&lt;std::size_t&gt;(&amp;stored_vtable.base);
+<span class="lineNum">     975 </span>            :         // coverity[pointless_expression]: suppress coverity warnings on apparant if(const).
+<span class="lineNum">     976 </span>            :         if (boost::has_trivial_copy_constructor&lt;Functor&gt;::value &amp;&amp;
+<span class="lineNum">     977 </span>            :             boost::has_trivial_destructor&lt;Functor&gt;::value &amp;&amp;
+<span class="lineNum">     978 </span>            :             boost::detail::function::function_allows_small_object_optimization&lt;Functor&gt;::value)
+<span class="lineNum">     979 </span>            :           value |= static_cast&lt;std::size_t&gt;(0x01);
+<span class="lineNum">     980 </span>            :         vtable = reinterpret_cast&lt;boost::detail::function::vtable_base *&gt;(value);
+<span class="lineNum">     981 </span>            :       } else
+<span class="lineNum">     982 </span>            :         vtable = 0;
+<span class="lineNum">     983 </span>            :     }
+<span class="lineNum">     984 </span>            : 
+<span class="lineNum">     985 </span>            :     // Moves the value from the specified argument to *this. If the argument
+<a name="986"><span class="lineNum">     986 </span>            :     // has its function object allocated on the heap, move_assign will pass</a>
+<span class="lineNum">     987 </span>            :     // its buffer to *this, and set the argument's buffer pointer to NULL.
+<span class="lineNum">     988 </span><span class="lineCov">         58 :     void move_assign(BOOST_FUNCTION_FUNCTION&amp; f)</span>
+<span class="lineNum">     989 </span>            :     {
+<span class="lineNum">     990 </span><span class="lineCov">         58 :       if (&amp;f == this)</span>
+<span class="lineNum">     991 </span>            :         return;
+<span class="lineNum">     992 </span>            : 
+<span class="lineNum">     993 </span>            :       BOOST_TRY {
+<span class="lineNum">     994 </span><span class="lineCov">         58 :         if (!f.empty()) {</span>
+<span class="lineNum">     995 </span><span class="lineCov">         21 :           this-&gt;vtable = f.vtable;</span>
+<span class="lineNum">     996 </span><span class="lineCov">         42 :           if (this-&gt;has_trivial_copy_and_destroy())</span>
+<span class="lineNum">     997 </span><span class="lineCov">         21 :             this-&gt;functor = f.functor;</span>
+<span class="lineNum">     998 </span>            :           else
+<span class="lineNum">     999 </span><span class="lineNoCov">          0 :             get_vtable()-&gt;base.manager(f.functor, this-&gt;functor,</span>
+<span class="lineNum">    1000 </span>            :                                      boost::detail::function::move_functor_tag);
+<span class="lineNum">    1001 </span><span class="lineCov">         21 :           f.vtable = 0;</span>
+<span class="lineNum">    1002 </span>            :         } else {
+<span class="lineNum">    1003 </span>            :           clear();
+<span class="lineNum">    1004 </span>            :         }
+<span class="lineNum">    1005 </span><span class="lineNoCov">          0 :       } BOOST_CATCH (...) {</span>
+<span class="lineNum">    1006 </span><span class="lineNoCov">          0 :         vtable = 0;</span>
+<span class="lineNum">    1007 </span><span class="lineNoCov">          0 :         BOOST_RETHROW;</span>
+<span class="lineNum">    1008 </span>            :       }
+<span class="lineNum">    1009 </span>            :       BOOST_CATCH_END
+<span class="lineNum">    1010 </span>            :     }
+<span class="lineNum">    1011 </span>            :   };
+<span class="lineNum">    1012 </span>            : 
+<span class="lineNum">    1013 </span>            :   template&lt;typename R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_PARMS&gt;
+<span class="lineNum">    1014 </span>            :   inline void swap(BOOST_FUNCTION_FUNCTION&lt;
+<span class="lineNum">    1015 </span>            :                      R BOOST_FUNCTION_COMMA
+<span class="lineNum">    1016 </span>            :                      BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">    1017 </span>            :                    &gt;&amp; f1,
+<span class="lineNum">    1018 </span>            :                    BOOST_FUNCTION_FUNCTION&lt;
+<span class="lineNum">    1019 </span>            :                      R BOOST_FUNCTION_COMMA
+<span class="lineNum">    1020 </span>            :                      BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">    1021 </span>            :                    &gt;&amp; f2)
+<span class="lineNum">    1022 </span>            :   {
+<span class="lineNum">    1023 </span>            :     f1.swap(f2);
+<span class="lineNum">    1024 </span>            :   }
+<span class="lineNum">    1025 </span>            : 
+<span class="lineNum">    1026 </span>            : // Poison comparisons between boost::function objects of the same type.
+<span class="lineNum">    1027 </span>            : template&lt;typename R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_PARMS&gt;
+<span class="lineNum">    1028 </span>            :   void operator==(const BOOST_FUNCTION_FUNCTION&lt;
+<span class="lineNum">    1029 </span>            :                           R BOOST_FUNCTION_COMMA
+<span class="lineNum">    1030 </span>            :                           BOOST_FUNCTION_TEMPLATE_ARGS&gt;&amp;,
+<span class="lineNum">    1031 </span>            :                   const BOOST_FUNCTION_FUNCTION&lt;
+<span class="lineNum">    1032 </span>            :                           R BOOST_FUNCTION_COMMA
+<span class="lineNum">    1033 </span>            :                           BOOST_FUNCTION_TEMPLATE_ARGS&gt;&amp;);
+<span class="lineNum">    1034 </span>            : template&lt;typename R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_PARMS&gt;
+<span class="lineNum">    1035 </span>            :   void operator!=(const BOOST_FUNCTION_FUNCTION&lt;
+<span class="lineNum">    1036 </span>            :                           R BOOST_FUNCTION_COMMA
+<span class="lineNum">    1037 </span>            :                           BOOST_FUNCTION_TEMPLATE_ARGS&gt;&amp;,
+<span class="lineNum">    1038 </span>            :                   const BOOST_FUNCTION_FUNCTION&lt;
+<span class="lineNum">    1039 </span>            :                           R BOOST_FUNCTION_COMMA
+<span class="lineNum">    1040 </span>            :                           BOOST_FUNCTION_TEMPLATE_ARGS&gt;&amp; );
+<span class="lineNum">    1041 </span>            : 
+<span class="lineNum">    1042 </span>            : #if !defined(BOOST_FUNCTION_NO_FUNCTION_TYPE_SYNTAX)
+<span class="lineNum">    1043 </span>            : 
+<span class="lineNum">    1044 </span>            : #if BOOST_FUNCTION_NUM_ARGS == 0
+<span class="lineNum">    1045 </span>            : #define BOOST_FUNCTION_PARTIAL_SPEC R (void)
+<span class="lineNum">    1046 </span>            : #else
+<span class="lineNum">    1047 </span>            : #define BOOST_FUNCTION_PARTIAL_SPEC R (BOOST_PP_ENUM_PARAMS(BOOST_FUNCTION_NUM_ARGS,T))
+<span class="lineNum">    1048 </span>            : #endif
+<span class="lineNum">    1049 </span>            : 
+<a name="1050"><span class="lineNum">    1050 </span>            : template&lt;typename R BOOST_FUNCTION_COMMA</a>
+<span class="lineNum">    1051 </span>            :          BOOST_FUNCTION_TEMPLATE_PARMS&gt;
+<span class="lineNum">    1052 </span><span class="lineCov">    6145094 : class function&lt;BOOST_FUNCTION_PARTIAL_SPEC&gt;</span>
+<span class="lineNum">    1053 </span>            :   : public BOOST_FUNCTION_FUNCTION&lt;R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_ARGS&gt;
+<span class="lineNum">    1054 </span>            : {
+<span class="lineNum">    1055 </span>            :   typedef BOOST_FUNCTION_FUNCTION&lt;R BOOST_FUNCTION_COMMA BOOST_FUNCTION_TEMPLATE_ARGS&gt; base_type;
+<span class="lineNum">    1056 </span>            :   typedef function self_type;
+<span class="lineNum">    1057 </span>            : 
+<span class="lineNum">    1058 </span>            :   struct clear_type {};
+<span class="lineNum">    1059 </span>            : 
+<span class="lineNum">    1060 </span>            : public:
+<span class="lineNum">    1061 </span>            : 
+<span class="lineNum">    1062 </span><span class="lineCov">         74 :   function() : base_type() {}</span>
+<a name="1063"><span class="lineNum">    1063 </span>            : </a>
+<span class="lineNum">    1064 </span>            :   template&lt;typename Functor&gt;
+<span class="lineNum">    1065 </span><span class="lineNoCov">          0 :   function(Functor f</span>
+<span class="lineNum">    1066 </span>            : #ifndef BOOST_NO_SFINAE
+<span class="lineNum">    1067 </span>            :            ,typename boost::enable_if_c&lt;
+<span class="lineNum">    1068 </span>            :                           !(is_integral&lt;Functor&gt;::value),
+<span class="lineNum">    1069 </span>            :                        int&gt;::type = 0
+<span class="lineNum">    1070 </span>            : #endif
+<span class="lineNum">    1071 </span>            :            ) :
+<span class="lineNum">    1072 </span><span class="lineCov">     586326 :     base_type(f)</span>
+<span class="lineNum">    1073 </span>            :   {
+<span class="lineNum">    1074 </span><span class="lineNoCov">          0 :   }</span>
+<span class="lineNum">    1075 </span>            :   template&lt;typename Functor,typename Allocator&gt;
+<span class="lineNum">    1076 </span>            :   function(Functor f, Allocator a
+<span class="lineNum">    1077 </span>            : #ifndef BOOST_NO_SFINAE
+<span class="lineNum">    1078 </span>            :            ,typename boost::enable_if_c&lt;
+<span class="lineNum">    1079 </span>            :                            !(is_integral&lt;Functor&gt;::value),
+<span class="lineNum">    1080 </span>            :                        int&gt;::type = 0
+<span class="lineNum">    1081 </span>            : #endif
+<span class="lineNum">    1082 </span>            :            ) :
+<span class="lineNum">    1083 </span>            :     base_type(f,a)
+<span class="lineNum">    1084 </span>            :   {
+<span class="lineNum">    1085 </span>            :   }
+<span class="lineNum">    1086 </span>            : 
+<span class="lineNum">    1087 </span>            : #ifndef BOOST_NO_SFINAE
+<span class="lineNum">    1088 </span>            :   function(clear_type*) : base_type() {}
+<span class="lineNum">    1089 </span>            : #endif
+<span class="lineNum">    1090 </span>            : 
+<span class="lineNum">    1091 </span><span class="lineCov">    2486794 :   function(const self_type&amp; f) : base_type(static_cast&lt;const base_type&amp;&gt;(f)){}</span>
+<span class="lineNum">    1092 </span>            : 
+<span class="lineNum">    1093 </span>            :   function(const base_type&amp; f) : base_type(static_cast&lt;const base_type&amp;&gt;(f)){}
+<span class="lineNum">    1094 </span>            : 
+<span class="lineNum">    1095 </span>            : #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">    1096 </span>            :   // Move constructors
+<span class="lineNum">    1097 </span><span class="lineCov">         56 :   function(self_type&amp;&amp; f): base_type(static_cast&lt;base_type&amp;&amp;&gt;(f)){}</span>
+<span class="lineNum">    1098 </span>            :   function(base_type&amp;&amp; f): base_type(static_cast&lt;base_type&amp;&amp;&gt;(f)){}
+<a name="1099"><span class="lineNum">    1099 </span>            : #endif</a>
+<span class="lineNum">    1100 </span>            : 
+<span class="lineNum">    1101 </span><span class="lineNoCov">          0 :   self_type&amp; operator=(const self_type&amp; f)</span>
+<span class="lineNum">    1102 </span>            :   {
+<span class="lineNum">    1103 </span><span class="lineNoCov">          0 :     self_type(f).swap(*this);</span>
+<span class="lineNum">    1104 </span><span class="lineNoCov">          0 :     return *this;</span>
+<span class="lineNum">    1105 </span>            :   }
+<span class="lineNum">    1106 </span>            : 
+<span class="lineNum">    1107 </span>            : #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">    1108 </span>            :   self_type&amp; operator=(self_type&amp;&amp; f)
+<span class="lineNum">    1109 </span>            :   {
+<span class="lineNum">    1110 </span>            :     self_type(static_cast&lt;self_type&amp;&amp;&gt;(f)).swap(*this);
+<span class="lineNum">    1111 </span>            :     return *this;
+<span class="lineNum">    1112 </span>            :   }
+<span class="lineNum">    1113 </span>            : #endif
+<span class="lineNum">    1114 </span>            : 
+<span class="lineNum">    1115 </span>            :   template&lt;typename Functor&gt;
+<span class="lineNum">    1116 </span>            : #ifndef BOOST_NO_SFINAE
+<span class="lineNum">    1117 </span>            :   typename boost::enable_if_c&lt;
+<span class="lineNum">    1118 </span>            :                          !(is_integral&lt;Functor&gt;::value),
+<span class="lineNum">    1119 </span>            :                       self_type&amp;&gt;::type
+<span class="lineNum">    1120 </span>            : #else
+<a name="1121"><span class="lineNum">    1121 </span>            :   self_type&amp;</a>
+<span class="lineNum">    1122 </span>            : #endif
+<span class="lineNum">    1123 </span><span class="lineCov">         10 :   operator=(Functor f)</span>
+<span class="lineNum">    1124 </span>            :   {
+<span class="lineNum">    1125 </span><span class="lineCov">         30 :     self_type(f).swap(*this);</span>
+<span class="lineNum">    1126 </span><span class="lineCov">         10 :     return *this;</span>
+<span class="lineNum">    1127 </span>            :   }
+<span class="lineNum">    1128 </span>            : 
+<span class="lineNum">    1129 </span>            : #ifndef BOOST_NO_SFINAE
+<span class="lineNum">    1130 </span>            :   self_type&amp; operator=(clear_type*)
+<span class="lineNum">    1131 </span>            :   {
+<span class="lineNum">    1132 </span>            :     this-&gt;clear();
+<span class="lineNum">    1133 </span>            :     return *this;
+<span class="lineNum">    1134 </span>            :   }
+<span class="lineNum">    1135 </span>            : #endif
+<span class="lineNum">    1136 </span>            : 
+<span class="lineNum">    1137 </span>            :   self_type&amp; operator=(const base_type&amp; f)
+<span class="lineNum">    1138 </span>            :   {
+<span class="lineNum">    1139 </span>            :     self_type(f).swap(*this);
+<span class="lineNum">    1140 </span>            :     return *this;
+<span class="lineNum">    1141 </span>            :   }
+<span class="lineNum">    1142 </span>            : 
+<span class="lineNum">    1143 </span>            : #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">    1144 </span>            :   self_type&amp; operator=(base_type&amp;&amp; f)
+<span class="lineNum">    1145 </span>            :   {
+<span class="lineNum">    1146 </span>            :     self_type(static_cast&lt;base_type&amp;&amp;&gt;(f)).swap(*this);
+<span class="lineNum">    1147 </span>            :     return *this;
+<span class="lineNum">    1148 </span>            :   }
+<span class="lineNum">    1149 </span>            : #endif
+<span class="lineNum">    1150 </span>            : };
+<span class="lineNum">    1151 </span>            : 
+<span class="lineNum">    1152 </span>            : #undef BOOST_FUNCTION_PARTIAL_SPEC
+<span class="lineNum">    1153 </span>            : #endif // have partial specialization
+<span class="lineNum">    1154 </span>            : 
+<span class="lineNum">    1155 </span>            : } // end namespace boost
+<span class="lineNum">    1156 </span>            : 
+<span class="lineNum">    1157 </span>            : // Cleanup after ourselves...
+<span class="lineNum">    1158 </span>            : #undef BOOST_FUNCTION_VTABLE
+<span class="lineNum">    1159 </span>            : #undef BOOST_FUNCTION_COMMA
+<span class="lineNum">    1160 </span>            : #undef BOOST_FUNCTION_FUNCTION
+<span class="lineNum">    1161 </span>            : #undef BOOST_FUNCTION_FUNCTION_INVOKER
+<span class="lineNum">    1162 </span>            : #undef BOOST_FUNCTION_VOID_FUNCTION_INVOKER
+<span class="lineNum">    1163 </span>            : #undef BOOST_FUNCTION_FUNCTION_OBJ_INVOKER
+<span class="lineNum">    1164 </span>            : #undef BOOST_FUNCTION_VOID_FUNCTION_OBJ_INVOKER
+<span class="lineNum">    1165 </span>            : #undef BOOST_FUNCTION_FUNCTION_REF_INVOKER
+<span class="lineNum">    1166 </span>            : #undef BOOST_FUNCTION_VOID_FUNCTION_REF_INVOKER
+<span class="lineNum">    1167 </span>            : #undef BOOST_FUNCTION_MEMBER_INVOKER
+<span class="lineNum">    1168 </span>            : #undef BOOST_FUNCTION_VOID_MEMBER_INVOKER
+<span class="lineNum">    1169 </span>            : #undef BOOST_FUNCTION_GET_FUNCTION_INVOKER
+<span class="lineNum">    1170 </span>            : #undef BOOST_FUNCTION_GET_FUNCTION_OBJ_INVOKER
+<span class="lineNum">    1171 </span>            : #undef BOOST_FUNCTION_GET_FUNCTION_REF_INVOKER
+<span class="lineNum">    1172 </span>            : #undef BOOST_FUNCTION_GET_MEM_FUNCTION_INVOKER
+<span class="lineNum">    1173 </span>            : #undef BOOST_FUNCTION_GET_INVOKER
+<span class="lineNum">    1174 </span>            : #undef BOOST_FUNCTION_TEMPLATE_PARMS
+<span class="lineNum">    1175 </span>            : #undef BOOST_FUNCTION_TEMPLATE_ARGS
+<span class="lineNum">    1176 </span>            : #undef BOOST_FUNCTION_PARMS
+<span class="lineNum">    1177 </span>            : #undef BOOST_FUNCTION_PARM
+<span class="lineNum">    1178 </span>            : #ifdef BOOST_FUNCTION_ARG
+<span class="lineNum">    1179 </span>            : #   undef BOOST_FUNCTION_ARG
+<span class="lineNum">    1180 </span>            : #endif
+<span class="lineNum">    1181 </span>            : #undef BOOST_FUNCTION_ARGS
+<span class="lineNum">    1182 </span>            : #undef BOOST_FUNCTION_ARG_TYPE
+<span class="lineNum">    1183 </span>            : #undef BOOST_FUNCTION_ARG_TYPES
+<span class="lineNum">    1184 </span>            : #undef BOOST_FUNCTION_VOID_RETURN_TYPE
+<span class="lineNum">    1185 </span>            : #undef BOOST_FUNCTION_RETURN
+<span class="lineNum">    1186 </span>            : 
+<span class="lineNum">    1187 </span>            : #if defined(BOOST_MSVC)
+<span class="lineNum">    1188 </span>            : #   pragma warning( pop )
+<span class="lineNum">    1189 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

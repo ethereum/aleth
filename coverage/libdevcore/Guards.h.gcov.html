@@ -1,0 +1,235 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/Guards.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - Guards.h<span style="font-size: 80%;"> (source / <a href="Guards.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryLo">70.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Guards.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;mutex&gt;
+<span class="lineNum">      25 </span>            : #include &lt;condition_variable&gt;
+<span class="lineNum">      26 </span>            : #include &lt;atomic&gt;
+<span class="lineNum">      27 </span>            : #pragma warning(push)
+<span class="lineNum">      28 </span>            : #pragma GCC diagnostic push
+<span class="lineNum">      29 </span>            : #pragma GCC diagnostic ignored &quot;-Wunused-parameter&quot;
+<span class="lineNum">      30 </span>            : #include &lt;boost/thread.hpp&gt;
+<span class="lineNum">      31 </span>            : #pragma warning(pop)
+<span class="lineNum">      32 </span>            : #pragma GCC diagnostic pop
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace dev
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : using Mutex = std::mutex;
+<span class="lineNum">      38 </span>            : using RecursiveMutex = std::recursive_mutex;
+<span class="lineNum">      39 </span>            : using SharedMutex = boost::shared_mutex;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : using Guard = std::lock_guard&lt;std::mutex&gt;;
+<span class="lineNum">      42 </span>            : using UniqueGuard = std::unique_lock&lt;std::mutex&gt;;
+<span class="lineNum">      43 </span>            : using RecursiveGuard = std::lock_guard&lt;std::recursive_mutex&gt;;
+<span class="lineNum">      44 </span>            : using ReadGuard = boost::shared_lock&lt;boost::shared_mutex&gt;;
+<span class="lineNum">      45 </span>            : using UpgradableGuard = boost::upgrade_lock&lt;boost::shared_mutex&gt;;
+<span class="lineNum">      46 </span>            : using UpgradeGuard = boost::upgrade_to_unique_lock&lt;boost::shared_mutex&gt;;
+<span class="lineNum">      47 </span>            : using WriteGuard = boost::unique_lock&lt;boost::shared_mutex&gt;;
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : template &lt;class GuardType, class MutexType&gt;
+<span class="lineNum">      50 </span><span class="lineCov">     148183 : struct GenericGuardBool: GuardType</span>
+<span class="lineNum">      51 </span>            : {
+<span class="lineNum">      52 </span><span class="lineCov">     116176 :         GenericGuardBool(MutexType&amp; _m): GuardType(_m) {}</span>
+<span class="lineNum">      53 </span>            :         bool b = true;
+<span class="lineNum">      54 </span>            : };
+<span class="lineNum">      55 </span>            : template &lt;class MutexType&gt;
+<span class="lineNum">      56 </span>            : struct GenericUnguardBool
+<span class="lineNum">      57 </span>            : {
+<span class="lineNum">      58 </span>            :         GenericUnguardBool(MutexType&amp; _m): m(_m) { m.unlock(); }
+<span class="lineNum">      59 </span>            :         ~GenericUnguardBool() { m.lock(); }
+<span class="lineNum">      60 </span>            :         bool b = true;
+<span class="lineNum">      61 </span>            :         MutexType&amp; m;
+<span class="lineNum">      62 </span>            : };
+<span class="lineNum">      63 </span>            : template &lt;class MutexType&gt;
+<span class="lineNum">      64 </span>            : struct GenericUnguardSharedBool
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span>            :         GenericUnguardSharedBool(MutexType&amp; _m): m(_m) { m.unlock_shared(); }
+<span class="lineNum">      67 </span>            :         ~GenericUnguardSharedBool() { m.lock_shared(); }
+<span class="lineNum">      68 </span>            :         bool b = true;
+<span class="lineNum">      69 </span>            :         MutexType&amp; m;
+<span class="lineNum">      70 </span>            : };
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : /** @brief Simple lock that waits for release without making context switch */
+<span class="lineNum">      73 </span>            : class SpinLock
+<span class="lineNum">      74 </span>            : {
+<span class="lineNum">      75 </span>            : public:
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :         SpinLock() { m_lock.clear(); }</span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :         void lock() { while (m_lock.test_and_set(std::memory_order_acquire)) {} }</span>
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :         void unlock() { m_lock.clear(std::memory_order_release); }</span>
+<span class="lineNum">      79 </span>            : private:
+<span class="lineNum">      80 </span>            :         std::atomic_flag m_lock;
+<span class="lineNum">      81 </span>            : };
+<span class="lineNum">      82 </span>            : using SpinGuard = std::lock_guard&lt;SpinLock&gt;;
+<a name="83"><span class="lineNum">      83 </span>            : </a>
+<span class="lineNum">      84 </span>            : template &lt;class N&gt;
+<span class="lineNum">      85 </span><span class="lineCov">         38 : class Notified</span>
+<span class="lineNum">      86 </span>            : {
+<span class="lineNum">      87 </span>            : public:
+<span class="lineNum">      88 </span><span class="lineCov">         57 :         Notified() {}</span>
+<a name="89"><span class="lineNum">      89 </span>            :         Notified(N const&amp; _v): m_value(_v) {}</a>
+<span class="lineNum">      90 </span>            :         Notified(Notified const&amp;) = delete;
+<a name="91"><span class="lineNum">      91 </span><span class="lineCov">         63 :         Notified&amp; operator=(N const&amp; _v) { UniqueGuard l(m_mutex); m_value = _v; m_cv.notify_all(); return *this; }</span></a>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">         75 :         operator N() const { UniqueGuard l(m_mutex); return m_value; }</span>
+<span class="lineNum">      94 </span>            : 
+<a name="95"><span class="lineNum">      95 </span>            :         void wait() const { N old; { UniqueGuard l(m_mutex); old = m_value; } waitNot(old); }</a>
+<span class="lineNum">      96 </span>            :         void wait(N const&amp; _v) const { UniqueGuard l(m_mutex); m_cv.wait(l, [&amp;](){return m_value == _v;}); }
+<span class="lineNum">      97 </span><span class="lineCov">        146 :         void waitNot(N const&amp; _v) const { UniqueGuard l(m_mutex); m_cv.wait(l, [&amp;](){return m_value != _v;}); }</span>
+<span class="lineNum">      98 </span>            :         template &lt;class F&gt; void wait(F const&amp; _f) const { UniqueGuard l(m_mutex); m_cv.wait(l, _f); }
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :         template &lt;class R, class P&gt; void wait(std::chrono::duration&lt;R, P&gt; _d) const { N old; { UniqueGuard l(m_mutex); old = m_value; } waitNot(_d, old); }
+<span class="lineNum">     101 </span>            :         template &lt;class R, class P&gt; void wait(std::chrono::duration&lt;R, P&gt; _d, N const&amp; _v) const { UniqueGuard l(m_mutex); m_cv.wait_for(l, _d, [&amp;](){return m_value == _v;}); }
+<span class="lineNum">     102 </span>            :         template &lt;class R, class P&gt; void waitNot(std::chrono::duration&lt;R, P&gt; _d, N const&amp; _v) const { UniqueGuard l(m_mutex); m_cv.wait_for(l, _d, [&amp;](){return m_value != _v;}); }
+<span class="lineNum">     103 </span>            :         template &lt;class R, class P, class F&gt; void wait(std::chrono::duration&lt;R, P&gt; _d, F const&amp; _f) const { UniqueGuard l(m_mutex); m_cv.wait_for(l, _d, _f); }
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : private:
+<span class="lineNum">     106 </span>            :         mutable Mutex m_mutex;
+<span class="lineNum">     107 </span>            :         mutable std::condition_variable m_cv;
+<span class="lineNum">     108 </span>            :         N m_value;
+<span class="lineNum">     109 </span>            : };
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            : /** @brief Simple block guard.
+<span class="lineNum">     112 </span>            :  * The expression/block following is guarded though the given mutex.
+<span class="lineNum">     113 </span>            :  * Usage:
+<span class="lineNum">     114 </span>            :  * @code
+<span class="lineNum">     115 </span>            :  * Mutex m;
+<span class="lineNum">     116 </span>            :  * unsigned d;
+<span class="lineNum">     117 </span>            :  * ...
+<span class="lineNum">     118 </span>            :  * ETH_(m) d = 1;
+<span class="lineNum">     119 </span>            :  * ...
+<span class="lineNum">     120 </span>            :  * ETH_(m) { for (auto d = 10; d &gt; 0; --d) foo(d); d = 0; }
+<span class="lineNum">     121 </span>            :  * @endcode
+<span class="lineNum">     122 </span>            :  *
+<span class="lineNum">     123 </span>            :  * There are several variants of this basic mechanism for different Mutex types and Guards.
+<span class="lineNum">     124 </span>            :  *
+<span class="lineNum">     125 </span>            :  * There is also the UNGUARD variant which allows an unguarded expression/block to exist within a
+<span class="lineNum">     126 </span>            :  * guarded expression. eg:
+<span class="lineNum">     127 </span>            :  *
+<span class="lineNum">     128 </span>            :  * @code
+<span class="lineNum">     129 </span>            :  * Mutex m;
+<span class="lineNum">     130 </span>            :  * int d;
+<span class="lineNum">     131 </span>            :  * ...
+<span class="lineNum">     132 </span>            :  * ETH_GUARDED(m)
+<span class="lineNum">     133 </span>            :  * {
+<span class="lineNum">     134 </span>            :  *   for (auto d = 50; d &gt; 25; --d)
+<span class="lineNum">     135 </span>            :  *     foo(d);
+<span class="lineNum">     136 </span>            :  *   ETH_UNGUARDED(m)
+<span class="lineNum">     137 </span>            :  *     bar();
+<span class="lineNum">     138 </span>            :  *   for (; d &gt; 0; --d)
+<span class="lineNum">     139 </span>            :  *     foo(d);
+<span class="lineNum">     140 </span>            :  * }
+<span class="lineNum">     141 </span>            :  * @endcode
+<span class="lineNum">     142 </span>            :  */
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : #define DEV_GUARDED(MUTEX) \
+<span class="lineNum">     145 </span>            :         for (GenericGuardBool&lt;Guard, Mutex&gt; __eth_l(MUTEX); __eth_l.b; __eth_l.b = false)
+<span class="lineNum">     146 </span>            : #define DEV_READ_GUARDED(MUTEX) \
+<span class="lineNum">     147 </span>            :         for (GenericGuardBool&lt;ReadGuard, SharedMutex&gt; __eth_l(MUTEX); __eth_l.b; __eth_l.b = false)
+<span class="lineNum">     148 </span>            : #define DEV_WRITE_GUARDED(MUTEX) \
+<span class="lineNum">     149 </span>            :         for (GenericGuardBool&lt;WriteGuard, SharedMutex&gt; __eth_l(MUTEX); __eth_l.b; __eth_l.b = false)
+<span class="lineNum">     150 </span>            : #define DEV_RECURSIVE_GUARDED(MUTEX) \
+<span class="lineNum">     151 </span>            :         for (GenericGuardBool&lt;RecursiveGuard, RecursiveMutex&gt; __eth_l(MUTEX); __eth_l.b; __eth_l.b = false)
+<span class="lineNum">     152 </span>            : #define DEV_UNGUARDED(MUTEX) \
+<span class="lineNum">     153 </span>            :         for (GenericUnguardBool&lt;Mutex&gt; __eth_l(MUTEX); __eth_l.b; __eth_l.b = false)
+<span class="lineNum">     154 </span>            : #define DEV_READ_UNGUARDED(MUTEX) \
+<span class="lineNum">     155 </span>            :         for (GenericUnguardSharedBool&lt;SharedMutex&gt; __eth_l(MUTEX); __eth_l.b; __eth_l.b = false)
+<span class="lineNum">     156 </span>            : #define DEV_WRITE_UNGUARDED(MUTEX) \
+<span class="lineNum">     157 </span>            :         for (GenericUnguardBool&lt;SharedMutex&gt; __eth_l(MUTEX); __eth_l.b; __eth_l.b = false)
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,960 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/bits/stl_multiset.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5/bits</a> - stl_multiset.h<span style="font-size: 80%;"> (source / <a href="stl_multiset.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Multiset implementation -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2001-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /*
+<span class="lineNum">      26 </span>            :  *
+<span class="lineNum">      27 </span>            :  * Copyright (c) 1994
+<span class="lineNum">      28 </span>            :  * Hewlett-Packard Company
+<span class="lineNum">      29 </span>            :  *
+<span class="lineNum">      30 </span>            :  * Permission to use, copy, modify, distribute and sell this software
+<span class="lineNum">      31 </span>            :  * and its documentation for any purpose is hereby granted without fee,
+<span class="lineNum">      32 </span>            :  * provided that the above copyright notice appear in all copies and
+<span class="lineNum">      33 </span>            :  * that both that copyright notice and this permission notice appear
+<span class="lineNum">      34 </span>            :  * in supporting documentation.  Hewlett-Packard Company makes no
+<span class="lineNum">      35 </span>            :  * representations about the suitability of this software for any
+<span class="lineNum">      36 </span>            :  * purpose.  It is provided &quot;as is&quot; without express or implied warranty.
+<span class="lineNum">      37 </span>            :  *
+<span class="lineNum">      38 </span>            :  *
+<span class="lineNum">      39 </span>            :  * Copyright (c) 1996
+<span class="lineNum">      40 </span>            :  * Silicon Graphics Computer Systems, Inc.
+<span class="lineNum">      41 </span>            :  *
+<span class="lineNum">      42 </span>            :  * Permission to use, copy, modify, distribute and sell this software
+<span class="lineNum">      43 </span>            :  * and its documentation for any purpose is hereby granted without fee,
+<span class="lineNum">      44 </span>            :  * provided that the above copyright notice appear in all copies and
+<span class="lineNum">      45 </span>            :  * that both that copyright notice and this permission notice appear
+<span class="lineNum">      46 </span>            :  * in supporting documentation.  Silicon Graphics makes no
+<span class="lineNum">      47 </span>            :  * representations about the suitability of this software for any
+<span class="lineNum">      48 </span>            :  * purpose.  It is provided &quot;as is&quot; without express or implied warranty.
+<span class="lineNum">      49 </span>            :  */
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : /** @file bits/stl_multiset.h
+<span class="lineNum">      52 </span>            :  *  This is an internal header file, included by other library headers.
+<span class="lineNum">      53 </span>            :  *  Do not attempt to use it directly. @headername{set}
+<span class="lineNum">      54 </span>            :  */
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : #ifndef _STL_MULTISET_H
+<span class="lineNum">      57 </span>            : #define _STL_MULTISET_H 1
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : #include &lt;bits/concept_check.h&gt;
+<span class="lineNum">      60 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">      61 </span>            : #include &lt;initializer_list&gt;
+<span class="lineNum">      62 </span>            : #endif
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span>            : _GLIBCXX_BEGIN_NAMESPACE_CONTAINER
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            :   /**
+<span class="lineNum">      69 </span>            :    *  @brief A standard container made up of elements, which can be retrieved
+<span class="lineNum">      70 </span>            :    *  in logarithmic time.
+<span class="lineNum">      71 </span>            :    *
+<span class="lineNum">      72 </span>            :    *  @ingroup associative_containers
+<span class="lineNum">      73 </span>            :    *
+<span class="lineNum">      74 </span>            :    *
+<span class="lineNum">      75 </span>            :    *  @tparam _Key  Type of key objects.
+<span class="lineNum">      76 </span>            :    *  @tparam _Compare  Comparison function object type, defaults to less&lt;_Key&gt;.
+<span class="lineNum">      77 </span>            :    *  @tparam _Alloc  Allocator type, defaults to allocator&lt;_Key&gt;.
+<span class="lineNum">      78 </span>            :    *
+<span class="lineNum">      79 </span>            :    *  Meets the requirements of a &lt;a href=&quot;tables.html#65&quot;&gt;container&lt;/a&gt;, a
+<span class="lineNum">      80 </span>            :    *  &lt;a href=&quot;tables.html#66&quot;&gt;reversible container&lt;/a&gt;, and an
+<span class="lineNum">      81 </span>            :    *  &lt;a href=&quot;tables.html#69&quot;&gt;associative container&lt;/a&gt; (using equivalent
+<span class="lineNum">      82 </span>            :    *  keys).  For a @c multiset&lt;Key&gt; the key_type and value_type are Key.
+<span class="lineNum">      83 </span>            :    *
+<span class="lineNum">      84 </span>            :    *  Multisets support bidirectional iterators.
+<span class="lineNum">      85 </span>            :    *
+<span class="lineNum">      86 </span>            :    *  The private tree data is declared exactly the same way for set and
+<span class="lineNum">      87 </span>            :    *  multiset; the distinction is made entirely in how the tree functions are
+<span class="lineNum">      88 </span>            :    *  called (*_unique versus *_equal, same as the standard).
+<span class="lineNum">      89 </span>            :   */
+<span class="lineNum">      90 </span>            :   template &lt;typename _Key, typename _Compare = std::less&lt;_Key&gt;,
+<span class="lineNum">      91 </span>            :             typename _Alloc = std::allocator&lt;_Key&gt; &gt;
+<span class="lineNum">      92 </span><span class="lineCov">      30196 :     class multiset</span>
+<span class="lineNum">      93 </span>            :     {
+<span class="lineNum">      94 </span>            :       // concept requirements
+<span class="lineNum">      95 </span>            :       typedef typename _Alloc::value_type                   _Alloc_value_type;
+<span class="lineNum">      96 </span>            :       __glibcxx_class_requires(_Key, _SGIAssignableConcept)
+<span class="lineNum">      97 </span>            :       __glibcxx_class_requires4(_Compare, bool, _Key, _Key,
+<span class="lineNum">      98 </span>            :                                 _BinaryFunctionConcept)
+<span class="lineNum">      99 </span>            :       __glibcxx_class_requires2(_Key, _Alloc_value_type, _SameTypeConcept)      
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :     public:
+<span class="lineNum">     102 </span>            :       // typedefs:
+<span class="lineNum">     103 </span>            :       typedef _Key     key_type;
+<span class="lineNum">     104 </span>            :       typedef _Key     value_type;
+<span class="lineNum">     105 </span>            :       typedef _Compare key_compare;
+<span class="lineNum">     106 </span>            :       typedef _Compare value_compare;
+<span class="lineNum">     107 </span>            :       typedef _Alloc   allocator_type;
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            :     private:
+<span class="lineNum">     110 </span>            :       /// This turns a red-black tree into a [multi]set.
+<span class="lineNum">     111 </span>            :       typedef typename __gnu_cxx::__alloc_traits&lt;_Alloc&gt;::template
+<span class="lineNum">     112 </span>            :         rebind&lt;_Key&gt;::other _Key_alloc_type;
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :       typedef _Rb_tree&lt;key_type, value_type, _Identity&lt;value_type&gt;,
+<span class="lineNum">     115 </span>            :                        key_compare, _Key_alloc_type&gt; _Rep_type;
+<span class="lineNum">     116 </span>            :       /// The actual tree structure.
+<span class="lineNum">     117 </span>            :       _Rep_type _M_t;
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :       typedef __gnu_cxx::__alloc_traits&lt;_Key_alloc_type&gt; _Alloc_traits;
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            :     public:
+<span class="lineNum">     122 </span>            :       typedef typename _Alloc_traits::pointer               pointer;
+<span class="lineNum">     123 </span>            :       typedef typename _Alloc_traits::const_pointer         const_pointer;
+<span class="lineNum">     124 </span>            :       typedef typename _Alloc_traits::reference             reference;
+<span class="lineNum">     125 </span>            :       typedef typename _Alloc_traits::const_reference       const_reference;
+<span class="lineNum">     126 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     127 </span>            :       // DR 103. set::iterator is required to be modifiable,
+<span class="lineNum">     128 </span>            :       // but this allows modification of keys.
+<span class="lineNum">     129 </span>            :       typedef typename _Rep_type::const_iterator            iterator;
+<span class="lineNum">     130 </span>            :       typedef typename _Rep_type::const_iterator            const_iterator;
+<span class="lineNum">     131 </span>            :       typedef typename _Rep_type::const_reverse_iterator    reverse_iterator;
+<span class="lineNum">     132 </span>            :       typedef typename _Rep_type::const_reverse_iterator const_reverse_iterator;
+<span class="lineNum">     133 </span>            :       typedef typename _Rep_type::size_type                 size_type;
+<span class="lineNum">     134 </span>            :       typedef typename _Rep_type::difference_type           difference_type;
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :       // allocation/deallocation
+<span class="lineNum">     137 </span>            :       /**
+<span class="lineNum">     138 </span>            :        *  @brief  Default constructor creates no elements.
+<span class="lineNum">     139 </span>            :        */
+<span class="lineNum">     140 </span>            :       multiset()
+<span class="lineNum">     141 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     142 </span>            :       noexcept(is_nothrow_default_constructible&lt;allocator_type&gt;::value)
+<span class="lineNum">     143 </span>            : #endif
+<span class="lineNum">     144 </span>            :       : _M_t() { }
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :       /**
+<span class="lineNum">     147 </span>            :        *  @brief  Creates a %multiset with no elements.
+<span class="lineNum">     148 </span>            :        *  @param  __comp  Comparator to use.
+<span class="lineNum">     149 </span>            :        *  @param  __a  An allocator object.
+<span class="lineNum">     150 </span>            :        */
+<span class="lineNum">     151 </span>            :       explicit
+<span class="lineNum">     152 </span>            :       multiset(const _Compare&amp; __comp,
+<span class="lineNum">     153 </span>            :                const allocator_type&amp; __a = allocator_type())
+<span class="lineNum">     154 </span><span class="lineCov">      45294 :       : _M_t(__comp, _Key_alloc_type(__a)) { }</span>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :       /**
+<span class="lineNum">     157 </span>            :        *  @brief  Builds a %multiset from a range.
+<span class="lineNum">     158 </span>            :        *  @param  __first  An input iterator.
+<span class="lineNum">     159 </span>            :        *  @param  __last  An input iterator.
+<span class="lineNum">     160 </span>            :        *
+<span class="lineNum">     161 </span>            :        *  Create a %multiset consisting of copies of the elements from
+<span class="lineNum">     162 </span>            :        *  [first,last).  This is linear in N if the range is already sorted,
+<span class="lineNum">     163 </span>            :        *  and NlogN otherwise (where N is distance(__first,__last)).
+<span class="lineNum">     164 </span>            :        */
+<span class="lineNum">     165 </span>            :       template&lt;typename _InputIterator&gt;
+<span class="lineNum">     166 </span>            :         multiset(_InputIterator __first, _InputIterator __last)
+<span class="lineNum">     167 </span>            :         : _M_t()
+<span class="lineNum">     168 </span>            :         { _M_t._M_insert_equal(__first, __last); }
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :       /**
+<span class="lineNum">     171 </span>            :        *  @brief  Builds a %multiset from a range.
+<span class="lineNum">     172 </span>            :        *  @param  __first  An input iterator.
+<span class="lineNum">     173 </span>            :        *  @param  __last  An input iterator.
+<span class="lineNum">     174 </span>            :        *  @param  __comp  A comparison functor.
+<span class="lineNum">     175 </span>            :        *  @param  __a  An allocator object.
+<span class="lineNum">     176 </span>            :        *
+<span class="lineNum">     177 </span>            :        *  Create a %multiset consisting of copies of the elements from
+<span class="lineNum">     178 </span>            :        *  [__first,__last).  This is linear in N if the range is already sorted,
+<span class="lineNum">     179 </span>            :        *  and NlogN otherwise (where N is distance(__first,__last)).
+<span class="lineNum">     180 </span>            :        */
+<span class="lineNum">     181 </span>            :       template&lt;typename _InputIterator&gt;
+<span class="lineNum">     182 </span>            :         multiset(_InputIterator __first, _InputIterator __last,
+<span class="lineNum">     183 </span>            :                  const _Compare&amp; __comp,
+<span class="lineNum">     184 </span>            :                  const allocator_type&amp; __a = allocator_type())
+<span class="lineNum">     185 </span>            :         : _M_t(__comp, _Key_alloc_type(__a))
+<span class="lineNum">     186 </span>            :         { _M_t._M_insert_equal(__first, __last); }
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :       /**
+<span class="lineNum">     189 </span>            :        *  @brief  %Multiset copy constructor.
+<span class="lineNum">     190 </span>            :        *  @param  __x  A %multiset of identical element and allocator types.
+<span class="lineNum">     191 </span>            :        *
+<span class="lineNum">     192 </span>            :        *  The newly-created %multiset uses a copy of the allocation object used
+<span class="lineNum">     193 </span>            :        *  by @a __x.
+<span class="lineNum">     194 </span>            :        */
+<span class="lineNum">     195 </span>            :       multiset(const multiset&amp; __x)
+<span class="lineNum">     196 </span>            :       : _M_t(__x._M_t) { }
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     199 </span>            :      /**
+<span class="lineNum">     200 </span>            :        *  @brief  %Multiset move constructor.
+<span class="lineNum">     201 </span>            :        *  @param  __x  A %multiset of identical element and allocator types.
+<span class="lineNum">     202 </span>            :        *
+<span class="lineNum">     203 </span>            :        *  The newly-created %multiset contains the exact contents of @a __x.
+<span class="lineNum">     204 </span>            :        *  The contents of @a __x are a valid, but unspecified %multiset.
+<span class="lineNum">     205 </span>            :        */
+<span class="lineNum">     206 </span>            :       multiset(multiset&amp;&amp; __x)
+<span class="lineNum">     207 </span>            :       noexcept(is_nothrow_copy_constructible&lt;_Compare&gt;::value)
+<span class="lineNum">     208 </span>            :       : _M_t(std::move(__x._M_t)) { }
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :       /**
+<span class="lineNum">     211 </span>            :        *  @brief  Builds a %multiset from an initializer_list.
+<span class="lineNum">     212 </span>            :        *  @param  __l  An initializer_list.
+<span class="lineNum">     213 </span>            :        *  @param  __comp  A comparison functor.
+<span class="lineNum">     214 </span>            :        *  @param  __a  An allocator object.
+<span class="lineNum">     215 </span>            :        *
+<span class="lineNum">     216 </span>            :        *  Create a %multiset consisting of copies of the elements from
+<span class="lineNum">     217 </span>            :        *  the list.  This is linear in N if the list is already sorted,
+<span class="lineNum">     218 </span>            :        *  and NlogN otherwise (where N is @a __l.size()).
+<span class="lineNum">     219 </span>            :        */
+<span class="lineNum">     220 </span>            :       multiset(initializer_list&lt;value_type&gt; __l,
+<span class="lineNum">     221 </span>            :                const _Compare&amp; __comp = _Compare(),
+<span class="lineNum">     222 </span>            :                const allocator_type&amp; __a = allocator_type())
+<span class="lineNum">     223 </span>            :       : _M_t(__comp, _Key_alloc_type(__a))
+<span class="lineNum">     224 </span>            :       { _M_t._M_insert_equal(__l.begin(), __l.end()); }
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            :       /// Allocator-extended default constructor.
+<span class="lineNum">     227 </span>            :       explicit
+<span class="lineNum">     228 </span>            :       multiset(const allocator_type&amp; __a)
+<span class="lineNum">     229 </span>            :       : _M_t(_Compare(), _Key_alloc_type(__a)) { }
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :       /// Allocator-extended copy constructor.
+<span class="lineNum">     232 </span>            :       multiset(const multiset&amp; __m, const allocator_type&amp; __a)
+<span class="lineNum">     233 </span>            :       : _M_t(__m._M_t, _Key_alloc_type(__a)) { }
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            :       /// Allocator-extended move constructor.
+<span class="lineNum">     236 </span>            :       multiset(multiset&amp;&amp; __m, const allocator_type&amp; __a)
+<span class="lineNum">     237 </span>            :       noexcept(is_nothrow_copy_constructible&lt;_Compare&gt;::value
+<span class="lineNum">     238 </span>            :                &amp;&amp; _Alloc_traits::_S_always_equal())
+<span class="lineNum">     239 </span>            :       : _M_t(std::move(__m._M_t), _Key_alloc_type(__a)) { }
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            :       /// Allocator-extended initialier-list constructor.
+<span class="lineNum">     242 </span>            :       multiset(initializer_list&lt;value_type&gt; __l, const allocator_type&amp; __a)
+<span class="lineNum">     243 </span>            :       : _M_t(_Compare(), _Key_alloc_type(__a))
+<span class="lineNum">     244 </span>            :       { _M_t._M_insert_equal(__l.begin(), __l.end()); }
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            :       /// Allocator-extended range constructor.
+<span class="lineNum">     247 </span>            :       template&lt;typename _InputIterator&gt;
+<span class="lineNum">     248 </span>            :         multiset(_InputIterator __first, _InputIterator __last,
+<span class="lineNum">     249 </span>            :                  const allocator_type&amp; __a)
+<span class="lineNum">     250 </span>            :         : _M_t(_Compare(), _Key_alloc_type(__a))
+<span class="lineNum">     251 </span>            :         { _M_t._M_insert_equal(__first, __last); }
+<span class="lineNum">     252 </span>            : #endif
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            :       /**
+<span class="lineNum">     255 </span>            :        *  @brief  %Multiset assignment operator.
+<span class="lineNum">     256 </span>            :        *  @param  __x  A %multiset of identical element and allocator types.
+<span class="lineNum">     257 </span>            :        *
+<span class="lineNum">     258 </span>            :        *  All the elements of @a __x are copied, but unlike the copy
+<span class="lineNum">     259 </span>            :        *  constructor, the allocator object is not copied.
+<span class="lineNum">     260 </span>            :        */
+<span class="lineNum">     261 </span>            :       multiset&amp;
+<span class="lineNum">     262 </span>            :       operator=(const multiset&amp; __x)
+<span class="lineNum">     263 </span>            :       {
+<span class="lineNum">     264 </span>            :         _M_t = __x._M_t;
+<span class="lineNum">     265 </span>            :         return *this;
+<span class="lineNum">     266 </span>            :       }
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     269 </span>            :       /// Move assignment operator.
+<span class="lineNum">     270 </span>            :       multiset&amp;
+<span class="lineNum">     271 </span>            :       operator=(multiset&amp;&amp;) = default;
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span>            :       /**
+<span class="lineNum">     274 </span>            :        *  @brief  %Multiset list assignment operator.
+<span class="lineNum">     275 </span>            :        *  @param  __l  An initializer_list.
+<span class="lineNum">     276 </span>            :        *
+<span class="lineNum">     277 </span>            :        *  This function fills a %multiset with copies of the elements in the
+<span class="lineNum">     278 </span>            :        *  initializer list @a __l.
+<span class="lineNum">     279 </span>            :        *
+<span class="lineNum">     280 </span>            :        *  Note that the assignment completely changes the %multiset and
+<span class="lineNum">     281 </span>            :        *  that the resulting %multiset's size is the same as the number
+<span class="lineNum">     282 </span>            :        *  of elements assigned.  Old data may be lost.
+<span class="lineNum">     283 </span>            :        */
+<span class="lineNum">     284 </span>            :       multiset&amp;
+<span class="lineNum">     285 </span>            :       operator=(initializer_list&lt;value_type&gt; __l)
+<span class="lineNum">     286 </span>            :       {
+<span class="lineNum">     287 </span>            :         _M_t._M_assign_equal(__l.begin(), __l.end());
+<span class="lineNum">     288 </span>            :         return *this;
+<span class="lineNum">     289 </span>            :       }
+<span class="lineNum">     290 </span>            : #endif
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span>            :       // accessors:
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            :       ///  Returns the comparison object.
+<span class="lineNum">     295 </span>            :       key_compare
+<span class="lineNum">     296 </span>            :       key_comp() const
+<span class="lineNum">     297 </span>            :       { return _M_t.key_comp(); }
+<span class="lineNum">     298 </span>            :       ///  Returns the comparison object.
+<span class="lineNum">     299 </span>            :       value_compare
+<span class="lineNum">     300 </span>            :       value_comp() const
+<span class="lineNum">     301 </span>            :       { return _M_t.key_comp(); }
+<span class="lineNum">     302 </span>            :       ///  Returns the memory allocation object.
+<span class="lineNum">     303 </span>            :       allocator_type
+<span class="lineNum">     304 </span>            :       get_allocator() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     305 </span>            :       { return allocator_type(_M_t.get_allocator()); }
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            :       /**
+<span class="lineNum">     308 </span>            :        *  Returns a read-only (constant) iterator that points to the first
+<span class="lineNum">     309 </span>            :        *  element in the %multiset.  Iteration is done in ascending order
+<span class="lineNum">     310 </span>            :        *  according to the keys.
+<span class="lineNum">     311 </span>            :        */
+<span class="lineNum">     312 </span>            :       iterator
+<span class="lineNum">     313 </span>            :       begin() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     314 </span><span class="lineCov">      14163 :       { return _M_t.begin(); }</span>
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span>            :       /**
+<span class="lineNum">     317 </span>            :        *  Returns a read-only (constant) iterator that points one past the last
+<span class="lineNum">     318 </span>            :        *  element in the %multiset.  Iteration is done in ascending order
+<span class="lineNum">     319 </span>            :        *  according to the keys.
+<span class="lineNum">     320 </span>            :        */
+<span class="lineNum">     321 </span>            :       iterator
+<span class="lineNum">     322 </span>            :       end() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     323 </span><span class="lineCov">      42874 :       { return _M_t.end(); }</span>
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span>            :       /**
+<span class="lineNum">     326 </span>            :        *  Returns a read-only (constant) reverse iterator that points to the
+<span class="lineNum">     327 </span>            :        *  last element in the %multiset.  Iteration is done in descending order
+<span class="lineNum">     328 </span>            :        *  according to the keys.
+<span class="lineNum">     329 </span>            :        */
+<span class="lineNum">     330 </span>            :       reverse_iterator
+<span class="lineNum">     331 </span>            :       rbegin() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     332 </span><span class="lineCov">          8 :       { return _M_t.rbegin(); }</span>
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span>            :       /**
+<span class="lineNum">     335 </span>            :        *  Returns a read-only (constant) reverse iterator that points to the
+<span class="lineNum">     336 </span>            :        *  last element in the %multiset.  Iteration is done in descending order
+<span class="lineNum">     337 </span>            :        *  according to the keys.
+<span class="lineNum">     338 </span>            :        */
+<span class="lineNum">     339 </span>            :       reverse_iterator
+<span class="lineNum">     340 </span>            :       rend() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     341 </span>            :       { return _M_t.rend(); }
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     344 </span>            :       /**
+<span class="lineNum">     345 </span>            :        *  Returns a read-only (constant) iterator that points to the first
+<span class="lineNum">     346 </span>            :        *  element in the %multiset.  Iteration is done in ascending order
+<span class="lineNum">     347 </span>            :        *  according to the keys.
+<span class="lineNum">     348 </span>            :        */
+<span class="lineNum">     349 </span>            :       iterator
+<span class="lineNum">     350 </span>            :       cbegin() const noexcept
+<span class="lineNum">     351 </span>            :       { return _M_t.begin(); }
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span>            :       /**
+<span class="lineNum">     354 </span>            :        *  Returns a read-only (constant) iterator that points one past the last
+<span class="lineNum">     355 </span>            :        *  element in the %multiset.  Iteration is done in ascending order
+<span class="lineNum">     356 </span>            :        *  according to the keys.
+<span class="lineNum">     357 </span>            :        */
+<span class="lineNum">     358 </span>            :       iterator
+<span class="lineNum">     359 </span>            :       cend() const noexcept
+<span class="lineNum">     360 </span>            :       { return _M_t.end(); }
+<span class="lineNum">     361 </span>            : 
+<span class="lineNum">     362 </span>            :       /**
+<span class="lineNum">     363 </span>            :        *  Returns a read-only (constant) reverse iterator that points to the
+<span class="lineNum">     364 </span>            :        *  last element in the %multiset.  Iteration is done in descending order
+<span class="lineNum">     365 </span>            :        *  according to the keys.
+<span class="lineNum">     366 </span>            :        */
+<span class="lineNum">     367 </span>            :       reverse_iterator
+<span class="lineNum">     368 </span>            :       crbegin() const noexcept
+<span class="lineNum">     369 </span>            :       { return _M_t.rbegin(); }
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span>            :       /**
+<span class="lineNum">     372 </span>            :        *  Returns a read-only (constant) reverse iterator that points to the
+<span class="lineNum">     373 </span>            :        *  last element in the %multiset.  Iteration is done in descending order
+<span class="lineNum">     374 </span>            :        *  according to the keys.
+<span class="lineNum">     375 </span>            :        */
+<span class="lineNum">     376 </span>            :       reverse_iterator
+<span class="lineNum">     377 </span>            :       crend() const noexcept
+<span class="lineNum">     378 </span>            :       { return _M_t.rend(); }
+<span class="lineNum">     379 </span>            : #endif
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span>            :       ///  Returns true if the %set is empty.
+<span class="lineNum">     382 </span>            :       bool
+<span class="lineNum">     383 </span>            :       empty() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     384 </span>            :       { return _M_t.empty(); }
+<span class="lineNum">     385 </span>            : 
+<span class="lineNum">     386 </span>            :       ///  Returns the size of the %set.
+<span class="lineNum">     387 </span>            :       size_type
+<span class="lineNum">     388 </span>            :       size() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     389 </span><span class="lineCov">      11348 :       { return _M_t.size(); }</span>
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span>            :       ///  Returns the maximum size of the %set.
+<span class="lineNum">     392 </span>            :       size_type
+<span class="lineNum">     393 </span>            :       max_size() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     394 </span>            :       { return _M_t.max_size(); }
+<span class="lineNum">     395 </span>            : 
+<span class="lineNum">     396 </span>            :       /**
+<span class="lineNum">     397 </span>            :        *  @brief  Swaps data with another %multiset.
+<span class="lineNum">     398 </span>            :        *  @param  __x  A %multiset of the same element and allocator types.
+<span class="lineNum">     399 </span>            :        *
+<span class="lineNum">     400 </span>            :        *  This exchanges the elements between two multisets in constant time.
+<span class="lineNum">     401 </span>            :        *  (It is only swapping a pointer, an integer, and an instance of the @c
+<span class="lineNum">     402 </span>            :        *  Compare type (which itself is often stateless and empty), so it should
+<span class="lineNum">     403 </span>            :        *  be quite fast.)
+<span class="lineNum">     404 </span>            :        *  Note that the global std::swap() function is specialized such that
+<span class="lineNum">     405 </span>            :        *  std::swap(s1,s2) will feed to this function.
+<span class="lineNum">     406 </span>            :        */
+<span class="lineNum">     407 </span>            :       void
+<span class="lineNum">     408 </span>            :       swap(multiset&amp; __x)
+<span class="lineNum">     409 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     410 </span>            :       noexcept(_Alloc_traits::_S_nothrow_swap())
+<span class="lineNum">     411 </span>            : #endif
+<span class="lineNum">     412 </span>            :       { _M_t.swap(__x._M_t); }
+<span class="lineNum">     413 </span>            : 
+<span class="lineNum">     414 </span>            :       // insert/erase
+<span class="lineNum">     415 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     416 </span>            :       /**
+<span class="lineNum">     417 </span>            :        *  @brief Builds and inserts an element into the %multiset.
+<span class="lineNum">     418 </span>            :        *  @param  __args  Arguments used to generate the element instance to be
+<span class="lineNum">     419 </span>            :        *                 inserted.
+<span class="lineNum">     420 </span>            :        *  @return An iterator that points to the inserted element.
+<span class="lineNum">     421 </span>            :        *
+<span class="lineNum">     422 </span>            :        *  This function inserts an element into the %multiset.  Contrary
+<span class="lineNum">     423 </span>            :        *  to a std::set the %multiset does not rely on unique keys and thus
+<span class="lineNum">     424 </span>            :        *  multiple copies of the same element can be inserted.
+<span class="lineNum">     425 </span>            :        *
+<span class="lineNum">     426 </span>            :        *  Insertion requires logarithmic time.
+<span class="lineNum">     427 </span>            :        */
+<span class="lineNum">     428 </span>            :       template&lt;typename... _Args&gt;
+<span class="lineNum">     429 </span>            :         iterator
+<span class="lineNum">     430 </span>            :         emplace(_Args&amp;&amp;... __args)
+<span class="lineNum">     431 </span><span class="lineCov">      22692 :         { return _M_t._M_emplace_equal(std::forward&lt;_Args&gt;(__args)...); }</span>
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span>            :       /**
+<span class="lineNum">     434 </span>            :        *  @brief Builds and inserts an element into the %multiset.
+<span class="lineNum">     435 </span>            :        *  @param  __pos  An iterator that serves as a hint as to where the
+<span class="lineNum">     436 </span>            :        *                element should be inserted.
+<span class="lineNum">     437 </span>            :        *  @param  __args  Arguments used to generate the element instance to be
+<span class="lineNum">     438 </span>            :        *                 inserted.
+<span class="lineNum">     439 </span>            :        *  @return An iterator that points to the inserted element.
+<span class="lineNum">     440 </span>            :        *
+<span class="lineNum">     441 </span>            :        *  This function inserts an element into the %multiset.  Contrary
+<span class="lineNum">     442 </span>            :        *  to a std::set the %multiset does not rely on unique keys and thus
+<span class="lineNum">     443 </span>            :        *  multiple copies of the same element can be inserted.
+<span class="lineNum">     444 </span>            :        *
+<span class="lineNum">     445 </span>            :        *  Note that the first parameter is only a hint and can potentially
+<span class="lineNum">     446 </span>            :        *  improve the performance of the insertion process.  A bad hint would
+<span class="lineNum">     447 </span>            :        *  cause no gains in efficiency.
+<span class="lineNum">     448 </span>            :        *
+<span class="lineNum">     449 </span>            :        *  See https://gcc.gnu.org/onlinedocs/libstdc++/manual/associative.html#containers.associative.insert_hints
+<span class="lineNum">     450 </span>            :        *  for more on @a hinting.
+<span class="lineNum">     451 </span>            :        *
+<span class="lineNum">     452 </span>            :        *  Insertion requires logarithmic time (if the hint is not taken).
+<span class="lineNum">     453 </span>            :        */
+<span class="lineNum">     454 </span>            :       template&lt;typename... _Args&gt;
+<span class="lineNum">     455 </span>            :         iterator
+<span class="lineNum">     456 </span>            :         emplace_hint(const_iterator __pos, _Args&amp;&amp;... __args)
+<span class="lineNum">     457 </span>            :         {
+<span class="lineNum">     458 </span>            :           return _M_t._M_emplace_hint_equal(__pos,
+<span class="lineNum">     459 </span>            :                                             std::forward&lt;_Args&gt;(__args)...);
+<span class="lineNum">     460 </span>            :         }
+<span class="lineNum">     461 </span>            : #endif
+<span class="lineNum">     462 </span>            : 
+<span class="lineNum">     463 </span>            :       /**
+<span class="lineNum">     464 </span>            :        *  @brief Inserts an element into the %multiset.
+<span class="lineNum">     465 </span>            :        *  @param  __x  Element to be inserted.
+<span class="lineNum">     466 </span>            :        *  @return An iterator that points to the inserted element.
+<span class="lineNum">     467 </span>            :        *
+<span class="lineNum">     468 </span>            :        *  This function inserts an element into the %multiset.  Contrary
+<span class="lineNum">     469 </span>            :        *  to a std::set the %multiset does not rely on unique keys and thus
+<span class="lineNum">     470 </span>            :        *  multiple copies of the same element can be inserted.
+<span class="lineNum">     471 </span>            :        *
+<span class="lineNum">     472 </span>            :        *  Insertion requires logarithmic time.
+<span class="lineNum">     473 </span>            :        */
+<span class="lineNum">     474 </span>            :       iterator
+<span class="lineNum">     475 </span>            :       insert(const value_type&amp; __x)
+<span class="lineNum">     476 </span>            :       { return _M_t._M_insert_equal(__x); }
+<span class="lineNum">     477 </span>            : 
+<span class="lineNum">     478 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     479 </span>            :       iterator
+<span class="lineNum">     480 </span>            :       insert(value_type&amp;&amp; __x)
+<span class="lineNum">     481 </span>            :       { return _M_t._M_insert_equal(std::move(__x)); }
+<span class="lineNum">     482 </span>            : #endif
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span>            :       /**
+<span class="lineNum">     485 </span>            :        *  @brief Inserts an element into the %multiset.
+<span class="lineNum">     486 </span>            :        *  @param  __position  An iterator that serves as a hint as to where the
+<span class="lineNum">     487 </span>            :        *                    element should be inserted.
+<span class="lineNum">     488 </span>            :        *  @param  __x  Element to be inserted.
+<span class="lineNum">     489 </span>            :        *  @return An iterator that points to the inserted element.
+<span class="lineNum">     490 </span>            :        *
+<span class="lineNum">     491 </span>            :        *  This function inserts an element into the %multiset.  Contrary
+<span class="lineNum">     492 </span>            :        *  to a std::set the %multiset does not rely on unique keys and thus
+<span class="lineNum">     493 </span>            :        *  multiple copies of the same element can be inserted.
+<span class="lineNum">     494 </span>            :        *
+<span class="lineNum">     495 </span>            :        *  Note that the first parameter is only a hint and can potentially
+<span class="lineNum">     496 </span>            :        *  improve the performance of the insertion process.  A bad hint would
+<span class="lineNum">     497 </span>            :        *  cause no gains in efficiency.
+<span class="lineNum">     498 </span>            :        *
+<span class="lineNum">     499 </span>            :        *  See https://gcc.gnu.org/onlinedocs/libstdc++/manual/associative.html#containers.associative.insert_hints
+<span class="lineNum">     500 </span>            :        *  for more on @a hinting.
+<span class="lineNum">     501 </span>            :        *
+<span class="lineNum">     502 </span>            :        *  Insertion requires logarithmic time (if the hint is not taken).
+<span class="lineNum">     503 </span>            :        */
+<span class="lineNum">     504 </span>            :       iterator
+<span class="lineNum">     505 </span>            :       insert(const_iterator __position, const value_type&amp; __x)
+<span class="lineNum">     506 </span>            :       { return _M_t._M_insert_equal_(__position, __x); }
+<span class="lineNum">     507 </span>            : 
+<span class="lineNum">     508 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     509 </span>            :       iterator
+<span class="lineNum">     510 </span>            :       insert(const_iterator __position, value_type&amp;&amp; __x)
+<span class="lineNum">     511 </span>            :       { return _M_t._M_insert_equal_(__position, std::move(__x)); }
+<span class="lineNum">     512 </span>            : #endif
+<span class="lineNum">     513 </span>            : 
+<span class="lineNum">     514 </span>            :       /**
+<span class="lineNum">     515 </span>            :        *  @brief A template function that tries to insert a range of elements.
+<span class="lineNum">     516 </span>            :        *  @param  __first  Iterator pointing to the start of the range to be
+<span class="lineNum">     517 </span>            :        *                   inserted.
+<span class="lineNum">     518 </span>            :        *  @param  __last  Iterator pointing to the end of the range.
+<span class="lineNum">     519 </span>            :        *
+<span class="lineNum">     520 </span>            :        *  Complexity similar to that of the range constructor.
+<span class="lineNum">     521 </span>            :        */
+<span class="lineNum">     522 </span>            :       template&lt;typename _InputIterator&gt;
+<span class="lineNum">     523 </span>            :         void
+<span class="lineNum">     524 </span>            :         insert(_InputIterator __first, _InputIterator __last)
+<span class="lineNum">     525 </span>            :         { _M_t._M_insert_equal(__first, __last); }
+<span class="lineNum">     526 </span>            : 
+<span class="lineNum">     527 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     528 </span>            :       /**
+<span class="lineNum">     529 </span>            :        *  @brief Attempts to insert a list of elements into the %multiset.
+<span class="lineNum">     530 </span>            :        *  @param  __l  A std::initializer_list&lt;value_type&gt; of elements
+<span class="lineNum">     531 </span>            :        *               to be inserted.
+<span class="lineNum">     532 </span>            :        *
+<span class="lineNum">     533 </span>            :        *  Complexity similar to that of the range constructor.
+<span class="lineNum">     534 </span>            :        */
+<span class="lineNum">     535 </span>            :       void
+<span class="lineNum">     536 </span>            :       insert(initializer_list&lt;value_type&gt; __l)
+<span class="lineNum">     537 </span>            :       { this-&gt;insert(__l.begin(), __l.end()); }
+<span class="lineNum">     538 </span>            : #endif
+<span class="lineNum">     539 </span>            : 
+<span class="lineNum">     540 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     541 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     542 </span>            :       // DR 130. Associative erase should return an iterator.
+<span class="lineNum">     543 </span>            :       /**
+<span class="lineNum">     544 </span>            :        *  @brief Erases an element from a %multiset.
+<span class="lineNum">     545 </span>            :        *  @param  __position  An iterator pointing to the element to be erased.
+<span class="lineNum">     546 </span>            :        *  @return An iterator pointing to the element immediately following
+<span class="lineNum">     547 </span>            :        *          @a position prior to the element being erased. If no such 
+<span class="lineNum">     548 </span>            :        *          element exists, end() is returned.
+<span class="lineNum">     549 </span>            :        *
+<span class="lineNum">     550 </span>            :        *  This function erases an element, pointed to by the given iterator,
+<span class="lineNum">     551 </span>            :        *  from a %multiset.  Note that this function only erases the element,
+<span class="lineNum">     552 </span>            :        *  and that if the element is itself a pointer, the pointed-to memory is
+<span class="lineNum">     553 </span>            :        *  not touched in any way.  Managing the pointer is the user's
+<span class="lineNum">     554 </span>            :        *  responsibility.
+<span class="lineNum">     555 </span>            :        */
+<span class="lineNum">     556 </span>            :       _GLIBCXX_ABI_TAG_CXX11
+<span class="lineNum">     557 </span>            :       iterator
+<span class="lineNum">     558 </span>            :       erase(const_iterator __position)
+<span class="lineNum">     559 </span><span class="lineCov">         50 :       { return _M_t.erase(__position); }</span>
+<span class="lineNum">     560 </span>            : #else
+<span class="lineNum">     561 </span>            :       /**
+<span class="lineNum">     562 </span>            :        *  @brief Erases an element from a %multiset.
+<span class="lineNum">     563 </span>            :        *  @param  __position  An iterator pointing to the element to be erased.
+<span class="lineNum">     564 </span>            :        *
+<span class="lineNum">     565 </span>            :        *  This function erases an element, pointed to by the given iterator,
+<span class="lineNum">     566 </span>            :        *  from a %multiset.  Note that this function only erases the element,
+<span class="lineNum">     567 </span>            :        *  and that if the element is itself a pointer, the pointed-to memory is
+<span class="lineNum">     568 </span>            :        *  not touched in any way.  Managing the pointer is the user's
+<span class="lineNum">     569 </span>            :        *  responsibility.
+<span class="lineNum">     570 </span>            :        */
+<span class="lineNum">     571 </span>            :       void
+<span class="lineNum">     572 </span>            :       erase(iterator __position)
+<span class="lineNum">     573 </span>            :       { _M_t.erase(__position); }
+<span class="lineNum">     574 </span>            : #endif
+<span class="lineNum">     575 </span>            : 
+<span class="lineNum">     576 </span>            :       /**
+<span class="lineNum">     577 </span>            :        *  @brief Erases elements according to the provided key.
+<span class="lineNum">     578 </span>            :        *  @param  __x  Key of element to be erased.
+<span class="lineNum">     579 </span>            :        *  @return  The number of elements erased.
+<span class="lineNum">     580 </span>            :        *
+<span class="lineNum">     581 </span>            :        *  This function erases all elements located by the given key from a
+<span class="lineNum">     582 </span>            :        *  %multiset.
+<span class="lineNum">     583 </span>            :        *  Note that this function only erases the element, and that if
+<span class="lineNum">     584 </span>            :        *  the element is itself a pointer, the pointed-to memory is not touched
+<span class="lineNum">     585 </span>            :        *  in any way.  Managing the pointer is the user's responsibility.
+<span class="lineNum">     586 </span>            :        */
+<span class="lineNum">     587 </span>            :       size_type
+<span class="lineNum">     588 </span>            :       erase(const key_type&amp; __x)
+<span class="lineNum">     589 </span>            :       { return _M_t.erase(__x); }
+<span class="lineNum">     590 </span>            : 
+<span class="lineNum">     591 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     592 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     593 </span>            :       // DR 130. Associative erase should return an iterator.
+<span class="lineNum">     594 </span>            :       /**
+<span class="lineNum">     595 </span>            :        *  @brief Erases a [first,last) range of elements from a %multiset.
+<span class="lineNum">     596 </span>            :        *  @param  __first  Iterator pointing to the start of the range to be
+<span class="lineNum">     597 </span>            :        *                   erased.
+<span class="lineNum">     598 </span>            :        *  @param __last Iterator pointing to the end of the range to
+<span class="lineNum">     599 </span>            :        *                be erased.
+<span class="lineNum">     600 </span>            :        *  @return The iterator @a last.
+<span class="lineNum">     601 </span>            :        *
+<span class="lineNum">     602 </span>            :        *  This function erases a sequence of elements from a %multiset.
+<span class="lineNum">     603 </span>            :        *  Note that this function only erases the elements, and that if
+<span class="lineNum">     604 </span>            :        *  the elements themselves are pointers, the pointed-to memory is not
+<span class="lineNum">     605 </span>            :        *  touched in any way.  Managing the pointer is the user's
+<span class="lineNum">     606 </span>            :        *  responsibility.
+<span class="lineNum">     607 </span>            :        */
+<span class="lineNum">     608 </span>            :       _GLIBCXX_ABI_TAG_CXX11
+<span class="lineNum">     609 </span>            :       iterator
+<span class="lineNum">     610 </span>            :       erase(const_iterator __first, const_iterator __last)
+<span class="lineNum">     611 </span>            :       { return _M_t.erase(__first, __last); }
+<span class="lineNum">     612 </span>            : #else
+<span class="lineNum">     613 </span>            :       /**
+<span class="lineNum">     614 </span>            :        *  @brief Erases a [first,last) range of elements from a %multiset.
+<span class="lineNum">     615 </span>            :        *  @param  first  Iterator pointing to the start of the range to be
+<span class="lineNum">     616 </span>            :        *                 erased.
+<span class="lineNum">     617 </span>            :        *  @param  last  Iterator pointing to the end of the range to be erased.
+<span class="lineNum">     618 </span>            :        *
+<span class="lineNum">     619 </span>            :        *  This function erases a sequence of elements from a %multiset.
+<span class="lineNum">     620 </span>            :        *  Note that this function only erases the elements, and that if
+<span class="lineNum">     621 </span>            :        *  the elements themselves are pointers, the pointed-to memory is not
+<span class="lineNum">     622 </span>            :        *  touched in any way.  Managing the pointer is the user's
+<span class="lineNum">     623 </span>            :        *  responsibility.
+<span class="lineNum">     624 </span>            :        */
+<span class="lineNum">     625 </span>            :       void
+<span class="lineNum">     626 </span>            :       erase(iterator __first, iterator __last)
+<span class="lineNum">     627 </span>            :       { _M_t.erase(__first, __last); }
+<span class="lineNum">     628 </span>            : #endif
+<span class="lineNum">     629 </span>            : 
+<span class="lineNum">     630 </span>            :       /**
+<span class="lineNum">     631 </span>            :        *  Erases all elements in a %multiset.  Note that this function only
+<span class="lineNum">     632 </span>            :        *  erases the elements, and that if the elements themselves are pointers,
+<span class="lineNum">     633 </span>            :        *  the pointed-to memory is not touched in any way.  Managing the pointer
+<span class="lineNum">     634 </span>            :        *  is the user's responsibility.
+<span class="lineNum">     635 </span>            :        */
+<span class="lineNum">     636 </span>            :       void
+<span class="lineNum">     637 </span>            :       clear() _GLIBCXX_NOEXCEPT
+<span class="lineNum">     638 </span><span class="lineCov">      27450 :       { _M_t.clear(); }</span>
+<span class="lineNum">     639 </span>            : 
+<span class="lineNum">     640 </span>            :       // multiset operations:
+<span class="lineNum">     641 </span>            : 
+<span class="lineNum">     642 </span>            :       //@{
+<span class="lineNum">     643 </span>            :       /**
+<span class="lineNum">     644 </span>            :        *  @brief Finds the number of elements with given key.
+<span class="lineNum">     645 </span>            :        *  @param  __x  Key of elements to be located.
+<span class="lineNum">     646 </span>            :        *  @return Number of elements with specified key.
+<span class="lineNum">     647 </span>            :        */
+<span class="lineNum">     648 </span>            :       size_type
+<span class="lineNum">     649 </span>            :       count(const key_type&amp; __x) const
+<span class="lineNum">     650 </span>            :       { return _M_t.count(__x); }
+<span class="lineNum">     651 </span>            : 
+<span class="lineNum">     652 </span>            : #if __cplusplus &gt; 201103L
+<span class="lineNum">     653 </span>            :       template&lt;typename _Kt&gt;
+<span class="lineNum">     654 </span>            :         auto
+<span class="lineNum">     655 </span>            :         count(const _Kt&amp; __x) const -&gt; decltype(_M_t._M_count_tr(__x))
+<span class="lineNum">     656 </span>            :         { return _M_t._M_count_tr(__x); }
+<span class="lineNum">     657 </span>            : #endif
+<span class="lineNum">     658 </span>            :       //@}
+<span class="lineNum">     659 </span>            : 
+<span class="lineNum">     660 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     661 </span>            :       // 214.  set::find() missing const overload
+<span class="lineNum">     662 </span>            :       //@{
+<span class="lineNum">     663 </span>            :       /**
+<span class="lineNum">     664 </span>            :        *  @brief Tries to locate an element in a %set.
+<span class="lineNum">     665 </span>            :        *  @param  __x  Element to be located.
+<span class="lineNum">     666 </span>            :        *  @return  Iterator pointing to sought-after element, or end() if not
+<span class="lineNum">     667 </span>            :        *           found.
+<span class="lineNum">     668 </span>            :        *
+<span class="lineNum">     669 </span>            :        *  This function takes a key and tries to locate the element with which
+<span class="lineNum">     670 </span>            :        *  the key matches.  If successful the function returns an iterator
+<span class="lineNum">     671 </span>            :        *  pointing to the sought after element.  If unsuccessful it returns the
+<span class="lineNum">     672 </span>            :        *  past-the-end ( @c end() ) iterator.
+<span class="lineNum">     673 </span>            :        */
+<span class="lineNum">     674 </span>            :       iterator
+<span class="lineNum">     675 </span>            :       find(const key_type&amp; __x)
+<span class="lineNum">     676 </span>            :       { return _M_t.find(__x); }
+<span class="lineNum">     677 </span>            : 
+<span class="lineNum">     678 </span>            :       const_iterator
+<span class="lineNum">     679 </span>            :       find(const key_type&amp; __x) const
+<span class="lineNum">     680 </span>            :       { return _M_t.find(__x); }
+<span class="lineNum">     681 </span>            : 
+<span class="lineNum">     682 </span>            : #if __cplusplus &gt; 201103L
+<span class="lineNum">     683 </span>            :       template&lt;typename _Kt&gt;
+<span class="lineNum">     684 </span>            :         auto
+<span class="lineNum">     685 </span>            :         find(const _Kt&amp; __x)
+<span class="lineNum">     686 </span>            :         -&gt; decltype(iterator{_M_t._M_find_tr(__x)})
+<span class="lineNum">     687 </span>            :         { return iterator{_M_t._M_find_tr(__x)}; }
+<span class="lineNum">     688 </span>            : 
+<span class="lineNum">     689 </span>            :       template&lt;typename _Kt&gt;
+<span class="lineNum">     690 </span>            :         auto
+<span class="lineNum">     691 </span>            :         find(const _Kt&amp; __x) const
+<span class="lineNum">     692 </span>            :         -&gt; decltype(const_iterator{_M_t._M_find_tr(__x)})
+<span class="lineNum">     693 </span>            :         { return const_iterator{_M_t._M_find_tr(__x)}; }
+<span class="lineNum">     694 </span>            : #endif
+<span class="lineNum">     695 </span>            :       //@}
+<span class="lineNum">     696 </span>            : 
+<span class="lineNum">     697 </span>            :       //@{
+<span class="lineNum">     698 </span>            :       /**
+<span class="lineNum">     699 </span>            :        *  @brief Finds the beginning of a subsequence matching given key.
+<span class="lineNum">     700 </span>            :        *  @param  __x  Key to be located.
+<span class="lineNum">     701 </span>            :        *  @return  Iterator pointing to first element equal to or greater
+<span class="lineNum">     702 </span>            :        *           than key, or end().
+<span class="lineNum">     703 </span>            :        *
+<span class="lineNum">     704 </span>            :        *  This function returns the first element of a subsequence of elements
+<span class="lineNum">     705 </span>            :        *  that matches the given key.  If unsuccessful it returns an iterator
+<span class="lineNum">     706 </span>            :        *  pointing to the first element that has a greater value than given key
+<span class="lineNum">     707 </span>            :        *  or end() if no such element exists.
+<span class="lineNum">     708 </span>            :        */
+<span class="lineNum">     709 </span>            :       iterator
+<span class="lineNum">     710 </span>            :       lower_bound(const key_type&amp; __x)
+<span class="lineNum">     711 </span>            :       { return _M_t.lower_bound(__x); }
+<span class="lineNum">     712 </span>            : 
+<span class="lineNum">     713 </span>            :       const_iterator
+<span class="lineNum">     714 </span>            :       lower_bound(const key_type&amp; __x) const
+<span class="lineNum">     715 </span>            :       { return _M_t.lower_bound(__x); }
+<span class="lineNum">     716 </span>            : 
+<span class="lineNum">     717 </span>            : #if __cplusplus &gt; 201103L
+<span class="lineNum">     718 </span>            :       template&lt;typename _Kt&gt;
+<span class="lineNum">     719 </span>            :         auto
+<span class="lineNum">     720 </span>            :         lower_bound(const _Kt&amp; __x)
+<span class="lineNum">     721 </span>            :         -&gt; decltype(_M_t._M_lower_bound_tr(__x))
+<span class="lineNum">     722 </span>            :         { return _M_t._M_lower_bound_tr(__x); }
+<span class="lineNum">     723 </span>            : 
+<span class="lineNum">     724 </span>            :       template&lt;typename _Kt&gt;
+<span class="lineNum">     725 </span>            :         auto
+<span class="lineNum">     726 </span>            :         lower_bound(const _Kt&amp; __x) const
+<span class="lineNum">     727 </span>            :         -&gt; decltype(_M_t._M_lower_bound_tr(__x))
+<span class="lineNum">     728 </span>            :         { return _M_t._M_lower_bound_tr(__x); }
+<span class="lineNum">     729 </span>            : #endif
+<span class="lineNum">     730 </span>            :       //@}
+<span class="lineNum">     731 </span>            : 
+<span class="lineNum">     732 </span>            :       //@{
+<span class="lineNum">     733 </span>            :       /**
+<span class="lineNum">     734 </span>            :        *  @brief Finds the end of a subsequence matching given key.
+<span class="lineNum">     735 </span>            :        *  @param  __x  Key to be located.
+<span class="lineNum">     736 </span>            :        *  @return Iterator pointing to the first element
+<span class="lineNum">     737 </span>            :        *          greater than key, or end().
+<span class="lineNum">     738 </span>            :        */
+<span class="lineNum">     739 </span>            :       iterator
+<span class="lineNum">     740 </span>            :       upper_bound(const key_type&amp; __x)
+<span class="lineNum">     741 </span>            :       { return _M_t.upper_bound(__x); }
+<span class="lineNum">     742 </span>            : 
+<span class="lineNum">     743 </span>            :       const_iterator
+<span class="lineNum">     744 </span>            :       upper_bound(const key_type&amp; __x) const
+<span class="lineNum">     745 </span>            :       { return _M_t.upper_bound(__x); }
+<span class="lineNum">     746 </span>            : 
+<span class="lineNum">     747 </span>            : #if __cplusplus &gt; 201103L
+<span class="lineNum">     748 </span>            :       template&lt;typename _Kt&gt;
+<span class="lineNum">     749 </span>            :         auto
+<span class="lineNum">     750 </span>            :         upper_bound(const _Kt&amp; __x)
+<span class="lineNum">     751 </span>            :         -&gt; decltype(_M_t._M_upper_bound_tr(__x))
+<span class="lineNum">     752 </span>            :         { return _M_t._M_upper_bound_tr(__x); }
+<span class="lineNum">     753 </span>            : 
+<span class="lineNum">     754 </span>            :       template&lt;typename _Kt&gt;
+<span class="lineNum">     755 </span>            :         auto
+<span class="lineNum">     756 </span>            :         upper_bound(const _Kt&amp; __x) const
+<span class="lineNum">     757 </span>            :         -&gt; decltype(_M_t._M_upper_bound_tr(__x))
+<span class="lineNum">     758 </span>            :         { return _M_t._M_upper_bound_tr(__x); }
+<span class="lineNum">     759 </span>            : #endif
+<span class="lineNum">     760 </span>            :       //@}
+<span class="lineNum">     761 </span>            : 
+<span class="lineNum">     762 </span>            :       //@{
+<span class="lineNum">     763 </span>            :       /**
+<span class="lineNum">     764 </span>            :        *  @brief Finds a subsequence matching given key.
+<span class="lineNum">     765 </span>            :        *  @param  __x  Key to be located.
+<span class="lineNum">     766 </span>            :        *  @return  Pair of iterators that possibly points to the subsequence
+<span class="lineNum">     767 </span>            :        *           matching given key.
+<span class="lineNum">     768 </span>            :        *
+<span class="lineNum">     769 </span>            :        *  This function is equivalent to
+<span class="lineNum">     770 </span>            :        *  @code
+<span class="lineNum">     771 </span>            :        *    std::make_pair(c.lower_bound(val),
+<span class="lineNum">     772 </span>            :        *                   c.upper_bound(val))
+<span class="lineNum">     773 </span>            :        *  @endcode
+<span class="lineNum">     774 </span>            :        *  (but is faster than making the calls separately).
+<span class="lineNum">     775 </span>            :        *
+<span class="lineNum">     776 </span>            :        *  This function probably only makes sense for multisets.
+<span class="lineNum">     777 </span>            :        */
+<span class="lineNum">     778 </span>            :       std::pair&lt;iterator, iterator&gt;
+<span class="lineNum">     779 </span>            :       equal_range(const key_type&amp; __x)
+<span class="lineNum">     780 </span>            :       { return _M_t.equal_range(__x); }
+<span class="lineNum">     781 </span>            : 
+<span class="lineNum">     782 </span>            :       std::pair&lt;const_iterator, const_iterator&gt;
+<span class="lineNum">     783 </span>            :       equal_range(const key_type&amp; __x) const
+<span class="lineNum">     784 </span>            :       { return _M_t.equal_range(__x); }
+<span class="lineNum">     785 </span>            : 
+<span class="lineNum">     786 </span>            : #if __cplusplus &gt; 201103L
+<span class="lineNum">     787 </span>            :       template&lt;typename _Kt&gt;
+<span class="lineNum">     788 </span>            :         auto
+<span class="lineNum">     789 </span>            :         equal_range(const _Kt&amp; __x)
+<span class="lineNum">     790 </span>            :         -&gt; decltype(_M_t._M_equal_range_tr(__x))
+<span class="lineNum">     791 </span>            :         { return _M_t._M_equal_range_tr(__x); }
+<span class="lineNum">     792 </span>            : 
+<span class="lineNum">     793 </span>            :       template&lt;typename _Kt&gt;
+<span class="lineNum">     794 </span>            :         auto
+<span class="lineNum">     795 </span>            :         equal_range(const _Kt&amp; __x) const
+<span class="lineNum">     796 </span>            :         -&gt; decltype(_M_t._M_equal_range_tr(__x))
+<span class="lineNum">     797 </span>            :         { return _M_t._M_equal_range_tr(__x); }
+<span class="lineNum">     798 </span>            : #endif
+<span class="lineNum">     799 </span>            :       //@}
+<span class="lineNum">     800 </span>            : 
+<span class="lineNum">     801 </span>            :       template&lt;typename _K1, typename _C1, typename _A1&gt;
+<span class="lineNum">     802 </span>            :         friend bool
+<span class="lineNum">     803 </span>            :         operator==(const multiset&lt;_K1, _C1, _A1&gt;&amp;,
+<span class="lineNum">     804 </span>            :                    const multiset&lt;_K1, _C1, _A1&gt;&amp;);
+<span class="lineNum">     805 </span>            : 
+<span class="lineNum">     806 </span>            :       template&lt;typename _K1, typename _C1, typename _A1&gt;
+<span class="lineNum">     807 </span>            :         friend bool
+<span class="lineNum">     808 </span>            :         operator&lt; (const multiset&lt;_K1, _C1, _A1&gt;&amp;,
+<span class="lineNum">     809 </span>            :                    const multiset&lt;_K1, _C1, _A1&gt;&amp;);
+<span class="lineNum">     810 </span>            :     };
+<span class="lineNum">     811 </span>            : 
+<span class="lineNum">     812 </span>            :   /**
+<span class="lineNum">     813 </span>            :    *  @brief  Multiset equality comparison.
+<span class="lineNum">     814 </span>            :    *  @param  __x  A %multiset.
+<span class="lineNum">     815 </span>            :    *  @param  __y  A %multiset of the same type as @a __x.
+<span class="lineNum">     816 </span>            :    *  @return  True iff the size and elements of the multisets are equal.
+<span class="lineNum">     817 </span>            :    *
+<span class="lineNum">     818 </span>            :    *  This is an equivalence relation.  It is linear in the size of the
+<span class="lineNum">     819 </span>            :    *  multisets.
+<span class="lineNum">     820 </span>            :    *  Multisets are considered equivalent if their sizes are equal, and if
+<span class="lineNum">     821 </span>            :    *  corresponding elements compare equal.
+<span class="lineNum">     822 </span>            :   */
+<span class="lineNum">     823 </span>            :   template&lt;typename _Key, typename _Compare, typename _Alloc&gt;
+<span class="lineNum">     824 </span>            :     inline bool
+<span class="lineNum">     825 </span>            :     operator==(const multiset&lt;_Key, _Compare, _Alloc&gt;&amp; __x,
+<span class="lineNum">     826 </span>            :                const multiset&lt;_Key, _Compare, _Alloc&gt;&amp; __y)
+<span class="lineNum">     827 </span>            :     { return __x._M_t == __y._M_t; }
+<span class="lineNum">     828 </span>            : 
+<span class="lineNum">     829 </span>            :   /**
+<span class="lineNum">     830 </span>            :    *  @brief  Multiset ordering relation.
+<span class="lineNum">     831 </span>            :    *  @param  __x  A %multiset.
+<span class="lineNum">     832 </span>            :    *  @param  __y  A %multiset of the same type as @a __x.
+<span class="lineNum">     833 </span>            :    *  @return  True iff @a __x is lexicographically less than @a __y.
+<span class="lineNum">     834 </span>            :    *
+<span class="lineNum">     835 </span>            :    *  This is a total ordering relation.  It is linear in the size of the
+<span class="lineNum">     836 </span>            :    *  sets.  The elements must be comparable with @c &lt;.
+<span class="lineNum">     837 </span>            :    *
+<span class="lineNum">     838 </span>            :    *  See std::lexicographical_compare() for how the determination is made.
+<span class="lineNum">     839 </span>            :   */
+<span class="lineNum">     840 </span>            :   template&lt;typename _Key, typename _Compare, typename _Alloc&gt;
+<span class="lineNum">     841 </span>            :     inline bool
+<span class="lineNum">     842 </span>            :     operator&lt;(const multiset&lt;_Key, _Compare, _Alloc&gt;&amp; __x,
+<span class="lineNum">     843 </span>            :               const multiset&lt;_Key, _Compare, _Alloc&gt;&amp; __y)
+<span class="lineNum">     844 </span>            :     { return __x._M_t &lt; __y._M_t; }
+<span class="lineNum">     845 </span>            : 
+<span class="lineNum">     846 </span>            :   ///  Returns !(x == y).
+<span class="lineNum">     847 </span>            :   template&lt;typename _Key, typename _Compare, typename _Alloc&gt;
+<span class="lineNum">     848 </span>            :     inline bool
+<span class="lineNum">     849 </span>            :     operator!=(const multiset&lt;_Key, _Compare, _Alloc&gt;&amp; __x,
+<span class="lineNum">     850 </span>            :                const multiset&lt;_Key, _Compare, _Alloc&gt;&amp; __y)
+<span class="lineNum">     851 </span>            :     { return !(__x == __y); }
+<span class="lineNum">     852 </span>            : 
+<span class="lineNum">     853 </span>            :   ///  Returns y &lt; x.
+<span class="lineNum">     854 </span>            :   template&lt;typename _Key, typename _Compare, typename _Alloc&gt;
+<span class="lineNum">     855 </span>            :     inline bool
+<span class="lineNum">     856 </span>            :     operator&gt;(const multiset&lt;_Key,_Compare,_Alloc&gt;&amp; __x,
+<span class="lineNum">     857 </span>            :               const multiset&lt;_Key,_Compare,_Alloc&gt;&amp; __y)
+<span class="lineNum">     858 </span>            :     { return __y &lt; __x; }
+<span class="lineNum">     859 </span>            : 
+<span class="lineNum">     860 </span>            :   ///  Returns !(y &lt; x)
+<span class="lineNum">     861 </span>            :   template&lt;typename _Key, typename _Compare, typename _Alloc&gt;
+<span class="lineNum">     862 </span>            :     inline bool
+<span class="lineNum">     863 </span>            :     operator&lt;=(const multiset&lt;_Key, _Compare, _Alloc&gt;&amp; __x,
+<span class="lineNum">     864 </span>            :                const multiset&lt;_Key, _Compare, _Alloc&gt;&amp; __y)
+<span class="lineNum">     865 </span>            :     { return !(__y &lt; __x); }
+<span class="lineNum">     866 </span>            : 
+<span class="lineNum">     867 </span>            :   ///  Returns !(x &lt; y)
+<span class="lineNum">     868 </span>            :   template&lt;typename _Key, typename _Compare, typename _Alloc&gt;
+<span class="lineNum">     869 </span>            :     inline bool
+<span class="lineNum">     870 </span>            :     operator&gt;=(const multiset&lt;_Key, _Compare, _Alloc&gt;&amp; __x,
+<span class="lineNum">     871 </span>            :                const multiset&lt;_Key, _Compare, _Alloc&gt;&amp; __y)
+<span class="lineNum">     872 </span>            :     { return !(__x &lt; __y); }
+<span class="lineNum">     873 </span>            : 
+<span class="lineNum">     874 </span>            :   /// See std::multiset::swap().
+<span class="lineNum">     875 </span>            :   template&lt;typename _Key, typename _Compare, typename _Alloc&gt;
+<span class="lineNum">     876 </span>            :     inline void
+<span class="lineNum">     877 </span>            :     swap(multiset&lt;_Key, _Compare, _Alloc&gt;&amp; __x,
+<span class="lineNum">     878 </span>            :          multiset&lt;_Key, _Compare, _Alloc&gt;&amp; __y)
+<span class="lineNum">     879 </span>            :     { __x.swap(__y); }
+<span class="lineNum">     880 </span>            : 
+<span class="lineNum">     881 </span>            : _GLIBCXX_END_NAMESPACE_CONTAINER
+<span class="lineNum">     882 </span>            : } // namespace std
+<span class="lineNum">     883 </span>            : 
+<span class="lineNum">     884 </span>            : #endif /* _STL_MULTISET_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

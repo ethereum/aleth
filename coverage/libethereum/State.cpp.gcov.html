@@ -1,0 +1,695 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/State.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - State.cpp<span style="font-size: 80%;"> (source / <a href="State.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">228</td>
+            <td class="headerCovTableEntry">314</td>
+            <td class="headerCovTableEntryLo">72.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">39</td>
+            <td class="headerCovTableEntry">43</td>
+            <td class="headerCovTableEntryHi">90.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file State.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;State.h&quot;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;ctime&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/filesystem.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/timer.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libdevcore/CommonIO.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libdevcore/Assertions.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libdevcore/TrieHash.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libevmcore/Instruction.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libethcore/Exceptions.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libevm/VMFactory.h&gt;
+<span class="lineNum">      33 </span>            : #include &quot;BlockChain.h&quot;
+<span class="lineNum">      34 </span>            : #include &quot;CodeSizeCache.h&quot;
+<span class="lineNum">      35 </span>            : #include &quot;Defaults.h&quot;
+<span class="lineNum">      36 </span>            : #include &quot;ExtVM.h&quot;
+<span class="lineNum">      37 </span>            : #include &quot;Executive.h&quot;
+<span class="lineNum">      38 </span>            : #include &quot;BlockChain.h&quot;
+<span class="lineNum">      39 </span>            : #include &quot;TransactionQueue.h&quot;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : using namespace std;
+<span class="lineNum">      42 </span>            : using namespace dev;
+<span class="lineNum">      43 </span>            : using namespace dev::eth;
+<span class="lineNum">      44 </span>            : using namespace dev::eth::detail;
+<a name="45"><span class="lineNum">      45 </span>            : namespace fs = boost::filesystem;</a>
+<a name="46"><span class="lineNum">      46 </span>            : </a>
+<a name="47"><span class="lineNum">      47 </span><span class="lineCov">      97972 : const char* StateSafeExceptions::name() { return EthViolet &quot;⚙&quot; EthBlue &quot; ℹ&quot;; }</span></a>
+<a name="48"><span class="lineNum">      48 </span><span class="lineCov">      13432 : const char* StateDetail::name() { return EthViolet &quot;⚙&quot; EthWhite &quot; ◌&quot;; }</span></a>
+<span class="lineNum">      49 </span><span class="lineCov">     281248 : const char* StateTrace::name() { return EthViolet &quot;⚙&quot; EthGray &quot; ◎&quot;; }</span>
+<a name="50"><span class="lineNum">      50 </span><span class="lineNoCov">          0 : const char* StateChat::name() { return EthViolet &quot;⚙&quot; EthWhite &quot; ◌&quot;; }</span></a>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineCov">      31229 : State::State(u256 const&amp; _accountStartNonce, OverlayDB const&amp; _db, BaseState _bs):</span>
+<span class="lineNum">      53 </span>            :         m_db(_db),
+<span class="lineNum">      54 </span>            :         m_state(&amp;m_db),
+<span class="lineNum">      55 </span><span class="lineCov">     249832 :         m_accountStartNonce(_accountStartNonce)</span>
+<span class="lineNum">      56 </span>            : {
+<span class="lineNum">      57 </span><span class="lineCov">      31229 :         if (_bs != BaseState::PreExisting)</span>
+<span class="lineNum">      58 </span>            :                 // Initialise to the state entailed by the genesis block; this guarantees the trie is built correctly.
+<span class="lineNum">      59 </span><span class="lineCov">      26236 :                 m_state.init();</span>
+<a name="60"><span class="lineNum">      60 </span><span class="lineCov">      31229 : }</span></a>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span><span class="lineCov">     484201 : State::State(State const&amp; _s):</span>
+<span class="lineNum">      63 </span>            :         m_db(_s.m_db),
+<span class="lineNum">      64 </span><span class="lineCov">     484201 :         m_state(&amp;m_db, _s.m_state.root(), Verification::Skip),</span>
+<span class="lineNum">      65 </span>            :         m_cache(_s.m_cache),
+<span class="lineNum">      66 </span>            :         m_unchangedCacheEntries(_s.m_unchangedCacheEntries),
+<span class="lineNum">      67 </span>            :         m_nonExistingAccountsCache(_s.m_nonExistingAccountsCache),
+<span class="lineNum">      68 </span>            :         m_touched(_s.m_touched),
+<span class="lineNum">      69 </span><span class="lineCov">    3873608 :         m_accountStartNonce(_s.m_accountStartNonce)</span>
+<span class="lineNum">      70 </span><span class="lineCov">     484201 : {}</span>
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span><span class="lineCov">       9552 : OverlayDB State::openDB(std::string const&amp; _basePath, h256 const&amp; _genesisHash, WithExisting _we)</span>
+<span class="lineNum">      73 </span>            : {
+<span class="lineNum">      74 </span><span class="lineCov">      28656 :         std::string path = _basePath.empty() ? Defaults::get()-&gt;m_dbPath : _basePath;</span>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">       9552 :         if (_we == WithExisting::Kill)</span>
+<span class="lineNum">      77 </span>            :         {
+<span class="lineNum">      78 </span><span class="lineCov">       9550 :                 cnote &lt;&lt; &quot;Killing state database (WithExisting::Kill).&quot;;</span>
+<span class="lineNum">      79 </span><span class="lineCov">      47750 :                 boost::filesystem::remove_all(path + &quot;/state&quot;);</span>
+<span class="lineNum">      80 </span>            :         }
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span><span class="lineCov">      85968 :         path += &quot;/&quot; + toHex(_genesisHash.ref().cropped(0, 4)) + &quot;/&quot; + toString(c_databaseVersion);</span>
+<span class="lineNum">      83 </span><span class="lineCov">      28656 :         boost::filesystem::create_directories(path);</span>
+<span class="lineNum">      84 </span><span class="lineCov">      28656 :         DEV_IGNORE_EXCEPTIONS(fs::permissions(path, fs::owner_all));</span>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">       9552 :         ldb::Options o;</span>
+<span class="lineNum">      87 </span><span class="lineCov">       9552 :         o.max_open_files = 256;</span>
+<span class="lineNum">      88 </span><span class="lineCov">       9552 :         o.create_if_missing = true;</span>
+<span class="lineNum">      89 </span><span class="lineCov">       9552 :         ldb::DB* db = nullptr;</span>
+<span class="lineNum">      90 </span><span class="lineCov">      28656 :         ldb::Status status = ldb::DB::Open(o, path + &quot;/state&quot;, &amp;db);</span>
+<span class="lineNum">      91 </span><span class="lineCov">       9552 :         if (!status.ok() || !db)</span>
+<span class="lineNum">      92 </span>            :         {
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :                 if (boost::filesystem::space(path + &quot;/state&quot;).available &lt; 1024)</span>
+<span class="lineNum">      94 </span>            :                 {
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :                         cwarn &lt;&lt; &quot;Not enough available space found on hard drive. Please free some up and then re-run. Bailing.&quot;;</span>
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(NotEnoughAvailableSpace());</span>
+<span class="lineNum">      97 </span>            :                 }
+<span class="lineNum">      98 </span>            :                 else
+<span class="lineNum">      99 </span>            :                 {
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :                         cwarn &lt;&lt; status.ToString();</span>
+<span class="lineNum">     101 </span>            :                         cwarn &lt;&lt;
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :                                 &quot;Database &quot; &lt;&lt;</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :                                 (path + &quot;/state&quot;) &lt;&lt;</span>
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :                                 &quot;already open. You appear to have another instance of ethereum running. Bailing.&quot;;</span>
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());</span>
+<span class="lineNum">     106 </span>            :                 }
+<span class="lineNum">     107 </span>            :         }
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span><span class="lineCov">       9552 :         ctrace &lt;&lt; &quot;Opened state DB.&quot;;</span>
+<span class="lineNum">     110 </span><span class="lineCov">      19104 :         return OverlayDB(db);</span>
+<a name="111"><span class="lineNum">     111 </span>            : }</a>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineCov">      12795 : void State::populateFrom(AccountMap const&amp; _map)</span>
+<span class="lineNum">     114 </span>            : {
+<span class="lineNum">     115 </span><span class="lineCov">      25590 :         eth::commit(_map, m_state);</span>
+<span class="lineNum">     116 </span><span class="lineCov">      12795 :         commit(State::CommitBehaviour::KeepEmptyAccounts);</span>
+<span class="lineNum">     117 </span><span class="lineCov">      12795 : }</span>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineCov">      30177 : u256 const&amp; State::requireAccountStartNonce() const</span>
+<span class="lineNum">     120 </span>            : {
+<span class="lineNum">     121 </span><span class="lineCov">      60354 :         if (m_accountStartNonce == Invalid256)</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(InvalidAccountStartNonceInState());</span>
+<span class="lineNum">     123 </span><span class="lineCov">      30177 :         return m_accountStartNonce;</span>
+<span class="lineNum">     124 </span>            : }
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineCov">      14986 : void State::noteAccountStartNonce(u256 const&amp; _actual)</span>
+<span class="lineNum">     127 </span>            : {
+<span class="lineNum">     128 </span><span class="lineCov">      29972 :         if (m_accountStartNonce == Invalid256)</span>
+<span class="lineNum">     129 </span><span class="lineCov">      14984 :                 m_accountStartNonce = _actual;</span>
+<span class="lineNum">     130 </span><span class="lineCov">          4 :         else if (m_accountStartNonce != _actual)</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(IncorrectAccountStartNonceInState());</span>
+<a name="132"><span class="lineNum">     132 </span><span class="lineCov">      14986 : }</span></a>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">       7099 : void State::removeEmptyAccounts()</span>
+<span class="lineNum">     135 </span>            : {
+<span class="lineNum">     136 </span><span class="lineCov">      34413 :         for (auto&amp; i: m_cache)</span>
+<span class="lineNum">     137 </span><span class="lineCov">      26232 :                 if (i.second.isDirty() &amp;&amp; i.second.isEmpty())</span>
+<span class="lineNum">     138 </span><span class="lineCov">        426 :                         i.second.kill();</span>
+<a name="139"><span class="lineNum">     139 </span><span class="lineCov">       7099 : }</span></a>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineCov">      29031 : State&amp; State::operator=(State const&amp; _s)</span>
+<span class="lineNum">     142 </span>            : {
+<span class="lineNum">     143 </span><span class="lineCov">      29031 :         if (&amp;_s == this)</span>
+<span class="lineNum">     144 </span>            :                 return *this;
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineCov">      29031 :         m_db = _s.m_db;</span>
+<span class="lineNum">     147 </span><span class="lineCov">      58062 :         m_state.open(&amp;m_db, _s.m_state.root(), Verification::Skip);</span>
+<span class="lineNum">     148 </span><span class="lineCov">      58062 :         m_cache = _s.m_cache;</span>
+<span class="lineNum">     149 </span><span class="lineCov">      29031 :         m_unchangedCacheEntries = _s.m_unchangedCacheEntries;</span>
+<span class="lineNum">     150 </span><span class="lineCov">      58062 :         m_nonExistingAccountsCache = _s.m_nonExistingAccountsCache;</span>
+<span class="lineNum">     151 </span><span class="lineCov">      58062 :         m_touched = _s.m_touched;</span>
+<span class="lineNum">     152 </span><span class="lineCov">      58062 :         m_accountStartNonce = _s.m_accountStartNonce;</span>
+<span class="lineNum">     153 </span><span class="lineCov">      29031 :         return *this;</span>
+<a name="154"><span class="lineNum">     154 </span>            : }</a>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 : Account const* State::account(Address const&amp; _a) const</span>
+<span class="lineNum">     157 </span>            : {
+<span class="lineNum">     158 </span><span class="lineCov">    2705364 :         return const_cast&lt;State*&gt;(this)-&gt;account(_a);</span>
+<a name="159"><span class="lineNum">     159 </span>            : }</a>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span><span class="lineCov">    3198358 : Account* State::account(Address const&amp; _addr)</span>
+<span class="lineNum">     162 </span>            : {
+<span class="lineNum">     163 </span><span class="lineCov">    6396716 :         auto it = m_cache.find(_addr);</span>
+<span class="lineNum">     164 </span><span class="lineCov">    6396716 :         if (it != m_cache.end())</span>
+<span class="lineNum">     165 </span><span class="lineCov">    2952215 :                 return &amp;it-&gt;second;</span>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span><span class="lineCov">     492286 :         if (m_nonExistingAccountsCache.count(_addr))</span>
+<span class="lineNum">     168 </span>            :                 return nullptr;
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :         // Populate basic info.
+<span class="lineNum">     171 </span><span class="lineCov">     429332 :         string stateBack = m_state.at(_addr);</span>
+<span class="lineNum">     172 </span><span class="lineCov">     214666 :         if (stateBack.empty())</span>
+<span class="lineNum">     173 </span>            :         {
+<span class="lineNum">     174 </span><span class="lineCov">     267812 :                 m_nonExistingAccountsCache.insert(_addr);</span>
+<span class="lineNum">     175 </span><span class="lineCov">     133906 :                 return nullptr;</span>
+<span class="lineNum">     176 </span>            :         }
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span><span class="lineCov">      80760 :         clearCacheIfTooLarge();</span>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">      80760 :         RLP state(stateBack);</span>
+<span class="lineNum">     181 </span>            :         auto i = m_cache.emplace(
+<span class="lineNum">     182 </span>            :                 std::piecewise_construct,
+<span class="lineNum">     183 </span><span class="lineCov">     161520 :                 std::forward_as_tuple(_addr),</span>
+<span class="lineNum">     184 </span><span class="lineCov">     242280 :                 std::forward_as_tuple(state[0].toInt&lt;u256&gt;(), state[1].toInt&lt;u256&gt;(), state[2].toHash&lt;h256&gt;(), state[3].toHash&lt;h256&gt;(), Account::Unchanged)</span>
+<span class="lineNum">     185 </span><span class="lineCov">     161520 :         );</span>
+<span class="lineNum">     186 </span><span class="lineCov">      80760 :         m_unchangedCacheEntries.push_back(_addr);</span>
+<span class="lineNum">     187 </span><span class="lineCov">      80760 :         return &amp;i.first-&gt;second;</span>
+<a name="188"><span class="lineNum">     188 </span>            : }</a>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span><span class="lineCov">      80760 : void State::clearCacheIfTooLarge() const</span>
+<span class="lineNum">     191 </span>            : {
+<span class="lineNum">     192 </span>            :         // TODO: Find a good magic number
+<span class="lineNum">     193 </span><span class="lineCov">     161520 :         while (m_unchangedCacheEntries.size() &gt; 1000)</span>
+<span class="lineNum">     194 </span>            :         {
+<span class="lineNum">     195 </span>            :                 // Remove a random element
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :                 size_t const randomIndex = boost::random::uniform_int_distribution&lt;size_t&gt;(0, m_unchangedCacheEntries.size() - 1)(dev::s_fixedHashEngine);</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :                 Address const addr = m_unchangedCacheEntries[randomIndex];</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :                 swap(m_unchangedCacheEntries[randomIndex], m_unchangedCacheEntries.back());</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :                 m_unchangedCacheEntries.pop_back();</span>
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :                 auto cacheEntry = m_cache.find(addr);</span>
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :                 if (cacheEntry != m_cache.end() &amp;&amp; !cacheEntry-&gt;second.isDirty())</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :                         m_cache.erase(cacheEntry);</span>
+<span class="lineNum">     205 </span>            :         }
+<a name="206"><span class="lineNum">     206 </span><span class="lineCov">      80760 : }</span></a>
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span><span class="lineCov">      43283 : void State::commit(CommitBehaviour _commitBehaviour)</span>
+<span class="lineNum">     209 </span>            : {
+<span class="lineNum">     210 </span><span class="lineCov">      43283 :         if (_commitBehaviour == CommitBehaviour::RemoveEmptyAccounts)</span>
+<span class="lineNum">     211 </span><span class="lineCov">       7099 :                 removeEmptyAccounts();</span>
+<span class="lineNum">     212 </span><span class="lineCov">      86566 :         m_touched += dev::eth::commit(m_cache, m_state);</span>
+<span class="lineNum">     213 </span><span class="lineCov">      86566 :         m_changeLog.clear();</span>
+<span class="lineNum">     214 </span><span class="lineCov">      86566 :         m_cache.clear();</span>
+<span class="lineNum">     215 </span><span class="lineCov">      86566 :         m_unchangedCacheEntries.clear();</span>
+<a name="216"><span class="lineNum">     216 </span><span class="lineCov">      43283 : }</span></a>
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span><span class="lineCov">       8258 : unordered_map&lt;Address, u256&gt; State::addresses() const</span>
+<span class="lineNum">     219 </span>            : {
+<span class="lineNum">     220 </span>            : #if ETH_FATDB
+<span class="lineNum">     221 </span><span class="lineCov">       8258 :         unordered_map&lt;Address, u256&gt; ret;</span>
+<span class="lineNum">     222 </span><span class="lineCov">      28444 :         for (auto&amp; i: m_cache)</span>
+<span class="lineNum">     223 </span><span class="lineCov">       3670 :                 if (i.second.isAlive())</span>
+<span class="lineNum">     224 </span><span class="lineCov">      11010 :                         ret[i.first] = i.second.balance();</span>
+<span class="lineNum">     225 </span><span class="lineCov">     110700 :         for (auto const&amp; i: m_state)</span>
+<span class="lineNum">     226 </span><span class="lineCov">     104115 :                 if (m_cache.find(i.first) == m_cache.end())</span>
+<span class="lineNum">     227 </span><span class="lineCov">      93105 :                         ret[i.first] = RLP(i.second)[1].toInt&lt;u256&gt;();</span>
+<span class="lineNum">     228 </span><span class="lineCov">       8258 :         return ret;</span>
+<span class="lineNum">     229 </span>            : #else
+<span class="lineNum">     230 </span>            :         BOOST_THROW_EXCEPTION(InterfaceNotSupported(&quot;State::addresses()&quot;));
+<span class="lineNum">     231 </span>            : #endif
+<a name="232"><span class="lineNum">     232 </span>            : }</a>
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span><span class="lineCov">      22363 : void State::setRoot(h256 const&amp; _r)</span>
+<span class="lineNum">     235 </span>            : {
+<span class="lineNum">     236 </span><span class="lineCov">      44726 :         m_cache.clear();</span>
+<span class="lineNum">     237 </span><span class="lineCov">      44726 :         m_unchangedCacheEntries.clear();</span>
+<span class="lineNum">     238 </span><span class="lineCov">      44726 :         m_nonExistingAccountsCache.clear();</span>
+<span class="lineNum">     239 </span>            : //      m_touched.clear();
+<span class="lineNum">     240 </span><span class="lineCov">      22363 :         m_state.setRoot(_r);</span>
+<a name="241"><span class="lineNum">     241 </span><span class="lineCov">      22363 : }</span></a>
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span><span class="lineCov">     328723 : bool State::addressInUse(Address const&amp; _id) const</span>
+<span class="lineNum">     244 </span>            : {
+<span class="lineNum">     245 </span><span class="lineCov">     358900 :         return !!account(_id);</span>
+<a name="246"><span class="lineNum">     246 </span>            : }</a>
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span><span class="lineCov">      55264 : bool State::accountNonemptyAndExisting(Address const&amp; _address) const</span>
+<span class="lineNum">     249 </span>            : {
+<span class="lineNum">     250 </span><span class="lineCov">      55264 :         if (Account const* a = account(_address))</span>
+<span class="lineNum">     251 </span><span class="lineCov">      55056 :                 return !a-&gt;isEmpty();</span>
+<span class="lineNum">     252 </span>            :         else
+<span class="lineNum">     253 </span>            :                 return false;
+<a name="254"><span class="lineNum">     254 </span>            : }</a>
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span><span class="lineCov">     255517 : bool State::addressHasCode(Address const&amp; _id) const</span>
+<span class="lineNum">     257 </span>            : {
+<span class="lineNum">     258 </span><span class="lineCov">     255517 :         if (auto a = account(_id))</span>
+<span class="lineNum">     259 </span><span class="lineCov">     509000 :                 return a-&gt;codeHash() != EmptySHA3;</span>
+<span class="lineNum">     260 </span>            :         else
+<span class="lineNum">     261 </span>            :                 return false;
+<a name="262"><span class="lineNum">     262 </span>            : }</a>
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span><span class="lineCov">     381582 : u256 State::balance(Address const&amp; _id) const</span>
+<span class="lineNum">     265 </span>            : {
+<span class="lineNum">     266 </span><span class="lineCov">     381582 :         if (auto a = account(_id))</span>
+<span class="lineNum">     267 </span><span class="lineCov">     381524 :                 return a-&gt;balance();</span>
+<span class="lineNum">     268 </span>            :         else
+<span class="lineNum">     269 </span><span class="lineCov">        116 :                 return 0;</span>
+<a name="270"><span class="lineNum">     270 </span>            : }</a>
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span><span class="lineCov">      18800 : void State::incNonce(Address const&amp; _addr)</span>
+<span class="lineNum">     273 </span>            : {
+<span class="lineNum">     274 </span><span class="lineCov">      18800 :         if (Account* a = account(_addr))</span>
+<span class="lineNum">     275 </span>            :         {
+<span class="lineNum">     276 </span><span class="lineCov">      18798 :                 a-&gt;incNonce();</span>
+<span class="lineNum">     277 </span><span class="lineCov">      18798 :                 m_changeLog.emplace_back(Change::Nonce, _addr);</span>
+<span class="lineNum">     278 </span>            :         }
+<span class="lineNum">     279 </span>            :         else
+<span class="lineNum">     280 </span>            :                 // This is possible if a transaction has gas price 0.
+<span class="lineNum">     281 </span><span class="lineCov">          4 :                 createAccount(_addr, Account(requireAccountStartNonce() + 1, 0));</span>
+<a name="282"><span class="lineNum">     282 </span><span class="lineCov">      18800 : }</span></a>
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span><span class="lineCov">     394168 : void State::addBalance(Address const&amp; _id, u256 const&amp; _amount)</span>
+<span class="lineNum">     285 </span>            : {
+<span class="lineNum">     286 </span><span class="lineCov">     394168 :         if (Account* a = account(_id))</span>
+<span class="lineNum">     287 </span>            :         {
+<span class="lineNum">     288 </span>            :                 // Log empty account being touched. Empty touched accounts are cleared
+<span class="lineNum">     289 </span>            :                 // after the transaction, so this event must be also reverted.
+<span class="lineNum">     290 </span>            :                 // We only log the first touch (not dirty yet), and only for empty
+<span class="lineNum">     291 </span>            :                 // accounts, as other accounts does not matter.
+<span class="lineNum">     292 </span>            :                 // TODO: to save space we can combine this event with Balance by having
+<span class="lineNum">     293 </span>            :                 //       Balance and Balance+Touch events.
+<span class="lineNum">     294 </span><span class="lineCov">     363994 :                 if (!a-&gt;isDirty() &amp;&amp; a-&gt;isEmpty())</span>
+<span class="lineNum">     295 </span><span class="lineCov">        161 :                         m_changeLog.emplace_back(Change::Touch, _id);</span>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            :                 // Increase the account balance. This also is done for value 0 to mark
+<span class="lineNum">     298 </span>            :                 // the account as dirty. Dirty account are not removed from the cache
+<span class="lineNum">     299 </span>            :                 // and are cleared if empty at the end of the transaction.
+<span class="lineNum">     300 </span><span class="lineCov">     727988 :                 a-&gt;addBalance(_amount);</span>
+<span class="lineNum">     301 </span>            :         }
+<span class="lineNum">     302 </span>            :         else
+<span class="lineNum">     303 </span><span class="lineCov">      90522 :                 createAccount(_id, {requireAccountStartNonce(), _amount});</span>
+<span class="lineNum">     304 </span>            : 
+<span class="lineNum">     305 </span><span class="lineCov">     394168 :         if (_amount)</span>
+<span class="lineNum">     306 </span><span class="lineCov">     175083 :                 m_changeLog.emplace_back(Change::Balance, _id, _amount);</span>
+<span class="lineNum">     307 </span><span class="lineCov">     394168 : }</span>
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span><span class="lineCov">     296355 : void State::subBalance(Address const&amp; _addr, u256 const&amp; _value)</span>
+<span class="lineNum">     310 </span>            : {
+<span class="lineNum">     311 </span><span class="lineCov">     592710 :         if (_value == 0)</span>
+<span class="lineNum">     312 </span>            :                 return;
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span><span class="lineCov">      79337 :         Account* a = account(_addr);</span>
+<span class="lineNum">     315 </span><span class="lineCov">     158674 :         if (!a || a-&gt;balance() &lt; _value)</span>
+<span class="lineNum">     316 </span>            :                 // TODO: I expect this never happens.
+<span class="lineNum">     317 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(NotEnoughCash());</span>
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            :         // Fall back to addBalance().
+<span class="lineNum">     320 </span><span class="lineCov">      79337 :         addBalance(_addr, 0 - _value);</span>
+<a name="321"><span class="lineNum">     321 </span>            : }</a>
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span><span class="lineCov">          1 : void State::createContract(Address const&amp; _address)</span>
+<span class="lineNum">     324 </span>            : {
+<span class="lineNum">     325 </span><span class="lineCov">          3 :         createAccount(_address, {requireAccountStartNonce(), 0});</span>
+<a name="326"><span class="lineNum">     326 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span><span class="lineCov">      30177 : void State::createAccount(Address const&amp; _address, Account const&amp;&amp; _account)</span>
+<span class="lineNum">     329 </span>            : {
+<span class="lineNum">     330 </span><span class="lineCov">      30177 :         assert(!addressInUse(_address) &amp;&amp; &quot;Account already exists&quot;);</span>
+<span class="lineNum">     331 </span><span class="lineCov">      60354 :         m_cache[_address] = std::move(_account);</span>
+<span class="lineNum">     332 </span><span class="lineCov">      60354 :         m_nonExistingAccountsCache.erase(_address);</span>
+<span class="lineNum">     333 </span><span class="lineCov">      30177 :         m_changeLog.emplace_back(Change::Create, _address);</span>
+<a name="334"><span class="lineNum">     334 </span><span class="lineCov">      30177 : }</span></a>
+<span class="lineNum">     335 </span>            : 
+<span class="lineNum">     336 </span><span class="lineCov">        689 : void State::kill(Address _addr)</span>
+<span class="lineNum">     337 </span>            : {
+<span class="lineNum">     338 </span><span class="lineCov">        689 :         if (auto a = account(_addr))</span>
+<span class="lineNum">     339 </span><span class="lineCov">        689 :                 a-&gt;kill();</span>
+<span class="lineNum">     340 </span>            :         // If the account is not in the db, nothing to kill.
+<a name="341"><span class="lineNum">     341 </span><span class="lineCov">        689 : }</span></a>
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span><span class="lineCov">     100978 : u256 State::getNonce(Address const&amp; _addr) const</span>
+<span class="lineNum">     344 </span>            : {
+<span class="lineNum">     345 </span><span class="lineCov">     100978 :         if (auto a = account(_addr))</span>
+<span class="lineNum">     346 </span>            :                 return a-&gt;nonce();
+<span class="lineNum">     347 </span>            :         else
+<span class="lineNum">     348 </span><span class="lineCov">          4 :                 return m_accountStartNonce;</span>
+<a name="349"><span class="lineNum">     349 </span>            : }</a>
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span><span class="lineCov">     877186 : u256 State::storage(Address const&amp; _id, u256 const&amp; _key) const</span>
+<span class="lineNum">     352 </span>            : {
+<span class="lineNum">     353 </span><span class="lineCov">     877186 :         if (Account const* a = account(_id))</span>
+<span class="lineNum">     354 </span>            :         {
+<span class="lineNum">     355 </span><span class="lineCov">    1754372 :                 auto mit = a-&gt;storageOverlay().find(_key);</span>
+<span class="lineNum">     356 </span><span class="lineCov">    1754372 :                 if (mit != a-&gt;storageOverlay().end())</span>
+<span class="lineNum">     357 </span><span class="lineCov">     858338 :                         return mit-&gt;second;</span>
+<span class="lineNum">     358 </span>            : 
+<span class="lineNum">     359 </span>            :                 // Not in the storage cache - go to the DB.
+<span class="lineNum">     360 </span><span class="lineCov">      37696 :                 SecureTrieDB&lt;h256, OverlayDB&gt; memdb(const_cast&lt;OverlayDB*&gt;(&amp;m_db), a-&gt;baseRoot());                   // promise we won't change the overlay! :)</span>
+<span class="lineNum">     361 </span><span class="lineCov">      56544 :                 string payload = memdb.at(_key);</span>
+<span class="lineNum">     362 </span><span class="lineCov">      38832 :                 u256 ret = payload.size() ? RLP(payload).toInt&lt;u256&gt;() : 0;</span>
+<span class="lineNum">     363 </span><span class="lineCov">      56544 :                 a-&gt;setStorageCache(_key, ret);</span>
+<span class="lineNum">     364 </span><span class="lineCov">      18848 :                 return ret;</span>
+<span class="lineNum">     365 </span>            :         }
+<span class="lineNum">     366 </span>            :         else
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 :                 return 0;</span>
+<a name="368"><span class="lineNum">     368 </span>            : }</a>
+<span class="lineNum">     369 </span>            : 
+<span class="lineNum">     370 </span><span class="lineCov">     210818 : void State::setStorage(Address const&amp; _contract, u256 const&amp; _key, u256 const&amp; _value)</span>
+<span class="lineNum">     371 </span>            : {
+<span class="lineNum">     372 </span><span class="lineCov">     210818 :         m_changeLog.emplace_back(_contract, _key, storage(_contract, _key));</span>
+<span class="lineNum">     373 </span><span class="lineCov">     843272 :         m_cache[_contract].setStorage(_key, _value);</span>
+<a name="374"><span class="lineNum">     374 </span><span class="lineCov">     210818 : }</span></a>
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span><span class="lineCov">      49417 : map&lt;h256, pair&lt;u256, u256&gt;&gt; State::storage(Address const&amp; _id) const</span>
+<span class="lineNum">     377 </span>            : {
+<span class="lineNum">     378 </span><span class="lineCov">      49417 :         map&lt;h256, pair&lt;u256, u256&gt;&gt; ret;</span>
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span><span class="lineCov">      49417 :         if (Account const* a = account(_id))</span>
+<span class="lineNum">     381 </span>            :         {
+<span class="lineNum">     382 </span>            :                 // Pull out all values from trie storage.
+<span class="lineNum">     383 </span><span class="lineCov">      98834 :                 if (h256 root = a-&gt;baseRoot())</span>
+<span class="lineNum">     384 </span>            :                 {
+<span class="lineNum">     385 </span><span class="lineCov">     148251 :                         SecureTrieDB&lt;h256, OverlayDB&gt; memdb(const_cast&lt;OverlayDB*&gt;(&amp;m_db), root);               // promise we won't alter the overlay! :)</span>
+<span class="lineNum">     386 </span>            : 
+<span class="lineNum">     387 </span><span class="lineCov">     261421 :                         for (auto it = memdb.hashedBegin(); it != memdb.hashedEnd(); ++it)</span>
+<span class="lineNum">     388 </span>            :                         {
+<span class="lineNum">     389 </span><span class="lineCov">       3584 :                                 h256 const hashedKey((*it).first);</span>
+<span class="lineNum">     390 </span><span class="lineCov">      10752 :                                 u256 const key = h256(it.key());</span>
+<span class="lineNum">     391 </span><span class="lineCov">       3584 :                                 u256 const value = RLP((*it).second).toInt&lt;u256&gt;();</span>
+<span class="lineNum">     392 </span><span class="lineCov">       7168 :                                 ret[hashedKey] = make_pair(key, value);</span>
+<span class="lineNum">     393 </span>            :                         }
+<span class="lineNum">     394 </span>            :                 }
+<span class="lineNum">     395 </span>            : 
+<span class="lineNum">     396 </span>            :                 // Then merge cached storage over the top.
+<span class="lineNum">     397 </span><span class="lineCov">     148251 :                 for (auto const&amp; i : a-&gt;storageOverlay())</span>
+<span class="lineNum">     398 </span>            :                 {
+<span class="lineNum">     399 </span><span class="lineNoCov">          0 :                         h256 const key = i.first;</span>
+<span class="lineNum">     400 </span><span class="lineNoCov">          0 :                         h256 const hashedKey = sha3(key);</span>
+<span class="lineNum">     401 </span><span class="lineNoCov">          0 :                         if (i.second)</span>
+<span class="lineNum">     402 </span><span class="lineNoCov">          0 :                                 ret[hashedKey] = i;</span>
+<span class="lineNum">     403 </span>            :                         else
+<span class="lineNum">     404 </span>            :                                 ret.erase(hashedKey);
+<span class="lineNum">     405 </span>            :                 }
+<span class="lineNum">     406 </span>            :         }
+<span class="lineNum">     407 </span><span class="lineCov">      49417 :         return ret;</span>
+<a name="408"><span class="lineNum">     408 </span>            : }</a>
+<span class="lineNum">     409 </span>            : 
+<span class="lineNum">     410 </span><span class="lineNoCov">          0 : h256 State::storageRoot(Address const&amp; _id) const</span>
+<span class="lineNum">     411 </span>            : {
+<span class="lineNum">     412 </span><span class="lineNoCov">          0 :         string s = m_state.at(_id);</span>
+<span class="lineNum">     413 </span><span class="lineNoCov">          0 :         if (s.size())</span>
+<span class="lineNum">     414 </span>            :         {
+<span class="lineNum">     415 </span><span class="lineNoCov">          0 :                 RLP r(s);</span>
+<span class="lineNum">     416 </span><span class="lineNoCov">          0 :                 return r[2].toHash&lt;h256&gt;();</span>
+<span class="lineNum">     417 </span>            :         }
+<span class="lineNum">     418 </span><span class="lineNoCov">          0 :         return EmptyTrie;</span>
+<a name="419"><span class="lineNum">     419 </span>            : }</a>
+<span class="lineNum">     420 </span>            : 
+<span class="lineNum">     421 </span><span class="lineCov">     291723 : bytes const&amp; State::code(Address const&amp; _addr) const</span>
+<span class="lineNum">     422 </span>            : {
+<span class="lineNum">     423 </span><span class="lineCov">     291723 :         Account const* a = account(_addr);</span>
+<span class="lineNum">     424 </span><span class="lineCov">     875139 :         if (!a || a-&gt;codeHash() == EmptySHA3)</span>
+<span class="lineNum">     425 </span>            :                 return NullBytes;
+<span class="lineNum">     426 </span>            : 
+<span class="lineNum">     427 </span><span class="lineCov">     482262 :         if (a-&gt;code().empty())</span>
+<span class="lineNum">     428 </span>            :         {
+<span class="lineNum">     429 </span>            :                 // Load the code from the backend.
+<span class="lineNum">     430 </span><span class="lineCov">      15394 :                 Account* mutableAccount = const_cast&lt;Account*&gt;(a);</span>
+<span class="lineNum">     431 </span><span class="lineCov">      46182 :                 mutableAccount-&gt;noteCode(m_db.lookup(a-&gt;codeHash()));</span>
+<span class="lineNum">     432 </span><span class="lineCov">      46182 :                 CodeSizeCache::instance().store(a-&gt;codeHash(), a-&gt;code().size());</span>
+<span class="lineNum">     433 </span>            :         }
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span><span class="lineCov">     241131 :         return a-&gt;code();</span>
+<a name="436"><span class="lineNum">     436 </span>            : }</a>
+<span class="lineNum">     437 </span>            : 
+<span class="lineNum">     438 </span><span class="lineCov">       4131 : void State::setNewCode(Address const&amp; _address, bytes&amp;&amp; _code)</span>
+<span class="lineNum">     439 </span>            : {
+<span class="lineNum">     440 </span><span class="lineCov">       8262 :         m_cache[_address].setNewCode(std::move(_code));</span>
+<span class="lineNum">     441 </span><span class="lineCov">       4131 :         m_changeLog.emplace_back(Change::NewCode, _address);</span>
+<a name="442"><span class="lineNum">     442 </span><span class="lineCov">       4131 : }</span></a>
+<span class="lineNum">     443 </span>            : 
+<span class="lineNum">     444 </span><span class="lineCov">     232253 : h256 State::codeHash(Address const&amp; _a) const</span>
+<span class="lineNum">     445 </span>            : {
+<span class="lineNum">     446 </span><span class="lineCov">     232253 :         if (Account const* a = account(_a))</span>
+<span class="lineNum">     447 </span>            :                 return a-&gt;codeHash();
+<span class="lineNum">     448 </span>            :         else
+<span class="lineNum">     449 </span><span class="lineNoCov">          0 :                 return EmptySHA3;</span>
+<a name="450"><span class="lineNum">     450 </span>            : }</a>
+<span class="lineNum">     451 </span>            : 
+<span class="lineNum">     452 </span><span class="lineCov">     102544 : size_t State::codeSize(Address const&amp; _a) const</span>
+<span class="lineNum">     453 </span>            : {
+<span class="lineNum">     454 </span><span class="lineCov">     102544 :         if (Account const* a = account(_a))</span>
+<span class="lineNum">     455 </span>            :         {
+<span class="lineNum">     456 </span><span class="lineCov">         69 :                 if (a-&gt;hasNewCode())</span>
+<span class="lineNum">     457 </span><span class="lineCov">         90 :                         return a-&gt;code().size();</span>
+<span class="lineNum">     458 </span><span class="lineCov">         24 :                 auto&amp; codeSizeCache = CodeSizeCache::instance();</span>
+<span class="lineNum">     459 </span><span class="lineCov">         24 :                 h256 codeHash = a-&gt;codeHash();</span>
+<span class="lineNum">     460 </span><span class="lineCov">         24 :                 if (codeSizeCache.contains(codeHash))</span>
+<span class="lineNum">     461 </span><span class="lineCov">         24 :                         return codeSizeCache.get(codeHash);</span>
+<span class="lineNum">     462 </span>            :                 else
+<span class="lineNum">     463 </span>            :                 {
+<span class="lineNum">     464 </span><span class="lineNoCov">          0 :                         size_t size = code(_a).size();</span>
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :                         codeSizeCache.store(codeHash, size);</span>
+<span class="lineNum">     466 </span>            :                         return size;
+<span class="lineNum">     467 </span>            :                 }
+<span class="lineNum">     468 </span>            :         }
+<span class="lineNum">     469 </span>            :         else
+<span class="lineNum">     470 </span>            :                 return 0;
+<a name="471"><span class="lineNum">     471 </span>            : }</a>
+<span class="lineNum">     472 </span>            : 
+<span class="lineNum">     473 </span><span class="lineCov">     261055 : size_t State::savepoint() const</span>
+<span class="lineNum">     474 </span>            : {
+<span class="lineNum">     475 </span><span class="lineCov">     522110 :         return m_changeLog.size();</span>
+<a name="476"><span class="lineNum">     476 </span>            : }</a>
+<span class="lineNum">     477 </span>            : 
+<span class="lineNum">     478 </span><span class="lineCov">      97972 : void State::rollback(size_t _savepoint)</span>
+<span class="lineNum">     479 </span>            : {
+<span class="lineNum">     480 </span><span class="lineCov">     229026 :         while (_savepoint != m_changeLog.size())</span>
+<span class="lineNum">     481 </span>            :         {
+<span class="lineNum">     482 </span><span class="lineCov">      33082 :                 auto&amp; change = m_changeLog.back();</span>
+<span class="lineNum">     483 </span><span class="lineCov">      33082 :                 auto&amp; account = m_cache[change.address];</span>
+<span class="lineNum">     484 </span>            : 
+<span class="lineNum">     485 </span>            :                 // Public State API cannot be used here because it will add another
+<span class="lineNum">     486 </span>            :                 // change log entry.
+<span class="lineNum">     487 </span><span class="lineCov">      16541 :                 switch (change.kind)</span>
+<span class="lineNum">     488 </span>            :                 {
+<span class="lineNum">     489 </span>            :                 case Change::Storage:
+<span class="lineNum">     490 </span><span class="lineCov">      44804 :                         account.setStorage(change.key, change.value);</span>
+<span class="lineNum">     491 </span><span class="lineCov">      11201 :                         break;</span>
+<span class="lineNum">     492 </span>            :                 case Change::Balance:
+<span class="lineNum">     493 </span><span class="lineCov">       7012 :                         account.addBalance(0 - change.value);</span>
+<span class="lineNum">     494 </span><span class="lineCov">       3506 :                         break;</span>
+<span class="lineNum">     495 </span>            :                 case Change::Nonce:
+<span class="lineNum">     496 </span><span class="lineCov">       2732 :                         account.setNonce(account.nonce() - 1);</span>
+<span class="lineNum">     497 </span><span class="lineCov">        683 :                         break;</span>
+<span class="lineNum">     498 </span>            :                 case Change::Create:
+<span class="lineNum">     499 </span><span class="lineCov">       1035 :                         m_cache.erase(change.address);</span>
+<span class="lineNum">     500 </span>            :                         break;
+<span class="lineNum">     501 </span>            :                 case Change::NewCode:
+<span class="lineNum">     502 </span>            :                         account.resetCode();
+<span class="lineNum">     503 </span>            :                         break;
+<span class="lineNum">     504 </span>            :                 case Change::Touch:
+<span class="lineNum">     505 </span><span class="lineCov">         37 :                         account.untouch();</span>
+<span class="lineNum">     506 </span><span class="lineCov">         37 :                         m_unchangedCacheEntries.emplace_back(change.address);</span>
+<span class="lineNum">     507 </span><span class="lineCov">         37 :                         break;</span>
+<span class="lineNum">     508 </span>            :                 }
+<span class="lineNum">     509 </span><span class="lineCov">      16541 :                 m_changeLog.pop_back();</span>
+<span class="lineNum">     510 </span>            :         }
+<a name="511"><span class="lineNum">     511 </span><span class="lineCov">      97972 : }</span></a>
+<span class="lineNum">     512 </span>            : 
+<span class="lineNum">     513 </span><span class="lineCov">     289898 : std::pair&lt;ExecutionResult, TransactionReceipt&gt; State::execute(EnvInfo const&amp; _envInfo, SealEngineFace const&amp; _sealEngine, Transaction const&amp; _t, Permanence _p, OnOpFunc const&amp; _onOp)</span>
+<span class="lineNum">     514 </span>            : {
+<span class="lineNum">     515 </span><span class="lineCov">     579796 :         auto onOp = _onOp;</span>
+<span class="lineNum">     516 </span>            : #if ETH_VMTRACE
+<span class="lineNum">     517 </span>            :         if (isChannelVisible&lt;VMTraceChannel&gt;())
+<span class="lineNum">     518 </span>            :                 onOp = Executive::simpleTrace(); // override tracer
+<span class="lineNum">     519 </span>            : #endif
+<span class="lineNum">     520 </span>            : 
+<span class="lineNum">     521 </span>            :         // Create and initialize the executive. This will throw fairly cheaply and quickly if the
+<span class="lineNum">     522 </span>            :         // transaction is bad in any way.
+<span class="lineNum">     523 </span><span class="lineCov">     579796 :         Executive e(*this, _envInfo, _sealEngine);</span>
+<span class="lineNum">     524 </span><span class="lineCov">     579796 :         ExecutionResult res;</span>
+<span class="lineNum">     525 </span><span class="lineCov">     579796 :         e.setResultRecipient(res);</span>
+<span class="lineNum">     526 </span><span class="lineCov">     289898 :         e.initialize(_t);</span>
+<span class="lineNum">     527 </span>            : 
+<span class="lineNum">     528 </span>            :         // OK - transaction looks valid - execute.
+<span class="lineNum">     529 </span><span class="lineCov">      26708 :         u256 startGasUsed = _envInfo.gasUsed();</span>
+<span class="lineNum">     530 </span><span class="lineCov">      13354 :         if (!e.execute())</span>
+<span class="lineNum">     531 </span><span class="lineCov">       8955 :                 e.go(onOp);</span>
+<span class="lineNum">     532 </span><span class="lineCov">      13354 :         e.finalize();</span>
+<span class="lineNum">     533 </span>            : 
+<span class="lineNum">     534 </span><span class="lineCov">      13354 :         if (_p == Permanence::Reverted)</span>
+<span class="lineNum">     535 </span><span class="lineNoCov">          0 :                 m_cache.clear();</span>
+<span class="lineNum">     536 </span>            :         else
+<span class="lineNum">     537 </span>            :         {
+<span class="lineNum">     538 </span><span class="lineCov">      66770 :                 bool removeEmptyAccounts = _envInfo.number() &gt;= _sealEngine.chainParams().u256Param(&quot;EIP158ForkBlock&quot;);</span>
+<span class="lineNum">     539 </span><span class="lineCov">      13354 :                 commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);</span>
+<span class="lineNum">     540 </span>            :         }
+<span class="lineNum">     541 </span>            : 
+<span class="lineNum">     542 </span><span class="lineCov">      80124 :         return make_pair(res, TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs()));</span>
+<a name="543"><span class="lineNum">     543 </span>            : }</a>
+<span class="lineNum">     544 </span>            : 
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 : std::ostream&amp; dev::eth::operator&lt;&lt;(std::ostream&amp; _out, State const&amp; _s)</span>
+<span class="lineNum">     546 </span>            : {
+<span class="lineNum">     547 </span><span class="lineNoCov">          0 :         _out &lt;&lt; &quot;--- &quot; &lt;&lt; _s.rootHash() &lt;&lt; std::endl;</span>
+<span class="lineNum">     548 </span><span class="lineNoCov">          0 :         std::set&lt;Address&gt; d;</span>
+<span class="lineNum">     549 </span><span class="lineNoCov">          0 :         std::set&lt;Address&gt; dtr;</span>
+<span class="lineNum">     550 </span><span class="lineNoCov">          0 :         auto trie = SecureTrieDB&lt;Address, OverlayDB&gt;(const_cast&lt;OverlayDB*&gt;(&amp;_s.m_db), _s.rootHash());</span>
+<span class="lineNum">     551 </span><span class="lineNoCov">          0 :         for (auto i: trie)</span>
+<span class="lineNum">     552 </span><span class="lineNoCov">          0 :                 d.insert(i.first), dtr.insert(i.first);</span>
+<span class="lineNum">     553 </span><span class="lineNoCov">          0 :         for (auto i: _s.m_cache)</span>
+<span class="lineNum">     554 </span><span class="lineNoCov">          0 :                 d.insert(i.first);</span>
+<span class="lineNum">     555 </span>            : 
+<span class="lineNum">     556 </span><span class="lineNoCov">          0 :         for (auto i: d)</span>
+<span class="lineNum">     557 </span>            :         {
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 :                 auto it = _s.m_cache.find(i);</span>
+<span class="lineNum">     559 </span><span class="lineNoCov">          0 :                 Account* cache = it != _s.m_cache.end() ? &amp;it-&gt;second : nullptr;</span>
+<span class="lineNum">     560 </span><span class="lineNoCov">          0 :                 string rlpString = dtr.count(i) ? trie.at(i) : &quot;&quot;;</span>
+<span class="lineNum">     561 </span><span class="lineNoCov">          0 :                 RLP r(rlpString);</span>
+<span class="lineNum">     562 </span><span class="lineNoCov">          0 :                 assert(cache || r);</span>
+<span class="lineNum">     563 </span>            : 
+<span class="lineNum">     564 </span><span class="lineNoCov">          0 :                 if (cache &amp;&amp; !cache-&gt;isAlive())</span>
+<span class="lineNum">     565 </span><span class="lineNoCov">          0 :                         _out &lt;&lt; &quot;XXX  &quot; &lt;&lt; i &lt;&lt; std::endl;</span>
+<span class="lineNum">     566 </span>            :                 else
+<span class="lineNum">     567 </span>            :                 {
+<span class="lineNum">     568 </span><span class="lineNoCov">          0 :                         string lead = (cache ? r ? &quot; *   &quot; : &quot; +   &quot; : &quot;     &quot;);</span>
+<span class="lineNum">     569 </span><span class="lineNoCov">          0 :                         if (cache &amp;&amp; r &amp;&amp; cache-&gt;nonce() == r[0].toInt&lt;u256&gt;() &amp;&amp; cache-&gt;balance() == r[1].toInt&lt;u256&gt;())</span>
+<span class="lineNum">     570 </span>            :                                 lead = &quot; .   &quot;;
+<span class="lineNum">     571 </span>            : 
+<span class="lineNum">     572 </span><span class="lineNoCov">          0 :                         stringstream contout;</span>
+<span class="lineNum">     573 </span>            : 
+<span class="lineNum">     574 </span><span class="lineNoCov">          0 :                         if ((cache &amp;&amp; cache-&gt;codeHash() == EmptySHA3) || (!cache &amp;&amp; r &amp;&amp; (h256)r[3] != EmptySHA3))</span>
+<span class="lineNum">     575 </span>            :                         {
+<span class="lineNum">     576 </span><span class="lineNoCov">          0 :                                 std::map&lt;u256, u256&gt; mem;</span>
+<span class="lineNum">     577 </span><span class="lineNoCov">          0 :                                 std::set&lt;u256&gt; back;</span>
+<span class="lineNum">     578 </span><span class="lineNoCov">          0 :                                 std::set&lt;u256&gt; delta;</span>
+<span class="lineNum">     579 </span><span class="lineNoCov">          0 :                                 std::set&lt;u256&gt; cached;</span>
+<span class="lineNum">     580 </span><span class="lineNoCov">          0 :                                 if (r)</span>
+<span class="lineNum">     581 </span>            :                                 {
+<span class="lineNum">     582 </span><span class="lineNoCov">          0 :                                         SecureTrieDB&lt;h256, OverlayDB&gt; memdb(const_cast&lt;OverlayDB*&gt;(&amp;_s.m_db), r[2].toHash&lt;h256&gt;());               // promise we won't alter the overlay! :)</span>
+<span class="lineNum">     583 </span><span class="lineNoCov">          0 :                                         for (auto const&amp; j: memdb)</span>
+<span class="lineNum">     584 </span><span class="lineNoCov">          0 :                                                 mem[j.first] = RLP(j.second).toInt&lt;u256&gt;(), back.insert(j.first);</span>
+<span class="lineNum">     585 </span>            :                                 }
+<span class="lineNum">     586 </span><span class="lineNoCov">          0 :                                 if (cache)</span>
+<span class="lineNum">     587 </span><span class="lineNoCov">          0 :                                         for (auto const&amp; j: cache-&gt;storageOverlay())</span>
+<span class="lineNum">     588 </span>            :                                         {
+<span class="lineNum">     589 </span><span class="lineNoCov">          0 :                                                 if ((!mem.count(j.first) &amp;&amp; j.second) || (mem.count(j.first) &amp;&amp; mem.at(j.first) != j.second))</span>
+<span class="lineNum">     590 </span><span class="lineNoCov">          0 :                                                         mem[j.first] = j.second, delta.insert(j.first);</span>
+<span class="lineNum">     591 </span><span class="lineNoCov">          0 :                                                 else if (j.second)</span>
+<span class="lineNum">     592 </span><span class="lineNoCov">          0 :                                                         cached.insert(j.first);</span>
+<span class="lineNum">     593 </span>            :                                         }
+<span class="lineNum">     594 </span><span class="lineNoCov">          0 :                                 if (!delta.empty())</span>
+<span class="lineNum">     595 </span><span class="lineNoCov">          0 :                                         lead = (lead == &quot; .   &quot;) ? &quot;*.*  &quot; : &quot;***  &quot;;</span>
+<span class="lineNum">     596 </span>            : 
+<span class="lineNum">     597 </span><span class="lineNoCov">          0 :                                 contout &lt;&lt; &quot; @:&quot;;</span>
+<span class="lineNum">     598 </span><span class="lineNoCov">          0 :                                 if (!delta.empty())</span>
+<span class="lineNum">     599 </span><span class="lineNoCov">          0 :                                         contout &lt;&lt; &quot;???&quot;;</span>
+<span class="lineNum">     600 </span>            :                                 else
+<span class="lineNum">     601 </span><span class="lineNoCov">          0 :                                         contout &lt;&lt; r[2].toHash&lt;h256&gt;();</span>
+<span class="lineNum">     602 </span><span class="lineNoCov">          0 :                                 if (cache &amp;&amp; cache-&gt;hasNewCode())</span>
+<span class="lineNum">     603 </span><span class="lineNoCov">          0 :                                         contout &lt;&lt; &quot; $&quot; &lt;&lt; toHex(cache-&gt;code());</span>
+<span class="lineNum">     604 </span>            :                                 else
+<span class="lineNum">     605 </span><span class="lineNoCov">          0 :                                         contout &lt;&lt; &quot; $&quot; &lt;&lt; (cache ? cache-&gt;codeHash() : r[3].toHash&lt;h256&gt;());</span>
+<span class="lineNum">     606 </span>            : 
+<span class="lineNum">     607 </span><span class="lineNoCov">          0 :                                 for (auto const&amp; j: mem)</span>
+<span class="lineNum">     608 </span><span class="lineNoCov">          0 :                                         if (j.second)</span>
+<span class="lineNum">     609 </span><span class="lineNoCov">          0 :                                                 contout &lt;&lt; std::endl &lt;&lt; (delta.count(j.first) ? back.count(j.first) ? &quot; *     &quot; : &quot; +     &quot; : cached.count(j.first) ? &quot; .     &quot; : &quot;       &quot;) &lt;&lt; std::hex &lt;&lt; nouppercase &lt;&lt; std::setw(64) &lt;&lt; j.first &lt;&lt; &quot;: &quot; &lt;&lt; std::setw(0) &lt;&lt; j.second ;</span>
+<span class="lineNum">     610 </span>            :                                         else
+<span class="lineNum">     611 </span><span class="lineNoCov">          0 :                                                 contout &lt;&lt; std::endl &lt;&lt; &quot;XXX    &quot; &lt;&lt; std::hex &lt;&lt; nouppercase &lt;&lt; std::setw(64) &lt;&lt; j.first &lt;&lt; &quot;&quot;;</span>
+<span class="lineNum">     612 </span>            :                         }
+<span class="lineNum">     613 </span>            :                         else
+<span class="lineNum">     614 </span><span class="lineNoCov">          0 :                                 contout &lt;&lt; &quot; [SIMPLE]&quot;;</span>
+<span class="lineNum">     615 </span><span class="lineNoCov">          0 :                         _out &lt;&lt; lead &lt;&lt; i &lt;&lt; &quot;: &quot; &lt;&lt; std::dec &lt;&lt; (cache ? cache-&gt;nonce() : r[0].toInt&lt;u256&gt;()) &lt;&lt; &quot; #:&quot; &lt;&lt; (cache ? cache-&gt;balance() : r[1].toInt&lt;u256&gt;()) &lt;&lt; contout.str() &lt;&lt; std::endl;</span>
+<span class="lineNum">     616 </span>            :                 }
+<a name="617"><span class="lineNum">     617 </span>            :         }</a>
+<span class="lineNum">     618 </span><span class="lineNoCov">          0 :         return _out;</span>
+<span class="lineNum">     619 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

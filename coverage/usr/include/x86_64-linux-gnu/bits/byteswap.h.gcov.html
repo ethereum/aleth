@@ -1,0 +1,231 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/x86_64-linux-gnu/bits/byteswap.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/x86_64-linux-gnu/bits</a> - byteswap.h<span style="font-size: 80%;"> (source / <a href="byteswap.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* Macros to swap the order of bytes in integer values.</a>
+<span class="lineNum">       2 </span>            :    Copyright (C) 1997-2016 Free Software Foundation, Inc.
+<span class="lineNum">       3 </span>            :    This file is part of the GNU C Library.
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    The GNU C Library is free software; you can redistribute it and/or
+<span class="lineNum">       6 </span>            :    modify it under the terms of the GNU Lesser General Public
+<span class="lineNum">       7 </span>            :    License as published by the Free Software Foundation; either
+<span class="lineNum">       8 </span>            :    version 2.1 of the License, or (at your option) any later version.
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            :    The GNU C Library is distributed in the hope that it will be useful,
+<span class="lineNum">      11 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      12 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+<span class="lineNum">      13 </span>            :    Lesser General Public License for more details.
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            :    You should have received a copy of the GNU Lesser General Public
+<span class="lineNum">      16 </span>            :    License along with the GNU C Library; if not, see
+<span class="lineNum">      17 </span>            :    &lt;http://www.gnu.org/licenses/&gt;.  */
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #if !defined _BYTESWAP_H &amp;&amp; !defined _NETINET_IN_H &amp;&amp; !defined _ENDIAN_H
+<span class="lineNum">      20 </span>            : # error &quot;Never use &lt;bits/byteswap.h&gt; directly; include &lt;byteswap.h&gt; instead.&quot;
+<span class="lineNum">      21 </span>            : #endif
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #ifndef _BITS_BYTESWAP_H
+<span class="lineNum">      24 </span>            : #define _BITS_BYTESWAP_H 1
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;features.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;bits/types.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;bits/wordsize.h&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : /* Swap bytes in 16 bit value.  */
+<span class="lineNum">      31 </span>            : #define __bswap_constant_16(x) \
+<span class="lineNum">      32 </span>            :      ((unsigned short int) ((((x) &gt;&gt; 8) &amp; 0xff) | (((x) &amp; 0xff) &lt;&lt; 8)))
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : /* Get __bswap_16.  */
+<span class="lineNum">      35 </span>            : #include &lt;bits/byteswap-16.h&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : /* Swap bytes in 32 bit value.  */
+<span class="lineNum">      38 </span>            : #define __bswap_constant_32(x) \
+<span class="lineNum">      39 </span>            :      ((((x) &amp; 0xff000000) &gt;&gt; 24) | (((x) &amp; 0x00ff0000) &gt;&gt;  8) |                   \
+<span class="lineNum">      40 </span>            :       (((x) &amp; 0x0000ff00) &lt;&lt;  8) | (((x) &amp; 0x000000ff) &lt;&lt; 24))
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : #ifdef __GNUC__
+<span class="lineNum">      43 </span>            : # if __GNUC_PREREQ (4, 3)
+<span class="lineNum">      44 </span>            : static __inline unsigned int
+<span class="lineNum">      45 </span>            : __bswap_32 (unsigned int __bsx)
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span><span class="lineCov">       1414 :   return __builtin_bswap32 (__bsx);</span>
+<span class="lineNum">      48 </span>            : }
+<span class="lineNum">      49 </span>            : # elif __GNUC__ &gt;= 2
+<span class="lineNum">      50 </span>            : #  if __WORDSIZE == 64 || (defined __i486__ || defined __pentium__            \
+<span class="lineNum">      51 </span>            :                            || defined __pentiumpro__ || defined __pentium4__  \
+<span class="lineNum">      52 </span>            :                            || defined __k8__ || defined __athlon__            \
+<span class="lineNum">      53 </span>            :                            || defined __k6__ || defined __nocona__            \
+<span class="lineNum">      54 </span>            :                            || defined __core2__ || defined __geode__          \
+<span class="lineNum">      55 </span>            :                            || defined __amdfam10__)
+<span class="lineNum">      56 </span>            : /* To swap the bytes in a word the i486 processors and up provide the
+<span class="lineNum">      57 </span>            :    `bswap' opcode.  On i386 we have to use three instructions.  */
+<span class="lineNum">      58 </span>            : #   define __bswap_32(x) \
+<span class="lineNum">      59 </span>            :       (__extension__                                                          \
+<span class="lineNum">      60 </span>            :        ({ unsigned int __v, __x = (x);                                        \
+<span class="lineNum">      61 </span>            :           if (__builtin_constant_p (__x))                                     \
+<span class="lineNum">      62 </span>            :             __v = __bswap_constant_32 (__x);                                  \
+<span class="lineNum">      63 </span>            :           else                                                                \
+<span class="lineNum">      64 </span>            :             __asm__ (&quot;bswap %0&quot; : &quot;=r&quot; (__v) : &quot;0&quot; (__x));                      \
+<span class="lineNum">      65 </span>            :           __v; }))
+<span class="lineNum">      66 </span>            : #  else
+<span class="lineNum">      67 </span>            : #   define __bswap_32(x)                                                      \
+<span class="lineNum">      68 </span>            :       (__extension__                                                          \
+<span class="lineNum">      69 </span>            :        ({ unsigned int __v, __x = (x);                                        \
+<span class="lineNum">      70 </span>            :           if (__builtin_constant_p (__x))                                     \
+<span class="lineNum">      71 </span>            :             __v = __bswap_constant_32 (__x);                                  \
+<span class="lineNum">      72 </span>            :           else                                                                \
+<span class="lineNum">      73 </span>            :             __asm__ (&quot;rorw $8, %w0;&quot;                                        \
+<span class="lineNum">      74 </span>            :                      &quot;rorl $16, %0;&quot;                                        \
+<span class="lineNum">      75 </span>            :                      &quot;rorw $8, %w0&quot;                                         \
+<span class="lineNum">      76 </span>            :                      : &quot;=r&quot; (__v)                                           \
+<span class="lineNum">      77 </span>            :                      : &quot;0&quot; (__x)                                            \
+<span class="lineNum">      78 </span>            :                      : &quot;cc&quot;);                                               \
+<span class="lineNum">      79 </span>            :           __v; }))
+<span class="lineNum">      80 </span>            : #  endif
+<span class="lineNum">      81 </span>            : # else
+<span class="lineNum">      82 </span>            : #  define __bswap_32(x) \
+<span class="lineNum">      83 </span>            :      (__extension__                                                           \
+<span class="lineNum">      84 </span>            :       ({ unsigned int __x = (x); __bswap_constant_32 (__x); }))
+<span class="lineNum">      85 </span>            : # endif
+<span class="lineNum">      86 </span>            : #else
+<span class="lineNum">      87 </span>            : static __inline unsigned int
+<span class="lineNum">      88 </span>            : __bswap_32 (unsigned int __bsx)
+<span class="lineNum">      89 </span>            : {
+<span class="lineNum">      90 </span>            :   return __bswap_constant_32 (__bsx);
+<span class="lineNum">      91 </span>            : }
+<span class="lineNum">      92 </span>            : #endif
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : #if __GNUC_PREREQ (2, 0)
+<span class="lineNum">      96 </span>            : /* Swap bytes in 64 bit value.  */
+<span class="lineNum">      97 </span>            : # define __bswap_constant_64(x) \
+<span class="lineNum">      98 </span>            :      (__extension__ ((((x) &amp; 0xff00000000000000ull) &gt;&gt; 56)                  \
+<span class="lineNum">      99 </span>            :                      | (((x) &amp; 0x00ff000000000000ull) &gt;&gt; 40)                \
+<span class="lineNum">     100 </span>            :                      | (((x) &amp; 0x0000ff0000000000ull) &gt;&gt; 24)                \
+<span class="lineNum">     101 </span>            :                      | (((x) &amp; 0x000000ff00000000ull) &gt;&gt; 8)                 \
+<span class="lineNum">     102 </span>            :                      | (((x) &amp; 0x00000000ff000000ull) &lt;&lt; 8)                 \
+<span class="lineNum">     103 </span>            :                      | (((x) &amp; 0x0000000000ff0000ull) &lt;&lt; 24)                \
+<span class="lineNum">     104 </span>            :                      | (((x) &amp; 0x000000000000ff00ull) &lt;&lt; 40)                \
+<span class="lineNum">     105 </span>            :                      | (((x) &amp; 0x00000000000000ffull) &lt;&lt; 56)))
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : # if __GNUC_PREREQ (4, 3)
+<span class="lineNum">     108 </span>            : static __inline __uint64_t
+<span class="lineNum">     109 </span>            : __bswap_64 (__uint64_t __bsx)
+<span class="lineNum">     110 </span>            : {
+<span class="lineNum">     111 </span><span class="lineCov">          1 :   return __builtin_bswap64 (__bsx);</span>
+<span class="lineNum">     112 </span>            : }
+<span class="lineNum">     113 </span>            : # elif __WORDSIZE == 64
+<span class="lineNum">     114 </span>            : #  define __bswap_64(x) \
+<span class="lineNum">     115 </span>            :      (__extension__                                                           \
+<span class="lineNum">     116 </span>            :       ({ __uint64_t __v, __x = (x);                                           \
+<span class="lineNum">     117 </span>            :          if (__builtin_constant_p (__x))                                      \
+<span class="lineNum">     118 </span>            :            __v = __bswap_constant_64 (__x);                                   \
+<span class="lineNum">     119 </span>            :          else                                                                 \
+<span class="lineNum">     120 </span>            :            __asm__ (&quot;bswap %q0&quot; : &quot;=r&quot; (__v) : &quot;0&quot; (__x));                      \
+<span class="lineNum">     121 </span>            :          __v; }))
+<span class="lineNum">     122 </span>            : # else
+<span class="lineNum">     123 </span>            : #  define __bswap_64(x) \
+<span class="lineNum">     124 </span>            :      (__extension__                                                           \
+<span class="lineNum">     125 </span>            :       ({ union { __extension__ __uint64_t __ll;                               \
+<span class="lineNum">     126 </span>            :                  unsigned int __l[2]; } __w, __r;                             \
+<span class="lineNum">     127 </span>            :          if (__builtin_constant_p (x))                                        \
+<span class="lineNum">     128 </span>            :            __r.__ll = __bswap_constant_64 (x);                                \
+<span class="lineNum">     129 </span>            :          else                                                                 \
+<span class="lineNum">     130 </span>            :            {                                                                  \
+<span class="lineNum">     131 </span>            :              __w.__ll = (x);                                                  \
+<span class="lineNum">     132 </span>            :              __r.__l[0] = __bswap_32 (__w.__l[1]);                            \
+<span class="lineNum">     133 </span>            :              __r.__l[1] = __bswap_32 (__w.__l[0]);                            \
+<span class="lineNum">     134 </span>            :            }                                                                  \
+<span class="lineNum">     135 </span>            :          __r.__ll; }))
+<span class="lineNum">     136 </span>            : # endif
+<span class="lineNum">     137 </span>            : #else
+<span class="lineNum">     138 </span>            : # define __bswap_constant_64(x) \
+<span class="lineNum">     139 </span>            :      ((((x) &amp; 0xff00000000000000ull) &gt;&gt; 56)                                 \
+<span class="lineNum">     140 </span>            :       | (((x) &amp; 0x00ff000000000000ull) &gt;&gt; 40)                               \
+<span class="lineNum">     141 </span>            :       | (((x) &amp; 0x0000ff0000000000ull) &gt;&gt; 24)                               \
+<span class="lineNum">     142 </span>            :       | (((x) &amp; 0x000000ff00000000ull) &gt;&gt; 8)                                \
+<span class="lineNum">     143 </span>            :       | (((x) &amp; 0x00000000ff000000ull) &lt;&lt; 8)                                \
+<span class="lineNum">     144 </span>            :       | (((x) &amp; 0x0000000000ff0000ull) &lt;&lt; 24)                               \
+<span class="lineNum">     145 </span>            :       | (((x) &amp; 0x000000000000ff00ull) &lt;&lt; 40)                               \
+<span class="lineNum">     146 </span>            :       | (((x) &amp; 0x00000000000000ffull) &lt;&lt; 56))
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            : static __inline __uint64_t
+<span class="lineNum">     149 </span>            : __bswap_64 (__uint64_t __bsx)
+<span class="lineNum">     150 </span>            : {
+<span class="lineNum">     151 </span>            :   return __bswap_constant_64 (__bsx);
+<span class="lineNum">     152 </span>            : }
+<span class="lineNum">     153 </span>            : #endif
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            : #endif /* _BITS_BYTESWAP_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

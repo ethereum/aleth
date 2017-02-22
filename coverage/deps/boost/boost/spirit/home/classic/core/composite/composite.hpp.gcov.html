@@ -1,0 +1,227 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/spirit/home/classic/core/composite/composite.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/spirit/home/classic/core/composite</a> - composite.hpp<span style="font-size: 80%;"> (source / <a href="composite.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*=============================================================================</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 1998-2003 Joel de Guzman
+<span class="lineNum">       3 </span>            :     http://spirit.sourceforge.net/
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :   Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       6 </span>            :   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       7 </span>            : =============================================================================*/
+<span class="lineNum">       8 </span>            : #if !defined(BOOST_SPIRIT_COMPOSITE_HPP)
+<span class="lineNum">       9 </span>            : #define BOOST_SPIRIT_COMPOSITE_HPP
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      12 </span>            : #include &lt;boost/compressed_pair.hpp&gt;
+<span class="lineNum">      13 </span>            : #include &lt;boost/spirit/home/classic/namespace.hpp&gt;
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      16 </span>            : namespace boost { namespace spirit {
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &gt;= 1400)
+<span class="lineNum">      21 </span>            : #pragma warning(push)
+<span class="lineNum">      22 </span>            : #pragma warning(disable:4512) //assignment operator could not be generated
+<span class="lineNum">      23 </span>            : #endif
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      26 </span>            :     //
+<span class="lineNum">      27 </span>            :     //  unary class.
+<span class="lineNum">      28 </span>            :     //
+<span class="lineNum">      29 </span>            :     //      Composite class composed of a single subject. This template class
+<span class="lineNum">      30 </span>            :     //      is parameterized by the subject type S and a base class to
+<span class="lineNum">      31 </span>            :     //      inherit from, BaseT. The unary class is meant to be a base class
+<span class="lineNum">      32 </span>            :     //      to inherit from. The inheritance structure, given the BaseT
+<span class="lineNum">      33 </span>            :     //      template parameter places the unary class in the middle of a
+<span class="lineNum">      34 </span>            :     //      linear, single parent hierarchy. For instance, given a class S
+<span class="lineNum">      35 </span>            :     //      and a base class B, a class D can derive from unary:
+<span class="lineNum">      36 </span>            :     //
+<span class="lineNum">      37 </span>            :     //          struct D : public unary&lt;S, B&gt; {...};
+<span class="lineNum">      38 </span>            :     //
+<span class="lineNum">      39 </span>            :     //      The inheritance structure is thus:
+<span class="lineNum">      40 </span>            :     //
+<span class="lineNum">      41 </span>            :     //            B
+<span class="lineNum">      42 </span>            :     //            |
+<span class="lineNum">      43 </span>            :     //          unary (has S)
+<span class="lineNum">      44 </span>            :     //            |
+<span class="lineNum">      45 </span>            :     //            D
+<span class="lineNum">      46 </span>            :     //
+<span class="lineNum">      47 </span>            :     //      The subject can be accessed from the derived class D as:
+<span class="lineNum">      48 </span>            :     //      this-&gt;subject();
+<span class="lineNum">      49 </span>            :     //
+<span class="lineNum">      50 </span>            :     //      Typically, the subject S is specified as typename S::embed_t.
+<span class="lineNum">      51 </span>            :     //      embed_t specifies how the subject is embedded in the composite
+<span class="lineNum">      52 </span>            :     //      (See parser.hpp for details).
+<span class="lineNum">      53 </span>            :     //
+<span class="lineNum">      54 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      55 </span>            :     template &lt;typename S, typename BaseT&gt;
+<span class="lineNum">      56 </span>            :     class unary : public BaseT
+<span class="lineNum">      57 </span>            :     {
+<span class="lineNum">      58 </span>            :     public:
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :         typedef BaseT                                           base_t;
+<span class="lineNum">      61 </span>            :         typedef typename boost::call_traits&lt;S&gt;::param_type      param_t;
+<span class="lineNum">      62 </span>            :         typedef typename boost::call_traits&lt;S&gt;::const_reference return_t;
+<span class="lineNum">      63 </span>            :         typedef S                                               subject_t;
+<span class="lineNum">      64 </span>            :         typedef typename S::embed_t                             subject_embed_t;
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :         unary(param_t subj_)
+<span class="lineNum">      67 </span><span class="lineCov">     438786 :         : base_t(), subj(subj_) {}</span>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :         unary(BaseT const&amp; base, param_t subj_)
+<span class="lineNum">      70 </span>            :         : base_t(base), subj(subj_) {}
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :         return_t
+<span class="lineNum">      73 </span>            :         subject() const
+<span class="lineNum">      74 </span><span class="lineCov">  212407421 :         { return subj; }</span>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            :     private:
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :         subject_embed_t subj;
+<span class="lineNum">      79 </span>            :     };
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      82 </span>            :     //
+<span class="lineNum">      83 </span>            :     //  binary class.
+<span class="lineNum">      84 </span>            :     //
+<span class="lineNum">      85 </span>            :     //      Composite class composed of a pair (left and right). This
+<span class="lineNum">      86 </span>            :     //      template class is parameterized by the left and right subject
+<span class="lineNum">      87 </span>            :     //      types A and B and a base class to inherit from, BaseT. The binary
+<span class="lineNum">      88 </span>            :     //      class is meant to be a base class to inherit from. The
+<span class="lineNum">      89 </span>            :     //      inheritance structure, given the BaseT template parameter places
+<span class="lineNum">      90 </span>            :     //      the binary class in the middle of a linear, single parent
+<span class="lineNum">      91 </span>            :     //      hierarchy. For instance, given classes X and Y and a base class
+<span class="lineNum">      92 </span>            :     //      B, a class D can derive from binary:
+<span class="lineNum">      93 </span>            :     //
+<span class="lineNum">      94 </span>            :     //          struct D : public binary&lt;X, Y, B&gt; {...};
+<span class="lineNum">      95 </span>            :     //
+<span class="lineNum">      96 </span>            :     //      The inheritance structure is thus:
+<span class="lineNum">      97 </span>            :     //
+<span class="lineNum">      98 </span>            :     //            B
+<span class="lineNum">      99 </span>            :     //            |
+<span class="lineNum">     100 </span>            :     //          binary (has X and Y)
+<span class="lineNum">     101 </span>            :     //            |
+<span class="lineNum">     102 </span>            :     //            D
+<span class="lineNum">     103 </span>            :     //
+<span class="lineNum">     104 </span>            :     //      The left and right subjects can be accessed from the derived
+<span class="lineNum">     105 </span>            :     //      class D as: this-&gt;left(); and this-&gt;right();
+<span class="lineNum">     106 </span>            :     //
+<span class="lineNum">     107 </span>            :     //      Typically, the pairs X and Y are specified as typename X::embed_t
+<span class="lineNum">     108 </span>            :     //      and typename Y::embed_t. embed_t specifies how the subject is
+<span class="lineNum">     109 </span>            :     //      embedded in the composite (See parser.hpp for details).
+<span class="lineNum">     110 </span>            :     //
+<span class="lineNum">     111 </span>            :     ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     112 </span>            :     template &lt;typename A, typename B, typename BaseT&gt;
+<span class="lineNum">     113 </span><span class="lineCov">    8775720 :     class binary : public BaseT</span>
+<span class="lineNum">     114 </span>            :     {
+<span class="lineNum">     115 </span>            :     public:
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :         typedef BaseT                                           base_t;
+<span class="lineNum">     118 </span>            :         typedef typename boost::call_traits&lt;A&gt;::param_type      left_param_t;
+<span class="lineNum">     119 </span>            :         typedef typename boost::call_traits&lt;A&gt;::const_reference left_return_t;
+<span class="lineNum">     120 </span>            :         typedef typename boost::call_traits&lt;B&gt;::param_type      right_param_t;
+<span class="lineNum">     121 </span>            :         typedef typename boost::call_traits&lt;B&gt;::const_reference right_return_t;
+<span class="lineNum">     122 </span>            :         typedef A                                               left_t;
+<span class="lineNum">     123 </span>            :         typedef typename A::embed_t                             left_embed_t;
+<span class="lineNum">     124 </span>            :         typedef B                                               right_t;
+<span class="lineNum">     125 </span>            :         typedef typename B::embed_t                             right_embed_t;
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :         binary(left_param_t a, right_param_t b)
+<span class="lineNum">     128 </span><span class="lineCov">   26833356 :         : base_t(), subj(a, b) {}</span>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :         left_return_t
+<span class="lineNum">     131 </span>            :         left() const
+<span class="lineNum">     132 </span><span class="lineCov"> 1276757330 :         { return subj.first(); }</span>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            :         right_return_t
+<span class="lineNum">     135 </span>            :         right() const
+<span class="lineNum">     136 </span><span class="lineCov">  842015908 :         { return subj.second(); }</span>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :     private:
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :         boost::compressed_pair&lt;left_embed_t, right_embed_t&gt; subj;
+<span class="lineNum">     141 </span>            :     };
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &gt;= 1400)
+<span class="lineNum">     144 </span>            : #pragma warning(pop)
+<span class="lineNum">     145 </span>            : #endif
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_END
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            : }} // namespace BOOST_SPIRIT_CLASSIC_NS
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/exception/detail/object_hex_dump.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/exception/detail</a> - object_hex_dump.hpp<span style="font-size: 80%;"> (source / <a href="object_hex_dump.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //Copyright (c) 2006-2009 Emil Dotchevski and Reverge Studios, Inc.</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : //Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       4 </span>            : //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : #ifndef UUID_6F463AC838DF11DDA3E6909F56D89593
+<span class="lineNum">       7 </span>            : #define UUID_6F463AC838DF11DDA3E6909F56D89593
+<span class="lineNum">       8 </span>            : #if (__GNUC__*100+__GNUC_MINOR__&gt;301) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">       9 </span>            : #pragma GCC system_header
+<span class="lineNum">      10 </span>            : #endif
+<span class="lineNum">      11 </span>            : #if defined(_MSC_VER) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">      12 </span>            : #pragma warning(push,1)
+<span class="lineNum">      13 </span>            : #endif
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #include &lt;boost/exception/detail/type_info.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;iomanip&gt;
+<span class="lineNum">      17 </span>            : #include &lt;ios&gt;
+<span class="lineNum">      18 </span>            : #include &lt;string&gt;
+<span class="lineNum">      19 </span>            : #include &lt;sstream&gt;
+<span class="lineNum">      20 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : namespace
+<span class="lineNum">      23 </span>            : boost
+<span class="lineNum">      24 </span>            :     {
+<span class="lineNum">      25 </span>            :     namespace
+<span class="lineNum">      26 </span>            :     exception_detail
+<span class="lineNum">      27 </span>            :         {
+<span class="lineNum">      28 </span>            :         template &lt;class T&gt;
+<a name="29"><span class="lineNum">      29 </span>            :         inline</a>
+<span class="lineNum">      30 </span>            :         std::string
+<span class="lineNum">      31 </span><span class="lineCov">        253 :         object_hex_dump( T const &amp; x, std::size_t max_size=16 )</span>
+<span class="lineNum">      32 </span>            :             {
+<span class="lineNum">      33 </span><span class="lineCov">        506 :             std::ostringstream s;</span>
+<span class="lineNum">      34 </span><span class="lineCov">       1265 :             s &lt;&lt; &quot;type: &quot; &lt;&lt; type_name&lt;T&gt;() &lt;&lt; &quot;, size: &quot; &lt;&lt; sizeof(T) &lt;&lt; &quot;, dump: &quot;;</span>
+<span class="lineNum">      35 </span><span class="lineCov">        253 :             std::size_t n=sizeof(T)&gt;max_size?max_size:sizeof(T);</span>
+<span class="lineNum">      36 </span><span class="lineCov">        253 :             s.fill('0');</span>
+<span class="lineNum">      37 </span><span class="lineCov">        506 :             s.width(2);</span>
+<span class="lineNum">      38 </span><span class="lineCov">        253 :             unsigned char const * b=reinterpret_cast&lt;unsigned char const *&gt;(&amp;x);</span>
+<span class="lineNum">      39 </span><span class="lineCov">       1012 :             s &lt;&lt; std::setw(2) &lt;&lt; std::hex &lt;&lt; (unsigned int)*b;</span>
+<span class="lineNum">      40 </span><span class="lineCov">        253 :             for( unsigned char const * e=b+n; ++b!=e; )</span>
+<span class="lineNum">      41 </span><span class="lineCov">      15180 :                 s &lt;&lt; &quot; &quot; &lt;&lt; std::setw(2) &lt;&lt; std::hex &lt;&lt; (unsigned int)*b;</span>
+<span class="lineNum">      42 </span><span class="lineCov">        506 :             return s.str();</span>
+<span class="lineNum">      43 </span>            :             }
+<span class="lineNum">      44 </span>            :         }
+<span class="lineNum">      45 </span>            :     }
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : #if defined(_MSC_VER) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">      48 </span>            : #pragma warning(pop)
+<span class="lineNum">      49 </span>            : #endif
+<span class="lineNum">      50 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

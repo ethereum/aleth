@@ -1,0 +1,548 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/utils/runtime/parameter.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/utils/runtime</a> - parameter.hpp<span style="font-size: 80%;"> (source / <a href="parameter.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">70</td>
+            <td class="headerCovTableEntry">142</td>
+            <td class="headerCovTableEntryLo">49.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">79</td>
+            <td class="headerCovTableEntry">111</td>
+            <td class="headerCovTableEntryLo">71.2 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : formal parameter definition
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_UTILS_RUNTIME_PARAMETER_HPP
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_UTILS_RUNTIME_PARAMETER_HPP
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test Runtime parameters
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/utils/runtime/fwd.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/utils/runtime/modifier.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/test/utils/runtime/argument.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/utils/runtime/argument_factory.hpp&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : // Boost.Test
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/utils/class_properties.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/test/utils/foreach.hpp&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : // Boost
+<span class="lineNum">      29 </span>            : #include &lt;boost/function/function2.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/algorithm/cxx11/all_of.hpp&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : // STL
+<span class="lineNum">      33 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : namespace boost {
+<span class="lineNum">      38 </span>            : namespace runtime {
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : // ************************************************************************** //
+<span class="lineNum">      41 </span>            : // **************           runtime::parameter_cla_id          ************** //
+<span class="lineNum">      42 </span>            : // ************************************************************************** //
+<a name="43"><span class="lineNum">      43 </span>            : // set of attributes identifying the parameter in the command line</a>
+<a name="44"><span class="lineNum">      44 </span>            : </a>
+<span class="lineNum">      45 </span><span class="lineCov">       1884 : struct parameter_cla_id {</span>
+<span class="lineNum">      46 </span><span class="lineCov">         71 :     parameter_cla_id( cstring prefix, cstring tag, cstring value_separator, bool negatable )</span>
+<span class="lineNum">      47 </span>            :     : m_prefix( prefix.begin(), prefix.size() )
+<span class="lineNum">      48 </span>            :     , m_tag( tag.begin(), tag.size() )
+<span class="lineNum">      49 </span>            :     , m_value_separator( value_separator.begin(), value_separator.size() )
+<span class="lineNum">      50 </span><span class="lineCov">        923 :     , m_negatable( negatable )</span>
+<span class="lineNum">      51 </span>            :     {
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineCov">        284 :         BOOST_TEST_I_ASSRT( algorithm::all_of( m_prefix.begin(), m_prefix.end(), valid_prefix_char ),</span>
+<span class="lineNum">      54 </span>            :                             invalid_cla_id() &lt;&lt; &quot;Parameter &quot; &lt;&lt; m_tag
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :                                              &lt;&lt; &quot; has invalid characters in prefix.&quot; );</span>
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineCov">        284 :         BOOST_TEST_I_ASSRT( algorithm::all_of( m_tag.begin(), m_tag.end(), valid_name_char ),</span>
+<span class="lineNum">      58 </span>            :                             invalid_cla_id() &lt;&lt; &quot;Parameter &quot; &lt;&lt; m_tag
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :                                              &lt;&lt; &quot; has invalid characters in name.&quot; );</span>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineCov">        284 :         BOOST_TEST_I_ASSRT( algorithm::all_of( m_value_separator.begin(), m_value_separator.end(), valid_separator_char ),</span>
+<span class="lineNum">      62 </span>            :                             invalid_cla_id() &lt;&lt; &quot;Parameter &quot; &lt;&lt; m_tag
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :                                              &lt;&lt; &quot; has invalid characters in value separator.&quot; );</span>
+<a name="64"><span class="lineNum">      64 </span><span class="lineCov">         71 :     }</span></a>
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span><span class="lineCov">        184 :     static bool             valid_prefix_char( char c )</span>
+<span class="lineNum">      67 </span>            :     {
+<a name="68"><span class="lineNum">      68 </span><span class="lineCov">        184 :         return c == '-' || c == '/' ;</span></a>
+<span class="lineNum">      69 </span>            :     }
+<span class="lineNum">      70 </span><span class="lineCov">         54 :     static bool             valid_separator_char( char c )</span>
+<span class="lineNum">      71 </span>            :     {
+<a name="72"><span class="lineNum">      72 </span><span class="lineCov">         54 :         return c == '=' || c == ':' || c == ' ' || c == '\0';</span></a>
+<span class="lineNum">      73 </span>            :     }
+<span class="lineNum">      74 </span><span class="lineCov">        678 :     static bool             valid_name_char( char c )</span>
+<span class="lineNum">      75 </span>            :     {
+<span class="lineNum">      76 </span><span class="lineCov">        678 :         return std::isalnum( c ) || c == '+' || c == '_' || c == '?';</span>
+<span class="lineNum">      77 </span>            :     }
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :     std::string             m_prefix;
+<span class="lineNum">      80 </span>            :     std::string             m_tag;
+<span class="lineNum">      81 </span>            :     std::string             m_value_separator;
+<span class="lineNum">      82 </span>            :     bool                    m_negatable;
+<span class="lineNum">      83 </span>            : };
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : typedef std::vector&lt;parameter_cla_id&gt; param_cla_ids;
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : // ************************************************************************** //
+<span class="lineNum">      88 </span>            : // **************             runtime::basic_param             ************** //
+<span class="lineNum">      89 </span>            : // ************************************************************************** //
+<span class="lineNum">      90 </span>            : 
+<a name="91"><span class="lineNum">      91 </span><span class="lineCov">          1 : cstring const help_prefix(&quot;////&quot;);</span></a>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">        196 : class basic_param {</span>
+<span class="lineNum">      94 </span>            :     typedef function&lt;void (cstring)&gt;            callback_type;
+<span class="lineNum">      95 </span>            :     typedef unit_test::readwrite_property&lt;bool&gt; bool_property;
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : protected:
+<a name="98"><span class="lineNum">      98 </span>            :     /// Constructor with modifiers</a>
+<span class="lineNum">      99 </span>            :     template&lt;typename Modifiers&gt;
+<span class="lineNum">     100 </span><span class="lineCov">         28 :     basic_param( cstring name, bool is_optional, bool is_repeatable, Modifiers const&amp; m )</span>
+<span class="lineNum">     101 </span>            :     : p_name( name.begin(), name.end() )
+<span class="lineNum">     102 </span>            :     , p_description( nfp::opt_get( m, description, std::string() ) )
+<span class="lineNum">     103 </span>            :     , p_help( nfp::opt_get( m, runtime::help, std::string() ) )
+<span class="lineNum">     104 </span>            :     , p_env_var( nfp::opt_get( m, env_var, std::string() ) )
+<span class="lineNum">     105 </span>            :     , p_value_hint( nfp::opt_get( m, value_hint, std::string() ) )
+<span class="lineNum">     106 </span>            :     , p_optional( is_optional )
+<span class="lineNum">     107 </span>            :     , p_repeatable( is_repeatable )
+<span class="lineNum">     108 </span>            :     , p_has_optional_value( m.has( optional_value ) )
+<span class="lineNum">     109 </span><span class="lineCov">         49 :     , p_has_default_value( m.has( default_value ) || is_repeatable )</span>
+<span class="lineNum">     110 </span><span class="lineCov">        661 :     , p_callback( nfp::opt_get( m, callback, callback_type() ) )</span>
+<span class="lineNum">     111 </span>            :     {
+<span class="lineNum">     112 </span><span class="lineCov">         56 :         add_cla_id( help_prefix, name, &quot;:&quot; );</span>
+<span class="lineNum">     113 </span><span class="lineCov">         28 :     }</span>
+<a name="114"><span class="lineNum">     114 </span>            : </a>
+<span class="lineNum">     115 </span>            : public:
+<span class="lineNum">     116 </span><span class="lineCov">        392 :     virtual                 ~basic_param() {}</span>
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :     // Pubic properties
+<span class="lineNum">     119 </span>            :     std::string const       p_name;
+<span class="lineNum">     120 </span>            :     std::string const       p_description;
+<span class="lineNum">     121 </span>            :     std::string const       p_help;
+<span class="lineNum">     122 </span>            :     std::string const       p_env_var;
+<span class="lineNum">     123 </span>            :     std::string const       p_value_hint;
+<span class="lineNum">     124 </span>            :     bool const              p_optional;
+<span class="lineNum">     125 </span>            :     bool const              p_repeatable;
+<span class="lineNum">     126 </span>            :     bool_property           p_has_optional_value;
+<span class="lineNum">     127 </span>            :     bool_property           p_has_default_value;
+<span class="lineNum">     128 </span>            :     callback_type const     p_callback;
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :     /// interface for cloning typed parameters
+<span class="lineNum">     131 </span>            :     virtual basic_param_ptr clone() const = 0;
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            :     /// Access methods
+<span class="lineNum">     134 </span>            :     param_cla_ids const&amp;    cla_ids() const { return m_cla_ids; }
+<span class="lineNum">     135 </span>            :     void                    add_cla_id( cstring prefix, cstring tag, cstring value_separator )
+<span class="lineNum">     136 </span>            :     {
+<span class="lineNum">     137 </span><span class="lineCov">         51 :         add_cla_id_impl( prefix, tag, value_separator, false, true );</span>
+<span class="lineNum">     138 </span>            :     }
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :     /// interface for producing argument values for this parameter
+<span class="lineNum">     141 </span>            :     virtual void            produce_argument( cstring token, bool negative_form, arguments_store&amp; store ) const = 0;
+<span class="lineNum">     142 </span>            :     virtual void            produce_default( arguments_store&amp; store ) const = 0;
+<a name="143"><span class="lineNum">     143 </span>            : </a>
+<span class="lineNum">     144 </span>            :     /// interfaces for help message reporting
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :     virtual void            usage( std::ostream&amp; ostr, cstring negation_prefix_ )</span>
+<span class="lineNum">     146 </span>            :     {
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :         ostr     &lt;&lt; &quot;Parameter: &quot; &lt;&lt; p_name &lt;&lt; '\n';</span>
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :         if( !p_description.empty() )</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; ' ' &lt;&lt; p_description &lt;&lt; '\n';</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :         ostr     &lt;&lt; &quot; Command line formats:\n&quot;;</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :         BOOST_TEST_FOREACH( parameter_cla_id const&amp;, id, cla_ids() ) {</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :             if( id.m_prefix == help_prefix )</span>
+<span class="lineNum">     154 </span>            :                 continue;
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; &quot;   &quot; &lt;&lt; id.m_prefix;</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :             if( id.m_negatable )</span>
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :                 cla_name_help( ostr, id.m_tag, negation_prefix_ );</span>
+<span class="lineNum">     159 </span>            :             else
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :                 cla_name_help( ostr, id.m_tag, &quot;&quot; );</span>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :             bool optional_value_ = false;</span>
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :             if( p_has_optional_value ) {</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :                 optional_value_ = true;</span>
+<span class="lineNum">     166 </span>            :                 ostr &lt;&lt; '[';
+<span class="lineNum">     167 </span>            :             }
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :             if( id.m_value_separator.empty() )</span>
+<span class="lineNum">     170 </span>            :                 ostr &lt;&lt; ' ';
+<span class="lineNum">     171 </span>            :             else {
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :                 ostr &lt;&lt; id.m_value_separator;</span>
+<span class="lineNum">     173 </span>            :             }
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :             value_help( ostr );</span>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :             if( optional_value_ )</span>
+<span class="lineNum">     178 </span>            :                 ostr &lt;&lt; ']';
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            :             ostr &lt;&lt; '\n';
+<span class="lineNum">     181 </span>            :         }
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :         if( !p_env_var.empty() )</span>
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; &quot; Environment variable: &quot; &lt;&lt; p_env_var &lt;&lt; '\n';</span>
+<a name="184"><span class="lineNum">     184 </span><span class="lineNoCov">          0 :     }</span></a>
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :     virtual void            help( std::ostream&amp; ostr, cstring negation_prefix_ )</span>
+<span class="lineNum">     187 </span>            :     {
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :         usage( ostr, negation_prefix_ );</span>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :         if( !p_help.empty() )</span>
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; '\n' &lt;&lt; p_help &lt;&lt; '\n';</span>
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :     }</span>
+<a name="193"><span class="lineNum">     193 </span>            : </a>
+<span class="lineNum">     194 </span>            : protected:
+<span class="lineNum">     195 </span><span class="lineCov">         71 :     void                    add_cla_id_impl( cstring prefix,</span>
+<span class="lineNum">     196 </span>            :                                              cstring tag,
+<span class="lineNum">     197 </span>            :                                              cstring value_separator,
+<span class="lineNum">     198 </span>            :                                              bool negatable,
+<span class="lineNum">     199 </span>            :                                              bool validate_value_separator )
+<span class="lineNum">     200 </span>            :     {
+<span class="lineNum">     201 </span><span class="lineCov">         71 :         BOOST_TEST_I_ASSRT( !tag.is_empty(),</span>
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :                             invalid_cla_id() &lt;&lt; &quot;Parameter can't have an empty name.&quot; );</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineCov">         71 :         BOOST_TEST_I_ASSRT( !prefix.is_empty(),</span>
+<span class="lineNum">     205 </span>            :                             invalid_cla_id() &lt;&lt; &quot;Parameter &quot; &lt;&lt; tag
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :                                              &lt;&lt; &quot; can't have an empty prefix.&quot; );</span>
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span><span class="lineCov">         71 :         BOOST_TEST_I_ASSRT( !value_separator.is_empty(),</span>
+<span class="lineNum">     209 </span>            :                             invalid_cla_id() &lt;&lt; &quot;Parameter &quot; &lt;&lt; tag
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :                                              &lt;&lt; &quot; can't have an empty value separator.&quot; );</span>
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            :         // We trim value separator from all the spaces, so token end will indicate separator
+<span class="lineNum">     213 </span><span class="lineCov">        142 :         value_separator.trim();</span>
+<span class="lineNum">     214 </span><span class="lineCov">        130 :         BOOST_TEST_I_ASSRT( !validate_value_separator || !value_separator.is_empty() || !p_has_optional_value,</span>
+<span class="lineNum">     215 </span>            :                             invalid_cla_id() &lt;&lt; &quot;Parameter &quot; &lt;&lt; tag
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :                                              &lt;&lt; &quot; with optional value attribute can't use space as value separator.&quot; );</span>
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span><span class="lineCov">        142 :         m_cla_ids.push_back( parameter_cla_id( prefix, tag, value_separator, negatable ) );</span>
+<span class="lineNum">     219 </span><span class="lineCov">         71 :     }</span>
+<span class="lineNum">     220 </span>            : 
+<a name="221"><span class="lineNum">     221 </span>            : private:</a>
+<span class="lineNum">     222 </span>            :     /// interface for usage/help customization
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :     virtual void            cla_name_help( std::ostream&amp; ostr, cstring cla_tag, cstring /* negation_prefix_ */) const</span>
+<span class="lineNum">     224 </span>            :     {
+<a name="225"><span class="lineNum">     225 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; cla_tag;</span></a>
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :     virtual void            value_help( std::ostream&amp; ostr ) const</span>
+<span class="lineNum">     228 </span>            :     {
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :         if( p_value_hint.empty() )</span>
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; &quot;&lt;value&gt;&quot;;</span>
+<span class="lineNum">     231 </span>            :         else
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; p_value_hint;</span>
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            :     // Data members
+<span class="lineNum">     236 </span>            :     param_cla_ids       m_cla_ids;
+<span class="lineNum">     237 </span>            : };
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            : // ************************************************************************** //
+<span class="lineNum">     240 </span>            : // **************              runtime::parameter              ************** //
+<span class="lineNum">     241 </span>            : // ************************************************************************** //
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            : enum args_amount {
+<span class="lineNum">     244 </span>            :     OPTIONAL_PARAM,   // 0-1
+<span class="lineNum">     245 </span>            :     REQUIRED_PARAM,   // exactly 1
+<span class="lineNum">     246 </span>            :     REPEATABLE_PARAM  // 0-N
+<span class="lineNum">     247 </span>            : };
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            : //____________________________________________________________________________//
+<a name="250"><span class="lineNum">     250 </span>            : </a>
+<span class="lineNum">     251 </span>            : template&lt;typename ValueType, args_amount a = runtime::OPTIONAL_PARAM, bool is_enum = false&gt;
+<span class="lineNum">     252 </span><span class="lineCov">         63 : class parameter : public basic_param {</span>
+<span class="lineNum">     253 </span>            : public:
+<span class="lineNum">     254 </span>            :     /// Constructor with modifiers
+<a name="255"><span class="lineNum">     255 </span>            : #ifndef BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS</a>
+<span class="lineNum">     256 </span>            :     template&lt;typename Modifiers=nfp::no_params_type&gt;
+<span class="lineNum">     257 </span><span class="lineCov">         13 :     parameter( cstring name, Modifiers const&amp; m = nfp::no_params )</span>
+<span class="lineNum">     258 </span>            : #else
+<span class="lineNum">     259 </span>            :     template&lt;typename Modifiers&gt;
+<span class="lineNum">     260 </span>            :     parameter( cstring name, Modifiers const&amp; m )
+<span class="lineNum">     261 </span>            : #endif
+<span class="lineNum">     262 </span>            :     : basic_param( name, a != runtime::REQUIRED_PARAM, a == runtime::REPEATABLE_PARAM, m )
+<span class="lineNum">     263 </span><span class="lineCov">         19 :     , m_arg_factory( m )</span>
+<span class="lineNum">     264 </span>            :     {
+<span class="lineNum">     265 </span><span class="lineCov">         23 :         BOOST_TEST_I_ASSRT( !m.has( default_value ) || a == runtime::OPTIONAL_PARAM,</span>
+<span class="lineNum">     266 </span>            :                             invalid_param_spec() &lt;&lt; &quot;Parameter &quot; &lt;&lt; name
+<span class="lineNum">     267 </span>            :                                                  &lt;&lt; &quot; is not optional and can't have default_value.&quot; );
+<span class="lineNum">     268 </span>            : 
+<span class="lineNum">     269 </span><span class="lineCov">         19 :         BOOST_TEST_I_ASSRT( !m.has( optional_value ) || !this-&gt;p_repeatable,</span>
+<span class="lineNum">     270 </span>            :                             invalid_param_spec() &lt;&lt; &quot;Parameter &quot; &lt;&lt; name
+<span class="lineNum">     271 </span>            :                                                  &lt;&lt; &quot; is repeatable and can't have optional_value.&quot; );
+<span class="lineNum">     272 </span><span class="lineCov">         13 :     }</span>
+<a name="273"><span class="lineNum">     273 </span>            : </a>
+<span class="lineNum">     274 </span>            : private:
+<span class="lineNum">     275 </span><span class="lineCov">          9 :     virtual basic_param_ptr clone() const</span>
+<span class="lineNum">     276 </span>            :     {
+<a name="277"><span class="lineNum">     277 </span><span class="lineCov">         13 :         return basic_param_ptr( new parameter( *this ) );</span></a>
+<span class="lineNum">     278 </span>            :     }
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :     virtual void    produce_argument( cstring token, bool , arguments_store&amp; store ) const</span>
+<span class="lineNum">     280 </span>            :     {
+<a name="281"><span class="lineNum">     281 </span><span class="lineNoCov">          0 :         m_arg_factory.produce_argument( token, this-&gt;p_name, store );</span></a>
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     283 </span><span class="lineCov">         10 :     virtual void    produce_default( arguments_store&amp; store ) const</span>
+<span class="lineNum">     284 </span>            :     {
+<span class="lineNum">     285 </span><span class="lineCov">         20 :         if( !this-&gt;p_has_default_value )</span>
+<span class="lineNum">     286 </span>            :             return;
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span><span class="lineCov">         20 :         m_arg_factory.produce_default( this-&gt;p_name, store );</span>
+<span class="lineNum">     289 </span>            :     }
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            :     // Data members
+<span class="lineNum">     292 </span>            :     typedef argument_factory&lt;ValueType, is_enum, a == runtime::REPEATABLE_PARAM&gt; factory_t;
+<span class="lineNum">     293 </span>            :     factory_t       m_arg_factory;
+<span class="lineNum">     294 </span>            : };
+<span class="lineNum">     295 </span>            : 
+<a name="296"><span class="lineNum">     296 </span>            : //____________________________________________________________________________//</a>
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span><span class="lineCov">         39 : class option : public basic_param {</span>
+<span class="lineNum">     299 </span>            : public:
+<span class="lineNum">     300 </span>            :     /// Constructor with modifiers
+<a name="301"><span class="lineNum">     301 </span>            : #ifndef BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS</a>
+<span class="lineNum">     302 </span>            :     template&lt;typename Modifiers=nfp::no_params_type&gt;
+<span class="lineNum">     303 </span><span class="lineCov">         13 :     option( cstring name, Modifiers const&amp; m = nfp::no_params )</span>
+<span class="lineNum">     304 </span>            : #else
+<span class="lineNum">     305 </span>            :     template&lt;typename Modifiers&gt;
+<span class="lineNum">     306 </span>            :     option( cstring name, Modifiers const&amp; m )
+<span class="lineNum">     307 </span>            : #endif
+<span class="lineNum">     308 </span>            :     : basic_param( name, true, false, nfp::opt_append( nfp::opt_append( m, optional_value = true), default_value = false) )
+<span class="lineNum">     309 </span><span class="lineCov">        117 :     , m_arg_factory( nfp::opt_append( nfp::opt_append( m, optional_value = true), default_value = false) )</span>
+<span class="lineNum">     310 </span>            :     {
+<span class="lineNum">     311 </span><span class="lineCov">         13 :     }</span>
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            :     void            add_cla_id( cstring prefix, cstring tag, cstring value_separator, bool negatable = false )
+<span class="lineNum">     314 </span>            :     {
+<span class="lineNum">     315 </span><span class="lineCov">         20 :         add_cla_id_impl( prefix, tag, value_separator, negatable, false );</span>
+<span class="lineNum">     316 </span>            :     }
+<a name="317"><span class="lineNum">     317 </span>            : </a>
+<span class="lineNum">     318 </span>            : private:
+<span class="lineNum">     319 </span><span class="lineCov">         13 :     virtual basic_param_ptr clone() const</span>
+<span class="lineNum">     320 </span>            :     {
+<span class="lineNum">     321 </span><span class="lineCov">         26 :         return basic_param_ptr( new option( *this ) );</span>
+<a name="322"><span class="lineNum">     322 </span>            :     }</a>
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 :     virtual void    produce_argument( cstring token, bool negative_form, arguments_store&amp; store ) const</span>
+<span class="lineNum">     325 </span>            :     {
+<span class="lineNum">     326 </span><span class="lineNoCov">          0 :         if( token.empty() )</span>
+<span class="lineNum">     327 </span><span class="lineNoCov">          0 :             store.set( p_name, !negative_form );</span>
+<span class="lineNum">     328 </span>            :         else {
+<span class="lineNum">     329 </span><span class="lineNoCov">          0 :             BOOST_TEST_I_ASSRT( !negative_form,</span>
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 :                                 format_error( p_name ) &lt;&lt; &quot;Can't set value to negative form of the argument.&quot; );</span>
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 :             m_arg_factory.produce_argument( token, p_name, store );</span>
+<span class="lineNum">     333 </span>            :         }
+<a name="334"><span class="lineNum">     334 </span><span class="lineNoCov">          0 :     }</span></a>
+<span class="lineNum">     335 </span>            : 
+<span class="lineNum">     336 </span><span class="lineCov">         13 :     virtual void    produce_default( arguments_store&amp; store ) const</span>
+<span class="lineNum">     337 </span>            :     {
+<a name="338"><span class="lineNum">     338 </span><span class="lineCov">         39 :         m_arg_factory.produce_default( p_name, store );</span></a>
+<span class="lineNum">     339 </span><span class="lineCov">         13 :     }</span>
+<span class="lineNum">     340 </span><span class="lineNoCov">          0 :     virtual void    cla_name_help( std::ostream&amp; ostr, cstring cla_tag, cstring negation_prefix_ ) const</span>
+<span class="lineNum">     341 </span>            :     {
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 :         if( negation_prefix_.is_empty() )</span>
+<span class="lineNum">     343 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; cla_tag;</span>
+<span class="lineNum">     344 </span>            :         else
+<a name="345"><span class="lineNum">     345 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; '[' &lt;&lt; negation_prefix_ &lt;&lt; ']' &lt;&lt; cla_tag;</span></a>
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     347 </span><span class="lineNoCov">          0 :     virtual void    value_help( std::ostream&amp; ostr ) const</span>
+<span class="lineNum">     348 </span>            :     {
+<span class="lineNum">     349 </span><span class="lineNoCov">          0 :         if( p_value_hint.empty() )</span>
+<span class="lineNum">     350 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; &quot;&lt;boolean value&gt;&quot;;</span>
+<span class="lineNum">     351 </span>            :         else
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; p_value_hint;</span>
+<span class="lineNum">     353 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span>            :     // Data members
+<span class="lineNum">     356 </span>            :     typedef argument_factory&lt;bool, false, false&gt; factory_t;
+<span class="lineNum">     357 </span>            :     factory_t       m_arg_factory;
+<span class="lineNum">     358 </span>            : };
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span>            : //____________________________________________________________________________//
+<a name="361"><span class="lineNum">     361 </span>            : </a>
+<span class="lineNum">     362 </span>            : template&lt;typename EnumType, args_amount a = runtime::OPTIONAL_PARAM&gt;
+<span class="lineNum">     363 </span><span class="lineCov">         48 : class enum_parameter : public parameter&lt;EnumType, a, true&gt; {</span>
+<span class="lineNum">     364 </span>            :     typedef parameter&lt;EnumType, a, true&gt; base;
+<span class="lineNum">     365 </span>            : public:
+<span class="lineNum">     366 </span>            :     /// Constructor with modifiers
+<a name="367"><span class="lineNum">     367 </span>            : #ifndef BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS</a>
+<span class="lineNum">     368 </span>            :     template&lt;typename Modifiers=nfp::no_params_type&gt;
+<span class="lineNum">     369 </span><span class="lineCov">          6 :     enum_parameter( cstring name, Modifiers const&amp; m = nfp::no_params )</span>
+<span class="lineNum">     370 </span>            : #else
+<span class="lineNum">     371 </span>            :     template&lt;typename Modifiers&gt;
+<span class="lineNum">     372 </span>            :     enum_parameter( cstring name, Modifiers const&amp; m )
+<span class="lineNum">     373 </span>            : #endif
+<span class="lineNum">     374 </span><span class="lineCov">         12 :     : base( name, m )</span>
+<span class="lineNum">     375 </span>            :     {
+<span class="lineNum">     376 </span>            : #ifdef BOOST_TEST_CLA_NEW_API
+<span class="lineNum">     377 </span><span class="lineCov">         12 :         auto const&amp; values = m[enum_values&lt;EnumType&gt;::value];</span>
+<span class="lineNum">     378 </span><span class="lineCov">          6 :         auto it = values.begin();</span>
+<span class="lineNum">     379 </span>            : #else
+<span class="lineNum">     380 </span>            :         std::vector&lt;std::pair&lt;cstring, EnumType&gt; &gt; const&amp; values = m[enum_values&lt;EnumType&gt;::value];
+<span class="lineNum">     381 </span>            :         typename std::vector&lt;std::pair&lt;cstring, EnumType&gt; &gt;::const_iterator it = values.begin();
+<span class="lineNum">     382 </span>            : #endif
+<span class="lineNum">     383 </span><span class="lineCov">         60 :         while( it != values.end() ) {</span>
+<span class="lineNum">     384 </span><span class="lineCov">         27 :             m_valid_names.push_back( it-&gt;first );</span>
+<span class="lineNum">     385 </span><span class="lineCov">         27 :             ++it;</span>
+<span class="lineNum">     386 </span>            :         }
+<span class="lineNum">     387 </span><span class="lineCov">          6 :     }</span>
+<a name="388"><span class="lineNum">     388 </span>            : </a>
+<span class="lineNum">     389 </span>            : private:
+<span class="lineNum">     390 </span><span class="lineCov">          6 :     virtual basic_param_ptr clone() const</span>
+<span class="lineNum">     391 </span>            :     {
+<span class="lineNum">     392 </span><span class="lineCov">          6 :         return basic_param_ptr( new enum_parameter( *this ) );</span>
+<a name="393"><span class="lineNum">     393 </span>            :     }</a>
+<span class="lineNum">     394 </span>            : 
+<span class="lineNum">     395 </span><span class="lineNoCov">          0 :     virtual void    value_help( std::ostream&amp; ostr ) const</span>
+<span class="lineNum">     396 </span>            :     {
+<span class="lineNum">     397 </span><span class="lineNoCov">          0 :         if( this-&gt;p_value_hint.empty() ) {</span>
+<span class="lineNum">     398 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; &quot;&lt;&quot;;</span>
+<span class="lineNum">     399 </span><span class="lineNoCov">          0 :             bool first = true;</span>
+<span class="lineNum">     400 </span><span class="lineNoCov">          0 :             BOOST_TEST_FOREACH( cstring, name, m_valid_names ) {</span>
+<span class="lineNum">     401 </span><span class="lineNoCov">          0 :                 if( first )</span>
+<span class="lineNum">     402 </span>            :                     first = false;
+<span class="lineNum">     403 </span>            :                 else
+<span class="lineNum">     404 </span>            :                     ostr &lt;&lt; '|';
+<span class="lineNum">     405 </span><span class="lineNoCov">          0 :                 ostr &lt;&lt; name;</span>
+<span class="lineNum">     406 </span>            :             }
+<span class="lineNum">     407 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; &quot;&gt;&quot;;</span>
+<span class="lineNum">     408 </span>            :         }
+<span class="lineNum">     409 </span>            :         else
+<span class="lineNum">     410 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; this-&gt;p_value_hint;</span>
+<span class="lineNum">     411 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     412 </span>            : 
+<span class="lineNum">     413 </span>            :     // Data members
+<span class="lineNum">     414 </span>            :     std::vector&lt;cstring&gt;    m_valid_names;
+<span class="lineNum">     415 </span>            : };
+<span class="lineNum">     416 </span>            : 
+<span class="lineNum">     417 </span>            : 
+<span class="lineNum">     418 </span>            : // ************************************************************************** //
+<span class="lineNum">     419 </span>            : // **************           runtime::parameters_store          ************** //
+<a name="420"><span class="lineNum">     420 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span><span class="lineCov">          4 : class parameters_store {</span>
+<span class="lineNum">     423 </span>            :     struct lg_compare {
+<span class="lineNum">     424 </span>            :         bool operator()( cstring lh, cstring rh ) const
+<span class="lineNum">     425 </span>            :         {
+<span class="lineNum">     426 </span><span class="lineCov">        186 :             return std::lexicographical_compare(lh.begin(), lh.end(),</span>
+<span class="lineNum">     427 </span><span class="lineCov">        186 :                                                 rh.begin(), rh.end());</span>
+<span class="lineNum">     428 </span>            :         }
+<span class="lineNum">     429 </span>            :     };
+<span class="lineNum">     430 </span>            : public:
+<span class="lineNum">     431 </span>            : 
+<span class="lineNum">     432 </span>            :     typedef std::map&lt;cstring, basic_param_ptr, lg_compare&gt; storage_type;
+<a name="433"><span class="lineNum">     433 </span>            : </a>
+<span class="lineNum">     434 </span>            :     /// Adds parameter into the persistent store
+<span class="lineNum">     435 </span><span class="lineCov">         28 :     void                    add( basic_param const&amp; in )</span>
+<span class="lineNum">     436 </span>            :     {
+<span class="lineNum">     437 </span><span class="lineCov">         56 :         basic_param_ptr p = in.clone();</span>
+<span class="lineNum">     438 </span>            : 
+<span class="lineNum">     439 </span><span class="lineCov">        168 :         BOOST_TEST_I_ASSRT( m_parameters.insert( std::make_pair( cstring(p-&gt;p_name), p ) ).second,</span>
+<span class="lineNum">     440 </span><span class="lineNoCov">          0 :                             duplicate_param() &lt;&lt; &quot;Parameter &quot; &lt;&lt; p-&gt;p_name &lt;&lt; &quot; is duplicate.&quot; );</span>
+<span class="lineNum">     441 </span><span class="lineCov">         28 :     }</span>
+<span class="lineNum">     442 </span>            : 
+<span class="lineNum">     443 </span>            :     /// Returns true if there is no parameters registered
+<span class="lineNum">     444 </span><span class="lineCov">          2 :     bool                    is_empty() const    { return m_parameters.empty(); }</span>
+<span class="lineNum">     445 </span>            :     /// Returns map of all the registered parameter
+<span class="lineNum">     446 </span>            :     storage_type const&amp;     all() const         { return m_parameters; }
+<span class="lineNum">     447 </span>            :     /// Returns true if parameter with psecified name is registered
+<span class="lineNum">     448 </span>            :     bool                    has( cstring name ) const
+<span class="lineNum">     449 </span>            :     {
+<span class="lineNum">     450 </span>            :         return m_parameters.find( name ) != m_parameters.end();
+<span class="lineNum">     451 </span>            :     }
+<span class="lineNum">     452 </span>            :     /// Returns map of all the registered parameter
+<span class="lineNum">     453 </span>            :     basic_param_ptr         get( cstring name ) const
+<span class="lineNum">     454 </span>            :     {
+<span class="lineNum">     455 </span>            :         storage_type::const_iterator const&amp; found = m_parameters.find( name );
+<span class="lineNum">     456 </span>            :         BOOST_TEST_I_ASSRT( found != m_parameters.end(),
+<span class="lineNum">     457 </span>            :                             unknown_param() &lt;&lt; &quot;Parameter &quot; &lt;&lt; name &lt;&lt; &quot; is unknown.&quot; );
+<span class="lineNum">     458 </span>            : 
+<span class="lineNum">     459 </span>            :         return found-&gt;second;
+<span class="lineNum">     460 </span>            :     }
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span>            : private:
+<span class="lineNum">     463 </span>            :     // Data members
+<span class="lineNum">     464 </span>            :     storage_type            m_parameters;
+<span class="lineNum">     465 </span>            : };
+<span class="lineNum">     466 </span>            : 
+<span class="lineNum">     467 </span>            : } // namespace runtime
+<span class="lineNum">     468 </span>            : } // namespace boost
+<span class="lineNum">     469 </span>            : 
+<span class="lineNum">     470 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     471 </span>            : 
+<span class="lineNum">     472 </span>            : #endif // BOOST_TEST_UTILS_RUNTIME_PARAMETER_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

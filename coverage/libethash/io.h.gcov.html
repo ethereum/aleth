@@ -1,0 +1,278 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethash/io.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethash</a> - io.h<span style="font-size: 80%;"> (source / <a href="io.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :   This file is part of ethash.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :   ethash is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :   it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :   the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :   (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :   ethash is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :   but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :   GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :   You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :   along with ethash.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file io.h
+<span class="lineNum">      18 </span>            :  * @author Lefteris Karapetsas &lt;lefteris@ethdev.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : #pragma once
+<span class="lineNum">      22 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      23 </span>            : #include &lt;stdint.h&gt;
+<span class="lineNum">      24 </span>            : #include &lt;stdbool.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;stdio.h&gt;
+<span class="lineNum">      26 </span>            : #ifdef __cplusplus
+<span class="lineNum">      27 </span>            : #define __STDC_FORMAT_MACROS 1
+<span class="lineNum">      28 </span>            : #endif
+<span class="lineNum">      29 </span>            : #include &lt;inttypes.h&gt;
+<span class="lineNum">      30 </span>            : #include &quot;endian.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;ethash.h&quot;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #ifdef __cplusplus
+<span class="lineNum">      34 </span>            : extern &quot;C&quot; {
+<span class="lineNum">      35 </span>            : #endif
+<span class="lineNum">      36 </span>            : // Maximum size for mutable part of DAG file name
+<span class="lineNum">      37 </span>            : // 6 is for &quot;full-R&quot;, the suffix of the filename
+<span class="lineNum">      38 </span>            : // 10 is for maximum number of digits of a uint32_t (for REVISION)
+<span class="lineNum">      39 </span>            : // 1 is for - and 16 is for the first 16 hex digits for first 8 bytes of
+<span class="lineNum">      40 </span>            : // the seedhash and last 1 is for the null terminating character
+<span class="lineNum">      41 </span>            : // Reference: https://github.com/ethereum/wiki/wiki/Ethash-DAG
+<span class="lineNum">      42 </span>            : #define DAG_MUTABLE_NAME_MAX_SIZE (6 + 10 + 1 + 16 + 1)
+<span class="lineNum">      43 </span>            : /// Possible return values of @see ethash_io_prepare
+<span class="lineNum">      44 </span>            : enum ethash_io_rc {
+<span class="lineNum">      45 </span>            :         ETHASH_IO_FAIL = 0,           ///&lt; There has been an IO failure
+<span class="lineNum">      46 </span>            :         ETHASH_IO_MEMO_SIZE_MISMATCH, ///&lt; DAG with revision/hash match, but file size was wrong.
+<span class="lineNum">      47 </span>            :         ETHASH_IO_MEMO_MISMATCH,      ///&lt; The DAG file did not exist or there was revision/hash mismatch
+<span class="lineNum">      48 </span>            :         ETHASH_IO_MEMO_MATCH,         ///&lt; DAG file existed and revision/hash matched. No need to do anything
+<span class="lineNum">      49 </span>            : };
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : // small hack for windows. I don't feel I should use va_args and forward just
+<span class="lineNum">      52 </span>            : // to have this one function properly cross-platform abstracted
+<span class="lineNum">      53 </span>            : #if defined(_WIN32) &amp;&amp; !defined(__GNUC__)
+<span class="lineNum">      54 </span>            : #define snprintf(...) sprintf_s(__VA_ARGS__)
+<span class="lineNum">      55 </span>            : #endif
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : /**
+<span class="lineNum">      58 </span>            :  * Logs a critical error in important parts of ethash. Should mostly help
+<span class="lineNum">      59 </span>            :  * figure out what kind of problem (I/O, memory e.t.c.) causes a NULL
+<span class="lineNum">      60 </span>            :  * ethash_full_t
+<span class="lineNum">      61 </span>            :  */
+<span class="lineNum">      62 </span>            : #ifdef ETHASH_PRINT_CRITICAL_OUTPUT
+<span class="lineNum">      63 </span>            : #define ETHASH_CRITICAL(...)                                                    \
+<span class="lineNum">      64 </span>            :         do                                                                                                      \
+<span class="lineNum">      65 </span>            :         {                                                                                                       \
+<span class="lineNum">      66 </span>            :                 printf(&quot;ETHASH CRITICAL ERROR: &quot;__VA_ARGS__); \
+<span class="lineNum">      67 </span>            :                 printf(&quot;\n&quot;);                                                                 \
+<span class="lineNum">      68 </span>            :                 fflush(stdout);                                                                 \
+<span class="lineNum">      69 </span>            :         } while (0)
+<span class="lineNum">      70 </span>            : #else
+<span class="lineNum">      71 </span>            : #define ETHASH_CRITICAL(...)          
+<span class="lineNum">      72 </span>            : #endif
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : /**
+<span class="lineNum">      75 </span>            :  * Prepares io for ethash
+<span class="lineNum">      76 </span>            :  *
+<span class="lineNum">      77 </span>            :  * Create the DAG directory and the DAG file if they don't exist.
+<span class="lineNum">      78 </span>            :  *
+<span class="lineNum">      79 </span>            :  * @param[in] dirname        A null terminated c-string of the path of the ethash
+<span class="lineNum">      80 </span>            :  *                           data directory. If it does not exist it's created.
+<span class="lineNum">      81 </span>            :  * @param[in] seedhash       The seedhash of the current block number, used in the
+<span class="lineNum">      82 </span>            :  *                           naming of the file as can be seen from the spec at:
+<span class="lineNum">      83 </span>            :  *                           https://github.com/ethereum/wiki/wiki/Ethash-DAG
+<span class="lineNum">      84 </span>            :  * @param[out] output_file   If there was no failure then this will point to an open
+<span class="lineNum">      85 </span>            :  *                           file descriptor. User is responsible for closing it.
+<span class="lineNum">      86 </span>            :  *                           In the case of memo match then the file is open on read
+<span class="lineNum">      87 </span>            :  *                           mode, while on the case of mismatch a new file is created
+<span class="lineNum">      88 </span>            :  *                           on write mode
+<span class="lineNum">      89 </span>            :  * @param[in] file_size      The size that the DAG file should have on disk
+<span class="lineNum">      90 </span>            :  * @param[out] force_create  If true then there is no check to see if the file
+<span class="lineNum">      91 </span>            :  *                           already exists
+<span class="lineNum">      92 </span>            :  * @return                   For possible return values @see enum ethash_io_rc
+<span class="lineNum">      93 </span>            :  */
+<span class="lineNum">      94 </span>            : enum ethash_io_rc ethash_io_prepare(
+<span class="lineNum">      95 </span>            :         char const* dirname,
+<span class="lineNum">      96 </span>            :         ethash_h256_t const seedhash,
+<span class="lineNum">      97 </span>            :         FILE** output_file,
+<span class="lineNum">      98 </span>            :         uint64_t file_size,
+<span class="lineNum">      99 </span>            :         bool force_create
+<span class="lineNum">     100 </span>            : );
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : /**
+<span class="lineNum">     103 </span>            :  * An fopen wrapper for no-warnings crossplatform fopen.
+<span class="lineNum">     104 </span>            :  *
+<span class="lineNum">     105 </span>            :  * Msvc compiler considers fopen to be insecure and suggests to use their
+<span class="lineNum">     106 </span>            :  * alternative. This is a wrapper for this alternative. Another way is to
+<span class="lineNum">     107 </span>            :  * #define _CRT_SECURE_NO_WARNINGS, but disabling all security warnings does
+<span class="lineNum">     108 </span>            :  * not sound like a good idea.
+<span class="lineNum">     109 </span>            :  *
+<span class="lineNum">     110 </span>            :  * @param file_name        The path to the file to open
+<span class="lineNum">     111 </span>            :  * @param mode             Opening mode. Check fopen()
+<span class="lineNum">     112 </span>            :  * @return                 The FILE* or NULL in failure
+<span class="lineNum">     113 </span>            :  */
+<span class="lineNum">     114 </span>            : FILE* ethash_fopen(char const* file_name, char const* mode);
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            : /**
+<span class="lineNum">     117 </span>            :  * An strncat wrapper for no-warnings crossplatform strncat.
+<span class="lineNum">     118 </span>            :  *
+<span class="lineNum">     119 </span>            :  * Msvc compiler considers strncat to be insecure and suggests to use their
+<span class="lineNum">     120 </span>            :  * alternative. This is a wrapper for this alternative. Another way is to
+<span class="lineNum">     121 </span>            :  * #define _CRT_SECURE_NO_WARNINGS, but disabling all security warnings does
+<span class="lineNum">     122 </span>            :  * not sound like a good idea.
+<span class="lineNum">     123 </span>            :  *
+<span class="lineNum">     124 </span>            :  * @param des              Destination buffer
+<span class="lineNum">     125 </span>            :  * @param dest_size        Maximum size of the destination buffer. This is the
+<span class="lineNum">     126 </span>            :  *                         extra argument for the MSVC secure strncat
+<span class="lineNum">     127 </span>            :  * @param src              Souce buffer
+<span class="lineNum">     128 </span>            :  * @param count            Number of bytes to copy from source
+<span class="lineNum">     129 </span>            :  * @return                 If all is well returns the dest buffer. If there is an
+<span class="lineNum">     130 </span>            :  *                         error returns NULL
+<span class="lineNum">     131 </span>            :  */
+<span class="lineNum">     132 </span>            : char* ethash_strncat(char* dest, size_t dest_size, char const* src, size_t count);
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            : /**
+<span class="lineNum">     135 </span>            :  * A cross-platform mkdir wrapper to create a directory or assert it's there
+<span class="lineNum">     136 </span>            :  *
+<span class="lineNum">     137 </span>            :  * @param dirname        The full path of the directory to create
+<span class="lineNum">     138 </span>            :  * @return               true if the directory was created or if it already
+<span class="lineNum">     139 </span>            :  *                       existed
+<span class="lineNum">     140 </span>            :  */
+<span class="lineNum">     141 </span>            : bool ethash_mkdir(char const* dirname);
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            : /**
+<span class="lineNum">     144 </span>            :  * Get a file's size
+<span class="lineNum">     145 </span>            :  *
+<span class="lineNum">     146 </span>            :  * @param[in] f        The open file stream whose size to get
+<span class="lineNum">     147 </span>            :  * @param[out] size    Pass a size_t by reference to contain the file size
+<span class="lineNum">     148 </span>            :  * @return             true in success and false if there was a failure
+<span class="lineNum">     149 </span>            :  */
+<span class="lineNum">     150 </span>            : bool ethash_file_size(FILE* f, size_t* ret_size);
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            : /**
+<span class="lineNum">     153 </span>            :  * Get a file descriptor number from a FILE stream
+<span class="lineNum">     154 </span>            :  *
+<span class="lineNum">     155 </span>            :  * @param f            The file stream whose fd to get
+<span class="lineNum">     156 </span>            :  * @return             Platform specific fd handler
+<span class="lineNum">     157 </span>            :  */
+<span class="lineNum">     158 </span>            : int ethash_fileno(FILE* f);
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            : /**
+<span class="lineNum">     161 </span>            :  * Create the filename for the DAG.
+<span class="lineNum">     162 </span>            :  *
+<span class="lineNum">     163 </span>            :  * @param dirname            The directory name in which the DAG file should reside
+<span class="lineNum">     164 </span>            :  *                           If it does not end with a directory separator it is appended.
+<span class="lineNum">     165 </span>            :  * @param filename           The actual name of the file
+<span class="lineNum">     166 </span>            :  * @param filename_length    The length of the filename in bytes
+<span class="lineNum">     167 </span>            :  * @return                   A char* containing the full name. User must deallocate.
+<span class="lineNum">     168 </span>            :  */
+<span class="lineNum">     169 </span>            : char* ethash_io_create_filename(
+<span class="lineNum">     170 </span>            :         char const* dirname,
+<span class="lineNum">     171 </span>            :         char const* filename,
+<span class="lineNum">     172 </span>            :         size_t filename_length
+<span class="lineNum">     173 </span>            : );
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            : /**
+<span class="lineNum">     176 </span>            :  * Gets the default directory name for the DAG depending on the system
+<span class="lineNum">     177 </span>            :  *
+<span class="lineNum">     178 </span>            :  * The spec defining this directory is here: https://github.com/ethereum/wiki/wiki/Ethash-DAG
+<span class="lineNum">     179 </span>            :  *
+<span class="lineNum">     180 </span>            :  * @param[out] strbuf          A string buffer of sufficient size to keep the
+<span class="lineNum">     181 </span>            :  *                             null termninated string of the directory name
+<span class="lineNum">     182 </span>            :  * @param[in]  buffsize        Size of @a strbuf in bytes
+<span class="lineNum">     183 </span>            :  * @return                     true for success and false otherwise
+<span class="lineNum">     184 </span>            :  */
+<span class="lineNum">     185 </span>            : bool ethash_get_default_dirname(char* strbuf, size_t buffsize);
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">          1 : static inline bool ethash_io_mutable_name(</span>
+<span class="lineNum">     188 </span>            :         uint32_t revision,
+<span class="lineNum">     189 </span>            :         ethash_h256_t const* seed_hash,
+<span class="lineNum">     190 </span>            :         char* output
+<span class="lineNum">     191 </span>            : )
+<span class="lineNum">     192 </span>            : {
+<span class="lineNum">     193 </span><span class="lineCov">          1 :     uint64_t hash = *((uint64_t*)seed_hash);</span>
+<span class="lineNum">     194 </span>            : #if LITTLE_ENDIAN == BYTE_ORDER
+<span class="lineNum">     195 </span><span class="lineCov">          1 :     hash = ethash_swap_u64(hash);</span>
+<span class="lineNum">     196 </span>            : #endif
+<span class="lineNum">     197 </span><span class="lineCov">          1 :     return snprintf(output, DAG_MUTABLE_NAME_MAX_SIZE, &quot;full-R%u-%016&quot; PRIx64, revision, hash) &gt;= 0;</span>
+<span class="lineNum">     198 </span>            : }
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            : #ifdef __cplusplus
+<span class="lineNum">     201 </span>            : }
+<span class="lineNum">     202 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

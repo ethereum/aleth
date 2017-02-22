@@ -1,0 +1,145 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethashseal/GenesisInfo.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethashseal</a> - GenesisInfo.cpp<span style="font-size: 80%;"> (source / <a href="GenesisInfo.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntryLo">56.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : </a>
+<span class="lineNum">       2 </span>            : /*
+<span class="lineNum">       3 </span>            :                 This file is part of cpp-ethereum.
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :                 cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       6 </span>            :                 it under the terms of the GNU General Public License as published by
+<span class="lineNum">       7 </span>            :                 the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       8 </span>            :                 (at your option) any later version.
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            :                 cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      11 </span>            :                 but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      12 </span>            :                 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      13 </span>            :                 GNU General Public License for more details.
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            :                 You should have received a copy of the GNU General Public License
+<span class="lineNum">      16 </span>            :                 along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      17 </span>            : */
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #include &quot;GenesisInfo.h&quot;
+<span class="lineNum">      20 </span>            : using namespace dev;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : //Client configurations
+<span class="lineNum">      23 </span>            : #include &quot;genesis/mainNetwork.cpp&quot;
+<span class="lineNum">      24 </span>            : #include &quot;genesis/ropsten.cpp&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : //Test configurations
+<span class="lineNum">      27 </span>            : #include &quot;genesis/mainNetworkTest.cpp&quot;
+<span class="lineNum">      28 </span>            : #include &quot;genesis/frontierTest.cpp&quot;
+<span class="lineNum">      29 </span>            : #include &quot;genesis/homesteadTest.cpp&quot;
+<span class="lineNum">      30 </span>            : #include &quot;genesis/eip150Test.cpp&quot;
+<span class="lineNum">      31 </span>            : #include &quot;genesis/eip158Test.cpp&quot;
+<span class="lineNum">      32 </span>            : #include &quot;genesis/metropolisTest.cpp&quot;
+<a name="33"><span class="lineNum">      33 </span>            : #include &quot;genesis/transitionnetTest.cpp&quot;</a>
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span><span class="lineCov">      10371 : std::string const&amp; dev::eth::genesisInfo(Network _n)</span>
+<span class="lineNum">      36 </span>            : {
+<span class="lineNum">      37 </span><span class="lineCov">      10371 :         switch (_n)</span>
+<span class="lineNum">      38 </span>            :         {
+<span class="lineNum">      39 </span>            :         case Network::MainNetwork: return c_genesisInfoMainNetwork;
+<span class="lineNum">      40 </span><span class="lineCov">          9 :         case Network::MainNetworkTest: return c_genesisInfoMainNetworkTest;</span>
+<span class="lineNum">      41 </span><span class="lineCov">          1 :         case Network::Ropsten: return c_genesisInfoRopsten;</span>
+<span class="lineNum">      42 </span><span class="lineCov">         26 :         case Network::TransitionnetTest: return c_genesisInfoTest;</span>
+<span class="lineNum">      43 </span><span class="lineCov">       2340 :         case Network::FrontierTest: return c_genesisInfoFrontierTest;</span>
+<span class="lineNum">      44 </span><span class="lineCov">       2319 :         case Network::HomesteadTest: return c_genesisInfoHomesteadTest;</span>
+<span class="lineNum">      45 </span><span class="lineCov">       2052 :         case Network::EIP150Test: return c_genesisInfoEIP150Test;</span>
+<span class="lineNum">      46 </span><span class="lineCov">       1810 :         case Network::EIP158Test: return c_genesisInfoEIP158Test;</span>
+<span class="lineNum">      47 </span><span class="lineCov">       1810 :         case Network::MetropolisTest: return c_genesisInfoMetropolisTest;</span>
+<span class="lineNum">      48 </span>            :         default:
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :                 throw std::invalid_argument(&quot;Invalid network value&quot;);</span>
+<span class="lineNum">      50 </span>            :         }
+<a name="51"><span class="lineNum">      51 </span>            : }</a>
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineCov">          1 : h256 const&amp; dev::eth::genesisStateRoot(Network _n)</span>
+<span class="lineNum">      54 </span>            : {
+<span class="lineNum">      55 </span><span class="lineCov">          1 :         switch (_n)</span>
+<span class="lineNum">      56 </span>            :         {
+<span class="lineNum">      57 </span>            :         case Network::MainNetwork: return c_genesisStateRootMainNetwork;
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :         case Network::Ropsten: return c_genesisStateRootRopsten;</span>
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :         case Network::MainNetworkTest: return c_genesisStateRootMainNetworkTest;</span>
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :         case Network::TransitionnetTest: return c_genesisStateRootTest;</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :         case Network::FrontierTest: return c_genesisStateRootFrontierTest;</span>
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 :         case Network::HomesteadTest: return c_genesisStateRootHomesteadTest;</span>
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :         case Network::EIP150Test: return c_genesisStateRootEIP150Test;</span>
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :         case Network::EIP158Test: return c_genesisStateRootEIP158Test;</span>
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :         case Network::MetropolisTest: return c_genesisStateRootMetropolisTest;</span>
+<span class="lineNum">      66 </span>            :         default:
+<a name="67"><span class="lineNum">      67 </span><span class="lineNoCov">          0 :                 throw std::invalid_argument(&quot;Invalid network value&quot;);</span></a>
+<span class="lineNum">      68 </span>            :         }
+<span class="lineNum">      69 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

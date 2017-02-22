@@ -1,0 +1,377 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/core/ref.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/core</a> - ref.hpp<span style="font-size: 80%;"> (source / <a href="ref.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef BOOST_CORE_REF_HPP</a>
+<span class="lineNum">       2 </span>            : #define BOOST_CORE_REF_HPP
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : // MS compatible compilers support #pragma once
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1020)
+<span class="lineNum">       7 </span>            : # pragma once
+<span class="lineNum">       8 </span>            : #endif
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      11 </span>            : #include &lt;boost/utility/addressof.hpp&gt;
+<span class="lineNum">      12 </span>            : #include &lt;boost/detail/workaround.hpp&gt;
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : //
+<span class="lineNum">      15 </span>            : //  ref.hpp - ref/cref, useful helper functions
+<span class="lineNum">      16 </span>            : //
+<span class="lineNum">      17 </span>            : //  Copyright (C) 1999, 2000 Jaakko Jarvi (jaakko.jarvi@cs.utu.fi)
+<span class="lineNum">      18 </span>            : //  Copyright (C) 2001, 2002 Peter Dimov
+<span class="lineNum">      19 </span>            : //  Copyright (C) 2002 David Abrahams
+<span class="lineNum">      20 </span>            : //
+<span class="lineNum">      21 </span>            : //  Copyright (C) 2014 Glen Joseph Fernandes
+<span class="lineNum">      22 </span>            : //  glenfe at live dot com
+<span class="lineNum">      23 </span>            : //  Copyright (C) 2014 Agustin Berge
+<span class="lineNum">      24 </span>            : //
+<span class="lineNum">      25 </span>            : // Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">      26 </span>            : // accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">      27 </span>            : // http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">      28 </span>            : //
+<span class="lineNum">      29 </span>            : //  See http://www.boost.org/libs/core/doc/html/core/ref.html for documentation.
+<span class="lineNum">      30 </span>            : //
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : /**
+<span class="lineNum">      33 </span>            :  @file
+<span class="lineNum">      34 </span>            : */
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : /**
+<span class="lineNum">      37 </span>            :  Boost namespace.
+<span class="lineNum">      38 </span>            : */
+<span class="lineNum">      39 </span>            : namespace boost
+<span class="lineNum">      40 </span>            : {
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : #if defined( BOOST_MSVC ) &amp;&amp; BOOST_WORKAROUND( BOOST_MSVC, == 1600 )
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            :     struct ref_workaround_tag {};
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : #endif
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : // reference_wrapper
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : /**
+<span class="lineNum">      51 </span>            :  @brief Contains a reference to an object of type `T`.
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            :  `reference_wrapper` is primarily used to &quot;feed&quot; references to
+<span class="lineNum">      54 </span>            :  function templates (algorithms) that take their parameter by
+<span class="lineNum">      55 </span>            :  value. It provides an implicit conversion to `T&amp;`, which
+<span class="lineNum">      56 </span>            :  usually allows the function templates to work on references
+<span class="lineNum">      57 </span>            :  unmodified.
+<span class="lineNum">      58 </span>            : */
+<span class="lineNum">      59 </span>            : template&lt;class T&gt; class reference_wrapper
+<span class="lineNum">      60 </span>            : {
+<span class="lineNum">      61 </span>            : public:
+<span class="lineNum">      62 </span>            :     /**
+<span class="lineNum">      63 </span>            :      Type `T`.
+<span class="lineNum">      64 </span>            :     */
+<span class="lineNum">      65 </span>            :     typedef T type;
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :     /**
+<span class="lineNum">      68 </span>            :      Constructs a `reference_wrapper` object that stores a
+<span class="lineNum">      69 </span>            :      reference to `t`.
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            :      @remark Does not throw.
+<span class="lineNum">      72 </span>            :     */
+<span class="lineNum">      73 </span><span class="lineCov">        675 :     BOOST_FORCEINLINE explicit reference_wrapper(T&amp; t): t_(boost::addressof(t)) {}</span>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : #if defined( BOOST_MSVC ) &amp;&amp; BOOST_WORKAROUND( BOOST_MSVC, == 1600 )
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :     BOOST_FORCEINLINE explicit reference_wrapper( T &amp; t, ref_workaround_tag ): t_( boost::addressof( t ) ) {}
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : #endif
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+<span class="lineNum">      82 </span>            :     /**
+<span class="lineNum">      83 </span>            :      @remark Construction from a temporary object is disabled.
+<span class="lineNum">      84 </span>            :     */
+<span class="lineNum">      85 </span>            :     BOOST_DELETED_FUNCTION(reference_wrapper(T&amp;&amp; t))
+<span class="lineNum">      86 </span>            : public:
+<span class="lineNum">      87 </span>            : #endif
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :     /**
+<span class="lineNum">      90 </span>            :      @return The stored reference.
+<span class="lineNum">      91 </span>            :      @remark Does not throw.
+<span class="lineNum">      92 </span>            :     */
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :     BOOST_FORCEINLINE operator T&amp; () const { return *t_; }</span>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            :     /**
+<span class="lineNum">      96 </span>            :      @return The stored reference.
+<span class="lineNum">      97 </span>            :      @remark Does not throw.
+<span class="lineNum">      98 </span>            :     */
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :     BOOST_FORCEINLINE T&amp; get() const { return *t_; }</span>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :     /**
+<span class="lineNum">     102 </span>            :      @return A pointer to the object referenced by the stored
+<span class="lineNum">     103 </span>            :        reference.
+<span class="lineNum">     104 </span>            :      @remark Does not throw.
+<span class="lineNum">     105 </span>            :     */
+<span class="lineNum">     106 </span>            :     BOOST_FORCEINLINE T* get_pointer() const { return t_; }
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : private:
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            :     T* t_;
+<span class="lineNum">     111 </span>            : };
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            : // ref
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : /**
+<span class="lineNum">     116 </span>            :  @cond
+<span class="lineNum">     117 </span>            : */
+<span class="lineNum">     118 </span>            : #if defined( __BORLANDC__ ) &amp;&amp; BOOST_WORKAROUND( __BORLANDC__, BOOST_TESTED_AT(0x581) )
+<span class="lineNum">     119 </span>            : #  define BOOST_REF_CONST
+<span class="lineNum">     120 </span>            : #else
+<span class="lineNum">     121 </span>            : #  define BOOST_REF_CONST const
+<span class="lineNum">     122 </span>            : #endif
+<span class="lineNum">     123 </span>            : /**
+<span class="lineNum">     124 </span>            :  @endcond
+<span class="lineNum">     125 </span>            : */
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : /**
+<span class="lineNum">     128 </span>            :  @return `reference_wrapper&lt;T&gt;(t)`
+<span class="lineNum">     129 </span>            :  @remark Does not throw.
+<span class="lineNum">     130 </span>            : */
+<span class="lineNum">     131 </span>            : template&lt;class T&gt; BOOST_FORCEINLINE reference_wrapper&lt;T&gt; BOOST_REF_CONST ref( T &amp; t )
+<span class="lineNum">     132 </span>            : {
+<span class="lineNum">     133 </span>            : #if defined( BOOST_MSVC ) &amp;&amp; BOOST_WORKAROUND( BOOST_MSVC, == 1600 )
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            :     return reference_wrapper&lt;T&gt;( t, ref_workaround_tag() );
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : #else
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineCov">        675 :     return reference_wrapper&lt;T&gt;( t );</span>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            : #endif
+<span class="lineNum">     142 </span>            : }
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : // cref
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            : /**
+<span class="lineNum">     147 </span>            :  @return `reference_wrapper&lt;T const&gt;(t)`
+<span class="lineNum">     148 </span>            :  @remark Does not throw.
+<span class="lineNum">     149 </span>            : */
+<span class="lineNum">     150 </span>            : template&lt;class T&gt; BOOST_FORCEINLINE reference_wrapper&lt;T const&gt; BOOST_REF_CONST cref( T const &amp; t )
+<span class="lineNum">     151 </span>            : {
+<span class="lineNum">     152 </span>            :     return reference_wrapper&lt;T const&gt;(t);
+<span class="lineNum">     153 </span>            : }
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            : #undef BOOST_REF_CONST
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            : #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : /**
+<span class="lineNum">     160 </span>            :  @cond
+<span class="lineNum">     161 </span>            : */
+<span class="lineNum">     162 </span>            : #if defined(BOOST_NO_CXX11_DELETED_FUNCTIONS)
+<span class="lineNum">     163 </span>            : #  define BOOST_REF_DELETE
+<span class="lineNum">     164 </span>            : #else
+<span class="lineNum">     165 </span>            : #  define BOOST_REF_DELETE = delete
+<span class="lineNum">     166 </span>            : #endif
+<span class="lineNum">     167 </span>            : /**
+<span class="lineNum">     168 </span>            :  @endcond
+<span class="lineNum">     169 </span>            : */
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            : /**
+<span class="lineNum">     172 </span>            :  @remark Construction from a temporary object is disabled.
+<span class="lineNum">     173 </span>            : */
+<span class="lineNum">     174 </span>            : template&lt;class T&gt; void ref(T const&amp;&amp;) BOOST_REF_DELETE;
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            : /**
+<span class="lineNum">     177 </span>            :  @remark Construction from a temporary object is disabled.
+<span class="lineNum">     178 </span>            : */
+<span class="lineNum">     179 </span>            : template&lt;class T&gt; void cref(T const&amp;&amp;) BOOST_REF_DELETE;
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            : #undef BOOST_REF_DELETE
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            : #endif
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            : // is_reference_wrapper
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            : /**
+<span class="lineNum">     188 </span>            :  @brief Determine if a type `T` is an instantiation of
+<span class="lineNum">     189 </span>            :  `reference_wrapper`.
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            :  The value static constant will be true if the type `T` is a
+<span class="lineNum">     192 </span>            :  specialization of `reference_wrapper`.
+<span class="lineNum">     193 </span>            : */
+<span class="lineNum">     194 </span>            : template&lt;typename T&gt; struct is_reference_wrapper
+<span class="lineNum">     195 </span>            : {
+<span class="lineNum">     196 </span>            :     BOOST_STATIC_CONSTANT( bool, value = false );
+<span class="lineNum">     197 </span>            : };
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            : /**
+<span class="lineNum">     200 </span>            :  @cond
+<span class="lineNum">     201 </span>            : */
+<span class="lineNum">     202 </span>            : template&lt;typename T&gt; struct is_reference_wrapper&lt; reference_wrapper&lt;T&gt; &gt;
+<span class="lineNum">     203 </span>            : {
+<span class="lineNum">     204 </span>            :     BOOST_STATIC_CONSTANT( bool, value = true );
+<span class="lineNum">     205 </span>            : };
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            : #if !defined(BOOST_NO_CV_SPECIALIZATIONS)
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            : template&lt;typename T&gt; struct is_reference_wrapper&lt; reference_wrapper&lt;T&gt; const &gt;
+<span class="lineNum">     210 </span>            : {
+<span class="lineNum">     211 </span>            :     BOOST_STATIC_CONSTANT( bool, value = true );
+<span class="lineNum">     212 </span>            : };
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : template&lt;typename T&gt; struct is_reference_wrapper&lt; reference_wrapper&lt;T&gt; volatile &gt;
+<span class="lineNum">     215 </span>            : {
+<span class="lineNum">     216 </span>            :     BOOST_STATIC_CONSTANT( bool, value = true );
+<span class="lineNum">     217 </span>            : };
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            : template&lt;typename T&gt; struct is_reference_wrapper&lt; reference_wrapper&lt;T&gt; const volatile &gt;
+<span class="lineNum">     220 </span>            : {
+<span class="lineNum">     221 </span>            :     BOOST_STATIC_CONSTANT( bool, value = true );
+<span class="lineNum">     222 </span>            : };
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            : #endif // !defined(BOOST_NO_CV_SPECIALIZATIONS)
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            : /**
+<span class="lineNum">     227 </span>            :  @endcond
+<span class="lineNum">     228 </span>            : */
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            : // unwrap_reference
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            : /**
+<span class="lineNum">     234 </span>            :  @brief Find the type in a `reference_wrapper`.
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            :  The `typedef` type is `T::type` if `T` is a
+<span class="lineNum">     237 </span>            :  `reference_wrapper`, `T` otherwise.
+<span class="lineNum">     238 </span>            : */
+<span class="lineNum">     239 </span>            : template&lt;typename T&gt; struct unwrap_reference
+<span class="lineNum">     240 </span>            : {
+<span class="lineNum">     241 </span>            :     typedef T type;
+<span class="lineNum">     242 </span>            : };
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            : /**
+<span class="lineNum">     245 </span>            :  @cond
+<span class="lineNum">     246 </span>            : */
+<span class="lineNum">     247 </span>            : template&lt;typename T&gt; struct unwrap_reference&lt; reference_wrapper&lt;T&gt; &gt;
+<span class="lineNum">     248 </span>            : {
+<span class="lineNum">     249 </span>            :     typedef T type;
+<span class="lineNum">     250 </span>            : };
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            : #if !defined(BOOST_NO_CV_SPECIALIZATIONS)
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            : template&lt;typename T&gt; struct unwrap_reference&lt; reference_wrapper&lt;T&gt; const &gt;
+<span class="lineNum">     255 </span>            : {
+<span class="lineNum">     256 </span>            :     typedef T type;
+<span class="lineNum">     257 </span>            : };
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            : template&lt;typename T&gt; struct unwrap_reference&lt; reference_wrapper&lt;T&gt; volatile &gt;
+<span class="lineNum">     260 </span>            : {
+<span class="lineNum">     261 </span>            :     typedef T type;
+<span class="lineNum">     262 </span>            : };
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            : template&lt;typename T&gt; struct unwrap_reference&lt; reference_wrapper&lt;T&gt; const volatile &gt;
+<span class="lineNum">     265 </span>            : {
+<span class="lineNum">     266 </span>            :     typedef T type;
+<span class="lineNum">     267 </span>            : };
+<span class="lineNum">     268 </span>            : 
+<span class="lineNum">     269 </span>            : #endif // !defined(BOOST_NO_CV_SPECIALIZATIONS)
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            : /**
+<span class="lineNum">     272 </span>            :  @endcond
+<span class="lineNum">     273 </span>            : */
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            : // unwrap_ref
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            : /**
+<span class="lineNum">     278 </span>            :  @return `unwrap_reference&lt;T&gt;::type&amp;(t)`
+<span class="lineNum">     279 </span>            :  @remark Does not throw.
+<span class="lineNum">     280 </span>            : */
+<span class="lineNum">     281 </span>            : template&lt;class T&gt; BOOST_FORCEINLINE typename unwrap_reference&lt;T&gt;::type&amp; unwrap_ref( T &amp; t )
+<span class="lineNum">     282 </span>            : {
+<span class="lineNum">     283 </span>            :     return t;
+<span class="lineNum">     284 </span>            : }
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            : // get_pointer
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            : /**
+<span class="lineNum">     289 </span>            :  @cond
+<span class="lineNum">     290 </span>            : */
+<span class="lineNum">     291 </span>            : template&lt;class T&gt; BOOST_FORCEINLINE T* get_pointer( reference_wrapper&lt;T&gt; const &amp; r )
+<span class="lineNum">     292 </span>            : {
+<span class="lineNum">     293 </span>            :     return r.get_pointer();
+<span class="lineNum">     294 </span>            : }
+<span class="lineNum">     295 </span>            : /**
+<span class="lineNum">     296 </span>            :  @endcond
+<span class="lineNum">     297 </span>            : */
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span>            : } // namespace boost
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span>            : #endif // #ifndef BOOST_CORE_REF_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

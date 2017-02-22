@@ -1,0 +1,488 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libp2p/RLPxHandshake.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libp2p</a> - RLPxHandshake.cpp<span style="font-size: 80%;"> (source / <a href="RLPxHandshake.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">211</td>
+            <td class="headerCovTableEntry">260</td>
+            <td class="headerCovTableEntryMed">81.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntryHi">95.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :  This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            :  
+<span class="lineNum">       4 </span>            :  cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :  it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :  the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :  (at your option) any later version.
+<span class="lineNum">       8 </span>            :  
+<span class="lineNum">       9 </span>            :  cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :  but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :  GNU General Public License for more details.
+<span class="lineNum">      13 </span>            :  
+<span class="lineNum">      14 </span>            :  You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :  along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            :  */
+<span class="lineNum">      17 </span>            : /** @file RLPXHandshake.cpp
+<span class="lineNum">      18 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;Host.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;Session.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;Peer.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;RLPxHandshake.h&quot;
+<span class="lineNum">      26 </span>            : using namespace std;
+<span class="lineNum">      27 </span>            : using namespace dev;
+<span class="lineNum">      28 </span>            : using namespace dev::p2p;
+<a name="29"><span class="lineNum">      29 </span>            : using namespace dev::crypto;</a>
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span><span class="lineCov">         22 : void RLPXHandshake::writeAuth()</span>
+<span class="lineNum">      32 </span>            : {
+<span class="lineNum">      33 </span><span class="lineCov">         22 :         clog(NetP2PConnect) &lt;&lt; &quot;p2p.connect.egress sending auth to &quot; &lt;&lt; m_socket-&gt;remoteEndpoint();</span>
+<span class="lineNum">      34 </span><span class="lineCov">         22 :         m_auth.resize(Signature::size + h256::size + Public::size + h256::size + 1);</span>
+<span class="lineNum">      35 </span><span class="lineCov">         44 :         bytesRef sig(&amp;m_auth[0], Signature::size);</span>
+<span class="lineNum">      36 </span><span class="lineCov">         66 :         bytesRef hepubk(&amp;m_auth[Signature::size], h256::size);</span>
+<span class="lineNum">      37 </span><span class="lineCov">         66 :         bytesRef pubk(&amp;m_auth[Signature::size + h256::size], Public::size);</span>
+<span class="lineNum">      38 </span><span class="lineCov">         66 :         bytesRef nonce(&amp;m_auth[Signature::size + h256::size + Public::size], h256::size);</span>
+<span class="lineNum">      39 </span>            :         
+<span class="lineNum">      40 </span>            :         // E(remote-pubk, S(ecdhe-random, ecdh-shared-secret^nonce) || H(ecdhe-random-pubk) || pubk || nonce || 0x0)
+<span class="lineNum">      41 </span><span class="lineCov">         44 :         Secret staticShared;</span>
+<span class="lineNum">      42 </span><span class="lineCov">         44 :         crypto::ecdh::agree(m_host-&gt;m_alias.sec(), m_remote, staticShared);</span>
+<span class="lineNum">      43 </span><span class="lineCov">         88 :         sign(m_ecdhe.seckey(), staticShared.makeInsecure() ^ m_nonce).ref().copyTo(sig);</span>
+<span class="lineNum">      44 </span><span class="lineCov">         88 :         sha3(m_ecdhe.pubkey().ref(), hepubk);</span>
+<span class="lineNum">      45 </span><span class="lineCov">         44 :         m_host-&gt;m_alias.pub().ref().copyTo(pubk);</span>
+<span class="lineNum">      46 </span><span class="lineCov">         44 :         m_nonce.ref().copyTo(nonce);</span>
+<span class="lineNum">      47 </span><span class="lineCov">         66 :         m_auth[m_auth.size() - 1] = 0x0;</span>
+<span class="lineNum">      48 </span><span class="lineCov">         44 :         encryptECIES(m_remote, &amp;m_auth, m_authCipher);</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">         66 :         auto self(shared_from_this());</span>
+<span class="lineNum">      51 </span><span class="lineCov">        572 :         ba::async_write(m_socket-&gt;ref(), ba::buffer(m_authCipher), [this, self](boost::system::error_code ec, std::size_t)</span>
+<span class="lineNum">      52 </span>            :         {
+<span class="lineNum">      53 </span><span class="lineCov">         22 :                 transition(ec);</span>
+<span class="lineNum">      54 </span><span class="lineCov">         22 :         });</span>
+<a name="55"><span class="lineNum">      55 </span><span class="lineCov">         22 : }</span></a>
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineCov">         20 : void RLPXHandshake::writeAck()</span>
+<span class="lineNum">      58 </span>            : {
+<span class="lineNum">      59 </span><span class="lineCov">         20 :         clog(NetP2PConnect) &lt;&lt; &quot;p2p.connect.ingress sending ack to &quot; &lt;&lt; m_socket-&gt;remoteEndpoint();</span>
+<span class="lineNum">      60 </span><span class="lineCov">         20 :         m_ack.resize(Public::size + h256::size + 1);</span>
+<span class="lineNum">      61 </span><span class="lineCov">         40 :         bytesRef epubk(&amp;m_ack[0], Public::size);</span>
+<span class="lineNum">      62 </span><span class="lineCov">         60 :         bytesRef nonce(&amp;m_ack[Public::size], h256::size);</span>
+<span class="lineNum">      63 </span><span class="lineCov">         60 :         m_ecdhe.pubkey().ref().copyTo(epubk);</span>
+<span class="lineNum">      64 </span><span class="lineCov">         40 :         m_nonce.ref().copyTo(nonce);</span>
+<span class="lineNum">      65 </span><span class="lineCov">         60 :         m_ack[m_ack.size() - 1] = 0x0;</span>
+<span class="lineNum">      66 </span><span class="lineCov">         40 :         encryptECIES(m_remote, &amp;m_ack, m_ackCipher);</span>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">         60 :         auto self(shared_from_this());</span>
+<span class="lineNum">      69 </span><span class="lineCov">        520 :         ba::async_write(m_socket-&gt;ref(), ba::buffer(m_ackCipher), [this, self](boost::system::error_code ec, std::size_t)</span>
+<span class="lineNum">      70 </span>            :         {
+<span class="lineNum">      71 </span><span class="lineCov">         20 :                 transition(ec);</span>
+<span class="lineNum">      72 </span><span class="lineCov">         20 :         });</span>
+<a name="73"><span class="lineNum">      73 </span><span class="lineCov">         20 : }</span></a>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">          2 : void RLPXHandshake::writeAckEIP8()</span>
+<span class="lineNum">      76 </span>            : {
+<span class="lineNum">      77 </span><span class="lineCov">          2 :         clog(NetP2PConnect) &lt;&lt; &quot;p2p.connect.ingress sending EIP-8 ack to &quot; &lt;&lt; m_socket-&gt;remoteEndpoint();</span>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineCov">          4 :         RLPStream rlp;</span>
+<span class="lineNum">      80 </span><span class="lineCov">          2 :         rlp.appendList(3)</span>
+<span class="lineNum">      81 </span><span class="lineCov">          6 :                 &lt;&lt; m_ecdhe.pubkey()</span>
+<span class="lineNum">      82 </span><span class="lineCov">          2 :                 &lt;&lt; m_nonce</span>
+<span class="lineNum">      83 </span><span class="lineCov">          2 :                 &lt;&lt; c_rlpxVersion;</span>
+<span class="lineNum">      84 </span><span class="lineCov">          2 :         m_ack = rlp.out();</span>
+<span class="lineNum">      85 </span><span class="lineCov">          2 :         int padAmount(rand()%100 + 100);</span>
+<span class="lineNum">      86 </span><span class="lineCov">          4 :         m_ack.resize(m_ack.size() + padAmount, 0);</span>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">          6 :         bytes prefix(2);</span>
+<span class="lineNum">      89 </span><span class="lineCov">          6 :         toBigEndian&lt;uint16_t&gt;(m_ack.size() + c_eciesOverhead, prefix);</span>
+<span class="lineNum">      90 </span><span class="lineCov">          6 :         encryptECIES(m_remote, bytesConstRef(&amp;prefix), &amp;m_ack, m_ackCipher);</span>
+<span class="lineNum">      91 </span><span class="lineCov">          8 :         m_ackCipher.insert(m_ackCipher.begin(), prefix.begin(), prefix.end());</span>
+<span class="lineNum">      92 </span>            :         
+<span class="lineNum">      93 </span><span class="lineCov">          4 :         auto self(shared_from_this());</span>
+<span class="lineNum">      94 </span><span class="lineCov">         52 :         ba::async_write(m_socket-&gt;ref(), ba::buffer(m_ackCipher), [this, self](boost::system::error_code ec, std::size_t)</span>
+<span class="lineNum">      95 </span>            :         {
+<span class="lineNum">      96 </span><span class="lineCov">          2 :                 transition(ec);</span>
+<span class="lineNum">      97 </span><span class="lineCov">          2 :         });</span>
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">         22 : void RLPXHandshake::setAuthValues(Signature const&amp; _sig, Public const&amp; _remotePubk, h256 const&amp; _remoteNonce, uint64_t _remoteVersion)</span>
+<span class="lineNum">     101 </span>            : {
+<span class="lineNum">     102 </span><span class="lineCov">         66 :         _remotePubk.ref().copyTo(m_remote.ref());</span>
+<span class="lineNum">     103 </span><span class="lineCov">         66 :         _remoteNonce.ref().copyTo(m_remoteNonce.ref());</span>
+<span class="lineNum">     104 </span><span class="lineCov">         22 :         m_remoteVersion = _remoteVersion;</span>
+<span class="lineNum">     105 </span><span class="lineCov">         44 :         Secret sharedSecret;</span>
+<span class="lineNum">     106 </span><span class="lineCov">         44 :         crypto::ecdh::agree(m_host-&gt;m_alias.sec(), _remotePubk, sharedSecret);</span>
+<span class="lineNum">     107 </span><span class="lineCov">         22 :         m_remoteEphemeral = recover(_sig, sharedSecret.makeInsecure() ^ _remoteNonce);</span>
+<a name="108"><span class="lineNum">     108 </span><span class="lineCov">         22 : }</span></a>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineCov">         22 : void RLPXHandshake::readAuth()</span>
+<span class="lineNum">     111 </span>            : {
+<span class="lineNum">     112 </span><span class="lineCov">         22 :         clog(NetP2PConnect) &lt;&lt; &quot;p2p.connect.ingress receiving auth from &quot; &lt;&lt; m_socket-&gt;remoteEndpoint();</span>
+<a name="113"><span class="lineNum">     113 </span><span class="lineCov">         22 :         m_authCipher.resize(307);</span></a>
+<span class="lineNum">     114 </span><span class="lineCov">         66 :         auto self(shared_from_this());</span>
+<span class="lineNum">     115 </span><span class="lineCov">        594 :         ba::async_read(m_socket-&gt;ref(), ba::buffer(m_authCipher, 307), [this, self](boost::system::error_code ec, std::size_t)</span>
+<span class="lineNum">     116 </span><span class="lineCov">        104 :         {</span>
+<span class="lineNum">     117 </span><span class="lineCov">         44 :                 if (ec)</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :                         transition(ec);</span>
+<span class="lineNum">     119 </span><span class="lineCov">         66 :                 else if (decryptECIES(m_host-&gt;m_alias.sec(), bytesConstRef(&amp;m_authCipher), m_auth))</span>
+<span class="lineNum">     120 </span>            :                 {
+<span class="lineNum">     121 </span><span class="lineCov">         40 :                         bytesConstRef data(&amp;m_auth);</span>
+<span class="lineNum">     122 </span><span class="lineCov">         20 :                         Signature sig(data.cropped(0, Signature::size));</span>
+<span class="lineNum">     123 </span><span class="lineCov">         20 :                         Public pubk(data.cropped(Signature::size + h256::size, Public::size));</span>
+<span class="lineNum">     124 </span><span class="lineCov">         20 :                         h256 nonce(data.cropped(Signature::size + h256::size + Public::size, h256::size));</span>
+<span class="lineNum">     125 </span><span class="lineCov">         20 :                         setAuthValues(sig, pubk, nonce, 4);</span>
+<span class="lineNum">     126 </span><span class="lineCov">         60 :                         transition();</span>
+<span class="lineNum">     127 </span>            :                 }
+<span class="lineNum">     128 </span>            :                 else
+<span class="lineNum">     129 </span><span class="lineCov">          2 :                         readAuthEIP8();</span>
+<span class="lineNum">     130 </span><span class="lineCov">         44 :         });</span>
+<a name="131"><span class="lineNum">     131 </span><span class="lineCov">         22 : }</span></a>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineCov">          2 : void RLPXHandshake::readAuthEIP8()</span>
+<span class="lineNum">     134 </span>            : {
+<span class="lineNum">     135 </span><span class="lineCov">          4 :         assert(m_authCipher.size() == 307);</span>
+<span class="lineNum">     136 </span><span class="lineCov">          2 :         uint16_t size(m_authCipher[0]&lt;&lt;8 | m_authCipher[1]);</span>
+<span class="lineNum">     137 </span><span class="lineCov">          2 :         clog(NetP2PConnect) &lt;&lt; &quot;p2p.connect.ingress receiving &quot; &lt;&lt; size &lt;&lt; &quot;bytes EIP-8 auth from &quot; &lt;&lt; m_socket-&gt;remoteEndpoint();</span>
+<span class="lineNum">     138 </span><span class="lineCov">          2 :         m_authCipher.resize((size_t)size + 2);</span>
+<a name="139"><span class="lineNum">     139 </span><span class="lineCov">          8 :         auto rest = ba::buffer(ba::buffer(m_authCipher) + 307);</span></a>
+<span class="lineNum">     140 </span><span class="lineCov">          6 :         auto self(shared_from_this());</span>
+<span class="lineNum">     141 </span><span class="lineCov">         52 :         ba::async_read(m_socket-&gt;ref(), rest, [this, self](boost::system::error_code ec, std::size_t)</span>
+<span class="lineNum">     142 </span><span class="lineCov">         10 :         {</span>
+<span class="lineNum">     143 </span><span class="lineCov">          4 :                 bytesConstRef ct(&amp;m_authCipher);</span>
+<span class="lineNum">     144 </span><span class="lineCov">          4 :                 if (ec)</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :                         transition(ec);</span>
+<span class="lineNum">     146 </span><span class="lineCov">          8 :                 else if (decryptECIES(m_host-&gt;m_alias.sec(), ct.cropped(0, 2), ct.cropped(2), m_auth))</span>
+<span class="lineNum">     147 </span>            :                 {
+<span class="lineNum">     148 </span><span class="lineCov">          4 :                         RLP rlp(m_auth, RLP::ThrowOnFail | RLP::FailIfTooSmall);</span>
+<span class="lineNum">     149 </span><span class="lineCov">          4 :                         setAuthValues(</span>
+<span class="lineNum">     150 </span><span class="lineCov">          4 :                                 rlp[0].toHash&lt;Signature&gt;(),</span>
+<span class="lineNum">     151 </span><span class="lineCov">          4 :                                 rlp[1].toHash&lt;Public&gt;(),</span>
+<span class="lineNum">     152 </span><span class="lineCov">          4 :                                 rlp[2].toHash&lt;h256&gt;(),</span>
+<span class="lineNum">     153 </span>            :                                 rlp[3].toInt&lt;uint64_t&gt;()
+<span class="lineNum">     154 </span><span class="lineCov">          2 :                         );</span>
+<span class="lineNum">     155 </span><span class="lineCov">          2 :                         m_nextState = AckAuthEIP8;</span>
+<span class="lineNum">     156 </span><span class="lineCov">          6 :                         transition();</span>
+<span class="lineNum">     157 </span>            :                 }
+<span class="lineNum">     158 </span>            :                 else
+<span class="lineNum">     159 </span>            :                 {
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :                         clog(NetP2PConnect) &lt;&lt; &quot;p2p.connect.ingress auth decrypt failed for&quot; &lt;&lt; m_socket-&gt;remoteEndpoint();</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :                         m_nextState = Error;</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :                         transition();</span>
+<span class="lineNum">     163 </span>            :                 }
+<span class="lineNum">     164 </span><span class="lineCov">          4 :         });</span>
+<a name="165"><span class="lineNum">     165 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span><span class="lineCov">         22 : void RLPXHandshake::readAck()</span>
+<span class="lineNum">     168 </span>            : {
+<span class="lineNum">     169 </span><span class="lineCov">         22 :         clog(NetP2PConnect) &lt;&lt; &quot;p2p.connect.egress receiving ack from &quot; &lt;&lt; m_socket-&gt;remoteEndpoint();</span>
+<a name="170"><span class="lineNum">     170 </span><span class="lineCov">         22 :         m_ackCipher.resize(210);</span></a>
+<span class="lineNum">     171 </span><span class="lineCov">         66 :         auto self(shared_from_this());</span>
+<span class="lineNum">     172 </span><span class="lineCov">        594 :         ba::async_read(m_socket-&gt;ref(), ba::buffer(m_ackCipher, 210), [this, self](boost::system::error_code ec, std::size_t)</span>
+<span class="lineNum">     173 </span><span class="lineCov">        104 :         {</span>
+<span class="lineNum">     174 </span><span class="lineCov">         44 :                 if (ec)</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :                         transition(ec);</span>
+<span class="lineNum">     176 </span><span class="lineCov">         66 :                 else if (decryptECIES(m_host-&gt;m_alias.sec(), bytesConstRef(&amp;m_ackCipher), m_ack))</span>
+<span class="lineNum">     177 </span>            :                 {
+<span class="lineNum">     178 </span><span class="lineCov">         80 :                         bytesConstRef(&amp;m_ack).cropped(0, Public::size).copyTo(m_remoteEphemeral.ref());</span>
+<span class="lineNum">     179 </span><span class="lineCov">         80 :                         bytesConstRef(&amp;m_ack).cropped(Public::size, h256::size).copyTo(m_remoteNonce.ref());</span>
+<span class="lineNum">     180 </span><span class="lineCov">         20 :                         m_remoteVersion = 4;</span>
+<span class="lineNum">     181 </span><span class="lineCov">         60 :                         transition();</span>
+<span class="lineNum">     182 </span>            :                 }
+<span class="lineNum">     183 </span>            :                 else
+<span class="lineNum">     184 </span><span class="lineCov">          2 :                         readAckEIP8();</span>
+<span class="lineNum">     185 </span><span class="lineCov">         44 :         });</span>
+<a name="186"><span class="lineNum">     186 </span><span class="lineCov">         22 : }</span></a>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span><span class="lineCov">          2 : void RLPXHandshake::readAckEIP8()</span>
+<span class="lineNum">     189 </span>            : {
+<span class="lineNum">     190 </span><span class="lineCov">          4 :         assert(m_ackCipher.size() == 210);</span>
+<span class="lineNum">     191 </span><span class="lineCov">          2 :         uint16_t size(m_ackCipher[0]&lt;&lt;8 | m_ackCipher[1]);</span>
+<span class="lineNum">     192 </span><span class="lineCov">          2 :         clog(NetP2PConnect) &lt;&lt; &quot;p2p.connect.egress receiving &quot; &lt;&lt; size &lt;&lt; &quot;bytes EIP-8 ack from &quot; &lt;&lt; m_socket-&gt;remoteEndpoint();</span>
+<span class="lineNum">     193 </span><span class="lineCov">          2 :         m_ackCipher.resize((size_t)size + 2);</span>
+<a name="194"><span class="lineNum">     194 </span><span class="lineCov">          8 :         auto rest = ba::buffer(ba::buffer(m_ackCipher) + 210);</span></a>
+<span class="lineNum">     195 </span><span class="lineCov">          6 :         auto self(shared_from_this());</span>
+<span class="lineNum">     196 </span><span class="lineCov">         52 :         ba::async_read(m_socket-&gt;ref(), rest, [this, self](boost::system::error_code ec, std::size_t)</span>
+<span class="lineNum">     197 </span><span class="lineCov">         14 :         {</span>
+<span class="lineNum">     198 </span><span class="lineCov">          4 :                 bytesConstRef ct(&amp;m_ackCipher);</span>
+<span class="lineNum">     199 </span><span class="lineCov">          4 :                 if (ec)</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :                         transition(ec);</span>
+<span class="lineNum">     201 </span><span class="lineCov">          8 :                 else if (decryptECIES(m_host-&gt;m_alias.sec(), ct.cropped(0, 2), ct.cropped(2), m_ack))</span>
+<span class="lineNum">     202 </span>            :                 {
+<span class="lineNum">     203 </span><span class="lineCov">          4 :                         RLP rlp(m_ack, RLP::ThrowOnFail | RLP::FailIfTooSmall);</span>
+<span class="lineNum">     204 </span><span class="lineCov">          2 :                         m_remoteEphemeral = rlp[0].toHash&lt;Public&gt;();</span>
+<span class="lineNum">     205 </span><span class="lineCov">          2 :                         m_remoteNonce = rlp[1].toHash&lt;h256&gt;();</span>
+<span class="lineNum">     206 </span><span class="lineCov">          2 :                         m_remoteVersion = rlp[2].toInt&lt;uint64_t&gt;();</span>
+<span class="lineNum">     207 </span><span class="lineCov">          6 :                         transition();</span>
+<span class="lineNum">     208 </span>            :                 }
+<span class="lineNum">     209 </span>            :                 else
+<span class="lineNum">     210 </span>            :                 {
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :                         clog(NetP2PConnect) &lt;&lt; &quot;p2p.connect.egress ack decrypt failed for &quot; &lt;&lt; m_socket-&gt;remoteEndpoint();</span>
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :                         m_nextState = Error;</span>
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :                         transition();</span>
+<span class="lineNum">     214 </span>            :                 }
+<span class="lineNum">     215 </span><span class="lineCov">          4 :         });</span>
+<a name="216"><span class="lineNum">     216 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span><span class="lineCov">          6 : void RLPXHandshake::cancel()</span>
+<span class="lineNum">     219 </span>            : {
+<span class="lineNum">     220 </span><span class="lineCov">          6 :         m_cancel = true;</span>
+<span class="lineNum">     221 </span><span class="lineCov">          6 :         m_idleTimer.cancel();</span>
+<span class="lineNum">     222 </span><span class="lineCov">          6 :         m_socket-&gt;close();</span>
+<span class="lineNum">     223 </span><span class="lineCov">          6 :         m_io.reset();</span>
+<a name="224"><span class="lineNum">     224 </span><span class="lineCov">          6 : }</span></a>
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 : void RLPXHandshake::error()</span>
+<span class="lineNum">     227 </span>            : {
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :         auto connected = m_socket-&gt;isConnected();</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :         if (connected &amp;&amp; !m_socket-&gt;remoteEndpoint().address().is_unspecified())</span>
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :                 clog(NetP2PConnect) &lt;&lt; &quot;Disconnecting &quot; &lt;&lt; m_socket-&gt;remoteEndpoint() &lt;&lt; &quot; (Handshake Failed)&quot;;</span>
+<span class="lineNum">     231 </span>            :         else
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :                 clog(NetP2PConnect) &lt;&lt; &quot;Handshake Failed (Connection reset by peer)&quot;;</span>
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :         cancel();</span>
+<a name="235"><span class="lineNum">     235 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span><span class="lineCov">        170 : void RLPXHandshake::transition(boost::system::error_code _ech)</span>
+<span class="lineNum">     238 </span>            : {
+<span class="lineNum">     239 </span>            :         // reset timeout
+<span class="lineNum">     240 </span><span class="lineCov">        170 :         m_idleTimer.cancel();</span>
+<span class="lineNum">     241 </span>            :         
+<span class="lineNum">     242 </span><span class="lineCov">        340 :         if (_ech || m_nextState == Error || m_cancel)</span>
+<span class="lineNum">     243 </span>            :         {
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :                 clog(NetP2PConnect) &lt;&lt; &quot;Handshake Failed (I/O Error:&quot; &lt;&lt; _ech.message() &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :                 return error();</span>
+<span class="lineNum">     246 </span>            :         }
+<span class="lineNum">     247 </span>            :         
+<span class="lineNum">     248 </span><span class="lineCov">        510 :         auto self(shared_from_this());</span>
+<a name="249"><span class="lineNum">     249 </span><span class="lineCov">        170 :         assert(m_nextState != StartSession);</span></a>
+<span class="lineNum">     250 </span><span class="lineCov">        170 :         m_idleTimer.expires_from_now(c_timeout);</span>
+<span class="lineNum">     251 </span><span class="lineCov">       2890 :         m_idleTimer.async_wait([this, self](boost::system::error_code const&amp; _ec)</span>
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :         {</span>
+<span class="lineNum">     253 </span><span class="lineCov">        170 :                 if (!_ec)</span>
+<span class="lineNum">     254 </span>            :                 {
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :                         if (!m_socket-&gt;remoteEndpoint().address().is_unspecified())</span>
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :                                 clog(NetP2PConnect) &lt;&lt; &quot;Disconnecting &quot; &lt;&lt; m_socket-&gt;remoteEndpoint() &lt;&lt; &quot; (Handshake Timeout)&quot;;</span>
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :                         cancel();</span>
+<span class="lineNum">     258 </span>            :                 }
+<span class="lineNum">     259 </span><span class="lineCov">        340 :         });</span>
+<span class="lineNum">     260 </span>            :         
+<span class="lineNum">     261 </span><span class="lineCov">        170 :         if (m_nextState == New)</span>
+<span class="lineNum">     262 </span>            :         {
+<span class="lineNum">     263 </span><span class="lineCov">         44 :                 m_nextState = AckAuth;</span>
+<span class="lineNum">     264 </span><span class="lineCov">         44 :                 if (m_originated)</span>
+<span class="lineNum">     265 </span><span class="lineCov">         22 :                         writeAuth();</span>
+<span class="lineNum">     266 </span>            :                 else
+<span class="lineNum">     267 </span><span class="lineCov">         22 :                         readAuth();</span>
+<span class="lineNum">     268 </span>            :         }
+<span class="lineNum">     269 </span><span class="lineCov">        126 :         else if (m_nextState == AckAuth)</span>
+<span class="lineNum">     270 </span>            :         {
+<span class="lineNum">     271 </span><span class="lineCov">         42 :                 m_nextState = WriteHello;</span>
+<span class="lineNum">     272 </span><span class="lineCov">         42 :                 if (m_originated)</span>
+<span class="lineNum">     273 </span><span class="lineCov">         22 :                         readAck();</span>
+<span class="lineNum">     274 </span>            :                 else
+<span class="lineNum">     275 </span><span class="lineCov">         20 :                         writeAck();</span>
+<span class="lineNum">     276 </span>            :         }
+<span class="lineNum">     277 </span><span class="lineCov">         84 :         else if (m_nextState == AckAuthEIP8)</span>
+<span class="lineNum">     278 </span>            :         {
+<span class="lineNum">     279 </span><span class="lineCov">          2 :                 m_nextState = WriteHello;</span>
+<span class="lineNum">     280 </span><span class="lineCov">          2 :                 if (m_originated)</span>
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :                         readAck();</span>
+<span class="lineNum">     282 </span>            :                 else
+<span class="lineNum">     283 </span><span class="lineCov">          2 :                         writeAckEIP8();</span>
+<span class="lineNum">     284 </span>            :         }
+<span class="lineNum">     285 </span><span class="lineCov">         82 :         else if (m_nextState == WriteHello)</span>
+<span class="lineNum">     286 </span>            :         {
+<span class="lineNum">     287 </span><span class="lineCov">         44 :                 m_nextState = ReadHello;</span>
+<span class="lineNum">     288 </span><span class="lineCov">         44 :                 clog(NetP2PConnect) &lt;&lt; (m_originated ? &quot;p2p.connect.egress&quot; : &quot;p2p.connect.ingress&quot;) &lt;&lt; &quot;sending capabilities handshake&quot;;</span>
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            :                 /// This pointer will be freed if there is an error otherwise
+<span class="lineNum">     291 </span>            :                 /// it will be passed to Host which will take ownership.
+<span class="lineNum">     292 </span><span class="lineCov">         44 :                 m_io.reset(new RLPXFrameCoder(*this));</span>
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span><span class="lineCov">         88 :                 RLPStream s;</span>
+<span class="lineNum">     295 </span><span class="lineCov">         44 :                 s.append((unsigned)HelloPacket).appendList(5)</span>
+<span class="lineNum">     296 </span><span class="lineCov">         88 :                         &lt;&lt; dev::p2p::c_protocolVersion</span>
+<span class="lineNum">     297 </span><span class="lineCov">        176 :                         &lt;&lt; m_host-&gt;m_clientVersion</span>
+<span class="lineNum">     298 </span><span class="lineCov">        132 :                         &lt;&lt; m_host-&gt;caps()</span>
+<span class="lineNum">     299 </span><span class="lineCov">        132 :                         &lt;&lt; m_host-&gt;listenPort()</span>
+<span class="lineNum">     300 </span><span class="lineCov">        132 :                         &lt;&lt; m_host-&gt;id();</span>
+<span class="lineNum">     301 </span>            : 
+<span class="lineNum">     302 </span><span class="lineCov">         88 :                 bytes packet;</span>
+<span class="lineNum">     303 </span><span class="lineCov">         44 :                 s.swapOut(packet);</span>
+<span class="lineNum">     304 </span><span class="lineCov">        132 :                 m_io-&gt;writeSingleFramePacket(&amp;packet, m_handshakeOutBuffer);</span>
+<span class="lineNum">     305 </span><span class="lineCov">       1144 :                 ba::async_write(m_socket-&gt;ref(), ba::buffer(m_handshakeOutBuffer), [this, self](boost::system::error_code ec, std::size_t)</span>
+<span class="lineNum">     306 </span>            :                 {
+<span class="lineNum">     307 </span><span class="lineCov">         44 :                         transition(ec);</span>
+<span class="lineNum">     308 </span><span class="lineCov">         44 :                 });</span>
+<span class="lineNum">     309 </span>            :         }
+<span class="lineNum">     310 </span><span class="lineCov">         38 :         else if (m_nextState == ReadHello)</span>
+<span class="lineNum">     311 </span>            :         {
+<span class="lineNum">     312 </span>            :                 // Authenticate and decrypt initial hello frame with initial RLPXFrameCoder
+<span class="lineNum">     313 </span>            :                 // and request m_host to start session.
+<span class="lineNum">     314 </span><span class="lineCov">         38 :                 m_nextState = StartSession;</span>
+<span class="lineNum">     315 </span>            :                 
+<span class="lineNum">     316 </span>            :                 // read frame header
+<a name="317"><span class="lineNum">     317 </span><span class="lineCov">         38 :                 unsigned const handshakeSize = 32;</span></a>
+<span class="lineNum">     318 </span><span class="lineCov">         38 :                 m_handshakeInBuffer.resize(handshakeSize);</span>
+<span class="lineNum">     319 </span><span class="lineCov">       1026 :                 ba::async_read(m_socket-&gt;ref(), boost::asio::buffer(m_handshakeInBuffer, handshakeSize), [this, self](boost::system::error_code ec, std::size_t)</span>
+<span class="lineNum">     320 </span><span class="lineCov">        228 :                 {</span>
+<span class="lineNum">     321 </span><span class="lineCov">         76 :                         if (ec)</span>
+<span class="lineNum">     322 </span><span class="lineNoCov">          0 :                                 transition(ec);</span>
+<span class="lineNum">     323 </span>            :                         else
+<span class="lineNum">     324 </span>            :                         {
+<span class="lineNum">     325 </span><span class="lineCov">         76 :                                 if (!m_io)</span>
+<span class="lineNum">     326 </span>            :                                 {
+<span class="lineNum">     327 </span><span class="lineNoCov">          0 :                                         clog(NetP2PWarn) &lt;&lt; &quot;Internal error in handshake: RLPXFrameCoder disappeared.&quot;;</span>
+<span class="lineNum">     328 </span><span class="lineNoCov">          0 :                                         m_nextState = Error;</span>
+<span class="lineNum">     329 </span><span class="lineNoCov">          0 :                                         transition();</span>
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 :                                         return;</span>
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span>            :                                 }
+<span class="lineNum">     333 </span>            :                                 /// authenticate and decrypt header
+<span class="lineNum">     334 </span><span class="lineCov">        190 :                                 if (!m_io-&gt;authAndDecryptHeader(bytesRef(m_handshakeInBuffer.data(), m_handshakeInBuffer.size())))</span>
+<span class="lineNum">     335 </span>            :                                 {
+<span class="lineNum">     336 </span><span class="lineNoCov">          0 :                                         m_nextState = Error;</span>
+<span class="lineNum">     337 </span><span class="lineNoCov">          0 :                                         transition();</span>
+<span class="lineNum">     338 </span>            :                                         return;
+<span class="lineNum">     339 </span>            :                                 }
+<span class="lineNum">     340 </span>            :                                 
+<span class="lineNum">     341 </span><span class="lineCov">         38 :                                 clog(NetP2PNote) &lt;&lt; (m_originated ? &quot;p2p.connect.egress&quot; : &quot;p2p.connect.ingress&quot;) &lt;&lt; &quot;recvd hello header&quot;;</span>
+<span class="lineNum">     342 </span>            :                                 
+<span class="lineNum">     343 </span>            :                                 /// check frame size
+<span class="lineNum">     344 </span><span class="lineCov">         38 :                                 bytes&amp; header = m_handshakeInBuffer;</span>
+<span class="lineNum">     345 </span><span class="lineCov">         38 :                                 uint32_t frameSize = (uint32_t)(header[2]) | (uint32_t)(header[1])&lt;&lt;8 | (uint32_t)(header[0])&lt;&lt;16;</span>
+<span class="lineNum">     346 </span><span class="lineCov">         38 :                                 if (frameSize &gt; 1024)</span>
+<span class="lineNum">     347 </span>            :                                 {
+<span class="lineNum">     348 </span>            :                                         // all future frames: 16777216
+<span class="lineNum">     349 </span><span class="lineNoCov">          0 :                                         clog(NetP2PWarn) &lt;&lt; (m_originated ? &quot;p2p.connect.egress&quot; : &quot;p2p.connect.ingress&quot;) &lt;&lt; &quot;hello frame is too large&quot; &lt;&lt; frameSize;</span>
+<span class="lineNum">     350 </span><span class="lineNoCov">          0 :                                         m_nextState = Error;</span>
+<span class="lineNum">     351 </span><span class="lineNoCov">          0 :                                         transition();</span>
+<span class="lineNum">     352 </span>            :                                         return;
+<span class="lineNum">     353 </span>            :                                 }
+<span class="lineNum">     354 </span>            :                                 
+<span class="lineNum">     355 </span>            :                                 /// rlp of header has protocol-type, sequence-id[, total-packet-size]
+<span class="lineNum">     356 </span><span class="lineCov">        152 :                                 bytes headerRLP(header.size() - 3 - h128::size);        // this is always 32 - 3 - 16 = 13. wtf?</span>
+<span class="lineNum">     357 </span><span class="lineCov">        114 :                                 bytesConstRef(&amp;header).cropped(3).copyTo(&amp;headerRLP);</span>
+<span class="lineNum">     358 </span>            :                                 
+<a name="359"><span class="lineNum">     359 </span>            :                                 /// read padded frame and mac</a>
+<span class="lineNum">     360 </span><span class="lineCov">         76 :                                 m_handshakeInBuffer.resize(frameSize + ((16 - (frameSize % 16)) % 16) + h128::size);</span>
+<span class="lineNum">     361 </span><span class="lineCov">       1555 :                                 ba::async_read(m_socket-&gt;ref(), boost::asio::buffer(m_handshakeInBuffer, m_handshakeInBuffer.size()), [this, self, headerRLP](boost::system::error_code ec, std::size_t)</span>
+<span class="lineNum">     362 </span><span class="lineCov">        151 :                                 {</span>
+<span class="lineNum">     363 </span><span class="lineCov">         38 :                                         m_idleTimer.cancel();</span>
+<span class="lineNum">     364 </span>            :                                         
+<span class="lineNum">     365 </span><span class="lineCov">         76 :                                         if (ec)</span>
+<span class="lineNum">     366 </span><span class="lineNoCov">          0 :                                                 transition(ec);</span>
+<span class="lineNum">     367 </span>            :                                         else
+<span class="lineNum">     368 </span>            :                                         {
+<span class="lineNum">     369 </span><span class="lineCov">         76 :                                                 if (!m_io)</span>
+<span class="lineNum">     370 </span>            :                                                 {
+<span class="lineNum">     371 </span><span class="lineNoCov">          0 :                                                         clog(NetP2PWarn) &lt;&lt; &quot;Internal error in handshake: RLPXFrameCoder disappeared.&quot;;</span>
+<span class="lineNum">     372 </span><span class="lineNoCov">          0 :                                                         m_nextState = Error;</span>
+<span class="lineNum">     373 </span><span class="lineNoCov">          0 :                                                         transition();</span>
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 :                                                         return;</span>
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span>            :                                                 }
+<span class="lineNum">     377 </span><span class="lineCov">         76 :                                                 bytesRef frame(&amp;m_handshakeInBuffer);</span>
+<span class="lineNum">     378 </span><span class="lineCov">         76 :                                                 if (!m_io-&gt;authAndDecryptFrame(frame))</span>
+<span class="lineNum">     379 </span>            :                                                 {
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 :                                                         clog(NetTriviaSummary) &lt;&lt; (m_originated ? &quot;p2p.connect.egress&quot; : &quot;p2p.connect.ingress&quot;) &lt;&lt; &quot;hello frame: decrypt failed&quot;;</span>
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 :                                                         m_nextState = Error;</span>
+<span class="lineNum">     382 </span><span class="lineNoCov">          0 :                                                         transition();</span>
+<span class="lineNum">     383 </span>            :                                                         return;
+<span class="lineNum">     384 </span>            :                                                 }
+<span class="lineNum">     385 </span>            :                                                 
+<span class="lineNum">     386 </span><span class="lineCov">         38 :                                                 PacketType packetType = frame[0] == 0x80 ? HelloPacket : (PacketType)frame[0];</span>
+<span class="lineNum">     387 </span><span class="lineCov">         38 :                                                 if (packetType != HelloPacket)</span>
+<span class="lineNum">     388 </span>            :                                                 {
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :                                                         clog(NetTriviaSummary) &lt;&lt; (m_originated ? &quot;p2p.connect.egress&quot; : &quot;p2p.connect.ingress&quot;) &lt;&lt; &quot;hello frame: invalid packet type&quot;;</span>
+<span class="lineNum">     390 </span><span class="lineNoCov">          0 :                                                         m_nextState = Error;</span>
+<span class="lineNum">     391 </span><span class="lineNoCov">          0 :                                                         transition();</span>
+<span class="lineNum">     392 </span>            :                                                         return;
+<span class="lineNum">     393 </span>            :                                                 }
+<span class="lineNum">     394 </span>            : 
+<span class="lineNum">     395 </span><span class="lineCov">         38 :                                                 clog(NetTriviaSummary) &lt;&lt; (m_originated ? &quot;p2p.connect.egress&quot; : &quot;p2p.connect.ingress&quot;) &lt;&lt; &quot;hello frame: success. starting session.&quot;;</span>
+<span class="lineNum">     396 </span>            :                                                 try
+<span class="lineNum">     397 </span>            :                                                 {
+<span class="lineNum">     398 </span><span class="lineCov">         76 :                                                         RLP rlp(frame.cropped(1), RLP::ThrowOnFail | RLP::FailIfTooSmall);</span>
+<span class="lineNum">     399 </span><span class="lineCov">         37 :                                                         m_host-&gt;startPeerSession(m_remote, rlp, move(m_io), m_socket);</span>
+<span class="lineNum">     400 </span>            :                                                 }
+<span class="lineNum">     401 </span><span class="lineNoCov">          0 :                                                 catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     402 </span>            :                                                 {
+<span class="lineNum">     403 </span><span class="lineNoCov">          0 :                                                         clog(NetWarn) &lt;&lt; &quot;Handshake causing an exception:&quot; &lt;&lt; _e.what();</span>
+<span class="lineNum">     404 </span><span class="lineNoCov">          0 :                                                         m_nextState = Error;</span>
+<span class="lineNum">     405 </span><span class="lineNoCov">          0 :                                                         transition();</span>
+<span class="lineNum">     406 </span>            :                                                 }
+<span class="lineNum">     407 </span>            :                                         }
+<span class="lineNum">     408 </span><span class="lineCov">         38 :                                 });</span>
+<span class="lineNum">     409 </span>            :                         }
+<a name="410"><span class="lineNum">     410 </span><span class="lineCov">         38 :                 });</span></a>
+<span class="lineNum">     411 </span>            :         }
+<span class="lineNum">     412 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

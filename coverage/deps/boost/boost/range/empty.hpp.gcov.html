@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/range/empty.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/range</a> - empty.hpp<span style="font-size: 80%;"> (source / <a href="empty.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Boost.Range library</a>
+<span class="lineNum">       2 </span>            : //
+<span class="lineNum">       3 </span>            : //  Copyright Thorsten Ottosen 2003-2004. Use, modification and
+<span class="lineNum">       4 </span>            : //  distribution is subject to the Boost Software License, Version
+<span class="lineNum">       5 </span>            : //  1.0. (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       6 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : // For more information, see http://www.boost.org/libs/range/
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_RANGE_EMPTY_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_RANGE_EMPTY_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/range/config.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/range/begin.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/range/end.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : namespace boost 
+<span class="lineNum">      23 </span>            : { 
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            :     template&lt; class T &gt;
+<span class="lineNum">      26 </span>            :     inline bool empty( const T&amp; r )
+<span class="lineNum">      27 </span>            :     {
+<span class="lineNum">      28 </span><span class="lineCov">       1008 :         return boost::begin( r ) == boost::end( r );</span>
+<span class="lineNum">      29 </span>            :     }
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : } // namespace 'boost'
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

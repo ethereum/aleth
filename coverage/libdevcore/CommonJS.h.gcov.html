@@ -1,0 +1,203 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/CommonJS.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - CommonJS.h<span style="font-size: 80%;"> (source / <a href="CommonJS.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntryHi">96.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntryLo">57.1 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file CommonJS.h
+<span class="lineNum">      18 </span>            :  * @authors:
+<span class="lineNum">      19 </span>            :  *   Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      20 </span>            :  *   Marek Kotewicz &lt;marek@ethdev.com&gt;
+<span class="lineNum">      21 </span>            :  * @date 2014
+<span class="lineNum">      22 </span>            :  */
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #pragma once
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;string&gt;
+<span class="lineNum">      27 </span>            : #include &quot;FixedHash.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;CommonData.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;CommonIO.h&quot;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : namespace dev
+<a name="32"><span class="lineNum">      32 </span>            : {</a>
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span><span class="lineCov">          7 : template &lt;unsigned S&gt; std::string toJS(FixedHash&lt;S&gt; const&amp; _h)</span>
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span><span class="lineCov">         14 :         return &quot;0x&quot; + toHex(_h.ref());</span>
+<a name="37"><span class="lineNum">      37 </span>            : }</a>
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span><span class="lineCov">          1 : template &lt;unsigned N&gt; std::string toJS(boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;N, N, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void&gt;&gt; const&amp; _n)</span>
+<span class="lineNum">      40 </span>            : {
+<span class="lineNum">      41 </span><span class="lineCov">          3 :         std::string h = toHex(toCompactBigEndian(_n, 1));</span>
+<span class="lineNum">      42 </span>            :         // remove first 0, if it is necessary;
+<span class="lineNum">      43 </span><span class="lineCov">          3 :         std::string res = h[0] != '0' ? h : h.substr(1);</span>
+<span class="lineNum">      44 </span><span class="lineCov">          2 :         return &quot;0x&quot; + res;</span>
+<a name="45"><span class="lineNum">      45 </span>            : }</a>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineCov">          1 : inline std::string toJS(bytes const&amp; _n, std::size_t _padding = 0)</span>
+<span class="lineNum">      48 </span>            : {
+<span class="lineNum">      49 </span><span class="lineCov">          2 :         bytes n = _n;</span>
+<span class="lineNum">      50 </span><span class="lineCov">          3 :         n.resize(std::max&lt;unsigned&gt;(n.size(), _padding));</span>
+<span class="lineNum">      51 </span><span class="lineCov">          3 :         return &quot;0x&quot; + toHex(n);</span>
+<span class="lineNum">      52 </span>            : }
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : template&lt;unsigned T&gt; std::string toJS(SecureFixedHash&lt;T&gt; const&amp; _i)
+<span class="lineNum">      55 </span>            : {
+<span class="lineNum">      56 </span>            :         std::stringstream stream;
+<span class="lineNum">      57 </span>            :         stream &lt;&lt; &quot;0x&quot; &lt;&lt; _i.makeInsecure().hex();
+<span class="lineNum">      58 </span>            :         return stream.str();
+<a name="59"><span class="lineNum">      59 </span>            : }</a>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineCov">          1 : template&lt;typename T&gt; std::string toJS(T const&amp; _i)</span>
+<span class="lineNum">      62 </span>            : {
+<span class="lineNum">      63 </span><span class="lineCov">          2 :         std::stringstream stream;</span>
+<span class="lineNum">      64 </span><span class="lineCov">          4 :         stream &lt;&lt; &quot;0x&quot; &lt;&lt; std::hex &lt;&lt; _i;</span>
+<span class="lineNum">      65 </span><span class="lineCov">          2 :         return stream.str();</span>
+<span class="lineNum">      66 </span>            : }
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : enum class OnFailed { InterpretRaw, Empty, Throw };
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : /// Convert string to byte array. Input parameter is hex, optionally prefixed by &quot;0x&quot;.
+<span class="lineNum">      71 </span>            : /// Returns empty array if invalid input.
+<span class="lineNum">      72 </span>            : bytes jsToBytes(std::string const&amp; _s, OnFailed _f = OnFailed::Empty);
+<span class="lineNum">      73 </span>            : /// Add '0' on, or remove items from, the front of @a _b until it is of length @a _l.
+<span class="lineNum">      74 </span>            : bytes padded(bytes _b, unsigned _l);
+<span class="lineNum">      75 </span>            : /// Add '0' on, or remove items from,  the back of @a _b until it is of length @a _l.
+<span class="lineNum">      76 </span>            : bytes paddedRight(bytes _b, unsigned _l);
+<span class="lineNum">      77 </span>            : /// Removing all trailing '0'. Returns empty array if input contains only '0' char.
+<span class="lineNum">      78 </span>            : bytes unpadded(bytes _s);
+<span class="lineNum">      79 </span>            : /// Remove all 0 byte on the head of @a _s.
+<span class="lineNum">      80 </span>            : bytes unpadLeft(bytes _s);
+<span class="lineNum">      81 </span>            : /// Convert h256 into user-readable string (by directly using std::string constructor). If it can't be interpreted as an ASCII string, empty string is returned.
+<a name="82"><span class="lineNum">      82 </span>            : std::string fromRaw(h256 _n);</a>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span><span class="lineCov">          5 : template &lt;unsigned N&gt; FixedHash&lt;N&gt; jsToFixed(std::string const&amp; _s)</span>
+<span class="lineNum">      85 </span>            : {
+<span class="lineNum">      86 </span><span class="lineCov">         15 :         if (_s.substr(0, 2) == &quot;0x&quot;)</span>
+<span class="lineNum">      87 </span>            :                 // Hex
+<span class="lineNum">      88 </span><span class="lineCov">          9 :                 return FixedHash&lt;N&gt;(_s.substr(2 + std::max&lt;unsigned&gt;(N * 2, _s.size() - 2) - N * 2));</span>
+<span class="lineNum">      89 </span><span class="lineCov">          2 :         else if (_s.find_first_not_of(&quot;0123456789&quot;) == std::string::npos)</span>
+<span class="lineNum">      90 </span>            :                 // Decimal
+<span class="lineNum">      91 </span><span class="lineCov">          1 :                 return (typename FixedHash&lt;N&gt;::Arith)(_s);</span>
+<span class="lineNum">      92 </span>            :         else
+<span class="lineNum">      93 </span>            :                 // Binary
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :                 return FixedHash&lt;N&gt;();    // FAIL</span>
+<a name="95"><span class="lineNum">      95 </span>            : }</a>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span><span class="lineCov">         14 : template &lt;unsigned N&gt; boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;N * 8, N * 8, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void&gt;&gt; jsToInt(std::string const&amp; _s)</span>
+<span class="lineNum">      98 </span>            : {
+<span class="lineNum">      99 </span><span class="lineCov">         42 :         if (_s.substr(0, 2) == &quot;0x&quot;)</span>
+<span class="lineNum">     100 </span>            :                 // Hex
+<span class="lineNum">     101 </span><span class="lineCov">         27 :                 return fromBigEndian&lt;boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;N * 8, N * 8, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void&gt;&gt;&gt;(fromHex(_s.substr(2)));</span>
+<span class="lineNum">     102 </span><span class="lineCov">          5 :         else if (_s.find_first_not_of(&quot;0123456789&quot;) == std::string::npos)</span>
+<span class="lineNum">     103 </span>            :                 // Decimal
+<span class="lineNum">     104 </span>            :                 return boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;N * 8, N * 8, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void&gt;&gt;(_s);
+<span class="lineNum">     105 </span>            :         else
+<span class="lineNum">     106 </span>            :                 // Binary
+<span class="lineNum">     107 </span><span class="lineCov">          6 :                 return 0;                       // FAIL</span>
+<span class="lineNum">     108 </span>            : }
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineCov">          9 : inline u256 jsToU256(std::string const&amp; _s) { return jsToInt&lt;32&gt;(_s); }</span>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            : /// Convert a string representation of a number to an int
+<a name="113"><span class="lineNum">     113 </span>            : /// String can be a normal decimal number, or a hex prefixed by 0x or 0X, or an octal if prefixed by 0</a>
+<span class="lineNum">     114 </span>            : /// Returns 0 in case of failure
+<span class="lineNum">     115 </span><span class="lineCov">          4 : inline int jsToInt(std::string const&amp; _s)</span>
+<span class="lineNum">     116 </span>            : {
+<span class="lineNum">     117 </span><span class="lineCov">          4 :         int ret = 0;</span>
+<span class="lineNum">     118 </span><span class="lineCov">          1 :         DEV_IGNORE_EXCEPTIONS(ret = std::stoi(_s, nullptr, 0));</span>
+<span class="lineNum">     119 </span><span class="lineCov">          4 :         return ret;</span>
+<span class="lineNum">     120 </span>            : }
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : inline std::string jsToDecimal(std::string const&amp; _s)
+<span class="lineNum">     123 </span>            : {
+<span class="lineNum">     124 </span>            :         return toString(jsToU256(_s));
+<span class="lineNum">     125 </span>            : }
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

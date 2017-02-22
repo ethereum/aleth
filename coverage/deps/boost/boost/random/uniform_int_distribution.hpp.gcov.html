@@ -1,0 +1,495 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/random/uniform_int_distribution.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/random</a> - uniform_int_distribution.hpp<span style="font-size: 80%;"> (source / <a href="uniform_int_distribution.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntry">39</td>
+            <td class="headerCovTableEntryLo">43.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryLo">60.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* boost random/uniform_int_distribution.hpp header file</a>
+<span class="lineNum">       2 </span>            :  *
+<span class="lineNum">       3 </span>            :  * Copyright Jens Maurer 2000-2001
+<span class="lineNum">       4 </span>            :  * Copyright Steven Watanabe 2011
+<span class="lineNum">       5 </span>            :  * Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">       6 </span>            :  * accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       7 </span>            :  * http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            :  *
+<span class="lineNum">       9 </span>            :  * See http://www.boost.org for most recent version including documentation.
+<span class="lineNum">      10 </span>            :  *
+<span class="lineNum">      11 </span>            :  * $Id$
+<span class="lineNum">      12 </span>            :  *
+<span class="lineNum">      13 </span>            :  * Revision history
+<span class="lineNum">      14 </span>            :  *  2001-04-08  added min&lt;max assertion (N. Becker)
+<span class="lineNum">      15 </span>            :  *  2001-02-18  moved to individual header files
+<span class="lineNum">      16 </span>            :  */
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #ifndef BOOST_RANDOM_UNIFORM_INT_DISTRIBUTION_HPP
+<span class="lineNum">      19 </span>            : #define BOOST_RANDOM_UNIFORM_INT_DISTRIBUTION_HPP
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : #include &lt;iosfwd&gt;
+<span class="lineNum">      22 </span>            : #include &lt;ios&gt;
+<span class="lineNum">      23 </span>            : #include &lt;istream&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/limits.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/assert.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/random/detail/config.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/random/detail/operators.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/random/detail/uniform_int_float.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/random/detail/signed_unsigned_tools.hpp&gt;
+<span class="lineNum">      31 </span>            : #include &lt;boost/random/traits.hpp&gt;
+<span class="lineNum">      32 </span>            : #include &lt;boost/mpl/bool.hpp&gt;
+<span class="lineNum">      33 </span>            : #ifdef BOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
+<span class="lineNum">      34 </span>            : #include &lt;boost/mpl/if.hpp&gt;
+<span class="lineNum">      35 </span>            : #endif
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : namespace boost {
+<span class="lineNum">      38 </span>            : namespace random {
+<span class="lineNum">      39 </span>            : namespace detail {
+<span class="lineNum">      40 </span>            :     
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">      43 </span>            : #pragma warning(push)
+<span class="lineNum">      44 </span>            : // disable division by zero warning, since we can't
+<span class="lineNum">      45 </span>            : // actually divide by zero.
+<span class="lineNum">      46 </span>            : #pragma warning(disable:4723)
+<span class="lineNum">      47 </span>            : #endif
+<a name="48"><span class="lineNum">      48 </span>            : </a>
+<span class="lineNum">      49 </span>            : template&lt;class Engine, class T&gt;
+<span class="lineNum">      50 </span><span class="lineCov">      55363 : T generate_uniform_int(</span>
+<span class="lineNum">      51 </span>            :     Engine&amp; eng, T min_value, T max_value,
+<span class="lineNum">      52 </span>            :     boost::mpl::true_ /** is_integral&lt;Engine::result_type&gt; */)
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span>            :     typedef T result_type;
+<span class="lineNum">      55 </span>            :     typedef typename boost::random::traits::make_unsigned_or_unbounded&lt;T&gt;::type range_type;
+<span class="lineNum">      56 </span>            :     typedef typename Engine::result_type base_result;
+<span class="lineNum">      57 </span>            :     // ranges are always unsigned or unbounded
+<span class="lineNum">      58 </span>            :     typedef typename boost::random::traits::make_unsigned_or_unbounded&lt;base_result&gt;::type base_unsigned;
+<span class="lineNum">      59 </span><span class="lineCov">     110726 :     const range_type range = random::detail::subtract&lt;result_type&gt;()(max_value, min_value);</span>
+<span class="lineNum">      60 </span><span class="lineCov">      55363 :     const base_result bmin = (eng.min)();</span>
+<span class="lineNum">      61 </span>            :     const base_unsigned brange =
+<span class="lineNum">      62 </span><span class="lineCov">      55363 :       random::detail::subtract&lt;base_result&gt;()((eng.max)(), (eng.min)());</span>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">      55363 :     if(range == 0) {</span>
+<span class="lineNum">      65 </span>            :       return min_value;    
+<span class="lineNum">      66 </span><span class="lineCov">      55363 :     } else if(brange == range) {</span>
+<span class="lineNum">      67 </span>            :       // this will probably never happen in real life
+<span class="lineNum">      68 </span>            :       // basically nothing to do; just take care we don't overflow / underflow
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :       base_unsigned v = random::detail::subtract&lt;base_result&gt;()(eng(), bmin);</span>
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :       return random::detail::add&lt;base_unsigned, result_type&gt;()(v, min_value);</span>
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :     } else if(brange &lt; range) {</span>
+<span class="lineNum">      72 </span>            :       // use rejection method to handle things like 0..3 --&gt; 0..4
+<span class="lineNum">      73 </span>            :       for(;;) {
+<span class="lineNum">      74 </span>            :         // concatenate several invocations of the base RNG
+<span class="lineNum">      75 </span>            :         // take extra care to avoid overflows
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :         //  limit == floor((range+1)/(brange+1))
+<span class="lineNum">      78 </span>            :         //  Therefore limit*(brange+1) &lt;= range+1
+<span class="lineNum">      79 </span>            :         range_type limit;
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :         if(range == (std::numeric_limits&lt;range_type&gt;::max)()) {</span>
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :           limit = range/(range_type(brange)+1);</span>
+<span class="lineNum">      82 </span><span class="lineNoCov">          0 :           if(range % (range_type(brange)+1) == range_type(brange))</span>
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :             ++limit;</span>
+<span class="lineNum">      84 </span>            :         } else {
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :           limit = (range+1)/(range_type(brange)+1);</span>
+<span class="lineNum">      86 </span>            :         }
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            :         // We consider &quot;result&quot; as expressed to base (brange+1):
+<span class="lineNum">      89 </span>            :         // For every power of (brange+1), we determine a random factor
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 :         range_type result = range_type(0);</span>
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :         range_type mult = range_type(1);</span>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            :         // loop invariants:
+<span class="lineNum">      94 </span>            :         //  result &lt; mult
+<span class="lineNum">      95 </span>            :         //  mult &lt;= range
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :         while(mult &lt;= limit) {</span>
+<span class="lineNum">      97 </span>            :           // Postcondition: result &lt;= range, thus no overflow
+<span class="lineNum">      98 </span>            :           //
+<span class="lineNum">      99 </span>            :           // limit*(brange+1)&lt;=range+1                   def. of limit       (1)
+<span class="lineNum">     100 </span>            :           // eng()-bmin&lt;=brange                          eng() post.         (2)
+<span class="lineNum">     101 </span>            :           // and mult&lt;=limit.                            loop condition      (3)
+<span class="lineNum">     102 </span>            :           // Therefore mult*(eng()-bmin+1)&lt;=range+1      by (1),(2),(3)      (4)
+<span class="lineNum">     103 </span>            :           // Therefore mult*(eng()-bmin)+mult&lt;=range+1   rearranging (4)     (5)
+<span class="lineNum">     104 </span>            :           // result&lt;mult                                 loop invariant      (6)
+<span class="lineNum">     105 </span>            :           // Therefore result+mult*(eng()-bmin)&lt;range+1  by (5), (6)         (7)
+<span class="lineNum">     106 </span>            :           //
+<span class="lineNum">     107 </span>            :           // Postcondition: result &lt; mult*(brange+1)
+<span class="lineNum">     108 </span>            :           //
+<span class="lineNum">     109 </span>            :           // result&lt;mult                                 loop invariant      (1)
+<span class="lineNum">     110 </span>            :           // eng()-bmin&lt;=brange                          eng() post.         (2)
+<span class="lineNum">     111 </span>            :           // Therefore result+mult*(eng()-bmin) &lt;
+<span class="lineNum">     112 </span>            :           //           mult+mult*(eng()-bmin)            by (1)              (3)
+<span class="lineNum">     113 </span>            :           // Therefore result+(eng()-bmin)*mult &lt;
+<span class="lineNum">     114 </span>            :           //           mult+mult*brange                  by (2), (3)         (4)
+<span class="lineNum">     115 </span>            :           // Therefore result+(eng()-bmin)*mult &lt;
+<span class="lineNum">     116 </span>            :           //           mult*(brange+1)                   by (4)
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :           result += static_cast&lt;range_type&gt;(static_cast&lt;range_type&gt;(random::detail::subtract&lt;base_result&gt;()(eng(), bmin)) * mult);</span>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :           // equivalent to (mult * (brange+1)) == range+1, but avoids overflow.
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :           if(mult * range_type(brange) == range - mult + 1) {</span>
+<span class="lineNum">     121 </span>            :               // The destination range is an integer power of
+<span class="lineNum">     122 </span>            :               // the generator's range.
+<span class="lineNum">     123 </span>            :               return(result);
+<span class="lineNum">     124 </span>            :           }
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            :           // Postcondition: mult &lt;= range
+<span class="lineNum">     127 </span>            :           // 
+<span class="lineNum">     128 </span>            :           // limit*(brange+1)&lt;=range+1                   def. of limit       (1)
+<span class="lineNum">     129 </span>            :           // mult&lt;=limit                                 loop condition      (2)
+<span class="lineNum">     130 </span>            :           // Therefore mult*(brange+1)&lt;=range+1          by (1), (2)         (3)
+<span class="lineNum">     131 </span>            :           // mult*(brange+1)!=range+1                    preceding if        (4)
+<span class="lineNum">     132 </span>            :           // Therefore mult*(brange+1)&lt;range+1           by (3), (4)         (5)
+<span class="lineNum">     133 </span>            :           // 
+<span class="lineNum">     134 </span>            :           // Postcondition: result &lt; mult
+<span class="lineNum">     135 </span>            :           //
+<span class="lineNum">     136 </span>            :           // See the second postcondition on the change to result. 
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :           mult *= range_type(brange)+range_type(1);</span>
+<span class="lineNum">     138 </span>            :         }
+<span class="lineNum">     139 </span>            :         // loop postcondition: range/mult &lt; brange+1
+<span class="lineNum">     140 </span>            :         //
+<span class="lineNum">     141 </span>            :         // mult &gt; limit                                  loop condition      (1)
+<span class="lineNum">     142 </span>            :         // Suppose range/mult &gt;= brange+1                Assumption          (2)
+<span class="lineNum">     143 </span>            :         // range &gt;= mult*(brange+1)                      by (2)              (3)
+<span class="lineNum">     144 </span>            :         // range+1 &gt; mult*(brange+1)                     by (3)              (4)
+<span class="lineNum">     145 </span>            :         // range+1 &gt; (limit+1)*(brange+1)                by (1), (4)         (5)
+<span class="lineNum">     146 </span>            :         // (range+1)/(brange+1) &gt; limit+1                by (5)              (6)
+<span class="lineNum">     147 </span>            :         // limit &lt; floor((range+1)/(brange+1))           by (6)              (7)
+<span class="lineNum">     148 </span>            :         // limit==floor((range+1)/(brange+1))            def. of limit       (8)
+<span class="lineNum">     149 </span>            :         // not (2)                                       reductio            (9)
+<span class="lineNum">     150 </span>            :         //
+<span class="lineNum">     151 </span>            :         // loop postcondition: (range/mult)*mult+(mult-1) &gt;= range
+<span class="lineNum">     152 </span>            :         //
+<span class="lineNum">     153 </span>            :         // (range/mult)*mult + range%mult == range       identity            (1)
+<span class="lineNum">     154 </span>            :         // range%mult &lt; mult                             def. of %           (2)
+<span class="lineNum">     155 </span>            :         // (range/mult)*mult+mult &gt; range                by (1), (2)         (3)
+<span class="lineNum">     156 </span>            :         // (range/mult)*mult+(mult-1) &gt;= range           by (3)              (4)
+<span class="lineNum">     157 </span>            :         //
+<span class="lineNum">     158 </span>            :         // Note that the maximum value of result at this point is (mult-1),
+<span class="lineNum">     159 </span>            :         // so after this final step, we generate numbers that can be
+<span class="lineNum">     160 </span>            :         // at least as large as range.  We have to really careful to avoid
+<span class="lineNum">     161 </span>            :         // overflow in this final addition and in the rejection.  Anything
+<span class="lineNum">     162 </span>            :         // that overflows is larger than range and can thus be rejected.
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :         // range/mult &lt; brange+1  -&gt; no endless loop
+<span class="lineNum">     165 </span>            :         range_type result_increment =
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :             generate_uniform_int(</span>
+<span class="lineNum">     167 </span>            :                 eng,
+<span class="lineNum">     168 </span>            :                 static_cast&lt;range_type&gt;(0),
+<span class="lineNum">     169 </span>            :                 static_cast&lt;range_type&gt;(range/mult),
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :                 boost::mpl::true_());</span>
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :         if(std::numeric_limits&lt;range_type&gt;::is_bounded &amp;&amp; ((std::numeric_limits&lt;range_type&gt;::max)() / mult &lt; result_increment)) {</span>
+<span class="lineNum">     172 </span>            :           // The multiplcation would overflow.  Reject immediately.
+<span class="lineNum">     173 </span>            :           continue;
+<span class="lineNum">     174 </span>            :         }
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :         result_increment *= mult;</span>
+<span class="lineNum">     176 </span>            :         // unsigned integers are guaranteed to wrap on overflow.
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :         result += result_increment;</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :         if(result &lt; result_increment) {</span>
+<span class="lineNum">     179 </span>            :           // The addition overflowed.  Reject.
+<span class="lineNum">     180 </span>            :           continue;
+<span class="lineNum">     181 </span>            :         }
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :         if(result &gt; range) {</span>
+<span class="lineNum">     183 </span>            :           // Too big.  Reject.
+<span class="lineNum">     184 </span>            :           continue;
+<span class="lineNum">     185 </span>            :         }
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :         return random::detail::add&lt;range_type, result_type&gt;()(result, min_value);</span>
+<span class="lineNum">     187 </span>            :       }
+<span class="lineNum">     188 </span>            :     } else {                   // brange &gt; range
+<span class="lineNum">     189 </span>            : #ifdef BOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
+<span class="lineNum">     190 </span>            :       typedef typename mpl::if_c&lt;
+<span class="lineNum">     191 </span>            :          std::numeric_limits&lt;range_type&gt;::is_specialized &amp;&amp; std::numeric_limits&lt;base_unsigned&gt;::is_specialized
+<span class="lineNum">     192 </span>            :          &amp;&amp; (std::numeric_limits&lt;range_type&gt;::digits &gt;= std::numeric_limits&lt;base_unsigned&gt;::digits),
+<span class="lineNum">     193 </span>            :          range_type, base_unsigned&gt;::type mixed_range_type;
+<span class="lineNum">     194 </span>            : #else
+<span class="lineNum">     195 </span>            :       typedef base_unsigned mixed_range_type;
+<span class="lineNum">     196 </span>            : #endif
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :       mixed_range_type bucket_size;
+<span class="lineNum">     199 </span>            :       // it's safe to add 1 to range, as long as we cast it first,
+<span class="lineNum">     200 </span>            :       // because we know that it is less than brange.  However,
+<span class="lineNum">     201 </span>            :       // we do need to be careful not to cause overflow by adding 1
+<span class="lineNum">     202 </span>            :       // to brange.  We use mixed_range_type throughout for mixed
+<span class="lineNum">     203 </span>            :       // arithmetic between base_unsigned and range_type - in the case
+<span class="lineNum">     204 </span>            :       // that range_type has more bits than base_unsigned it is always
+<span class="lineNum">     205 </span>            :       // safe to use range_type for this albeit it may be more effient
+<span class="lineNum">     206 </span>            :       // to use base_unsigned.  The latter is a narrowing conversion though
+<span class="lineNum">     207 </span>            :       // which may be disallowed if range_type is a multiprecision type
+<span class="lineNum">     208 </span>            :       // and there are no explicit converison operators.
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :       if(brange == (std::numeric_limits&lt;base_unsigned&gt;::max)()) {
+<span class="lineNum">     211 </span><span class="lineCov">      55363 :         bucket_size = static_cast&lt;mixed_range_type&gt;(brange) / (static_cast&lt;mixed_range_type&gt;(range)+1);</span>
+<span class="lineNum">     212 </span><span class="lineCov">      55363 :         if(static_cast&lt;mixed_range_type&gt;(brange) % (static_cast&lt;mixed_range_type&gt;(range)+1) == static_cast&lt;mixed_range_type&gt;(range)) {</span>
+<span class="lineNum">     213 </span><span class="lineCov">      51392 :           ++bucket_size;</span>
+<span class="lineNum">     214 </span>            :         }
+<span class="lineNum">     215 </span>            :       } else {
+<span class="lineNum">     216 </span>            :         bucket_size = static_cast&lt;mixed_range_type&gt;(brange + 1) / (static_cast&lt;mixed_range_type&gt;(range)+1);
+<span class="lineNum">     217 </span>            :       }
+<span class="lineNum">     218 </span>            :       for(;;) {
+<span class="lineNum">     219 </span>            :         mixed_range_type result =
+<span class="lineNum">     220 </span><span class="lineCov">      55363 :           random::detail::subtract&lt;base_result&gt;()(eng(), bmin);</span>
+<span class="lineNum">     221 </span><span class="lineCov">      55363 :         result /= bucket_size;</span>
+<span class="lineNum">     222 </span>            :         // result and range are non-negative, and result is possibly larger
+<span class="lineNum">     223 </span>            :         // than range, so the cast is safe
+<span class="lineNum">     224 </span><span class="lineCov">      55363 :         if(result &lt;= static_cast&lt;mixed_range_type&gt;(range))</span>
+<span class="lineNum">     225 </span><span class="lineCov">     110726 :           return random::detail::add&lt;mixed_range_type, result_type&gt;()(result, min_value);</span>
+<span class="lineNum">     226 </span>            :       }
+<span class="lineNum">     227 </span>            :     }
+<span class="lineNum">     228 </span>            : }
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">     231 </span>            : #pragma warning(pop)
+<span class="lineNum">     232 </span>            : #endif
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            : template&lt;class Engine, class T&gt;
+<span class="lineNum">     235 </span>            : inline T generate_uniform_int(
+<span class="lineNum">     236 </span>            :     Engine&amp; eng, T min_value, T max_value,
+<span class="lineNum">     237 </span>            :     boost::mpl::false_ /** is_integral&lt;Engine::result_type&gt; */)
+<span class="lineNum">     238 </span>            : {
+<span class="lineNum">     239 </span>            :     uniform_int_float&lt;Engine&gt; wrapper(eng);
+<span class="lineNum">     240 </span>            :     return generate_uniform_int(wrapper, min_value, max_value, boost::mpl::true_());
+<span class="lineNum">     241 </span>            : }
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            : template&lt;class Engine, class T&gt;
+<span class="lineNum">     244 </span>            : inline T generate_uniform_int(Engine&amp; eng, T min_value, T max_value)
+<span class="lineNum">     245 </span>            : {
+<span class="lineNum">     246 </span>            :     typedef typename Engine::result_type base_result;
+<span class="lineNum">     247 </span>            :     return generate_uniform_int(eng, min_value, max_value,
+<span class="lineNum">     248 </span><span class="lineCov">      55363 :         boost::random::traits::is_integral&lt;base_result&gt;());</span>
+<span class="lineNum">     249 </span>            : }
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            : }
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span>            : /**
+<span class="lineNum">     254 </span>            :  * The class template uniform_int_distribution models a \random_distribution.
+<span class="lineNum">     255 </span>            :  * On each invocation, it returns a random integer value uniformly
+<span class="lineNum">     256 </span>            :  * distributed in the set of integers {min, min+1, min+2, ..., max}.
+<span class="lineNum">     257 </span>            :  *
+<span class="lineNum">     258 </span>            :  * The template parameter IntType shall denote an integer-like value type.
+<span class="lineNum">     259 </span>            :  */
+<span class="lineNum">     260 </span>            : template&lt;class IntType = int&gt;
+<span class="lineNum">     261 </span>            : class uniform_int_distribution
+<span class="lineNum">     262 </span>            : {
+<span class="lineNum">     263 </span>            : public:
+<span class="lineNum">     264 </span>            :     typedef IntType input_type;
+<span class="lineNum">     265 </span>            :     typedef IntType result_type;
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span>            :     class param_type
+<span class="lineNum">     268 </span>            :     {
+<span class="lineNum">     269 </span>            :     public:
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            :         typedef uniform_int_distribution distribution_type;
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span>            :         /**
+<span class="lineNum">     274 </span>            :          * Constructs the parameters of a uniform_int_distribution.
+<span class="lineNum">     275 </span>            :          *
+<span class="lineNum">     276 </span>            :          * Requires min &lt;= max
+<span class="lineNum">     277 </span>            :          */
+<span class="lineNum">     278 </span>            :         explicit param_type(
+<span class="lineNum">     279 </span>            :             IntType min_arg = 0,
+<span class="lineNum">     280 </span>            :             IntType max_arg = (std::numeric_limits&lt;IntType&gt;::max)())
+<span class="lineNum">     281 </span>            :           : _min(min_arg), _max(max_arg)
+<span class="lineNum">     282 </span>            :         {
+<span class="lineNum">     283 </span>            :             BOOST_ASSERT(_min &lt;= _max);
+<span class="lineNum">     284 </span>            :         }
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            :         /** Returns the minimum value of the distribution. */
+<span class="lineNum">     287 </span>            :         IntType a() const { return _min; }
+<span class="lineNum">     288 </span>            :         /** Returns the maximum value of the distribution. */
+<span class="lineNum">     289 </span>            :         IntType b() const { return _max; }
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            :         /** Writes the parameters to a @c std::ostream. */
+<span class="lineNum">     292 </span>            :         BOOST_RANDOM_DETAIL_OSTREAM_OPERATOR(os, param_type, parm)
+<span class="lineNum">     293 </span>            :         {
+<span class="lineNum">     294 </span>            :             os &lt;&lt; parm._min &lt;&lt; &quot; &quot; &lt;&lt; parm._max;
+<span class="lineNum">     295 </span>            :             return os;
+<span class="lineNum">     296 </span>            :         }
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            :         /** Reads the parameters from a @c std::istream. */
+<span class="lineNum">     299 </span>            :         BOOST_RANDOM_DETAIL_ISTREAM_OPERATOR(is, param_type, parm)
+<span class="lineNum">     300 </span>            :         {
+<span class="lineNum">     301 </span>            :             IntType min_in, max_in;
+<span class="lineNum">     302 </span>            :             if(is &gt;&gt; min_in &gt;&gt; std::ws &gt;&gt; max_in) {
+<span class="lineNum">     303 </span>            :                 if(min_in &lt;= max_in) {
+<span class="lineNum">     304 </span>            :                     parm._min = min_in;
+<span class="lineNum">     305 </span>            :                     parm._max = max_in;
+<span class="lineNum">     306 </span>            :                 } else {
+<span class="lineNum">     307 </span>            :                     is.setstate(std::ios_base::failbit);
+<span class="lineNum">     308 </span>            :                 }
+<span class="lineNum">     309 </span>            :             }
+<span class="lineNum">     310 </span>            :             return is;
+<span class="lineNum">     311 </span>            :         }
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            :         /** Returns true if the two sets of parameters are equal. */
+<span class="lineNum">     314 </span>            :         BOOST_RANDOM_DETAIL_EQUALITY_OPERATOR(param_type, lhs, rhs)
+<span class="lineNum">     315 </span>            :         { return lhs._min == rhs._min &amp;&amp; lhs._max == rhs._max; }
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            :         /** Returns true if the two sets of parameters are different. */
+<span class="lineNum">     318 </span>            :         BOOST_RANDOM_DETAIL_INEQUALITY_OPERATOR(param_type)
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span>            :     private:
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span>            :         IntType _min;
+<span class="lineNum">     323 </span>            :         IntType _max;
+<span class="lineNum">     324 </span>            :     };
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span>            :     /**
+<span class="lineNum">     327 </span>            :      * Constructs a uniform_int_distribution. @c min and @c max are
+<span class="lineNum">     328 </span>            :      * the parameters of the distribution.
+<span class="lineNum">     329 </span>            :      *
+<span class="lineNum">     330 </span>            :      * Requires: min &lt;= max
+<span class="lineNum">     331 </span>            :      */
+<span class="lineNum">     332 </span>            :     explicit uniform_int_distribution(
+<span class="lineNum">     333 </span>            :         IntType min_arg = 0,
+<span class="lineNum">     334 </span>            :         IntType max_arg = (std::numeric_limits&lt;IntType&gt;::max)())
+<span class="lineNum">     335 </span><span class="lineCov">       1005 :       : _min(min_arg), _max(max_arg)</span>
+<span class="lineNum">     336 </span>            :     {
+<span class="lineNum">     337 </span><span class="lineCov">          9 :         BOOST_ASSERT(min_arg &lt;= max_arg);</span>
+<span class="lineNum">     338 </span>            :     }
+<span class="lineNum">     339 </span>            :     /** Constructs a uniform_int_distribution from its parameters. */
+<span class="lineNum">     340 </span>            :     explicit uniform_int_distribution(const param_type&amp; parm)
+<span class="lineNum">     341 </span>            :       : _min(parm.a()), _max(parm.b()) {}
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span>            :     /**  Returns the minimum value of the distribution */
+<span class="lineNum">     344 </span>            :     IntType min BOOST_PREVENT_MACRO_SUBSTITUTION () const { return _min; }
+<span class="lineNum">     345 </span>            :     /**  Returns the maximum value of the distribution */
+<span class="lineNum">     346 </span>            :     IntType max BOOST_PREVENT_MACRO_SUBSTITUTION () const { return _max; }
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            :     /**  Returns the minimum value of the distribution */
+<span class="lineNum">     349 </span>            :     IntType a() const { return _min; }
+<span class="lineNum">     350 </span>            :     /**  Returns the maximum value of the distribution */
+<span class="lineNum">     351 </span>            :     IntType b() const { return _max; }
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span>            :     /** Returns the parameters of the distribution. */
+<span class="lineNum">     354 </span>            :     param_type param() const { return param_type(_min, _max); }
+<span class="lineNum">     355 </span>            :     /** Sets the parameters of the distribution. */
+<span class="lineNum">     356 </span>            :     void param(const param_type&amp; parm)
+<span class="lineNum">     357 </span>            :     {
+<span class="lineNum">     358 </span>            :         _min = parm.a();
+<span class="lineNum">     359 </span>            :         _max = parm.b();
+<span class="lineNum">     360 </span>            :     }
+<span class="lineNum">     361 </span>            : 
+<span class="lineNum">     362 </span>            :     /**
+<span class="lineNum">     363 </span>            :      * Effects: Subsequent uses of the distribution do not depend
+<span class="lineNum">     364 </span>            :      * on values produced by any engine prior to invoking reset.
+<span class="lineNum">     365 </span>            :      */
+<span class="lineNum">     366 </span>            :     void reset() { }
+<span class="lineNum">     367 </span>            : 
+<span class="lineNum">     368 </span>            :     /** Returns an integer uniformly distributed in the range [min, max]. */
+<span class="lineNum">     369 </span>            :     template&lt;class Engine&gt;
+<span class="lineNum">     370 </span>            :     result_type operator()(Engine&amp; eng) const
+<span class="lineNum">     371 </span><span class="lineCov">     110726 :     { return detail::generate_uniform_int(eng, _min, _max); }</span>
+<span class="lineNum">     372 </span>            : 
+<span class="lineNum">     373 </span>            :     /**
+<span class="lineNum">     374 </span>            :      * Returns an integer uniformly distributed in the range
+<span class="lineNum">     375 </span>            :      * [param.a(), param.b()].
+<span class="lineNum">     376 </span>            :      */
+<span class="lineNum">     377 </span>            :     template&lt;class Engine&gt;
+<span class="lineNum">     378 </span>            :     result_type operator()(Engine&amp; eng, const param_type&amp; parm) const
+<span class="lineNum">     379 </span>            :     { return detail::generate_uniform_int(eng, parm.a(), parm.b()); }
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span>            :     /** Writes the distribution to a @c std::ostream. */
+<span class="lineNum">     382 </span>            :     BOOST_RANDOM_DETAIL_OSTREAM_OPERATOR(os, uniform_int_distribution, ud)
+<span class="lineNum">     383 </span>            :     {
+<span class="lineNum">     384 </span>            :         os &lt;&lt; ud.param();
+<span class="lineNum">     385 </span>            :         return os;
+<span class="lineNum">     386 </span>            :     }
+<span class="lineNum">     387 </span>            : 
+<span class="lineNum">     388 </span>            :     /** Reads the distribution from a @c std::istream. */
+<span class="lineNum">     389 </span>            :     BOOST_RANDOM_DETAIL_ISTREAM_OPERATOR(is, uniform_int_distribution, ud)
+<span class="lineNum">     390 </span>            :     {
+<span class="lineNum">     391 </span>            :         param_type parm;
+<span class="lineNum">     392 </span>            :         if(is &gt;&gt; parm) {
+<span class="lineNum">     393 </span>            :             ud.param(parm);
+<span class="lineNum">     394 </span>            :         }
+<span class="lineNum">     395 </span>            :         return is;
+<span class="lineNum">     396 </span>            :     }
+<span class="lineNum">     397 </span>            : 
+<span class="lineNum">     398 </span>            :     /**
+<span class="lineNum">     399 </span>            :      * Returns true if the two distributions will produce identical sequences
+<span class="lineNum">     400 </span>            :      * of values given equal generators.
+<span class="lineNum">     401 </span>            :      */
+<span class="lineNum">     402 </span>            :     BOOST_RANDOM_DETAIL_EQUALITY_OPERATOR(uniform_int_distribution, lhs, rhs)
+<span class="lineNum">     403 </span>            :     { return lhs._min == rhs._min &amp;&amp; lhs._max == rhs._max; }
+<span class="lineNum">     404 </span>            :     
+<span class="lineNum">     405 </span>            :     /**
+<span class="lineNum">     406 </span>            :      * Returns true if the two distributions may produce different sequences
+<span class="lineNum">     407 </span>            :      * of values given equal generators.
+<span class="lineNum">     408 </span>            :      */
+<span class="lineNum">     409 </span>            :     BOOST_RANDOM_DETAIL_INEQUALITY_OPERATOR(uniform_int_distribution)
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span>            : private:
+<span class="lineNum">     412 </span>            :     IntType _min;
+<span class="lineNum">     413 </span>            :     IntType _max;
+<span class="lineNum">     414 </span>            : };
+<span class="lineNum">     415 </span>            : 
+<span class="lineNum">     416 </span>            : } // namespace random
+<span class="lineNum">     417 </span>            : } // namespace boost
+<span class="lineNum">     418 </span>            : 
+<span class="lineNum">     419 </span>            : #endif // BOOST_RANDOM_UNIFORM_INT_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/smart_ptr/enable_shared_from_this.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/smart_ptr</a> - enable_shared_from_this.hpp<span style="font-size: 80%;"> (source / <a href="enable_shared_from_this.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef BOOST_SMART_PTR_ENABLE_SHARED_FROM_THIS_HPP_INCLUDED</a>
+<span class="lineNum">       2 </span>            : #define BOOST_SMART_PTR_ENABLE_SHARED_FROM_THIS_HPP_INCLUDED
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : //  enable_shared_from_this.hpp
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : //  Copyright 2002, 2009 Peter Dimov
+<span class="lineNum">       8 </span>            : //
+<span class="lineNum">       9 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">      10 </span>            : //  See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">      11 </span>            : //  http://www.boost.org/LICENSE_1_0.txt
+<span class="lineNum">      12 </span>            : //
+<span class="lineNum">      13 </span>            : //  http://www.boost.org/libs/smart_ptr/enable_shared_from_this.html
+<span class="lineNum">      14 </span>            : //
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #include &lt;boost/smart_ptr/weak_ptr.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/smart_ptr/shared_ptr.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/assert.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : namespace boost
+<span class="lineNum">      22 </span>            : {
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : template&lt;class T&gt; class enable_shared_from_this
+<span class="lineNum">      25 </span>            : {
+<span class="lineNum">      26 </span>            : protected:
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            :     enable_shared_from_this() BOOST_NOEXCEPT
+<span class="lineNum">      29 </span><span class="lineCov">        150 :     {</span>
+<span class="lineNum">      30 </span>            :     }
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            :     enable_shared_from_this(enable_shared_from_this const &amp;) BOOST_NOEXCEPT
+<span class="lineNum">      33 </span>            :     {
+<span class="lineNum">      34 </span>            :     }
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            :     enable_shared_from_this &amp; operator=(enable_shared_from_this const &amp;) BOOST_NOEXCEPT
+<span class="lineNum">      37 </span>            :     {
+<span class="lineNum">      38 </span>            :         return *this;
+<span class="lineNum">      39 </span>            :     }
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            :     ~enable_shared_from_this() BOOST_NOEXCEPT // ~weak_ptr&lt;T&gt; newer throws, so this call also must not throw
+<span class="lineNum">      42 </span>            :     {
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">      44 </span>            : 
+<a name="45"><span class="lineNum">      45 </span>            : public:</a>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineNoCov">          0 :     shared_ptr&lt;T&gt; shared_from_this()</span>
+<span class="lineNum">      48 </span>            :     {
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :         shared_ptr&lt;T&gt; p( weak_this_ );</span>
+<span class="lineNum">      50 </span><span class="lineNoCov">          0 :         BOOST_ASSERT( p.get() == this );</span>
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 :         return p;</span>
+<span class="lineNum">      52 </span>            :     }
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            :     shared_ptr&lt;T const&gt; shared_from_this() const
+<span class="lineNum">      55 </span>            :     {
+<span class="lineNum">      56 </span>            :         shared_ptr&lt;T const&gt; p( weak_this_ );
+<span class="lineNum">      57 </span>            :         BOOST_ASSERT( p.get() == this );
+<span class="lineNum">      58 </span>            :         return p;
+<span class="lineNum">      59 </span>            :     }
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            :     weak_ptr&lt;T&gt; weak_from_this() BOOST_NOEXCEPT
+<span class="lineNum">      62 </span>            :     {
+<span class="lineNum">      63 </span>            :         return weak_this_;
+<span class="lineNum">      64 </span>            :     }
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :     weak_ptr&lt;T const&gt; weak_from_this() const BOOST_NOEXCEPT
+<span class="lineNum">      67 </span>            :     {
+<span class="lineNum">      68 </span>            :         return weak_this_;
+<span class="lineNum">      69 </span>            :     }
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : public: // actually private, but avoids compiler template friendship issues
+<a name="72"><span class="lineNum">      72 </span>            : </a>
+<span class="lineNum">      73 </span>            :     // Note: invoked automatically by shared_ptr; do not call
+<span class="lineNum">      74 </span><span class="lineCov">         75 :     template&lt;class X, class Y&gt; void _internal_accept_owner( shared_ptr&lt;X&gt; const * ppx, Y * py ) const</span>
+<span class="lineNum">      75 </span>            :     {
+<span class="lineNum">      76 </span><span class="lineCov">        150 :         if( weak_this_.expired() )</span>
+<span class="lineNum">      77 </span>            :         {
+<span class="lineNum">      78 </span><span class="lineCov">        225 :             weak_this_ = shared_ptr&lt;T&gt;( *ppx, py );</span>
+<span class="lineNum">      79 </span>            :         }
+<span class="lineNum">      80 </span><span class="lineCov">         75 :     }</span>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : private:
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            :     mutable weak_ptr&lt;T&gt; weak_this_;
+<span class="lineNum">      85 </span>            : };
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : } // namespace boost
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : #endif  // #ifndef BOOST_SMART_PTR_ENABLE_SHARED_FROM_THIS_HPP_INCLUDED
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

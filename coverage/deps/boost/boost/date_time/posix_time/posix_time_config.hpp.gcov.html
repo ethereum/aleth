@@ -1,0 +1,254 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/date_time/posix_time/posix_time_config.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/date_time/posix_time</a> - posix_time_config.hpp<span style="font-size: 80%;"> (source / <a href="posix_time_config.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef POSIX_TIME_CONFIG_HPP___</a>
+<span class="lineNum">       2 </span>            : #define POSIX_TIME_CONFIG_HPP___
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : /* Copyright (c) 2002,2003,2005 CrystalClear Software, Inc.
+<span class="lineNum">       5 </span>            :  * Use, modification and distribution is subject to the
+<span class="lineNum">       6 </span>            :  * Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       7 </span>            :  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            :  * Author: Jeff Garland, Bart Garst
+<span class="lineNum">       9 </span>            :  * $Date$
+<span class="lineNum">      10 </span>            :  */
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #include &lt;cstdlib&gt; //for MCW 7.2 std::abs(long long)
+<span class="lineNum">      13 </span>            : #include &lt;boost/limits.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/cstdint.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/config/no_tr1/cmath.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/date_time/time_duration.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/date_time/time_resolution_traits.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/date_time/gregorian/gregorian_types.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/date_time/wrapping_int.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/date_time/compiler_config.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : namespace boost {
+<span class="lineNum">      23 </span>            : namespace posix_time {
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : //Remove the following line if you want 64 bit millisecond resolution time
+<span class="lineNum">      26 </span>            : //#define BOOST_GDTL_POSIX_TIME_STD_CONFIG
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #ifdef BOOST_DATE_TIME_POSIX_TIME_STD_CONFIG
+<span class="lineNum">      29 </span>            :   // set up conditional test compilations
+<span class="lineNum">      30 </span>            : #define BOOST_DATE_TIME_HAS_MILLISECONDS
+<span class="lineNum">      31 </span>            : #define BOOST_DATE_TIME_HAS_MICROSECONDS
+<span class="lineNum">      32 </span>            : #define BOOST_DATE_TIME_HAS_NANOSECONDS
+<span class="lineNum">      33 </span>            :   typedef date_time::time_resolution_traits&lt;boost::date_time::time_resolution_traits_adapted64_impl, boost::date_time::nano,
+<span class="lineNum">      34 </span>            :     1000000000, 9 &gt; time_res_traits;
+<span class="lineNum">      35 </span>            : #else
+<span class="lineNum">      36 </span>            :   // set up conditional test compilations
+<span class="lineNum">      37 </span>            : #define BOOST_DATE_TIME_HAS_MILLISECONDS
+<span class="lineNum">      38 </span>            : #define BOOST_DATE_TIME_HAS_MICROSECONDS
+<span class="lineNum">      39 </span>            : #undef  BOOST_DATE_TIME_HAS_NANOSECONDS
+<span class="lineNum">      40 </span>            :   typedef date_time::time_resolution_traits&lt;
+<span class="lineNum">      41 </span>            :     boost::date_time::time_resolution_traits_adapted64_impl, boost::date_time::micro,
+<span class="lineNum">      42 </span>            :                                             1000000, 6 &gt; time_res_traits;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : // #undef BOOST_DATE_TIME_HAS_MILLISECONDS
+<span class="lineNum">      46 </span>            : // #undef BOOST_DATE_TIME_HAS_MICROSECONDS
+<span class="lineNum">      47 </span>            : // #undef BOOST_DATE_TIME_HAS_NANOSECONDS
+<span class="lineNum">      48 </span>            : //   typedef date_time::time_resolution_traits&lt;boost::int64_t, boost::date_time::tenth,
+<span class="lineNum">      49 </span>            : //                                              10, 0 &gt; time_res_traits;
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : #endif
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            :   //! Base time duration type
+<span class="lineNum">      55 </span>            :   /*! \ingroup time_basics
+<span class="lineNum">      56 </span>            :    */
+<span class="lineNum">      57 </span><span class="lineCov">       7246 :   class time_duration :</span>
+<span class="lineNum">      58 </span>            :     public date_time::time_duration&lt;time_duration, time_res_traits&gt;
+<span class="lineNum">      59 </span>            :   {
+<span class="lineNum">      60 </span>            :   public:
+<span class="lineNum">      61 </span>            :     typedef time_res_traits rep_type;
+<span class="lineNum">      62 </span>            :     typedef time_res_traits::day_type day_type;
+<span class="lineNum">      63 </span>            :     typedef time_res_traits::hour_type hour_type;
+<span class="lineNum">      64 </span>            :     typedef time_res_traits::min_type min_type;
+<span class="lineNum">      65 </span>            :     typedef time_res_traits::sec_type sec_type;
+<span class="lineNum">      66 </span>            :     typedef time_res_traits::fractional_seconds_type fractional_seconds_type;
+<span class="lineNum">      67 </span>            :     typedef time_res_traits::tick_type tick_type;
+<span class="lineNum">      68 </span>            :     typedef time_res_traits::impl_type impl_type;
+<span class="lineNum">      69 </span>            :     time_duration(hour_type hour,
+<span class="lineNum">      70 </span>            :                   min_type min,
+<span class="lineNum">      71 </span>            :                   sec_type sec,
+<span class="lineNum">      72 </span>            :                   fractional_seconds_type fs=0) :
+<span class="lineNum">      73 </span><span class="lineCov">       7964 :       date_time::time_duration&lt;time_duration, time_res_traits&gt;(hour,min,sec,fs)</span>
+<span class="lineNum">      74 </span>            :     {}
+<span class="lineNum">      75 </span>            :     time_duration() :
+<span class="lineNum">      76 </span>            :       date_time::time_duration&lt;time_duration, time_res_traits&gt;(0,0,0)
+<span class="lineNum">      77 </span>            :     {}
+<span class="lineNum">      78 </span>            :     //! Construct from special_values
+<span class="lineNum">      79 </span>            :     time_duration(boost::date_time::special_values sv) :
+<span class="lineNum">      80 </span><span class="lineCov">       1920 :       date_time::time_duration&lt;time_duration, time_res_traits&gt;(sv)</span>
+<span class="lineNum">      81 </span>            :     {}
+<span class="lineNum">      82 </span>            :     //Give duration access to ticks constructor -- hide from users
+<span class="lineNum">      83 </span>            :     friend class date_time::time_duration&lt;time_duration, time_res_traits&gt;;
+<span class="lineNum">      84 </span>            :   protected:
+<span class="lineNum">      85 </span>            :     explicit time_duration(impl_type tick_count) :
+<span class="lineNum">      86 </span><span class="lineCov">       1352 :       date_time::time_duration&lt;time_duration, time_res_traits&gt;(tick_count)</span>
+<span class="lineNum">      87 </span>            :     {}
+<span class="lineNum">      88 </span>            :   };
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : #ifdef BOOST_DATE_TIME_POSIX_TIME_STD_CONFIG
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :   //! Simple implementation for the time rep
+<span class="lineNum">      93 </span>            :   struct simple_time_rep
+<span class="lineNum">      94 </span>            :   {
+<span class="lineNum">      95 </span>            :     typedef gregorian::date      date_type;
+<span class="lineNum">      96 </span>            :     typedef time_duration        time_duration_type;
+<span class="lineNum">      97 </span>            :     simple_time_rep(date_type d, time_duration_type tod) :
+<span class="lineNum">      98 </span>            :       day(d),
+<span class="lineNum">      99 </span>            :       time_of_day(tod)
+<span class="lineNum">     100 </span>            :     {
+<span class="lineNum">     101 </span>            :       // make sure we have sane values for date &amp; time
+<span class="lineNum">     102 </span>            :       if(!day.is_special() &amp;&amp; !time_of_day.is_special()){
+<span class="lineNum">     103 </span>            :         if(time_of_day &gt;= time_duration_type(24,0,0)) {
+<span class="lineNum">     104 </span>            :           while(time_of_day &gt;= time_duration_type(24,0,0)) {
+<span class="lineNum">     105 </span>            :             day += date_type::duration_type(1);
+<span class="lineNum">     106 </span>            :             time_of_day -= time_duration_type(24,0,0);
+<span class="lineNum">     107 </span>            :           }
+<span class="lineNum">     108 </span>            :         }
+<span class="lineNum">     109 </span>            :         else if(time_of_day.is_negative()) {
+<span class="lineNum">     110 </span>            :           while(time_of_day.is_negative()) {
+<span class="lineNum">     111 </span>            :             day -= date_type::duration_type(1);
+<span class="lineNum">     112 </span>            :             time_of_day += time_duration_type(24,0,0);
+<span class="lineNum">     113 </span>            :           }
+<span class="lineNum">     114 </span>            :         }
+<span class="lineNum">     115 </span>            :       }
+<span class="lineNum">     116 </span>            :     }
+<span class="lineNum">     117 </span>            :     date_type day;
+<span class="lineNum">     118 </span>            :     time_duration_type time_of_day;
+<span class="lineNum">     119 </span>            :     bool is_special()const
+<span class="lineNum">     120 </span>            :     {
+<span class="lineNum">     121 </span>            :       return(is_pos_infinity() || is_neg_infinity() || is_not_a_date_time());
+<span class="lineNum">     122 </span>            :     }
+<span class="lineNum">     123 </span>            :     bool is_pos_infinity()const
+<span class="lineNum">     124 </span>            :     {
+<span class="lineNum">     125 </span>            :       return(day.is_pos_infinity() || time_of_day.is_pos_infinity());
+<span class="lineNum">     126 </span>            :     }
+<span class="lineNum">     127 </span>            :     bool is_neg_infinity()const
+<span class="lineNum">     128 </span>            :     {
+<span class="lineNum">     129 </span>            :       return(day.is_neg_infinity() || time_of_day.is_neg_infinity());
+<span class="lineNum">     130 </span>            :     }
+<span class="lineNum">     131 </span>            :     bool is_not_a_date_time()const
+<span class="lineNum">     132 </span>            :     {
+<span class="lineNum">     133 </span>            :       return(day.is_not_a_date() || time_of_day.is_not_a_date_time());
+<span class="lineNum">     134 </span>            :     }
+<span class="lineNum">     135 </span>            :   };
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :   class posix_time_system_config
+<span class="lineNum">     138 </span>            :   {
+<span class="lineNum">     139 </span>            :    public:
+<span class="lineNum">     140 </span>            :     typedef simple_time_rep time_rep_type;
+<span class="lineNum">     141 </span>            :     typedef gregorian::date date_type;
+<span class="lineNum">     142 </span>            :     typedef gregorian::date_duration date_duration_type;
+<span class="lineNum">     143 </span>            :     typedef time_duration time_duration_type;
+<span class="lineNum">     144 </span>            :     typedef time_res_traits::tick_type int_type;
+<span class="lineNum">     145 </span>            :     typedef time_res_traits resolution_traits;
+<span class="lineNum">     146 </span>            : #if (defined(BOOST_DATE_TIME_NO_MEMBER_INIT)) //help bad compilers
+<span class="lineNum">     147 </span>            : #else
+<span class="lineNum">     148 </span>            :     BOOST_STATIC_CONSTANT(boost::int64_t, tick_per_second = 1000000000);
+<span class="lineNum">     149 </span>            : #endif
+<span class="lineNum">     150 </span>            :   };
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            : #else
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            :   class millisec_posix_time_system_config
+<span class="lineNum">     155 </span>            :   {
+<span class="lineNum">     156 </span>            :    public:
+<span class="lineNum">     157 </span>            :     typedef boost::int64_t time_rep_type;
+<span class="lineNum">     158 </span>            :     //typedef time_res_traits::tick_type time_rep_type;
+<span class="lineNum">     159 </span>            :     typedef gregorian::date date_type;
+<span class="lineNum">     160 </span>            :     typedef gregorian::date_duration date_duration_type;
+<span class="lineNum">     161 </span>            :     typedef time_duration time_duration_type;
+<span class="lineNum">     162 </span>            :     typedef time_res_traits::tick_type int_type;
+<span class="lineNum">     163 </span>            :     typedef time_res_traits::impl_type impl_type;
+<span class="lineNum">     164 </span>            :     typedef time_res_traits resolution_traits;
+<span class="lineNum">     165 </span>            : #if (defined(BOOST_DATE_TIME_NO_MEMBER_INIT)) //help bad compilers
+<span class="lineNum">     166 </span>            : #else
+<span class="lineNum">     167 </span>            :     BOOST_STATIC_CONSTANT(boost::int64_t, tick_per_second = 1000000);
+<span class="lineNum">     168 </span>            : #endif
+<span class="lineNum">     169 </span>            :   };
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            : #endif
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            : } }//namespace posix_time
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            : #endif
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

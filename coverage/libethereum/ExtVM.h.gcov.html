@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/ExtVM.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - ExtVM.h<span style="font-size: 80%;"> (source / <a href="ExtVM.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryMed">87.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file ExtVM.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;map&gt;
+<span class="lineNum">      25 </span>            : #include &lt;functional&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libethcore/Common.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libevm/ExtVMFace.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libethcore/SealEngine.h&gt;
+<span class="lineNum">      29 </span>            : #include &quot;State.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;Executive.h&quot;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace dev
+<span class="lineNum">      33 </span>            : {
+<span class="lineNum">      34 </span>            : namespace eth
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : class SealEngineFace;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : /**
+<a name="40"><span class="lineNum">      40 </span>            :  * @brief Externality interface for the Virtual Machine providing access to world state.</a>
+<span class="lineNum">      41 </span>            :  */
+<span class="lineNum">      42 </span><span class="lineCov">     237296 : class ExtVM: public ExtVMFace</span>
+<span class="lineNum">      43 </span>            : {
+<a name="44"><span class="lineNum">      44 </span>            : public:</a>
+<span class="lineNum">      45 </span>            :         /// Full constructor.
+<span class="lineNum">      46 </span><span class="lineCov">     237296 :         ExtVM(State&amp; _s, EnvInfo const&amp; _envInfo, SealEngineFace const&amp; _sealEngine, Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytesConstRef _code, h256 const&amp; _codeHash, unsigned _depth = 0):</span>
+<span class="lineNum">      47 </span><span class="lineCov">     949184 :                 ExtVMFace(_envInfo, _myAddress, _caller, _origin, _value, _gasPrice, _data, _code.toBytes(), _codeHash, _depth), m_s(_s), m_sealEngine(_sealEngine)</span>
+<span class="lineNum">      48 </span>            :         {
+<span class="lineNum">      49 </span>            :                 // Contract: processing account must exist. In case of CALL, the ExtVM
+<span class="lineNum">      50 </span>            :                 // is created only if an account has code (so exist). In case of CREATE
+<span class="lineNum">      51 </span>            :                 // the account must be created first.
+<span class="lineNum">      52 </span><span class="lineCov">     237296 :                 assert(m_s.addressInUse(_myAddress));</span>
+<span class="lineNum">      53 </span><span class="lineCov">     237296 :         }</span>
+<a name="54"><span class="lineNum">      54 </span>            : </a>
+<span class="lineNum">      55 </span>            :         /// Read storage location.
+<span class="lineNum">      56 </span><span class="lineCov">     666368 :         virtual u256 store(u256 _n) override final { return m_s.storage(myAddress, _n); }</span>
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            :         /// Write a value in storage.
+<span class="lineNum">      59 </span>            :         virtual void setStore(u256 _n, u256 _v) override final;
+<a name="60"><span class="lineNum">      60 </span>            : </a>
+<span class="lineNum">      61 </span>            :         /// Read address's code.
+<span class="lineNum">      62 </span><span class="lineCov">        244 :         virtual bytes const&amp; codeAt(Address _a) override final { return m_s.code(_a); }</span>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :         /// @returns the size of the code in  bytes at the given address.
+<span class="lineNum">      65 </span>            :         virtual size_t codeSizeAt(Address _a) override final;
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :         /// Create a new contract.
+<span class="lineNum">      68 </span>            :         virtual h160 create(u256 _endowment, u256&amp; io_gas, bytesConstRef _code, OnOpFunc const&amp; _onOp = {}) override final;
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            :         /// Create a new message call. Leave _myAddressOverride as the default to use the present address as caller.
+<span class="lineNum">      71 </span>            :         virtual boost::optional&lt;owning_bytes_ref&gt; call(CallParameters&amp; _params) override final;
+<a name="72"><span class="lineNum">      72 </span>            : </a>
+<span class="lineNum">      73 </span>            :         /// Read address's balance.
+<span class="lineNum">      74 </span><span class="lineCov">     269025 :         virtual u256 balance(Address _a) override final { return m_s.balance(_a); }</span>
+<a name="75"><span class="lineNum">      75 </span>            : </a>
+<span class="lineNum">      76 </span>            :         /// Does the account exist?
+<span class="lineNum">      77 </span><span class="lineCov">     131979 :         virtual bool exists(Address _a) override final</span>
+<span class="lineNum">      78 </span>            :         {
+<span class="lineNum">      79 </span><span class="lineCov">     131979 :                 if (evmSchedule().emptinessIsNonexistence())</span>
+<span class="lineNum">      80 </span><span class="lineCov">      55264 :                         return m_s.accountNonemptyAndExisting(_a);</span>
+<span class="lineNum">      81 </span>            :                 else
+<span class="lineNum">      82 </span><span class="lineCov">      76715 :                         return m_s.addressInUse(_a);</span>
+<span class="lineNum">      83 </span>            :         }
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            :         /// Suicide the associated contract to the given address.
+<span class="lineNum">      86 </span>            :         virtual void suicide(Address _a) override final;
+<a name="87"><span class="lineNum">      87 </span>            : </a>
+<span class="lineNum">      88 </span>            :         /// Return the EVM gas-price schedule for this execution context.
+<span class="lineNum">      89 </span><span class="lineCov">     390551 :         virtual EVMSchedule const&amp; evmSchedule() const override final { return m_sealEngine.evmSchedule(envInfo()); }</span>
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            :         State const&amp; state() const { return m_s; }
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : private:
+<span class="lineNum">      94 </span>            :         State&amp; m_s;  ///&lt; A reference to the base state.
+<span class="lineNum">      95 </span>            :         SealEngineFace const&amp; m_sealEngine;
+<span class="lineNum">      96 </span>            : };
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : }
+<span class="lineNum">      99 </span>            : }
+<span class="lineNum">     100 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

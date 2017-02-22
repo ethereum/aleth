@@ -1,0 +1,589 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/exception/detail/exception_ptr.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/exception/detail</a> - exception_ptr.hpp<span style="font-size: 80%;"> (source / <a href="exception_ptr.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntry">114</td>
+            <td class="headerCovTableEntryLo">14.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">116</td>
+            <td class="headerCovTableEntryLo">3.4 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //Copyright (c) 2006-2009 Emil Dotchevski and Reverge Studios, Inc.</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : //Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       4 </span>            : //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : #ifndef UUID_618474C2DE1511DEB74A388C56D89593
+<span class="lineNum">       7 </span>            : #define UUID_618474C2DE1511DEB74A388C56D89593
+<span class="lineNum">       8 </span>            : #if (__GNUC__*100+__GNUC_MINOR__&gt;301) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">       9 </span>            : #pragma GCC system_header
+<span class="lineNum">      10 </span>            : #endif
+<span class="lineNum">      11 </span>            : #if defined(_MSC_VER) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">      12 </span>            : #pragma warning(push,1)
+<span class="lineNum">      13 </span>            : #endif
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      16 </span>            : #ifdef BOOST_NO_EXCEPTIONS
+<span class="lineNum">      17 </span>            : #error This header requires exception handling to be enabled.
+<span class="lineNum">      18 </span>            : #endif
+<span class="lineNum">      19 </span>            : #include &lt;boost/exception/exception.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/exception/info.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/exception/diagnostic_information.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/exception/detail/type_info.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/exception/detail/clone_current_exception.hpp&gt;
+<span class="lineNum">      24 </span>            : #ifndef BOOST_NO_RTTI
+<span class="lineNum">      25 </span>            : #include &lt;boost/core/demangle.hpp&gt;
+<span class="lineNum">      26 </span>            : #endif
+<span class="lineNum">      27 </span>            : #include &lt;boost/shared_ptr.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;stdexcept&gt;
+<span class="lineNum">      29 </span>            : #include &lt;new&gt;
+<span class="lineNum">      30 </span>            : #include &lt;ios&gt;
+<span class="lineNum">      31 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace
+<span class="lineNum">      34 </span>            : boost
+<span class="lineNum">      35 </span>            :     {
+<span class="lineNum">      36 </span>            :     class exception_ptr;
+<span class="lineNum">      37 </span>            :     BOOST_NORETURN void rethrow_exception( exception_ptr const &amp; );
+<span class="lineNum">      38 </span>            :     exception_ptr current_exception();
+<a name="39"><span class="lineNum">      39 </span>            : </a>
+<span class="lineNum">      40 </span>            :     class
+<span class="lineNum">      41 </span><span class="lineCov">        154 :     exception_ptr</span>
+<span class="lineNum">      42 </span>            :         {
+<span class="lineNum">      43 </span>            :         typedef boost::shared_ptr&lt;exception_detail::clone_base const&gt; impl;
+<span class="lineNum">      44 </span>            :         impl ptr_;
+<span class="lineNum">      45 </span>            :         friend void rethrow_exception( exception_ptr const &amp; );
+<span class="lineNum">      46 </span>            :         typedef exception_detail::clone_base const * (impl::*unspecified_bool_type)() const;
+<span class="lineNum">      47 </span>            :         public:
+<span class="lineNum">      48 </span>            :         exception_ptr()
+<span class="lineNum">      49 </span><span class="lineCov">        150 :             {</span>
+<span class="lineNum">      50 </span>            :             }
+<span class="lineNum">      51 </span>            :         explicit
+<span class="lineNum">      52 </span>            :         exception_ptr( impl const &amp; ptr ):
+<span class="lineNum">      53 </span><span class="lineCov">          4 :             ptr_(ptr)</span>
+<span class="lineNum">      54 </span>            :             {
+<span class="lineNum">      55 </span>            :             }
+<span class="lineNum">      56 </span>            :         bool
+<span class="lineNum">      57 </span>            :         operator==( exception_ptr const &amp; other ) const
+<span class="lineNum">      58 </span>            :             {
+<span class="lineNum">      59 </span>            :             return ptr_==other.ptr_;
+<span class="lineNum">      60 </span>            :             }
+<span class="lineNum">      61 </span>            :         bool
+<span class="lineNum">      62 </span>            :         operator!=( exception_ptr const &amp; other ) const
+<span class="lineNum">      63 </span>            :             {
+<span class="lineNum">      64 </span>            :             return ptr_!=other.ptr_;
+<span class="lineNum">      65 </span>            :             }
+<span class="lineNum">      66 </span>            :         operator unspecified_bool_type() const
+<span class="lineNum">      67 </span>            :             {
+<span class="lineNum">      68 </span><span class="lineCov">         75 :             return ptr_?&amp;impl::get:0;</span>
+<span class="lineNum">      69 </span>            :             }
+<span class="lineNum">      70 </span>            :         };
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :     template &lt;class T&gt;
+<span class="lineNum">      73 </span>            :     inline
+<span class="lineNum">      74 </span>            :     exception_ptr
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :     copy_exception( T const &amp; e )</span>
+<span class="lineNum">      76 </span>            :         {
+<span class="lineNum">      77 </span>            :         try
+<span class="lineNum">      78 </span>            :             {
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :             throw enable_current_exception(e);</span>
+<span class="lineNum">      80 </span>            :             }
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :         catch(</span>
+<span class="lineNum">      82 </span>            :         ... )
+<span class="lineNum">      83 </span>            :             {
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :             return current_exception();</span>
+<span class="lineNum">      85 </span>            :             }
+<span class="lineNum">      86 </span>            :         }
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : #ifndef BOOST_NO_RTTI
+<span class="lineNum">      89 </span>            :     typedef error_info&lt;struct tag_original_exception_type,std::type_info const *&gt; original_exception_type;
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            :     inline
+<span class="lineNum">      92 </span>            :     std::string
+<span class="lineNum">      93 </span>            :     to_string( original_exception_type const &amp; x )
+<span class="lineNum">      94 </span>            :         {
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :         return core::demangle(x.value()-&gt;name());</span>
+<span class="lineNum">      96 </span>            :         }
+<span class="lineNum">      97 </span>            : #endif
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :     namespace
+<span class="lineNum">     100 </span>            :     exception_detail
+<span class="lineNum">     101 </span>            :         {
+<span class="lineNum">     102 </span>            :         struct
+<span class="lineNum">     103 </span><span class="lineCov">          9 :         bad_alloc_:</span>
+<span class="lineNum">     104 </span>            :             boost::exception,
+<a name="105"><span class="lineNum">     105 </span>            :             std::bad_alloc</a>
+<span class="lineNum">     106 </span>            :                 {
+<span class="lineNum">     107 </span><span class="lineCov">          4 :                 ~bad_alloc_() throw() { }</span>
+<span class="lineNum">     108 </span>            :                 };
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            :         struct
+<span class="lineNum">     111 </span><span class="lineCov">          9 :         bad_exception_:</span>
+<span class="lineNum">     112 </span>            :             boost::exception,
+<a name="113"><span class="lineNum">     113 </span>            :             std::bad_exception</a>
+<span class="lineNum">     114 </span>            :                 {
+<span class="lineNum">     115 </span><span class="lineCov">          4 :                 ~bad_exception_() throw() { }</span>
+<span class="lineNum">     116 </span>            :                 };
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :         template &lt;class Exception&gt;
+<span class="lineNum">     119 </span>            :         exception_ptr
+<span class="lineNum">     120 </span><span class="lineCov">          2 :         get_static_exception_object()</span>
+<span class="lineNum">     121 </span>            :             {
+<span class="lineNum">     122 </span><span class="lineCov">          4 :             Exception ba;</span>
+<span class="lineNum">     123 </span><span class="lineCov">          4 :             exception_detail::clone_impl&lt;Exception&gt; c(ba);</span>
+<span class="lineNum">     124 </span>            : #ifndef BOOST_EXCEPTION_DISABLE
+<span class="lineNum">     125 </span><span class="lineCov">          6 :             c &lt;&lt;</span>
+<span class="lineNum">     126 </span><span class="lineCov">          4 :                 throw_function(BOOST_CURRENT_FUNCTION) &lt;&lt;</span>
+<span class="lineNum">     127 </span><span class="lineCov">          2 :                 throw_file(__FILE__) &lt;&lt;</span>
+<span class="lineNum">     128 </span>            :                 throw_line(__LINE__);
+<span class="lineNum">     129 </span>            : #endif
+<span class="lineNum">     130 </span><span class="lineCov">          6 :             static exception_ptr ep(shared_ptr&lt;exception_detail::clone_base const&gt;(new exception_detail::clone_impl&lt;Exception&gt;(c)));</span>
+<span class="lineNum">     131 </span><span class="lineCov">          4 :             return ep;</span>
+<span class="lineNum">     132 </span>            :             }
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            :         template &lt;class Exception&gt;
+<span class="lineNum">     135 </span>            :         struct
+<span class="lineNum">     136 </span>            :         exception_ptr_static_exception_object
+<span class="lineNum">     137 </span>            :             {
+<span class="lineNum">     138 </span>            :             static exception_ptr const e;
+<span class="lineNum">     139 </span>            :             };
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            :         template &lt;class Exception&gt;
+<span class="lineNum">     142 </span>            :         exception_ptr const
+<span class="lineNum">     143 </span><span class="lineCov">        123 :         exception_ptr_static_exception_object&lt;Exception&gt;::</span>
+<span class="lineNum">     144 </span>            :         e = get_static_exception_object&lt;Exception&gt;();
+<span class="lineNum">     145 </span>            :         }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : #if defined(__GNUC__)
+<span class="lineNum">     148 </span>            : # if (__GNUC__ == 4 &amp;&amp; __GNUC_MINOR__ &gt;= 1) || (__GNUC__ &gt; 4)
+<span class="lineNum">     149 </span>            : #  pragma GCC visibility push (default)
+<span class="lineNum">     150 </span>            : # endif
+<span class="lineNum">     151 </span>            : #endif
+<span class="lineNum">     152 </span>            :     class
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :     unknown_exception:</span>
+<span class="lineNum">     154 </span>            :         public boost::exception,
+<span class="lineNum">     155 </span>            :         public std::exception
+<span class="lineNum">     156 </span>            :         {
+<span class="lineNum">     157 </span>            :         public:
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :         unknown_exception()
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :             {</span>
+<span class="lineNum">     161 </span>            :             }
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            :         explicit
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :         unknown_exception( std::exception const &amp; e )</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :             {</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :             add_original_type(e);</span>
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :             }</span>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            :         explicit
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :         unknown_exception( boost::exception const &amp; e ):</span>
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :             boost::exception(e)</span>
+<span class="lineNum">     172 </span>            :             {
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :             add_original_type(e);</span>
+<a name="174"><span class="lineNum">     174 </span><span class="lineNoCov">          0 :             }</span></a>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :         ~unknown_exception() throw()</span>
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :             {</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :             }</span>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            :         private:
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            :         template &lt;class E&gt;
+<span class="lineNum">     183 </span>            :         void
+<span class="lineNum">     184 </span>            :         add_original_type( E const &amp; e )
+<span class="lineNum">     185 </span>            :             {
+<span class="lineNum">     186 </span>            : #ifndef BOOST_NO_RTTI
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :             (*this) &lt;&lt; original_exception_type(&amp;typeid(e));</span>
+<span class="lineNum">     188 </span>            : #endif
+<span class="lineNum">     189 </span>            :             }
+<span class="lineNum">     190 </span>            :         };
+<span class="lineNum">     191 </span>            : #if defined(__GNUC__)
+<span class="lineNum">     192 </span>            : # if (__GNUC__ == 4 &amp;&amp; __GNUC_MINOR__ &gt;= 1) || (__GNUC__ &gt; 4)
+<span class="lineNum">     193 </span>            : #  pragma GCC visibility pop
+<span class="lineNum">     194 </span>            : # endif
+<span class="lineNum">     195 </span>            : #endif
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :     namespace
+<span class="lineNum">     198 </span>            :     exception_detail
+<span class="lineNum">     199 </span>            :         {
+<span class="lineNum">     200 </span>            :         template &lt;class T&gt;
+<span class="lineNum">     201 </span>            :         class
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :         current_exception_std_exception_wrapper:</span>
+<span class="lineNum">     203 </span>            :             public T,
+<span class="lineNum">     204 </span>            :             public boost::exception
+<span class="lineNum">     205 </span>            :             {
+<span class="lineNum">     206 </span>            :             public:
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            :             explicit
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 :             current_exception_std_exception_wrapper( T const &amp; e1 ):</span>
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :                 T(e1)</span>
+<span class="lineNum">     211 </span>            :                 {
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :                 add_original_type(e1);</span>
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :                 }</span>
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :             current_exception_std_exception_wrapper( T const &amp; e1, boost::exception const &amp; e2 ):</span>
+<span class="lineNum">     216 </span>            :                 T(e1),
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :                 boost::exception(e2)</span>
+<span class="lineNum">     218 </span>            :                 {
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :                 add_original_type(e1);</span>
+<a name="220"><span class="lineNum">     220 </span><span class="lineNoCov">          0 :                 }</span></a>
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :             ~current_exception_std_exception_wrapper() throw()</span>
+<span class="lineNum">     223 </span>            :                 {
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :                 }</span>
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            :             private:
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :             template &lt;class E&gt;
+<span class="lineNum">     229 </span>            :             void
+<span class="lineNum">     230 </span>            :             add_original_type( E const &amp; e )
+<span class="lineNum">     231 </span>            :                 {
+<span class="lineNum">     232 </span>            : #ifndef BOOST_NO_RTTI
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :                 (*this) &lt;&lt; original_exception_type(&amp;typeid(e));</span>
+<span class="lineNum">     234 </span>            : #endif
+<span class="lineNum">     235 </span>            :                 }
+<span class="lineNum">     236 </span>            :             };
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span>            : #ifdef BOOST_NO_RTTI
+<span class="lineNum">     239 </span>            :         template &lt;class T&gt;
+<span class="lineNum">     240 </span>            :         boost::exception const *
+<span class="lineNum">     241 </span>            :         get_boost_exception( T const * )
+<span class="lineNum">     242 </span>            :             {
+<span class="lineNum">     243 </span>            :             try
+<span class="lineNum">     244 </span>            :                 {
+<span class="lineNum">     245 </span>            :                 throw;
+<span class="lineNum">     246 </span>            :                 }
+<span class="lineNum">     247 </span>            :             catch(
+<span class="lineNum">     248 </span>            :             boost::exception &amp; x )
+<span class="lineNum">     249 </span>            :                 {
+<span class="lineNum">     250 </span>            :                 return &amp;x;
+<span class="lineNum">     251 </span>            :                 }
+<span class="lineNum">     252 </span>            :             catch(...)
+<span class="lineNum">     253 </span>            :                 {
+<span class="lineNum">     254 </span>            :                 return 0;
+<span class="lineNum">     255 </span>            :                 }
+<span class="lineNum">     256 </span>            :             }
+<span class="lineNum">     257 </span>            : #else
+<span class="lineNum">     258 </span>            :         template &lt;class T&gt;
+<span class="lineNum">     259 </span>            :         boost::exception const *
+<span class="lineNum">     260 </span>            :         get_boost_exception( T const * x )
+<span class="lineNum">     261 </span>            :             {
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :             return dynamic_cast&lt;boost::exception const *&gt;(x);</span>
+<span class="lineNum">     263 </span>            :             }
+<span class="lineNum">     264 </span>            : #endif
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            :         template &lt;class T&gt;
+<a name="267"><span class="lineNum">     267 </span>            :         inline</a>
+<span class="lineNum">     268 </span>            :         exception_ptr
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :         current_exception_std_exception( T const &amp; e1 )</span>
+<span class="lineNum">     270 </span>            :             {
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :             if( boost::exception const * e2 = get_boost_exception(&amp;e1) )</span>
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :                 return boost::copy_exception(current_exception_std_exception_wrapper&lt;T&gt;(e1,*e2));</span>
+<span class="lineNum">     273 </span>            :             else
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :                 return boost::copy_exception(current_exception_std_exception_wrapper&lt;T&gt;(e1));</span>
+<span class="lineNum">     275 </span>            :             }
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            :         inline
+<span class="lineNum">     278 </span>            :         exception_ptr
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :         current_exception_unknown_exception()</span>
+<span class="lineNum">     280 </span>            :             {
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :             return boost::copy_exception(unknown_exception());</span>
+<span class="lineNum">     282 </span>            :             }
+<span class="lineNum">     283 </span>            : 
+<a name="284"><span class="lineNum">     284 </span>            :         inline</a>
+<span class="lineNum">     285 </span>            :         exception_ptr
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :         current_exception_unknown_boost_exception( boost::exception const &amp; e )</span>
+<span class="lineNum">     287 </span>            :             {
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :             return boost::copy_exception(unknown_exception(e));</span>
+<span class="lineNum">     289 </span>            :             }
+<span class="lineNum">     290 </span>            : 
+<a name="291"><span class="lineNum">     291 </span>            :         inline</a>
+<span class="lineNum">     292 </span>            :         exception_ptr
+<span class="lineNum">     293 </span><span class="lineNoCov">          0 :         current_exception_unknown_std_exception( std::exception const &amp; e )</span>
+<span class="lineNum">     294 </span>            :             {
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :             if( boost::exception const * be = get_boost_exception(&amp;e) )</span>
+<span class="lineNum">     296 </span><span class="lineNoCov">          0 :                 return current_exception_unknown_boost_exception(*be);</span>
+<span class="lineNum">     297 </span>            :             else
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :                 return boost::copy_exception(unknown_exception(e));</span>
+<span class="lineNum">     299 </span>            :             }
+<span class="lineNum">     300 </span>            : 
+<a name="301"><span class="lineNum">     301 </span>            :         inline</a>
+<span class="lineNum">     302 </span>            :         exception_ptr
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :         current_exception_impl()</span>
+<span class="lineNum">     304 </span>            :             {
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 :             exception_detail::clone_base const * e=0;</span>
+<span class="lineNum">     306 </span><span class="lineNoCov">          0 :             switch(</span>
+<span class="lineNum">     307 </span>            :             exception_detail::clone_current_exception(e) )
+<span class="lineNum">     308 </span>            :                 {
+<span class="lineNum">     309 </span>            :                 case exception_detail::clone_current_exception_result::
+<span class="lineNum">     310 </span>            :                 success:
+<span class="lineNum">     311 </span>            :                     {
+<span class="lineNum">     312 </span>            :                     BOOST_ASSERT(e!=0);
+<span class="lineNum">     313 </span>            :                     return exception_ptr(shared_ptr&lt;exception_detail::clone_base const&gt;(e));
+<span class="lineNum">     314 </span>            :                     }
+<span class="lineNum">     315 </span>            :                 case exception_detail::clone_current_exception_result::
+<span class="lineNum">     316 </span>            :                 bad_alloc:
+<span class="lineNum">     317 </span>            :                     {
+<span class="lineNum">     318 </span>            :                     BOOST_ASSERT(!e);
+<span class="lineNum">     319 </span>            :                     return exception_detail::exception_ptr_static_exception_object&lt;bad_alloc_&gt;::e;
+<span class="lineNum">     320 </span>            :                     }
+<span class="lineNum">     321 </span>            :                 case exception_detail::clone_current_exception_result::
+<span class="lineNum">     322 </span>            :                 bad_exception:
+<span class="lineNum">     323 </span>            :                     {
+<span class="lineNum">     324 </span>            :                     BOOST_ASSERT(!e);
+<span class="lineNum">     325 </span>            :                     return exception_detail::exception_ptr_static_exception_object&lt;bad_exception_&gt;::e;
+<span class="lineNum">     326 </span>            :                     }
+<span class="lineNum">     327 </span>            :                 default:
+<span class="lineNum">     328 </span>            :                     BOOST_ASSERT(0);
+<span class="lineNum">     329 </span>            :                 case exception_detail::clone_current_exception_result::
+<span class="lineNum">     330 </span>            :                 not_supported:
+<span class="lineNum">     331 </span>            :                     {
+<span class="lineNum">     332 </span>            :                     BOOST_ASSERT(!e);
+<span class="lineNum">     333 </span>            :                     try
+<span class="lineNum">     334 </span>            :                         {
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :                         throw;</span>
+<span class="lineNum">     336 </span>            :                         }
+<span class="lineNum">     337 </span>            :                     catch(
+<span class="lineNum">     338 </span><span class="lineNoCov">          0 :                     exception_detail::clone_base &amp; e )</span>
+<span class="lineNum">     339 </span>            :                         {
+<span class="lineNum">     340 </span><span class="lineNoCov">          0 :                         return exception_ptr(shared_ptr&lt;exception_detail::clone_base const&gt;(e.clone()));</span>
+<span class="lineNum">     341 </span>            :                         }
+<span class="lineNum">     342 </span>            :                     catch(
+<span class="lineNum">     343 </span><span class="lineNoCov">          0 :                     std::domain_error &amp; e )</span>
+<span class="lineNum">     344 </span>            :                         {
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_std_exception(e);</span>
+<span class="lineNum">     346 </span>            :                         }
+<span class="lineNum">     347 </span>            :                     catch(
+<span class="lineNum">     348 </span><span class="lineNoCov">          0 :                     std::invalid_argument &amp; e )</span>
+<span class="lineNum">     349 </span>            :                         {
+<span class="lineNum">     350 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_std_exception(e);</span>
+<span class="lineNum">     351 </span>            :                         }
+<span class="lineNum">     352 </span>            :                     catch(
+<span class="lineNum">     353 </span><span class="lineNoCov">          0 :                     std::length_error &amp; e )</span>
+<span class="lineNum">     354 </span>            :                         {
+<span class="lineNum">     355 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_std_exception(e);</span>
+<span class="lineNum">     356 </span>            :                         }
+<span class="lineNum">     357 </span>            :                     catch(
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :                     std::out_of_range &amp; e )</span>
+<span class="lineNum">     359 </span>            :                         {
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_std_exception(e);</span>
+<span class="lineNum">     361 </span>            :                         }
+<span class="lineNum">     362 </span>            :                     catch(
+<span class="lineNum">     363 </span><span class="lineNoCov">          0 :                     std::logic_error &amp; e )</span>
+<span class="lineNum">     364 </span>            :                         {
+<span class="lineNum">     365 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_std_exception(e);</span>
+<span class="lineNum">     366 </span>            :                         }
+<span class="lineNum">     367 </span>            :                     catch(
+<span class="lineNum">     368 </span><span class="lineNoCov">          0 :                     std::range_error &amp; e )</span>
+<span class="lineNum">     369 </span>            :                         {
+<span class="lineNum">     370 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_std_exception(e);</span>
+<span class="lineNum">     371 </span>            :                         }
+<span class="lineNum">     372 </span>            :                     catch(
+<span class="lineNum">     373 </span><span class="lineNoCov">          0 :                     std::overflow_error &amp; e )</span>
+<span class="lineNum">     374 </span>            :                         {
+<span class="lineNum">     375 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_std_exception(e);</span>
+<span class="lineNum">     376 </span>            :                         }
+<span class="lineNum">     377 </span>            :                     catch(
+<span class="lineNum">     378 </span><span class="lineNoCov">          0 :                     std::underflow_error &amp; e )</span>
+<span class="lineNum">     379 </span>            :                         {
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_std_exception(e);</span>
+<span class="lineNum">     381 </span>            :                         }
+<span class="lineNum">     382 </span>            :                     catch(
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 :                     std::ios_base::failure &amp; e )</span>
+<span class="lineNum">     384 </span>            :                         {
+<span class="lineNum">     385 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_std_exception(e);</span>
+<span class="lineNum">     386 </span>            :                         }
+<span class="lineNum">     387 </span>            :                     catch(
+<span class="lineNum">     388 </span><span class="lineNoCov">          0 :                     std::runtime_error &amp; e )</span>
+<span class="lineNum">     389 </span>            :                         {
+<span class="lineNum">     390 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_std_exception(e);</span>
+<span class="lineNum">     391 </span>            :                         }
+<span class="lineNum">     392 </span>            :                     catch(
+<span class="lineNum">     393 </span><span class="lineNoCov">          0 :                     std::bad_alloc &amp; e )</span>
+<span class="lineNum">     394 </span>            :                         {
+<span class="lineNum">     395 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_std_exception(e);</span>
+<span class="lineNum">     396 </span>            :                         }
+<span class="lineNum">     397 </span>            : #ifndef BOOST_NO_TYPEID
+<span class="lineNum">     398 </span>            :                     catch(
+<span class="lineNum">     399 </span><span class="lineNoCov">          0 :                     std::bad_cast &amp; e )</span>
+<span class="lineNum">     400 </span>            :                         {
+<span class="lineNum">     401 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_std_exception(e);</span>
+<span class="lineNum">     402 </span>            :                         }
+<span class="lineNum">     403 </span>            :                     catch(
+<span class="lineNum">     404 </span><span class="lineNoCov">          0 :                     std::bad_typeid &amp; e )</span>
+<span class="lineNum">     405 </span>            :                         {
+<span class="lineNum">     406 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_std_exception(e);</span>
+<span class="lineNum">     407 </span>            :                         }
+<span class="lineNum">     408 </span>            : #endif
+<span class="lineNum">     409 </span>            :                     catch(
+<span class="lineNum">     410 </span><span class="lineNoCov">          0 :                     std::bad_exception &amp; e )</span>
+<span class="lineNum">     411 </span>            :                         {
+<span class="lineNum">     412 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_std_exception(e);</span>
+<span class="lineNum">     413 </span>            :                         }
+<span class="lineNum">     414 </span>            :                     catch(
+<span class="lineNum">     415 </span><span class="lineNoCov">          0 :                     std::exception &amp; e )</span>
+<span class="lineNum">     416 </span>            :                         {
+<span class="lineNum">     417 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_unknown_std_exception(e);</span>
+<span class="lineNum">     418 </span>            :                         }
+<span class="lineNum">     419 </span>            :                     catch(
+<span class="lineNum">     420 </span><span class="lineNoCov">          0 :                     boost::exception &amp; e )</span>
+<span class="lineNum">     421 </span>            :                         {
+<span class="lineNum">     422 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_unknown_boost_exception(e);</span>
+<span class="lineNum">     423 </span>            :                         }
+<span class="lineNum">     424 </span>            :                     catch(
+<span class="lineNum">     425 </span><span class="lineNoCov">          0 :                     ... )</span>
+<span class="lineNum">     426 </span>            :                         {
+<span class="lineNum">     427 </span><span class="lineNoCov">          0 :                         return exception_detail::current_exception_unknown_exception();</span>
+<span class="lineNum">     428 </span>            :                         }
+<span class="lineNum">     429 </span>            :                     }
+<span class="lineNum">     430 </span>            :                 }
+<span class="lineNum">     431 </span>            :             }
+<span class="lineNum">     432 </span>            :         }
+<span class="lineNum">     433 </span>            : 
+<a name="434"><span class="lineNum">     434 </span>            :     inline</a>
+<span class="lineNum">     435 </span>            :     exception_ptr
+<span class="lineNum">     436 </span><span class="lineNoCov">          0 :     current_exception()</span>
+<span class="lineNum">     437 </span>            :         {
+<span class="lineNum">     438 </span><span class="lineNoCov">          0 :         exception_ptr ret;</span>
+<span class="lineNum">     439 </span>            :         try
+<span class="lineNum">     440 </span>            :             {
+<span class="lineNum">     441 </span><span class="lineNoCov">          0 :             ret=exception_detail::current_exception_impl();</span>
+<span class="lineNum">     442 </span>            :             }
+<span class="lineNum">     443 </span>            :         catch(
+<span class="lineNum">     444 </span><span class="lineNoCov">          0 :         std::bad_alloc &amp; )</span>
+<span class="lineNum">     445 </span>            :             {
+<span class="lineNum">     446 </span><span class="lineNoCov">          0 :             ret=exception_detail::exception_ptr_static_exception_object&lt;exception_detail::bad_alloc_&gt;::e;</span>
+<span class="lineNum">     447 </span>            :             }
+<span class="lineNum">     448 </span>            :         catch(
+<span class="lineNum">     449 </span><span class="lineNoCov">          0 :         ... )</span>
+<span class="lineNum">     450 </span>            :             {
+<span class="lineNum">     451 </span><span class="lineNoCov">          0 :             ret=exception_detail::exception_ptr_static_exception_object&lt;exception_detail::bad_exception_&gt;::e;</span>
+<span class="lineNum">     452 </span>            :             }
+<span class="lineNum">     453 </span><span class="lineNoCov">          0 :         BOOST_ASSERT(ret);</span>
+<span class="lineNum">     454 </span><span class="lineNoCov">          0 :         return ret;</span>
+<span class="lineNum">     455 </span>            :         }
+<span class="lineNum">     456 </span>            : 
+<span class="lineNum">     457 </span>            :     BOOST_NORETURN
+<a name="458"><span class="lineNum">     458 </span>            :     inline</a>
+<span class="lineNum">     459 </span>            :     void
+<span class="lineNum">     460 </span><span class="lineNoCov">          0 :     rethrow_exception( exception_ptr const &amp; p )</span>
+<span class="lineNum">     461 </span>            :         {
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 :         BOOST_ASSERT(p);</span>
+<span class="lineNum">     463 </span><span class="lineNoCov">          0 :         p.ptr_-&gt;rethrow();</span>
+<span class="lineNum">     464 </span><span class="lineNoCov">          0 :         BOOST_ASSERT(0);</span>
+<span class="lineNum">     465 </span>            :         #if defined(UNDER_CE)
+<span class="lineNum">     466 </span>            :             // some CE platforms don't define ::abort()
+<span class="lineNum">     467 </span>            :             exit(-1);
+<span class="lineNum">     468 </span>            :         #else
+<span class="lineNum">     469 </span>            :             abort();
+<span class="lineNum">     470 </span>            :         #endif
+<span class="lineNum">     471 </span>            :         }
+<span class="lineNum">     472 </span>            : 
+<span class="lineNum">     473 </span>            :     inline
+<span class="lineNum">     474 </span>            :     std::string
+<span class="lineNum">     475 </span>            :     diagnostic_information( exception_ptr const &amp; p, bool verbose=true )
+<span class="lineNum">     476 </span>            :         {
+<span class="lineNum">     477 </span>            :         if( p )
+<span class="lineNum">     478 </span>            :             try
+<span class="lineNum">     479 </span>            :                 {
+<span class="lineNum">     480 </span>            :                 rethrow_exception(p);
+<span class="lineNum">     481 </span>            :                 }
+<span class="lineNum">     482 </span>            :             catch(
+<span class="lineNum">     483 </span>            :             ... )
+<span class="lineNum">     484 </span>            :                 {
+<span class="lineNum">     485 </span>            :                 return current_exception_diagnostic_information(verbose);
+<span class="lineNum">     486 </span>            :                 }
+<span class="lineNum">     487 </span>            :         return &quot;&lt;empty&gt;&quot;;
+<span class="lineNum">     488 </span>            :         }
+<span class="lineNum">     489 </span>            : 
+<span class="lineNum">     490 </span>            :     inline
+<span class="lineNum">     491 </span>            :     std::string
+<span class="lineNum">     492 </span>            :     to_string( exception_ptr const &amp; p )
+<span class="lineNum">     493 </span>            :         {
+<span class="lineNum">     494 </span>            :         std::string s='\n'+diagnostic_information(p);
+<span class="lineNum">     495 </span>            :         std::string padding(&quot;  &quot;);
+<span class="lineNum">     496 </span>            :         std::string r;
+<span class="lineNum">     497 </span>            :         bool f=false;
+<span class="lineNum">     498 </span>            :         for( std::string::const_iterator i=s.begin(),e=s.end(); i!=e; ++i )
+<span class="lineNum">     499 </span>            :             {
+<span class="lineNum">     500 </span>            :             if( f )
+<span class="lineNum">     501 </span>            :                 r+=padding;
+<span class="lineNum">     502 </span>            :             char c=*i;
+<span class="lineNum">     503 </span>            :             r+=c;
+<span class="lineNum">     504 </span>            :             f=(c=='\n');
+<span class="lineNum">     505 </span>            :             }
+<span class="lineNum">     506 </span>            :         return r;
+<span class="lineNum">     507 </span>            :         }
+<span class="lineNum">     508 </span>            :     }
+<span class="lineNum">     509 </span>            : 
+<span class="lineNum">     510 </span>            : #if defined(_MSC_VER) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">     511 </span>            : #pragma warning(pop)
+<span class="lineNum">     512 </span>            : #endif
+<span class="lineNum">     513 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

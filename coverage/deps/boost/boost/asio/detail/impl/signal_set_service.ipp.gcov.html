@@ -1,0 +1,725 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/detail/impl/signal_set_service.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/detail/impl</a> - signal_set_service.ipp<span style="font-size: 80%;"> (source / <a href="signal_set_service.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">109</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // detail/impl/signal_set_service.ipp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DETAIL_IMPL_SIGNAL_SET_SERVICE_IPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DETAIL_IMPL_SIGNAL_SET_SERVICE_IPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/asio/detail/reactor.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/asio/detail/signal_blocker.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/asio/detail/signal_set_service.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/detail/static_mutex.hpp&gt;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace boost {
+<span class="lineNum">      29 </span>            : namespace asio {
+<span class="lineNum">      30 </span>            : namespace detail {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : struct signal_state
+<span class="lineNum">      33 </span>            : {
+<span class="lineNum">      34 </span>            :   // Mutex used for protecting global state.
+<span class="lineNum">      35 </span>            :   static_mutex mutex_;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            :   // The read end of the pipe used for signal notifications.
+<span class="lineNum">      38 </span>            :   int read_descriptor_;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            :   // The write end of the pipe used for signal notifications.
+<span class="lineNum">      41 </span>            :   int write_descriptor_;
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            :   // Whether the signal state has been prepared for a fork.
+<span class="lineNum">      44 </span>            :   bool fork_prepared_;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :   // The head of a linked list of all signal_set_service instances.
+<span class="lineNum">      47 </span>            :   class signal_set_service* service_list_;
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :   // A count of the number of objects that are registered for each signal.
+<span class="lineNum">      50 </span>            :   std::size_t registration_count_[max_signal_number];
+<span class="lineNum">      51 </span>            : };
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : signal_state* get_signal_state()
+<span class="lineNum">      54 </span>            : {
+<span class="lineNum">      55 </span>            :   static signal_state state = {
+<span class="lineNum">      56 </span>            :     BOOST_ASIO_STATIC_MUTEX_INIT, -1, -1, false, 0, { 0 } };
+<span class="lineNum">      57 </span>            :   return &amp;state;
+<span class="lineNum">      58 </span>            : }
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : void boost_asio_signal_handler(int signal_number)
+<span class="lineNum">      61 </span>            : {
+<span class="lineNum">      62 </span>            : #if defined(BOOST_ASIO_WINDOWS) \
+<span class="lineNum">      63 </span>            :   || defined(BOOST_ASIO_WINDOWS_RUNTIME) \
+<span class="lineNum">      64 </span>            :   || defined(__CYGWIN__)
+<span class="lineNum">      65 </span>            :   signal_set_service::deliver_signal(signal_number);
+<span class="lineNum">      66 </span>            : #else // defined(BOOST_ASIO_WINDOWS)
+<span class="lineNum">      67 </span>            :       //   || defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">      68 </span>            :       //   || defined(__CYGWIN__)
+<span class="lineNum">      69 </span>            :   int saved_errno = errno;
+<span class="lineNum">      70 </span>            :   signal_state* state = get_signal_state();
+<span class="lineNum">      71 </span>            :   signed_size_type result = ::write(state-&gt;write_descriptor_,
+<span class="lineNum">      72 </span>            :       &amp;signal_number, sizeof(signal_number));
+<span class="lineNum">      73 </span>            :   (void)result;
+<span class="lineNum">      74 </span>            :   errno = saved_errno;
+<span class="lineNum">      75 </span>            : #endif // defined(BOOST_ASIO_WINDOWS)
+<span class="lineNum">      76 </span>            :        //   || defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">      77 </span>            :        //   || defined(__CYGWIN__)
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : #if defined(BOOST_ASIO_HAS_SIGNAL) &amp;&amp; !defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">      80 </span>            :   ::signal(signal_number, boost_asio_signal_handler);
+<span class="lineNum">      81 </span>            : #endif // defined(BOOST_ASIO_HAS_SIGNAL) &amp;&amp; !defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">      82 </span>            : }
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : #if !defined(BOOST_ASIO_WINDOWS) \
+<span class="lineNum">      85 </span>            :   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME) \
+<span class="lineNum">      86 </span>            :   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 : class signal_set_service::pipe_read_op : public reactor_op</span>
+<span class="lineNum">      88 </span>            : {
+<span class="lineNum">      89 </span>            : public:
+<span class="lineNum">      90 </span>            :   pipe_read_op()
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :     : reactor_op(&amp;pipe_read_op::do_perform, pipe_read_op::do_complete)</span>
+<span class="lineNum">      92 </span>            :   {
+<a name="93"><span class="lineNum">      93 </span>            :   }</a>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :   static bool do_perform(reactor_op*)</span>
+<span class="lineNum">      96 </span>            :   {
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :     signal_state* state = get_signal_state();</span>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :     int fd = state-&gt;read_descriptor_;</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :     int signal_number = 0;</span>
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :     while (::read(fd, &amp;signal_number, sizeof(int)) == sizeof(int))</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :       if (signal_number &gt;= 0 &amp;&amp; signal_number &lt; max_signal_number)</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :         signal_set_service::deliver_signal(signal_number);</span>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :     return false;</span>
+<a name="106"><span class="lineNum">     106 </span>            :   }</a>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :   static void do_complete(io_service_impl* /*owner*/, operation* base,</span>
+<span class="lineNum">     109 </span>            :       const boost::system::error_code&amp; /*ec*/,
+<span class="lineNum">     110 </span>            :       std::size_t /*bytes_transferred*/)
+<span class="lineNum">     111 </span>            :   {
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :     pipe_read_op* o(static_cast&lt;pipe_read_op*&gt;(base));</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :     delete o;</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :   }</span>
+<span class="lineNum">     115 </span>            : };
+<span class="lineNum">     116 </span>            : #endif // !defined(BOOST_ASIO_WINDOWS)
+<span class="lineNum">     117 </span>            :        //   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">     118 </span>            :        //   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : signal_set_service::signal_set_service(
+<span class="lineNum">     121 </span>            :     boost::asio::io_service&amp; io_service)
+<span class="lineNum">     122 </span>            :   : io_service_(boost::asio::use_service&lt;io_service_impl&gt;(io_service)),
+<span class="lineNum">     123 </span>            : #if !defined(BOOST_ASIO_WINDOWS) \
+<span class="lineNum">     124 </span>            :   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME) \
+<span class="lineNum">     125 </span>            :   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     126 </span>            :     reactor_(boost::asio::use_service&lt;reactor&gt;(io_service)),
+<span class="lineNum">     127 </span>            : #endif // !defined(BOOST_ASIO_WINDOWS)
+<span class="lineNum">     128 </span>            :        //   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">     129 </span>            :        //   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     130 </span>            :     next_(0),
+<span class="lineNum">     131 </span>            :     prev_(0)
+<span class="lineNum">     132 </span>            : {
+<span class="lineNum">     133 </span>            :   get_signal_state()-&gt;mutex_.init();
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : #if !defined(BOOST_ASIO_WINDOWS) \
+<span class="lineNum">     136 </span>            :   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME) \
+<span class="lineNum">     137 </span>            :   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     138 </span>            :   reactor_.init_task();
+<span class="lineNum">     139 </span>            : #endif // !defined(BOOST_ASIO_WINDOWS)
+<span class="lineNum">     140 </span>            :        //   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">     141 </span>            :        //   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :   for (int i = 0; i &lt; max_signal_number; ++i)
+<span class="lineNum">     144 </span>            :     registrations_[i] = 0;
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :   add_service(this);
+<span class="lineNum">     147 </span>            : }
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 : signal_set_service::~signal_set_service()</span>
+<span class="lineNum">     150 </span>            : {
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :   remove_service(this);</span>
+<a name="152"><span class="lineNum">     152 </span>            : }</a>
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 : void signal_set_service::shutdown_service()</span>
+<span class="lineNum">     155 </span>            : {
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :   remove_service(this);</span>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :   op_queue&lt;operation&gt; ops;</span>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :   for (int i = 0; i &lt; max_signal_number; ++i)</span>
+<span class="lineNum">     161 </span>            :   {
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :     registration* reg = registrations_[i];</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :     while (reg)</span>
+<span class="lineNum">     164 </span>            :     {
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :       ops.push(*reg-&gt;queue_);</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :       reg = reg-&gt;next_in_table_;</span>
+<span class="lineNum">     167 </span>            :     }
+<span class="lineNum">     168 </span>            :   }
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :   io_service_.abandon_operations(ops);</span>
+<a name="171"><span class="lineNum">     171 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 : void signal_set_service::fork_service(</span>
+<span class="lineNum">     174 </span>            :     boost::asio::io_service::fork_event fork_ev)
+<span class="lineNum">     175 </span>            : {
+<span class="lineNum">     176 </span>            : #if !defined(BOOST_ASIO_WINDOWS) \
+<span class="lineNum">     177 </span>            :   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME) \
+<span class="lineNum">     178 </span>            :   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :   signal_state* state = get_signal_state();</span>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :   static_mutex::scoped_lock lock(state-&gt;mutex_);</span>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :   switch (fork_ev)</span>
+<span class="lineNum">     183 </span>            :   {
+<span class="lineNum">     184 </span>            :   case boost::asio::io_service::fork_prepare:
+<span class="lineNum">     185 </span>            :     {
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :       int read_descriptor = state-&gt;read_descriptor_;</span>
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :       state-&gt;fork_prepared_ = true;</span>
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :       lock.unlock();</span>
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :       reactor_.deregister_internal_descriptor(read_descriptor, reactor_data_);</span>
+<span class="lineNum">     190 </span>            :     }
+<span class="lineNum">     191 </span>            :     break;
+<span class="lineNum">     192 </span>            :   case boost::asio::io_service::fork_parent:
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :     if (state-&gt;fork_prepared_)</span>
+<span class="lineNum">     194 </span>            :     {
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :       int read_descriptor = state-&gt;read_descriptor_;</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :       state-&gt;fork_prepared_ = false;</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :       lock.unlock();</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :       reactor_.register_internal_descriptor(reactor::read_op,</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :           read_descriptor, reactor_data_, new pipe_read_op);</span>
+<span class="lineNum">     200 </span>            :     }
+<span class="lineNum">     201 </span>            :     break;
+<span class="lineNum">     202 </span>            :   case boost::asio::io_service::fork_child:
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :     if (state-&gt;fork_prepared_)</span>
+<span class="lineNum">     204 </span>            :     {
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :       boost::asio::detail::signal_blocker blocker;</span>
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :       close_descriptors();</span>
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :       open_descriptors();</span>
+<span class="lineNum">     208 </span><span class="lineNoCov">          0 :       int read_descriptor = state-&gt;read_descriptor_;</span>
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 :       state-&gt;fork_prepared_ = false;</span>
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :       lock.unlock();</span>
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :       reactor_.register_internal_descriptor(reactor::read_op,</span>
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :           read_descriptor, reactor_data_, new pipe_read_op);</span>
+<span class="lineNum">     213 </span>            :     }
+<span class="lineNum">     214 </span>            :     break;
+<span class="lineNum">     215 </span>            :   default:
+<span class="lineNum">     216 </span>            :     break;
+<span class="lineNum">     217 </span>            :   }
+<span class="lineNum">     218 </span>            : #else // !defined(BOOST_ASIO_WINDOWS)
+<span class="lineNum">     219 </span>            :       //   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">     220 </span>            :       //   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     221 </span>            :   (void)fork_ev;
+<span class="lineNum">     222 </span>            : #endif // !defined(BOOST_ASIO_WINDOWS)
+<span class="lineNum">     223 </span>            :        //   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">     224 </span>            :        //   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span>            : void signal_set_service::construct(
+<span class="lineNum">     228 </span>            :     signal_set_service::implementation_type&amp; impl)
+<span class="lineNum">     229 </span>            : {
+<span class="lineNum">     230 </span>            :   impl.signals_ = 0;
+<span class="lineNum">     231 </span>            : }
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            : void signal_set_service::destroy(
+<span class="lineNum">     234 </span>            :     signal_set_service::implementation_type&amp; impl)
+<span class="lineNum">     235 </span>            : {
+<span class="lineNum">     236 </span>            :   boost::system::error_code ignored_ec;
+<span class="lineNum">     237 </span>            :   clear(impl, ignored_ec);
+<span class="lineNum">     238 </span>            :   cancel(impl, ignored_ec);
+<span class="lineNum">     239 </span>            : }
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            : boost::system::error_code signal_set_service::add(
+<span class="lineNum">     242 </span>            :     signal_set_service::implementation_type&amp; impl,
+<span class="lineNum">     243 </span>            :     int signal_number, boost::system::error_code&amp; ec)
+<span class="lineNum">     244 </span>            : {
+<span class="lineNum">     245 </span>            :   // Check that the signal number is valid.
+<span class="lineNum">     246 </span>            :   if (signal_number &lt; 0 || signal_number &gt;= max_signal_number)
+<span class="lineNum">     247 </span>            :   {
+<span class="lineNum">     248 </span>            :     ec = boost::asio::error::invalid_argument;
+<span class="lineNum">     249 </span>            :     return ec;
+<span class="lineNum">     250 </span>            :   }
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            :   signal_state* state = get_signal_state();
+<span class="lineNum">     253 </span>            :   static_mutex::scoped_lock lock(state-&gt;mutex_);
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            :   // Find the appropriate place to insert the registration.
+<span class="lineNum">     256 </span>            :   registration** insertion_point = &amp;impl.signals_;
+<span class="lineNum">     257 </span>            :   registration* next = impl.signals_;
+<span class="lineNum">     258 </span>            :   while (next &amp;&amp; next-&gt;signal_number_ &lt; signal_number)
+<span class="lineNum">     259 </span>            :   {
+<span class="lineNum">     260 </span>            :     insertion_point = &amp;next-&gt;next_in_set_;
+<span class="lineNum">     261 </span>            :     next = next-&gt;next_in_set_;
+<span class="lineNum">     262 </span>            :   }
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            :   // Only do something if the signal is not already registered.
+<span class="lineNum">     265 </span>            :   if (next == 0 || next-&gt;signal_number_ != signal_number)
+<span class="lineNum">     266 </span>            :   {
+<span class="lineNum">     267 </span>            :     registration* new_registration = new registration;
+<span class="lineNum">     268 </span>            : 
+<span class="lineNum">     269 </span>            : #if defined(BOOST_ASIO_HAS_SIGNAL) || defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     270 </span>            :     // Register for the signal if we're the first.
+<span class="lineNum">     271 </span>            :     if (state-&gt;registration_count_[signal_number] == 0)
+<span class="lineNum">     272 </span>            :     {
+<span class="lineNum">     273 </span>            : # if defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     274 </span>            :       using namespace std; // For memset.
+<span class="lineNum">     275 </span>            :       struct sigaction sa;
+<span class="lineNum">     276 </span>            :       memset(&amp;sa, 0, sizeof(sa));
+<span class="lineNum">     277 </span>            :       sa.sa_handler = boost_asio_signal_handler;
+<span class="lineNum">     278 </span>            :       sigfillset(&amp;sa.sa_mask);
+<span class="lineNum">     279 </span>            :       if (::sigaction(signal_number, &amp;sa, 0) == -1)
+<span class="lineNum">     280 </span>            : # else // defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     281 </span>            :       if (::signal(signal_number, boost_asio_signal_handler) == SIG_ERR)
+<span class="lineNum">     282 </span>            : # endif // defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     283 </span>            :       {
+<span class="lineNum">     284 </span>            : # if defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
+<span class="lineNum">     285 </span>            :         ec = boost::asio::error::invalid_argument;
+<span class="lineNum">     286 </span>            : # else // defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
+<span class="lineNum">     287 </span>            :         ec = boost::system::error_code(errno,
+<span class="lineNum">     288 </span>            :             boost::asio::error::get_system_category());
+<span class="lineNum">     289 </span>            : # endif // defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
+<span class="lineNum">     290 </span>            :         delete new_registration;
+<span class="lineNum">     291 </span>            :         return ec;
+<span class="lineNum">     292 </span>            :       }
+<span class="lineNum">     293 </span>            :     }
+<span class="lineNum">     294 </span>            : #endif // defined(BOOST_ASIO_HAS_SIGNAL) || defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            :     // Record the new registration in the set.
+<span class="lineNum">     297 </span>            :     new_registration-&gt;signal_number_ = signal_number;
+<span class="lineNum">     298 </span>            :     new_registration-&gt;queue_ = &amp;impl.queue_;
+<span class="lineNum">     299 </span>            :     new_registration-&gt;next_in_set_ = next;
+<span class="lineNum">     300 </span>            :     *insertion_point = new_registration;
+<span class="lineNum">     301 </span>            : 
+<span class="lineNum">     302 </span>            :     // Insert registration into the registration table.
+<span class="lineNum">     303 </span>            :     new_registration-&gt;next_in_table_ = registrations_[signal_number];
+<span class="lineNum">     304 </span>            :     if (registrations_[signal_number])
+<span class="lineNum">     305 </span>            :       registrations_[signal_number]-&gt;prev_in_table_ = new_registration;
+<span class="lineNum">     306 </span>            :     registrations_[signal_number] = new_registration;
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            :     ++state-&gt;registration_count_[signal_number];
+<span class="lineNum">     309 </span>            :   }
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            :   ec = boost::system::error_code();
+<span class="lineNum">     312 </span>            :   return ec;
+<span class="lineNum">     313 </span>            : }
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span>            : boost::system::error_code signal_set_service::remove(
+<span class="lineNum">     316 </span>            :     signal_set_service::implementation_type&amp; impl,
+<span class="lineNum">     317 </span>            :     int signal_number, boost::system::error_code&amp; ec)
+<span class="lineNum">     318 </span>            : {
+<span class="lineNum">     319 </span>            :   // Check that the signal number is valid.
+<span class="lineNum">     320 </span>            :   if (signal_number &lt; 0 || signal_number &gt;= max_signal_number)
+<span class="lineNum">     321 </span>            :   {
+<span class="lineNum">     322 </span>            :     ec = boost::asio::error::invalid_argument;
+<span class="lineNum">     323 </span>            :     return ec;
+<span class="lineNum">     324 </span>            :   }
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span>            :   signal_state* state = get_signal_state();
+<span class="lineNum">     327 </span>            :   static_mutex::scoped_lock lock(state-&gt;mutex_);
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span>            :   // Find the signal number in the list of registrations.
+<span class="lineNum">     330 </span>            :   registration** deletion_point = &amp;impl.signals_;
+<span class="lineNum">     331 </span>            :   registration* reg = impl.signals_;
+<span class="lineNum">     332 </span>            :   while (reg &amp;&amp; reg-&gt;signal_number_ &lt; signal_number)
+<span class="lineNum">     333 </span>            :   {
+<span class="lineNum">     334 </span>            :     deletion_point = &amp;reg-&gt;next_in_set_;
+<span class="lineNum">     335 </span>            :     reg = reg-&gt;next_in_set_;
+<span class="lineNum">     336 </span>            :   }
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            :   if (reg != 0 &amp;&amp; reg-&gt;signal_number_ == signal_number)
+<span class="lineNum">     339 </span>            :   {
+<span class="lineNum">     340 </span>            : #if defined(BOOST_ASIO_HAS_SIGNAL) || defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     341 </span>            :     // Set signal handler back to the default if we're the last.
+<span class="lineNum">     342 </span>            :     if (state-&gt;registration_count_[signal_number] == 1)
+<span class="lineNum">     343 </span>            :     {
+<span class="lineNum">     344 </span>            : # if defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     345 </span>            :       using namespace std; // For memset.
+<span class="lineNum">     346 </span>            :       struct sigaction sa;
+<span class="lineNum">     347 </span>            :       memset(&amp;sa, 0, sizeof(sa));
+<span class="lineNum">     348 </span>            :       sa.sa_handler = SIG_DFL;
+<span class="lineNum">     349 </span>            :       if (::sigaction(signal_number, &amp;sa, 0) == -1)
+<span class="lineNum">     350 </span>            : # else // defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     351 </span>            :       if (::signal(signal_number, SIG_DFL) == SIG_ERR)
+<span class="lineNum">     352 </span>            : # endif // defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     353 </span>            :       {
+<span class="lineNum">     354 </span>            : # if defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
+<span class="lineNum">     355 </span>            :         ec = boost::asio::error::invalid_argument;
+<span class="lineNum">     356 </span>            : # else // defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
+<span class="lineNum">     357 </span>            :         ec = boost::system::error_code(errno,
+<span class="lineNum">     358 </span>            :             boost::asio::error::get_system_category());
+<span class="lineNum">     359 </span>            : # endif // defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
+<span class="lineNum">     360 </span>            :         return ec;
+<span class="lineNum">     361 </span>            :       }
+<span class="lineNum">     362 </span>            :     }
+<span class="lineNum">     363 </span>            : #endif // defined(BOOST_ASIO_HAS_SIGNAL) || defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     364 </span>            : 
+<span class="lineNum">     365 </span>            :     // Remove the registration from the set.
+<span class="lineNum">     366 </span>            :     *deletion_point = reg-&gt;next_in_set_;
+<span class="lineNum">     367 </span>            : 
+<span class="lineNum">     368 </span>            :     // Remove the registration from the registration table.
+<span class="lineNum">     369 </span>            :     if (registrations_[signal_number] == reg)
+<span class="lineNum">     370 </span>            :       registrations_[signal_number] = reg-&gt;next_in_table_;
+<span class="lineNum">     371 </span>            :     if (reg-&gt;prev_in_table_)
+<span class="lineNum">     372 </span>            :       reg-&gt;prev_in_table_-&gt;next_in_table_ = reg-&gt;next_in_table_;
+<span class="lineNum">     373 </span>            :     if (reg-&gt;next_in_table_)
+<span class="lineNum">     374 </span>            :       reg-&gt;next_in_table_-&gt;prev_in_table_ = reg-&gt;prev_in_table_;
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span>            :     --state-&gt;registration_count_[signal_number];
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span>            :     delete reg;
+<span class="lineNum">     379 </span>            :   }
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span>            :   ec = boost::system::error_code();
+<span class="lineNum">     382 </span>            :   return ec;
+<span class="lineNum">     383 </span>            : }
+<span class="lineNum">     384 </span>            : 
+<span class="lineNum">     385 </span>            : boost::system::error_code signal_set_service::clear(
+<span class="lineNum">     386 </span>            :     signal_set_service::implementation_type&amp; impl,
+<span class="lineNum">     387 </span>            :     boost::system::error_code&amp; ec)
+<span class="lineNum">     388 </span>            : {
+<span class="lineNum">     389 </span>            :   signal_state* state = get_signal_state();
+<span class="lineNum">     390 </span>            :   static_mutex::scoped_lock lock(state-&gt;mutex_);
+<span class="lineNum">     391 </span>            : 
+<span class="lineNum">     392 </span>            :   while (registration* reg = impl.signals_)
+<span class="lineNum">     393 </span>            :   {
+<span class="lineNum">     394 </span>            : #if defined(BOOST_ASIO_HAS_SIGNAL) || defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     395 </span>            :     // Set signal handler back to the default if we're the last.
+<span class="lineNum">     396 </span>            :     if (state-&gt;registration_count_[reg-&gt;signal_number_] == 1)
+<span class="lineNum">     397 </span>            :     {
+<span class="lineNum">     398 </span>            : # if defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     399 </span>            :       using namespace std; // For memset.
+<span class="lineNum">     400 </span>            :       struct sigaction sa;
+<span class="lineNum">     401 </span>            :       memset(&amp;sa, 0, sizeof(sa));
+<span class="lineNum">     402 </span>            :       sa.sa_handler = SIG_DFL;
+<span class="lineNum">     403 </span>            :       if (::sigaction(reg-&gt;signal_number_, &amp;sa, 0) == -1)
+<span class="lineNum">     404 </span>            : # else // defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     405 </span>            :       if (::signal(reg-&gt;signal_number_, SIG_DFL) == SIG_ERR)
+<span class="lineNum">     406 </span>            : # endif // defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     407 </span>            :       {
+<span class="lineNum">     408 </span>            : # if defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
+<span class="lineNum">     409 </span>            :         ec = boost::asio::error::invalid_argument;
+<span class="lineNum">     410 </span>            : # else // defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
+<span class="lineNum">     411 </span>            :         ec = boost::system::error_code(errno,
+<span class="lineNum">     412 </span>            :             boost::asio::error::get_system_category());
+<span class="lineNum">     413 </span>            : # endif // defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
+<span class="lineNum">     414 </span>            :         return ec;
+<span class="lineNum">     415 </span>            :       }
+<span class="lineNum">     416 </span>            :     }
+<span class="lineNum">     417 </span>            : #endif // defined(BOOST_ASIO_HAS_SIGNAL) || defined(BOOST_ASIO_HAS_SIGACTION)
+<span class="lineNum">     418 </span>            : 
+<span class="lineNum">     419 </span>            :     // Remove the registration from the registration table.
+<span class="lineNum">     420 </span>            :     if (registrations_[reg-&gt;signal_number_] == reg)
+<span class="lineNum">     421 </span>            :       registrations_[reg-&gt;signal_number_] = reg-&gt;next_in_table_;
+<span class="lineNum">     422 </span>            :     if (reg-&gt;prev_in_table_)
+<span class="lineNum">     423 </span>            :       reg-&gt;prev_in_table_-&gt;next_in_table_ = reg-&gt;next_in_table_;
+<span class="lineNum">     424 </span>            :     if (reg-&gt;next_in_table_)
+<span class="lineNum">     425 </span>            :       reg-&gt;next_in_table_-&gt;prev_in_table_ = reg-&gt;prev_in_table_;
+<span class="lineNum">     426 </span>            : 
+<span class="lineNum">     427 </span>            :     --state-&gt;registration_count_[reg-&gt;signal_number_];
+<span class="lineNum">     428 </span>            : 
+<span class="lineNum">     429 </span>            :     impl.signals_ = reg-&gt;next_in_set_;
+<span class="lineNum">     430 </span>            :     delete reg;
+<span class="lineNum">     431 </span>            :   }
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span>            :   ec = boost::system::error_code();
+<span class="lineNum">     434 </span>            :   return ec;
+<span class="lineNum">     435 </span>            : }
+<span class="lineNum">     436 </span>            : 
+<span class="lineNum">     437 </span>            : boost::system::error_code signal_set_service::cancel(
+<span class="lineNum">     438 </span>            :     signal_set_service::implementation_type&amp; impl,
+<span class="lineNum">     439 </span>            :     boost::system::error_code&amp; ec)
+<span class="lineNum">     440 </span>            : {
+<span class="lineNum">     441 </span>            :   BOOST_ASIO_HANDLER_OPERATION((&quot;signal_set&quot;, &amp;impl, &quot;cancel&quot;));
+<span class="lineNum">     442 </span>            : 
+<span class="lineNum">     443 </span>            :   op_queue&lt;operation&gt; ops;
+<span class="lineNum">     444 </span>            :   {
+<span class="lineNum">     445 </span>            :     signal_state* state = get_signal_state();
+<span class="lineNum">     446 </span>            :     static_mutex::scoped_lock lock(state-&gt;mutex_);
+<span class="lineNum">     447 </span>            : 
+<span class="lineNum">     448 </span>            :     while (signal_op* op = impl.queue_.front())
+<span class="lineNum">     449 </span>            :     {
+<span class="lineNum">     450 </span>            :       op-&gt;ec_ = boost::asio::error::operation_aborted;
+<span class="lineNum">     451 </span>            :       impl.queue_.pop();
+<span class="lineNum">     452 </span>            :       ops.push(op);
+<span class="lineNum">     453 </span>            :     }
+<span class="lineNum">     454 </span>            :   }
+<span class="lineNum">     455 </span>            : 
+<span class="lineNum">     456 </span>            :   io_service_.post_deferred_completions(ops);
+<span class="lineNum">     457 </span>            : 
+<span class="lineNum">     458 </span>            :   ec = boost::system::error_code();
+<span class="lineNum">     459 </span>            :   return ec;
+<a name="460"><span class="lineNum">     460 </span>            : }</a>
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 : void signal_set_service::deliver_signal(int signal_number)</span>
+<span class="lineNum">     463 </span>            : {
+<span class="lineNum">     464 </span><span class="lineNoCov">          0 :   signal_state* state = get_signal_state();</span>
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :   static_mutex::scoped_lock lock(state-&gt;mutex_);</span>
+<span class="lineNum">     466 </span>            : 
+<span class="lineNum">     467 </span><span class="lineNoCov">          0 :   signal_set_service* service = state-&gt;service_list_;</span>
+<span class="lineNum">     468 </span><span class="lineNoCov">          0 :   while (service)</span>
+<span class="lineNum">     469 </span>            :   {
+<span class="lineNum">     470 </span><span class="lineNoCov">          0 :     op_queue&lt;operation&gt; ops;</span>
+<span class="lineNum">     471 </span>            : 
+<span class="lineNum">     472 </span><span class="lineNoCov">          0 :     registration* reg = service-&gt;registrations_[signal_number];</span>
+<span class="lineNum">     473 </span><span class="lineNoCov">          0 :     while (reg)</span>
+<span class="lineNum">     474 </span>            :     {
+<span class="lineNum">     475 </span><span class="lineNoCov">          0 :       if (reg-&gt;queue_-&gt;empty())</span>
+<span class="lineNum">     476 </span>            :       {
+<span class="lineNum">     477 </span><span class="lineNoCov">          0 :         ++reg-&gt;undelivered_;</span>
+<span class="lineNum">     478 </span>            :       }
+<span class="lineNum">     479 </span>            :       else
+<span class="lineNum">     480 </span>            :       {
+<span class="lineNum">     481 </span><span class="lineNoCov">          0 :         while (signal_op* op = reg-&gt;queue_-&gt;front())</span>
+<span class="lineNum">     482 </span>            :         {
+<span class="lineNum">     483 </span><span class="lineNoCov">          0 :           op-&gt;signal_number_ = signal_number;</span>
+<span class="lineNum">     484 </span><span class="lineNoCov">          0 :           reg-&gt;queue_-&gt;pop();</span>
+<span class="lineNum">     485 </span>            :           ops.push(op);
+<span class="lineNum">     486 </span>            :         }
+<span class="lineNum">     487 </span>            :       }
+<span class="lineNum">     488 </span>            : 
+<span class="lineNum">     489 </span><span class="lineNoCov">          0 :       reg = reg-&gt;next_in_table_;</span>
+<span class="lineNum">     490 </span>            :     }
+<span class="lineNum">     491 </span>            : 
+<span class="lineNum">     492 </span><span class="lineNoCov">          0 :     service-&gt;io_service_.post_deferred_completions(ops);</span>
+<span class="lineNum">     493 </span>            : 
+<span class="lineNum">     494 </span><span class="lineNoCov">          0 :     service = service-&gt;next_;</span>
+<span class="lineNum">     495 </span>            :   }
+<span class="lineNum">     496 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     497 </span>            : 
+<span class="lineNum">     498 </span>            : void signal_set_service::add_service(signal_set_service* service)
+<span class="lineNum">     499 </span>            : {
+<span class="lineNum">     500 </span>            :   signal_state* state = get_signal_state();
+<span class="lineNum">     501 </span>            :   static_mutex::scoped_lock lock(state-&gt;mutex_);
+<span class="lineNum">     502 </span>            : 
+<span class="lineNum">     503 </span>            : #if !defined(BOOST_ASIO_WINDOWS) &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     504 </span>            :   // If this is the first service to be created, open a new pipe.
+<span class="lineNum">     505 </span>            :   if (state-&gt;service_list_ == 0)
+<span class="lineNum">     506 </span>            :     open_descriptors();
+<span class="lineNum">     507 </span>            : #endif // !defined(BOOST_ASIO_WINDOWS) &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            :   // Insert service into linked list of all services.
+<span class="lineNum">     510 </span>            :   service-&gt;next_ = state-&gt;service_list_;
+<span class="lineNum">     511 </span>            :   service-&gt;prev_ = 0;
+<span class="lineNum">     512 </span>            :   if (state-&gt;service_list_)
+<span class="lineNum">     513 </span>            :     state-&gt;service_list_-&gt;prev_ = service;
+<span class="lineNum">     514 </span>            :   state-&gt;service_list_ = service;
+<span class="lineNum">     515 </span>            : 
+<span class="lineNum">     516 </span>            : #if !defined(BOOST_ASIO_WINDOWS) \
+<span class="lineNum">     517 </span>            :   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME) \
+<span class="lineNum">     518 </span>            :   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     519 </span>            :   // Register for pipe readiness notifications.
+<span class="lineNum">     520 </span>            :   int read_descriptor = state-&gt;read_descriptor_;
+<span class="lineNum">     521 </span>            :   lock.unlock();
+<span class="lineNum">     522 </span>            :   service-&gt;reactor_.register_internal_descriptor(reactor::read_op,
+<span class="lineNum">     523 </span>            :       read_descriptor, service-&gt;reactor_data_, new pipe_read_op);
+<span class="lineNum">     524 </span>            : #endif // !defined(BOOST_ASIO_WINDOWS)
+<span class="lineNum">     525 </span>            :        //   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">     526 </span>            :        //   &amp;&amp; !defined(__CYGWIN__)
+<a name="527"><span class="lineNum">     527 </span>            : }</a>
+<span class="lineNum">     528 </span>            : 
+<span class="lineNum">     529 </span><span class="lineNoCov">          0 : void signal_set_service::remove_service(signal_set_service* service)</span>
+<span class="lineNum">     530 </span>            : {
+<span class="lineNum">     531 </span><span class="lineNoCov">          0 :   signal_state* state = get_signal_state();</span>
+<span class="lineNum">     532 </span><span class="lineNoCov">          0 :   static_mutex::scoped_lock lock(state-&gt;mutex_);</span>
+<span class="lineNum">     533 </span>            : 
+<span class="lineNum">     534 </span><span class="lineNoCov">          0 :   if (service-&gt;next_ || service-&gt;prev_ || state-&gt;service_list_ == service)</span>
+<span class="lineNum">     535 </span>            :   {
+<span class="lineNum">     536 </span>            : #if !defined(BOOST_ASIO_WINDOWS) \
+<span class="lineNum">     537 </span>            :   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME) \
+<span class="lineNum">     538 </span>            :   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     539 </span>            :     // Disable the pipe readiness notifications.
+<span class="lineNum">     540 </span><span class="lineNoCov">          0 :     int read_descriptor = state-&gt;read_descriptor_;</span>
+<span class="lineNum">     541 </span><span class="lineNoCov">          0 :     lock.unlock();</span>
+<span class="lineNum">     542 </span><span class="lineNoCov">          0 :     service-&gt;reactor_.deregister_descriptor(</span>
+<span class="lineNum">     543 </span><span class="lineNoCov">          0 :         read_descriptor, service-&gt;reactor_data_, false);</span>
+<span class="lineNum">     544 </span><span class="lineNoCov">          0 :     lock.lock();</span>
+<span class="lineNum">     545 </span>            : #endif // !defined(BOOST_ASIO_WINDOWS)
+<span class="lineNum">     546 </span>            :        //   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">     547 </span>            :        //   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     548 </span>            : 
+<span class="lineNum">     549 </span>            :     // Remove service from linked list of all services.
+<span class="lineNum">     550 </span><span class="lineNoCov">          0 :     if (state-&gt;service_list_ == service)</span>
+<span class="lineNum">     551 </span><span class="lineNoCov">          0 :       state-&gt;service_list_ = service-&gt;next_;</span>
+<span class="lineNum">     552 </span><span class="lineNoCov">          0 :     if (service-&gt;prev_)</span>
+<span class="lineNum">     553 </span><span class="lineNoCov">          0 :       service-&gt;prev_-&gt;next_ = service-&gt;next_;</span>
+<span class="lineNum">     554 </span><span class="lineNoCov">          0 :     if (service-&gt;next_)</span>
+<span class="lineNum">     555 </span><span class="lineNoCov">          0 :       service-&gt;next_-&gt;prev_= service-&gt;prev_;</span>
+<span class="lineNum">     556 </span><span class="lineNoCov">          0 :     service-&gt;next_ = 0;</span>
+<span class="lineNum">     557 </span><span class="lineNoCov">          0 :     service-&gt;prev_ = 0;</span>
+<span class="lineNum">     558 </span>            : 
+<span class="lineNum">     559 </span>            : #if !defined(BOOST_ASIO_WINDOWS) &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     560 </span>            :     // If this is the last service to be removed, close the pipe.
+<span class="lineNum">     561 </span><span class="lineNoCov">          0 :     if (state-&gt;service_list_ == 0)</span>
+<span class="lineNum">     562 </span><span class="lineNoCov">          0 :       close_descriptors();</span>
+<span class="lineNum">     563 </span>            : #endif // !defined(BOOST_ASIO_WINDOWS) &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     564 </span>            :   }
+<a name="565"><span class="lineNum">     565 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     566 </span>            : 
+<span class="lineNum">     567 </span><span class="lineNoCov">          0 : void signal_set_service::open_descriptors()</span>
+<span class="lineNum">     568 </span>            : {
+<span class="lineNum">     569 </span>            : #if !defined(BOOST_ASIO_WINDOWS) \
+<span class="lineNum">     570 </span>            :   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME) \
+<span class="lineNum">     571 </span>            :   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     572 </span><span class="lineNoCov">          0 :   signal_state* state = get_signal_state();</span>
+<span class="lineNum">     573 </span>            : 
+<span class="lineNum">     574 </span>            :   int pipe_fds[2];
+<span class="lineNum">     575 </span><span class="lineNoCov">          0 :   if (::pipe(pipe_fds) == 0)</span>
+<span class="lineNum">     576 </span>            :   {
+<span class="lineNum">     577 </span><span class="lineNoCov">          0 :     state-&gt;read_descriptor_ = pipe_fds[0];</span>
+<span class="lineNum">     578 </span><span class="lineNoCov">          0 :     ::fcntl(state-&gt;read_descriptor_, F_SETFL, O_NONBLOCK);</span>
+<span class="lineNum">     579 </span>            : 
+<span class="lineNum">     580 </span><span class="lineNoCov">          0 :     state-&gt;write_descriptor_ = pipe_fds[1];</span>
+<span class="lineNum">     581 </span><span class="lineNoCov">          0 :     ::fcntl(state-&gt;write_descriptor_, F_SETFL, O_NONBLOCK);</span>
+<span class="lineNum">     582 </span>            : 
+<span class="lineNum">     583 </span>            : #if defined(FD_CLOEXEC)
+<span class="lineNum">     584 </span><span class="lineNoCov">          0 :     ::fcntl(state-&gt;read_descriptor_, F_SETFD, FD_CLOEXEC);</span>
+<span class="lineNum">     585 </span><span class="lineNoCov">          0 :     ::fcntl(state-&gt;write_descriptor_, F_SETFD, FD_CLOEXEC);</span>
+<span class="lineNum">     586 </span>            : #endif // defined(FD_CLOEXEC)
+<span class="lineNum">     587 </span>            :   }
+<span class="lineNum">     588 </span>            :   else
+<span class="lineNum">     589 </span>            :   {
+<span class="lineNum">     590 </span><span class="lineNoCov">          0 :     boost::system::error_code ec(errno,</span>
+<span class="lineNum">     591 </span><span class="lineNoCov">          0 :         boost::asio::error::get_system_category());</span>
+<span class="lineNum">     592 </span><span class="lineNoCov">          0 :     boost::asio::detail::throw_error(ec, &quot;signal_set_service pipe&quot;);</span>
+<span class="lineNum">     593 </span>            :   }
+<span class="lineNum">     594 </span>            : #endif // !defined(BOOST_ASIO_WINDOWS)
+<span class="lineNum">     595 </span>            :        //   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">     596 </span>            :        //   &amp;&amp; !defined(__CYGWIN__)
+<a name="597"><span class="lineNum">     597 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     598 </span>            : 
+<span class="lineNum">     599 </span><span class="lineNoCov">          0 : void signal_set_service::close_descriptors()</span>
+<span class="lineNum">     600 </span>            : {
+<span class="lineNum">     601 </span>            : #if !defined(BOOST_ASIO_WINDOWS) \
+<span class="lineNum">     602 </span>            :   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME) \
+<span class="lineNum">     603 </span>            :   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     604 </span><span class="lineNoCov">          0 :   signal_state* state = get_signal_state();</span>
+<span class="lineNum">     605 </span>            : 
+<span class="lineNum">     606 </span><span class="lineNoCov">          0 :   if (state-&gt;read_descriptor_ != -1)</span>
+<span class="lineNum">     607 </span><span class="lineNoCov">          0 :     ::close(state-&gt;read_descriptor_);</span>
+<span class="lineNum">     608 </span><span class="lineNoCov">          0 :   state-&gt;read_descriptor_ = -1;</span>
+<span class="lineNum">     609 </span>            : 
+<span class="lineNum">     610 </span><span class="lineNoCov">          0 :   if (state-&gt;write_descriptor_ != -1)</span>
+<span class="lineNum">     611 </span><span class="lineNoCov">          0 :     ::close(state-&gt;write_descriptor_);</span>
+<span class="lineNum">     612 </span><span class="lineNoCov">          0 :   state-&gt;write_descriptor_ = -1;</span>
+<span class="lineNum">     613 </span>            : #endif // !defined(BOOST_ASIO_WINDOWS)
+<span class="lineNum">     614 </span>            :        //   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">     615 </span>            :        //   &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     616 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     617 </span>            : 
+<span class="lineNum">     618 </span>            : void signal_set_service::start_wait_op(
+<span class="lineNum">     619 </span>            :     signal_set_service::implementation_type&amp; impl, signal_op* op)
+<span class="lineNum">     620 </span>            : {
+<span class="lineNum">     621 </span>            :   io_service_.work_started();
+<span class="lineNum">     622 </span>            : 
+<span class="lineNum">     623 </span>            :   signal_state* state = get_signal_state();
+<span class="lineNum">     624 </span>            :   static_mutex::scoped_lock lock(state-&gt;mutex_);
+<span class="lineNum">     625 </span>            : 
+<span class="lineNum">     626 </span>            :   registration* reg = impl.signals_;
+<span class="lineNum">     627 </span>            :   while (reg)
+<span class="lineNum">     628 </span>            :   {
+<span class="lineNum">     629 </span>            :     if (reg-&gt;undelivered_ &gt; 0)
+<span class="lineNum">     630 </span>            :     {
+<span class="lineNum">     631 </span>            :       --reg-&gt;undelivered_;
+<span class="lineNum">     632 </span>            :       op-&gt;signal_number_ = reg-&gt;signal_number_;
+<span class="lineNum">     633 </span>            :       io_service_.post_deferred_completion(op);
+<span class="lineNum">     634 </span>            :       return;
+<span class="lineNum">     635 </span>            :     }
+<span class="lineNum">     636 </span>            : 
+<span class="lineNum">     637 </span>            :     reg = reg-&gt;next_in_set_;
+<span class="lineNum">     638 </span>            :   }
+<span class="lineNum">     639 </span>            : 
+<span class="lineNum">     640 </span>            :   impl.queue_.push(op);
+<span class="lineNum">     641 </span>            : }
+<span class="lineNum">     642 </span>            : 
+<span class="lineNum">     643 </span>            : } // namespace detail
+<span class="lineNum">     644 </span>            : } // namespace asio
+<span class="lineNum">     645 </span>            : } // namespace boost
+<span class="lineNum">     646 </span>            : 
+<span class="lineNum">     647 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     648 </span>            : 
+<span class="lineNum">     649 </span>            : #endif // BOOST_ASIO_DETAIL_IMPL_SIGNAL_SET_SERVICE_IPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

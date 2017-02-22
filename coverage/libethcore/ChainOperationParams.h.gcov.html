@@ -1,0 +1,163 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethcore/ChainOperationParams.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethcore</a> - ChainOperationParams.h<span style="font-size: 80%;"> (source / <a href="ChainOperationParams.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file ChainOperationsParams.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      25 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      26 </span>            : #include &lt;libevmcore/EVMSchedule.h&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace dev
+<span class="lineNum">      29 </span>            : {
+<span class="lineNum">      30 </span>            : namespace eth
+<a name="31"><span class="lineNum">      31 </span>            : {</a>
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span><span class="lineCov">    1219996 : class PrecompiledContract</span>
+<span class="lineNum">      34 </span>            : {
+<a name="35"><span class="lineNum">      35 </span>            : public:</a>
+<span class="lineNum">      36 </span>            :         PrecompiledContract() = default;
+<span class="lineNum">      37 </span><span class="lineCov">      46740 :         PrecompiledContract(std::function&lt;bigint(size_t)&gt; const&amp; _cost, std::function&lt;bytes(bytesConstRef)&gt; const&amp; _exec):</span>
+<span class="lineNum">      38 </span>            :                 m_cost(_cost),
+<span class="lineNum">      39 </span><span class="lineCov">      46740 :                 m_execute(_exec)</span>
+<span class="lineNum">      40 </span><span class="lineCov">      46740 :         {}</span>
+<span class="lineNum">      41 </span>            :         PrecompiledContract(unsigned _base, unsigned _word, std::function&lt;bytes(bytesConstRef)&gt; const&amp; _exec);
+<a name="42"><span class="lineNum">      42 </span>            : </a>
+<span class="lineNum">      43 </span><span class="lineCov">        990 :         bigint cost(bytesConstRef _in) const { return m_cost(_in.size()); }</span>
+<span class="lineNum">      44 </span><span class="lineCov">        820 :         bytes execute(bytesConstRef _in) const { return m_execute(_in); }</span>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : private:
+<span class="lineNum">      47 </span>            :         std::function&lt;bigint(size_t)&gt; m_cost;
+<span class="lineNum">      48 </span>            :         std::function&lt;bytes(bytesConstRef)&gt; m_execute;
+<a name="49"><span class="lineNum">      49 </span>            : };</a>
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineCov">     730177 : struct ChainOperationParams</span>
+<span class="lineNum">      52 </span>            : {
+<span class="lineNum">      53 </span>            :         ChainOperationParams();
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :         explicit operator bool() const { return accountStartNonce != Invalid256; }
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :         /// The chain sealer name: e.g. Ethash, NoProof, BasicAuthority
+<span class="lineNum">      58 </span>            :         std::string sealEngineName = &quot;NoProof&quot;;
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :         /// General chain params.
+<span class="lineNum">      61 </span>            :         u256 blockReward = 0;
+<span class="lineNum">      62 </span>            :         u256 maximumExtraDataSize = 1024;
+<span class="lineNum">      63 </span>            :         u256 accountStartNonce = 0;
+<span class="lineNum">      64 </span>            :         bool tieBreakingGas = true;
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :         /// Precompiled contracts as specified in the chain params.
+<span class="lineNum">      67 </span>            :         std::unordered_map&lt;Address, PrecompiledContract&gt; precompiled;
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :         /**
+<span class="lineNum">      70 </span>            :          * @brief Additional parameters.
+<span class="lineNum">      71 </span>            :          *
+<span class="lineNum">      72 </span>            :          * e.g. Ethash specific:
+<span class="lineNum">      73 </span>            :          * - minGasLimit
+<span class="lineNum">      74 </span>            :          * - maxGasLimit
+<span class="lineNum">      75 </span>            :          * - gasLimitBoundDivisor
+<span class="lineNum">      76 </span>            :          * - minimumDifficulty
+<span class="lineNum">      77 </span>            :          * - difficultyBoundDivisor
+<span class="lineNum">      78 </span>            :          * - durationLimit
+<span class="lineNum">      79 </span>            :          */
+<span class="lineNum">      80 </span>            :         std::unordered_map&lt;std::string, std::string&gt; otherParams;
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :         /// Convenience method to get an otherParam as a u256 int.
+<span class="lineNum">      83 </span>            :         u256 u256Param(std::string const&amp; _name) const;
+<span class="lineNum">      84 </span>            : };
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            : }
+<span class="lineNum">      87 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

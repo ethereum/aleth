@@ -1,0 +1,179 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - utils/secp256k1/num_gmp_impl.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">utils/secp256k1</a> - num_gmp_impl.h<span style="font-size: 80%;"> (source / <a href="num_gmp_impl.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntry">39</td>
+            <td class="headerCovTableEntryMed">89.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /**********************************************************************</a>
+<span class="lineNum">       2 </span>            :  * Copyright (c) 2013, 2014 Pieter Wuille                             *
+<span class="lineNum">       3 </span>            :  * Distributed under the MIT software license, see the accompanying   *
+<span class="lineNum">       4 </span>            :  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+<span class="lineNum">       5 </span>            :  **********************************************************************/
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #ifndef _SECP256K1_NUM_REPR_IMPL_H_
+<span class="lineNum">       8 </span>            : #define _SECP256K1_NUM_REPR_IMPL_H_
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #include &lt;string.h&gt;
+<span class="lineNum">      11 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      12 </span>            : #include &lt;gmp.h&gt;
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &quot;util.h&quot;
+<span class="lineNum">      15 </span>            : #include &quot;num.h&quot;
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : #ifdef VERIFY
+<span class="lineNum">      18 </span>            : static void secp256k1_num_sanity(const secp256k1_num_t *a) {
+<span class="lineNum">      19 </span>            :     VERIFY_CHECK(a-&gt;limbs == 1 || (a-&gt;limbs &gt; 1 &amp;&amp; a-&gt;data[a-&gt;limbs-1] != 0));
+<span class="lineNum">      20 </span>            : }
+<span class="lineNum">      21 </span>            : #else
+<span class="lineNum">      22 </span>            : #define secp256k1_num_sanity(a) do { } while(0)
+<a name="23"><span class="lineNum">      23 </span>            : #endif</a>
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span><span class="lineCov">      64014 : static void secp256k1_num_get_bin(unsigned char *r, unsigned int rlen, const secp256k1_num_t *a) {</span>
+<span class="lineNum">      26 </span>            :     unsigned char tmp[65];
+<span class="lineNum">      27 </span><span class="lineCov">      64014 :     int len = 0;</span>
+<span class="lineNum">      28 </span><span class="lineCov">      64014 :     int shift = 0;</span>
+<span class="lineNum">      29 </span><span class="lineCov">      64014 :     if (a-&gt;limbs&gt;1 || a-&gt;data[0] != 0) {</span>
+<span class="lineNum">      30 </span><span class="lineCov">      64014 :         len = mpn_get_str(tmp, 256, (mp_limb_t*)a-&gt;data, a-&gt;limbs);</span>
+<span class="lineNum">      31 </span>            :     }
+<span class="lineNum">      32 </span><span class="lineNoCov">          0 :     while (shift &lt; len &amp;&amp; tmp[shift] == 0) shift++;</span>
+<span class="lineNum">      33 </span>            :     VERIFY_CHECK(len-shift &lt;= (int)rlen);
+<span class="lineNum">      34 </span><span class="lineCov">     128028 :     memset(r, 0, rlen - len + shift);</span>
+<span class="lineNum">      35 </span><span class="lineCov">      64014 :     if (len &gt; shift) {</span>
+<span class="lineNum">      36 </span><span class="lineCov">      64014 :         memcpy(r + rlen - len + shift, tmp + shift, len - shift);</span>
+<span class="lineNum">      37 </span>            :     }
+<span class="lineNum">      38 </span><span class="lineCov">      64014 :     memset(tmp, 0, sizeof(tmp));</span>
+<a name="39"><span class="lineNum">      39 </span><span class="lineCov">      64014 : }</span></a>
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span><span class="lineCov">     128028 : static void secp256k1_num_set_bin(secp256k1_num_t *r, const unsigned char *a, unsigned int alen) {</span>
+<span class="lineNum">      42 </span>            :     int len;
+<span class="lineNum">      43 </span>            :     VERIFY_CHECK(alen &gt; 0);
+<span class="lineNum">      44 </span>            :     VERIFY_CHECK(alen &lt;= 64);
+<span class="lineNum">      45 </span><span class="lineCov">     128028 :     len = mpn_set_str(r-&gt;data, a, alen, 256);</span>
+<span class="lineNum">      46 </span><span class="lineCov">     128028 :     if (len == 0) {</span>
+<span class="lineNum">      47 </span><span class="lineNoCov">          0 :         r-&gt;data[0] = 0;</span>
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 :         len = 1;</span>
+<span class="lineNum">      49 </span>            :     }
+<span class="lineNum">      50 </span>            :     VERIFY_CHECK(len &lt;= NUM_LIMBS*2);
+<span class="lineNum">      51 </span><span class="lineCov">     128028 :     r-&gt;limbs = len;</span>
+<span class="lineNum">      52 </span><span class="lineCov">     128028 :     r-&gt;neg = 0;</span>
+<span class="lineNum">      53 </span><span class="lineCov">     256136 :     while (r-&gt;limbs &gt; 1 &amp;&amp; r-&gt;data[r-&gt;limbs-1]==0) {</span>
+<span class="lineNum">      54 </span><span class="lineCov">         80 :         r-&gt;limbs--;</span>
+<span class="lineNum">      55 </span>            :     }
+<a name="56"><span class="lineNum">      56 </span><span class="lineCov">     128028 : }</span></a>
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span><span class="lineCov">      64014 : static void secp256k1_num_mod_inverse(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *m) {</span>
+<span class="lineNum">      59 </span>            :     int i;
+<span class="lineNum">      60 </span>            :     mp_limb_t g[NUM_LIMBS+1];
+<span class="lineNum">      61 </span>            :     mp_limb_t u[NUM_LIMBS+1];
+<span class="lineNum">      62 </span>            :     mp_limb_t v[NUM_LIMBS+1];
+<span class="lineNum">      63 </span>            :     mp_size_t sn;
+<span class="lineNum">      64 </span>            :     mp_size_t gn;
+<span class="lineNum">      65 </span>            :     secp256k1_num_sanity(a);
+<span class="lineNum">      66 </span>            :     secp256k1_num_sanity(m);
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            :     /** mpn_gcdext computes: (G,S) = gcdext(U,V), where
+<span class="lineNum">      69 </span>            :      *  * G = gcd(U,V)
+<span class="lineNum">      70 </span>            :      *  * G = U*S + V*T
+<span class="lineNum">      71 </span>            :      *  * U has equal or more limbs than V, and V has no padding
+<span class="lineNum">      72 </span>            :      *  If we set U to be (a padded version of) a, and V = m:
+<span class="lineNum">      73 </span>            :      *    G = a*S + m*T
+<span class="lineNum">      74 </span>            :      *    G = a*S mod m
+<span class="lineNum">      75 </span>            :      *  Assuming G=1:
+<span class="lineNum">      76 </span>            :      *    S = 1/a mod m
+<span class="lineNum">      77 </span>            :      */
+<span class="lineNum">      78 </span>            :     VERIFY_CHECK(m-&gt;limbs &lt;= NUM_LIMBS);
+<span class="lineNum">      79 </span><span class="lineCov">      64014 :     VERIFY_CHECK(m-&gt;data[m-&gt;limbs-1] != 0);</span>
+<span class="lineNum">      80 </span><span class="lineCov">     320070 :     for (i = 0; i &lt; m-&gt;limbs; i++) {</span>
+<span class="lineNum">      81 </span><span class="lineCov">     256056 :         u[i] = (i &lt; a-&gt;limbs) ? a-&gt;data[i] : 0;</span>
+<span class="lineNum">      82 </span><span class="lineCov">     256056 :         v[i] = m-&gt;data[i];</span>
+<span class="lineNum">      83 </span>            :     }
+<span class="lineNum">      84 </span><span class="lineCov">      64014 :     sn = NUM_LIMBS+1;</span>
+<span class="lineNum">      85 </span><span class="lineCov">      64014 :     gn = mpn_gcdext(g, r-&gt;data, &amp;sn, u, m-&gt;limbs, v, m-&gt;limbs);</span>
+<span class="lineNum">      86 </span>            :     VERIFY_CHECK(gn == 1);
+<span class="lineNum">      87 </span>            :     VERIFY_CHECK(g[0] == 1);
+<span class="lineNum">      88 </span><span class="lineCov">      64014 :     r-&gt;neg = a-&gt;neg ^ m-&gt;neg;</span>
+<span class="lineNum">      89 </span><span class="lineCov">      64014 :     if (sn &lt; 0) {</span>
+<span class="lineNum">      90 </span><span class="lineCov">      59278 :         mpn_sub(r-&gt;data, m-&gt;data, m-&gt;limbs, r-&gt;data, -sn);</span>
+<span class="lineNum">      91 </span><span class="lineCov">      29639 :         r-&gt;limbs = m-&gt;limbs;</span>
+<span class="lineNum">      92 </span><span class="lineCov">      59278 :         while (r-&gt;limbs &gt; 1 &amp;&amp; r-&gt;data[r-&gt;limbs-1]==0) {</span>
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :             r-&gt;limbs--;</span>
+<span class="lineNum">      94 </span>            :         }
+<span class="lineNum">      95 </span>            :     } else {
+<span class="lineNum">      96 </span><span class="lineCov">      34375 :         r-&gt;limbs = sn;</span>
+<span class="lineNum">      97 </span>            :     }
+<span class="lineNum">      98 </span><span class="lineCov">      64014 :     memset(g, 0, sizeof(g));</span>
+<span class="lineNum">      99 </span><span class="lineCov">      64014 :     memset(u, 0, sizeof(u));</span>
+<span class="lineNum">     100 </span><span class="lineCov">      64014 :     memset(v, 0, sizeof(v));</span>
+<span class="lineNum">     101 </span><span class="lineCov">      64014 : }</span>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/Account.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - Account.h<span style="font-size: 80%;"> (source / <a href="Account.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Account.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libdevcore/RLP.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libdevcore/TrieDB.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libdevcore/SHA3.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libethcore/Common.h&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace dev
+<span class="lineNum">      31 </span>            : {
+<span class="lineNum">      32 </span>            : namespace eth
+<span class="lineNum">      33 </span>            : {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : /**
+<span class="lineNum">      36 </span>            :  * Models the state of a single Ethereum account.
+<span class="lineNum">      37 </span>            :  * Used to cache a portion of the full Ethereum state. State keeps a mapping of Address's to Accounts.
+<span class="lineNum">      38 </span>            :  *
+<span class="lineNum">      39 </span>            :  * Aside from storing the nonce and balance, the account may also be &quot;dead&quot; (where isAlive() returns false).
+<span class="lineNum">      40 </span>            :  * This allows State to explicitly store the notion of a deleted account in it's cache. kill() can be used
+<span class="lineNum">      41 </span>            :  * for this.
+<span class="lineNum">      42 </span>            :  *
+<span class="lineNum">      43 </span>            :  * For the account's storage, the class operates a cache. baseRoot() specifies the base state of the storage
+<span class="lineNum">      44 </span>            :  * given as the Trie root to be looked up in the state database. Alterations beyond this base are specified
+<span class="lineNum">      45 </span>            :  * in the overlay, stored in this class and retrieved with storageOverlay(). setStorage allows the overlay
+<span class="lineNum">      46 </span>            :  * to be altered.
+<span class="lineNum">      47 </span>            :  *
+<span class="lineNum">      48 </span>            :  * The code handling explicitly supports a two-stage commit model needed for contract-creation. When creating
+<span class="lineNum">      49 </span>            :  * a contract (running the initialisation code), the code of the account is considered empty. The attribute
+<span class="lineNum">      50 </span>            :  * of emptiness can be retrieved with codeBearing(). After initialisation one must set the code accordingly;
+<span class="lineNum">      51 </span>            :  * the code of the Account can be set with setCode(). To validate a setCode() call, this class records the
+<span class="lineNum">      52 </span>            :  * state of being in contract-creation (and thus in a state where setCode may validly be called). It can be
+<span class="lineNum">      53 </span>            :  * determined through isFreshCode().
+<span class="lineNum">      54 </span>            :  *
+<span class="lineNum">      55 </span>            :  * The code can be retrieved through code(), and its hash through codeHash(). codeHash() is only valid when
+<span class="lineNum">      56 </span>            :  * the account is not in the contract-creation phase (i.e. when isFreshCode() returns false). This class
+<span class="lineNum">      57 </span>            :  * supports populating code on-demand from the state database. To determine if the code has been prepopulated
+<span class="lineNum">      58 </span>            :  * call codeCacheValid(). To populate the code, look it up with codeHash() and populate with noteCode().
+<span class="lineNum">      59 </span>            :  *
+<span class="lineNum">      60 </span>            :  * @todo: need to make a noteCodeCommitted().
+<span class="lineNum">      61 </span>            :  *
+<span class="lineNum">      62 </span>            :  * The constructor allows you to create an one of a number of &quot;types&quot; of accounts. The default constructor
+<span class="lineNum">      63 </span>            :  * makes a dead account (this is ignored by State when writing out the Trie). Another three allow a basic
+<span class="lineNum">      64 </span>            :  * or contract account to be specified along with an initial balance. The fina two allow either a basic or
+<a name="65"><span class="lineNum">      65 </span>            :  * a contract account to be created with arbitrary values.</a>
+<span class="lineNum">      66 </span>            :  */
+<span class="lineNum">      67 </span><span class="lineCov">    2831712 : class Account</span>
+<span class="lineNum">      68 </span>            : {
+<span class="lineNum">      69 </span>            : public:
+<span class="lineNum">      70 </span>            :         /// Changedness of account to create.
+<span class="lineNum">      71 </span>            :         enum Changedness
+<span class="lineNum">      72 </span>            :         {
+<span class="lineNum">      73 </span>            :                 /// Account starts as though it has been changed.
+<span class="lineNum">      74 </span>            :                 Changed,
+<span class="lineNum">      75 </span>            :                 /// Account starts as though it has not been changed.
+<span class="lineNum">      76 </span>            :                 Unchanged
+<span class="lineNum">      77 </span>            :         };
+<a name="78"><span class="lineNum">      78 </span>            : </a>
+<span class="lineNum">      79 </span>            :         /// Construct a dead Account.
+<span class="lineNum">      80 </span><span class="lineCov">     720180 :         Account() {}</span>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :         /// Construct an alive Account, with given endowment, for either a normal (non-contract) account or for a
+<a name="83"><span class="lineNum">      83 </span>            :         /// contract account in the</a>
+<span class="lineNum">      84 </span>            :         /// conception phase, where the code is not yet known.
+<span class="lineNum">      85 </span><span class="lineCov">     720200 :         Account(u256 _nonce, u256 _balance, Changedness _c = Changed): m_isAlive(true), m_isUnchanged(_c == Unchanged), m_nonce(_nonce), m_balance(_balance) {}</span>
+<a name="86"><span class="lineNum">      86 </span>            : </a>
+<span class="lineNum">      87 </span>            :         /// Explicit constructor for wierd cases of construction or a contract account.
+<span class="lineNum">      88 </span><span class="lineCov">     484560 :         Account(u256 _nonce, u256 _balance, h256 _contractRoot, h256 _codeHash, Changedness _c): m_isAlive(true), m_isUnchanged(_c == Unchanged), m_nonce(_nonce), m_balance(_balance), m_storageRoot(_contractRoot), m_codeHash(_codeHash) { assert(_contractRoot); }</span>
+<span class="lineNum">      89 </span>            : 
+<a name="90"><span class="lineNum">      90 </span>            : </a>
+<span class="lineNum">      91 </span>            :         /// Kill this account. Useful for the suicide opcode. Following this call, isAlive() returns false.
+<span class="lineNum">      92 </span><span class="lineCov">       5575 :         void kill() { m_isAlive = false; m_storageOverlay.clear(); m_codeHash = EmptySHA3; m_storageRoot = EmptyTrie; m_balance = 0; m_nonce = 0; changed(); }</span>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :         /// @returns true iff this object represents an account in the state. Returns false if this object
+<span class="lineNum">      95 </span>            :         /// represents an account that should no longer exist in the trie (an account that never existed or was
+<span class="lineNum">      96 </span>            :         /// suicided).
+<span class="lineNum">      97 </span>            :         bool isAlive() const { return m_isAlive; }
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :         /// @returns true if the account is unchanged from creation.
+<span class="lineNum">     100 </span><span class="lineCov">     188326 :         bool isDirty() const { return !m_isUnchanged; }</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span><span class="lineCov">         37 :         void untouch() { m_isUnchanged = true; }</span>
+<span class="lineNum">     103 </span>            : 
+<a name="104"><span class="lineNum">     104 </span>            :         /// @returns true if the nonce, balance and code is zero / empty. Code is considered empty</a>
+<span class="lineNum">     105 </span>            :         /// during creation phase.
+<span class="lineNum">     106 </span><span class="lineCov">     447691 :         bool isEmpty() const { return nonce() == 0 &amp;&amp; balance() == 0 &amp;&amp; codeHash() == EmptySHA3; }</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :         /// @returns the balance of this account.
+<span class="lineNum">     109 </span><span class="lineCov">       3670 :         u256 const&amp; balance() const { return m_balance; }</span>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            :         /// Increments the balance of this account by the given amount.
+<span class="lineNum">     112 </span><span class="lineCov">     735000 :         void addBalance(u256 _value) { m_balance += _value; changed(); }</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :         /// @returns the nonce of the account.
+<span class="lineNum">     115 </span><span class="lineCov">     766916 :         u256 nonce() const { return m_nonce; }</span>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :         /// Increment the nonce of the account by one.
+<span class="lineNum">     118 </span><span class="lineCov">      37596 :         void incNonce() { ++m_nonce; changed(); }</span>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            :         /// Set nonce to a new value. This is used when reverting changes made to
+<span class="lineNum">     121 </span>            :         /// the account.
+<span class="lineNum">     122 </span><span class="lineCov">       1366 :         void setNonce(u256 const&amp; _nonce) { m_nonce = _nonce; changed(); }</span>
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : 
+<a name="125"><span class="lineNum">     125 </span>            :         /// @returns the root of the trie (whose nodes are stored in the state db externally to this class)</a>
+<span class="lineNum">     126 </span>            :         /// which encodes the base-state of the account's storage (upon which the storage is overlaid).
+<span class="lineNum">     127 </span><span class="lineCov">     802042 :         h256 baseRoot() const { assert(m_storageRoot); return m_storageRoot; }</span>
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            :         /// @returns the storage overlay as a simple hash map.
+<span class="lineNum">     130 </span>            :         std::unordered_map&lt;u256, u256&gt; const&amp; storageOverlay() const { return m_storageOverlay; }
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            :         /// Set a key/value pair in the account's storage. This actually goes into the overlay, for committing
+<span class="lineNum">     133 </span>            :         /// to the trie later.
+<span class="lineNum">     134 </span><span class="lineCov">     672633 :         void setStorage(u256 _p, u256 _v) { m_storageOverlay[_p] = _v; changed(); }</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :         /// Set a key/value pair in the account's storage to a value that is already present inside the
+<span class="lineNum">     137 </span>            :         /// database.
+<span class="lineNum">     138 </span><span class="lineCov">      56544 :         void setStorageCache(u256 _p, u256 _v) const { const_cast&lt;decltype(m_storageOverlay)&amp;&gt;(m_storageOverlay)[_p] = _v; }</span>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :         /// @returns the hash of the account's code.
+<span class="lineNum">     141 </span><span class="lineCov">     991193 :         h256 codeHash() const { return m_codeHash; }</span>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :         bool hasNewCode() const { return m_hasNewCode; }
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            :         /// Sets the code of the account. Used by &quot;create&quot; messages.
+<span class="lineNum">     146 </span>            :         void setNewCode(bytes&amp;&amp; _code);
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            :         /// Reset the code set by previous CREATE message.
+<span class="lineNum">     149 </span><span class="lineCov">        158 :         void resetCode() { m_codeCache.clear(); m_hasNewCode = false; m_codeHash = EmptySHA3; }</span>
+<span class="lineNum">     150 </span>            : 
+<a name="151"><span class="lineNum">     151 </span>            :         /// Specify to the object what the actual code is for the account. @a _code must have a SHA3 equal to</a>
+<span class="lineNum">     152 </span>            :         /// codeHash() and must only be called when isFreshCode() returns false.
+<span class="lineNum">     153 </span><span class="lineCov">      92364 :         void noteCode(bytesConstRef _code) { assert(sha3(_code) == m_codeHash); m_codeCache = _code.toBytes(); }</span>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            :         /// @returns the account's code.
+<span class="lineNum">     156 </span><span class="lineCov">     241131 :         bytes const&amp; code() const { return m_codeCache; }</span>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            : private:
+<span class="lineNum">     159 </span>            :         /// Note that we've altered the account.
+<span class="lineNum">     160 </span><span class="lineCov">     612307 :         void changed() { m_isUnchanged = false; }</span>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :         /// Is this account existant? If not, it represents a deleted account.
+<span class="lineNum">     163 </span>            :         bool m_isAlive = false;
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :         /// True if we've not made any alteration to the account having been given it's properties directly.
+<span class="lineNum">     166 </span>            :         bool m_isUnchanged = false;
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :         /// True if new code was deployed to the account
+<span class="lineNum">     169 </span>            :         bool m_hasNewCode = false;
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            :         /// Account's nonce.
+<span class="lineNum">     172 </span>            :         u256 m_nonce;
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            :         /// Account's balance.
+<span class="lineNum">     175 </span>            :         u256 m_balance = 0;
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :         /// The base storage root. Used with the state DB to give a base to the storage. m_storageOverlay is
+<span class="lineNum">     178 </span>            :         /// overlaid on this and takes precedence for all values set.
+<span class="lineNum">     179 </span>            :         h256 m_storageRoot = EmptyTrie;
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            :         /** If c_contractConceptionCodeHash then we're in the limbo where we're running the initialisation code.
+<span class="lineNum">     182 </span>            :          * We expect a setCode() at some point later.
+<span class="lineNum">     183 </span>            :          * If EmptySHA3, then m_code, which should be empty, is valid.
+<span class="lineNum">     184 </span>            :          * If anything else, then m_code is valid iff it's not empty, otherwise, State::ensureCached() needs to
+<span class="lineNum">     185 </span>            :          * be called with the correct args.
+<span class="lineNum">     186 </span>            :          */
+<span class="lineNum">     187 </span>            :         h256 m_codeHash = EmptySHA3;
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            :         /// The map with is overlaid onto whatever storage is implied by the m_storageRoot in the trie.
+<span class="lineNum">     190 </span>            :         std::unordered_map&lt;u256, u256&gt; m_storageOverlay;
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :         /// The associated code for this account. The SHA3 of this should be equal to m_codeHash unless m_codeHash
+<span class="lineNum">     193 </span>            :         /// equals c_contractConceptionCodeHash.
+<span class="lineNum">     194 </span>            :         bytes m_codeCache;
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            :         /// Value for m_codeHash when this account is having its code determined.
+<span class="lineNum">     197 </span>            :         static const h256 c_contractConceptionCodeHash;
+<span class="lineNum">     198 </span>            : };
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            : class AccountMask
+<span class="lineNum">     201 </span>            : {
+<span class="lineNum">     202 </span>            : public:
+<span class="lineNum">     203 </span>            :         AccountMask(bool _all = false):
+<span class="lineNum">     204 </span>            :                 m_hasBalance(_all),
+<span class="lineNum">     205 </span>            :                 m_hasNonce(_all),
+<span class="lineNum">     206 </span>            :                 m_hasCode(_all),
+<span class="lineNum">     207 </span><span class="lineCov">      44081 :                 m_hasStorage(_all)</span>
+<span class="lineNum">     208 </span>            :         {}
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :         AccountMask(
+<span class="lineNum">     211 </span>            :                 bool _hasBalance,
+<span class="lineNum">     212 </span>            :                 bool _hasNonce,
+<span class="lineNum">     213 </span>            :                 bool _hasCode,
+<span class="lineNum">     214 </span>            :                 bool _hasStorage,
+<span class="lineNum">     215 </span>            :                 bool _shouldNotExist = false
+<span class="lineNum">     216 </span>            :         ):
+<span class="lineNum">     217 </span>            :                 m_hasBalance(_hasBalance),
+<span class="lineNum">     218 </span>            :                 m_hasNonce(_hasNonce),
+<span class="lineNum">     219 </span>            :                 m_hasCode(_hasCode),
+<span class="lineNum">     220 </span>            :                 m_hasStorage(_hasStorage),
+<span class="lineNum">     221 </span><span class="lineCov">      39177 :                 m_shouldNotExist(_shouldNotExist)</span>
+<span class="lineNum">     222 </span>            :         {}
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span><span class="lineCov">      39177 :         bool allSet() const { return m_hasBalance &amp;&amp; m_hasNonce &amp;&amp; m_hasCode &amp;&amp; m_hasStorage; }</span>
+<span class="lineNum">     225 </span>            :         bool hasBalance() const { return m_hasBalance; }
+<span class="lineNum">     226 </span>            :         bool hasNonce() const { return m_hasNonce; }
+<span class="lineNum">     227 </span>            :         bool hasCode() const { return m_hasCode; }
+<span class="lineNum">     228 </span>            :         bool hasStorage() const { return m_hasStorage; }
+<span class="lineNum">     229 </span><span class="lineCov">       4904 :         bool shouldExist() const { return !m_shouldNotExist; }</span>
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            : private:
+<span class="lineNum">     232 </span>            :         bool m_hasBalance;
+<span class="lineNum">     233 </span>            :         bool m_hasNonce;
+<span class="lineNum">     234 </span>            :         bool m_hasCode;
+<span class="lineNum">     235 </span>            :         bool m_hasStorage;
+<span class="lineNum">     236 </span>            :         bool m_shouldNotExist = false;
+<span class="lineNum">     237 </span>            : };
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            : using AccountMap = std::unordered_map&lt;Address, Account&gt;;
+<span class="lineNum">     240 </span>            : using AccountMaskMap = std::unordered_map&lt;Address, AccountMask&gt;;
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            : class PrecompiledContract;
+<span class="lineNum">     243 </span>            : using PrecompiledContractMap = std::unordered_map&lt;Address, PrecompiledContract&gt;;
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span>            : AccountMap jsonToAccountMap(std::string const&amp; _json, u256 const&amp; _defaultNonce = 0, AccountMaskMap* o_mask = nullptr, PrecompiledContractMap* o_precompiled = nullptr);
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            : }
+<span class="lineNum">     248 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/impl/results_collector.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/impl</a> - results_collector.ipp<span style="font-size: 80%;"> (source / <a href="results_collector.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">77</td>
+            <td class="headerCovTableEntry">106</td>
+            <td class="headerCovTableEntryLo">72.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntryLo">52.6 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : implements Unit Test results collecting facility.
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_RESULTS_COLLECTOR_IPP_021105GER
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_RESULTS_COLLECTOR_IPP_021105GER
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/unit_test_log.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/results_collector.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/test/framework.hpp&gt;
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;boost/test/tree/test_unit.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/tree/visitor.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/tree/test_case_counter.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/test/tree/traverse.hpp&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : // Boost
+<span class="lineNum">      29 </span>            : #include &lt;boost/cstdlib.hpp&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : // STL
+<span class="lineNum">      32 </span>            : #include &lt;map&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : namespace boost {
+<span class="lineNum">      39 </span>            : namespace unit_test {
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : // ************************************************************************** //
+<span class="lineNum">      42 </span>            : // **************                 test_results                 ************** //
+<a name="43"><span class="lineNum">      43 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">       4719 : test_results::test_results()</span>
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span><span class="lineCov">        363 :     clear();</span>
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : //____________________________________________________________________________//
+<a name="51"><span class="lineNum">      51 </span>            : </a>
+<span class="lineNum">      52 </span>            : bool
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 : test_results::passed() const</span>
+<span class="lineNum">      54 </span>            : {
+<span class="lineNum">      55 </span><span class="lineCov">        942 :     return  !p_skipped                                  &amp;&amp;</span>
+<span class="lineNum">      56 </span><span class="lineCov">        628 :             p_test_cases_failed == 0                    &amp;&amp;</span>
+<span class="lineNum">      57 </span><span class="lineCov">        628 :             p_assertions_failed &lt;= p_expected_failures  &amp;&amp;</span>
+<span class="lineNum">      58 </span><span class="lineCov">        942 :             p_test_cases_skipped == 0                   &amp;&amp;</span>
+<span class="lineNum">      59 </span><span class="lineCov">        628 :             !p_aborted;</span>
+<span class="lineNum">      60 </span>            : }
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : //____________________________________________________________________________//
+<a name="63"><span class="lineNum">      63 </span>            : </a>
+<span class="lineNum">      64 </span>            : int
+<span class="lineNum">      65 </span><span class="lineCov">          1 : test_results::result_code() const</span>
+<span class="lineNum">      66 </span>            : {
+<span class="lineNum">      67 </span><span class="lineCov">          1 :     return passed() ? exit_success</span>
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :            : ( (p_assertions_failed &gt; p_expected_failures || p_skipped )</span>
+<span class="lineNum">      69 </span>            :                     ? exit_test_failure
+<span class="lineNum">      70 </span><span class="lineCov">          2 :                     : exit_exception_failure );</span>
+<span class="lineNum">      71 </span>            : }
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : //____________________________________________________________________________//
+<a name="74"><span class="lineNum">      74 </span>            : </a>
+<span class="lineNum">      75 </span>            : void
+<span class="lineNum">      76 </span><span class="lineCov">        362 : test_results::operator+=( test_results const&amp; tr )</span>
+<span class="lineNum">      77 </span>            : {
+<span class="lineNum">      78 </span><span class="lineCov">        362 :     p_assertions_passed.value   += tr.p_assertions_passed;</span>
+<span class="lineNum">      79 </span><span class="lineCov">        362 :     p_assertions_failed.value   += tr.p_assertions_failed;</span>
+<span class="lineNum">      80 </span><span class="lineCov">        362 :     p_warnings_failed.value     += tr.p_warnings_failed;</span>
+<span class="lineNum">      81 </span><span class="lineCov">        362 :     p_test_cases_passed.value   += tr.p_test_cases_passed;</span>
+<span class="lineNum">      82 </span><span class="lineCov">        362 :     p_test_cases_warned.value   += tr.p_test_cases_warned;</span>
+<span class="lineNum">      83 </span><span class="lineCov">        362 :     p_test_cases_failed.value   += tr.p_test_cases_failed;</span>
+<span class="lineNum">      84 </span><span class="lineCov">        362 :     p_test_cases_skipped.value  += tr.p_test_cases_skipped;</span>
+<span class="lineNum">      85 </span><span class="lineCov">        362 :     p_test_cases_aborted.value  += tr.p_test_cases_aborted;</span>
+<span class="lineNum">      86 </span><span class="lineCov">        362 :     p_duration_microseconds.value += tr.p_duration_microseconds;</span>
+<span class="lineNum">      87 </span><span class="lineCov">        362 : }</span>
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : //____________________________________________________________________________//
+<a name="90"><span class="lineNum">      90 </span>            : </a>
+<span class="lineNum">      91 </span>            : void
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 : test_results::clear()</span>
+<span class="lineNum">      93 </span>            : {
+<span class="lineNum">      94 </span><span class="lineCov">        363 :     p_assertions_passed.value   = 0;</span>
+<span class="lineNum">      95 </span><span class="lineCov">        363 :     p_assertions_failed.value   = 0;</span>
+<span class="lineNum">      96 </span><span class="lineCov">        363 :     p_warnings_failed.value     = 0;</span>
+<span class="lineNum">      97 </span><span class="lineCov">        363 :     p_expected_failures.value   = 0;</span>
+<span class="lineNum">      98 </span><span class="lineCov">        363 :     p_test_cases_passed.value   = 0;</span>
+<span class="lineNum">      99 </span><span class="lineCov">        363 :     p_test_cases_warned.value   = 0;</span>
+<span class="lineNum">     100 </span><span class="lineCov">        363 :     p_test_cases_failed.value   = 0;</span>
+<span class="lineNum">     101 </span><span class="lineCov">        363 :     p_test_cases_skipped.value  = 0;</span>
+<span class="lineNum">     102 </span><span class="lineCov">        363 :     p_test_cases_aborted.value  = 0;</span>
+<span class="lineNum">     103 </span><span class="lineCov">        363 :     p_duration_microseconds.value= 0;</span>
+<span class="lineNum">     104 </span><span class="lineCov">        363 :     p_aborted.value             = false;</span>
+<span class="lineNum">     105 </span><span class="lineCov">        363 :     p_skipped.value             = false;</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            : // ************************************************************************** //
+<span class="lineNum">     111 </span>            : // **************               results_collector              ************** //
+<span class="lineNum">     112 </span>            : // ************************************************************************** //
+<span class="lineNum">     113 </span>            : 
+<a name="114"><span class="lineNum">     114 </span>            : namespace {</a>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">          4 : struct results_collector_impl {</span>
+<span class="lineNum">     117 </span>            :     std::map&lt;test_unit_id,test_results&gt; m_results_store;
+<a name="118"><span class="lineNum">     118 </span>            : };</a>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span><span class="lineCov">     304004 : results_collector_impl&amp; s_rc_impl() { static results_collector_impl the_inst; return the_inst; }</span>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : } // local namespace
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : //____________________________________________________________________________//
+<a name="125"><span class="lineNum">     125 </span>            : </a>
+<span class="lineNum">     126 </span>            : void
+<span class="lineNum">     127 </span><span class="lineCov">          1 : results_collector_t::test_start( counter_t )</span>
+<span class="lineNum">     128 </span>            : {
+<span class="lineNum">     129 </span><span class="lineCov">          2 :     s_rc_impl().m_results_store.clear();</span>
+<span class="lineNum">     130 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            : //____________________________________________________________________________//
+<a name="133"><span class="lineNum">     133 </span>            : </a>
+<span class="lineNum">     134 </span>            : void
+<span class="lineNum">     135 </span><span class="lineCov">        363 : results_collector_t::test_unit_start( test_unit const&amp; tu )</span>
+<span class="lineNum">     136 </span>            : {
+<span class="lineNum">     137 </span>            :     // init test_results entry
+<span class="lineNum">     138 </span><span class="lineCov">        726 :     test_results&amp; tr = s_rc_impl().m_results_store[tu.p_id];</span>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span><span class="lineCov">        363 :     tr.clear();</span>
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span><span class="lineCov">        363 :     tr.p_expected_failures.value = tu.p_expected_failures;</span>
+<span class="lineNum">     143 </span><span class="lineCov">        363 : }</span>
+<span class="lineNum">     144 </span>            : 
+<a name="145"><span class="lineNum">     145 </span>            : //____________________________________________________________________________//</a>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">        102 : class results_collect_helper : public test_tree_visitor {</span>
+<span class="lineNum">     148 </span>            : public:
+<a name="149"><span class="lineNum">     149 </span><span class="lineCov">        102 :     explicit results_collect_helper( test_results&amp; tr, test_unit const&amp; ts ) : m_tr( tr ), m_ts( ts ) {}</span></a>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineCov">        312 :     void    visit( test_case const&amp; tc )</span>
+<span class="lineNum">     152 </span>            :     {
+<span class="lineNum">     153 </span><span class="lineCov">        624 :         test_results const&amp; tr = results_collector.results( tc.p_id );</span>
+<span class="lineNum">     154 </span><span class="lineCov">        312 :         m_tr += tr;</span>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineCov">        312 :         if( tr.passed() ) {</span>
+<span class="lineNum">     157 </span><span class="lineCov">        312 :             if( tr.p_warnings_failed )</span>
+<span class="lineNum">     158 </span><span class="lineCov">          1 :                 m_tr.p_test_cases_warned.value++;</span>
+<span class="lineNum">     159 </span>            :             else
+<span class="lineNum">     160 </span><span class="lineCov">        311 :                 m_tr.p_test_cases_passed.value++;</span>
+<span class="lineNum">     161 </span>            :         }
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :         else if( tr.p_skipped )</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :             m_tr.p_test_cases_skipped.value++;</span>
+<span class="lineNum">     164 </span>            :         else {
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :             if( tr.p_aborted )</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :                 m_tr.p_test_cases_aborted.value++;</span>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :             m_tr.p_test_cases_failed.value++;</span>
+<a name="169"><span class="lineNum">     169 </span>            :         }</a>
+<span class="lineNum">     170 </span><span class="lineCov">        312 :     }</span>
+<span class="lineNum">     171 </span><span class="lineCov">        101 :     bool    test_suite_start( test_suite const&amp; ts )</span>
+<span class="lineNum">     172 </span>            :     {
+<span class="lineNum">     173 </span><span class="lineCov">        202 :         if( m_ts.p_id == ts.p_id )</span>
+<span class="lineNum">     174 </span>            :             return true;
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span><span class="lineCov">        100 :         m_tr += results_collector.results( ts.p_id );</span>
+<span class="lineNum">     177 </span><span class="lineCov">         50 :         return false;</span>
+<span class="lineNum">     178 </span>            :     }
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            : private:
+<span class="lineNum">     181 </span>            :     // Data members
+<span class="lineNum">     182 </span>            :     test_results&amp;       m_tr;
+<span class="lineNum">     183 </span>            :     test_unit const&amp;    m_ts;
+<span class="lineNum">     184 </span>            : };
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            : //____________________________________________________________________________//
+<a name="187"><span class="lineNum">     187 </span>            : </a>
+<span class="lineNum">     188 </span>            : void
+<span class="lineNum">     189 </span><span class="lineCov">        363 : results_collector_t::test_unit_finish( test_unit const&amp; tu, unsigned long elapsed_in_microseconds )</span>
+<span class="lineNum">     190 </span>            : {
+<span class="lineNum">     191 </span><span class="lineCov">        363 :     if( tu.p_type == TUT_SUITE ) {</span>
+<span class="lineNum">     192 </span><span class="lineCov">        204 :         results_collect_helper ch( s_rc_impl().m_results_store[tu.p_id], tu );</span>
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineCov">         51 :         traverse_test_tree( tu, ch );</span>
+<span class="lineNum">     195 </span>            :     }
+<span class="lineNum">     196 </span>            :     else {
+<span class="lineNum">     197 </span><span class="lineCov">        624 :         test_results &amp; tr = s_rc_impl().m_results_store[tu.p_id];</span>
+<span class="lineNum">     198 </span><span class="lineCov">        312 :         tr.p_duration_microseconds.value = elapsed_in_microseconds;</span>
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span><span class="lineCov">        312 :         bool num_failures_match = tr.p_aborted || tr.p_assertions_failed &gt;= tr.p_expected_failures;</span>
+<span class="lineNum">     201 </span><span class="lineCov">        312 :         if( !num_failures_match )</span>
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :             BOOST_TEST_FRAMEWORK_MESSAGE( &quot;Test case &quot; &lt;&lt; tu.full_name() &lt;&lt; &quot; has fewer failures than expected&quot; );</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineCov">        312 :         bool check_any_assertions = tr.p_aborted || (tr.p_assertions_failed != 0) || (tr.p_assertions_passed != 0);</span>
+<span class="lineNum">     205 </span><span class="lineCov">        312 :         if( !check_any_assertions )</span>
+<span class="lineNum">     206 </span><span class="lineCov">        325 :             BOOST_TEST_FRAMEWORK_MESSAGE( &quot;Test case &quot; &lt;&lt; tu.full_name() &lt;&lt; &quot; did not check any assertions&quot; );</span>
+<span class="lineNum">     207 </span>            :     }
+<span class="lineNum">     208 </span><span class="lineCov">        363 : }</span>
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            : //____________________________________________________________________________//
+<a name="211"><span class="lineNum">     211 </span>            : </a>
+<span class="lineNum">     212 </span>            : void
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 : results_collector_t::test_unit_skipped( test_unit const&amp; tu, const_string /*reason*/ )</span>
+<span class="lineNum">     214 </span>            : {
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :     test_results&amp; tr = s_rc_impl().m_results_store[tu.p_id];</span>
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :     tr.clear();</span>
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :     tr.p_skipped.value = true;</span>
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :     if( tu.p_type == TUT_SUITE ) {</span>
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :         test_case_counter tcc;</span>
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :         traverse_test_tree( tu, tcc );</span>
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :         tr.p_test_cases_skipped.value = tcc.p_count;</span>
+<span class="lineNum">     226 </span>            :     }
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            : //____________________________________________________________________________//
+<a name="230"><span class="lineNum">     230 </span>            : </a>
+<span class="lineNum">     231 </span>            : void
+<span class="lineNum">     232 </span><span class="lineCov">     302912 : results_collector_t::assertion_result( unit_test::assertion_result ar )</span>
+<span class="lineNum">     233 </span>            : {
+<span class="lineNum">     234 </span><span class="lineCov">     302912 :     test_results&amp; tr = s_rc_impl().m_results_store[framework::current_test_case_id()];</span>
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span><span class="lineCov">     302912 :     switch( ar ) {</span>
+<span class="lineNum">     237 </span><span class="lineCov">     302904 :     case AR_PASSED: tr.p_assertions_passed.value++; break;</span>
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :     case AR_FAILED: tr.p_assertions_failed.value++; break;</span>
+<span class="lineNum">     239 </span><span class="lineCov">          8 :     case AR_TRIGGERED: tr.p_warnings_failed.value++; break;</span>
+<span class="lineNum">     240 </span>            :     }
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span><span class="lineCov">     302912 :     if( tr.p_assertions_failed == 1 )</span>
+<span class="lineNum">     243 </span>            :         first_failed_assertion();
+<span class="lineNum">     244 </span><span class="lineCov">     302912 : }</span>
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            : //____________________________________________________________________________//
+<a name="247"><span class="lineNum">     247 </span>            : </a>
+<span class="lineNum">     248 </span>            : void
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 : results_collector_t::exception_caught( execution_exception const&amp; )</span>
+<span class="lineNum">     250 </span>            : {
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :     test_results&amp; tr = s_rc_impl().m_results_store[framework::current_test_case_id()];</span>
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :     tr.p_assertions_failed.value++;</span>
+<span class="lineNum">     254 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            : //____________________________________________________________________________//
+<a name="257"><span class="lineNum">     257 </span>            : </a>
+<span class="lineNum">     258 </span>            : void
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 : results_collector_t::test_unit_aborted( test_unit const&amp; tu )</span>
+<span class="lineNum">     260 </span>            : {
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :     s_rc_impl().m_results_store[tu.p_id].p_aborted.value = true;</span>
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            : //____________________________________________________________________________//
+<a name="265"><span class="lineNum">     265 </span>            : </a>
+<span class="lineNum">     266 </span>            : test_results const&amp;
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 : results_collector_t::results( test_unit_id id ) const</span>
+<span class="lineNum">     268 </span>            : {
+<span class="lineNum">     269 </span><span class="lineCov">        364 :     return s_rc_impl().m_results_store[id];</span>
+<span class="lineNum">     270 </span>            : }
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            : } // namespace unit_test
+<span class="lineNum">     275 </span>            : } // namespace boost
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            : #endif // BOOST_TEST_RESULTS_COLLECTOR_IPP_021105GER
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

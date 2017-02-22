@@ -1,0 +1,371 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/date_time/time_duration.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/date_time</a> - time_duration.hpp<span style="font-size: 80%;"> (source / <a href="time_duration.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryMed">83.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef DATE_TIME_TIME_DURATION_HPP___</a>
+<span class="lineNum">       2 </span>            : #define DATE_TIME_TIME_DURATION_HPP___
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
+<span class="lineNum">       5 </span>            :  * Use, modification and distribution is subject to the
+<span class="lineNum">       6 </span>            :  * Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       7 </span>            :  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            :  * Author: Jeff Garland, Bart Garst
+<span class="lineNum">       9 </span>            :  * $Date$
+<span class="lineNum">      10 </span>            :  */
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #include &lt;boost/cstdint.hpp&gt;
+<span class="lineNum">      13 </span>            : #include &lt;boost/operators.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/static_assert.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/date_time/time_defs.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/date_time/special_defs.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/date_time/compiler_config.hpp&gt;
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : namespace boost {
+<span class="lineNum">      20 </span>            : namespace date_time {
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            :   //! Represents some amount of elapsed time measure to a given resolution
+<span class="lineNum">      24 </span>            :   /*! This class represents a standard set of capabilities for all
+<span class="lineNum">      25 </span>            :       counted time durations.  Time duration implementations should derive
+<span class="lineNum">      26 </span>            :       from this class passing their type as the first template parameter.
+<span class="lineNum">      27 </span>            :       This design allows the subclass duration types to provide custom
+<span class="lineNum">      28 </span>            :       construction policies or other custom features not provided here.
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            :       @param T The subclass type
+<span class="lineNum">      31 </span>            :       @param rep_type The time resolution traits for this duration type.
+<span class="lineNum">      32 </span>            :   */
+<span class="lineNum">      33 </span>            :   template&lt;class T, typename rep_type&gt;
+<span class="lineNum">      34 </span>            :   class time_duration : private
+<span class="lineNum">      35 </span>            :       boost::less_than_comparable&lt;T
+<span class="lineNum">      36 </span>            :     , boost::equality_comparable&lt;T
+<span class="lineNum">      37 </span>            :     &gt; &gt;
+<span class="lineNum">      38 </span>            :   /* dividable, addable, and subtractable operator templates
+<span class="lineNum">      39 </span>            :    * won't work with this class (MSVC++ 6.0). return type
+<span class="lineNum">      40 </span>            :    * from '+=' is different than expected return type
+<span class="lineNum">      41 </span>            :    * from '+'. multipliable probably wont work
+<span class="lineNum">      42 </span>            :    * either (haven't tried) */
+<span class="lineNum">      43 </span>            :   {
+<span class="lineNum">      44 </span>            :   public:
+<span class="lineNum">      45 </span>            :     // A tag for type categorization. Can be used to detect Boost.DateTime duration types in generic code.
+<span class="lineNum">      46 </span>            :     typedef void _is_boost_date_time_duration;
+<span class="lineNum">      47 </span>            :     typedef T duration_type;  //the subclass
+<span class="lineNum">      48 </span>            :     typedef rep_type traits_type;
+<span class="lineNum">      49 </span>            :     typedef typename rep_type::day_type  day_type;
+<span class="lineNum">      50 </span>            :     typedef typename rep_type::hour_type hour_type;
+<span class="lineNum">      51 </span>            :     typedef typename rep_type::min_type  min_type;
+<span class="lineNum">      52 </span>            :     typedef typename rep_type::sec_type  sec_type;
+<span class="lineNum">      53 </span>            :     typedef typename rep_type::fractional_seconds_type fractional_seconds_type;
+<span class="lineNum">      54 </span>            :     typedef typename rep_type::tick_type tick_type;
+<span class="lineNum">      55 </span>            :     typedef typename rep_type::impl_type impl_type;
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :     time_duration() : ticks_(0) {}
+<span class="lineNum">      58 </span>            :     time_duration(hour_type hours_in,
+<span class="lineNum">      59 </span>            :                   min_type minutes_in,
+<span class="lineNum">      60 </span>            :                   sec_type seconds_in=0,
+<span class="lineNum">      61 </span>            :                   fractional_seconds_type frac_sec_in = 0) :
+<span class="lineNum">      62 </span><span class="lineCov">       7964 :       ticks_(rep_type::to_tick_count(hours_in,minutes_in,seconds_in,frac_sec_in))</span>
+<span class="lineNum">      63 </span>            :     {}
+<span class="lineNum">      64 </span>            :     // copy constructor required for dividable&lt;&gt;
+<span class="lineNum">      65 </span>            :     //! Construct from another time_duration (Copy constructor)
+<span class="lineNum">      66 </span>            :     time_duration(const time_duration&lt;T, rep_type&gt;&amp; other)
+<span class="lineNum">      67 </span><span class="lineCov">       4024 :       : ticks_(other.ticks_)</span>
+<span class="lineNum">      68 </span>            :     {}
+<span class="lineNum">      69 </span>            :     //! Construct from special_values
+<span class="lineNum">      70 </span><span class="lineCov">        960 :     time_duration(special_values sv) : ticks_(impl_type::from_special(sv))</span>
+<span class="lineNum">      71 </span>            :     {}
+<span class="lineNum">      72 </span>            :     //! Returns smallest representable duration
+<span class="lineNum">      73 </span>            :     static duration_type unit()
+<span class="lineNum">      74 </span>            :     {
+<span class="lineNum">      75 </span>            :       return duration_type(0,0,0,1);
+<span class="lineNum">      76 </span>            :     }
+<span class="lineNum">      77 </span>            :     //! Return the number of ticks in a second
+<span class="lineNum">      78 </span>            :     static tick_type ticks_per_second()
+<span class="lineNum">      79 </span>            :     {
+<span class="lineNum">      80 </span>            :       return rep_type::res_adjust();
+<span class="lineNum">      81 </span>            :     }
+<span class="lineNum">      82 </span>            :     //! Provide the resolution of this duration type
+<span class="lineNum">      83 </span>            :     static time_resolutions resolution()
+<span class="lineNum">      84 </span>            :     {
+<span class="lineNum">      85 </span>            :       return rep_type::resolution();
+<span class="lineNum">      86 </span>            :     }
+<span class="lineNum">      87 </span>            :     //! Returns number of hours in the duration
+<span class="lineNum">      88 </span>            :     hour_type hours()   const
+<span class="lineNum">      89 </span>            :     {
+<span class="lineNum">      90 </span>            :       return static_cast&lt;hour_type&gt;(ticks() / (3600*ticks_per_second()));
+<span class="lineNum">      91 </span>            :     }
+<span class="lineNum">      92 </span>            :     //! Returns normalized number of minutes
+<span class="lineNum">      93 </span>            :     min_type minutes() const
+<span class="lineNum">      94 </span>            :     {
+<span class="lineNum">      95 </span>            :       return static_cast&lt;min_type&gt;((ticks() / (60*ticks_per_second())) % 60);
+<span class="lineNum">      96 </span>            :     }
+<span class="lineNum">      97 </span>            :     //! Returns normalized number of seconds (0..60)
+<span class="lineNum">      98 </span>            :     sec_type seconds() const
+<span class="lineNum">      99 </span>            :     {
+<span class="lineNum">     100 </span>            :       return static_cast&lt;sec_type&gt;((ticks()/ticks_per_second()) % 60);
+<span class="lineNum">     101 </span>            :     }
+<span class="lineNum">     102 </span>            :     //! Returns total number of seconds truncating any fractional seconds
+<span class="lineNum">     103 </span>            :     sec_type total_seconds() const
+<span class="lineNum">     104 </span>            :     {
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :       return static_cast&lt;sec_type&gt;(ticks() / ticks_per_second());</span>
+<span class="lineNum">     106 </span>            :     }
+<span class="lineNum">     107 </span>            :     //! Returns total number of milliseconds truncating any fractional seconds
+<span class="lineNum">     108 </span>            :     tick_type total_milliseconds() const
+<span class="lineNum">     109 </span>            :     {
+<span class="lineNum">     110 </span>            :       if (ticks_per_second() &lt; 1000) {
+<span class="lineNum">     111 </span>            :         return ticks() * (static_cast&lt;tick_type&gt;(1000) / ticks_per_second());
+<span class="lineNum">     112 </span>            :       }
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :       return ticks() / (ticks_per_second() / static_cast&lt;tick_type&gt;(1000)) ;</span>
+<span class="lineNum">     114 </span>            :     }
+<span class="lineNum">     115 </span>            :     //! Returns total number of nanoseconds truncating any sub millisecond values
+<span class="lineNum">     116 </span>            :     tick_type total_nanoseconds() const
+<span class="lineNum">     117 </span>            :     {
+<span class="lineNum">     118 </span>            :       if (ticks_per_second() &lt; 1000000000) {
+<span class="lineNum">     119 </span><span class="lineCov">        760 :         return ticks() * (static_cast&lt;tick_type&gt;(1000000000) / ticks_per_second());</span>
+<span class="lineNum">     120 </span>            :       }
+<span class="lineNum">     121 </span>            :       return ticks() / (ticks_per_second() / static_cast&lt;tick_type&gt;(1000000000)) ;
+<span class="lineNum">     122 </span>            :     }
+<span class="lineNum">     123 </span>            :     //! Returns total number of microseconds truncating any sub microsecond values
+<span class="lineNum">     124 </span>            :     tick_type total_microseconds() const
+<span class="lineNum">     125 </span>            :     {
+<span class="lineNum">     126 </span>            :       if (ticks_per_second() &lt; 1000000) {
+<span class="lineNum">     127 </span>            :         return ticks() * (static_cast&lt;tick_type&gt;(1000000) / ticks_per_second());
+<span class="lineNum">     128 </span>            :       }
+<span class="lineNum">     129 </span><span class="lineCov">        491 :       return ticks() / (ticks_per_second() / static_cast&lt;tick_type&gt;(1000000)) ;</span>
+<span class="lineNum">     130 </span>            :     }
+<span class="lineNum">     131 </span>            :     //! Returns count of fractional seconds at given resolution
+<span class="lineNum">     132 </span>            :     fractional_seconds_type fractional_seconds() const
+<span class="lineNum">     133 </span>            :     {
+<span class="lineNum">     134 </span>            :       return (ticks() % ticks_per_second());
+<span class="lineNum">     135 </span>            :     }
+<span class="lineNum">     136 </span>            :     //! Returns number of possible digits in fractional seconds
+<span class="lineNum">     137 </span>            :     static unsigned short num_fractional_digits()
+<span class="lineNum">     138 </span>            :     {
+<span class="lineNum">     139 </span>            :       return rep_type::num_fractional_digits();
+<span class="lineNum">     140 </span>            :     }
+<span class="lineNum">     141 </span>            :     duration_type invert_sign() const
+<span class="lineNum">     142 </span>            :     {
+<span class="lineNum">     143 </span>            :       return duration_type(ticks_ * (-1));
+<span class="lineNum">     144 </span>            :     }
+<span class="lineNum">     145 </span>            :     bool is_negative() const
+<span class="lineNum">     146 </span>            :     {
+<span class="lineNum">     147 </span>            :       return ticks_ &lt; 0;
+<span class="lineNum">     148 </span>            :     }
+<span class="lineNum">     149 </span>            :     bool operator&lt;(const time_duration&amp; rhs)  const
+<span class="lineNum">     150 </span>            :     {
+<span class="lineNum">     151 </span>            :       return ticks_ &lt;  rhs.ticks_;
+<span class="lineNum">     152 </span>            :     }
+<span class="lineNum">     153 </span>            :     bool operator==(const time_duration&amp; rhs)  const
+<span class="lineNum">     154 </span>            :     {
+<span class="lineNum">     155 </span>            :       return ticks_ ==  rhs.ticks_;
+<span class="lineNum">     156 </span>            :     }
+<span class="lineNum">     157 </span>            :     //! unary- Allows for time_duration td = -td1
+<span class="lineNum">     158 </span>            :     duration_type operator-()const
+<span class="lineNum">     159 </span>            :     {
+<span class="lineNum">     160 </span>            :       return duration_type(ticks_ * (-1));
+<span class="lineNum">     161 </span>            :     }
+<span class="lineNum">     162 </span>            :     duration_type operator-(const duration_type&amp; d) const
+<span class="lineNum">     163 </span>            :     {
+<span class="lineNum">     164 </span>            :       return duration_type(ticks_ - d.ticks_);
+<span class="lineNum">     165 </span>            :     }
+<span class="lineNum">     166 </span>            :     duration_type operator+(const duration_type&amp; d) const
+<span class="lineNum">     167 </span>            :     {
+<span class="lineNum">     168 </span>            :       return duration_type(ticks_ + d.ticks_);
+<span class="lineNum">     169 </span>            :     }
+<span class="lineNum">     170 </span>            :     duration_type operator/(int divisor) const
+<span class="lineNum">     171 </span>            :     {
+<span class="lineNum">     172 </span>            :       return duration_type(ticks_ / divisor);
+<span class="lineNum">     173 </span>            :     }
+<span class="lineNum">     174 </span>            :     duration_type operator-=(const duration_type&amp; d)
+<span class="lineNum">     175 </span>            :     {
+<span class="lineNum">     176 </span>            :       ticks_ = ticks_ - d.ticks_;
+<span class="lineNum">     177 </span>            :       return duration_type(ticks_);
+<span class="lineNum">     178 </span>            :     }
+<span class="lineNum">     179 </span>            :     duration_type operator+=(const duration_type&amp; d)
+<span class="lineNum">     180 </span>            :     {
+<span class="lineNum">     181 </span>            :       ticks_ = ticks_ + d.ticks_;
+<span class="lineNum">     182 </span>            :       return duration_type(ticks_);
+<span class="lineNum">     183 </span>            :     }
+<span class="lineNum">     184 </span>            :     //! Division operations on a duration with an integer.
+<span class="lineNum">     185 </span>            :     duration_type operator/=(int divisor)
+<span class="lineNum">     186 </span>            :     {
+<span class="lineNum">     187 </span>            :       ticks_ = ticks_ / divisor;
+<span class="lineNum">     188 </span>            :       return duration_type(ticks_);
+<span class="lineNum">     189 </span>            :     }
+<span class="lineNum">     190 </span>            :     //! Multiplication operations an a duration with an integer
+<span class="lineNum">     191 </span>            :     duration_type operator*(int rhs) const
+<span class="lineNum">     192 </span>            :     {
+<span class="lineNum">     193 </span>            :       return duration_type(ticks_ * rhs);
+<span class="lineNum">     194 </span>            :     }
+<span class="lineNum">     195 </span>            :     duration_type operator*=(int divisor)
+<span class="lineNum">     196 </span>            :     {
+<span class="lineNum">     197 </span>            :       ticks_ = ticks_ * divisor;
+<span class="lineNum">     198 </span>            :       return duration_type(ticks_);
+<span class="lineNum">     199 </span>            :     }
+<span class="lineNum">     200 </span>            :     tick_type ticks() const
+<span class="lineNum">     201 </span>            :     {
+<span class="lineNum">     202 </span><span class="lineCov">       5275 :       return traits_type::as_number(ticks_);</span>
+<span class="lineNum">     203 </span>            :     }
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            :     //! Is ticks_ a special value?
+<span class="lineNum">     206 </span>            :     bool is_special()const
+<span class="lineNum">     207 </span>            :     {
+<span class="lineNum">     208 </span>            :       if(traits_type::is_adapted())
+<span class="lineNum">     209 </span>            :       {
+<span class="lineNum">     210 </span><span class="lineCov">       7060 :         return ticks_.is_special();</span>
+<span class="lineNum">     211 </span>            :       }
+<span class="lineNum">     212 </span>            :       else{
+<span class="lineNum">     213 </span>            :         return false;
+<span class="lineNum">     214 </span>            :       }
+<span class="lineNum">     215 </span>            :     }
+<span class="lineNum">     216 </span>            :     //! Is duration pos-infinity
+<span class="lineNum">     217 </span>            :     bool is_pos_infinity()const
+<span class="lineNum">     218 </span>            :     {
+<span class="lineNum">     219 </span>            :       if(traits_type::is_adapted())
+<span class="lineNum">     220 </span>            :       {
+<span class="lineNum">     221 </span>            :         return ticks_.is_pos_infinity();
+<span class="lineNum">     222 </span>            :       }
+<span class="lineNum">     223 </span>            :       else{
+<span class="lineNum">     224 </span>            :         return false;
+<span class="lineNum">     225 </span>            :       }
+<span class="lineNum">     226 </span>            :     }
+<span class="lineNum">     227 </span>            :     //! Is duration neg-infinity
+<span class="lineNum">     228 </span>            :     bool is_neg_infinity()const
+<span class="lineNum">     229 </span>            :     {
+<span class="lineNum">     230 </span>            :       if(traits_type::is_adapted())
+<span class="lineNum">     231 </span>            :       {
+<span class="lineNum">     232 </span>            :         return ticks_.is_neg_infinity();
+<span class="lineNum">     233 </span>            :       }
+<span class="lineNum">     234 </span>            :       else{
+<span class="lineNum">     235 </span>            :         return false;
+<span class="lineNum">     236 </span>            :       }
+<span class="lineNum">     237 </span>            :     }
+<span class="lineNum">     238 </span>            :     //! Is duration not-a-date-time
+<span class="lineNum">     239 </span>            :     bool is_not_a_date_time()const
+<span class="lineNum">     240 </span>            :     {
+<span class="lineNum">     241 </span>            :       if(traits_type::is_adapted())
+<span class="lineNum">     242 </span>            :       {
+<span class="lineNum">     243 </span>            :         return ticks_.is_nan();
+<span class="lineNum">     244 </span>            :       }
+<span class="lineNum">     245 </span>            :       else{
+<span class="lineNum">     246 </span>            :         return false;
+<span class="lineNum">     247 </span>            :       }
+<span class="lineNum">     248 </span>            :     }
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            :     //! Used for special_values output
+<span class="lineNum">     251 </span>            :     impl_type get_rep()const
+<span class="lineNum">     252 </span>            :     {
+<span class="lineNum">     253 </span><span class="lineCov">        960 :       return ticks_;</span>
+<span class="lineNum">     254 </span>            :     }
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            :   protected:
+<span class="lineNum">     257 </span><span class="lineCov">        676 :     explicit time_duration(impl_type in) : ticks_(in) {}</span>
+<span class="lineNum">     258 </span>            :     impl_type ticks_;
+<span class="lineNum">     259 </span>            :   };
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            :   //! Template for instantiating derived adjusting durations
+<span class="lineNum">     264 </span>            :   /* These templates are designed to work with multiples of
+<span class="lineNum">     265 </span>            :    * 10 for frac_of_second and resoultion adjustment
+<span class="lineNum">     266 </span>            :    */
+<span class="lineNum">     267 </span>            :   template&lt;class base_duration, boost::int64_t frac_of_second&gt;
+<span class="lineNum">     268 </span>            :   class subsecond_duration : public base_duration
+<span class="lineNum">     269 </span>            :   {
+<span class="lineNum">     270 </span>            :   public:
+<span class="lineNum">     271 </span>            :     typedef typename base_duration::impl_type impl_type;
+<span class="lineNum">     272 </span>            :     typedef typename base_duration::traits_type traits_type;
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            :   private:
+<span class="lineNum">     275 </span>            :     // To avoid integer overflow we precompute the duration resolution conversion coefficient (ticket #3471)
+<span class="lineNum">     276 </span>            :     BOOST_STATIC_ASSERT_MSG((traits_type::ticks_per_second &gt;= frac_of_second ? traits_type::ticks_per_second % frac_of_second : frac_of_second % traits_type::ticks_per_second) == 0,\
+<span class="lineNum">     277 </span>            :       &quot;The base duration resolution must be a multiple of the subsecond duration resolution&quot;);
+<span class="lineNum">     278 </span>            :     BOOST_STATIC_CONSTANT(boost::int64_t, adjustment_ratio = (traits_type::ticks_per_second &gt;= frac_of_second ? traits_type::ticks_per_second / frac_of_second : frac_of_second / traits_type::ticks_per_second));
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span>            :   public:
+<span class="lineNum">     281 </span>            :     explicit subsecond_duration(boost::int64_t ss) :
+<span class="lineNum">     282 </span><span class="lineCov">       1352 :       base_duration(impl_type(traits_type::ticks_per_second &gt;= frac_of_second ? ss * adjustment_ratio : ss / adjustment_ratio))</span>
+<span class="lineNum">     283 </span>            :     {
+<span class="lineNum">     284 </span>            :     }
+<span class="lineNum">     285 </span>            :   };
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            : } } //namespace date_time
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            : #endif
+<span class="lineNum">     295 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

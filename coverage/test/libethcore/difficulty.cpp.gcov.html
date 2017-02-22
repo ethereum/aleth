@@ -1,0 +1,398 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libethcore/difficulty.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libethcore</a> - difficulty.cpp<span style="font-size: 80%;"> (source / <a href="difficulty.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">101</td>
+            <td class="headerCovTableEntry">187</td>
+            <td class="headerCovTableEntryLo">54.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryHi">94.1 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file difficulty.cpp
+<span class="lineNum">      18 </span>            :  * @author Christoph Jentzsch &lt;cj@ethdev.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  * difficulty calculation tests.
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;boost/test/unit_test.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;test/fuzzTesting/fuzzHelper.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libethashseal/Ethash.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libethashseal/GenesisInfo.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libethereum/ChainParams.h&gt;
+<span class="lineNum">      29 </span>            : using namespace std;
+<span class="lineNum">      30 </span>            : using namespace dev;
+<span class="lineNum">      31 </span>            : using namespace dev::eth;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace js = json_spirit;
+<span class="lineNum">      34 </span><span class="lineCov">          3 : std::string const c_testDifficulty = R&quot;(</span>
+<span class="lineNum">      35 </span>            :  &quot;DifficultyTest[N]&quot; : {
+<span class="lineNum">      36 </span>            :                 &quot;parentTimestamp&quot; : &quot;[PSTAMP]&quot;,
+<span class="lineNum">      37 </span>            :                 &quot;parentDifficulty&quot; : &quot;[PDIFF]&quot;,
+<span class="lineNum">      38 </span>            :                 &quot;currentTimestamp&quot; : &quot;[СSTAMP]&quot;,
+<span class="lineNum">      39 </span>            :                 &quot;currentBlockNumber&quot; : &quot;[CNUM]&quot;,
+<span class="lineNum">      40 </span>            :                 &quot;currentDifficulty&quot; : &quot;[CDIFF]&quot;
+<span class="lineNum">      41 </span>            :         },
+<a name="42"><span class="lineNum">      42 </span>            : )&quot;;</a>
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span><span class="lineCov">       5654 : void checkCalculatedDifficulty(BlockHeader const&amp; _bi, BlockHeader const&amp; _parent, Network _n, ChainOperationParams const&amp; _p, string const&amp; _testName = &quot;&quot;)</span>
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span><span class="lineCov">      11308 :         u256 difficulty = _bi.difficulty();</span>
+<span class="lineNum">      47 </span><span class="lineCov">      22616 :         u256 frontierDiff = _p.u256Param(&quot;homsteadForkBlock&quot;);</span>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :         //The ultimate formula (Homestead)
+<span class="lineNum">      50 </span><span class="lineCov">      11308 :         if (_bi.number() &gt; frontierDiff)</span>
+<span class="lineNum">      51 </span>            :         {
+<span class="lineNum">      52 </span><span class="lineCov">      12336 :                 u256 minimumDifficulty = _p.u256Param(&quot;minimumDifficulty&quot;);</span>
+<span class="lineNum">      53 </span><span class="lineCov">       9252 :                 bigint block_diff = _parent.difficulty();</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineCov">      12336 :                 bigint a = (_parent.difficulty() / 2048);</span>
+<span class="lineNum">      56 </span><span class="lineCov">       9252 :                 int b = 1 - int(_bi.timestamp() - _parent.timestamp()) / 10;</span>
+<span class="lineNum">      57 </span><span class="lineCov">      15420 :                 bigint c = (_bi.number() / 100000) - 2;</span>
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineCov">      12336 :                 block_diff += a * max&lt;int&gt;(b, -99);</span>
+<span class="lineNum">      60 </span><span class="lineCov">      12336 :                 block_diff += u256(1) &lt;&lt; (unsigned)c;</span>
+<span class="lineNum">      61 </span><span class="lineCov">      12336 :                 block_diff = max&lt;bigint&gt;(minimumDifficulty, block_diff);</span>
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineCov">      49344 :                 BOOST_CHECK_MESSAGE(difficulty == block_diff, &quot;Homestead Check Calculated diff = &quot; &lt;&lt; difficulty &lt;&lt; &quot; expected diff = &quot; &lt;&lt; block_diff &lt;&lt; _testName);</span>
+<span class="lineNum">      64 </span>            :                 return;
+<span class="lineNum">      65 </span>            :         }
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineCov">       2570 :         u256 durationLimit;</span>
+<span class="lineNum">      68 </span><span class="lineCov">       2570 :         u256 minimumDifficulty;</span>
+<span class="lineNum">      69 </span><span class="lineCov">       2570 :         u256 difficultyBoundDivisor;</span>
+<span class="lineNum">      70 </span><span class="lineCov">       2570 :         switch(_n)</span>
+<span class="lineNum">      71 </span>            :         {
+<span class="lineNum">      72 </span>            :         case Network::MainNetwork:
+<span class="lineNum">      73 </span>            :         case Network::FrontierTest:
+<span class="lineNum">      74 </span>            :         case Network::HomesteadTest:
+<span class="lineNum">      75 </span>            :         case Network::Ropsten:
+<span class="lineNum">      76 </span>            :         case Network::TransitionnetTest:
+<span class="lineNum">      77 </span><span class="lineCov">       5140 :                 durationLimit = 13;</span>
+<span class="lineNum">      78 </span><span class="lineCov">       5140 :                 minimumDifficulty = 131072;</span>
+<span class="lineNum">      79 </span><span class="lineCov">       5140 :                 difficultyBoundDivisor = 2048;</span>
+<span class="lineNum">      80 </span><span class="lineCov">       2570 :         break;</span>
+<span class="lineNum">      81 </span>            :         default:
+<span class="lineNum">      82 </span><span class="lineNoCov">          0 :                 cerr &lt;&lt; &quot;testing undefined network difficulty&quot;;</span>
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :                 durationLimit = _p.u256Param(&quot;durationLimit&quot;);</span>
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :                 minimumDifficulty = _p.u256Param(&quot;minimumDifficulty&quot;);</span>
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :                 difficultyBoundDivisor = _p.u256Param(&quot;difficultyBoundDivisor&quot;);</span>
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :                 break;</span>
+<span class="lineNum">      87 </span>            :         }
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :         //Frontier Era
+<span class="lineNum">      90 </span><span class="lineCov">       7710 :         bigint block_diff = _parent.difficulty();</span>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineCov">       7710 :         bigint a = (_parent.difficulty() / difficultyBoundDivisor);</span>
+<span class="lineNum">      93 </span><span class="lineCov">      12850 :         bigint b = ((_bi.timestamp() - _parent.timestamp()) &lt; durationLimit) ?  1 : -1;</span>
+<span class="lineNum">      94 </span><span class="lineCov">      12850 :         bigint c = (_bi.number() / 100000) - 2;</span>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">       5140 :         block_diff += a * b;</span>
+<span class="lineNum">      97 </span><span class="lineCov">      10280 :         block_diff += u256(1) &lt;&lt; (unsigned)c;</span>
+<span class="lineNum">      98 </span><span class="lineCov">      10280 :         block_diff = max&lt;bigint&gt;(minimumDifficulty, block_diff);</span>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">      41120 :         BOOST_CHECK_MESSAGE(difficulty == block_diff, &quot;Check Calculated diff = &quot; &lt;&lt; difficulty &lt;&lt; &quot; expected diff = &quot; &lt;&lt; block_diff &lt;&lt; _testName);</span>
+<span class="lineNum">     101 </span>            :         return;
+<a name="102"><span class="lineNum">     102 </span>            : }</a>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 : void fillDifficulty(string const&amp; _testFileFullName, Ethash&amp; _sealEngine)</span>
+<span class="lineNum">     105 </span>            : {
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :         int testN = 0;</span>
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :         ostringstream finalTest;</span>
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :         finalTest &lt;&lt; &quot;{&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :         dev::test::TestOutputHelper::initTest(900);</span>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :         for (int stampDelta = 0; stampDelta &lt; 45; stampDelta+=2)</span>
+<span class="lineNum">     112 </span>            :         {
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :                 for (u256 blockNumber = 1; blockNumber &lt; 1500000; blockNumber += 25000)</span>
+<span class="lineNum">     114 </span>            :                 {
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :                         testN++;</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :                         json_spirit::mObject m;</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :                         string testName = &quot;DifficultyTest&quot;+toString(testN);</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :                         if (!dev::test::TestOutputHelper::passTest(m, testName))</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :                                 continue;</span>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :                         u256 pStamp = dev::test::RandomCode::randomUniInt();</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :                         u256 pDiff = dev::test::RandomCode::randomUniInt();</span>
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :                         u256 cStamp = pStamp + stampDelta;</span>
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :                         u256 cNum = blockNumber;</span>
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :                         BlockHeader parent;</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :                         parent.setTimestamp(pStamp);</span>
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :                         parent.setDifficulty(pDiff);</span>
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :                         parent.setNumber(cNum - 1);</span>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :                         BlockHeader current;</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :                         current.setTimestamp(cStamp);</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :                         current.setNumber(cNum);</span>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :                         string tmptest = c_testDifficulty;</span>
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :                         std::map&lt;string, string&gt; replaceMap;</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :                         replaceMap[&quot;[N]&quot;] = toString(testN);</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :                         replaceMap[&quot;[PDIFF]&quot;] = toCompactHex(pDiff, HexPrefix::Add);</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :                         replaceMap[&quot;[PSTAMP]&quot;] = toCompactHex(pStamp, HexPrefix::Add);</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :                         replaceMap[&quot;[СSTAMP]&quot;] = toCompactHex(cStamp, HexPrefix::Add);</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :                         replaceMap[&quot;[CNUM]&quot;] = toCompactHex(cNum, HexPrefix::Add);</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :                         replaceMap[&quot;[CDIFF]&quot;] = toCompactHex(_sealEngine.calculateDifficulty(current, parent), HexPrefix::Add);                       </span>
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :                         dev::test::RandomCode::parseTestWithTypes(tmptest, replaceMap);</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :                         finalTest &lt;&lt; tmptest;</span>
+<span class="lineNum">     146 </span>            :                 }
+<span class="lineNum">     147 </span>            :         }
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :         finalTest &lt;&lt; std::endl &lt;&lt; &quot;}&quot;;</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :         string testFile = finalTest.str();</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :         testFile = testFile.replace(testFile.find_last_of(&quot;,&quot;), 1, &quot;&quot;);</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :         writeFile(_testFileFullName, asBytes(testFile));</span>
+<a name="153"><span class="lineNum">     153 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">          6 : void testDifficulty(string const&amp; _testFileFullName, Ethash&amp; _sealEngine, Network _n)</span>
+<span class="lineNum">     156 </span>            : {
+<span class="lineNum">     157 </span>            :         //Test File
+<span class="lineNum">     158 </span><span class="lineCov">         12 :         js::mValue v;</span>
+<span class="lineNum">     159 </span><span class="lineCov">         12 :         string s = contentsString(_testFileFullName);</span>
+<span class="lineNum">     160 </span><span class="lineCov">         66 :         BOOST_REQUIRE_MESSAGE(s.length() &gt; 0, &quot;Contents of '&quot; &lt;&lt; _testFileFullName &lt;&lt; &quot;' is empty. Have you cloned the 'tests' repo branch develop?&quot;);</span>
+<span class="lineNum">     161 </span><span class="lineCov">          6 :         js::read_string(s, v);</span>
+<span class="lineNum">     162 </span><span class="lineCov">          6 :         dev::test::TestOutputHelper::initTest(v);</span>
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span><span class="lineCov">       5672 :         for (auto&amp; i: v.get_obj())</span>
+<span class="lineNum">     165 </span>            :         {
+<span class="lineNum">     166 </span><span class="lineCov">      16962 :                 js::mObject o = i.second.get_obj();</span>
+<span class="lineNum">     167 </span><span class="lineCov">      16962 :                 string testname = i.first;</span>
+<span class="lineNum">     168 </span><span class="lineCov">       5654 :                 if (!dev::test::TestOutputHelper::passTest(o, testname))</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :                         continue;</span>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineCov">      11308 :                 BlockHeader parent;</span>
+<span class="lineNum">     172 </span><span class="lineCov">      22616 :                 parent.setTimestamp(test::toInt(o[&quot;parentTimestamp&quot;]));</span>
+<span class="lineNum">     173 </span><span class="lineCov">      22616 :                 parent.setDifficulty(test::toInt(o[&quot;parentDifficulty&quot;]));</span>
+<span class="lineNum">     174 </span><span class="lineCov">      28270 :                 parent.setNumber(test::toInt(o[&quot;currentBlockNumber&quot;]) - 1);</span>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span><span class="lineCov">      11308 :                 BlockHeader current;</span>
+<span class="lineNum">     177 </span><span class="lineCov">      22616 :                 current.setTimestamp(test::toInt(o[&quot;currentTimestamp&quot;]));</span>
+<span class="lineNum">     178 </span><span class="lineCov">      22616 :                 current.setNumber(test::toInt(o[&quot;currentBlockNumber&quot;]));</span>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">       5654 :                 u256 difficulty = _sealEngine.calculateDifficulty(current, parent);</span>
+<span class="lineNum">     181 </span>            :                 current.setDifficulty(difficulty);
+<span class="lineNum">     182 </span><span class="lineCov">      39578 :                 BOOST_CHECK_EQUAL(difficulty, test::toInt(o[&quot;currentDifficulty&quot;]));</span>
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            :                 //Manual formula test
+<span class="lineNum">     185 </span><span class="lineCov">      22616 :                 checkCalculatedDifficulty(current, parent, _n, _sealEngine.chainParams(), &quot;(&quot; + i.first + &quot;)&quot;);</span>
+<span class="lineNum">     186 </span>            :         }
+<span class="lineNum">     187 </span><span class="lineCov">          6 :         dev::test::TestOutputHelper::finishTest();</span>
+<span class="lineNum">     188 </span><span class="lineCov">          6 : }</span>
+<span class="lineNum">     189 </span>            : 
+<a name="190"><span class="lineNum">     190 </span><span class="lineCov">          3 : BOOST_AUTO_TEST_SUITE(DifficultyTests)</span></a>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(difficultyTestsFrontier)</span>
+<span class="lineNum">     193 </span>            : {
+<span class="lineNum">     194 </span><span class="lineCov">          2 :         string testFileFullName = test::getTestPath();</span>
+<span class="lineNum">     195 </span><span class="lineCov">          1 :         testFileFullName += &quot;/BasicTests/difficultyFrontier.json&quot;;</span>
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span><span class="lineCov">          2 :         Ethash sealEngine;</span>
+<span class="lineNum">     198 </span><span class="lineCov">          2 :         sealEngine.setChainParams(ChainParams(genesisInfo(Network::FrontierTest)));</span>
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span><span class="lineCov">          1 :         if (dev::test::Options::get().filltests)</span>
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :                 fillDifficulty(testFileFullName, sealEngine);</span>
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span><span class="lineCov">          1 :         testDifficulty(testFileFullName, sealEngine, Network::FrontierTest);</span>
+<a name="204"><span class="lineNum">     204 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(difficultyTestsRopsten)</span>
+<span class="lineNum">     207 </span>            : {
+<span class="lineNum">     208 </span><span class="lineCov">          2 :         string testFileFullName = test::getTestPath();</span>
+<span class="lineNum">     209 </span><span class="lineCov">          1 :         testFileFullName += &quot;/BasicTests/difficultyRopsten.json&quot;;</span>
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span><span class="lineCov">          2 :         Ethash sealEngine;</span>
+<span class="lineNum">     212 </span><span class="lineCov">          2 :         sealEngine.setChainParams(ChainParams(genesisInfo(Network::Ropsten)));</span>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span><span class="lineCov">          1 :         if (dev::test::Options::get().filltests)</span>
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :                 fillDifficulty(testFileFullName, sealEngine);</span>
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span><span class="lineCov">          1 :         testDifficulty(testFileFullName, sealEngine, Network::Ropsten);</span>
+<a name="218"><span class="lineNum">     218 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)</span>
+<span class="lineNum">     221 </span>            : {
+<span class="lineNum">     222 </span><span class="lineCov">          2 :         string testFileFullName = test::getTestPath();</span>
+<span class="lineNum">     223 </span><span class="lineCov">          1 :         testFileFullName += &quot;/BasicTests/difficultyHomestead.json&quot;;</span>
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span><span class="lineCov">          2 :         Ethash sealEngine;</span>
+<span class="lineNum">     226 </span><span class="lineCov">          2 :         sealEngine.setChainParams(ChainParams(genesisInfo(Network::HomesteadTest)));</span>
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span><span class="lineCov">          1 :         if (dev::test::Options::get().filltests)</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :                 fillDifficulty(testFileFullName, sealEngine);</span>
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span><span class="lineCov">          1 :         testDifficulty(testFileFullName, sealEngine, Network::HomesteadTest);</span>
+<a name="232"><span class="lineNum">     232 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(difficultyTestsMainNetwork)</span>
+<span class="lineNum">     235 </span>            : {
+<span class="lineNum">     236 </span><span class="lineCov">          2 :         string testFileFullName = test::getTestPath();</span>
+<span class="lineNum">     237 </span><span class="lineCov">          1 :         testFileFullName += &quot;/BasicTests/difficultyMainNetwork.json&quot;;</span>
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span><span class="lineCov">          2 :         Ethash sealEngine;</span>
+<span class="lineNum">     240 </span><span class="lineCov">          2 :         sealEngine.setChainParams(ChainParams(genesisInfo(Network::MainNetwork)));</span>
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span><span class="lineCov">          1 :         if (dev::test::Options::get().filltests)</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :                 fillDifficulty(testFileFullName, sealEngine);</span>
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span><span class="lineCov">          1 :         testDifficulty(testFileFullName, sealEngine, Network::MainNetwork);</span>
+<a name="246"><span class="lineNum">     246 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)</span>
+<span class="lineNum">     249 </span>            : {
+<span class="lineNum">     250 </span><span class="lineCov">          2 :         string testFileFullName = test::getTestPath();</span>
+<span class="lineNum">     251 </span><span class="lineCov">          1 :         testFileFullName += &quot;/BasicTests/difficultyCustomMainNetwork.json&quot;;</span>
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span><span class="lineCov">          2 :         Ethash sealEngine;</span>
+<span class="lineNum">     254 </span><span class="lineCov">          2 :         sealEngine.setChainParams(ChainParams(genesisInfo(Network::MainNetwork)));</span>
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span><span class="lineCov">          1 :         if (dev::test::Options::get().filltests)</span>
+<span class="lineNum">     257 </span>            :         {
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :                 u256 homsteadBlockNumber = 1000000;</span>
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :                 std::vector&lt;u256&gt; blockNumberVector = {homsteadBlockNumber - 100000, homsteadBlockNumber, homsteadBlockNumber + 100000};</span>
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :                 std::vector&lt;u256&gt; parentDifficultyVector = {1000, 2048, 4000, 1000000};</span>
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :                 std::vector&lt;int&gt; timestampDeltaVector = {0, 1, 8, 10, 13, 20, 100, 800, 1000, 1500};</span>
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :                 int testN = 0;</span>
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :                 ostringstream finalTest;</span>
+<span class="lineNum">     265 </span><span class="lineNoCov">          0 :                 finalTest &lt;&lt; &quot;{&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :                 for (size_t bN = 0; bN &lt; blockNumberVector.size(); bN++)</span>
+<span class="lineNum">     268 </span><span class="lineNoCov">          0 :                         for (size_t pdN = 0; pdN &lt; parentDifficultyVector.size(); pdN++)</span>
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :                                 for (size_t tsN = 0; tsN &lt; timestampDeltaVector.size(); tsN++)</span>
+<span class="lineNum">     270 </span>            :                                 {
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :                                         testN++;</span>
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :                                         int stampDelta = timestampDeltaVector.at(tsN);</span>
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :                                         u256 blockNumber = blockNumberVector.at(bN);</span>
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :                                         u256 pDiff = parentDifficultyVector.at(pdN);</span>
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span><span class="lineNoCov">          0 :                                         u256 pStamp = dev::test::RandomCode::randomUniInt();</span>
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :                                         u256 cStamp = pStamp + stampDelta;</span>
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :                                         u256 cNum = blockNumber;</span>
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 :                                         BlockHeader parent;</span>
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :                                         parent.setTimestamp(pStamp);</span>
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :                                         parent.setDifficulty(pDiff);</span>
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :                                         parent.setNumber(cNum - 1);</span>
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :                                         BlockHeader current;</span>
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :                                         current.setTimestamp(cStamp);</span>
+<span class="lineNum">     287 </span><span class="lineNoCov">          0 :                                         current.setNumber(cNum);</span>
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 :                                         string tmptest = c_testDifficulty;</span>
+<span class="lineNum">     290 </span><span class="lineNoCov">          0 :                                         std::map&lt;string, string&gt; replaceMap;</span>
+<span class="lineNum">     291 </span><span class="lineNoCov">          0 :                                         replaceMap[&quot;[N]&quot;] = toString(testN);</span>
+<span class="lineNum">     292 </span><span class="lineNoCov">          0 :                                         replaceMap[&quot;[PDIFF]&quot;] = toCompactHex(pDiff, HexPrefix::Add);</span>
+<span class="lineNum">     293 </span><span class="lineNoCov">          0 :                                         replaceMap[&quot;[PSTAMP]&quot;] = toCompactHex(pStamp, HexPrefix::Add);</span>
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 :                                         replaceMap[&quot;[СSTAMP]&quot;] = toCompactHex(cStamp, HexPrefix::Add);</span>
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :                                         replaceMap[&quot;[CNUM]&quot;] = toCompactHex(cNum, HexPrefix::Add);</span>
+<span class="lineNum">     296 </span><span class="lineNoCov">          0 :                                         replaceMap[&quot;[CDIFF]&quot;] = toCompactHex(sealEngine.calculateDifficulty(current, parent), HexPrefix::Add);</span>
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :                                         dev::test::RandomCode::parseTestWithTypes(tmptest, replaceMap);</span>
+<span class="lineNum">     299 </span><span class="lineNoCov">          0 :                                         finalTest &lt;&lt; tmptest;</span>
+<span class="lineNum">     300 </span>            :                                 }
+<span class="lineNum">     301 </span>            : 
+<span class="lineNum">     302 </span><span class="lineNoCov">          0 :                 finalTest &lt;&lt; std::endl &lt;&lt; &quot;}&quot;;</span>
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :                 string testFile = finalTest.str();</span>
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 :                 testFile = testFile.replace(testFile.find_last_of(&quot;,&quot;), 1, &quot;&quot;);</span>
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 :                 writeFile(testFileFullName, asBytes(testFile));</span>
+<span class="lineNum">     306 </span>            :         }
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span><span class="lineCov">          1 :         testDifficulty(testFileFullName, sealEngine, Network::MainNetwork);</span>
+<a name="309"><span class="lineNum">     309 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(basicDifficultyTest)</span>
+<span class="lineNum">     312 </span>            : {
+<span class="lineNum">     313 </span><span class="lineCov">          2 :         string testPath = test::getTestPath();</span>
+<span class="lineNum">     314 </span><span class="lineCov">          1 :         testPath += &quot;/BasicTests/difficulty.json&quot;;</span>
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span><span class="lineCov">          2 :         Ethash sealEngine;</span>
+<span class="lineNum">     317 </span><span class="lineCov">          2 :         sealEngine.setChainParams(ChainParams(genesisInfo(Network::MainNetwork)));</span>
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span><span class="lineCov">          1 :         testDifficulty(testPath, sealEngine, Network::MainNetwork);</span>
+<a name="320"><span class="lineNum">     320 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span><span class="lineCov">          3 : BOOST_AUTO_TEST_SUITE_END()</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

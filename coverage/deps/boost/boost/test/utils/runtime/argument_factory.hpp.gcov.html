@@ -1,0 +1,318 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/utils/runtime/argument_factory.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/utils/runtime</a> - argument_factory.hpp<span style="font-size: 80%;"> (source / <a href="argument_factory.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">54</td>
+            <td class="headerCovTableEntryLo">25.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntry">33</td>
+            <td class="headerCovTableEntryLo">57.6 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : argument factories for different kinds of parameters
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_UTILS_RUNTIME_ARGUMENT_FACTORY_HPP
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_UTILS_RUNTIME_ARGUMENT_FACTORY_HPP
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test Runtime parameters
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/utils/runtime/errors.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/utils/runtime/argument.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : // Boost.Test
+<span class="lineNum">      23 </span>            : #include &lt;boost/test/utils/basic_cstring/io.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/utils/basic_cstring/compare.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/utils/string_cast.hpp&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : // Boost
+<span class="lineNum">      28 </span>            : #include &lt;boost/function/function2.hpp&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : // STL
+<span class="lineNum">      31 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : namespace boost {
+<span class="lineNum">      36 </span>            : namespace runtime {
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : // ************************************************************************** //
+<span class="lineNum">      39 </span>            : // **************          runtime::value_interpreter          ************** //
+<span class="lineNum">      40 </span>            : // ************************************************************************** //
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : template&lt;typename ValueType, bool is_enum&gt;
+<span class="lineNum">      43 </span>            : struct value_interpreter;
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : template&lt;typename ValueType&gt;
+<span class="lineNum">      48 </span>            : struct value_interpreter&lt;ValueType, false&gt; {
+<span class="lineNum">      49 </span>            :     template&lt;typename Modifiers&gt;
+<a name="50"><span class="lineNum">      50 </span>            :     explicit    value_interpreter( Modifiers const&amp; ) {}</a>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :     ValueType interpret( cstring param_name, cstring source ) const</span>
+<span class="lineNum">      53 </span>            :     {
+<span class="lineNum">      54 </span>            :         ValueType res;
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :         if( !unit_test::utils::string_as&lt;ValueType&gt;( source, res ) )</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :             BOOST_TEST_I_THROW( format_error( param_name ) &lt;&lt; source &lt;&lt;</span>
+<span class="lineNum">      57 </span>            :                                 &quot; can't be interpreted as value of parameter &quot; &lt;&lt; param_name &lt;&lt; &quot;.&quot; );
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :         return res;</span>
+<span class="lineNum">      59 </span>            :     }
+<span class="lineNum">      60 </span>            : };
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : template&lt;&gt;
+<span class="lineNum">      65 </span>            : struct value_interpreter&lt;std::string, false&gt; {
+<span class="lineNum">      66 </span>            :     template&lt;typename Modifiers&gt;
+<span class="lineNum">      67 </span>            :     explicit    value_interpreter( Modifiers const&amp; ) {}
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :     std::string interpret( cstring, cstring source ) const
+<span class="lineNum">      70 </span>            :     {
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :         return std::string( source.begin(), source.size() );</span>
+<span class="lineNum">      72 </span>            :     }
+<span class="lineNum">      73 </span>            : };
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : template&lt;&gt;
+<span class="lineNum">      78 </span>            : struct value_interpreter&lt;cstring, false&gt; {
+<span class="lineNum">      79 </span>            :     template&lt;typename Modifiers&gt;
+<span class="lineNum">      80 </span>            :     explicit    value_interpreter( Modifiers const&amp; ) {}
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :     cstring interpret( cstring, cstring source ) const
+<span class="lineNum">      83 </span>            :     {
+<span class="lineNum">      84 </span>            :         return source;
+<span class="lineNum">      85 </span>            :     }
+<span class="lineNum">      86 </span>            : };
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : template&lt;&gt;
+<span class="lineNum">      91 </span>            : struct value_interpreter&lt;bool, false&gt; {
+<span class="lineNum">      92 </span>            :     template&lt;typename Modifiers&gt;
+<a name="93"><span class="lineNum">      93 </span>            :     explicit    value_interpreter( Modifiers const&amp; ) {}</a>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :     bool    interpret( cstring param_name, cstring source ) const</span>
+<span class="lineNum">      96 </span>            :     {
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :         static cstring const s_YES( &quot;YES&quot; );</span>
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :         static cstring const s_Y( &quot;Y&quot; );</span>
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :         static cstring const s_NO( &quot;NO&quot; );</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :         static cstring const s_N( &quot;N&quot; );</span>
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :         static cstring const s_TRUE( &quot;TRUE&quot; );</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :         static cstring const s_FALSE( &quot;FALSE&quot; );</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :         static cstring const s_one( &quot;1&quot; );</span>
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :         static cstring const s_zero( &quot;0&quot; );</span>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :         source.trim();</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :         if( source.is_empty() ||</span>
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :             case_ins_eq( source, s_YES ) ||</span>
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :             case_ins_eq( source, s_Y ) ||</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :             case_ins_eq( source, s_one ) ||</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :             case_ins_eq( source, s_TRUE ) )</span>
+<span class="lineNum">     113 </span>            :             return true;
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :         if( case_ins_eq( source, s_NO ) ||</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :             case_ins_eq( source, s_N ) ||</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :             case_ins_eq( source, s_zero ) ||</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :             case_ins_eq( source, s_FALSE ) )</span>
+<span class="lineNum">     119 </span>            :             return false;
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :         BOOST_TEST_I_THROW( format_error( param_name ) &lt;&lt; source &lt;&lt; &quot; can't be interpreted as bool value.&quot; );</span>
+<span class="lineNum">     122 </span>            :     }
+<span class="lineNum">     123 </span>            : };
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : template&lt;typename EnumType&gt;
+<a name="128"><span class="lineNum">     128 </span><span class="lineCov">         36 : struct value_interpreter&lt;EnumType, true&gt; {</span></a>
+<span class="lineNum">     129 </span>            :     template&lt;typename Modifiers&gt;
+<span class="lineNum">     130 </span><span class="lineCov">          6 :     explicit        value_interpreter( Modifiers const&amp; m )</span>
+<span class="lineNum">     131 </span>            : #if defined(BOOST_TEST_CLA_NEW_API)
+<span class="lineNum">     132 </span><span class="lineCov">         18 :     : m_name_to_value( m[enum_values&lt;EnumType&gt;::value] )</span>
+<span class="lineNum">     133 </span>            :     {
+<span class="lineNum">     134 </span><span class="lineCov">          6 :     }</span>
+<span class="lineNum">     135 </span>            : #else
+<span class="lineNum">     136 </span>            :     {
+<span class="lineNum">     137 </span>            :         std::vector&lt;std::pair&lt;cstring,EnumType&gt; &gt; const&amp; values = m[enum_values&lt;EnumType&gt;::value];
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :         m_name_to_value.insert( values.begin(), values.end() );
+<span class="lineNum">     140 </span>            :     }
+<a name="141"><span class="lineNum">     141 </span>            : #endif</a>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :     EnumType        interpret( cstring param_name, cstring source ) const</span>
+<span class="lineNum">     144 </span>            :     {
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :         typename std::map&lt;cstring,EnumType&gt;::const_iterator found = m_name_to_value.find( source );</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :         BOOST_TEST_I_ASSRT( found != m_name_to_value.end(),</span>
+<span class="lineNum">     148 </span>            :                             format_error( param_name ) &lt;&lt; source &lt;&lt;
+<span class="lineNum">     149 </span>            :                             &quot; is not a valid enumeration value name for parameter &quot; &lt;&lt; param_name &lt;&lt; &quot;.&quot; );
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :         return found-&gt;second;</span>
+<span class="lineNum">     152 </span>            :     }
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            : private:
+<span class="lineNum">     155 </span>            :     // Data members
+<span class="lineNum">     156 </span>            :     std::map&lt;cstring,EnumType&gt;  m_name_to_value;
+<span class="lineNum">     157 </span>            : };
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            : // ************************************************************************** //
+<span class="lineNum">     162 </span>            : // **************           runtime::argument_factory          ************** //
+<span class="lineNum">     163 </span>            : // ************************************************************************** //
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : template&lt;typename ValueType, bool is_enum, bool repeatable&gt;
+<span class="lineNum">     166 </span>            : class argument_factory;
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : //____________________________________________________________________________//
+<a name="169"><span class="lineNum">     169 </span>            : </a>
+<span class="lineNum">     170 </span>            : template&lt;typename ValueType, bool is_enum&gt;
+<span class="lineNum">     171 </span><span class="lineCov">         81 : class argument_factory&lt;ValueType, is_enum, false&gt; {</span>
+<a name="172"><span class="lineNum">     172 </span>            : public:</a>
+<span class="lineNum">     173 </span>            :     template&lt;typename Modifiers&gt;
+<span class="lineNum">     174 </span><span class="lineCov">         22 :     explicit    argument_factory( Modifiers const&amp; m )</span>
+<span class="lineNum">     175 </span>            :     : m_interpreter( m )
+<span class="lineNum">     176 </span><span class="lineCov">         29 :     , m_optional_value( nfp::opt_get( m, optional_value, ValueType() ) )</span>
+<span class="lineNum">     177 </span><span class="lineCov">         98 :     , m_default_value( nfp::opt_get( m, default_value, ValueType() ) )</span>
+<span class="lineNum">     178 </span>            :     {
+<a name="179"><span class="lineNum">     179 </span><span class="lineCov">         22 :     }</span></a>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :     void        produce_argument( cstring source, cstring param_name, arguments_store&amp; store ) const</span>
+<span class="lineNum">     182 </span>            :     {
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :         store.set( param_name, source.empty() ? m_optional_value : m_interpreter.interpret( param_name, source ) );</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :     void        produce_default( cstring param_name, arguments_store&amp; store ) const
+<span class="lineNum">     187 </span>            :     {
+<span class="lineNum">     188 </span><span class="lineCov">         21 :         store.set( param_name, m_default_value );</span>
+<span class="lineNum">     189 </span>            :     }
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            : private:
+<span class="lineNum">     192 </span>            :     // Data members
+<span class="lineNum">     193 </span>            :     typedef value_interpreter&lt;ValueType, is_enum&gt; interp_t;
+<span class="lineNum">     194 </span>            :     interp_t    m_interpreter;
+<span class="lineNum">     195 </span>            :     ValueType   m_optional_value;
+<span class="lineNum">     196 </span>            :     ValueType   m_default_value;
+<span class="lineNum">     197 </span>            : };
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            : template&lt;typename ValueType, bool is_enum&gt;
+<span class="lineNum">     202 </span>            : class argument_factory&lt;ValueType, is_enum, true&gt; {
+<span class="lineNum">     203 </span>            : public:
+<span class="lineNum">     204 </span>            :     template&lt;typename Modifiers&gt;
+<span class="lineNum">     205 </span>            :     explicit    argument_factory( Modifiers const&amp; m )
+<span class="lineNum">     206 </span><span class="lineCov">          2 :     : m_interpreter( m )</span>
+<span class="lineNum">     207 </span>            :     {
+<a name="208"><span class="lineNum">     208 </span>            :     }</a>
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :     void        produce_argument( cstring source, cstring param_name, arguments_store&amp; store ) const</span>
+<span class="lineNum">     211 </span>            :     {
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :         ValueType value = m_interpreter.interpret( param_name, source );</span>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :         if( store.has( param_name ) ) {</span>
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :             std::vector&lt;ValueType&gt;&amp; values = store.get&lt;std::vector&lt;ValueType&gt; &gt;( param_name );</span>
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :             values.push_back( value );</span>
+<span class="lineNum">     217 </span>            :         }
+<span class="lineNum">     218 </span>            :         else {
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :             std::vector&lt;ValueType&gt; values( 1, value );</span>
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :             store.set( param_name, values );</span>
+<span class="lineNum">     222 </span>            :         }
+<a name="223"><span class="lineNum">     223 </span>            : </a>
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     225 </span><span class="lineCov">          2 :     void        produce_default( cstring param_name, arguments_store&amp; store ) const</span>
+<span class="lineNum">     226 </span>            :     {
+<span class="lineNum">     227 </span><span class="lineCov">          2 :         store.set( param_name, std::vector&lt;ValueType&gt;() );</span>
+<span class="lineNum">     228 </span><span class="lineCov">          2 :     }</span>
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            : private:
+<span class="lineNum">     231 </span>            :     // Data members
+<span class="lineNum">     232 </span>            :     value_interpreter&lt;ValueType, is_enum&gt; m_interpreter;
+<span class="lineNum">     233 </span>            : };
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            : } // namespace runtime
+<span class="lineNum">     238 </span>            : } // namespace boost
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            : #endif // BOOST_TEST_UTILS_RUNTIME_ARGUMENT_FACTORY_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

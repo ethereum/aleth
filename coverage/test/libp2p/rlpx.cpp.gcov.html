@@ -1,0 +1,1063 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libp2p/rlpx.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libp2p</a> - rlpx.cpp<span style="font-size: 80%;"> (source / <a href="rlpx.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">668</td>
+            <td class="headerCovTableEntry">668</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file crypto.cpp
+<span class="lineNum">      18 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  * RLPx test functions.
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;libdevcore/Guards.h&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/unit_test.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;cryptopp/aes.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;cryptopp/hmac.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;cryptopp/keccak.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;cryptopp/modes.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;cryptopp/sha.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libdevcore/RLP.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;libdevcore/Log.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;libdevcore/SHA3.h&gt;
+<span class="lineNum">      35 </span>            : #include &lt;libdevcrypto/ECDHE.h&gt;
+<span class="lineNum">      36 </span>            : #include &lt;libdevcrypto/CryptoPP.h&gt;
+<span class="lineNum">      37 </span>            : #include &lt;libp2p/RLPxHandshake.h&gt;
+<span class="lineNum">      38 </span>            : #include &lt;libp2p/RLPXFrameWriter.h&gt;
+<span class="lineNum">      39 </span>            : #include &lt;libp2p/RLPXFrameReader.h&gt;
+<span class="lineNum">      40 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : using namespace std;
+<span class="lineNum">      43 </span>            : using namespace dev;
+<span class="lineNum">      44 </span>            : using namespace dev::crypto;
+<span class="lineNum">      45 </span>            : using namespace dev::p2p;
+<span class="lineNum">      46 </span>            : using namespace dev::test;
+<span class="lineNum">      47 </span>            : using namespace CryptoPP;
+<a name="48"><span class="lineNum">      48 </span>            : </a>
+<span class="lineNum">      49 </span>            : struct RLPXTestFixture: public TestOutputHelper {
+<span class="lineNum">      50 </span><span class="lineCov">         20 :         RLPXTestFixture() : s_secp256k1(Secp256k1PP::get()) {}</span>
+<span class="lineNum">      51 </span><span class="lineCov">         10 :         ~RLPXTestFixture() {}</span>
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            :         Secp256k1PP* s_secp256k1;
+<span class="lineNum">      54 </span>            : };
+<a name="55"><span class="lineNum">      55 </span><span class="lineCov">          3 : BOOST_FIXTURE_TEST_SUITE(rlpx, RLPXTestFixture)</span></a>
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)</span>
+<span class="lineNum">      58 </span>            : {
+<span class="lineNum">      59 </span><span class="lineCov">          6 :         KeyPair init(Secret(sha3(&quot;initiator&quot;)));</span>
+<span class="lineNum">      60 </span><span class="lineCov">          6 :         KeyPair initR(Secret(sha3(&quot;initiator-random&quot;)));</span>
+<span class="lineNum">      61 </span><span class="lineCov">          3 :         h256 initNonce(sha3(&quot;initiator-nonce&quot;));</span>
+<span class="lineNum">      62 </span>            :         
+<span class="lineNum">      63 </span><span class="lineCov">          6 :         KeyPair recv(Secret(sha3(&quot;remote-recv&quot;)));</span>
+<span class="lineNum">      64 </span><span class="lineCov">          6 :         KeyPair recvR(Secret(sha3(&quot;remote-recv-random&quot;)));</span>
+<span class="lineNum">      65 </span><span class="lineCov">          3 :         h256 recvNonce(sha3(&quot;remote-recv-nonce&quot;));</span>
+<span class="lineNum">      66 </span>            :         
+<span class="lineNum">      67 </span><span class="lineCov">          4 :         bytes authCipher(fromHex(&quot;&quot;));</span>
+<span class="lineNum">      68 </span><span class="lineCov">          4 :         bytes ackCipher(fromHex(&quot;&quot;));</span>
+<span class="lineNum">      69 </span>            :         
+<span class="lineNum">      70 </span><span class="lineCov">          2 :         CryptoPP::CTR_Mode&lt;CryptoPP::AES&gt;::Encryption m_frameEnc;</span>
+<span class="lineNum">      71 </span><span class="lineCov">          2 :         CryptoPP::CTR_Mode&lt;CryptoPP::AES&gt;::Encryption m_frameDec;</span>
+<span class="lineNum">      72 </span><span class="lineCov">          2 :         CryptoPP::ECB_Mode&lt;CryptoPP::AES&gt;::Encryption m_macEnc;</span>
+<span class="lineNum">      73 </span><span class="lineCov">          2 :         CryptoPP::Keccak_256 m_egressMac;</span>
+<span class="lineNum">      74 </span><span class="lineCov">          1 :         CryptoPP::Keccak_256 m_ingressMac;</span>
+<span class="lineNum">      75 </span>            :         
+<span class="lineNum">      76 </span>            :         // when originated is true, agreement is with init secrets
+<span class="lineNum">      77 </span>            :         // when originated is true, remoteNonce = recvNonce
+<span class="lineNum">      78 </span>            :         // when originated is true, nonce = initNonce
+<span class="lineNum">      79 </span><span class="lineCov">          1 :         bool originated = true;</span>
+<span class="lineNum">      80 </span><span class="lineCov">          1 :         auto remoteNonce = recvNonce;</span>
+<span class="lineNum">      81 </span><span class="lineCov">          1 :         auto nonce = initNonce;</span>
+<span class="lineNum">      82 </span><span class="lineCov">          3 :         bytes keyMaterialBytes(64);</span>
+<span class="lineNum">      83 </span><span class="lineCov">          1 :         bytesRef keyMaterial(&amp;keyMaterialBytes);</span>
+<span class="lineNum">      84 </span>            :         
+<span class="lineNum">      85 </span>            :         // shared-secret = sha3(ecdhe-shared-secret || sha3(nonce || initiator-nonce))
+<span class="lineNum">      86 </span><span class="lineCov">          2 :         Secret ephemeralShared;</span>
+<span class="lineNum">      87 </span><span class="lineCov">          1 :         s_secp256k1-&gt;agree(initR.sec(), recvR.pub(), ephemeralShared);</span>
+<span class="lineNum">      88 </span><span class="lineCov">          6 :         Secret expected(fromHex(&quot;20d82c1092f351dc217bd66fa183e801234af14ead40423b6ee25112201c6e5a&quot;));</span>
+<span class="lineNum">      89 </span><span class="lineCov">          9 :         BOOST_REQUIRE(expected == ephemeralShared);</span>
+<span class="lineNum">      90 </span>            :         
+<span class="lineNum">      91 </span><span class="lineCov">          2 :         ephemeralShared.ref().copyTo(keyMaterial.cropped(0, h256::size));</span>
+<span class="lineNum">      92 </span><span class="lineCov">          1 :         h512 nonceMaterial;</span>
+<span class="lineNum">      93 </span><span class="lineCov">          1 :         h256 const&amp; leftNonce = originated ? remoteNonce : nonce;</span>
+<span class="lineNum">      94 </span><span class="lineCov">          1 :         h256 const&amp; rightNonce = originated ? nonce : remoteNonce;</span>
+<span class="lineNum">      95 </span><span class="lineCov">          3 :         leftNonce.ref().copyTo(nonceMaterial.ref().cropped(0, h256::size));</span>
+<span class="lineNum">      96 </span><span class="lineCov">          2 :         rightNonce.ref().copyTo(nonceMaterial.ref().cropped(h256::size, h256::size));</span>
+<span class="lineNum">      97 </span><span class="lineCov">          1 :         auto outRef(keyMaterial.cropped(h256::size, h256::size));</span>
+<span class="lineNum">      98 </span><span class="lineCov">          2 :         sha3(nonceMaterial.ref(), outRef); // output h(nonces)</span>
+<span class="lineNum">      99 </span>            :         
+<span class="lineNum">     100 </span>            :         // test that keyMaterial = ecdhe-shared-secret || sha3(nonce || initiator-nonce)
+<span class="lineNum">     101 </span>            :         {
+<span class="lineNum">     102 </span><span class="lineCov">         10 :                 BOOST_REQUIRE(ephemeralShared == *(Secret*)keyMaterialBytes.data());</span>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineCov">          2 :                 Keccak_256 ctx;</span>
+<span class="lineNum">     105 </span><span class="lineCov">          1 :                 ctx.Update(leftNonce.data(), h256::size);</span>
+<span class="lineNum">     106 </span><span class="lineCov">          1 :                 ctx.Update(rightNonce.data(), h256::size);</span>
+<span class="lineNum">     107 </span><span class="lineCov">          3 :                 bytes expected(32);</span>
+<span class="lineNum">     108 </span><span class="lineCov">          3 :                 ctx.Final(expected.data());</span>
+<span class="lineNum">     109 </span><span class="lineCov">          3 :                 bytes given(32);</span>
+<span class="lineNum">     110 </span><span class="lineCov">          1 :                 outRef.copyTo(&amp;given);</span>
+<span class="lineNum">     111 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(expected == given);</span>
+<span class="lineNum">     112 </span>            :         }
+<span class="lineNum">     113 </span><span class="lineCov">          2 :         bytes preImage(keyMaterialBytes);</span>
+<span class="lineNum">     114 </span>            :         
+<span class="lineNum">     115 </span>            :         // shared-secret &lt;- sha3(ecdhe-shared-secret || sha3(nonce || initiator-nonce))
+<span class="lineNum">     116 </span>            :         // keyMaterial = ecdhe-shared-secret || shared-secret
+<span class="lineNum">     117 </span><span class="lineCov">          1 :         sha3(keyMaterial, outRef);</span>
+<span class="lineNum">     118 </span><span class="lineCov">          3 :         bytes sharedSecret(32);</span>
+<span class="lineNum">     119 </span><span class="lineCov">          1 :         outRef.copyTo(&amp;sharedSecret);</span>
+<span class="lineNum">     120 </span><span class="lineCov">         12 :         BOOST_REQUIRE(sharedSecret == fromHex(&quot;b65319ce56e00f3be75c4d0da92b5957d5583ca25eeeedac8e29b6dfc8b1ddf7&quot;));</span>
+<span class="lineNum">     121 </span>            :         
+<span class="lineNum">     122 </span>            :         // test that keyMaterial = ecdhe-shared-secret || shared-secret
+<span class="lineNum">     123 </span>            :         {
+<span class="lineNum">     124 </span><span class="lineCov">         10 :                 BOOST_REQUIRE(ephemeralShared == *(Secret*)keyMaterialBytes.data());</span>
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineCov">          2 :                 Keccak_256 ctx;</span>
+<span class="lineNum">     127 </span><span class="lineCov">          3 :                 ctx.Update(preImage.data(), preImage.size());</span>
+<span class="lineNum">     128 </span><span class="lineCov">          3 :                 bytes expected(32);</span>
+<span class="lineNum">     129 </span><span class="lineCov">          3 :                 ctx.Final(expected.data());</span>
+<span class="lineNum">     130 </span><span class="lineCov">          3 :                 bytes test(32);</span>
+<span class="lineNum">     131 </span><span class="lineCov">          1 :                 outRef.copyTo(&amp;test);</span>
+<span class="lineNum">     132 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(expected == test);</span>
+<span class="lineNum">     133 </span>            :         }
+<span class="lineNum">     134 </span>            :         
+<span class="lineNum">     135 </span>            :         // token: sha3(outRef)
+<span class="lineNum">     136 </span><span class="lineCov">          3 :         bytes token(32);</span>
+<span class="lineNum">     137 </span><span class="lineCov">          2 :         sha3(outRef, bytesRef(&amp;token));</span>
+<span class="lineNum">     138 </span><span class="lineCov">         12 :         BOOST_REQUIRE(token == fromHex(&quot;db41fe0180f372983cf19fca7ee890f7fb5481079d44683d2c027be9e71bbca2&quot;));</span>
+<span class="lineNum">     139 </span>            :         
+<span class="lineNum">     140 </span>            :         // aes-secret = sha3(ecdhe-shared-secret || shared-secret)
+<span class="lineNum">     141 </span><span class="lineCov">          1 :         sha3(keyMaterial, outRef); // output aes-secret</span>
+<span class="lineNum">     142 </span><span class="lineCov">          3 :         bytes aesSecret(32);</span>
+<span class="lineNum">     143 </span><span class="lineCov">          1 :         outRef.copyTo(&amp;aesSecret);</span>
+<span class="lineNum">     144 </span><span class="lineCov">         12 :         BOOST_REQUIRE(aesSecret == fromHex(&quot;12347b4784bcb4e74b84637940482852fe25d78e328cf5c6f7a396bf96cc20bb&quot;));</span>
+<span class="lineNum">     145 </span><span class="lineCov">          2 :         m_frameEnc.SetKeyWithIV(outRef.data(), h128::size, h128().data());</span>
+<span class="lineNum">     146 </span><span class="lineCov">          2 :         m_frameDec.SetKeyWithIV(outRef.data(), h128::size, h128().data());</span>
+<span class="lineNum">     147 </span>            :         
+<span class="lineNum">     148 </span>            :         // mac-secret = sha3(ecdhe-shared-secret || aes-secret)
+<span class="lineNum">     149 </span><span class="lineCov">          1 :         sha3(keyMaterial, outRef); // output mac-secret</span>
+<span class="lineNum">     150 </span><span class="lineCov">          3 :         bytes macSecret(32);</span>
+<span class="lineNum">     151 </span><span class="lineCov">          1 :         outRef.copyTo(&amp;macSecret);</span>
+<span class="lineNum">     152 </span><span class="lineCov">         12 :         BOOST_REQUIRE(macSecret == fromHex(&quot;2ec149072353d54437422837c886b0538a9206e6c559f6b4a55f65a866867723&quot;));</span>
+<span class="lineNum">     153 </span><span class="lineCov">          2 :         m_macEnc.SetKey(outRef.data(), h128::size);</span>
+<span class="lineNum">     154 </span>            :         
+<span class="lineNum">     155 </span>            :         // Initiator egress-mac: sha3(mac-secret^recipient-nonce || auth-sent-init)
+<span class="lineNum">     156 </span>            :         //           ingress-mac: sha3(mac-secret^initiator-nonce || auth-recvd-ack)
+<span class="lineNum">     157 </span>            :         // Recipient egress-mac: sha3(mac-secret^initiator-nonce || auth-sent-ack)
+<span class="lineNum">     158 </span>            :         //           ingress-mac: sha3(mac-secret^recipient-nonce || auth-recvd-init)
+<span class="lineNum">     159 </span>            :         
+<span class="lineNum">     160 </span><span class="lineCov">          2 :         (*(h256*)outRef.data() ^ remoteNonce).ref().copyTo(keyMaterial);</span>
+<span class="lineNum">     161 </span><span class="lineCov">          1 :         bytes const&amp; egressCipher = originated ? authCipher : ackCipher;</span>
+<span class="lineNum">     162 </span><span class="lineCov">          2 :         keyMaterialBytes.resize(h256::size + egressCipher.size());</span>
+<span class="lineNum">     163 </span><span class="lineCov">          4 :         keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());</span>
+<span class="lineNum">     164 </span><span class="lineCov">          4 :         bytesConstRef(&amp;egressCipher).copyTo(keyMaterial.cropped(h256::size, egressCipher.size()));</span>
+<span class="lineNum">     165 </span><span class="lineCov">          1 :         m_egressMac.Update(keyMaterial.data(), keyMaterial.size());</span>
+<span class="lineNum">     166 </span>            :         
+<span class="lineNum">     167 </span>            :         {
+<span class="lineNum">     168 </span><span class="lineCov">          2 :                 bytes egressMac;</span>
+<span class="lineNum">     169 </span><span class="lineCov">          2 :                 Keccak_256 h(m_egressMac);</span>
+<span class="lineNum">     170 </span><span class="lineCov">          3 :                 bytes digest(16);</span>
+<span class="lineNum">     171 </span><span class="lineCov">          2 :                 h.TruncatedFinal(digest.data(), 16);</span>
+<span class="lineNum">     172 </span><span class="lineCov">         12 :                 BOOST_REQUIRE(digest == fromHex(&quot;23e5e8efb6e3765ecae1fca9160b18df&quot;));</span>
+<span class="lineNum">     173 </span>            :         }
+<span class="lineNum">     174 </span>            :         
+<span class="lineNum">     175 </span>            :         // recover mac-secret by re-xoring remoteNonce
+<span class="lineNum">     176 </span><span class="lineCov">          2 :         (*(h256*)keyMaterial.data() ^ remoteNonce ^ nonce).ref().copyTo(keyMaterial);</span>
+<span class="lineNum">     177 </span><span class="lineCov">          1 :         bytes const&amp; ingressCipher = originated ? ackCipher : authCipher;</span>
+<span class="lineNum">     178 </span><span class="lineCov">          2 :         keyMaterialBytes.resize(h256::size + ingressCipher.size());</span>
+<span class="lineNum">     179 </span><span class="lineCov">          4 :         keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());</span>
+<span class="lineNum">     180 </span><span class="lineCov">          4 :         bytesConstRef(&amp;ingressCipher).copyTo(keyMaterial.cropped(h256::size, ingressCipher.size()));</span>
+<span class="lineNum">     181 </span><span class="lineCov">          1 :         m_ingressMac.Update(keyMaterial.data(), keyMaterial.size());</span>
+<span class="lineNum">     182 </span>            :         
+<span class="lineNum">     183 </span>            :         {
+<span class="lineNum">     184 </span><span class="lineCov">          2 :                 bytes ingressMac;</span>
+<span class="lineNum">     185 </span><span class="lineCov">          2 :                 Keccak_256 h(m_ingressMac);</span>
+<span class="lineNum">     186 </span><span class="lineCov">          3 :                 bytes digest(16);</span>
+<span class="lineNum">     187 </span><span class="lineCov">          2 :                 h.TruncatedFinal(digest.data(), 16);</span>
+<span class="lineNum">     188 </span><span class="lineCov">         12 :                 BOOST_REQUIRE(digest == fromHex(&quot;ceed64135852064cbdde86e7ea05e8f5&quot;));</span>
+<span class="lineNum">     189 </span>            :         }
+<a name="190"><span class="lineNum">     190 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(test_secrets_from_go)</span>
+<span class="lineNum">     193 </span>            : {
+<span class="lineNum">     194 </span><span class="lineCov">          7 :         KeyPair init(Secret(fromHex(&quot;0x5e173f6ac3c669587538e7727cf19b782a4f2fda07c1eaa662c593e5e85e3051&quot;)));</span>
+<span class="lineNum">     195 </span><span class="lineCov">          7 :         KeyPair initR(Secret(fromHex(&quot;0x19c2185f4f40634926ebed3af09070ca9e029f2edd5fae6253074896205f5f6c&quot;)));</span>
+<span class="lineNum">     196 </span><span class="lineCov">          4 :         h256 initNonce(fromHex(&quot;0xcd26fecb93657d1cd9e9eaf4f8be720b56dd1d39f190c4e1c6b7ec66f077bb11&quot;));</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineCov">          7 :         KeyPair recv(Secret(fromHex(&quot;0xc45f950382d542169ea207959ee0220ec1491755abe405cd7498d6b16adb6df8&quot;)));</span>
+<span class="lineNum">     199 </span><span class="lineCov">          7 :         KeyPair recvR(Secret(fromHex(&quot;0xd25688cf0ab10afa1a0e2dba7853ed5f1e5bf1c631757ed4e103b593ff3f5620&quot;)));</span>
+<span class="lineNum">     200 </span><span class="lineCov">          4 :         h256 recvNonce(fromHex(&quot;0xf37ec61d84cea03dcc5e8385db93248584e8af4b4d1c832d8c7453c0089687a7&quot;));</span>
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span><span class="lineCov">          4 :         bytes authCipher(fromHex(&quot;0x04a0274c5951e32132e7f088c9bdfdc76c9d91f0dc6078e848f8e3361193dbdc43b94351ea3d89e4ff33ddcefbc80070498824857f499656c4f79bbd97b6c51a514251d69fd1785ef8764bd1d262a883f780964cce6a14ff206daf1206aa073a2d35ce2697ebf3514225bef186631b2fd2316a4b7bcdefec8d75a1025ba2c5404a34e7795e1dd4bc01c6113ece07b0df13b69d3ba654a36e35e69ff9d482d88d2f0228e7d96fe11dccbb465a1831c7d4ad3a026924b182fc2bdfe016a6944312021da5cc459713b13b86a686cf34d6fe6615020e4acf26bf0d5b7579ba813e7723eb95b3cef9942f01a58bd61baee7c9bdd438956b426a4ffe238e61746a8c93d5e10680617c82e48d706ac4953f5e1c4c4f7d013c87d34a06626f498f34576dc017fdd3d581e83cfd26cf125b6d2bda1f1d56&quot;));</span>
+<span class="lineNum">     203 </span><span class="lineCov">          4 :         bytes ackCipher(fromHex(&quot;0x049934a7b2d7f9af8fd9db941d9da281ac9381b5740e1f64f7092f3588d4f87f5ce55191a6653e5e80c1c5dd538169aa123e70dc6ffc5af1827e546c0e958e42dad355bcc1fcb9cdf2cf47ff524d2ad98cbf275e661bf4cf00960e74b5956b799771334f426df007350b46049adb21a6e78ab1408d5e6ccde6fb5e69f0f4c92bb9c725c02f99fa72b9cdc8dd53cff089e0e73317f61cc5abf6152513cb7d833f09d2851603919bf0fbe44d79a09245c6e8338eb502083dc84b846f2fee1cc310d2cc8b1b9334728f97220bb799376233e113&quot;));</span>
+<span class="lineNum">     204 </span>            :         
+<span class="lineNum">     205 </span><span class="lineCov">          4 :         bytes authPlainExpected(fromHex(&quot;0x884c36f7ae6b406637c1f61b2f57e1d2cab813d24c6559aaf843c3f48962f32f46662c066d39669b7b2e3ba14781477417600e7728399278b1b5d801a519aa570034fdb5419558137e0d44cd13d319afe5629eeccb47fd9dfe55cc6089426e46cc762dd8a0636e07a54b31169eba0c7a20a1ac1ef68596f1f283b5c676bae4064abfcce24799d09f67e392632d3ffdc12e3d6430dcb0ea19c318343ffa7aae74d4cd26fecb93657d1cd9e9eaf4f8be720b56dd1d39f190c4e1c6b7ec66f077bb1100&quot;));</span>
+<span class="lineNum">     206 </span><span class="lineCov">          4 :         bytes ackPlainExpected(fromHex(&quot;0x802b052f8b066640bba94a4fc39d63815c377fced6fcb84d27f791c9921ddf3e9bf0108e298f490812847109cbd778fae393e80323fd643209841a3b7f110397f37ec61d84cea03dcc5e8385db93248584e8af4b4d1c832d8c7453c0089687a700&quot;));</span>
+<span class="lineNum">     207 </span>            :         
+<span class="lineNum">     208 </span><span class="lineCov">          2 :         bytes authPlain = authCipher;</span>
+<span class="lineNum">     209 </span><span class="lineCov">          8 :         BOOST_REQUIRE(s_secp256k1-&gt;decryptECIES(recv.sec(), authPlain));</span>
+<span class="lineNum">     210 </span><span class="lineCov">          2 :         bytes ackPlain = ackCipher;</span>
+<span class="lineNum">     211 </span><span class="lineCov">          8 :         BOOST_REQUIRE(s_secp256k1-&gt;decryptECIES(init.sec(), ackPlain));</span>
+<span class="lineNum">     212 </span>            :         
+<span class="lineNum">     213 </span><span class="lineCov">          2 :         CryptoPP::CTR_Mode&lt;CryptoPP::AES&gt;::Encryption m_frameEnc;</span>
+<span class="lineNum">     214 </span><span class="lineCov">          2 :         CryptoPP::CTR_Mode&lt;CryptoPP::AES&gt;::Encryption m_frameDec;</span>
+<span class="lineNum">     215 </span><span class="lineCov">          2 :         CryptoPP::ECB_Mode&lt;CryptoPP::AES&gt;::Encryption m_macEnc;</span>
+<span class="lineNum">     216 </span><span class="lineCov">          2 :         CryptoPP::Keccak_256 m_egressMac;</span>
+<span class="lineNum">     217 </span><span class="lineCov">          2 :         CryptoPP::Keccak_256 m_ingressMac;</span>
+<span class="lineNum">     218 </span>            :         
+<span class="lineNum">     219 </span>            :         // when originated is true, agreement is with init secrets
+<span class="lineNum">     220 </span>            :         // when originated is true, remoteNonce = recvNonce
+<span class="lineNum">     221 </span>            :         // when originated is true, nonce = initNonce
+<span class="lineNum">     222 </span><span class="lineCov">          1 :         bool originated = true;</span>
+<span class="lineNum">     223 </span><span class="lineCov">          1 :         auto remoteNonce = recvNonce;</span>
+<span class="lineNum">     224 </span><span class="lineCov">          1 :         auto nonce = initNonce;</span>
+<span class="lineNum">     225 </span><span class="lineCov">          3 :         bytes keyMaterialBytes(64);</span>
+<span class="lineNum">     226 </span><span class="lineCov">          1 :         bytesRef keyMaterial(&amp;keyMaterialBytes);</span>
+<span class="lineNum">     227 </span>            :         
+<span class="lineNum">     228 </span>            :         // shared-secret = sha3(ecdhe-shared-secret || sha3(nonce || initiator-nonce))
+<span class="lineNum">     229 </span><span class="lineCov">          2 :         Secret ephemeralShared;</span>
+<span class="lineNum">     230 </span><span class="lineCov">          1 :         s_secp256k1-&gt;agree(initR.sec(), recvR.pub(), ephemeralShared);</span>
+<span class="lineNum">     231 </span><span class="lineCov">          6 :         Secret expected(fromHex(&quot;0xe3f407f83fc012470c26a93fdff534100f2c6f736439ce0ca90e9914f7d1c381&quot;));</span>
+<span class="lineNum">     232 </span><span class="lineCov">          9 :         BOOST_REQUIRE(expected == ephemeralShared);</span>
+<span class="lineNum">     233 </span>            :         
+<span class="lineNum">     234 </span><span class="lineCov">          2 :         ephemeralShared.ref().copyTo(keyMaterial.cropped(0, h256::size));</span>
+<span class="lineNum">     235 </span><span class="lineCov">          1 :         h512 nonceMaterial;</span>
+<span class="lineNum">     236 </span><span class="lineCov">          1 :         h256 const&amp; leftNonce = originated ? remoteNonce : nonce;</span>
+<span class="lineNum">     237 </span><span class="lineCov">          1 :         h256 const&amp; rightNonce = originated ? nonce : remoteNonce;</span>
+<span class="lineNum">     238 </span><span class="lineCov">          3 :         leftNonce.ref().copyTo(nonceMaterial.ref().cropped(0, h256::size));</span>
+<span class="lineNum">     239 </span><span class="lineCov">          2 :         rightNonce.ref().copyTo(nonceMaterial.ref().cropped(h256::size, h256::size));</span>
+<span class="lineNum">     240 </span><span class="lineCov">          1 :         auto outRef(keyMaterial.cropped(h256::size, h256::size));</span>
+<span class="lineNum">     241 </span><span class="lineCov">          2 :         sha3(nonceMaterial.ref(), outRef); // output h(nonces)</span>
+<span class="lineNum">     242 </span>            :         
+<span class="lineNum">     243 </span>            :         // test that keyMaterial = ecdhe-shared-secret || sha3(nonce || initiator-nonce)
+<span class="lineNum">     244 </span>            :         {
+<span class="lineNum">     245 </span><span class="lineCov">         10 :                 BOOST_REQUIRE(ephemeralShared == *(Secret*)keyMaterialBytes.data());</span>
+<span class="lineNum">     246 </span>            :                 
+<span class="lineNum">     247 </span><span class="lineCov">          2 :                 Keccak_256 ctx;</span>
+<span class="lineNum">     248 </span><span class="lineCov">          1 :                 ctx.Update(leftNonce.data(), h256::size);</span>
+<span class="lineNum">     249 </span><span class="lineCov">          1 :                 ctx.Update(rightNonce.data(), h256::size);</span>
+<span class="lineNum">     250 </span><span class="lineCov">          3 :                 bytes expected(32);</span>
+<span class="lineNum">     251 </span><span class="lineCov">          3 :                 ctx.Final(expected.data());</span>
+<span class="lineNum">     252 </span><span class="lineCov">          3 :                 bytes given(32);</span>
+<span class="lineNum">     253 </span><span class="lineCov">          1 :                 outRef.copyTo(&amp;given);</span>
+<span class="lineNum">     254 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(expected == given);</span>
+<span class="lineNum">     255 </span>            :         }
+<span class="lineNum">     256 </span><span class="lineCov">          2 :         bytes preImage(keyMaterialBytes);</span>
+<span class="lineNum">     257 </span>            :         
+<span class="lineNum">     258 </span>            :         // shared-secret &lt;- sha3(ecdhe-shared-secret || sha3(nonce || initiator-nonce))
+<span class="lineNum">     259 </span>            :         // keyMaterial = ecdhe-shared-secret || shared-secret
+<span class="lineNum">     260 </span><span class="lineCov">          1 :         sha3(keyMaterial, outRef);</span>
+<span class="lineNum">     261 </span>            :         
+<span class="lineNum">     262 </span>            :         // test that keyMaterial = ecdhe-shared-secret || shared-secret
+<span class="lineNum">     263 </span>            :         {
+<span class="lineNum">     264 </span><span class="lineCov">         10 :                 BOOST_REQUIRE(ephemeralShared == *(Secret*)keyMaterialBytes.data());</span>
+<span class="lineNum">     265 </span>            :                 
+<span class="lineNum">     266 </span><span class="lineCov">          2 :                 Keccak_256 ctx;</span>
+<span class="lineNum">     267 </span><span class="lineCov">          3 :                 ctx.Update(preImage.data(), preImage.size());</span>
+<span class="lineNum">     268 </span><span class="lineCov">          3 :                 bytes expected(32);</span>
+<span class="lineNum">     269 </span><span class="lineCov">          3 :                 ctx.Final(expected.data());</span>
+<span class="lineNum">     270 </span><span class="lineCov">          3 :                 bytes test(32);</span>
+<span class="lineNum">     271 </span><span class="lineCov">          1 :                 outRef.copyTo(&amp;test);</span>
+<span class="lineNum">     272 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(expected == test);</span>
+<span class="lineNum">     273 </span>            :         }
+<span class="lineNum">     274 </span>            :         
+<span class="lineNum">     275 </span>            :         // token: sha3(outRef)
+<span class="lineNum">     276 </span><span class="lineCov">          3 :         bytes token(32);</span>
+<span class="lineNum">     277 </span><span class="lineCov">          2 :         sha3(outRef, bytesRef(&amp;token));</span>
+<span class="lineNum">     278 </span><span class="lineCov">         12 :         BOOST_REQUIRE(token == fromHex(&quot;0x3f9ec2592d1554852b1f54d228f042ed0a9310ea86d038dc2b401ba8cd7fdac4&quot;));</span>
+<span class="lineNum">     279 </span>            :         
+<span class="lineNum">     280 </span>            :         // aes-secret = sha3(ecdhe-shared-secret || shared-secret)
+<span class="lineNum">     281 </span><span class="lineCov">          1 :         sha3(keyMaterial, outRef); // output aes-secret</span>
+<span class="lineNum">     282 </span><span class="lineCov">          3 :         bytes aesSecret(32);</span>
+<span class="lineNum">     283 </span><span class="lineCov">          1 :         outRef.copyTo(&amp;aesSecret);</span>
+<span class="lineNum">     284 </span><span class="lineCov">         12 :         BOOST_REQUIRE(aesSecret == fromHex(&quot;0xc0458fa97a5230830e05f4f20b7c755c1d4e54b1ce5cf43260bb191eef4e418d&quot;));</span>
+<span class="lineNum">     285 </span><span class="lineCov">          2 :         m_frameEnc.SetKeyWithIV(outRef.data(), h128::size, h128().data());</span>
+<span class="lineNum">     286 </span><span class="lineCov">          2 :         m_frameDec.SetKeyWithIV(outRef.data(), h128::size, h128().data());</span>
+<span class="lineNum">     287 </span>            :         
+<span class="lineNum">     288 </span>            :         // mac-secret = sha3(ecdhe-shared-secret || aes-secret)
+<span class="lineNum">     289 </span><span class="lineCov">          1 :         sha3(keyMaterial, outRef); // output mac-secret</span>
+<span class="lineNum">     290 </span><span class="lineCov">          3 :         bytes macSecret(32);</span>
+<span class="lineNum">     291 </span><span class="lineCov">          1 :         outRef.copyTo(&amp;macSecret);</span>
+<span class="lineNum">     292 </span><span class="lineCov">         12 :         BOOST_REQUIRE(macSecret == fromHex(&quot;0x48c938884d5067a1598272fcddaa4b833cd5e7d92e8228c0ecdfabbe68aef7f1&quot;));</span>
+<span class="lineNum">     293 </span><span class="lineCov">          2 :         m_macEnc.SetKey(outRef.data(), h256::size);</span>
+<span class="lineNum">     294 </span>            :         
+<span class="lineNum">     295 </span>            :         // Initiator egress-mac: sha3(mac-secret^recipient-nonce || auth-sent-init)
+<span class="lineNum">     296 </span>            :         //           ingress-mac: sha3(mac-secret^initiator-nonce || auth-recvd-ack)
+<span class="lineNum">     297 </span>            :         // Recipient egress-mac: sha3(mac-secret^initiator-nonce || auth-sent-ack)
+<span class="lineNum">     298 </span>            :         //           ingress-mac: sha3(mac-secret^recipient-nonce || auth-recvd-init)
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span><span class="lineCov">          2 :         (*(h256*)outRef.data() ^ remoteNonce).ref().copyTo(keyMaterial);</span>
+<span class="lineNum">     301 </span><span class="lineCov">          1 :         bytes const&amp; egressCipher = originated ? authCipher : ackCipher;</span>
+<span class="lineNum">     302 </span><span class="lineCov">          2 :         keyMaterialBytes.resize(h256::size + egressCipher.size());</span>
+<span class="lineNum">     303 </span><span class="lineCov">          4 :         keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());</span>
+<span class="lineNum">     304 </span><span class="lineCov">          4 :         bytesConstRef(&amp;egressCipher).copyTo(keyMaterial.cropped(h256::size, egressCipher.size()));</span>
+<span class="lineNum">     305 </span><span class="lineCov">          3 :         m_egressMac.Update(keyMaterialBytes.data(), keyMaterialBytes.size());</span>
+<span class="lineNum">     306 </span>            :         
+<span class="lineNum">     307 </span>            :         {
+<span class="lineNum">     308 </span><span class="lineCov">          2 :                 bytes egressMac;</span>
+<span class="lineNum">     309 </span><span class="lineCov">          2 :                 Keccak_256 h(m_egressMac);</span>
+<span class="lineNum">     310 </span><span class="lineCov">          3 :                 bytes digest(32);</span>
+<span class="lineNum">     311 </span><span class="lineCov">          2 :                 h.Final(digest.data());</span>
+<span class="lineNum">     312 </span><span class="lineCov">         12 :                 BOOST_REQUIRE(digest == fromHex(&quot;0x09771e93b1a6109e97074cbe2d2b0cf3d3878efafe68f53c41bb60c0ec49097e&quot;));</span>
+<span class="lineNum">     313 </span>            :         }
+<span class="lineNum">     314 </span>            :         
+<span class="lineNum">     315 </span>            :         // recover mac-secret by re-xoring remoteNonce
+<span class="lineNum">     316 </span><span class="lineCov">          3 :         bytes recoverMacSecretTest(32);</span>
+<span class="lineNum">     317 </span><span class="lineCov">          2 :         (*(h256*)keyMaterial.data() ^ remoteNonce).ref().copyTo(&amp;recoverMacSecretTest);</span>
+<span class="lineNum">     318 </span><span class="lineCov">          8 :         BOOST_REQUIRE(recoverMacSecretTest == macSecret);</span>
+<span class="lineNum">     319 </span>            :         
+<span class="lineNum">     320 </span><span class="lineCov">          2 :         (*(h256*)keyMaterial.data() ^ remoteNonce ^ nonce).ref().copyTo(keyMaterial);</span>
+<span class="lineNum">     321 </span><span class="lineCov">          1 :         bytes const&amp; ingressCipher = originated ? ackCipher : authCipher;</span>
+<span class="lineNum">     322 </span><span class="lineCov">          2 :         keyMaterialBytes.resize(h256::size + ingressCipher.size());</span>
+<span class="lineNum">     323 </span><span class="lineCov">          4 :         keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());</span>
+<span class="lineNum">     324 </span><span class="lineCov">          4 :         bytesConstRef(&amp;ingressCipher).copyTo(keyMaterial.cropped(h256::size, ingressCipher.size()));</span>
+<span class="lineNum">     325 </span><span class="lineCov">          1 :         m_ingressMac.Update(keyMaterial.data(), keyMaterial.size());</span>
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span>            :         {
+<span class="lineNum">     328 </span><span class="lineCov">          2 :                 bytes ingressMac;</span>
+<span class="lineNum">     329 </span><span class="lineCov">          2 :                 Keccak_256 h(m_ingressMac);</span>
+<span class="lineNum">     330 </span><span class="lineCov">          3 :                 bytes digest(32);</span>
+<span class="lineNum">     331 </span><span class="lineCov">          2 :                 h.Final(digest.data());</span>
+<span class="lineNum">     332 </span><span class="lineCov">         12 :                 BOOST_CHECK(digest == fromHex(&quot;0x75823d96e23136c89666ee025fb21a432be906512b3dd4a3049e898adb433847&quot;));</span>
+<span class="lineNum">     333 </span>            :         }
+<span class="lineNum">     334 </span>            :         
+<span class="lineNum">     335 </span><span class="lineCov">          4 :         bytes initHello(fromHex(&quot;6ef23fcf1cec7312df623f9ae701e63b550cdb8517fefd8dd398fc2acd1d935e6e0434a2b96769078477637347b7b01924fff9ff1c06df2f804df3b0402bbb9f87365b3c6856b45e1e2b6470986813c3816a71bff9d69dd297a5dbd935ab578f6e5d7e93e4506a44f307c332d95e8a4b102585fd8ef9fc9e3e055537a5cec2e9&quot;));</span>
+<span class="lineNum">     336 </span>            :         
+<span class="lineNum">     337 </span><span class="lineCov">          5 :         bytes recvHello(fromHex(&quot;6ef23fcf1cec7312df623f9ae701e63be36a1cdd1b19179146019984f3625d4a6e0434a2b96769050577657247b7b02bc6c314470eca7e3ef650b98c83e9d7dd4830b3f718ff562349aead2530a8d28a8484604f92e5fced2c6183f304344ab0e7c301a0c05559f4c25db65e36820b4b909a226171a60ac6cb7beea09376d6d8&quot;));</span>
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span>            :         /// test macs of frame headers
+<span class="lineNum">     340 </span>            :         {
+<span class="lineNum">     341 </span><span class="lineCov">          2 :                 Keccak_256 egressmac(m_egressMac);</span>
+<span class="lineNum">     342 </span><span class="lineCov">          2 :                 Keccak_256 prevDigest(egressmac);</span>
+<span class="lineNum">     343 </span><span class="lineCov">          1 :                 h128 prevDigestOut;</span>
+<span class="lineNum">     344 </span><span class="lineCov">          1 :                 prevDigest.TruncatedFinal(prevDigestOut.data(), h128::size);</span>
+<span class="lineNum">     345 </span><span class="lineCov">          1 :                 h128 encDigest;</span>
+<span class="lineNum">     346 </span><span class="lineCov">          2 :                 m_macEnc.ProcessData(encDigest.data(), prevDigestOut.data(), h128::size);</span>
+<span class="lineNum">     347 </span><span class="lineCov">          3 :                 encDigest ^= *(h128*)initHello.data();</span>
+<span class="lineNum">     348 </span><span class="lineCov">          1 :                 egressmac.Update(encDigest.data(), h128::size);</span>
+<span class="lineNum">     349 </span><span class="lineCov">          1 :                 egressmac.TruncatedFinal(encDigest.data(), h128::size);</span>
+<span class="lineNum">     350 </span>            :                 
+<span class="lineNum">     351 </span><span class="lineCov">          3 :                 bytes provided(16);</span>
+<span class="lineNum">     352 </span><span class="lineCov">          3 :                 bytesConstRef(&amp;initHello).cropped(16, 16).copyTo(bytesRef(&amp;provided));</span>
+<span class="lineNum">     353 </span><span class="lineCov">         11 :                 BOOST_REQUIRE(*(h128*)encDigest.data() == *(h128*)provided.data());</span>
+<span class="lineNum">     354 </span>            :         }
+<span class="lineNum">     355 </span>            :         
+<span class="lineNum">     356 </span>            :         {
+<span class="lineNum">     357 </span><span class="lineCov">          2 :                 Keccak_256 ingressmac(m_ingressMac);</span>
+<span class="lineNum">     358 </span><span class="lineCov">          2 :                 Keccak_256 prevDigest(ingressmac);</span>
+<span class="lineNum">     359 </span><span class="lineCov">          1 :                 h128 prevDigestOut;</span>
+<span class="lineNum">     360 </span><span class="lineCov">          1 :                 prevDigest.TruncatedFinal(prevDigestOut.data(), h128::size);</span>
+<span class="lineNum">     361 </span><span class="lineCov">          1 :                 h128 encDigest;</span>
+<span class="lineNum">     362 </span><span class="lineCov">          2 :                 m_macEnc.ProcessData(encDigest.data(), prevDigestOut.data(), h128::size);</span>
+<span class="lineNum">     363 </span><span class="lineCov">          3 :                 encDigest ^= *(h128*)recvHello.data();</span>
+<span class="lineNum">     364 </span><span class="lineCov">          1 :                 ingressmac.Update(encDigest.data(), h128::size);</span>
+<span class="lineNum">     365 </span><span class="lineCov">          1 :                 ingressmac.TruncatedFinal(encDigest.data(), h128::size);</span>
+<span class="lineNum">     366 </span>            :                 
+<span class="lineNum">     367 </span><span class="lineCov">          3 :                 bytes provided(16);</span>
+<span class="lineNum">     368 </span><span class="lineCov">          3 :                 bytesConstRef(&amp;recvHello).cropped(16, 16).copyTo(bytesRef(&amp;provided));</span>
+<span class="lineNum">     369 </span><span class="lineCov">         11 :                 BOOST_REQUIRE(*(h128*)encDigest.data() == *(h128*)provided.data());</span>
+<span class="lineNum">     370 </span>            :         }
+<span class="lineNum">     371 </span>            :         
+<span class="lineNum">     372 </span>            :         // test decrypt of frame headers for recvHello
+<span class="lineNum">     373 </span><span class="lineCov">          3 :         bytes plaintext(16);</span>
+<span class="lineNum">     374 </span><span class="lineCov">          3 :         m_frameDec.ProcessData(plaintext.data(), recvHello.data(), h128::size);</span>
+<span class="lineNum">     375 </span>            :         
+<span class="lineNum">     376 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span>            : #if defined(__GNUC__)
+<span class="lineNum">     379 </span>            :         #pragma GCC diagnostic pop
+<a name="380"><span class="lineNum">     380 </span>            : #endif // defined(__GNUC__)</a>
+<span class="lineNum">     381 </span>            : 
+<span class="lineNum">     382 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(ecies_interop_test_primitives)</span>
+<span class="lineNum">     383 </span>            : {
+<span class="lineNum">     384 </span><span class="lineCov">          2 :         CryptoPP::SHA256 sha256ctx;</span>
+<span class="lineNum">     385 </span><span class="lineCov">          5 :         bytes emptyExpected(fromHex(&quot;0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&quot;));</span>
+<span class="lineNum">     386 </span><span class="lineCov">          2 :         bytes empty;</span>
+<span class="lineNum">     387 </span><span class="lineCov">          2 :         sha256ctx.Update(empty.data(), 0);</span>
+<span class="lineNum">     388 </span><span class="lineCov">          3 :         bytes emptyTestOut(32);</span>
+<span class="lineNum">     389 </span><span class="lineCov">          2 :         sha256ctx.Final(emptyTestOut.data());</span>
+<span class="lineNum">     390 </span><span class="lineCov">          8 :         BOOST_REQUIRE(emptyExpected == emptyTestOut);</span>
+<span class="lineNum">     391 </span>            :         
+<span class="lineNum">     392 </span><span class="lineCov">          4 :         bytes hash1Expected(fromHex(&quot;0x8949b278bbafb8da1aaa18cb724175c5952280f74be5d29ab4b37d1b45c84b08&quot;));</span>
+<span class="lineNum">     393 </span><span class="lineCov">          4 :         bytes hash1input(fromHex(&quot;0x55a53b55afb12affff3c&quot;));</span>
+<span class="lineNum">     394 </span><span class="lineCov">          3 :         sha256ctx.Update(hash1input.data(), hash1input.size());</span>
+<span class="lineNum">     395 </span><span class="lineCov">          3 :         bytes hash1Out(32);</span>
+<span class="lineNum">     396 </span><span class="lineCov">          2 :         sha256ctx.Final(hash1Out.data());</span>
+<span class="lineNum">     397 </span><span class="lineCov">          8 :         BOOST_REQUIRE(hash1Out == hash1Expected);</span>
+<span class="lineNum">     398 </span>            :         
+<span class="lineNum">     399 </span><span class="lineCov">          5 :         h128 hmack(fromHex(&quot;0x07a4b6dfa06369a570f2dcba2f11a18f&quot;));</span>
+<span class="lineNum">     400 </span><span class="lineCov">          2 :         CryptoPP::HMAC&lt;SHA256&gt; hmacctx(hmack.data(), h128::size);</span>
+<span class="lineNum">     401 </span><span class="lineCov">          4 :         bytes input(fromHex(&quot;0x4dcb92ed4fc67fe86832&quot;));</span>
+<span class="lineNum">     402 </span><span class="lineCov">          3 :         hmacctx.Update(input.data(), input.size());</span>
+<span class="lineNum">     403 </span><span class="lineCov">          5 :         bytes hmacExpected(fromHex(&quot;0xc90b62b1a673b47df8e395e671a68bfa68070d6e2ef039598bb829398b89b9a9&quot;));</span>
+<span class="lineNum">     404 </span><span class="lineCov">          4 :         bytes hmacOut(hmacExpected.size());</span>
+<span class="lineNum">     405 </span><span class="lineCov">          2 :         hmacctx.Final(hmacOut.data());</span>
+<span class="lineNum">     406 </span><span class="lineCov">          8 :         BOOST_REQUIRE(hmacExpected == hmacOut);</span>
+<span class="lineNum">     407 </span>            :         
+<span class="lineNum">     408 </span>            :         // go messageTag
+<span class="lineNum">     409 </span><span class="lineCov">          4 :         bytes tagSecret(fromHex(&quot;0xaf6623e52208c596e17c72cea6f1cb09&quot;));</span>
+<span class="lineNum">     410 </span><span class="lineCov">          4 :         bytes tagInput(fromHex(&quot;0x3461282bcedace970df2&quot;));</span>
+<span class="lineNum">     411 </span><span class="lineCov">          4 :         bytes tagExpected(fromHex(&quot;0xb3ce623bce08d5793677ba9441b22bb34d3e8a7de964206d26589df3e8eb5183&quot;));</span>
+<span class="lineNum">     412 </span><span class="lineCov">          4 :         CryptoPP::HMAC&lt;SHA256&gt; hmactagctx(tagSecret.data(), tagSecret.size());</span>
+<span class="lineNum">     413 </span><span class="lineCov">          3 :         hmactagctx.Update(tagInput.data(), tagInput.size());</span>
+<span class="lineNum">     414 </span><span class="lineCov">          1 :         h256 mac;</span>
+<span class="lineNum">     415 </span><span class="lineCov">          1 :         hmactagctx.Final(mac.data());</span>
+<span class="lineNum">     416 </span><span class="lineCov">         10 :         BOOST_REQUIRE(mac.asBytes() == tagExpected);</span>
+<span class="lineNum">     417 </span>            :         
+<span class="lineNum">     418 </span><span class="lineCov">          6 :         Secret input1(fromHex(&quot;0x0de72f1223915fa8b8bf45dffef67aef8d89792d116eb61c9a1eb02c422a4663&quot;));</span>
+<span class="lineNum">     419 </span><span class="lineCov">          5 :         bytes expect1(fromHex(&quot;0x1d0c446f9899a3426f2b89a8cb75c14b&quot;));</span>
+<span class="lineNum">     420 </span><span class="lineCov">          2 :         bytes test1;</span>
+<span class="lineNum">     421 </span><span class="lineCov">          4 :         test1 = s_secp256k1-&gt;eciesKDF(input1, bytes(), 16);</span>
+<span class="lineNum">     422 </span><span class="lineCov">          8 :         BOOST_REQUIRE(test1 == expect1);</span>
+<span class="lineNum">     423 </span>            :         
+<span class="lineNum">     424 </span><span class="lineCov">          6 :         Secret kdfInput2(fromHex(&quot;0x961c065873443014e0371f1ed656c586c6730bf927415757f389d92acf8268df&quot;));</span>
+<span class="lineNum">     425 </span><span class="lineCov">          4 :         bytes kdfExpect2(fromHex(&quot;0x4050c52e6d9c08755e5a818ac66fabe478b825b1836fd5efc4d44e40d04dabcc&quot;));</span>
+<span class="lineNum">     426 </span><span class="lineCov">          2 :         bytes kdfTest2;</span>
+<span class="lineNum">     427 </span><span class="lineCov">          4 :         kdfTest2 = s_secp256k1-&gt;eciesKDF(kdfInput2, bytes(), 32);</span>
+<span class="lineNum">     428 </span><span class="lineCov">          8 :         BOOST_REQUIRE(kdfTest2 == kdfExpect2);</span>
+<span class="lineNum">     429 </span>            :         
+<span class="lineNum">     430 </span><span class="lineCov">          7 :         KeyPair k(Secret(fromHex(&quot;0x332143e9629eedff7d142d741f896258f5a1bfab54dab2121d3ec5000093d74b&quot;)));</span>
+<span class="lineNum">     431 </span><span class="lineCov">          4 :         Public p(fromHex(&quot;0xf0d2b97981bd0d415a843b5dfe8ab77a30300daab3658c578f2340308a2da1a07f0821367332598b6aa4e180a41e92f4ebbae3518da847f0b1c0bbfe20bcf4e1&quot;));</span>
+<span class="lineNum">     432 </span><span class="lineCov">          7 :         Secret agreeExpected(fromHex(&quot;0xee1418607c2fcfb57fda40380e885a707f49000a5dda056d828b7d9bd1f29a08&quot;));</span>
+<span class="lineNum">     433 </span><span class="lineCov">          2 :         Secret agreeTest;</span>
+<span class="lineNum">     434 </span><span class="lineCov">          1 :         s_secp256k1-&gt;agree(k.sec(), p, agreeTest);</span>
+<span class="lineNum">     435 </span><span class="lineCov">          9 :         BOOST_REQUIRE(agreeExpected == agreeTest);</span>
+<span class="lineNum">     436 </span>            :         
+<span class="lineNum">     437 </span><span class="lineCov">          7 :         KeyPair kmK(Secret(fromHex(&quot;0x57baf2c62005ddec64c357d96183ebc90bf9100583280e848aa31d683cad73cb&quot;)));</span>
+<span class="lineNum">     438 </span><span class="lineCov">          4 :         bytes kmCipher(fromHex(&quot;0x04ff2c874d0a47917c84eea0b2a4141ca95233720b5c70f81a8415bae1dc7b746b61df7558811c1d6054333907333ef9bb0cc2fbf8b34abb9730d14e0140f4553f4b15d705120af46cf653a1dc5b95b312cf8444714f95a4f7a0425b67fc064d18f4d0a528761565ca02d97faffdac23de10&quot;));</span>
+<span class="lineNum">     439 </span><span class="lineCov">          2 :         bytes kmPlain = kmCipher;</span>
+<span class="lineNum">     440 </span><span class="lineCov">          5 :         bytes kmExpected(asBytes(&quot;a&quot;));</span>
+<span class="lineNum">     441 </span><span class="lineCov">          8 :         BOOST_REQUIRE(s_secp256k1-&gt;decryptECIES(kmK.sec(), kmPlain));</span>
+<span class="lineNum">     442 </span><span class="lineCov">          8 :         BOOST_REQUIRE(kmExpected == kmPlain);</span>
+<span class="lineNum">     443 </span>            :         
+<span class="lineNum">     444 </span><span class="lineCov">          7 :         KeyPair kenc(Secret(fromHex(&quot;0x472413e97f1fd58d84e28a559479e6b6902d2e8a0cee672ef38a3a35d263886b&quot;)));</span>
+<span class="lineNum">     445 </span><span class="lineCov">          4 :         Public penc(Public(fromHex(&quot;0x7a2aa2951282279dc1171549a7112b07c38c0d97c0fe2c0ae6c4588ba15be74a04efc4f7da443f6d61f68a9279bc82b73e0cc8d090048e9f87e838ae65dd8d4c&quot;)));</span>
+<span class="lineNum">     446 </span><span class="lineCov">          9 :         BOOST_REQUIRE(penc == kenc.pub());</span>
+<span class="lineNum">     447 </span>            :         
+<span class="lineNum">     448 </span><span class="lineCov">          4 :         bytes cipher1(fromHex(&quot;0x046f647e1bd8a5cd1446d31513bac233e18bdc28ec0e59d46de453137a72599533f1e97c98154343420d5f16e171e5107999a7c7f1a6e26f57bcb0d2280655d08fb148d36f1d4b28642d3bb4a136f0e33e3dd2e3cffe4b45a03fb7c5b5ea5e65617250fdc89e1a315563c20504b9d3a72555&quot;));</span>
+<span class="lineNum">     449 </span><span class="lineCov">          2 :         bytes plainTest1 = cipher1;</span>
+<span class="lineNum">     450 </span><span class="lineCov">          5 :         bytes expectedPlain1 = asBytes(&quot;a&quot;);</span>
+<span class="lineNum">     451 </span><span class="lineCov">          8 :         BOOST_REQUIRE(s_secp256k1-&gt;decryptECIES(kenc.sec(), plainTest1));</span>
+<span class="lineNum">     452 </span><span class="lineCov">          8 :         BOOST_REQUIRE(plainTest1 == expectedPlain1);</span>
+<span class="lineNum">     453 </span>            :         
+<span class="lineNum">     454 </span><span class="lineCov">          4 :         bytes cipher2(fromHex(&quot;0x0443c24d6ccef3ad095140760bb143078b3880557a06392f17c5e368502d79532bc18903d59ced4bbe858e870610ab0d5f8b7963dd5c9c4cf81128d10efd7c7aa80091563c273e996578403694673581829e25a865191bdc9954db14285b56eb0043b6288172e0d003c10f42fe413222e273d1d4340c38a2d8344d7aadcbc846ee&quot;));</span>
+<span class="lineNum">     455 </span><span class="lineCov">          2 :         bytes plainTest2 = cipher2;</span>
+<span class="lineNum">     456 </span><span class="lineCov">          5 :         bytes expectedPlain2 = asBytes(&quot;aaaaaaaaaaaaaaaa&quot;);</span>
+<span class="lineNum">     457 </span><span class="lineCov">          8 :         BOOST_REQUIRE(s_secp256k1-&gt;decryptECIES(kenc.sec(), plainTest2));</span>
+<span class="lineNum">     458 </span><span class="lineCov">          8 :         BOOST_REQUIRE(plainTest2 == expectedPlain2);</span>
+<span class="lineNum">     459 </span>            :         
+<span class="lineNum">     460 </span><span class="lineCov">          4 :         bytes cipher3(fromHex(&quot;0x04c4e40c86bb5324e017e598c6d48c19362ae527af8ab21b077284a4656c8735e62d73fb3d740acefbec30ca4c024739a1fcdff69ecaf03301eebf156eb5f17cca6f9d7a7e214a1f3f6e34d1ee0ec00ce0ef7d2b242fbfec0f276e17941f9f1bfbe26de10a15a6fac3cda039904ddd1d7e06e7b96b4878f61860e47f0b84c8ceb64f6a900ff23844f4359ae49b44154980a626d3c73226c19e&quot;));</span>
+<span class="lineNum">     461 </span><span class="lineCov">          2 :         bytes plainTest3 = cipher3;</span>
+<span class="lineNum">     462 </span><span class="lineCov">          5 :         bytes expectedPlain3 = asBytes(&quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;);</span>
+<span class="lineNum">     463 </span><span class="lineCov">          8 :         BOOST_REQUIRE(s_secp256k1-&gt;decryptECIES(kenc.sec(), plainTest3));</span>
+<span class="lineNum">     464 </span><span class="lineCov">          8 :         BOOST_REQUIRE(plainTest3 == expectedPlain3);</span>
+<a name="465"><span class="lineNum">     465 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     466 </span>            : 
+<span class="lineNum">     467 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(segmentedPacketFlush)</span>
+<span class="lineNum">     468 </span>            : {
+<span class="lineNum">     469 </span><span class="lineCov">          2 :         ECDHE localEph;</span>
+<span class="lineNum">     470 </span><span class="lineCov">          2 :         Secret localNonce = Nonce::get();</span>
+<span class="lineNum">     471 </span><span class="lineCov">          2 :         ECDHE remoteEph;</span>
+<span class="lineNum">     472 </span><span class="lineCov">          2 :         Secret remoteNonce = Nonce::get();</span>
+<span class="lineNum">     473 </span><span class="lineCov">          4 :         bytes ackCipher{0};</span>
+<span class="lineNum">     474 </span><span class="lineCov">          4 :         bytes authCipher{1};</span>
+<span class="lineNum">     475 </span><span class="lineCov">          4 :         RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &amp;ackCipher, &amp;authCipher);</span>
+<span class="lineNum">     476 </span>            :         
+<span class="lineNum">     477 </span>            :         /// Test writing a 64byte RLPStream and drain with frame size that
+<span class="lineNum">     478 </span>            :         /// forces packet to be pieced into 4 frames.
+<span class="lineNum">     479 </span>            :         /// (Minimum frame size has room for 16 bytes of payload)
+<span class="lineNum">     480 </span>            :         
+<span class="lineNum">     481 </span>            :         // 64-byte payload minus 3 bytes for packet-type and RLP overhead.
+<span class="lineNum">     482 </span>            :         // Note: mux() is called with RLPXFrameWriter::MinFrameDequeLength
+<span class="lineNum">     483 </span>            :         // which is equal to 64byte, however, after overhead this means
+<span class="lineNum">     484 </span>            :         // there are only 16 bytes of payload which will be dequed.
+<span class="lineNum">     485 </span><span class="lineCov">          1 :         auto dequeLen = 16;</span>
+<span class="lineNum">     486 </span><span class="lineCov">          6 :         bytes stuff = sha3(&quot;A&quot;).asBytes();</span>
+<span class="lineNum">     487 </span><span class="lineCov">          2 :         bytes payload;</span>
+<span class="lineNum">     488 </span><span class="lineCov">          1 :         payload += stuff;</span>
+<span class="lineNum">     489 </span><span class="lineCov">          1 :         payload += stuff;</span>
+<span class="lineNum">     490 </span><span class="lineCov">          2 :         payload.resize(payload.size() - 3 /* packet-type, rlp-overhead */);</span>
+<span class="lineNum">     491 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(61, payload.size());</span>
+<span class="lineNum">     492 </span>            :         
+<span class="lineNum">     493 </span><span class="lineCov">          2 :         auto drains = (payload.size() + 3) / dequeLen;</span>
+<span class="lineNum">     494 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(4, drains);</span>
+<span class="lineNum">     495 </span>            :         
+<span class="lineNum">     496 </span><span class="lineCov">          2 :         RLPXFrameWriter w(0);</span>
+<span class="lineNum">     497 </span><span class="lineCov">          5 :         RLPStream rlpPayload(RLPStream() &lt;&lt; payload);</span>
+<span class="lineNum">     498 </span><span class="lineCov">          1 :         uint8_t packetType = 0;</span>
+<span class="lineNum">     499 </span><span class="lineCov">          4 :         bytes packetTypeRLP = (RLPStream() &lt;&lt; packetType).out();</span>
+<span class="lineNum">     500 </span><span class="lineCov">          1 :         w.enque(packetType, rlpPayload);</span>
+<span class="lineNum">     501 </span><span class="lineCov">          2 :         deque&lt;bytes&gt; encframes;</span>
+<span class="lineNum">     502 </span><span class="lineCov">          4 :         for (unsigned i = 1; i &lt; drains; i++)</span>
+<span class="lineNum">     503 </span>            :         {
+<span class="lineNum">     504 </span><span class="lineCov">          3 :                 auto n = w.mux(encoder, RLPXFrameWriter::MinFrameDequeLength, encframes);</span>
+<span class="lineNum">     505 </span><span class="lineCov">         15 :                 BOOST_REQUIRE_EQUAL(0, n);</span>
+<span class="lineNum">     506 </span><span class="lineCov">         18 :                 BOOST_REQUIRE_EQUAL(encframes.size(), i);</span>
+<span class="lineNum">     507 </span>            :         }
+<span class="lineNum">     508 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(1, w.mux(encoder, RLPXFrameWriter::MinFrameDequeLength, encframes));</span>
+<span class="lineNum">     509 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(encframes.size(), drains);</span>
+<span class="lineNum">     510 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(0, w.mux(encoder, RLPXFrameWriter::MinFrameDequeLength, encframes));</span>
+<span class="lineNum">     511 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(encframes.size(), drains);</span>
+<span class="lineNum">     512 </span>            :         
+<span class="lineNum">     513 </span>            :         // we should now have a bunch of ciphertext in encframes
+<span class="lineNum">     514 </span><span class="lineCov">          9 :         BOOST_REQUIRE(encframes.size() == drains);</span>
+<span class="lineNum">     515 </span><span class="lineCov">          7 :         for (auto const&amp; c: encframes)</span>
+<span class="lineNum">     516 </span>            :         {
+<span class="lineNum">     517 </span><span class="lineCov">         24 :                 BOOST_REQUIRE_EQUAL(c.size(), RLPXFrameWriter::MinFrameDequeLength);</span>
+<span class="lineNum">     518 </span>            :         }
+<span class="lineNum">     519 </span>            :         
+<span class="lineNum">     520 </span>            :         // read and assemble dequed encframes
+<span class="lineNum">     521 </span><span class="lineCov">          4 :         RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &amp;ackCipher, &amp;authCipher);</span>
+<span class="lineNum">     522 </span><span class="lineCov">          2 :         vector&lt;RLPXPacket&gt; packets;</span>
+<span class="lineNum">     523 </span><span class="lineCov">          2 :         RLPXFrameReader r(0);</span>
+<span class="lineNum">     524 </span><span class="lineCov">         10 :         for (size_t i = 0; i &lt; encframes.size(); i++)</span>
+<span class="lineNum">     525 </span>            :         {
+<span class="lineNum">     526 </span><span class="lineCov">         20 :                 bytesRef frameWithHeader(encframes[i].data(), encframes[i].size());</span>
+<span class="lineNum">     527 </span><span class="lineCov">          4 :                 bytesRef header = frameWithHeader.cropped(0, h256::size);</span>
+<span class="lineNum">     528 </span><span class="lineCov">          4 :                 bool decryptedHeader = decoder.authAndDecryptHeader(header);</span>
+<span class="lineNum">     529 </span><span class="lineCov">         32 :                 BOOST_REQUIRE(decryptedHeader);</span>
+<span class="lineNum">     530 </span><span class="lineCov">          4 :                 bytesRef frame = frameWithHeader.cropped(h256::size);</span>
+<span class="lineNum">     531 </span><span class="lineCov">          8 :                 RLPXFrameInfo f(header);</span>
+<span class="lineNum">     532 </span><span class="lineCov">         21 :                 for (RLPXPacket&amp; p: r.demux(decoder, f, frame))</span>
+<span class="lineNum">     533 </span><span class="lineCov">          2 :                         packets.push_back(move(p));</span>
+<span class="lineNum">     534 </span>            :         }
+<span class="lineNum">     535 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(packets.size(), 1);</span>
+<span class="lineNum">     536 </span><span class="lineCov">          8 :         BOOST_REQUIRE_EQUAL(packets.front().size(), packetTypeRLP.size() + rlpPayload.out().size());</span>
+<span class="lineNum">     537 </span><span class="lineCov">          8 :         BOOST_REQUIRE_EQUAL(sha3(RLP(packets.front().data()).payload()), sha3(payload));</span>
+<span class="lineNum">     538 </span><span class="lineCov">          7 :         BOOST_REQUIRE_EQUAL(sha3(packets.front().type()), sha3(packetTypeRLP));</span>
+<a name="539"><span class="lineNum">     539 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     540 </span>            : 
+<span class="lineNum">     541 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(coalescedPacketsPadded)</span>
+<span class="lineNum">     542 </span>            : {
+<span class="lineNum">     543 </span><span class="lineCov">          2 :         ECDHE localEph;</span>
+<span class="lineNum">     544 </span><span class="lineCov">          2 :         Secret localNonce = Nonce::get();</span>
+<span class="lineNum">     545 </span><span class="lineCov">          2 :         ECDHE remoteEph;</span>
+<span class="lineNum">     546 </span><span class="lineCov">          2 :         Secret remoteNonce = Nonce::get();</span>
+<span class="lineNum">     547 </span><span class="lineCov">          4 :         bytes ackCipher{0};</span>
+<span class="lineNum">     548 </span><span class="lineCov">          4 :         bytes authCipher{1};</span>
+<span class="lineNum">     549 </span><span class="lineCov">          4 :         RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &amp;ackCipher, &amp;authCipher);</span>
+<span class="lineNum">     550 </span>            :         
+<span class="lineNum">     551 </span>            :         /// Test writing four 32 byte RLPStream packets such that
+<span class="lineNum">     552 </span>            :         /// a single 1KB frame will incldue all four packets.
+<span class="lineNum">     553 </span><span class="lineCov">          1 :         auto dequeLen = 1024; // sufficient enough for all packets</span>
+<span class="lineNum">     554 </span><span class="lineCov">          6 :         bytes stuff = sha3(&quot;A&quot;).asBytes();</span>
+<span class="lineNum">     555 </span><span class="lineCov">          1 :         deque&lt;bytes&gt; packetsOut;</span>
+<span class="lineNum">     556 </span><span class="lineCov">          9 :         for (unsigned i = 0; i &lt; 4; i++)</span>
+<span class="lineNum">     557 </span><span class="lineCov">          4 :                 packetsOut.push_back(stuff);</span>
+<span class="lineNum">     558 </span>            :         
+<span class="lineNum">     559 </span><span class="lineCov">          2 :         RLPXFrameWriter w(0);</span>
+<span class="lineNum">     560 </span><span class="lineCov">          1 :         uint8_t packetType = 127;</span>
+<span class="lineNum">     561 </span><span class="lineCov">          4 :         bytes packetTypeRLP((RLPStream() &lt;&lt; packetType).out());</span>
+<span class="lineNum">     562 </span><span class="lineCov">          7 :         for (auto const&amp; p: packetsOut)</span>
+<span class="lineNum">     563 </span><span class="lineCov">         16 :                 w.enque(packetType, (RLPStream() &lt;&lt; p));</span>
+<span class="lineNum">     564 </span>            : 
+<span class="lineNum">     565 </span><span class="lineCov">          1 :         deque&lt;bytes&gt; encframes;</span>
+<span class="lineNum">     566 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(4, w.mux(encoder, dequeLen, encframes));</span>
+<span class="lineNum">     567 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(0, w.mux(encoder, dequeLen, encframes));</span>
+<span class="lineNum">     568 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(1, encframes.size());</span>
+<span class="lineNum">     569 </span><span class="lineCov">          2 :         auto expectedFrameSize = RLPXFrameWriter::EmptyFrameLength + packetsOut.size() * (/*packet-type*/ 1 + h256::size + /*rlp-prefix*/ 1);</span>
+<span class="lineNum">     570 </span><span class="lineCov">          1 :         expectedFrameSize += ((16 - (expectedFrameSize % 16)) % 16);</span>
+<span class="lineNum">     571 </span><span class="lineCov">          7 :         BOOST_REQUIRE_EQUAL(expectedFrameSize, encframes[0].size());</span>
+<span class="lineNum">     572 </span>            :         
+<span class="lineNum">     573 </span>            :         // read and assemble dequed encframes
+<span class="lineNum">     574 </span><span class="lineCov">          4 :         RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &amp;ackCipher, &amp;authCipher);</span>
+<span class="lineNum">     575 </span><span class="lineCov">          2 :         vector&lt;RLPXPacket&gt; packets;</span>
+<span class="lineNum">     576 </span><span class="lineCov">          2 :         RLPXFrameReader r(0);</span>
+<span class="lineNum">     577 </span><span class="lineCov">          5 :         bytesRef frameWithHeader(encframes[0].data(), encframes[0].size());</span>
+<span class="lineNum">     578 </span><span class="lineCov">          1 :         bytesRef header = frameWithHeader.cropped(0, h256::size);</span>
+<span class="lineNum">     579 </span><span class="lineCov">          1 :         bool decryptedHeader = decoder.authAndDecryptHeader(header);</span>
+<span class="lineNum">     580 </span><span class="lineCov">          8 :         BOOST_REQUIRE(decryptedHeader);</span>
+<span class="lineNum">     581 </span><span class="lineCov">          1 :         bytesRef frame = frameWithHeader.cropped(h256::size);</span>
+<span class="lineNum">     582 </span><span class="lineCov">          2 :         RLPXFrameInfo f(header);</span>
+<span class="lineNum">     583 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(f.multiFrame, false);</span>
+<span class="lineNum">     584 </span><span class="lineCov">          9 :         for (RLPXPacket&amp; p: r.demux(decoder, f, frame))</span>
+<span class="lineNum">     585 </span><span class="lineCov">          8 :                 packets.push_back(move(p));</span>
+<span class="lineNum">     586 </span>            :         
+<span class="lineNum">     587 </span><span class="lineCov">          2 :         RLPStream rlpPayload;</span>
+<span class="lineNum">     588 </span><span class="lineCov">          3 :         rlpPayload &lt;&lt; stuff;</span>
+<span class="lineNum">     589 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(packets.size(), 4);</span>
+<span class="lineNum">     590 </span><span class="lineCov">          5 :         while (!packets.empty())</span>
+<span class="lineNum">     591 </span>            :         {
+<span class="lineNum">     592 </span><span class="lineCov">         32 :                 BOOST_REQUIRE_EQUAL(packets.back().size(), packetTypeRLP.size() + rlpPayload.out().size());</span>
+<span class="lineNum">     593 </span><span class="lineCov">         32 :                 BOOST_REQUIRE_EQUAL(sha3(RLP(packets.back().data()).payload()), sha3(stuff));</span>
+<span class="lineNum">     594 </span><span class="lineCov">         28 :                 BOOST_REQUIRE_EQUAL(sha3(packets.back().type()), sha3(packetTypeRLP));</span>
+<span class="lineNum">     595 </span><span class="lineCov">          4 :                 packets.pop_back();</span>
+<span class="lineNum">     596 </span>            :         }
+<a name="597"><span class="lineNum">     597 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     598 </span>            : 
+<span class="lineNum">     599 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(singleFramePacketFlush)</span>
+<span class="lineNum">     600 </span>            : {
+<span class="lineNum">     601 </span><span class="lineCov">          2 :         ECDHE localEph;</span>
+<span class="lineNum">     602 </span><span class="lineCov">          2 :         Secret localNonce = Nonce::get();</span>
+<span class="lineNum">     603 </span><span class="lineCov">          2 :         ECDHE remoteEph;</span>
+<span class="lineNum">     604 </span><span class="lineCov">          2 :         Secret remoteNonce = Nonce::get();</span>
+<span class="lineNum">     605 </span><span class="lineCov">          4 :         bytes ackCipher{0};</span>
+<span class="lineNum">     606 </span><span class="lineCov">          4 :         bytes authCipher{1};</span>
+<span class="lineNum">     607 </span><span class="lineCov">          4 :         RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &amp;ackCipher, &amp;authCipher);</span>
+<span class="lineNum">     608 </span>            :         
+<span class="lineNum">     609 </span><span class="lineCov">          6 :         bytes stuff = sha3(&quot;A&quot;).asBytes();</span>
+<span class="lineNum">     610 </span><span class="lineCov">          2 :         RLPXFrameWriter w(0);</span>
+<span class="lineNum">     611 </span><span class="lineCov">          1 :         uint8_t packetType = 127;</span>
+<span class="lineNum">     612 </span><span class="lineCov">          4 :         bytes packetTypeRLP((RLPStream() &lt;&lt; packetType).out());</span>
+<span class="lineNum">     613 </span><span class="lineCov">          4 :         w.enque(packetType, (RLPStream() &lt;&lt; stuff));</span>
+<span class="lineNum">     614 </span>            :         
+<span class="lineNum">     615 </span><span class="lineCov">          2 :         deque&lt;bytes&gt; encframes;</span>
+<span class="lineNum">     616 </span><span class="lineCov">          1 :         auto dequeLen = RLPXFrameWriter::EmptyFrameLength + 34;</span>
+<span class="lineNum">     617 </span><span class="lineCov">          1 :         dequeLen += ((16 - (dequeLen % 16)) % 16);</span>
+<span class="lineNum">     618 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(1, w.mux(encoder, dequeLen, encframes));</span>
+<span class="lineNum">     619 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(0, w.mux(encoder, dequeLen, encframes));</span>
+<span class="lineNum">     620 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(1, encframes.size());</span>
+<span class="lineNum">     621 </span><span class="lineCov">          7 :         BOOST_REQUIRE_EQUAL(dequeLen, encframes[0].size());</span>
+<span class="lineNum">     622 </span>            :         
+<span class="lineNum">     623 </span>            :         // read and assemble dequed encframes
+<span class="lineNum">     624 </span><span class="lineCov">          4 :         RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &amp;ackCipher, &amp;authCipher);</span>
+<span class="lineNum">     625 </span><span class="lineCov">          2 :         vector&lt;RLPXPacket&gt; packets;</span>
+<span class="lineNum">     626 </span><span class="lineCov">          2 :         RLPXFrameReader r(0);</span>
+<span class="lineNum">     627 </span><span class="lineCov">          5 :         bytesRef frameWithHeader(encframes[0].data(), encframes[0].size());</span>
+<span class="lineNum">     628 </span><span class="lineCov">          1 :         bytesRef header = frameWithHeader.cropped(0, h256::size);</span>
+<span class="lineNum">     629 </span><span class="lineCov">          1 :         bool decryptedHeader = decoder.authAndDecryptHeader(header);</span>
+<span class="lineNum">     630 </span><span class="lineCov">          8 :         BOOST_REQUIRE(decryptedHeader);</span>
+<span class="lineNum">     631 </span><span class="lineCov">          1 :         bytesRef frame = frameWithHeader.cropped(h256::size);</span>
+<span class="lineNum">     632 </span><span class="lineCov">          2 :         RLPXFrameInfo f(header);</span>
+<span class="lineNum">     633 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(f.multiFrame, false);</span>
+<span class="lineNum">     634 </span><span class="lineCov">          6 :         for (RLPXPacket&amp; p: r.demux(decoder, f, frame))</span>
+<span class="lineNum">     635 </span><span class="lineCov">          2 :                 packets.push_back(move(p));</span>
+<span class="lineNum">     636 </span>            :         
+<span class="lineNum">     637 </span><span class="lineCov">          2 :         RLPStream rlpPayload;</span>
+<span class="lineNum">     638 </span><span class="lineCov">          3 :         rlpPayload &lt;&lt; stuff;</span>
+<span class="lineNum">     639 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(packets.size(), 1);</span>
+<span class="lineNum">     640 </span><span class="lineCov">          8 :         BOOST_REQUIRE_EQUAL(packets.back().size(), packetTypeRLP.size() + rlpPayload.out().size());</span>
+<span class="lineNum">     641 </span><span class="lineCov">          8 :         BOOST_REQUIRE_EQUAL(sha3(RLP(packets.back().data()).payload()), sha3(stuff));</span>
+<span class="lineNum">     642 </span><span class="lineCov">          7 :         BOOST_REQUIRE_EQUAL(sha3(packets.back().type()), sha3(packetTypeRLP));</span>
+<a name="643"><span class="lineNum">     643 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     644 </span>            : 
+<span class="lineNum">     645 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(multiProtocol)</span>
+<span class="lineNum">     646 </span>            : {
+<span class="lineNum">     647 </span>            :         /// Test writing four 32 byte RLPStream packets with different protocol ID.
+<span class="lineNum">     648 </span>            : 
+<span class="lineNum">     649 </span><span class="lineCov">          2 :         ECDHE localEph;</span>
+<span class="lineNum">     650 </span><span class="lineCov">          2 :         ECDHE remoteEph;</span>
+<span class="lineNum">     651 </span><span class="lineCov">          2 :         Secret localNonce = Nonce::get();</span>
+<span class="lineNum">     652 </span><span class="lineCov">          2 :         Secret remoteNonce = Nonce::get();</span>
+<span class="lineNum">     653 </span><span class="lineCov">          4 :         bytes ackCipher{0};</span>
+<span class="lineNum">     654 </span><span class="lineCov">          4 :         bytes authCipher{1};</span>
+<span class="lineNum">     655 </span><span class="lineCov">          4 :         RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &amp;ackCipher, &amp;authCipher);</span>
+<span class="lineNum">     656 </span>            :         
+<span class="lineNum">     657 </span><span class="lineCov">          1 :         auto dequeLen = 1024; // sufficient enough for all packets</span>
+<span class="lineNum">     658 </span><span class="lineCov">          5 :         bytes stuff0 = sha3(&quot;A&quot;).asBytes();</span>
+<span class="lineNum">     659 </span><span class="lineCov">          6 :         bytes stuff1 = sha3(&quot;B&quot;).asBytes();</span>
+<span class="lineNum">     660 </span><span class="lineCov">          2 :         vector&lt;bytes&gt; vStuff;</span>
+<span class="lineNum">     661 </span><span class="lineCov">          1 :         vStuff.push_back(stuff0);</span>
+<span class="lineNum">     662 </span><span class="lineCov">          1 :         vStuff.push_back(stuff1);</span>
+<span class="lineNum">     663 </span>            : 
+<span class="lineNum">     664 </span><span class="lineCov">          2 :         vector&lt;bytes&gt; packetsOut;</span>
+<span class="lineNum">     665 </span><span class="lineCov">          1 :         packetsOut.push_back(stuff0);</span>
+<span class="lineNum">     666 </span><span class="lineCov">          1 :         packetsOut.push_back(stuff0);</span>
+<span class="lineNum">     667 </span><span class="lineCov">          1 :         packetsOut.push_back(stuff1);</span>
+<span class="lineNum">     668 </span><span class="lineCov">          1 :         packetsOut.push_back(stuff1);</span>
+<span class="lineNum">     669 </span>            : 
+<span class="lineNum">     670 </span><span class="lineCov">          2 :         std::map&lt;uint16_t, RLPXFrameWriter*&gt; mw;</span>
+<span class="lineNum">     671 </span><span class="lineCov">          2 :         RLPXFrameWriter w0(0);</span>
+<span class="lineNum">     672 </span><span class="lineCov">          2 :         RLPXFrameWriter w1(1);</span>
+<span class="lineNum">     673 </span><span class="lineCov">          1 :         mw[0] = &amp;w0;</span>
+<span class="lineNum">     674 </span><span class="lineCov">          1 :         mw[1] = &amp;w1;</span>
+<span class="lineNum">     675 </span>            : 
+<span class="lineNum">     676 </span><span class="lineCov">          1 :         uint8_t const packetType = 127;</span>
+<span class="lineNum">     677 </span><span class="lineCov">          3 :         bytes packetTypeRLP((RLPStream() &lt;&lt; packetType).out());</span>
+<span class="lineNum">     678 </span>            : 
+<span class="lineNum">     679 </span><span class="lineCov">          1 :         unsigned i = 0;</span>
+<span class="lineNum">     680 </span><span class="lineCov">          4 :         mw[0]-&gt;enque(packetType, (RLPStream() &lt;&lt; packetsOut[i++]));</span>
+<span class="lineNum">     681 </span><span class="lineCov">          5 :         mw[0]-&gt;enque(packetType, (RLPStream() &lt;&lt; packetsOut[i++]));</span>
+<span class="lineNum">     682 </span><span class="lineCov">          5 :         mw[1]-&gt;enque(packetType, (RLPStream() &lt;&lt; packetsOut[i++]));</span>
+<span class="lineNum">     683 </span><span class="lineCov">          5 :         mw[1]-&gt;enque(packetType, (RLPStream() &lt;&lt; packetsOut[i++]));</span>
+<span class="lineNum">     684 </span>            : 
+<span class="lineNum">     685 </span><span class="lineCov">          1 :         deque&lt;bytes&gt; encframes;</span>
+<span class="lineNum">     686 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(2, mw[0]-&gt;mux(encoder, dequeLen, encframes));</span>
+<span class="lineNum">     687 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(2, mw[1]-&gt;mux(encoder, dequeLen, encframes));</span>
+<span class="lineNum">     688 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(0, mw[0]-&gt;mux(encoder, dequeLen, encframes));</span>
+<span class="lineNum">     689 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(0, mw[1]-&gt;mux(encoder, dequeLen, encframes));</span>
+<span class="lineNum">     690 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(2, encframes.size());</span>
+<span class="lineNum">     691 </span>            : 
+<span class="lineNum">     692 </span>            :         auto expectedFrameSize = RLPXFrameWriter::EmptyFrameLength
+<span class="lineNum">     693 </span><span class="lineCov">          2 :                 + packetsOut.size() * (/*packet-type*/ 1 + h256::size + /*rlp-prefix*/ 1) / 2;</span>
+<span class="lineNum">     694 </span>            : 
+<span class="lineNum">     695 </span><span class="lineCov">          1 :         expectedFrameSize += ((16 - (expectedFrameSize % 16)) % 16);</span>
+<span class="lineNum">     696 </span><span class="lineCov">          7 :         BOOST_REQUIRE_EQUAL(expectedFrameSize, encframes[0].size());</span>
+<span class="lineNum">     697 </span>            : 
+<span class="lineNum">     698 </span>            :         // read and assemble dequed encframes
+<span class="lineNum">     699 </span><span class="lineCov">          4 :         RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &amp;ackCipher, &amp;authCipher);</span>
+<span class="lineNum">     700 </span><span class="lineCov">          2 :         vector&lt;RLPXPacket&gt; packets;</span>
+<span class="lineNum">     701 </span><span class="lineCov">          2 :         std::map&lt;uint16_t, RLPXFrameReader*&gt; mr;</span>
+<span class="lineNum">     702 </span><span class="lineCov">          2 :         RLPXFrameReader r0(0);</span>
+<span class="lineNum">     703 </span><span class="lineCov">          2 :         RLPXFrameReader r1(1);</span>
+<span class="lineNum">     704 </span><span class="lineCov">          1 :         mr[0] = &amp;r0;</span>
+<span class="lineNum">     705 </span><span class="lineCov">          1 :         mr[1] = &amp;r1;</span>
+<span class="lineNum">     706 </span>            : 
+<span class="lineNum">     707 </span><span class="lineCov">          6 :         for (size_t i = 0; i &lt; encframes.size(); i++)</span>
+<span class="lineNum">     708 </span>            :         {
+<span class="lineNum">     709 </span><span class="lineCov">         10 :                 bytesRef frameWithHeader(encframes[i].data(), encframes[i].size());</span>
+<span class="lineNum">     710 </span><span class="lineCov">          2 :                 bytesRef header = frameWithHeader.cropped(0, h256::size);</span>
+<span class="lineNum">     711 </span><span class="lineCov">          2 :                 bool decryptedHeader = decoder.authAndDecryptHeader(header);</span>
+<span class="lineNum">     712 </span><span class="lineCov">         16 :                 BOOST_REQUIRE(decryptedHeader);</span>
+<span class="lineNum">     713 </span><span class="lineCov">          2 :                 bytesRef frame = frameWithHeader.cropped(h256::size);</span>
+<span class="lineNum">     714 </span><span class="lineCov">          4 :                 RLPXFrameInfo f(header);</span>
+<span class="lineNum">     715 </span><span class="lineCov">         10 :                 BOOST_REQUIRE_EQUAL(f.multiFrame, false);</span>
+<span class="lineNum">     716 </span><span class="lineCov">         14 :                 for (RLPXPacket&amp; p: mr[f.protocolId]-&gt;demux(decoder, f, frame))</span>
+<span class="lineNum">     717 </span>            :                 {
+<span class="lineNum">     718 </span><span class="lineCov">         20 :                         BOOST_REQUIRE_EQUAL(f.protocolId, p.cap());</span>
+<span class="lineNum">     719 </span><span class="lineCov">          8 :                         packets.push_back(move(p));</span>
+<span class="lineNum">     720 </span>            :                 }
+<span class="lineNum">     721 </span>            :         }
+<span class="lineNum">     722 </span>            : 
+<span class="lineNum">     723 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(packets.size(), 4);</span>
+<span class="lineNum">     724 </span><span class="lineCov">          2 :         RLPStream rlpPayload0;</span>
+<span class="lineNum">     725 </span><span class="lineCov">          2 :         RLPStream rlpPayload1;</span>
+<span class="lineNum">     726 </span><span class="lineCov">          3 :         rlpPayload0 &lt;&lt; stuff0;</span>
+<span class="lineNum">     727 </span><span class="lineCov">          3 :         rlpPayload1 &lt;&lt; stuff1;</span>
+<span class="lineNum">     728 </span><span class="lineCov">          2 :         vector&lt;RLPStream&gt; vRlpPayloads;</span>
+<span class="lineNum">     729 </span><span class="lineCov">          1 :         vRlpPayloads.push_back(rlpPayload0);</span>
+<span class="lineNum">     730 </span><span class="lineCov">          1 :         vRlpPayloads.push_back(rlpPayload1);</span>
+<span class="lineNum">     731 </span>            : 
+<span class="lineNum">     732 </span><span class="lineCov">         14 :         for (size_t i = 0; i &lt; packets.size(); i++)</span>
+<span class="lineNum">     733 </span>            :         {
+<span class="lineNum">     734 </span><span class="lineCov">          8 :                 auto prot = packets[i].cap();</span>
+<span class="lineNum">     735 </span><span class="lineCov">         36 :                 BOOST_REQUIRE_EQUAL(packets[i].size(), packetTypeRLP.size() + vRlpPayloads[prot].out().size());</span>
+<span class="lineNum">     736 </span><span class="lineCov">         36 :                 BOOST_REQUIRE_EQUAL(sha3(RLP(packets[i].data()).payload()), sha3(vStuff[prot]));</span>
+<span class="lineNum">     737 </span><span class="lineCov">         28 :                 BOOST_REQUIRE_EQUAL(sha3(packets[i].type()), sha3(packetTypeRLP));</span>
+<span class="lineNum">     738 </span>            :         }
+<a name="739"><span class="lineNum">     739 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     740 </span>            : 
+<span class="lineNum">     741 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(oddSizedMessages)</span>
+<span class="lineNum">     742 </span>            : {
+<span class="lineNum">     743 </span><span class="lineCov">          2 :         ECDHE localEph;</span>
+<span class="lineNum">     744 </span><span class="lineCov">          2 :         Secret localNonce = Nonce::get();</span>
+<span class="lineNum">     745 </span><span class="lineCov">          2 :         ECDHE remoteEph;</span>
+<span class="lineNum">     746 </span><span class="lineCov">          2 :         Secret remoteNonce = Nonce::get();</span>
+<span class="lineNum">     747 </span><span class="lineCov">          4 :         bytes ackCipher{0};</span>
+<span class="lineNum">     748 </span><span class="lineCov">          4 :         bytes authCipher{1};</span>
+<span class="lineNum">     749 </span><span class="lineCov">          4 :         RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &amp;ackCipher, &amp;authCipher);</span>
+<span class="lineNum">     750 </span>            : 
+<span class="lineNum">     751 </span><span class="lineCov">          1 :         auto dequeLen = 1024;</span>
+<span class="lineNum">     752 </span><span class="lineCov">          4 :         h256 h = sha3(&quot;pseudo-random&quot;);</span>
+<span class="lineNum">     753 </span><span class="lineCov">          2 :         vector&lt;bytes&gt; packetsOut;</span>
+<span class="lineNum">     754 </span><span class="lineCov">          1 :         size_t totalMessages = 2;</span>
+<span class="lineNum">     755 </span><span class="lineCov">          3 :         for (unsigned i = 0; i &lt; totalMessages; i++)</span>
+<span class="lineNum">     756 </span>            :         {
+<span class="lineNum">     757 </span><span class="lineCov">          2 :                 h = sha3(h);</span>
+<span class="lineNum">     758 </span><span class="lineCov">          6 :                 packetsOut.push_back(h.asBytes());</span>
+<span class="lineNum">     759 </span>            :         }
+<span class="lineNum">     760 </span>            : 
+<span class="lineNum">     761 </span><span class="lineCov">          1 :         packetsOut.front().resize(256);</span>
+<span class="lineNum">     762 </span><span class="lineCov">          1 :         packetsOut.back().resize(718);</span>
+<span class="lineNum">     763 </span>            : 
+<span class="lineNum">     764 </span><span class="lineCov">          2 :         RLPXFrameWriter w(0);</span>
+<span class="lineNum">     765 </span><span class="lineCov">          1 :         uint8_t packetType = 127;</span>
+<span class="lineNum">     766 </span><span class="lineCov">          4 :         bytes packetTypeRLP((RLPStream() &lt;&lt; packetType).out());</span>
+<span class="lineNum">     767 </span><span class="lineCov">          6 :         for (auto const&amp; p: packetsOut)</span>
+<span class="lineNum">     768 </span><span class="lineCov">          8 :                 w.enque(packetType, (RLPStream() &lt;&lt; p));</span>
+<span class="lineNum">     769 </span>            : 
+<span class="lineNum">     770 </span><span class="lineCov">          2 :         deque&lt;bytes&gt; encframes;</span>
+<span class="lineNum">     771 </span>            :         size_t n;
+<span class="lineNum">     772 </span><span class="lineCov">          1 :         n = w.mux(encoder, dequeLen, encframes);</span>
+<span class="lineNum">     773 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(n, 1);</span>
+<span class="lineNum">     774 </span><span class="lineCov">          1 :         n = w.mux(encoder, dequeLen, encframes);</span>
+<span class="lineNum">     775 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(n, 1);</span>
+<span class="lineNum">     776 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(encframes.size(), 3);</span>
+<span class="lineNum">     777 </span>            : 
+<span class="lineNum">     778 </span>            :         // read and assemble dequed encframes
+<span class="lineNum">     779 </span><span class="lineCov">          4 :         RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &amp;ackCipher, &amp;authCipher);</span>
+<span class="lineNum">     780 </span><span class="lineCov">          2 :         vector&lt;RLPXPacket&gt; packets;</span>
+<span class="lineNum">     781 </span><span class="lineCov">          2 :         RLPXFrameReader r(0);</span>
+<span class="lineNum">     782 </span><span class="lineCov">          8 :         for (size_t i = 0; i &lt; encframes.size(); i++)</span>
+<span class="lineNum">     783 </span>            :         {
+<span class="lineNum">     784 </span><span class="lineCov">         15 :                 bytesRef frameWithHeader(encframes[i].data(), encframes[i].size());</span>
+<span class="lineNum">     785 </span><span class="lineCov">          3 :                 bytesRef header = frameWithHeader.cropped(0, h256::size);</span>
+<span class="lineNum">     786 </span><span class="lineCov">          3 :                 bool decryptedHeader = decoder.authAndDecryptHeader(header);</span>
+<span class="lineNum">     787 </span><span class="lineCov">         24 :                 BOOST_REQUIRE(decryptedHeader);</span>
+<span class="lineNum">     788 </span><span class="lineCov">          3 :                 bytesRef frame = frameWithHeader.cropped(h256::size);</span>
+<span class="lineNum">     789 </span><span class="lineCov">          6 :                 RLPXFrameInfo f(header);</span>
+<span class="lineNum">     790 </span><span class="lineCov">         17 :                 for (RLPXPacket&amp; p: r.demux(decoder, f, frame))</span>
+<span class="lineNum">     791 </span><span class="lineCov">          4 :                         packets.push_back(move(p));</span>
+<span class="lineNum">     792 </span>            :         }
+<span class="lineNum">     793 </span>            : 
+<span class="lineNum">     794 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(packets.size(), totalMessages);</span>
+<span class="lineNum">     795 </span><span class="lineCov">          8 :         BOOST_REQUIRE_EQUAL(sha3(RLP(packets.front().data()).payload()), sha3(packetsOut[0]));</span>
+<span class="lineNum">     796 </span><span class="lineCov">          9 :         BOOST_REQUIRE_EQUAL(sha3(RLP(packets.back().data()).payload()), sha3(packetsOut[1]));</span>
+<span class="lineNum">     797 </span><span class="lineCov">          7 :         BOOST_REQUIRE_EQUAL(sha3(packets.front().type()), sha3(packetTypeRLP));</span>
+<span class="lineNum">     798 </span><span class="lineCov">          7 :         BOOST_REQUIRE_EQUAL(sha3(packets.back().type()), sha3(packetTypeRLP));</span>
+<a name="799"><span class="lineNum">     799 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     800 </span>            : 
+<span class="lineNum">     801 </span><span class="lineCov">       2048 : bytes generatePseudorandomPacket(h256 const&amp; _h)</span>
+<span class="lineNum">     802 </span>            : {
+<span class="lineNum">     803 </span><span class="lineCov">       2048 :         size_t const sz = 16;</span>
+<span class="lineNum">     804 </span><span class="lineCov">       2048 :         size_t msgSizes[sz] = { 1536, 1120, 1024, 800, 512, 352, 256, 160, 128, 96, 64, 64, 32, 32, 32, 3200 };</span>
+<span class="lineNum">     805 </span><span class="lineCov">       2048 :         size_t index = _h.data()[0] % sz;</span>
+<span class="lineNum">     806 </span><span class="lineCov">       2048 :         size_t msgSize = msgSizes[index];</span>
+<span class="lineNum">     807 </span><span class="lineCov">       2048 :         bytes ret;</span>
+<span class="lineNum">     808 </span><span class="lineCov">       2048 :         ret.reserve(msgSize);</span>
+<span class="lineNum">     809 </span>            : 
+<span class="lineNum">     810 </span><span class="lineCov">     120505 :         while (ret.size() &lt; msgSize)</span>
+<span class="lineNum">     811 </span><span class="lineCov">      77606 :                 ret += _h.asBytes();</span>
+<span class="lineNum">     812 </span>            : 
+<span class="lineNum">     813 </span><span class="lineCov">       2048 :         ret.resize(msgSize);</span>
+<span class="lineNum">     814 </span><span class="lineCov">       2048 :         return ret;</span>
+<a name="815"><span class="lineNum">     815 </span>            : }</a>
+<span class="lineNum">     816 </span>            : 
+<span class="lineNum">     817 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(pseudorandom)</span>
+<span class="lineNum">     818 </span>            : {
+<span class="lineNum">     819 </span><span class="lineCov">          2 :         ECDHE localEph;</span>
+<span class="lineNum">     820 </span><span class="lineCov">          2 :         ECDHE remoteEph;</span>
+<span class="lineNum">     821 </span><span class="lineCov">          2 :         Secret localNonce = Nonce::get();</span>
+<span class="lineNum">     822 </span><span class="lineCov">          2 :         Secret remoteNonce = Nonce::get();</span>
+<span class="lineNum">     823 </span><span class="lineCov">          4 :         bytes ackCipher{0};</span>
+<span class="lineNum">     824 </span><span class="lineCov">          4 :         bytes authCipher{1};</span>
+<span class="lineNum">     825 </span><span class="lineCov">          4 :         RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &amp;ackCipher, &amp;authCipher);</span>
+<span class="lineNum">     826 </span><span class="lineCov">          4 :         RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &amp;ackCipher, &amp;authCipher);</span>
+<span class="lineNum">     827 </span>            : 
+<span class="lineNum">     828 </span><span class="lineCov">          1 :         int const dequeLen = 1024;</span>
+<span class="lineNum">     829 </span><span class="lineCov">          1 :         size_t const numMessages = 1024;</span>
+<span class="lineNum">     830 </span><span class="lineCov">          1 :         uint8_t const packetType = 127;</span>
+<span class="lineNum">     831 </span><span class="lineCov">          3 :         bytes const packetTypeRLP((RLPStream() &lt;&lt; packetType).out());</span>
+<span class="lineNum">     832 </span><span class="lineCov">          4 :         h256 h = sha3(&quot;some pseudorandom stuff here&quot;);</span>
+<span class="lineNum">     833 </span><span class="lineCov">          2 :         deque&lt;bytes&gt; encframes;</span>
+<span class="lineNum">     834 </span><span class="lineCov">          2 :         vector&lt;bytes&gt; packetsSent;</span>
+<span class="lineNum">     835 </span><span class="lineCov">          2 :         vector&lt;RLPXPacket&gt; packetsReceived;</span>
+<span class="lineNum">     836 </span><span class="lineCov">          2 :         RLPXFrameWriter w(0);</span>
+<span class="lineNum">     837 </span><span class="lineCov">          2 :         RLPXFrameReader r(0);</span>
+<span class="lineNum">     838 </span>            : 
+<span class="lineNum">     839 </span><span class="lineCov">       1025 :         for (size_t i = 0; i &lt; numMessages; ++i)</span>
+<span class="lineNum">     840 </span>            :         {
+<span class="lineNum">     841 </span><span class="lineCov">       2048 :                 bytes pack = generatePseudorandomPacket(h);</span>
+<span class="lineNum">     842 </span><span class="lineCov">       1024 :                 packetsSent.push_back(pack);</span>
+<span class="lineNum">     843 </span><span class="lineCov">       1024 :                 h = sha3(h);</span>
+<span class="lineNum">     844 </span>            :         }
+<span class="lineNum">     845 </span>            : 
+<span class="lineNum">     846 </span><span class="lineCov">       2049 :         for (size_t i = 0; i &lt; numMessages; ++i)</span>
+<span class="lineNum">     847 </span><span class="lineCov">       5120 :                 w.enque(packetType, (RLPStream() &lt;&lt; packetsSent[i]));</span>
+<span class="lineNum">     848 </span>            : 
+<span class="lineNum">     849 </span>            :         bool done = false;
+<span class="lineNum">     850 </span><span class="lineCov">       1397 :         while (!done)</span>
+<span class="lineNum">     851 </span>            :         {
+<span class="lineNum">     852 </span><span class="lineCov">        698 :                 size_t prev = encframes.size();</span>
+<span class="lineNum">     853 </span><span class="lineCov">        698 :                 size_t num = w.mux(encoder, dequeLen, encframes);</span>
+<span class="lineNum">     854 </span><span class="lineCov">        698 :                 size_t diff = encframes.size() - prev;</span>
+<span class="lineNum">     855 </span><span class="lineCov">        698 :                 done = (!num &amp;&amp; !diff);</span>
+<span class="lineNum">     856 </span>            :         }
+<span class="lineNum">     857 </span>            :         
+<span class="lineNum">     858 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(numMessages, packetsSent.size());</span>
+<span class="lineNum">     859 </span>            :         
+<span class="lineNum">     860 </span><span class="lineCov">       2630 :         for (size_t i = 0; i &lt; encframes.size(); i++)</span>
+<span class="lineNum">     861 </span>            :         {
+<span class="lineNum">     862 </span><span class="lineCov">       6570 :                 bytesRef frameWithHeader(encframes[i].data(), encframes[i].size());</span>
+<span class="lineNum">     863 </span><span class="lineCov">       1314 :                 bytesRef header = frameWithHeader.cropped(0, h256::size);</span>
+<span class="lineNum">     864 </span><span class="lineCov">       1314 :                 bool decryptedHeader = decoder.authAndDecryptHeader(header);</span>
+<span class="lineNum">     865 </span><span class="lineCov">      10512 :                 BOOST_REQUIRE(decryptedHeader);</span>
+<span class="lineNum">     866 </span><span class="lineCov">       1314 :                 bytesRef frame = frameWithHeader.cropped(h256::size);</span>
+<span class="lineNum">     867 </span><span class="lineCov">       2628 :                 RLPXFrameInfo f(header);</span>
+<span class="lineNum">     868 </span><span class="lineCov">       2628 :                 auto px = r.demux(decoder, f, frame);</span>
+<span class="lineNum">     869 </span><span class="lineCov">       6280 :                 for (RLPXPacket&amp; p: px)</span>
+<span class="lineNum">     870 </span><span class="lineCov">       2048 :                         packetsReceived.push_back(move(p));</span>
+<span class="lineNum">     871 </span>            :         }
+<span class="lineNum">     872 </span>            : 
+<span class="lineNum">     873 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(numMessages, packetsReceived.size());</span>
+<span class="lineNum">     874 </span>            : 
+<span class="lineNum">     875 </span><span class="lineCov">       1025 :         for (size_t i = 0; i &lt; numMessages; i++)</span>
+<span class="lineNum">     876 </span>            :         {
+<span class="lineNum">     877 </span><span class="lineCov">      10240 :                 BOOST_REQUIRE(packetsReceived[i].type() == packetTypeRLP);</span>
+<span class="lineNum">     878 </span><span class="lineCov">       9216 :                 BOOST_REQUIRE_EQUAL(sha3(RLP(packetsReceived[i].data()).payload()), sha3(packetsSent[i]));</span>
+<span class="lineNum">     879 </span>            :         }
+<a name="880"><span class="lineNum">     880 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     881 </span>            : 
+<span class="lineNum">     882 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(randomizedMultiProtocol)</span>
+<span class="lineNum">     883 </span>            : {
+<span class="lineNum">     884 </span><span class="lineCov">          2 :         ECDHE localEph;</span>
+<span class="lineNum">     885 </span><span class="lineCov">          2 :         ECDHE remoteEph;</span>
+<span class="lineNum">     886 </span><span class="lineCov">          2 :         Secret localNonce = Nonce::get();</span>
+<span class="lineNum">     887 </span><span class="lineCov">          2 :         Secret remoteNonce = Nonce::get();</span>
+<span class="lineNum">     888 </span><span class="lineCov">          4 :         bytes ackCipher{0};</span>
+<span class="lineNum">     889 </span><span class="lineCov">          4 :         bytes authCipher{1};</span>
+<span class="lineNum">     890 </span><span class="lineCov">          4 :         RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &amp;ackCipher, &amp;authCipher);</span>
+<span class="lineNum">     891 </span><span class="lineCov">          4 :         RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &amp;ackCipher, &amp;authCipher);</span>
+<span class="lineNum">     892 </span>            : 
+<span class="lineNum">     893 </span><span class="lineCov">          1 :         int const dequeLen = 1024;</span>
+<span class="lineNum">     894 </span><span class="lineCov">          1 :         size_t const numMessages = 1024;</span>
+<span class="lineNum">     895 </span><span class="lineCov">          1 :         size_t const numSubprotocols = 8;</span>
+<span class="lineNum">     896 </span><span class="lineCov">          1 :         uint8_t const packetType = 127;</span>
+<span class="lineNum">     897 </span><span class="lineCov">          3 :         bytes const packetTypeRLP((RLPStream() &lt;&lt; packetType).out());</span>
+<span class="lineNum">     898 </span><span class="lineCov">          4 :         h256 h = sha3(&quot;pseudorandom string&quot;);</span>
+<span class="lineNum">     899 </span><span class="lineCov">          2 :         deque&lt;bytes&gt; encframes;</span>
+<span class="lineNum">     900 </span><span class="lineCov">          2 :         vector&lt;bytes&gt; packetsSent;</span>
+<span class="lineNum">     901 </span><span class="lineCov">         26 :         vector&lt;bytes&gt; packetsSentSorted[numSubprotocols];</span>
+<span class="lineNum">     902 </span><span class="lineCov">          2 :         vector&lt;bytes&gt; packetsSentShuffled;</span>
+<span class="lineNum">     903 </span><span class="lineCov">          2 :         vector&lt;RLPXPacket&gt; packetsReceived;</span>
+<span class="lineNum">     904 </span><span class="lineCov">          2 :         vector&lt;RLPXFrameWriter&gt; writers;</span>
+<span class="lineNum">     905 </span><span class="lineCov">          2 :         vector&lt;shared_ptr&lt;RLPXFrameReader&gt; &gt; readers;</span>
+<span class="lineNum">     906 </span><span class="lineCov">          2 :         map&lt;size_t, size_t&gt; msgPerSubprotocolSent;</span>
+<span class="lineNum">     907 </span><span class="lineCov">          2 :         map&lt;size_t, size_t&gt; msgPerSubprotocolReceived;</span>
+<span class="lineNum">     908 </span>            : 
+<span class="lineNum">     909 </span>            :         // create readers &amp; writers
+<span class="lineNum">     910 </span><span class="lineCov">          9 :         for (size_t i = 0; i &lt; numSubprotocols; ++i)</span>
+<span class="lineNum">     911 </span>            :         {
+<span class="lineNum">     912 </span><span class="lineCov">         32 :                 writers.push_back(RLPXFrameWriter(i));</span>
+<span class="lineNum">     913 </span><span class="lineCov">         32 :                 shared_ptr&lt;RLPXFrameReader&gt; p(new RLPXFrameReader(i));</span>
+<span class="lineNum">     914 </span><span class="lineCov">          8 :                 readers.push_back(p);</span>
+<span class="lineNum">     915 </span>            :         }
+<span class="lineNum">     916 </span>            : 
+<span class="lineNum">     917 </span>            :         // create messages
+<span class="lineNum">     918 </span><span class="lineCov">       2049 :         for (size_t i = 0; i &lt; numMessages; ++i)</span>
+<span class="lineNum">     919 </span>            :         {
+<span class="lineNum">     920 </span><span class="lineCov">       2048 :                 bytes pack = generatePseudorandomPacket(h);</span>
+<span class="lineNum">     921 </span><span class="lineCov">       1024 :                 packetsSent.push_back(pack);</span>
+<span class="lineNum">     922 </span><span class="lineCov">       1024 :                 h = sha3(h);</span>
+<span class="lineNum">     923 </span>            :         }
+<span class="lineNum">     924 </span>            :         
+<span class="lineNum">     925 </span>            :         // enque messages into writers
+<span class="lineNum">     926 </span><span class="lineCov">       2049 :         for (size_t i = 0; i &lt; numMessages; ++i)</span>
+<span class="lineNum">     927 </span>            :         {
+<span class="lineNum">     928 </span><span class="lineCov">       2048 :                 size_t sub = packetsSent[i][1] % numSubprotocols;</span>
+<span class="lineNum">     929 </span><span class="lineCov">       5120 :                 writers[sub].enque(packetType, (RLPStream() &lt;&lt; packetsSent[i]));</span>
+<span class="lineNum">     930 </span><span class="lineCov">       1024 :                 msgPerSubprotocolSent[sub]++;</span>
+<span class="lineNum">     931 </span><span class="lineCov">       2048 :                 packetsSentSorted[sub].push_back(packetsSent[i]);</span>
+<span class="lineNum">     932 </span>            :         }
+<span class="lineNum">     933 </span>            : 
+<span class="lineNum">     934 </span>            :         // note the sent messages sequence
+<span class="lineNum">     935 </span><span class="lineCov">         17 :         for (size_t i = 0; i &lt; numSubprotocols; ++i)</span>
+<span class="lineNum">     936 </span><span class="lineCov">       1056 :                 for (bytes const&amp; p: packetsSentSorted[i])</span>
+<span class="lineNum">     937 </span><span class="lineCov">       1024 :                         packetsSentShuffled.push_back(p);</span>
+<span class="lineNum">     938 </span>            : 
+<span class="lineNum">     939 </span>            :         // mux
+<span class="lineNum">     940 </span><span class="lineCov">          1 :         size_t total = 0;</span>
+<span class="lineNum">     941 </span><span class="lineCov">          9 :         for (size_t i = 0; i &lt; numSubprotocols; ++i)</span>
+<span class="lineNum">     942 </span>            :         {
+<span class="lineNum">     943 </span>            :                 bool done = false;
+<span class="lineNum">     944 </span><span class="lineCov">       1354 :                 while (!done)</span>
+<span class="lineNum">     945 </span>            :                 {
+<span class="lineNum">     946 </span><span class="lineCov">        673 :                         size_t prev = encframes.size();</span>
+<span class="lineNum">     947 </span><span class="lineCov">       1346 :                         size_t num = writers[i].mux(encoder, dequeLen, encframes);</span>
+<span class="lineNum">     948 </span><span class="lineCov">        673 :                         size_t diff = encframes.size() - prev;</span>
+<span class="lineNum">     949 </span><span class="lineCov">        673 :                         total += num;</span>
+<span class="lineNum">     950 </span><span class="lineCov">        673 :                         done = (!num &amp;&amp; !diff);</span>
+<span class="lineNum">     951 </span>            :                 }
+<span class="lineNum">     952 </span>            :         }
+<span class="lineNum">     953 </span>            :         
+<span class="lineNum">     954 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(numMessages, total);</span>
+<span class="lineNum">     955 </span>            :         
+<span class="lineNum">     956 </span>            :         // demux
+<span class="lineNum">     957 </span><span class="lineCov">       2532 :         for (size_t i = 0; i &lt; encframes.size(); i++)</span>
+<span class="lineNum">     958 </span>            :         {
+<span class="lineNum">     959 </span><span class="lineCov">       6325 :                 bytesRef frameWithHeader(encframes[i].data(), encframes[i].size());</span>
+<span class="lineNum">     960 </span><span class="lineCov">       1265 :                 bytesRef header = frameWithHeader.cropped(0, h256::size);</span>
+<span class="lineNum">     961 </span><span class="lineCov">       1265 :                 bool decryptedHeader = decoder.authAndDecryptHeader(header);</span>
+<span class="lineNum">     962 </span><span class="lineCov">      10120 :                 BOOST_REQUIRE(decryptedHeader);</span>
+<span class="lineNum">     963 </span><span class="lineCov">       1265 :                 bytesRef frame = frameWithHeader.cropped(h256::size);</span>
+<span class="lineNum">     964 </span><span class="lineCov">       2530 :                 RLPXFrameInfo f(header);</span>
+<span class="lineNum">     965 </span><span class="lineCov">       3795 :                 auto px = readers[f.protocolId]-&gt;demux(decoder, f, frame);</span>
+<span class="lineNum">     966 </span><span class="lineCov">       6084 :                 for (RLPXPacket&amp; p: px)</span>
+<span class="lineNum">     967 </span>            :                 {
+<span class="lineNum">     968 </span><span class="lineCov">       5120 :                         BOOST_REQUIRE_EQUAL(f.protocolId, p.cap());</span>
+<span class="lineNum">     969 </span><span class="lineCov">       2048 :                         packetsReceived.push_back(move(p));</span>
+<span class="lineNum">     970 </span><span class="lineCov">       1024 :                         msgPerSubprotocolReceived[f.protocolId]++;</span>
+<span class="lineNum">     971 </span>            :                 }
+<span class="lineNum">     972 </span>            :         }
+<span class="lineNum">     973 </span>            : 
+<span class="lineNum">     974 </span>            :         // check if everything is OK
+<span class="lineNum">     975 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(numMessages, packetsReceived.size());</span>
+<span class="lineNum">     976 </span>            : 
+<span class="lineNum">     977 </span><span class="lineCov">          9 :         for (size_t i = 0; i &lt; numSubprotocols; ++i)</span>
+<span class="lineNum">     978 </span><span class="lineCov">         40 :                 BOOST_REQUIRE_EQUAL(msgPerSubprotocolReceived[i], msgPerSubprotocolSent[i]);</span>
+<span class="lineNum">     979 </span>            : 
+<span class="lineNum">     980 </span><span class="lineCov">       1025 :         for (size_t i = 0; i &lt; numMessages; i++)</span>
+<span class="lineNum">     981 </span>            :         {
+<span class="lineNum">     982 </span><span class="lineCov">      10240 :                 BOOST_REQUIRE(packetsReceived[i].type() == packetTypeRLP);</span>
+<span class="lineNum">     983 </span><span class="lineCov">       9216 :                 BOOST_REQUIRE_EQUAL(sha3(RLP(packetsReceived[i].data()).payload()), sha3(packetsSentShuffled[i]));</span>
+<span class="lineNum">     984 </span>            :         }
+<a name="985"><span class="lineNum">     985 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     986 </span>            : 
+<span class="lineNum">     987 </span><span class="lineCov">          4 : BOOST_AUTO_TEST_SUITE_END()</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

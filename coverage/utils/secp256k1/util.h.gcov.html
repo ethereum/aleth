@@ -1,0 +1,180 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - utils/secp256k1/util.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">utils/secp256k1</a> - util.h<span style="font-size: 80%;"> (source / <a href="util.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /**********************************************************************</a>
+<span class="lineNum">       2 </span>            :  * Copyright (c) 2013, 2014 Pieter Wuille                             *
+<span class="lineNum">       3 </span>            :  * Distributed under the MIT software license, see the accompanying   *
+<span class="lineNum">       4 </span>            :  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+<span class="lineNum">       5 </span>            :  **********************************************************************/
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #ifndef _SECP256K1_UTIL_H_
+<span class="lineNum">       8 </span>            : #define _SECP256K1_UTIL_H_
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #if defined HAVE_CONFIG_H
+<span class="lineNum">      11 </span>            : #include &quot;libsecp256k1-config.h&quot;
+<span class="lineNum">      12 </span>            : #endif
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      15 </span>            : #include &lt;stdint.h&gt;
+<span class="lineNum">      16 </span>            : #include &lt;stdio.h&gt;
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #ifdef DETERMINISTIC
+<span class="lineNum">      19 </span>            : #define TEST_FAILURE(msg) do { \
+<span class="lineNum">      20 </span>            :     fprintf(stderr, &quot;%s\n&quot;, msg); \
+<span class="lineNum">      21 </span>            :     abort(); \
+<span class="lineNum">      22 </span>            : } while(0);
+<span class="lineNum">      23 </span>            : #else
+<span class="lineNum">      24 </span>            : #define TEST_FAILURE(msg) do { \
+<span class="lineNum">      25 </span>            :     fprintf(stderr, &quot;%s:%d: %s\n&quot;, __FILE__, __LINE__, msg); \
+<span class="lineNum">      26 </span>            :     abort(); \
+<span class="lineNum">      27 </span>            : } while(0)
+<span class="lineNum">      28 </span>            : #endif
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #ifdef HAVE_BUILTIN_EXPECT
+<span class="lineNum">      31 </span>            : #define EXPECT(x,c) __builtin_expect((x),(c))
+<span class="lineNum">      32 </span>            : #else
+<span class="lineNum">      33 </span>            : #define EXPECT(x,c) (x)
+<span class="lineNum">      34 </span>            : #endif
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #ifdef DETERMINISTIC
+<span class="lineNum">      37 </span>            : #define CHECK(cond) do { \
+<span class="lineNum">      38 </span>            :     if (EXPECT(!(cond), 0)) { \
+<span class="lineNum">      39 </span>            :         TEST_FAILURE(&quot;test condition failed&quot;); \
+<span class="lineNum">      40 </span>            :     } \
+<span class="lineNum">      41 </span>            : } while(0)
+<span class="lineNum">      42 </span>            : #else
+<span class="lineNum">      43 </span>            : #define CHECK(cond) do { \
+<span class="lineNum">      44 </span>            :     if (EXPECT(!(cond), 0)) { \
+<span class="lineNum">      45 </span>            :         TEST_FAILURE(&quot;test condition failed: &quot; #cond); \
+<span class="lineNum">      46 </span>            :     } \
+<span class="lineNum">      47 </span>            : } while(0)
+<span class="lineNum">      48 </span>            : #endif
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : /* Like assert(), but safe to use on expressions with side effects. */
+<span class="lineNum">      51 </span>            : #ifndef NDEBUG
+<span class="lineNum">      52 </span>            : #define DEBUG_CHECK CHECK
+<span class="lineNum">      53 </span>            : #else
+<span class="lineNum">      54 </span>            : #define DEBUG_CHECK(cond) do { (void)(cond); } while(0)
+<span class="lineNum">      55 </span>            : #endif
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : /* Like DEBUG_CHECK(), but when VERIFY is defined instead of NDEBUG not defined. */
+<span class="lineNum">      58 </span>            : #ifdef VERIFY
+<span class="lineNum">      59 </span>            : #define VERIFY_CHECK CHECK
+<span class="lineNum">      60 </span>            : #else
+<span class="lineNum">      61 </span>            : #define VERIFY_CHECK(cond) do { (void)(cond); } while(0)
+<a name="62"><span class="lineNum">      62 </span>            : #endif</a>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">         18 : static SECP256K1_INLINE void *checked_malloc(size_t size) {</span>
+<span class="lineNum">      65 </span><span class="lineCov">         18 :     void *ret = malloc(size);</span>
+<span class="lineNum">      66 </span><span class="lineCov">         18 :     CHECK(ret != NULL);</span>
+<span class="lineNum">      67 </span><span class="lineCov">         18 :     return ret;</span>
+<span class="lineNum">      68 </span>            : }
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : /* Macro for restrict, when available and not in a VERIFY build. */
+<span class="lineNum">      71 </span>            : #if defined(SECP256K1_BUILD) &amp;&amp; defined(VERIFY)
+<span class="lineNum">      72 </span>            : # define SECP256K1_RESTRICT
+<span class="lineNum">      73 </span>            : #else
+<span class="lineNum">      74 </span>            : # if (!defined(__STDC_VERSION__) || (__STDC_VERSION__ &lt; 199901L) )
+<span class="lineNum">      75 </span>            : #  if SECP256K1_GNUC_PREREQ(3,0)
+<span class="lineNum">      76 </span>            : #   define SECP256K1_RESTRICT __restrict__
+<span class="lineNum">      77 </span>            : #  elif (defined(_MSC_VER) &amp;&amp; _MSC_VER &gt;= 1400)
+<span class="lineNum">      78 </span>            : #   define SECP256K1_RESTRICT __restrict
+<span class="lineNum">      79 </span>            : #  else
+<span class="lineNum">      80 </span>            : #   define SECP256K1_RESTRICT
+<span class="lineNum">      81 </span>            : #  endif
+<span class="lineNum">      82 </span>            : # else
+<span class="lineNum">      83 </span>            : #  define SECP256K1_RESTRICT restrict
+<span class="lineNum">      84 </span>            : # endif
+<span class="lineNum">      85 </span>            : #endif
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : #if defined(_WIN32)
+<span class="lineNum">      88 </span>            : # define I64FORMAT &quot;I64d&quot;
+<span class="lineNum">      89 </span>            : # define I64uFORMAT &quot;I64u&quot;
+<span class="lineNum">      90 </span>            : #else
+<span class="lineNum">      91 </span>            : # define I64FORMAT &quot;lld&quot;
+<span class="lineNum">      92 </span>            : # define I64uFORMAT &quot;llu&quot;
+<span class="lineNum">      93 </span>            : #endif
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : #if defined(HAVE___INT128)
+<span class="lineNum">      96 </span>            : # if defined(__GNUC__)
+<span class="lineNum">      97 </span>            : #  define SECP256K1_GNUC_EXT __extension__
+<span class="lineNum">      98 </span>            : # else
+<span class="lineNum">      99 </span>            : #  define SECP256K1_GNUC_EXT
+<span class="lineNum">     100 </span>            : # endif
+<span class="lineNum">     101 </span>            : SECP256K1_GNUC_EXT typedef unsigned __int128 uint128_t;
+<span class="lineNum">     102 </span>            : #endif
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

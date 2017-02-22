@@ -1,0 +1,331 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/thread/barrier.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/thread</a> - barrier.hpp<span style="font-size: 80%;"> (source / <a href="barrier.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Copyright (C) 2002-2003</a>
+<span class="lineNum">       2 </span>            : // David Moore, William E. Kempf
+<span class="lineNum">       3 </span>            : // Copyright (C) 2007-8 Anthony Williams
+<span class="lineNum">       4 </span>            : // (C) Copyright 2013 Vicente J. Botet Escriba
+<span class="lineNum">       5 </span>            : //
+<span class="lineNum">       6 </span>            : //  Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       7 </span>            : //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : #ifndef BOOST_BARRIER_JDM030602_HPP
+<span class="lineNum">      10 </span>            : #define BOOST_BARRIER_JDM030602_HPP
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #include &lt;boost/thread/detail/config.hpp&gt;
+<span class="lineNum">      13 </span>            : #include &lt;boost/thread/detail/delete.hpp&gt;
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #include &lt;boost/throw_exception.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/thread/mutex.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/thread/lock_types.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/thread/condition_variable.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;string&gt;
+<span class="lineNum">      20 </span>            : #include &lt;stdexcept&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/thread/detail/nullary_function.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/type_traits/is_same.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/type_traits/is_void.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/core/enable_if.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/utility/result_of.hpp&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;boost/config/abi_prefix.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace boost
+<span class="lineNum">      30 </span>            : {
+<span class="lineNum">      31 </span>            :   namespace thread_detail
+<span class="lineNum">      32 </span>            :   {
+<span class="lineNum">      33 </span>            :     typedef detail::nullary_function&lt;void()&gt; void_completion_function;
+<span class="lineNum">      34 </span>            :     typedef detail::nullary_function&lt;size_t()&gt; size_completion_function;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            :     struct default_barrier_reseter
+<span class="lineNum">      37 </span>            :     {
+<span class="lineNum">      38 </span>            :       unsigned int size_;
+<span class="lineNum">      39 </span>            :       default_barrier_reseter(unsigned int size) :
+<span class="lineNum">      40 </span>            :         size_(size)
+<span class="lineNum">      41 </span>            :       {
+<span class="lineNum">      42 </span>            :       }
+<span class="lineNum">      43 </span>            :       BOOST_THREAD_MOVABLE(default_barrier_reseter)
+<span class="lineNum">      44 </span>            :       //BOOST_THREAD_COPYABLE_AND_MOVABLE(default_barrier_reseter)
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :       default_barrier_reseter(default_barrier_reseter const&amp; other) BOOST_NOEXCEPT :
+<span class="lineNum">      47 </span>            :       size_(other.size_)
+<span class="lineNum">      48 </span>            :       {
+<span class="lineNum">      49 </span>            :       }
+<span class="lineNum">      50 </span>            :       default_barrier_reseter(BOOST_THREAD_RV_REF(default_barrier_reseter) other) BOOST_NOEXCEPT :
+<span class="lineNum">      51 </span>            :       size_(BOOST_THREAD_RV(other).size_)
+<span class="lineNum">      52 </span>            :       {
+<span class="lineNum">      53 </span>            :       }
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :       unsigned int operator()()
+<span class="lineNum">      56 </span>            :       {
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 :         return size_;</span>
+<span class="lineNum">      58 </span>            :       }
+<span class="lineNum">      59 </span>            :     };
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            :     struct void_functor_barrier_reseter
+<span class="lineNum">      62 </span>            :     {
+<span class="lineNum">      63 </span>            :       unsigned int size_;
+<span class="lineNum">      64 </span>            :       void_completion_function fct_;
+<span class="lineNum">      65 </span>            :       template &lt;typename F&gt;
+<span class="lineNum">      66 </span>            :       void_functor_barrier_reseter(unsigned int size, BOOST_THREAD_RV_REF(F) funct)
+<span class="lineNum">      67 </span>            :       : size_(size), fct_(boost::move(funct))
+<span class="lineNum">      68 </span>            :       {}
+<span class="lineNum">      69 </span>            :       template &lt;typename F&gt;
+<span class="lineNum">      70 </span>            :       void_functor_barrier_reseter(unsigned int size, F&amp; funct)
+<span class="lineNum">      71 </span>            :       : size_(size), fct_(funct)
+<span class="lineNum">      72 </span>            :       {}
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :       BOOST_THREAD_MOVABLE(void_functor_barrier_reseter)
+<span class="lineNum">      75 </span>            :       //BOOST_THREAD_COPYABLE_AND_MOVABLE(void_functor_barrier_reseter)
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :       void_functor_barrier_reseter(void_functor_barrier_reseter const&amp; other) BOOST_NOEXCEPT :
+<span class="lineNum">      78 </span>            :       size_(other.size_), fct_(other.fct_)
+<span class="lineNum">      79 </span>            :       {
+<span class="lineNum">      80 </span>            :       }
+<span class="lineNum">      81 </span>            :       void_functor_barrier_reseter(BOOST_THREAD_RV_REF(void_functor_barrier_reseter) other) BOOST_NOEXCEPT :
+<span class="lineNum">      82 </span>            :       size_(BOOST_THREAD_RV(other).size_), fct_(BOOST_THREAD_RV(other).fct_)
+<span class="lineNum">      83 </span>            :       //size_(BOOST_THREAD_RV(other).size_), fct_(boost::move(BOOST_THREAD_RV(other).fct_))
+<span class="lineNum">      84 </span>            :       {
+<span class="lineNum">      85 </span>            :       }
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :       unsigned int operator()()
+<span class="lineNum">      88 </span>            :       {
+<span class="lineNum">      89 </span>            :         fct_();
+<span class="lineNum">      90 </span>            :         return size_;
+<span class="lineNum">      91 </span>            :       }
+<span class="lineNum">      92 </span>            :     };
+<span class="lineNum">      93 </span>            :     struct void_fct_ptr_barrier_reseter
+<span class="lineNum">      94 </span>            :     {
+<span class="lineNum">      95 </span>            :       unsigned int size_;
+<span class="lineNum">      96 </span>            :       void(*fct_)();
+<span class="lineNum">      97 </span>            :       void_fct_ptr_barrier_reseter(unsigned int size, void(*funct)()) :
+<span class="lineNum">      98 </span>            :         size_(size), fct_(funct)
+<span class="lineNum">      99 </span>            :       {
+<span class="lineNum">     100 </span>            :       }
+<span class="lineNum">     101 </span>            :       BOOST_THREAD_MOVABLE(void_fct_ptr_barrier_reseter)
+<span class="lineNum">     102 </span>            :       //BOOST_THREAD_COPYABLE_AND_MOVABLE(void_fct_ptr_barrier_reseter)
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :       void_fct_ptr_barrier_reseter(void_fct_ptr_barrier_reseter const&amp; other) BOOST_NOEXCEPT :
+<span class="lineNum">     105 </span>            :       size_(other.size_), fct_(other.fct_)
+<span class="lineNum">     106 </span>            :       {
+<span class="lineNum">     107 </span>            :       }
+<span class="lineNum">     108 </span>            :       void_fct_ptr_barrier_reseter(BOOST_THREAD_RV_REF(void_fct_ptr_barrier_reseter) other) BOOST_NOEXCEPT :
+<span class="lineNum">     109 </span>            :       size_(BOOST_THREAD_RV(other).size_), fct_(BOOST_THREAD_RV(other).fct_)
+<span class="lineNum">     110 </span>            :       {
+<span class="lineNum">     111 </span>            :       }
+<span class="lineNum">     112 </span>            :       unsigned int operator()()
+<span class="lineNum">     113 </span>            :       {
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :         fct_();</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :         return size_;</span>
+<span class="lineNum">     116 </span>            :       }
+<span class="lineNum">     117 </span>            :     };
+<span class="lineNum">     118 </span>            :   }
+<span class="lineNum">     119 </span>            :   //BOOST_THREAD_DCL_MOVABLE(thread_detail::default_barrier_reseter)
+<span class="lineNum">     120 </span>            :   //BOOST_THREAD_DCL_MOVABLE(thread_detail::void_functor_barrier_reseter)
+<span class="lineNum">     121 </span>            :   //BOOST_THREAD_DCL_MOVABLE(thread_detail::void_fct_ptr_barrier_reseter)
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            :   class barrier
+<span class="lineNum">     124 </span>            :   {
+<span class="lineNum">     125 </span>            :     static inline unsigned int check_counter(unsigned int count)
+<span class="lineNum">     126 </span>            :     {
+<span class="lineNum">     127 </span>            :       if (count == 0) boost::throw_exception(
+<span class="lineNum">     128 </span>            :           thread_exception(system::errc::invalid_argument, &quot;barrier constructor: count cannot be zero.&quot;));
+<span class="lineNum">     129 </span>            :       return count;
+<span class="lineNum">     130 </span>            :     }
+<span class="lineNum">     131 </span>            :     struct dummy
+<span class="lineNum">     132 </span>            :     {
+<span class="lineNum">     133 </span>            :     };
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            :   public:
+<span class="lineNum">     136 </span>            :     BOOST_THREAD_NO_COPYABLE( barrier)
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :     explicit barrier(unsigned int count) :
+<span class="lineNum">     139 </span>            :       m_count(check_counter(count)), m_generation(0), fct_(BOOST_THREAD_MAKE_RV_REF(thread_detail::default_barrier_reseter(count)))
+<span class="lineNum">     140 </span>            :     {
+<span class="lineNum">     141 </span>            :     }
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :     template &lt;typename F&gt;
+<span class="lineNum">     144 </span>            :     barrier(
+<span class="lineNum">     145 </span>            :         unsigned int count,
+<span class="lineNum">     146 </span>            :         BOOST_THREAD_RV_REF(F) funct,
+<span class="lineNum">     147 </span>            :         typename enable_if&lt;
+<span class="lineNum">     148 </span>            :         typename is_void&lt;typename result_of&lt;F()&gt;::type&gt;::type, dummy*
+<span class="lineNum">     149 </span>            :         &gt;::type=0
+<span class="lineNum">     150 </span>            :     )
+<span class="lineNum">     151 </span>            :     : m_count(check_counter(count)),
+<span class="lineNum">     152 </span>            :       m_generation(0),
+<span class="lineNum">     153 </span>            :       fct_(BOOST_THREAD_MAKE_RV_REF(thread_detail::void_functor_barrier_reseter(count,
+<span class="lineNum">     154 </span>            :         boost::move(funct)))
+<span class="lineNum">     155 </span>            :     )
+<span class="lineNum">     156 </span>            :     {
+<span class="lineNum">     157 </span>            :     }
+<span class="lineNum">     158 </span>            :     template &lt;typename F&gt;
+<span class="lineNum">     159 </span>            :     barrier(
+<span class="lineNum">     160 </span>            :         unsigned int count,
+<span class="lineNum">     161 </span>            :         F &amp;funct,
+<span class="lineNum">     162 </span>            :         typename enable_if&lt;
+<span class="lineNum">     163 </span>            :         typename is_void&lt;typename result_of&lt;F()&gt;::type&gt;::type, dummy*
+<span class="lineNum">     164 </span>            :         &gt;::type=0
+<span class="lineNum">     165 </span>            :     )
+<span class="lineNum">     166 </span>            :     : m_count(check_counter(count)),
+<span class="lineNum">     167 </span>            :       m_generation(0),
+<span class="lineNum">     168 </span>            :       fct_(BOOST_THREAD_MAKE_RV_REF(thread_detail::void_functor_barrier_reseter(count,
+<span class="lineNum">     169 </span>            :         funct))
+<span class="lineNum">     170 </span>            :     )
+<span class="lineNum">     171 </span>            :     {
+<span class="lineNum">     172 </span>            :     }
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            :     template &lt;typename F&gt;
+<span class="lineNum">     175 </span>            :     barrier(
+<span class="lineNum">     176 </span>            :         unsigned int count,
+<span class="lineNum">     177 </span>            :         BOOST_THREAD_RV_REF(F) funct,
+<span class="lineNum">     178 </span>            :         typename enable_if&lt;
+<span class="lineNum">     179 </span>            :         typename is_same&lt;typename result_of&lt;F()&gt;::type, unsigned int&gt;::type, dummy*
+<span class="lineNum">     180 </span>            :         &gt;::type=0
+<span class="lineNum">     181 </span>            :     )
+<span class="lineNum">     182 </span>            :     : m_count(check_counter(count)),
+<span class="lineNum">     183 </span>            :       m_generation(0),
+<span class="lineNum">     184 </span>            :       fct_(boost::move(funct))
+<span class="lineNum">     185 </span>            :     {
+<span class="lineNum">     186 </span>            :     }
+<span class="lineNum">     187 </span>            :     template &lt;typename F&gt;
+<span class="lineNum">     188 </span>            :     barrier(
+<span class="lineNum">     189 </span>            :         unsigned int count,
+<span class="lineNum">     190 </span>            :         F&amp; funct,
+<span class="lineNum">     191 </span>            :         typename enable_if&lt;
+<span class="lineNum">     192 </span>            :         typename is_same&lt;typename result_of&lt;F()&gt;::type, unsigned int&gt;::type, dummy*
+<span class="lineNum">     193 </span>            :         &gt;::type=0
+<span class="lineNum">     194 </span>            :     )
+<span class="lineNum">     195 </span>            :     : m_count(check_counter(count)),
+<span class="lineNum">     196 </span>            :       m_generation(0),
+<span class="lineNum">     197 </span>            :       fct_(funct)
+<span class="lineNum">     198 </span>            :     {
+<span class="lineNum">     199 </span>            :     }
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            :     barrier(unsigned int count, void(*funct)()) :
+<span class="lineNum">     202 </span>            :       m_count(check_counter(count)), m_generation(0),
+<span class="lineNum">     203 </span>            :       fct_(funct
+<span class="lineNum">     204 </span>            :           ? BOOST_THREAD_MAKE_RV_REF(thread_detail::size_completion_function(BOOST_THREAD_MAKE_RV_REF(thread_detail::void_fct_ptr_barrier_reseter(count, funct))))
+<span class="lineNum">     205 </span>            :           : BOOST_THREAD_MAKE_RV_REF(thread_detail::size_completion_function(BOOST_THREAD_MAKE_RV_REF(thread_detail::default_barrier_reseter(count))))
+<span class="lineNum">     206 </span>            :       )
+<span class="lineNum">     207 </span>            :     {
+<span class="lineNum">     208 </span>            :     }
+<span class="lineNum">     209 </span>            :     barrier(unsigned int count, unsigned int(*funct)()) :
+<span class="lineNum">     210 </span>            :       m_count(check_counter(count)), m_generation(0),
+<span class="lineNum">     211 </span>            :       fct_(funct
+<span class="lineNum">     212 </span>            :           ? BOOST_THREAD_MAKE_RV_REF(thread_detail::size_completion_function(funct))
+<span class="lineNum">     213 </span>            :           : BOOST_THREAD_MAKE_RV_REF(thread_detail::size_completion_function(BOOST_THREAD_MAKE_RV_REF(thread_detail::default_barrier_reseter(count))))
+<span class="lineNum">     214 </span>            :       )
+<span class="lineNum">     215 </span>            :     {
+<span class="lineNum">     216 </span>            :     }
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            :     bool wait()
+<span class="lineNum">     219 </span>            :     {
+<span class="lineNum">     220 </span>            :       boost::unique_lock &lt; boost::mutex &gt; lock(m_mutex);
+<span class="lineNum">     221 </span>            :       unsigned int gen = m_generation;
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            :       if (--m_count == 0)
+<span class="lineNum">     224 </span>            :       {
+<span class="lineNum">     225 </span>            :         m_generation++;
+<span class="lineNum">     226 </span>            :         m_count = static_cast&lt;unsigned int&gt;(fct_());
+<span class="lineNum">     227 </span>            :         BOOST_ASSERT(m_count != 0);
+<span class="lineNum">     228 </span>            :         lock.unlock();
+<span class="lineNum">     229 </span>            :         m_cond.notify_all();
+<span class="lineNum">     230 </span>            :         return true;
+<span class="lineNum">     231 </span>            :       }
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            :       while (gen == m_generation)
+<span class="lineNum">     234 </span>            :         m_cond.wait(lock);
+<span class="lineNum">     235 </span>            :       return false;
+<span class="lineNum">     236 </span>            :     }
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span>            :     void count_down_and_wait()
+<span class="lineNum">     239 </span>            :     {
+<span class="lineNum">     240 </span>            :       wait();
+<span class="lineNum">     241 </span>            :     }
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            :   private:
+<span class="lineNum">     244 </span>            :     mutex m_mutex;
+<span class="lineNum">     245 </span>            :     condition_variable m_cond;
+<span class="lineNum">     246 </span>            :     unsigned int m_count;
+<span class="lineNum">     247 </span>            :     unsigned int m_generation;
+<span class="lineNum">     248 </span>            :     thread_detail::size_completion_function fct_;
+<span class="lineNum">     249 </span>            :   };
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            : } // namespace boost
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span>            : #include &lt;boost/config/abi_suffix.hpp&gt;
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

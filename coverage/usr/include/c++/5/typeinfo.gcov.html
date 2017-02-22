@@ -1,0 +1,298 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/typeinfo</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5</a> - typeinfo<span style="font-size: 80%;"> (source / <a href="typeinfo.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // RTTI support for -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : // Copyright (C) 1994-2015 Free Software Foundation, Inc.
+<span class="lineNum">       3 </span>            : //
+<span class="lineNum">       4 </span>            : // This file is part of GCC.
+<span class="lineNum">       5 </span>            : //
+<span class="lineNum">       6 </span>            : // GCC is free software; you can redistribute it and/or modify
+<span class="lineNum">       7 </span>            : // it under the terms of the GNU General Public License as published by
+<span class="lineNum">       8 </span>            : // the Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : //
+<span class="lineNum">      11 </span>            : // GCC is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : //
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file typeinfo
+<span class="lineNum">      26 </span>            :  *  This is a Standard C++ Library header.
+<span class="lineNum">      27 </span>            :  */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #ifndef _TYPEINFO
+<span class="lineNum">      30 </span>            : #define _TYPEINFO
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #pragma GCC system_header
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #include &lt;exception&gt;
+<span class="lineNum">      35 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">      36 </span>            : #include &lt;bits/hash_bytes.h&gt;
+<span class="lineNum">      37 </span>            : #endif
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : #pragma GCC visibility push(default)
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : extern &quot;C++&quot; {
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : namespace __cxxabiv1
+<span class="lineNum">      44 </span>            : {
+<span class="lineNum">      45 </span>            :   class __class_type_info;
+<span class="lineNum">      46 </span>            : } // namespace __cxxabiv1
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : // Determine whether typeinfo names for the same type are merged (in which
+<span class="lineNum">      49 </span>            : // case comparison can just compare pointers) or not (in which case strings
+<span class="lineNum">      50 </span>            : // must be compared), and whether comparison is to be implemented inline or
+<span class="lineNum">      51 </span>            : // not.  We used to do inline pointer comparison by default if weak symbols
+<span class="lineNum">      52 </span>            : // are available, but even with weak symbols sometimes names are not merged
+<span class="lineNum">      53 </span>            : // when objects are loaded with RTLD_LOCAL, so now we always use strcmp by
+<span class="lineNum">      54 </span>            : // default.  For ABI compatibility, we do the strcmp inline if weak symbols
+<span class="lineNum">      55 </span>            : // are available, and out-of-line if not.  Out-of-line pointer comparison
+<span class="lineNum">      56 </span>            : // is used where the object files are to be portable to multiple systems,
+<span class="lineNum">      57 </span>            : // some of which may not be able to use pointer comparison, but the
+<span class="lineNum">      58 </span>            : // particular system for which libstdc++ is being built can use pointer
+<span class="lineNum">      59 </span>            : // comparison; in particular for most ARM EABI systems, where the ABI
+<span class="lineNum">      60 </span>            : // specifies out-of-line comparison.  The compiler's target configuration
+<span class="lineNum">      61 </span>            : // can override the defaults by defining __GXX_TYPEINFO_EQUALITY_INLINE to
+<span class="lineNum">      62 </span>            : // 1 or 0 to indicate whether or not comparison is inline, and
+<span class="lineNum">      63 </span>            : // __GXX_MERGED_TYPEINFO_NAMES to 1 or 0 to indicate whether or not pointer
+<span class="lineNum">      64 </span>            : // comparison can be used.
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : #ifndef __GXX_MERGED_TYPEINFO_NAMES
+<span class="lineNum">      67 </span>            : // By default, typeinfo names are not merged.
+<span class="lineNum">      68 </span>            : #define __GXX_MERGED_TYPEINFO_NAMES 0
+<span class="lineNum">      69 </span>            : #endif
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : // By default follow the old inline rules to avoid ABI changes.
+<span class="lineNum">      72 </span>            : #ifndef __GXX_TYPEINFO_EQUALITY_INLINE
+<span class="lineNum">      73 </span>            :   #if !__GXX_WEAK__
+<span class="lineNum">      74 </span>            :     #define __GXX_TYPEINFO_EQUALITY_INLINE 0
+<span class="lineNum">      75 </span>            :   #else
+<span class="lineNum">      76 </span>            :     #define __GXX_TYPEINFO_EQUALITY_INLINE 1
+<span class="lineNum">      77 </span>            :   #endif
+<span class="lineNum">      78 </span>            : #endif
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : namespace std
+<span class="lineNum">      81 </span>            : {
+<span class="lineNum">      82 </span>            :   /**
+<span class="lineNum">      83 </span>            :    *  @brief  Part of RTTI.
+<span class="lineNum">      84 </span>            :    *
+<span class="lineNum">      85 </span>            :    *  The @c type_info class describes type information generated by
+<span class="lineNum">      86 </span>            :    *  an implementation.
+<span class="lineNum">      87 </span>            :   */
+<span class="lineNum">      88 </span>            :   class type_info
+<span class="lineNum">      89 </span>            :   {
+<span class="lineNum">      90 </span>            :   public:
+<span class="lineNum">      91 </span>            :     /** Destructor first. Being the first non-inline virtual function, this
+<span class="lineNum">      92 </span>            :      *  controls in which translation unit the vtable is emitted. The
+<span class="lineNum">      93 </span>            :      *  compiler makes use of that information to know where to emit
+<span class="lineNum">      94 </span>            :      *  the runtime-mandated type_info structures in the new-abi.  */
+<span class="lineNum">      95 </span>            :     virtual ~type_info();
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            :     /** Returns an @e implementation-defined byte string; this is not
+<span class="lineNum">      98 </span>            :      *  portable between compilers!  */
+<span class="lineNum">      99 </span>            :     const char* name() const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     100 </span><span class="lineCov">      98963 :     { return __name[0] == '*' ? __name + 1 : __name; }</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : #if !__GXX_TYPEINFO_EQUALITY_INLINE
+<span class="lineNum">     103 </span>            :     // In old abi, or when weak symbols are not supported, there can
+<span class="lineNum">     104 </span>            :     // be multiple instances of a type_info object for one
+<span class="lineNum">     105 </span>            :     // type. Uniqueness must use the _name value, not object address.
+<span class="lineNum">     106 </span>            :     bool before(const type_info&amp; __arg) const _GLIBCXX_NOEXCEPT;
+<span class="lineNum">     107 </span>            :     bool operator==(const type_info&amp; __arg) const _GLIBCXX_NOEXCEPT;
+<span class="lineNum">     108 </span>            : #else
+<span class="lineNum">     109 </span>            :   #if !__GXX_MERGED_TYPEINFO_NAMES
+<span class="lineNum">     110 </span>            :     /** Returns true if @c *this precedes @c __arg in the implementation's
+<span class="lineNum">     111 </span>            :      *  collation order.  */
+<span class="lineNum">     112 </span>            :     // Even with the new abi, on systems that support dlopen
+<span class="lineNum">     113 </span>            :     // we can run into cases where type_info names aren't merged,
+<span class="lineNum">     114 </span>            :     // so we still need to do string comparison.
+<span class="lineNum">     115 </span>            :     bool before(const type_info&amp; __arg) const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     116 </span><span class="lineCov">    1713971 :     { return (__name[0] == '*' &amp;&amp; __arg.__name[0] == '*')</span>
+<span class="lineNum">     117 </span>            :         ? __name &lt; __arg.__name
+<span class="lineNum">     118 </span><span class="lineCov">    1713971 :         : __builtin_strcmp (__name, __arg.__name) &lt; 0; }</span>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            :     bool operator==(const type_info&amp; __arg) const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     121 </span>            :     {
+<span class="lineNum">     122 </span>            :       return ((__name == __arg.__name)
+<span class="lineNum">     123 </span><span class="lineCov">     721286 :               || (__name[0] != '*' &amp;&amp;</span>
+<span class="lineNum">     124 </span><span class="lineCov">       1216 :                   __builtin_strcmp (__name, __arg.__name) == 0));</span>
+<span class="lineNum">     125 </span>            :     }
+<span class="lineNum">     126 </span>            :   #else
+<span class="lineNum">     127 </span>            :     // On some targets we can rely on type_info's NTBS being unique,
+<span class="lineNum">     128 </span>            :     // and therefore address comparisons are sufficient.
+<span class="lineNum">     129 </span>            :     bool before(const type_info&amp; __arg) const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     130 </span>            :     { return __name &lt; __arg.__name; }
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            :     bool operator==(const type_info&amp; __arg) const _GLIBCXX_NOEXCEPT
+<span class="lineNum">     133 </span>            :     { return __name == __arg.__name; }
+<a name="134"><span class="lineNum">     134 </span>            :   #endif</a>
+<span class="lineNum">     135 </span>            : #endif
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :     bool operator!=(const type_info&amp; __arg) const _GLIBCXX_NOEXCEPT</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :     { return !operator==(__arg); }</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     140 </span>            :     size_t hash_code() const noexcept
+<span class="lineNum">     141 </span>            :     {
+<span class="lineNum">     142 </span>            : #  if !__GXX_MERGED_TYPEINFO_NAMES
+<span class="lineNum">     143 </span>            :       return _Hash_bytes(name(), __builtin_strlen(name()),
+<span class="lineNum">     144 </span>            :                          static_cast&lt;size_t&gt;(0xc70f6907UL));
+<span class="lineNum">     145 </span>            : #  else
+<span class="lineNum">     146 </span>            :       return reinterpret_cast&lt;size_t&gt;(__name);
+<span class="lineNum">     147 </span>            : #  endif
+<span class="lineNum">     148 </span>            :     }
+<span class="lineNum">     149 </span>            : #endif // C++11
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            :     // Return true if this is a pointer type of some kind
+<span class="lineNum">     152 </span>            :     virtual bool __is_pointer_p() const;
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            :     // Return true if this is a function type
+<span class="lineNum">     155 </span>            :     virtual bool __is_function_p() const;
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            :     // Try and catch a thrown type. Store an adjusted pointer to the
+<span class="lineNum">     158 </span>            :     // caught type in THR_OBJ. If THR_TYPE is not a pointer type, then
+<span class="lineNum">     159 </span>            :     // THR_OBJ points to the thrown object. If THR_TYPE is a pointer
+<span class="lineNum">     160 </span>            :     // type, then THR_OBJ is the pointer itself. OUTER indicates the
+<span class="lineNum">     161 </span>            :     // number of outer pointers, and whether they were const
+<span class="lineNum">     162 </span>            :     // qualified.
+<span class="lineNum">     163 </span>            :     virtual bool __do_catch(const type_info *__thr_type, void **__thr_obj,
+<span class="lineNum">     164 </span>            :                             unsigned __outer) const;
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :     // Internally used during catch matching
+<span class="lineNum">     167 </span>            :     virtual bool __do_upcast(const __cxxabiv1::__class_type_info *__target,
+<span class="lineNum">     168 </span>            :                              void **__obj_ptr) const;
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :   protected:
+<span class="lineNum">     171 </span>            :     const char *__name;
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :     explicit type_info(const char *__n): __name(__n) { }
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :   private:
+<span class="lineNum">     176 </span>            :     /// Assigning type_info is not supported.
+<span class="lineNum">     177 </span>            :     type_info&amp; operator=(const type_info&amp;);
+<span class="lineNum">     178 </span>            :     type_info(const type_info&amp;);
+<span class="lineNum">     179 </span>            :   };
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            :   /**
+<span class="lineNum">     182 </span>            :    *  @brief  Thrown during incorrect typecasting.
+<span class="lineNum">     183 </span>            :    *  @ingroup exceptions
+<span class="lineNum">     184 </span>            :    *
+<span class="lineNum">     185 </span>            :    *  If you attempt an invalid @c dynamic_cast expression, an instance of
+<span class="lineNum">     186 </span>            :    *  this class (or something derived from this class) is thrown.  */
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :   class bad_cast : public exception</span>
+<span class="lineNum">     188 </span>            :   {
+<span class="lineNum">     189 </span>            :   public:
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :     bad_cast() _GLIBCXX_USE_NOEXCEPT { }</span>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :     // This declaration is not useless:
+<span class="lineNum">     193 </span>            :     // http://gcc.gnu.org/onlinedocs/gcc-3.0.2/gcc_6.html#SEC118
+<span class="lineNum">     194 </span>            :     virtual ~bad_cast() _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            :     // See comment in eh_exception.cc.
+<span class="lineNum">     197 </span>            :     virtual const char* what() const _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">     198 </span>            :   };
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            :   /**
+<span class="lineNum">     201 </span>            :    *  @brief Thrown when a NULL pointer in a @c typeid expression is used.
+<span class="lineNum">     202 </span>            :    *  @ingroup exceptions
+<span class="lineNum">     203 </span>            :    */
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :   class bad_typeid : public exception</span>
+<span class="lineNum">     205 </span>            :   {
+<span class="lineNum">     206 </span>            :   public:
+<span class="lineNum">     207 </span>            :     bad_typeid () _GLIBCXX_USE_NOEXCEPT { }
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            :     // This declaration is not useless:
+<span class="lineNum">     210 </span>            :     // http://gcc.gnu.org/onlinedocs/gcc-3.0.2/gcc_6.html#SEC118
+<span class="lineNum">     211 </span>            :     virtual ~bad_typeid() _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            :     // See comment in eh_exception.cc.
+<span class="lineNum">     214 </span>            :     virtual const char* what() const _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">     215 </span>            :   };
+<span class="lineNum">     216 </span>            : } // namespace std
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            : } // extern &quot;C++&quot;
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            : #pragma GCC visibility pop
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

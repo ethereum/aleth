@@ -1,0 +1,965 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/x86_64-linux-gnu/c++/5/bits/gthr-default.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">usr/include/x86_64-linux-gnu/c++/5/bits</a> - gthr-default.h<span style="font-size: 80%;"> (source / <a href="gthr-default.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* Threads compatibility routines for libgcc2 and libobjc.  */</a>
+<span class="lineNum">       2 </span>            : /* Compile this one with gcc.  */
+<span class="lineNum">       3 </span>            : /* Copyright (C) 1997-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            : This file is part of GCC.
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : GCC is free software; you can redistribute it and/or modify it under
+<span class="lineNum">       8 </span>            : the terms of the GNU General Public License as published by the Free
+<span class="lineNum">       9 </span>            : Software Foundation; either version 3, or (at your option) any later
+<span class="lineNum">      10 </span>            : version.
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+<span class="lineNum">      13 </span>            : WARRANTY; without even the implied warranty of MERCHANTABILITY or
+<span class="lineNum">      14 </span>            : FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+<span class="lineNum">      15 </span>            : for more details.
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      18 </span>            : permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      19 </span>            : 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : You should have received a copy of the GNU General Public License and
+<span class="lineNum">      22 </span>            : a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      23 </span>            : see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      24 </span>            : &lt;http://www.gnu.org/licenses/&gt;.  */
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #ifndef _GLIBCXX_GCC_GTHR_POSIX_H
+<span class="lineNum">      27 </span>            : #define _GLIBCXX_GCC_GTHR_POSIX_H
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : /* POSIX threads specific definitions.
+<span class="lineNum">      30 </span>            :    Easy, since the interface is just one-to-one mapping.  */
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #define __GTHREADS 1
+<span class="lineNum">      33 </span>            : #define __GTHREADS_CXX0X 1
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #include &lt;pthread.h&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : #if ((defined(_LIBOBJC) || defined(_LIBOBJC_WEAK)) \
+<span class="lineNum">      38 </span>            :      || !defined(_GTHREAD_USE_MUTEX_TIMEDLOCK))
+<span class="lineNum">      39 </span>            : # include &lt;unistd.h&gt;
+<span class="lineNum">      40 </span>            : # if defined(_POSIX_TIMEOUTS) &amp;&amp; _POSIX_TIMEOUTS &gt;= 0
+<span class="lineNum">      41 </span>            : #  define _GTHREAD_USE_MUTEX_TIMEDLOCK 1
+<span class="lineNum">      42 </span>            : # else
+<span class="lineNum">      43 </span>            : #  define _GTHREAD_USE_MUTEX_TIMEDLOCK 0
+<span class="lineNum">      44 </span>            : # endif
+<span class="lineNum">      45 </span>            : #endif
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : typedef pthread_t __gthread_t;
+<span class="lineNum">      48 </span>            : typedef pthread_key_t __gthread_key_t;
+<span class="lineNum">      49 </span>            : typedef pthread_once_t __gthread_once_t;
+<span class="lineNum">      50 </span>            : typedef pthread_mutex_t __gthread_mutex_t;
+<span class="lineNum">      51 </span>            : typedef pthread_mutex_t __gthread_recursive_mutex_t;
+<span class="lineNum">      52 </span>            : typedef pthread_cond_t __gthread_cond_t;
+<span class="lineNum">      53 </span>            : typedef struct timespec __gthread_time_t;
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : /* POSIX like conditional variables are supported.  Please look at comments
+<span class="lineNum">      56 </span>            :    in gthr.h for details. */
+<span class="lineNum">      57 </span>            : #define __GTHREAD_HAS_COND      1
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : #define __GTHREAD_MUTEX_INIT PTHREAD_MUTEX_INITIALIZER
+<span class="lineNum">      60 </span>            : #define __GTHREAD_MUTEX_INIT_FUNCTION __gthread_mutex_init_function
+<span class="lineNum">      61 </span>            : #define __GTHREAD_ONCE_INIT PTHREAD_ONCE_INIT
+<span class="lineNum">      62 </span>            : #if defined(PTHREAD_RECURSIVE_MUTEX_INITIALIZER)
+<span class="lineNum">      63 </span>            : #define __GTHREAD_RECURSIVE_MUTEX_INIT PTHREAD_RECURSIVE_MUTEX_INITIALIZER
+<span class="lineNum">      64 </span>            : #elif defined(PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP)
+<span class="lineNum">      65 </span>            : #define __GTHREAD_RECURSIVE_MUTEX_INIT PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
+<span class="lineNum">      66 </span>            : #else
+<span class="lineNum">      67 </span>            : #define __GTHREAD_RECURSIVE_MUTEX_INIT_FUNCTION __gthread_recursive_mutex_init_function
+<span class="lineNum">      68 </span>            : #endif
+<span class="lineNum">      69 </span>            : #define __GTHREAD_COND_INIT PTHREAD_COND_INITIALIZER
+<span class="lineNum">      70 </span>            : #define __GTHREAD_TIME_INIT {0,0}
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : #ifdef _GTHREAD_USE_MUTEX_INIT_FUNC
+<span class="lineNum">      73 </span>            : # undef __GTHREAD_MUTEX_INIT
+<span class="lineNum">      74 </span>            : #endif
+<span class="lineNum">      75 </span>            : #ifdef _GTHREAD_USE_RECURSIVE_MUTEX_INIT_FUNC
+<span class="lineNum">      76 </span>            : # undef __GTHREAD_RECURSIVE_MUTEX_INIT
+<span class="lineNum">      77 </span>            : # undef __GTHREAD_RECURSIVE_MUTEX_INIT_FUNCTION
+<span class="lineNum">      78 </span>            : # define __GTHREAD_RECURSIVE_MUTEX_INIT_FUNCTION __gthread_recursive_mutex_init_function
+<span class="lineNum">      79 </span>            : #endif
+<span class="lineNum">      80 </span>            : #ifdef _GTHREAD_USE_COND_INIT_FUNC
+<span class="lineNum">      81 </span>            : # undef __GTHREAD_COND_INIT
+<span class="lineNum">      82 </span>            : # define __GTHREAD_COND_INIT_FUNCTION __gthread_cond_init_function
+<span class="lineNum">      83 </span>            : #endif
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : #if __GXX_WEAK__ &amp;&amp; _GLIBCXX_GTHREAD_USE_WEAK
+<span class="lineNum">      86 </span>            : # ifndef __gthrw_pragma
+<span class="lineNum">      87 </span>            : #  define __gthrw_pragma(pragma)
+<span class="lineNum">      88 </span>            : # endif
+<span class="lineNum">      89 </span>            : # define __gthrw2(name,name2,type) \
+<span class="lineNum">      90 </span>            :   static __typeof(type) name __attribute__ ((__weakref__(#name2))); \
+<span class="lineNum">      91 </span>            :   __gthrw_pragma(weak type)
+<span class="lineNum">      92 </span>            : # define __gthrw_(name) __gthrw_ ## name
+<span class="lineNum">      93 </span>            : #else
+<span class="lineNum">      94 </span>            : # define __gthrw2(name,name2,type)
+<span class="lineNum">      95 </span>            : # define __gthrw_(name) name
+<span class="lineNum">      96 </span>            : #endif
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : /* Typically, __gthrw_foo is a weak reference to symbol foo.  */
+<span class="lineNum">      99 </span>            : #define __gthrw(name) __gthrw2(__gthrw_ ## name,name,name)
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : __gthrw(pthread_once)
+<span class="lineNum">     102 </span>            : __gthrw(pthread_getspecific)
+<span class="lineNum">     103 </span>            : __gthrw(pthread_setspecific)
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : __gthrw(pthread_create)
+<span class="lineNum">     106 </span>            : __gthrw(pthread_join)
+<span class="lineNum">     107 </span>            : __gthrw(pthread_equal)
+<span class="lineNum">     108 </span>            : __gthrw(pthread_self)
+<span class="lineNum">     109 </span>            : __gthrw(pthread_detach)
+<span class="lineNum">     110 </span>            : #ifndef __BIONIC__
+<span class="lineNum">     111 </span>            : __gthrw(pthread_cancel)
+<span class="lineNum">     112 </span>            : #endif
+<span class="lineNum">     113 </span>            : __gthrw(sched_yield)
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : __gthrw(pthread_mutex_lock)
+<span class="lineNum">     116 </span>            : __gthrw(pthread_mutex_trylock)
+<span class="lineNum">     117 </span>            : #if _GTHREAD_USE_MUTEX_TIMEDLOCK
+<span class="lineNum">     118 </span>            : __gthrw(pthread_mutex_timedlock)
+<span class="lineNum">     119 </span>            : #endif
+<span class="lineNum">     120 </span>            : __gthrw(pthread_mutex_unlock)
+<span class="lineNum">     121 </span>            : __gthrw(pthread_mutex_init)
+<span class="lineNum">     122 </span>            : __gthrw(pthread_mutex_destroy)
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : __gthrw(pthread_cond_init)
+<span class="lineNum">     125 </span>            : __gthrw(pthread_cond_broadcast)
+<span class="lineNum">     126 </span>            : __gthrw(pthread_cond_signal)
+<span class="lineNum">     127 </span>            : __gthrw(pthread_cond_wait)
+<span class="lineNum">     128 </span>            : __gthrw(pthread_cond_timedwait)
+<span class="lineNum">     129 </span>            : __gthrw(pthread_cond_destroy)
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            : __gthrw(pthread_key_create)
+<span class="lineNum">     132 </span>            : __gthrw(pthread_key_delete)
+<span class="lineNum">     133 </span>            : __gthrw(pthread_mutexattr_init)
+<span class="lineNum">     134 </span>            : __gthrw(pthread_mutexattr_settype)
+<span class="lineNum">     135 </span>            : __gthrw(pthread_mutexattr_destroy)
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            : #if defined(_LIBOBJC) || defined(_LIBOBJC_WEAK)
+<span class="lineNum">     139 </span>            : /* Objective-C.  */
+<span class="lineNum">     140 </span>            : __gthrw(pthread_exit)
+<span class="lineNum">     141 </span>            : #ifdef _POSIX_PRIORITY_SCHEDULING
+<span class="lineNum">     142 </span>            : #ifdef _POSIX_THREAD_PRIORITY_SCHEDULING
+<span class="lineNum">     143 </span>            : __gthrw(sched_get_priority_max)
+<span class="lineNum">     144 </span>            : __gthrw(sched_get_priority_min)
+<span class="lineNum">     145 </span>            : #endif /* _POSIX_THREAD_PRIORITY_SCHEDULING */
+<span class="lineNum">     146 </span>            : #endif /* _POSIX_PRIORITY_SCHEDULING */
+<span class="lineNum">     147 </span>            : __gthrw(pthread_attr_destroy)
+<span class="lineNum">     148 </span>            : __gthrw(pthread_attr_init)
+<span class="lineNum">     149 </span>            : __gthrw(pthread_attr_setdetachstate)
+<span class="lineNum">     150 </span>            : #ifdef _POSIX_THREAD_PRIORITY_SCHEDULING
+<span class="lineNum">     151 </span>            : __gthrw(pthread_getschedparam)
+<span class="lineNum">     152 </span>            : __gthrw(pthread_setschedparam)
+<span class="lineNum">     153 </span>            : #endif /* _POSIX_THREAD_PRIORITY_SCHEDULING */
+<span class="lineNum">     154 </span>            : #endif /* _LIBOBJC || _LIBOBJC_WEAK */
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            : #if __GXX_WEAK__ &amp;&amp; _GLIBCXX_GTHREAD_USE_WEAK
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            : /* On Solaris 2.6 up to 9, the libc exposes a POSIX threads interface even if
+<span class="lineNum">     159 </span>            :    -pthreads is not specified.  The functions are dummies and most return an
+<span class="lineNum">     160 </span>            :    error value.  However pthread_once returns 0 without invoking the routine
+<span class="lineNum">     161 </span>            :    it is passed so we cannot pretend that the interface is active if -pthreads
+<span class="lineNum">     162 </span>            :    is not specified.  On Solaris 2.5.1, the interface is not exposed at all so
+<span class="lineNum">     163 </span>            :    we need to play the usual game with weak symbols.  On Solaris 10 and up, a
+<span class="lineNum">     164 </span>            :    working interface is always exposed.  On FreeBSD 6 and later, libc also
+<span class="lineNum">     165 </span>            :    exposes a dummy POSIX threads interface, similar to what Solaris 2.6 up
+<span class="lineNum">     166 </span>            :    to 9 does.  FreeBSD &gt;= 700014 even provides a pthread_cancel stub in libc,
+<span class="lineNum">     167 </span>            :    which means the alternate __gthread_active_p below cannot be used there.  */
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            : #if defined(__FreeBSD__) || (defined(__sun) &amp;&amp; defined(__svr4__))
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            : static volatile int __gthread_active = -1;
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            : static void
+<span class="lineNum">     174 </span>            : __gthread_trigger (void)
+<span class="lineNum">     175 </span>            : {
+<span class="lineNum">     176 </span>            :   __gthread_active = 1;
+<span class="lineNum">     177 </span>            : }
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            : static inline int
+<span class="lineNum">     180 </span>            : __gthread_active_p (void)
+<span class="lineNum">     181 </span>            : {
+<span class="lineNum">     182 </span>            :   static pthread_mutex_t __gthread_active_mutex = PTHREAD_MUTEX_INITIALIZER;
+<span class="lineNum">     183 </span>            :   static pthread_once_t __gthread_active_once = PTHREAD_ONCE_INIT;
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :   /* Avoid reading __gthread_active twice on the main code path.  */
+<span class="lineNum">     186 </span>            :   int __gthread_active_latest_value = __gthread_active;
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :   /* This test is not protected to avoid taking a lock on the main code
+<span class="lineNum">     189 </span>            :      path so every update of __gthread_active in a threaded program must
+<span class="lineNum">     190 </span>            :      be atomic with regard to the result of the test.  */
+<span class="lineNum">     191 </span>            :   if (__builtin_expect (__gthread_active_latest_value &lt; 0, 0))
+<span class="lineNum">     192 </span>            :     {
+<span class="lineNum">     193 </span>            :       if (__gthrw_(pthread_once))
+<span class="lineNum">     194 </span>            :         {
+<span class="lineNum">     195 </span>            :           /* If this really is a threaded program, then we must ensure that
+<span class="lineNum">     196 </span>            :              __gthread_active has been set to 1 before exiting this block.  */
+<span class="lineNum">     197 </span>            :           __gthrw_(pthread_mutex_lock) (&amp;__gthread_active_mutex);
+<span class="lineNum">     198 </span>            :           __gthrw_(pthread_once) (&amp;__gthread_active_once, __gthread_trigger);
+<span class="lineNum">     199 </span>            :           __gthrw_(pthread_mutex_unlock) (&amp;__gthread_active_mutex);
+<span class="lineNum">     200 </span>            :         }
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            :       /* Make sure we'll never enter this block again.  */
+<span class="lineNum">     203 </span>            :       if (__gthread_active &lt; 0)
+<span class="lineNum">     204 </span>            :         __gthread_active = 0;
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            :       __gthread_active_latest_value = __gthread_active;
+<span class="lineNum">     207 </span>            :     }
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            :   return __gthread_active_latest_value != 0;
+<span class="lineNum">     210 </span>            : }
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            : #else /* neither FreeBSD nor Solaris */
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : /* For a program to be multi-threaded the only thing that it certainly must
+<span class="lineNum">     215 </span>            :    be using is pthread_create.  However, there may be other libraries that
+<span class="lineNum">     216 </span>            :    intercept pthread_create with their own definitions to wrap pthreads
+<span class="lineNum">     217 </span>            :    functionality for some purpose.  In those cases, pthread_create being
+<span class="lineNum">     218 </span>            :    defined might not necessarily mean that libpthread is actually linked
+<span class="lineNum">     219 </span>            :    in.
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            :    For the GNU C library, we can use a known internal name.  This is always
+<span class="lineNum">     222 </span>            :    available in the ABI, but no other library would define it.  That is
+<span class="lineNum">     223 </span>            :    ideal, since any public pthread function might be intercepted just as
+<span class="lineNum">     224 </span>            :    pthread_create might be.  __pthread_key_create is an &quot;internal&quot;
+<span class="lineNum">     225 </span>            :    implementation symbol, but it is part of the public exported ABI.  Also,
+<span class="lineNum">     226 </span>            :    it's among the symbols that the static libpthread.a always links in
+<span class="lineNum">     227 </span>            :    whenever pthread_create is used, so there is no danger of a false
+<span class="lineNum">     228 </span>            :    negative result in any statically-linked, multi-threaded program.
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            :    For others, we choose pthread_cancel as a function that seems unlikely
+<span class="lineNum">     231 </span>            :    to be redefined by an interceptor library.  The bionic (Android) C
+<span class="lineNum">     232 </span>            :    library does not provide pthread_cancel, so we do use pthread_create
+<span class="lineNum">     233 </span>            :    there (and interceptor libraries lose).  */
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            : #ifdef __GLIBC__
+<span class="lineNum">     236 </span>            : __gthrw2(__gthrw_(__pthread_key_create),
+<span class="lineNum">     237 </span>            :          __pthread_key_create,
+<span class="lineNum">     238 </span>            :          pthread_key_create)
+<span class="lineNum">     239 </span>            : # define GTHR_ACTIVE_PROXY      __gthrw_(__pthread_key_create)
+<span class="lineNum">     240 </span>            : #elif defined (__BIONIC__)
+<span class="lineNum">     241 </span>            : # define GTHR_ACTIVE_PROXY      __gthrw_(pthread_create)
+<span class="lineNum">     242 </span>            : #else
+<span class="lineNum">     243 </span>            : # define GTHR_ACTIVE_PROXY      __gthrw_(pthread_cancel)
+<span class="lineNum">     244 </span>            : #endif
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            : static inline int
+<span class="lineNum">     247 </span>            : __gthread_active_p (void)
+<span class="lineNum">     248 </span>            : {
+<span class="lineNum">     249 </span>            :   static void *const __gthread_active_ptr
+<span class="lineNum">     250 </span>            :     = __extension__ (void *) &amp;GTHR_ACTIVE_PROXY;
+<span class="lineNum">     251 </span>            :   return __gthread_active_ptr != 0;
+<span class="lineNum">     252 </span>            : }
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            : #endif /* FreeBSD or Solaris */
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            : #else /* not __GXX_WEAK__ */
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            : /* Similar to Solaris, HP-UX 11 for PA-RISC provides stubs for pthread
+<span class="lineNum">     259 </span>            :    calls in shared flavors of the HP-UX C library.  Most of the stubs
+<span class="lineNum">     260 </span>            :    have no functionality.  The details are described in the &quot;libc cumulative
+<span class="lineNum">     261 </span>            :    patch&quot; for each subversion of HP-UX 11.  There are two special interfaces
+<span class="lineNum">     262 </span>            :    provided for checking whether an application is linked to a shared pthread
+<span class="lineNum">     263 </span>            :    library or not.  However, these interfaces aren't available in early
+<span class="lineNum">     264 </span>            :    libpthread libraries.  We also need a test that works for archive
+<span class="lineNum">     265 </span>            :    libraries.  We can't use pthread_once as some libc versions call the
+<span class="lineNum">     266 </span>            :    init function.  We also can't use pthread_create or pthread_attr_init
+<span class="lineNum">     267 </span>            :    as these create a thread and thereby prevent changing the default stack
+<span class="lineNum">     268 </span>            :    size.  The function pthread_default_stacksize_np is available in both
+<span class="lineNum">     269 </span>            :    the archive and shared versions of libpthread.   It can be used to
+<span class="lineNum">     270 </span>            :    determine the default pthread stack size.  There is a stub in some
+<span class="lineNum">     271 </span>            :    shared libc versions which returns a zero size if pthreads are not
+<span class="lineNum">     272 </span>            :    active.  We provide an equivalent stub to handle cases where libc
+<span class="lineNum">     273 </span>            :    doesn't provide one.  */
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            : #if defined(__hppa__) &amp;&amp; defined(__hpux__)
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            : static volatile int __gthread_active = -1;
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            : static inline int
+<span class="lineNum">     280 </span>            : __gthread_active_p (void)
+<span class="lineNum">     281 </span>            : {
+<span class="lineNum">     282 </span>            :   /* Avoid reading __gthread_active twice on the main code path.  */
+<span class="lineNum">     283 </span>            :   int __gthread_active_latest_value = __gthread_active;
+<span class="lineNum">     284 </span>            :   size_t __s;
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            :   if (__builtin_expect (__gthread_active_latest_value &lt; 0, 0))
+<span class="lineNum">     287 </span>            :     {
+<span class="lineNum">     288 </span>            :       pthread_default_stacksize_np (0, &amp;__s);
+<span class="lineNum">     289 </span>            :       __gthread_active = __s ? 1 : 0;
+<span class="lineNum">     290 </span>            :       __gthread_active_latest_value = __gthread_active;
+<span class="lineNum">     291 </span>            :     }
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            :   return __gthread_active_latest_value != 0;
+<span class="lineNum">     294 </span>            : }
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            : #else /* not hppa-hpux */
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            : static inline int
+<span class="lineNum">     299 </span>            : __gthread_active_p (void)
+<span class="lineNum">     300 </span>            : {
+<span class="lineNum">     301 </span>            :   return 1;
+<span class="lineNum">     302 </span>            : }
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span>            : #endif /* hppa-hpux */
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span>            : #endif /* __GXX_WEAK__ */
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            : #ifdef _LIBOBJC
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            : /* This is the config.h file in libobjc/ */
+<span class="lineNum">     311 </span>            : #include &lt;config.h&gt;
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            : #ifdef HAVE_SCHED_H
+<span class="lineNum">     314 </span>            : # include &lt;sched.h&gt;
+<span class="lineNum">     315 </span>            : #endif
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            : /* Key structure for maintaining thread specific storage */
+<span class="lineNum">     318 </span>            : static pthread_key_t _objc_thread_storage;
+<span class="lineNum">     319 </span>            : static pthread_attr_t _objc_thread_attribs;
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span>            : /* Thread local storage for a single thread */
+<span class="lineNum">     322 </span>            : static void *thread_local_storage = NULL;
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span>            : /* Backend initialization functions */
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span>            : /* Initialize the threads subsystem.  */
+<span class="lineNum">     327 </span>            : static inline int
+<span class="lineNum">     328 </span>            : __gthread_objc_init_thread_system (void)
+<span class="lineNum">     329 </span>            : {
+<span class="lineNum">     330 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     331 </span>            :     {
+<span class="lineNum">     332 </span>            :       /* Initialize the thread storage key.  */
+<span class="lineNum">     333 </span>            :       if (__gthrw_(pthread_key_create) (&amp;_objc_thread_storage, NULL) == 0)
+<span class="lineNum">     334 </span>            :         {
+<span class="lineNum">     335 </span>            :           /* The normal default detach state for threads is
+<span class="lineNum">     336 </span>            :            * PTHREAD_CREATE_JOINABLE which causes threads to not die
+<span class="lineNum">     337 </span>            :            * when you think they should.  */
+<span class="lineNum">     338 </span>            :           if (__gthrw_(pthread_attr_init) (&amp;_objc_thread_attribs) == 0
+<span class="lineNum">     339 </span>            :               &amp;&amp; __gthrw_(pthread_attr_setdetachstate) (&amp;_objc_thread_attribs,
+<span class="lineNum">     340 </span>            :                                               PTHREAD_CREATE_DETACHED) == 0)
+<span class="lineNum">     341 </span>            :             return 0;
+<span class="lineNum">     342 </span>            :         }
+<span class="lineNum">     343 </span>            :     }
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span>            :   return -1;
+<span class="lineNum">     346 </span>            : }
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            : /* Close the threads subsystem.  */
+<span class="lineNum">     349 </span>            : static inline int
+<span class="lineNum">     350 </span>            : __gthread_objc_close_thread_system (void)
+<span class="lineNum">     351 </span>            : {
+<span class="lineNum">     352 </span>            :   if (__gthread_active_p ()
+<span class="lineNum">     353 </span>            :       &amp;&amp; __gthrw_(pthread_key_delete) (_objc_thread_storage) == 0
+<span class="lineNum">     354 </span>            :       &amp;&amp; __gthrw_(pthread_attr_destroy) (&amp;_objc_thread_attribs) == 0)
+<span class="lineNum">     355 </span>            :     return 0;
+<span class="lineNum">     356 </span>            : 
+<span class="lineNum">     357 </span>            :   return -1;
+<span class="lineNum">     358 </span>            : }
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span>            : /* Backend thread functions */
+<span class="lineNum">     361 </span>            : 
+<span class="lineNum">     362 </span>            : /* Create a new thread of execution.  */
+<span class="lineNum">     363 </span>            : static inline objc_thread_t
+<span class="lineNum">     364 </span>            : __gthread_objc_thread_detach (void (*func)(void *), void *arg)
+<span class="lineNum">     365 </span>            : {
+<span class="lineNum">     366 </span>            :   objc_thread_t thread_id;
+<span class="lineNum">     367 </span>            :   pthread_t new_thread_handle;
+<span class="lineNum">     368 </span>            : 
+<span class="lineNum">     369 </span>            :   if (!__gthread_active_p ())
+<span class="lineNum">     370 </span>            :     return NULL;
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span>            :   if (!(__gthrw_(pthread_create) (&amp;new_thread_handle, &amp;_objc_thread_attribs,
+<span class="lineNum">     373 </span>            :                                   (void *) func, arg)))
+<span class="lineNum">     374 </span>            :     thread_id = (objc_thread_t) new_thread_handle;
+<span class="lineNum">     375 </span>            :   else
+<span class="lineNum">     376 </span>            :     thread_id = NULL;
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span>            :   return thread_id;
+<span class="lineNum">     379 </span>            : }
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span>            : /* Set the current thread's priority.  */
+<span class="lineNum">     382 </span>            : static inline int
+<span class="lineNum">     383 </span>            : __gthread_objc_thread_set_priority (int priority)
+<span class="lineNum">     384 </span>            : {
+<span class="lineNum">     385 </span>            :   if (!__gthread_active_p ())
+<span class="lineNum">     386 </span>            :     return -1;
+<span class="lineNum">     387 </span>            :   else
+<span class="lineNum">     388 </span>            :     {
+<span class="lineNum">     389 </span>            : #ifdef _POSIX_PRIORITY_SCHEDULING
+<span class="lineNum">     390 </span>            : #ifdef _POSIX_THREAD_PRIORITY_SCHEDULING
+<span class="lineNum">     391 </span>            :       pthread_t thread_id = __gthrw_(pthread_self) ();
+<span class="lineNum">     392 </span>            :       int policy;
+<span class="lineNum">     393 </span>            :       struct sched_param params;
+<span class="lineNum">     394 </span>            :       int priority_min, priority_max;
+<span class="lineNum">     395 </span>            : 
+<span class="lineNum">     396 </span>            :       if (__gthrw_(pthread_getschedparam) (thread_id, &amp;policy, &amp;params) == 0)
+<span class="lineNum">     397 </span>            :         {
+<span class="lineNum">     398 </span>            :           if ((priority_max = __gthrw_(sched_get_priority_max) (policy)) == -1)
+<span class="lineNum">     399 </span>            :             return -1;
+<span class="lineNum">     400 </span>            : 
+<span class="lineNum">     401 </span>            :           if ((priority_min = __gthrw_(sched_get_priority_min) (policy)) == -1)
+<span class="lineNum">     402 </span>            :             return -1;
+<span class="lineNum">     403 </span>            : 
+<span class="lineNum">     404 </span>            :           if (priority &gt; priority_max)
+<span class="lineNum">     405 </span>            :             priority = priority_max;
+<span class="lineNum">     406 </span>            :           else if (priority &lt; priority_min)
+<span class="lineNum">     407 </span>            :             priority = priority_min;
+<span class="lineNum">     408 </span>            :           params.sched_priority = priority;
+<span class="lineNum">     409 </span>            : 
+<span class="lineNum">     410 </span>            :           /*
+<span class="lineNum">     411 </span>            :            * The solaris 7 and several other man pages incorrectly state that
+<span class="lineNum">     412 </span>            :            * this should be a pointer to policy but pthread.h is universally
+<span class="lineNum">     413 </span>            :            * at odds with this.
+<span class="lineNum">     414 </span>            :            */
+<span class="lineNum">     415 </span>            :           if (__gthrw_(pthread_setschedparam) (thread_id, policy, &amp;params) == 0)
+<span class="lineNum">     416 </span>            :             return 0;
+<span class="lineNum">     417 </span>            :         }
+<span class="lineNum">     418 </span>            : #endif /* _POSIX_THREAD_PRIORITY_SCHEDULING */
+<span class="lineNum">     419 </span>            : #endif /* _POSIX_PRIORITY_SCHEDULING */
+<span class="lineNum">     420 </span>            :       return -1;
+<span class="lineNum">     421 </span>            :     }
+<span class="lineNum">     422 </span>            : }
+<span class="lineNum">     423 </span>            : 
+<span class="lineNum">     424 </span>            : /* Return the current thread's priority.  */
+<span class="lineNum">     425 </span>            : static inline int
+<span class="lineNum">     426 </span>            : __gthread_objc_thread_get_priority (void)
+<span class="lineNum">     427 </span>            : {
+<span class="lineNum">     428 </span>            : #ifdef _POSIX_PRIORITY_SCHEDULING
+<span class="lineNum">     429 </span>            : #ifdef _POSIX_THREAD_PRIORITY_SCHEDULING
+<span class="lineNum">     430 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     431 </span>            :     {
+<span class="lineNum">     432 </span>            :       int policy;
+<span class="lineNum">     433 </span>            :       struct sched_param params;
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span>            :       if (__gthrw_(pthread_getschedparam) (__gthrw_(pthread_self) (), &amp;policy, &amp;params) == 0)
+<span class="lineNum">     436 </span>            :         return params.sched_priority;
+<span class="lineNum">     437 </span>            :       else
+<span class="lineNum">     438 </span>            :         return -1;
+<span class="lineNum">     439 </span>            :     }
+<span class="lineNum">     440 </span>            :   else
+<span class="lineNum">     441 </span>            : #endif /* _POSIX_THREAD_PRIORITY_SCHEDULING */
+<span class="lineNum">     442 </span>            : #endif /* _POSIX_PRIORITY_SCHEDULING */
+<span class="lineNum">     443 </span>            :     return OBJC_THREAD_INTERACTIVE_PRIORITY;
+<span class="lineNum">     444 </span>            : }
+<span class="lineNum">     445 </span>            : 
+<span class="lineNum">     446 </span>            : /* Yield our process time to another thread.  */
+<span class="lineNum">     447 </span>            : static inline void
+<span class="lineNum">     448 </span>            : __gthread_objc_thread_yield (void)
+<span class="lineNum">     449 </span>            : {
+<span class="lineNum">     450 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     451 </span>            :     __gthrw_(sched_yield) ();
+<span class="lineNum">     452 </span>            : }
+<span class="lineNum">     453 </span>            : 
+<span class="lineNum">     454 </span>            : /* Terminate the current thread.  */
+<span class="lineNum">     455 </span>            : static inline int
+<span class="lineNum">     456 </span>            : __gthread_objc_thread_exit (void)
+<span class="lineNum">     457 </span>            : {
+<span class="lineNum">     458 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     459 </span>            :     /* exit the thread */
+<span class="lineNum">     460 </span>            :     __gthrw_(pthread_exit) (&amp;__objc_thread_exit_status);
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span>            :   /* Failed if we reached here */
+<span class="lineNum">     463 </span>            :   return -1;
+<span class="lineNum">     464 </span>            : }
+<span class="lineNum">     465 </span>            : 
+<span class="lineNum">     466 </span>            : /* Returns an integer value which uniquely describes a thread.  */
+<span class="lineNum">     467 </span>            : static inline objc_thread_t
+<span class="lineNum">     468 </span>            : __gthread_objc_thread_id (void)
+<span class="lineNum">     469 </span>            : {
+<span class="lineNum">     470 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     471 </span>            :     return (objc_thread_t) __gthrw_(pthread_self) ();
+<span class="lineNum">     472 </span>            :   else
+<span class="lineNum">     473 </span>            :     return (objc_thread_t) 1;
+<span class="lineNum">     474 </span>            : }
+<span class="lineNum">     475 </span>            : 
+<span class="lineNum">     476 </span>            : /* Sets the thread's local storage pointer.  */
+<span class="lineNum">     477 </span>            : static inline int
+<span class="lineNum">     478 </span>            : __gthread_objc_thread_set_data (void *value)
+<span class="lineNum">     479 </span>            : {
+<span class="lineNum">     480 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     481 </span>            :     return __gthrw_(pthread_setspecific) (_objc_thread_storage, value);
+<span class="lineNum">     482 </span>            :   else
+<span class="lineNum">     483 </span>            :     {
+<span class="lineNum">     484 </span>            :       thread_local_storage = value;
+<span class="lineNum">     485 </span>            :       return 0;
+<span class="lineNum">     486 </span>            :     }
+<span class="lineNum">     487 </span>            : }
+<span class="lineNum">     488 </span>            : 
+<span class="lineNum">     489 </span>            : /* Returns the thread's local storage pointer.  */
+<span class="lineNum">     490 </span>            : static inline void *
+<span class="lineNum">     491 </span>            : __gthread_objc_thread_get_data (void)
+<span class="lineNum">     492 </span>            : {
+<span class="lineNum">     493 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     494 </span>            :     return __gthrw_(pthread_getspecific) (_objc_thread_storage);
+<span class="lineNum">     495 </span>            :   else
+<span class="lineNum">     496 </span>            :     return thread_local_storage;
+<span class="lineNum">     497 </span>            : }
+<span class="lineNum">     498 </span>            : 
+<span class="lineNum">     499 </span>            : /* Backend mutex functions */
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span>            : /* Allocate a mutex.  */
+<span class="lineNum">     502 </span>            : static inline int
+<span class="lineNum">     503 </span>            : __gthread_objc_mutex_allocate (objc_mutex_t mutex)
+<span class="lineNum">     504 </span>            : {
+<span class="lineNum">     505 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     506 </span>            :     {
+<span class="lineNum">     507 </span>            :       mutex-&gt;backend = objc_malloc (sizeof (pthread_mutex_t));
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            :       if (__gthrw_(pthread_mutex_init) ((pthread_mutex_t *) mutex-&gt;backend, NULL))
+<span class="lineNum">     510 </span>            :         {
+<span class="lineNum">     511 </span>            :           objc_free (mutex-&gt;backend);
+<span class="lineNum">     512 </span>            :           mutex-&gt;backend = NULL;
+<span class="lineNum">     513 </span>            :           return -1;
+<span class="lineNum">     514 </span>            :         }
+<span class="lineNum">     515 </span>            :     }
+<span class="lineNum">     516 </span>            : 
+<span class="lineNum">     517 </span>            :   return 0;
+<span class="lineNum">     518 </span>            : }
+<span class="lineNum">     519 </span>            : 
+<span class="lineNum">     520 </span>            : /* Deallocate a mutex.  */
+<span class="lineNum">     521 </span>            : static inline int
+<span class="lineNum">     522 </span>            : __gthread_objc_mutex_deallocate (objc_mutex_t mutex)
+<span class="lineNum">     523 </span>            : {
+<span class="lineNum">     524 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     525 </span>            :     {
+<span class="lineNum">     526 </span>            :       int count;
+<span class="lineNum">     527 </span>            : 
+<span class="lineNum">     528 </span>            :       /*
+<span class="lineNum">     529 </span>            :        * Posix Threads specifically require that the thread be unlocked
+<span class="lineNum">     530 </span>            :        * for __gthrw_(pthread_mutex_destroy) to work.
+<span class="lineNum">     531 </span>            :        */
+<span class="lineNum">     532 </span>            : 
+<span class="lineNum">     533 </span>            :       do
+<span class="lineNum">     534 </span>            :         {
+<span class="lineNum">     535 </span>            :           count = __gthrw_(pthread_mutex_unlock) ((pthread_mutex_t *) mutex-&gt;backend);
+<span class="lineNum">     536 </span>            :           if (count &lt; 0)
+<span class="lineNum">     537 </span>            :             return -1;
+<span class="lineNum">     538 </span>            :         }
+<span class="lineNum">     539 </span>            :       while (count);
+<span class="lineNum">     540 </span>            : 
+<span class="lineNum">     541 </span>            :       if (__gthrw_(pthread_mutex_destroy) ((pthread_mutex_t *) mutex-&gt;backend))
+<span class="lineNum">     542 </span>            :         return -1;
+<span class="lineNum">     543 </span>            : 
+<span class="lineNum">     544 </span>            :       objc_free (mutex-&gt;backend);
+<span class="lineNum">     545 </span>            :       mutex-&gt;backend = NULL;
+<span class="lineNum">     546 </span>            :     }
+<span class="lineNum">     547 </span>            :   return 0;
+<span class="lineNum">     548 </span>            : }
+<span class="lineNum">     549 </span>            : 
+<span class="lineNum">     550 </span>            : /* Grab a lock on a mutex.  */
+<span class="lineNum">     551 </span>            : static inline int
+<span class="lineNum">     552 </span>            : __gthread_objc_mutex_lock (objc_mutex_t mutex)
+<span class="lineNum">     553 </span>            : {
+<span class="lineNum">     554 </span>            :   if (__gthread_active_p ()
+<span class="lineNum">     555 </span>            :       &amp;&amp; __gthrw_(pthread_mutex_lock) ((pthread_mutex_t *) mutex-&gt;backend) != 0)
+<span class="lineNum">     556 </span>            :     {
+<span class="lineNum">     557 </span>            :       return -1;
+<span class="lineNum">     558 </span>            :     }
+<span class="lineNum">     559 </span>            : 
+<span class="lineNum">     560 </span>            :   return 0;
+<span class="lineNum">     561 </span>            : }
+<span class="lineNum">     562 </span>            : 
+<span class="lineNum">     563 </span>            : /* Try to grab a lock on a mutex.  */
+<span class="lineNum">     564 </span>            : static inline int
+<span class="lineNum">     565 </span>            : __gthread_objc_mutex_trylock (objc_mutex_t mutex)
+<span class="lineNum">     566 </span>            : {
+<span class="lineNum">     567 </span>            :   if (__gthread_active_p ()
+<span class="lineNum">     568 </span>            :       &amp;&amp; __gthrw_(pthread_mutex_trylock) ((pthread_mutex_t *) mutex-&gt;backend) != 0)
+<span class="lineNum">     569 </span>            :     {
+<span class="lineNum">     570 </span>            :       return -1;
+<span class="lineNum">     571 </span>            :     }
+<span class="lineNum">     572 </span>            : 
+<span class="lineNum">     573 </span>            :   return 0;
+<span class="lineNum">     574 </span>            : }
+<span class="lineNum">     575 </span>            : 
+<span class="lineNum">     576 </span>            : /* Unlock the mutex */
+<span class="lineNum">     577 </span>            : static inline int
+<span class="lineNum">     578 </span>            : __gthread_objc_mutex_unlock (objc_mutex_t mutex)
+<span class="lineNum">     579 </span>            : {
+<span class="lineNum">     580 </span>            :   if (__gthread_active_p ()
+<span class="lineNum">     581 </span>            :       &amp;&amp; __gthrw_(pthread_mutex_unlock) ((pthread_mutex_t *) mutex-&gt;backend) != 0)
+<span class="lineNum">     582 </span>            :     {
+<span class="lineNum">     583 </span>            :       return -1;
+<span class="lineNum">     584 </span>            :     }
+<span class="lineNum">     585 </span>            : 
+<span class="lineNum">     586 </span>            :   return 0;
+<span class="lineNum">     587 </span>            : }
+<span class="lineNum">     588 </span>            : 
+<span class="lineNum">     589 </span>            : /* Backend condition mutex functions */
+<span class="lineNum">     590 </span>            : 
+<span class="lineNum">     591 </span>            : /* Allocate a condition.  */
+<span class="lineNum">     592 </span>            : static inline int
+<span class="lineNum">     593 </span>            : __gthread_objc_condition_allocate (objc_condition_t condition)
+<span class="lineNum">     594 </span>            : {
+<span class="lineNum">     595 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     596 </span>            :     {
+<span class="lineNum">     597 </span>            :       condition-&gt;backend = objc_malloc (sizeof (pthread_cond_t));
+<span class="lineNum">     598 </span>            : 
+<span class="lineNum">     599 </span>            :       if (__gthrw_(pthread_cond_init) ((pthread_cond_t *) condition-&gt;backend, NULL))
+<span class="lineNum">     600 </span>            :         {
+<span class="lineNum">     601 </span>            :           objc_free (condition-&gt;backend);
+<span class="lineNum">     602 </span>            :           condition-&gt;backend = NULL;
+<span class="lineNum">     603 </span>            :           return -1;
+<span class="lineNum">     604 </span>            :         }
+<span class="lineNum">     605 </span>            :     }
+<span class="lineNum">     606 </span>            : 
+<span class="lineNum">     607 </span>            :   return 0;
+<span class="lineNum">     608 </span>            : }
+<span class="lineNum">     609 </span>            : 
+<span class="lineNum">     610 </span>            : /* Deallocate a condition.  */
+<span class="lineNum">     611 </span>            : static inline int
+<span class="lineNum">     612 </span>            : __gthread_objc_condition_deallocate (objc_condition_t condition)
+<span class="lineNum">     613 </span>            : {
+<span class="lineNum">     614 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     615 </span>            :     {
+<span class="lineNum">     616 </span>            :       if (__gthrw_(pthread_cond_destroy) ((pthread_cond_t *) condition-&gt;backend))
+<span class="lineNum">     617 </span>            :         return -1;
+<span class="lineNum">     618 </span>            : 
+<span class="lineNum">     619 </span>            :       objc_free (condition-&gt;backend);
+<span class="lineNum">     620 </span>            :       condition-&gt;backend = NULL;
+<span class="lineNum">     621 </span>            :     }
+<span class="lineNum">     622 </span>            :   return 0;
+<span class="lineNum">     623 </span>            : }
+<span class="lineNum">     624 </span>            : 
+<span class="lineNum">     625 </span>            : /* Wait on the condition */
+<span class="lineNum">     626 </span>            : static inline int
+<span class="lineNum">     627 </span>            : __gthread_objc_condition_wait (objc_condition_t condition, objc_mutex_t mutex)
+<span class="lineNum">     628 </span>            : {
+<span class="lineNum">     629 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     630 </span>            :     return __gthrw_(pthread_cond_wait) ((pthread_cond_t *) condition-&gt;backend,
+<span class="lineNum">     631 </span>            :                               (pthread_mutex_t *) mutex-&gt;backend);
+<span class="lineNum">     632 </span>            :   else
+<span class="lineNum">     633 </span>            :     return 0;
+<span class="lineNum">     634 </span>            : }
+<span class="lineNum">     635 </span>            : 
+<span class="lineNum">     636 </span>            : /* Wake up all threads waiting on this condition.  */
+<span class="lineNum">     637 </span>            : static inline int
+<span class="lineNum">     638 </span>            : __gthread_objc_condition_broadcast (objc_condition_t condition)
+<span class="lineNum">     639 </span>            : {
+<span class="lineNum">     640 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     641 </span>            :     return __gthrw_(pthread_cond_broadcast) ((pthread_cond_t *) condition-&gt;backend);
+<span class="lineNum">     642 </span>            :   else
+<span class="lineNum">     643 </span>            :     return 0;
+<span class="lineNum">     644 </span>            : }
+<span class="lineNum">     645 </span>            : 
+<span class="lineNum">     646 </span>            : /* Wake up one thread waiting on this condition.  */
+<span class="lineNum">     647 </span>            : static inline int
+<span class="lineNum">     648 </span>            : __gthread_objc_condition_signal (objc_condition_t condition)
+<span class="lineNum">     649 </span>            : {
+<span class="lineNum">     650 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     651 </span>            :     return __gthrw_(pthread_cond_signal) ((pthread_cond_t *) condition-&gt;backend);
+<span class="lineNum">     652 </span>            :   else
+<span class="lineNum">     653 </span>            :     return 0;
+<span class="lineNum">     654 </span>            : }
+<span class="lineNum">     655 </span>            : 
+<span class="lineNum">     656 </span>            : #else /* _LIBOBJC */
+<span class="lineNum">     657 </span>            : 
+<span class="lineNum">     658 </span>            : static inline int
+<span class="lineNum">     659 </span>            : __gthread_create (__gthread_t *__threadid, void *(*__func) (void*),
+<span class="lineNum">     660 </span>            :                   void *__args)
+<span class="lineNum">     661 </span>            : {
+<span class="lineNum">     662 </span>            :   return __gthrw_(pthread_create) (__threadid, NULL, __func, __args);
+<span class="lineNum">     663 </span>            : }
+<span class="lineNum">     664 </span>            : 
+<span class="lineNum">     665 </span>            : static inline int
+<span class="lineNum">     666 </span>            : __gthread_join (__gthread_t __threadid, void **__value_ptr)
+<span class="lineNum">     667 </span>            : {
+<span class="lineNum">     668 </span>            :   return __gthrw_(pthread_join) (__threadid, __value_ptr);
+<span class="lineNum">     669 </span>            : }
+<span class="lineNum">     670 </span>            : 
+<span class="lineNum">     671 </span>            : static inline int
+<span class="lineNum">     672 </span>            : __gthread_detach (__gthread_t __threadid)
+<span class="lineNum">     673 </span>            : {
+<span class="lineNum">     674 </span>            :   return __gthrw_(pthread_detach) (__threadid);
+<span class="lineNum">     675 </span>            : }
+<span class="lineNum">     676 </span>            : 
+<span class="lineNum">     677 </span>            : static inline int
+<span class="lineNum">     678 </span>            : __gthread_equal (__gthread_t __t1, __gthread_t __t2)
+<span class="lineNum">     679 </span>            : {
+<span class="lineNum">     680 </span><span class="lineCov">     392569 :   return __gthrw_(pthread_equal) (__t1, __t2);</span>
+<span class="lineNum">     681 </span>            : }
+<span class="lineNum">     682 </span>            : 
+<span class="lineNum">     683 </span>            : static inline __gthread_t
+<span class="lineNum">     684 </span>            : __gthread_self (void)
+<span class="lineNum">     685 </span>            : {
+<span class="lineNum">     686 </span><span class="lineCov">        137 :   return __gthrw_(pthread_self) ();</span>
+<span class="lineNum">     687 </span>            : }
+<span class="lineNum">     688 </span>            : 
+<span class="lineNum">     689 </span>            : static inline int
+<span class="lineNum">     690 </span>            : __gthread_yield (void)
+<span class="lineNum">     691 </span>            : {
+<span class="lineNum">     692 </span>            :   return __gthrw_(sched_yield) ();
+<span class="lineNum">     693 </span>            : }
+<span class="lineNum">     694 </span>            : 
+<span class="lineNum">     695 </span>            : static inline int
+<span class="lineNum">     696 </span>            : __gthread_once (__gthread_once_t *__once, void (*__func) (void))
+<span class="lineNum">     697 </span>            : {
+<span class="lineNum">     698 </span><span class="lineCov">      28618 :   if (__gthread_active_p ())</span>
+<span class="lineNum">     699 </span><span class="lineCov">      28618 :     return __gthrw_(pthread_once) (__once, __func);</span>
+<span class="lineNum">     700 </span>            :   else
+<span class="lineNum">     701 </span>            :     return -1;
+<span class="lineNum">     702 </span>            : }
+<span class="lineNum">     703 </span>            : 
+<span class="lineNum">     704 </span>            : static inline int
+<span class="lineNum">     705 </span>            : __gthread_key_create (__gthread_key_t *__key, void (*__dtor) (void *))
+<span class="lineNum">     706 </span>            : {
+<span class="lineNum">     707 </span>            :   return __gthrw_(pthread_key_create) (__key, __dtor);
+<span class="lineNum">     708 </span>            : }
+<span class="lineNum">     709 </span>            : 
+<span class="lineNum">     710 </span>            : static inline int
+<span class="lineNum">     711 </span>            : __gthread_key_delete (__gthread_key_t __key)
+<span class="lineNum">     712 </span>            : {
+<span class="lineNum">     713 </span>            :   return __gthrw_(pthread_key_delete) (__key);
+<span class="lineNum">     714 </span>            : }
+<span class="lineNum">     715 </span>            : 
+<span class="lineNum">     716 </span>            : static inline void *
+<span class="lineNum">     717 </span>            : __gthread_getspecific (__gthread_key_t __key)
+<span class="lineNum">     718 </span>            : {
+<span class="lineNum">     719 </span>            :   return __gthrw_(pthread_getspecific) (__key);
+<span class="lineNum">     720 </span>            : }
+<span class="lineNum">     721 </span>            : 
+<span class="lineNum">     722 </span>            : static inline int
+<span class="lineNum">     723 </span>            : __gthread_setspecific (__gthread_key_t __key, const void *__ptr)
+<span class="lineNum">     724 </span>            : {
+<span class="lineNum">     725 </span>            :   return __gthrw_(pthread_setspecific) (__key, __ptr);
+<span class="lineNum">     726 </span>            : }
+<span class="lineNum">     727 </span>            : 
+<span class="lineNum">     728 </span>            : static inline void
+<span class="lineNum">     729 </span>            : __gthread_mutex_init_function (__gthread_mutex_t *__mutex)
+<span class="lineNum">     730 </span>            : {
+<span class="lineNum">     731 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     732 </span>            :     __gthrw_(pthread_mutex_init) (__mutex, NULL);
+<span class="lineNum">     733 </span>            : }
+<span class="lineNum">     734 </span>            : 
+<span class="lineNum">     735 </span>            : static inline int
+<span class="lineNum">     736 </span>            : __gthread_mutex_destroy (__gthread_mutex_t *__mutex)
+<span class="lineNum">     737 </span>            : {
+<span class="lineNum">     738 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     739 </span>            :     return __gthrw_(pthread_mutex_destroy) (__mutex);
+<span class="lineNum">     740 </span>            :   else
+<span class="lineNum">     741 </span>            :     return 0;
+<span class="lineNum">     742 </span>            : }
+<span class="lineNum">     743 </span>            : 
+<span class="lineNum">     744 </span>            : static inline int
+<span class="lineNum">     745 </span>            : __gthread_mutex_lock (__gthread_mutex_t *__mutex)
+<span class="lineNum">     746 </span>            : {
+<span class="lineNum">     747 </span><span class="lineCov">    1119033 :   if (__gthread_active_p ())</span>
+<span class="lineNum">     748 </span><span class="lineCov">    1119070 :     return __gthrw_(pthread_mutex_lock) (__mutex);</span>
+<span class="lineNum">     749 </span>            :   else
+<span class="lineNum">     750 </span>            :     return 0;
+<span class="lineNum">     751 </span>            : }
+<span class="lineNum">     752 </span>            : 
+<span class="lineNum">     753 </span>            : static inline int
+<span class="lineNum">     754 </span>            : __gthread_mutex_trylock (__gthread_mutex_t *__mutex)
+<span class="lineNum">     755 </span>            : {
+<span class="lineNum">     756 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     757 </span>            :     return __gthrw_(pthread_mutex_trylock) (__mutex);
+<span class="lineNum">     758 </span>            :   else
+<span class="lineNum">     759 </span>            :     return 0;
+<span class="lineNum">     760 </span>            : }
+<span class="lineNum">     761 </span>            : 
+<span class="lineNum">     762 </span>            : #if _GTHREAD_USE_MUTEX_TIMEDLOCK
+<span class="lineNum">     763 </span>            : static inline int
+<span class="lineNum">     764 </span>            : __gthread_mutex_timedlock (__gthread_mutex_t *__mutex,
+<span class="lineNum">     765 </span>            :                            const __gthread_time_t *__abs_timeout)
+<span class="lineNum">     766 </span>            : {
+<span class="lineNum">     767 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     768 </span>            :     return __gthrw_(pthread_mutex_timedlock) (__mutex, __abs_timeout);
+<span class="lineNum">     769 </span>            :   else
+<span class="lineNum">     770 </span>            :     return 0;
+<span class="lineNum">     771 </span>            : }
+<span class="lineNum">     772 </span>            : #endif
+<span class="lineNum">     773 </span>            : 
+<span class="lineNum">     774 </span>            : static inline int
+<span class="lineNum">     775 </span>            : __gthread_mutex_unlock (__gthread_mutex_t *__mutex)
+<span class="lineNum">     776 </span>            : {
+<span class="lineNum">     777 </span><span class="lineCov">    1119614 :   if (__gthread_active_p ())</span>
+<span class="lineNum">     778 </span><span class="lineCov">    1119614 :     return __gthrw_(pthread_mutex_unlock) (__mutex);</span>
+<span class="lineNum">     779 </span>            :   else
+<span class="lineNum">     780 </span>            :     return 0;
+<span class="lineNum">     781 </span>            : }
+<span class="lineNum">     782 </span>            : 
+<span class="lineNum">     783 </span>            : #if !defined( PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP) \
+<span class="lineNum">     784 </span>            :   || defined(_GTHREAD_USE_RECURSIVE_MUTEX_INIT_FUNC)
+<span class="lineNum">     785 </span>            : static inline int
+<span class="lineNum">     786 </span>            : __gthread_recursive_mutex_init_function (__gthread_recursive_mutex_t *__mutex)
+<span class="lineNum">     787 </span>            : {
+<span class="lineNum">     788 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     789 </span>            :     {
+<span class="lineNum">     790 </span>            :       pthread_mutexattr_t __attr;
+<span class="lineNum">     791 </span>            :       int __r;
+<span class="lineNum">     792 </span>            : 
+<span class="lineNum">     793 </span>            :       __r = __gthrw_(pthread_mutexattr_init) (&amp;__attr);
+<span class="lineNum">     794 </span>            :       if (!__r)
+<span class="lineNum">     795 </span>            :         __r = __gthrw_(pthread_mutexattr_settype) (&amp;__attr,
+<span class="lineNum">     796 </span>            :                                                    PTHREAD_MUTEX_RECURSIVE);
+<span class="lineNum">     797 </span>            :       if (!__r)
+<span class="lineNum">     798 </span>            :         __r = __gthrw_(pthread_mutex_init) (__mutex, &amp;__attr);
+<span class="lineNum">     799 </span>            :       if (!__r)
+<span class="lineNum">     800 </span>            :         __r = __gthrw_(pthread_mutexattr_destroy) (&amp;__attr);
+<span class="lineNum">     801 </span>            :       return __r;
+<span class="lineNum">     802 </span>            :     }
+<span class="lineNum">     803 </span>            :   return 0;
+<span class="lineNum">     804 </span>            : }
+<span class="lineNum">     805 </span>            : #endif
+<span class="lineNum">     806 </span>            : 
+<span class="lineNum">     807 </span>            : static inline int
+<span class="lineNum">     808 </span>            : __gthread_recursive_mutex_lock (__gthread_recursive_mutex_t *__mutex)
+<span class="lineNum">     809 </span>            : {
+<span class="lineNum">     810 </span><span class="lineCov">       1637 :   return __gthread_mutex_lock (__mutex);</span>
+<span class="lineNum">     811 </span>            : }
+<span class="lineNum">     812 </span>            : 
+<span class="lineNum">     813 </span>            : static inline int
+<span class="lineNum">     814 </span>            : __gthread_recursive_mutex_trylock (__gthread_recursive_mutex_t *__mutex)
+<span class="lineNum">     815 </span>            : {
+<span class="lineNum">     816 </span>            :   return __gthread_mutex_trylock (__mutex);
+<span class="lineNum">     817 </span>            : }
+<span class="lineNum">     818 </span>            : 
+<span class="lineNum">     819 </span>            : #if _GTHREAD_USE_MUTEX_TIMEDLOCK
+<span class="lineNum">     820 </span>            : static inline int
+<span class="lineNum">     821 </span>            : __gthread_recursive_mutex_timedlock (__gthread_recursive_mutex_t *__mutex,
+<span class="lineNum">     822 </span>            :                                      const __gthread_time_t *__abs_timeout)
+<span class="lineNum">     823 </span>            : {
+<span class="lineNum">     824 </span>            :   return __gthread_mutex_timedlock (__mutex, __abs_timeout);
+<span class="lineNum">     825 </span>            : }
+<span class="lineNum">     826 </span>            : #endif
+<span class="lineNum">     827 </span>            : 
+<span class="lineNum">     828 </span>            : static inline int
+<span class="lineNum">     829 </span>            : __gthread_recursive_mutex_unlock (__gthread_recursive_mutex_t *__mutex)
+<span class="lineNum">     830 </span>            : {
+<span class="lineNum">     831 </span><span class="lineCov">       1611 :   return __gthread_mutex_unlock (__mutex);</span>
+<span class="lineNum">     832 </span>            : }
+<span class="lineNum">     833 </span>            : 
+<span class="lineNum">     834 </span>            : static inline int
+<span class="lineNum">     835 </span>            : __gthread_recursive_mutex_destroy (__gthread_recursive_mutex_t *__mutex)
+<span class="lineNum">     836 </span>            : {
+<span class="lineNum">     837 </span>            :   return __gthread_mutex_destroy (__mutex);
+<span class="lineNum">     838 </span>            : }
+<span class="lineNum">     839 </span>            : 
+<span class="lineNum">     840 </span>            : #ifdef _GTHREAD_USE_COND_INIT_FUNC
+<span class="lineNum">     841 </span>            : static inline void
+<span class="lineNum">     842 </span>            : __gthread_cond_init_function (__gthread_cond_t *__cond)
+<span class="lineNum">     843 </span>            : {
+<span class="lineNum">     844 </span>            :   if (__gthread_active_p ())
+<span class="lineNum">     845 </span>            :     __gthrw_(pthread_cond_init) (__cond, NULL);
+<span class="lineNum">     846 </span>            : }
+<span class="lineNum">     847 </span>            : #endif
+<span class="lineNum">     848 </span>            : 
+<span class="lineNum">     849 </span>            : static inline int
+<span class="lineNum">     850 </span>            : __gthread_cond_broadcast (__gthread_cond_t *__cond)
+<span class="lineNum">     851 </span>            : {
+<span class="lineNum">     852 </span>            :   return __gthrw_(pthread_cond_broadcast) (__cond);
+<span class="lineNum">     853 </span>            : }
+<span class="lineNum">     854 </span>            : 
+<span class="lineNum">     855 </span>            : static inline int
+<span class="lineNum">     856 </span>            : __gthread_cond_signal (__gthread_cond_t *__cond)
+<span class="lineNum">     857 </span>            : {
+<span class="lineNum">     858 </span>            :   return __gthrw_(pthread_cond_signal) (__cond);
+<span class="lineNum">     859 </span>            : }
+<span class="lineNum">     860 </span>            : 
+<span class="lineNum">     861 </span>            : static inline int
+<span class="lineNum">     862 </span>            : __gthread_cond_wait (__gthread_cond_t *__cond, __gthread_mutex_t *__mutex)
+<span class="lineNum">     863 </span>            : {
+<span class="lineNum">     864 </span>            :   return __gthrw_(pthread_cond_wait) (__cond, __mutex);
+<span class="lineNum">     865 </span>            : }
+<span class="lineNum">     866 </span>            : 
+<span class="lineNum">     867 </span>            : static inline int
+<span class="lineNum">     868 </span>            : __gthread_cond_timedwait (__gthread_cond_t *__cond, __gthread_mutex_t *__mutex,
+<span class="lineNum">     869 </span>            :                           const __gthread_time_t *__abs_timeout)
+<span class="lineNum">     870 </span>            : {
+<span class="lineNum">     871 </span><span class="lineCov">          4 :   return __gthrw_(pthread_cond_timedwait) (__cond, __mutex, __abs_timeout);</span>
+<span class="lineNum">     872 </span>            : }
+<span class="lineNum">     873 </span>            : 
+<span class="lineNum">     874 </span>            : static inline int
+<span class="lineNum">     875 </span>            : __gthread_cond_wait_recursive (__gthread_cond_t *__cond,
+<span class="lineNum">     876 </span>            :                                __gthread_recursive_mutex_t *__mutex)
+<span class="lineNum">     877 </span>            : {
+<span class="lineNum">     878 </span>            :   return __gthread_cond_wait (__cond, __mutex);
+<span class="lineNum">     879 </span>            : }
+<span class="lineNum">     880 </span>            : 
+<span class="lineNum">     881 </span>            : static inline int
+<span class="lineNum">     882 </span>            : __gthread_cond_destroy (__gthread_cond_t* __cond)
+<span class="lineNum">     883 </span>            : {
+<span class="lineNum">     884 </span>            :   return __gthrw_(pthread_cond_destroy) (__cond);
+<span class="lineNum">     885 </span>            : }
+<span class="lineNum">     886 </span>            : 
+<span class="lineNum">     887 </span>            : #endif /* _LIBOBJC */
+<span class="lineNum">     888 </span>            : 
+<span class="lineNum">     889 </span>            : #endif /* ! _GLIBCXX_GCC_GTHR_POSIX_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

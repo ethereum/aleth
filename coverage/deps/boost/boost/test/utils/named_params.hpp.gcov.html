@@ -1,0 +1,464 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/utils/named_params.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/utils</a> - named_params.hpp<span style="font-size: 80%;"> (source / <a href="named_params.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntryMed">87.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">48</td>
+            <td class="headerCovTableEntry">49</td>
+            <td class="headerCovTableEntryHi">98.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : named function parameters library
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_UTILS_NAMED_PARAM
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_UTILS_NAMED_PARAM
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost
+<span class="lineNum">      19 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/detail/workaround.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : // Boost.Test
+<span class="lineNum">      23 </span>            : #include &lt;boost/test/utils/rtti.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/utils/assign_op.hpp&gt;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;boost/type_traits/remove_reference.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/type_traits/remove_cv.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #include &lt;boost/test/detail/throw_exception.hpp&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : // Boost
+<span class="lineNum">      32 </span>            : #include &lt;boost/mpl/if.hpp&gt;
+<span class="lineNum">      33 </span>            : #include &lt;boost/mpl/or.hpp&gt;
+<span class="lineNum">      34 </span>            : #include &lt;boost/type_traits/is_same.hpp&gt;
+<span class="lineNum">      35 </span>            : #include &lt;boost/type_traits/remove_cv.hpp&gt;
+<span class="lineNum">      36 </span>            : #include &lt;boost/utility/enable_if.hpp&gt;
+<span class="lineNum">      37 </span>            : #include &lt;boost/mpl/bool.hpp&gt;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : namespace boost {
+<span class="lineNum">      44 </span>            : namespace nfp { // named function parameters
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : // ************************************************************************** //
+<span class="lineNum">      47 </span>            : // **************             forward declarations             ************** //
+<span class="lineNum">      48 </span>            : // ************************************************************************** //
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : template&lt;typename unique_id, bool required&gt;                     struct keyword;
+<span class="lineNum">      51 </span>            : template&lt;typename T, typename unique_id, bool required = false&gt; struct typed_keyword;
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : template&lt;typename T, typename unique_id, typename RefType=T&amp;&gt;   struct named_parameter;
+<span class="lineNum">      54 </span>            : template&lt;typename NP1,typename NP2&gt;                             struct named_parameter_combine;
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : // ************************************************************************** //
+<span class="lineNum">      57 </span>            : // **************              is_named_param_pack             ************** //
+<span class="lineNum">      58 </span>            : // ************************************************************************** //
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : /// is_named_param_pack&lt;T&gt;::value is true if T is parameters pack
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : template&lt;typename T&gt;
+<span class="lineNum">      63 </span>            : struct is_named_param_pack : public mpl::false_ {};
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : template&lt;typename T, typename unique_id, typename RefType&gt;
+<span class="lineNum">      66 </span>            : struct is_named_param_pack&lt;named_parameter&lt;T,unique_id,RefType&gt; &gt; : public mpl::true_ {};
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : template&lt;typename NP, typename Rest&gt;
+<span class="lineNum">      69 </span>            : struct is_named_param_pack&lt;named_parameter_combine&lt;NP,Rest&gt; &gt; : public mpl::true_ {};
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : // ************************************************************************** //
+<span class="lineNum">      72 </span>            : // **************                  param_type                  ************** //
+<span class="lineNum">      73 </span>            : // ************************************************************************** //
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : /// param_type&lt;Params,Keyword,Default&gt;::type is is the type of the parameter
+<span class="lineNum">      76 </span>            : /// corresponding to the Keyword (if parameter is present) or Default
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : template&lt;typename NP, typename Keyword, typename DefaultType=void&gt;
+<span class="lineNum">      79 </span>            : struct param_type
+<span class="lineNum">      80 </span>            : : mpl::if_&lt;typename is_same&lt;typename NP::id,typename Keyword::id&gt;::type,
+<span class="lineNum">      81 </span>            :            typename remove_cv&lt;typename NP::data_type&gt;::type,
+<span class="lineNum">      82 </span>            :            DefaultType&gt; {};
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : template&lt;typename NP, typename Rest, typename Keyword, typename DefaultType&gt;
+<span class="lineNum">      85 </span>            : struct param_type&lt;named_parameter_combine&lt;NP,Rest&gt;,Keyword,DefaultType&gt;
+<span class="lineNum">      86 </span>            : : mpl::if_&lt;typename is_same&lt;typename NP::id,typename Keyword::id&gt;::type,
+<span class="lineNum">      87 </span>            :            typename remove_cv&lt;typename NP::data_type&gt;::type,
+<span class="lineNum">      88 </span>            :            typename param_type&lt;Rest,Keyword,DefaultType&gt;::type&gt; {};
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : // ************************************************************************** //
+<span class="lineNum">      91 </span>            : // **************                  has_param                   ************** //
+<span class="lineNum">      92 </span>            : // ************************************************************************** //
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : /// has_param&lt;Params,Keyword&gt;::value is true id Params has parameter corresponding
+<span class="lineNum">      95 </span>            : /// to the Keyword
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : template&lt;typename NP, typename Keyword&gt;
+<span class="lineNum">      98 </span>            : struct has_param : is_same&lt;typename NP::id,typename Keyword::id&gt; {};
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : template&lt;typename NP, typename Rest, typename Keyword&gt;
+<span class="lineNum">     101 </span>            : struct has_param&lt;named_parameter_combine&lt;NP,Rest&gt;,Keyword&gt;
+<span class="lineNum">     102 </span>            : : mpl::or_&lt;typename is_same&lt;typename NP::id,typename Keyword::id&gt;::type,
+<span class="lineNum">     103 </span>            :            typename has_param&lt;Rest,Keyword&gt;::type&gt; {};
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : // ************************************************************************** //
+<span class="lineNum">     106 </span>            : // **************          access_to_invalid_parameter         ************** //
+<span class="lineNum">     107 </span>            : // ************************************************************************** //
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : namespace nfp_detail {
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            : struct access_to_invalid_parameter {};
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : inline void
+<span class="lineNum">     116 </span>            : report_access_to_invalid_parameter( bool v )
+<span class="lineNum">     117 </span>            : {
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :     BOOST_TEST_I_ASSRT( !v, access_to_invalid_parameter() );</span>
+<span class="lineNum">     119 </span>            : }
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            : } // namespace nfp_detail
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : // ************************************************************************** //
+<span class="lineNum">     124 </span>            : // **************                      nil                     ************** //
+<span class="lineNum">     125 </span>            : // ************************************************************************** //
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : struct nil {
+<span class="lineNum">     128 </span>            :     template&lt;typename T&gt;
+<span class="lineNum">     129 </span>            : #if defined(__GNUC__) || defined(__HP_aCC) || defined(__EDG__) || defined(__SUNPRO_CC)
+<span class="lineNum">     130 </span>            :     operator T() const
+<span class="lineNum">     131 </span>            : #else
+<span class="lineNum">     132 </span>            :     operator T const&amp;() const
+<span class="lineNum">     133 </span>            : #endif
+<span class="lineNum">     134 </span>            :     { nfp_detail::report_access_to_invalid_parameter(true); static T* v = 0; return *v; }
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :     template&lt;typename T&gt;
+<span class="lineNum">     137 </span>            :     T any_cast() const
+<span class="lineNum">     138 </span>            :     { nfp_detail::report_access_to_invalid_parameter(true); static typename remove_reference&lt;T&gt;::type* v = 0; return *v; }
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :     template&lt;typename Arg1&gt;
+<span class="lineNum">     141 </span>            :     nil operator()( Arg1 const&amp; )
+<span class="lineNum">     142 </span>            :     { nfp_detail::report_access_to_invalid_parameter(true); return nil(); }
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            :     template&lt;typename Arg1,typename Arg2&gt;
+<span class="lineNum">     145 </span>            :     nil operator()( Arg1 const&amp;, Arg2 const&amp; )
+<span class="lineNum">     146 </span>            :     { nfp_detail::report_access_to_invalid_parameter(true); return nil(); }
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            :     template&lt;typename Arg1,typename Arg2,typename Arg3&gt;
+<span class="lineNum">     149 </span>            :     nil operator()( Arg1 const&amp;, Arg2 const&amp;, Arg3 const&amp; )
+<span class="lineNum">     150 </span>            :     { nfp_detail::report_access_to_invalid_parameter(true); return nil(); }
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :     // Visitation support
+<span class="lineNum">     153 </span>            :     template&lt;typename Visitor&gt;
+<a name="154"><span class="lineNum">     154 </span>            :     void            apply_to( Visitor&amp; /*v*/ ) const {}</a>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :     static nil&amp;     inst() { static nil s_inst; return s_inst; }</span>
+<span class="lineNum">     157 </span>            : private:
+<span class="lineNum">     158 </span>            :     nil() {}
+<span class="lineNum">     159 </span>            : };
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            : // ************************************************************************** //
+<span class="lineNum">     162 </span>            : // **************             named_parameter_base             ************** //
+<span class="lineNum">     163 </span>            : // ************************************************************************** //
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : namespace nfp_detail {
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            : template&lt;typename Derived&gt;
+<span class="lineNum">     168 </span>            : struct named_parameter_base {
+<span class="lineNum">     169 </span>            :     template&lt;typename NP&gt;
+<span class="lineNum">     170 </span>            :     named_parameter_combine&lt;NP,Derived&gt;
+<span class="lineNum">     171 </span><span class="lineCov">        127 :     operator,( NP const&amp; np ) const { return named_parameter_combine&lt;NP,Derived&gt;( np, *static_cast&lt;Derived const*&gt;(this) ); }</span>
+<span class="lineNum">     172 </span>            : };
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : } // namespace nfp_detail
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            : // ************************************************************************** //
+<span class="lineNum">     177 </span>            : // **************            named_parameter_combine           ************** //
+<span class="lineNum">     178 </span>            : // ************************************************************************** //
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            : template&lt;typename NP, typename Rest = nil&gt;
+<span class="lineNum">     181 </span><span class="lineCov">        426 : struct named_parameter_combine</span>
+<span class="lineNum">     182 </span>            : : Rest
+<span class="lineNum">     183 </span>            : , nfp_detail::named_parameter_base&lt;named_parameter_combine&lt;NP,Rest&gt; &gt; {
+<span class="lineNum">     184 </span>            :     typedef typename NP::ref_type  res_type;
+<span class="lineNum">     185 </span>            :     typedef named_parameter_combine&lt;NP,Rest&gt; self_type;
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :     // Constructor
+<span class="lineNum">     188 </span>            :     named_parameter_combine( NP const&amp; np, Rest const&amp; r )
+<span class="lineNum">     189 </span>            :     : Rest( r )
+<span class="lineNum">     190 </span><span class="lineCov">        381 :     , m_param( np )</span>
+<span class="lineNum">     191 </span>            :     {
+<span class="lineNum">     192 </span>            :     }
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            :     // Access methods
+<span class="lineNum">     195 </span>            :     res_type    operator[]( keyword&lt;typename NP::id,true&gt; kw ) const    { return m_param[kw]; }
+<span class="lineNum">     196 </span><span class="lineCov">        110 :     res_type    operator[]( keyword&lt;typename NP::id,false&gt; kw ) const   { return m_param[kw]; }</span>
+<span class="lineNum">     197 </span>            :     using       Rest::operator[];
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span><span class="lineCov">         50 :     bool        has( keyword&lt;typename NP::id,false&gt; kw ) const          { return m_param.has( kw ); }</span>
+<span class="lineNum">     200 </span>            :     using       Rest::has;
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            :     void        erase( keyword&lt;typename NP::id,false&gt; kw ) const        { m_param.erase( kw ); }
+<span class="lineNum">     203 </span>            :     using       Rest::erase;
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            :     using       nfp_detail::named_parameter_base&lt;named_parameter_combine&lt;NP,Rest&gt; &gt;::operator,;
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :     // Visitation support
+<span class="lineNum">     208 </span>            :     template&lt;typename Visitor&gt;
+<span class="lineNum">     209 </span>            :     void            apply_to( Visitor&amp; V ) const
+<span class="lineNum">     210 </span>            :     {
+<span class="lineNum">     211 </span>            :         m_param.apply_to( V );
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            :         Rest::apply_to( V );
+<span class="lineNum">     214 </span>            :     }
+<span class="lineNum">     215 </span>            : private:
+<span class="lineNum">     216 </span>            :     // Data members
+<span class="lineNum">     217 </span>            :     NP          m_param;
+<span class="lineNum">     218 </span>            : };
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            : // ************************************************************************** //
+<span class="lineNum">     221 </span>            : // **************                named_parameter               ************** //
+<span class="lineNum">     222 </span>            : // ************************************************************************** //
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            : template&lt;typename T, typename unique_id, typename RefType&gt;
+<span class="lineNum">     225 </span>            : struct named_parameter
+<span class="lineNum">     226 </span>            : : nfp_detail::named_parameter_base&lt;named_parameter&lt;T,unique_id,RefType&gt; &gt;
+<span class="lineNum">     227 </span>            : {
+<span class="lineNum">     228 </span>            :     typedef T               data_type;
+<span class="lineNum">     229 </span>            :     typedef RefType         ref_type;
+<span class="lineNum">     230 </span>            :     typedef unique_id       id;
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            :     // Constructor
+<span class="lineNum">     233 </span>            :     explicit        named_parameter( ref_type v )
+<span class="lineNum">     234 </span>            :     : m_value( v )
+<span class="lineNum">     235 </span><span class="lineCov">        164 :     , m_erased( false )</span>
+<span class="lineNum">     236 </span>            :     {}
+<span class="lineNum">     237 </span>            :     named_parameter( named_parameter const&amp; np )
+<span class="lineNum">     238 </span>            :     : m_value( np.m_value )
+<span class="lineNum">     239 </span><span class="lineCov">        482 :     , m_erased( np.m_erased )</span>
+<span class="lineNum">     240 </span>            :     {}
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            :     // Access methods
+<span class="lineNum">     243 </span>            :     ref_type        operator[]( keyword&lt;unique_id,true&gt; ) const     { return m_erased ? nil::inst().template any_cast&lt;ref_type&gt;() :  m_value; }
+<span class="lineNum">     244 </span><span class="lineCov">        139 :     ref_type        operator[]( keyword&lt;unique_id,false&gt; ) const    { return m_erased ? nil::inst().template any_cast&lt;ref_type&gt;() :  m_value; }</span>
+<span class="lineNum">     245 </span>            :     template&lt;typename UnknownId&gt;
+<span class="lineNum">     246 </span>            :     nil             operator[]( keyword&lt;UnknownId,false&gt; ) const    { return nil::inst(); }
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span><span class="lineCov">         38 :     bool            has( keyword&lt;unique_id,false&gt; ) const           { return !m_erased; }</span>
+<span class="lineNum">     249 </span>            :     template&lt;typename UnknownId&gt;
+<span class="lineNum">     250 </span>            :     bool            has( keyword&lt;UnknownId,false&gt; ) const           { return false; }
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            :     void            erase( keyword&lt;unique_id,false&gt; ) const         { m_erased = true; }
+<span class="lineNum">     253 </span>            :     template&lt;typename UnknownId&gt;
+<span class="lineNum">     254 </span>            :     void            erase( keyword&lt;UnknownId,false&gt; ) const         {}
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            :     // Visitation support
+<span class="lineNum">     257 </span>            :     template&lt;typename Visitor&gt;
+<span class="lineNum">     258 </span>            :     void            apply_to( Visitor&amp; V ) const
+<span class="lineNum">     259 </span>            :     {
+<span class="lineNum">     260 </span>            :         V.set_parameter( rtti::type_id&lt;unique_id&gt;(), m_value );
+<span class="lineNum">     261 </span>            :     }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            : private:
+<span class="lineNum">     264 </span>            :     // Data members
+<span class="lineNum">     265 </span>            :     ref_type        m_value;
+<span class="lineNum">     266 </span>            :     mutable bool    m_erased;
+<span class="lineNum">     267 </span>            : };
+<span class="lineNum">     268 </span>            : 
+<span class="lineNum">     269 </span>            : // ************************************************************************** //
+<span class="lineNum">     270 </span>            : // **************                   no_params                  ************** //
+<span class="lineNum">     271 </span>            : // ************************************************************************** //
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span>            : typedef named_parameter&lt;char, struct no_params_type_t,char&gt; no_params_type;
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            : namespace {
+<span class="lineNum">     276 </span><span class="lineCov">          1 : no_params_type no_params( '\0' );</span>
+<span class="lineNum">     277 </span>            : } // local namespace
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            : // ************************************************************************** //
+<span class="lineNum">     280 </span>            : // **************                    keyword                   ************** //
+<span class="lineNum">     281 </span>            : // ************************************************************************** //
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span>            : template&lt;typename unique_id, bool required = false&gt;
+<span class="lineNum">     284 </span>            : struct keyword {
+<span class="lineNum">     285 </span>            :     typedef unique_id id;
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            :     template&lt;typename T&gt;
+<span class="lineNum">     288 </span>            :     named_parameter&lt;T const,unique_id&gt;
+<span class="lineNum">     289 </span><span class="lineCov">         68 :     operator=( T const&amp; t ) const       { return named_parameter&lt;T const,unique_id&gt;( t ); }</span>
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            :     template&lt;typename T&gt;
+<span class="lineNum">     292 </span>            :     named_parameter&lt;T,unique_id&gt;
+<span class="lineNum">     293 </span>            :     operator=( T&amp; t ) const             { return named_parameter&lt;T,unique_id&gt;( t ); }
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span>            :     named_parameter&lt;char const*,unique_id,char const*&gt;
+<span class="lineNum">     296 </span><span class="lineNoCov">          0 :     operator=( char const* t ) const    { return named_parameter&lt;char const*,unique_id,char const*&gt;( t ); }</span>
+<span class="lineNum">     297 </span>            : };
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span>            : // ************************************************************************** //
+<span class="lineNum">     302 </span>            : // **************                 typed_keyword                ************** //
+<span class="lineNum">     303 </span>            : // ************************************************************************** //
+<span class="lineNum">     304 </span>            : 
+<span class="lineNum">     305 </span>            : template&lt;typename T, typename unique_id, bool required&gt;
+<span class="lineNum">     306 </span>            : struct typed_keyword : keyword&lt;unique_id,required&gt; {
+<span class="lineNum">     307 </span>            :     named_parameter&lt;T const,unique_id&gt;
+<span class="lineNum">     308 </span><span class="lineCov">         94 :     operator=( T const&amp; t ) const       { return named_parameter&lt;T const,unique_id&gt;( t ); }</span>
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            :     named_parameter&lt;T,unique_id&gt;
+<span class="lineNum">     311 </span>            :     operator=( T&amp; t ) const             { return named_parameter&lt;T,unique_id&gt;( t ); }
+<span class="lineNum">     312 </span>            : };
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span>            : template&lt;typename unique_id, bool required&gt;
+<span class="lineNum">     317 </span>            : struct typed_keyword&lt;bool,unique_id,required&gt;
+<span class="lineNum">     318 </span>            : : keyword&lt;unique_id,required&gt;
+<span class="lineNum">     319 </span>            : , named_parameter&lt;bool,unique_id,bool&gt; {
+<span class="lineNum">     320 </span>            :     typedef unique_id id;
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span><span class="lineCov">          2 :     typed_keyword() : named_parameter&lt;bool,unique_id,bool&gt;( true ) {}</span>
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span>            :     named_parameter&lt;bool,unique_id,bool&gt;
+<span class="lineNum">     325 </span>            :     operator!() const           { return named_parameter&lt;bool,unique_id,bool&gt;( false ); }
+<span class="lineNum">     326 </span>            : };
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span>            : // ************************************************************************** //
+<span class="lineNum">     329 </span>            : // **************                  opt_assign                  ************** //
+<span class="lineNum">     330 </span>            : // ************************************************************************** //
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span>            : template&lt;typename T, typename Params, typename Keyword&gt;
+<span class="lineNum">     333 </span>            : inline typename enable_if_c&lt;!has_param&lt;Params,Keyword&gt;::value,void&gt;::type
+<span class="lineNum">     334 </span>            : opt_assign( T&amp; /*target*/, Params const&amp; /*p*/, Keyword /*k*/ )
+<span class="lineNum">     335 </span>            : {
+<span class="lineNum">     336 </span>            : }
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     339 </span>            : 
+<a name="340"><span class="lineNum">     340 </span>            : template&lt;typename T, typename Params, typename Keyword&gt;</a>
+<span class="lineNum">     341 </span>            : inline typename enable_if_c&lt;has_param&lt;Params,Keyword&gt;::value,void&gt;::type
+<span class="lineNum">     342 </span><span class="lineCov">         91 : opt_assign( T&amp; target, Params const&amp; p, Keyword k )</span>
+<span class="lineNum">     343 </span>            : {
+<span class="lineNum">     344 </span>            :     using namespace unit_test;
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span><span class="lineCov">        381 :     assign_op( target, p[k], static_cast&lt;int&gt;(0) );</span>
+<span class="lineNum">     347 </span><span class="lineCov">         91 : }</span>
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span>            : // ************************************************************************** //
+<span class="lineNum">     350 </span>            : // **************                    opt_get                   ************** //
+<span class="lineNum">     351 </span>            : // ************************************************************************** //
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span>            : template&lt;typename T, typename Params, typename Keyword&gt;
+<span class="lineNum">     354 </span>            : inline T
+<span class="lineNum">     355 </span>            : opt_get( Params const&amp; p, Keyword k, T default_val )
+<span class="lineNum">     356 </span>            : {
+<span class="lineNum">     357 </span><span class="lineCov">        228 :     opt_assign( default_val, p, k );</span>
+<span class="lineNum">     358 </span>            : 
+<span class="lineNum">     359 </span><span class="lineCov">        150 :     return default_val;</span>
+<span class="lineNum">     360 </span>            : }
+<span class="lineNum">     361 </span>            : 
+<span class="lineNum">     362 </span>            : // ************************************************************************** //
+<span class="lineNum">     363 </span>            : // **************                    opt_get                   ************** //
+<span class="lineNum">     364 </span>            : // ************************************************************************** //
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span>            : template&lt;typename Params, typename NP&gt;
+<span class="lineNum">     367 </span>            : inline typename enable_if_c&lt;!has_param&lt;Params,keyword&lt;typename NP::id&gt; &gt;::value,
+<span class="lineNum">     368 </span>            : named_parameter_combine&lt;NP,Params&gt; &gt;::type
+<span class="lineNum">     369 </span>            : opt_append( Params const&amp; params, NP const&amp; np )
+<span class="lineNum">     370 </span>            : {
+<span class="lineNum">     371 </span><span class="lineCov">         46 :     return (params,np);</span>
+<span class="lineNum">     372 </span>            : }
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span>            : template&lt;typename Params, typename NP&gt;
+<span class="lineNum">     377 </span>            : inline typename enable_if_c&lt;has_param&lt;Params,keyword&lt;typename NP::id&gt; &gt;::value,Params&gt;::type
+<span class="lineNum">     378 </span>            : opt_append( Params const&amp; params, NP const&amp; )
+<span class="lineNum">     379 </span>            : {
+<span class="lineNum">     380 </span><span class="lineCov">          6 :     return params;</span>
+<span class="lineNum">     381 </span>            : }
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span>            : } // namespace nfp
+<span class="lineNum">     384 </span>            : } // namespace boost
+<span class="lineNum">     385 </span>            : 
+<span class="lineNum">     386 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     387 </span>            : 
+<span class="lineNum">     388 </span>            : #endif // BOOST_TEST_UTILS_NAMED_PARAM
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

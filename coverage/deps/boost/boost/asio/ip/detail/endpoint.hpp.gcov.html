@@ -1,0 +1,217 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/ip/detail/endpoint.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/ip/detail</a> - endpoint.hpp<span style="font-size: 80%;"> (source / <a href="endpoint.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // ip/detail/endpoint.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_IP_DETAIL_ENDPOINT_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_IP_DETAIL_ENDPOINT_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;string&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/asio/detail/socket_types.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/asio/detail/winsock_init.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/system/error_code.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/asio/ip/address.hpp&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : namespace boost {
+<span class="lineNum">      28 </span>            : namespace asio {
+<span class="lineNum">      29 </span>            : namespace ip {
+<span class="lineNum">      30 </span>            : namespace detail {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : // Helper class for implementating an IP endpoint.
+<span class="lineNum">      33 </span>            : class endpoint
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span>            : public:
+<span class="lineNum">      36 </span>            :   // Default constructor.
+<span class="lineNum">      37 </span>            :   BOOST_ASIO_DECL endpoint();
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            :   // Construct an endpoint using a family and port number.
+<span class="lineNum">      40 </span>            :   BOOST_ASIO_DECL endpoint(int family, unsigned short port_num);
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            :   // Construct an endpoint using an address and port number.
+<span class="lineNum">      43 </span>            :   BOOST_ASIO_DECL endpoint(const boost::asio::ip::address&amp; addr,
+<span class="lineNum">      44 </span>            :       unsigned short port_num);
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :   // Copy constructor.
+<span class="lineNum">      47 </span>            :   endpoint(const endpoint&amp; other)
+<span class="lineNum">      48 </span><span class="lineCov">        857 :     : data_(other.data_)</span>
+<span class="lineNum">      49 </span>            :   {
+<span class="lineNum">      50 </span>            :   }
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            :   // Assign from another endpoint.
+<span class="lineNum">      53 </span>            :   endpoint&amp; operator=(const endpoint&amp; other)
+<span class="lineNum">      54 </span>            :   {
+<span class="lineNum">      55 </span><span class="lineCov">         12 :     data_ = other.data_;</span>
+<span class="lineNum">      56 </span>            :     return *this;
+<span class="lineNum">      57 </span>            :   }
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            :   // Get the underlying endpoint in the native type.
+<span class="lineNum">      60 </span>            :   boost::asio::detail::socket_addr_type* data()
+<span class="lineNum">      61 </span>            :   {
+<span class="lineNum">      62 </span><span class="lineCov">        160 :     return &amp;data_.base;</span>
+<span class="lineNum">      63 </span>            :   }
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            :   // Get the underlying endpoint in the native type.
+<span class="lineNum">      66 </span>            :   const boost::asio::detail::socket_addr_type* data() const
+<span class="lineNum">      67 </span>            :   {
+<span class="lineNum">      68 </span><span class="lineCov">         78 :     return &amp;data_.base;</span>
+<span class="lineNum">      69 </span>            :   }
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            :   // Get the underlying size of the endpoint in the native type.
+<span class="lineNum">      72 </span>            :   std::size_t size() const
+<span class="lineNum">      73 </span>            :   {
+<span class="lineNum">      74 </span><span class="lineCov">        131 :     if (is_v4())</span>
+<span class="lineNum">      75 </span>            :       return sizeof(boost::asio::detail::sockaddr_in4_type);
+<span class="lineNum">      76 </span>            :     else
+<span class="lineNum">      77 </span>            :       return sizeof(boost::asio::detail::sockaddr_in6_type);
+<span class="lineNum">      78 </span>            :   }
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            :   // Set the underlying size of the endpoint in the native type.
+<span class="lineNum">      81 </span>            :   BOOST_ASIO_DECL void resize(std::size_t new_size);
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :   // Get the capacity of the endpoint in the native type.
+<span class="lineNum">      84 </span>            :   std::size_t capacity() const
+<span class="lineNum">      85 </span>            :   {
+<span class="lineNum">      86 </span>            :     return sizeof(data_);
+<span class="lineNum">      87 </span>            :   }
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :   // Get the port associated with the endpoint.
+<span class="lineNum">      90 </span>            :   BOOST_ASIO_DECL unsigned short port() const;
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :   // Set the port associated with the endpoint.
+<span class="lineNum">      93 </span>            :   BOOST_ASIO_DECL void port(unsigned short port_num);
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            :   // Get the IP address associated with the endpoint.
+<span class="lineNum">      96 </span>            :   BOOST_ASIO_DECL boost::asio::ip::address address() const;
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            :   // Set the IP address associated with the endpoint.
+<span class="lineNum">      99 </span>            :   BOOST_ASIO_DECL void address(const boost::asio::ip::address&amp; addr);
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :   // Compare two endpoints for equality.
+<span class="lineNum">     102 </span>            :   BOOST_ASIO_DECL friend bool operator==(
+<span class="lineNum">     103 </span>            :       const endpoint&amp; e1, const endpoint&amp; e2);
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            :   // Compare endpoints for ordering.
+<span class="lineNum">     106 </span>            :   BOOST_ASIO_DECL friend bool operator&lt;(
+<span class="lineNum">     107 </span>            :       const endpoint&amp; e1, const endpoint&amp; e2);
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            :   // Determine whether the endpoint is IPv4.
+<span class="lineNum">     110 </span>            :   bool is_v4() const
+<span class="lineNum">     111 </span>            :   {
+<span class="lineNum">     112 </span>            :     return data_.base.sa_family == BOOST_ASIO_OS_DEF(AF_INET);
+<span class="lineNum">     113 </span>            :   }
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : #if !defined(BOOST_ASIO_NO_IOSTREAM)
+<span class="lineNum">     116 </span>            :   // Convert to a string.
+<span class="lineNum">     117 </span>            :   BOOST_ASIO_DECL std::string to_string(boost::system::error_code&amp; ec) const;
+<span class="lineNum">     118 </span>            : #endif // !defined(BOOST_ASIO_NO_IOSTREAM)
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : private:
+<span class="lineNum">     121 </span>            :   // The underlying IP socket address.
+<span class="lineNum">     122 </span>            :   union data_union
+<span class="lineNum">     123 </span>            :   {
+<span class="lineNum">     124 </span>            :     boost::asio::detail::socket_addr_type base;
+<span class="lineNum">     125 </span>            :     boost::asio::detail::sockaddr_in4_type v4;
+<span class="lineNum">     126 </span>            :     boost::asio::detail::sockaddr_in6_type v6;
+<span class="lineNum">     127 </span>            :   } data_;
+<span class="lineNum">     128 </span>            : };
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : } // namespace detail
+<span class="lineNum">     131 </span>            : } // namespace ip
+<span class="lineNum">     132 </span>            : } // namespace asio
+<span class="lineNum">     133 </span>            : } // namespace boost
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : #if defined(BOOST_ASIO_HEADER_ONLY)
+<span class="lineNum">     138 </span>            : # include &lt;boost/asio/ip/detail/impl/endpoint.ipp&gt;
+<span class="lineNum">     139 </span>            : #endif // defined(BOOST_ASIO_HEADER_ONLY)
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            : #endif // BOOST_ASIO_IP_DETAIL_ENDPOINT_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

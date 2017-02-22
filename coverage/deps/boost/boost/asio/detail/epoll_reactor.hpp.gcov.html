@@ -1,0 +1,320 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/detail/epoll_reactor.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/detail</a> - epoll_reactor.hpp<span style="font-size: 80%;"> (source / <a href="epoll_reactor.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">66.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // detail/epoll_reactor.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DETAIL_EPOLL_REACTOR_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DETAIL_EPOLL_REACTOR_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #if defined(BOOST_ASIO_HAS_EPOLL)
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;boost/asio/io_service.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/asio/detail/atomic_count.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/detail/limits.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/detail/mutex.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/asio/detail/object_pool.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/asio/detail/op_queue.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/asio/detail/reactor_op.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/asio/detail/select_interrupter.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/asio/detail/socket_types.hpp&gt;
+<span class="lineNum">      31 </span>            : #include &lt;boost/asio/detail/timer_queue_base.hpp&gt;
+<span class="lineNum">      32 </span>            : #include &lt;boost/asio/detail/timer_queue_set.hpp&gt;
+<span class="lineNum">      33 </span>            : #include &lt;boost/asio/detail/wait_op.hpp&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : namespace boost {
+<span class="lineNum">      38 </span>            : namespace asio {
+<span class="lineNum">      39 </span>            : namespace detail {
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : class epoll_reactor
+<span class="lineNum">      42 </span>            :   : public boost::asio::detail::service_base&lt;epoll_reactor&gt;
+<span class="lineNum">      43 </span>            : {
+<span class="lineNum">      44 </span>            : public:
+<span class="lineNum">      45 </span>            :   enum op_types { read_op = 0, write_op = 1,
+<span class="lineNum">      46 </span>            :     connect_op = 1, except_op = 2, max_ops = 3 };
+<a name="47"><span class="lineNum">      47 </span>            : </a>
+<span class="lineNum">      48 </span>            :   // Per-descriptor queues.
+<span class="lineNum">      49 </span><span class="lineCov">        261 :   class descriptor_state : operation</span>
+<span class="lineNum">      50 </span>            :   {
+<span class="lineNum">      51 </span>            :     friend class epoll_reactor;
+<span class="lineNum">      52 </span>            :     friend class object_pool_access;
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            :     descriptor_state* next_;
+<span class="lineNum">      55 </span>            :     descriptor_state* prev_;
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :     mutex mutex_;
+<span class="lineNum">      58 </span>            :     epoll_reactor* reactor_;
+<span class="lineNum">      59 </span>            :     int descriptor_;
+<span class="lineNum">      60 </span>            :     uint32_t registered_events_;
+<span class="lineNum">      61 </span>            :     op_queue&lt;reactor_op&gt; op_queue_[max_ops];
+<span class="lineNum">      62 </span>            :     bool shutdown_;
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :     BOOST_ASIO_DECL descriptor_state();
+<span class="lineNum">      65 </span><span class="lineCov">        254 :     void set_ready_events(uint32_t events) { task_result_ = events; }</span>
+<span class="lineNum">      66 </span>            :     BOOST_ASIO_DECL operation* perform_io(uint32_t events);
+<span class="lineNum">      67 </span>            :     BOOST_ASIO_DECL static void do_complete(
+<span class="lineNum">      68 </span>            :         io_service_impl* owner, operation* base,
+<span class="lineNum">      69 </span>            :         const boost::system::error_code&amp; ec, std::size_t bytes_transferred);
+<span class="lineNum">      70 </span>            :   };
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :   // Per-descriptor data.
+<span class="lineNum">      73 </span>            :   typedef descriptor_state* per_descriptor_data;
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            :   // Constructor.
+<span class="lineNum">      76 </span>            :   BOOST_ASIO_DECL epoll_reactor(boost::asio::io_service&amp; io_service);
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :   // Destructor.
+<span class="lineNum">      79 </span>            :   BOOST_ASIO_DECL ~epoll_reactor();
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            :   // Destroy all user-defined handler objects owned by the service.
+<span class="lineNum">      82 </span>            :   BOOST_ASIO_DECL void shutdown_service();
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            :   // Recreate internal descriptors following a fork.
+<span class="lineNum">      85 </span>            :   BOOST_ASIO_DECL void fork_service(
+<span class="lineNum">      86 </span>            :       boost::asio::io_service::fork_event fork_ev);
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            :   // Initialise the task.
+<span class="lineNum">      89 </span>            :   BOOST_ASIO_DECL void init_task();
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            :   // Register a socket with the reactor. Returns 0 on success, system error
+<span class="lineNum">      92 </span>            :   // code on failure.
+<span class="lineNum">      93 </span>            :   BOOST_ASIO_DECL int register_descriptor(socket_type descriptor,
+<span class="lineNum">      94 </span>            :       per_descriptor_data&amp; descriptor_data);
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            :   // Register a descriptor with an associated single operation. Returns 0 on
+<span class="lineNum">      97 </span>            :   // success, system error code on failure.
+<span class="lineNum">      98 </span>            :   BOOST_ASIO_DECL int register_internal_descriptor(
+<span class="lineNum">      99 </span>            :       int op_type, socket_type descriptor,
+<span class="lineNum">     100 </span>            :       per_descriptor_data&amp; descriptor_data, reactor_op* op);
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :   // Move descriptor registration from one descriptor_data object to another.
+<span class="lineNum">     103 </span>            :   BOOST_ASIO_DECL void move_descriptor(socket_type descriptor,
+<span class="lineNum">     104 </span>            :       per_descriptor_data&amp; target_descriptor_data,
+<span class="lineNum">     105 </span>            :       per_descriptor_data&amp; source_descriptor_data);
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :   // Post a reactor operation for immediate completion.
+<span class="lineNum">     108 </span>            :   void post_immediate_completion(reactor_op* op, bool is_continuation)
+<span class="lineNum">     109 </span>            :   {
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :     io_service_.post_immediate_completion(op, is_continuation);</span>
+<span class="lineNum">     111 </span>            :   }
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :   // Start a new operation. The reactor operation will be performed when the
+<span class="lineNum">     114 </span>            :   // given descriptor is flagged as ready, or an error has occurred.
+<span class="lineNum">     115 </span>            :   BOOST_ASIO_DECL void start_op(int op_type, socket_type descriptor,
+<span class="lineNum">     116 </span>            :       per_descriptor_data&amp; descriptor_data, reactor_op* op,
+<span class="lineNum">     117 </span>            :       bool is_continuation, bool allow_speculative);
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :   // Cancel all operations associated with the given descriptor. The
+<span class="lineNum">     120 </span>            :   // handlers associated with the descriptor will be invoked with the
+<span class="lineNum">     121 </span>            :   // operation_aborted error.
+<span class="lineNum">     122 </span>            :   BOOST_ASIO_DECL void cancel_ops(socket_type descriptor,
+<span class="lineNum">     123 </span>            :       per_descriptor_data&amp; descriptor_data);
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :   // Cancel any operations that are running against the descriptor and remove
+<span class="lineNum">     126 </span>            :   // its registration from the reactor.
+<span class="lineNum">     127 </span>            :   BOOST_ASIO_DECL void deregister_descriptor(socket_type descriptor,
+<span class="lineNum">     128 </span>            :       per_descriptor_data&amp; descriptor_data, bool closing);
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :   // Remote the descriptor's registration from the reactor.
+<span class="lineNum">     131 </span>            :   BOOST_ASIO_DECL void deregister_internal_descriptor(
+<span class="lineNum">     132 </span>            :       socket_type descriptor, per_descriptor_data&amp; descriptor_data);
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            :   // Add a new timer queue to the reactor.
+<span class="lineNum">     135 </span>            :   template &lt;typename Time_Traits&gt;
+<span class="lineNum">     136 </span>            :   void add_timer_queue(timer_queue&lt;Time_Traits&gt;&amp; timer_queue);
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :   // Remove a timer queue from the reactor.
+<span class="lineNum">     139 </span>            :   template &lt;typename Time_Traits&gt;
+<span class="lineNum">     140 </span>            :   void remove_timer_queue(timer_queue&lt;Time_Traits&gt;&amp; timer_queue);
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            :   // Schedule a new operation in the given timer queue to expire at the
+<span class="lineNum">     143 </span>            :   // specified absolute time.
+<span class="lineNum">     144 </span>            :   template &lt;typename Time_Traits&gt;
+<span class="lineNum">     145 </span>            :   void schedule_timer(timer_queue&lt;Time_Traits&gt;&amp; queue,
+<span class="lineNum">     146 </span>            :       const typename Time_Traits::time_type&amp; time,
+<span class="lineNum">     147 </span>            :       typename timer_queue&lt;Time_Traits&gt;::per_timer_data&amp; timer, wait_op* op);
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            :   // Cancel the timer operations associated with the given token. Returns the
+<span class="lineNum">     150 </span>            :   // number of operations that have been posted or dispatched.
+<span class="lineNum">     151 </span>            :   template &lt;typename Time_Traits&gt;
+<span class="lineNum">     152 </span>            :   std::size_t cancel_timer(timer_queue&lt;Time_Traits&gt;&amp; queue,
+<span class="lineNum">     153 </span>            :       typename timer_queue&lt;Time_Traits&gt;::per_timer_data&amp; timer,
+<span class="lineNum">     154 </span>            :       std::size_t max_cancelled = (std::numeric_limits&lt;std::size_t&gt;::max)());
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :   // Run epoll once until interrupted or events are ready to be dispatched.
+<span class="lineNum">     157 </span>            :   BOOST_ASIO_DECL void run(bool block, op_queue&lt;operation&gt;&amp; ops);
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :   // Interrupt the select loop.
+<span class="lineNum">     160 </span>            :   BOOST_ASIO_DECL void interrupt();
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            : private:
+<span class="lineNum">     163 </span>            :   // The hint to pass to epoll_create to size its data structures.
+<span class="lineNum">     164 </span>            :   enum { epoll_size = 20000 };
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :   // Create the epoll file descriptor. Throws an exception if the descriptor
+<span class="lineNum">     167 </span>            :   // cannot be created.
+<span class="lineNum">     168 </span>            :   BOOST_ASIO_DECL static int do_epoll_create();
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :   // Create the timerfd file descriptor. Does not throw.
+<span class="lineNum">     171 </span>            :   BOOST_ASIO_DECL static int do_timerfd_create();
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :   // Allocate a new descriptor state object.
+<span class="lineNum">     174 </span>            :   BOOST_ASIO_DECL descriptor_state* allocate_descriptor_state();
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            :   // Free an existing descriptor state object.
+<span class="lineNum">     177 </span>            :   BOOST_ASIO_DECL void free_descriptor_state(descriptor_state* s);
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :   // Helper function to add a new timer queue.
+<span class="lineNum">     180 </span>            :   BOOST_ASIO_DECL void do_add_timer_queue(timer_queue_base&amp; queue);
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            :   // Helper function to remove a timer queue.
+<span class="lineNum">     183 </span>            :   BOOST_ASIO_DECL void do_remove_timer_queue(timer_queue_base&amp; queue);
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :   // Called to recalculate and update the timeout.
+<span class="lineNum">     186 </span>            :   BOOST_ASIO_DECL void update_timeout();
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :   // Get the timeout value for the epoll_wait call. The timeout value is
+<span class="lineNum">     189 </span>            :   // returned as a number of milliseconds. A return value of -1 indicates
+<span class="lineNum">     190 </span>            :   // that epoll_wait should block indefinitely.
+<span class="lineNum">     191 </span>            :   BOOST_ASIO_DECL int get_timeout();
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : #if defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     194 </span>            :   // Get the timeout value for the timer descriptor. The return value is the
+<span class="lineNum">     195 </span>            :   // flag argument to be used when calling timerfd_settime.
+<span class="lineNum">     196 </span>            :   BOOST_ASIO_DECL int get_timeout(itimerspec&amp; ts);
+<span class="lineNum">     197 </span>            : #endif // defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            :   // The io_service implementation used to post completions.
+<span class="lineNum">     200 </span>            :   io_service_impl&amp; io_service_;
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            :   // Mutex to protect access to internal data.
+<span class="lineNum">     203 </span>            :   mutex mutex_;
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            :   // The interrupter is used to break a blocking epoll_wait call.
+<span class="lineNum">     206 </span>            :   select_interrupter interrupter_;
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            :   // The epoll file descriptor.
+<span class="lineNum">     209 </span>            :   int epoll_fd_;
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :   // The timer file descriptor.
+<span class="lineNum">     212 </span>            :   int timer_fd_;
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            :   // The timer queues.
+<span class="lineNum">     215 </span>            :   timer_queue_set timer_queues_;
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :   // Whether the service has been shut down.
+<span class="lineNum">     218 </span>            :   bool shutdown_;
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            :   // Mutex to protect access to the registered descriptors.
+<span class="lineNum">     221 </span>            :   mutex registered_descriptors_mutex_;
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            :   // Keep track of all registered descriptors.
+<span class="lineNum">     224 </span>            :   object_pool&lt;descriptor_state&gt; registered_descriptors_;
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            :   // Helper class to do post-perform_io cleanup.
+<span class="lineNum">     227 </span>            :   struct perform_io_cleanup_on_block_exit;
+<span class="lineNum">     228 </span>            :   friend struct perform_io_cleanup_on_block_exit;
+<span class="lineNum">     229 </span>            : };
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            : } // namespace detail
+<span class="lineNum">     232 </span>            : } // namespace asio
+<span class="lineNum">     233 </span>            : } // namespace boost
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            : #include &lt;boost/asio/detail/impl/epoll_reactor.hpp&gt;
+<span class="lineNum">     238 </span>            : #if defined(BOOST_ASIO_HEADER_ONLY)
+<span class="lineNum">     239 </span>            : # include &lt;boost/asio/detail/impl/epoll_reactor.ipp&gt;
+<span class="lineNum">     240 </span>            : #endif // defined(BOOST_ASIO_HEADER_ONLY)
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            : #endif // defined(BOOST_ASIO_HAS_EPOLL)
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            : #endif // BOOST_ASIO_DETAIL_EPOLL_REACTOR_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

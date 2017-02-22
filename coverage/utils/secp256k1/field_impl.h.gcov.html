@@ -1,0 +1,339 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - utils/secp256k1/field_impl.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">utils/secp256k1</a> - field_impl.h<span style="font-size: 80%;"> (source / <a href="field_impl.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">133</td>
+            <td class="headerCovTableEntry">134</td>
+            <td class="headerCovTableEntryHi">99.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /**********************************************************************</a>
+<span class="lineNum">       2 </span>            :  * Copyright (c) 2013, 2014 Pieter Wuille                             *
+<span class="lineNum">       3 </span>            :  * Distributed under the MIT software license, see the accompanying   *
+<span class="lineNum">       4 </span>            :  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+<span class="lineNum">       5 </span>            :  **********************************************************************/
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #ifndef _SECP256K1_FIELD_IMPL_H_
+<span class="lineNum">       8 </span>            : #define _SECP256K1_FIELD_IMPL_H_
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #if defined HAVE_CONFIG_H
+<span class="lineNum">      11 </span>            : #include &quot;libsecp256k1-config.h&quot;
+<span class="lineNum">      12 </span>            : #endif
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &quot;util.h&quot;
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #if defined(USE_FIELD_10X26)
+<span class="lineNum">      17 </span>            : #include &quot;field_10x26_impl.h&quot;
+<span class="lineNum">      18 </span>            : #elif defined(USE_FIELD_5X52)
+<span class="lineNum">      19 </span>            : #include &quot;field_5x52_impl.h&quot;
+<span class="lineNum">      20 </span>            : #else
+<span class="lineNum">      21 </span>            : #error &quot;Please select field implementation&quot;
+<span class="lineNum">      22 </span>            : #endif
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span><span class="lineCov">      32038 : SECP256K1_INLINE static int secp256k1_fe_equal_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {</span>
+<span class="lineNum">      25 </span>            :     secp256k1_fe_t na;
+<span class="lineNum">      26 </span><span class="lineCov">      32038 :     secp256k1_fe_negate(&amp;na, a, 1);</span>
+<span class="lineNum">      27 </span><span class="lineCov">      32038 :     secp256k1_fe_add(&amp;na, b);</span>
+<span class="lineNum">      28 </span><span class="lineCov">      32038 :     return secp256k1_fe_normalizes_to_zero_var(&amp;na);</span>
+<span class="lineNum">      29 </span>            : }
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span><span class="lineCov">      32034 : static int secp256k1_fe_sqrt_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {</span>
+<span class="lineNum">      32 </span>            :     secp256k1_fe_t x2, x3, x6, x9, x11, x22, x44, x88, x176, x220, x223, t1;
+<span class="lineNum">      33 </span>            :     int j;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            :     /** The binary representation of (p + 1)/4 has 3 blocks of 1s, with lengths in
+<span class="lineNum">      36 </span>            :      *  { 2, 22, 223 }. Use an addition chain to calculate 2^n - 1 for each block:
+<span class="lineNum">      37 </span>            :      *  1, [2], 3, 6, 9, 11, [22], 44, 88, 176, 220, [223]
+<span class="lineNum">      38 </span>            :      */
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">      32034 :     secp256k1_fe_sqr(&amp;x2, a);</span>
+<span class="lineNum">      41 </span><span class="lineCov">      32034 :     secp256k1_fe_mul(&amp;x2, &amp;x2, a);</span>
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span><span class="lineCov">      32034 :     secp256k1_fe_sqr(&amp;x3, &amp;x2);</span>
+<span class="lineNum">      44 </span><span class="lineCov">      32034 :     secp256k1_fe_mul(&amp;x3, &amp;x3, a);</span>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span><span class="lineCov">      32034 :     x6 = x3;</span>
+<span class="lineNum">      47 </span><span class="lineCov">     128136 :     for (j=0; j&lt;3; j++) {</span>
+<span class="lineNum">      48 </span><span class="lineCov">      96102 :         secp256k1_fe_sqr(&amp;x6, &amp;x6);</span>
+<span class="lineNum">      49 </span>            :     }
+<span class="lineNum">      50 </span><span class="lineCov">      32034 :     secp256k1_fe_mul(&amp;x6, &amp;x6, &amp;x3);</span>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineCov">      32034 :     x9 = x6;</span>
+<span class="lineNum">      53 </span><span class="lineCov">     128136 :     for (j=0; j&lt;3; j++) {</span>
+<span class="lineNum">      54 </span><span class="lineCov">      96102 :         secp256k1_fe_sqr(&amp;x9, &amp;x9);</span>
+<span class="lineNum">      55 </span>            :     }
+<span class="lineNum">      56 </span><span class="lineCov">      32034 :     secp256k1_fe_mul(&amp;x9, &amp;x9, &amp;x3);</span>
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span><span class="lineCov">      32034 :     x11 = x9;</span>
+<span class="lineNum">      59 </span><span class="lineCov">      96102 :     for (j=0; j&lt;2; j++) {</span>
+<span class="lineNum">      60 </span><span class="lineCov">      64068 :         secp256k1_fe_sqr(&amp;x11, &amp;x11);</span>
+<span class="lineNum">      61 </span>            :     }
+<span class="lineNum">      62 </span><span class="lineCov">      32034 :     secp256k1_fe_mul(&amp;x11, &amp;x11, &amp;x2);</span>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">      32034 :     x22 = x11;</span>
+<span class="lineNum">      65 </span><span class="lineCov">     384408 :     for (j=0; j&lt;11; j++) {</span>
+<span class="lineNum">      66 </span><span class="lineCov">     352374 :         secp256k1_fe_sqr(&amp;x22, &amp;x22);</span>
+<span class="lineNum">      67 </span>            :     }
+<span class="lineNum">      68 </span><span class="lineCov">      32034 :     secp256k1_fe_mul(&amp;x22, &amp;x22, &amp;x11);</span>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineCov">      32034 :     x44 = x22;</span>
+<span class="lineNum">      71 </span><span class="lineCov">     736760 :     for (j=0; j&lt;22; j++) {</span>
+<span class="lineNum">      72 </span><span class="lineCov">     704726 :         secp256k1_fe_sqr(&amp;x44, &amp;x44);</span>
+<span class="lineNum">      73 </span>            :     }
+<span class="lineNum">      74 </span><span class="lineCov">      32034 :     secp256k1_fe_mul(&amp;x44, &amp;x44, &amp;x22);</span>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">      32034 :     x88 = x44;</span>
+<span class="lineNum">      77 </span><span class="lineCov">    1441486 :     for (j=0; j&lt;44; j++) {</span>
+<span class="lineNum">      78 </span><span class="lineCov">    1409452 :         secp256k1_fe_sqr(&amp;x88, &amp;x88);</span>
+<span class="lineNum">      79 </span>            :     }
+<span class="lineNum">      80 </span><span class="lineCov">      32034 :     secp256k1_fe_mul(&amp;x88, &amp;x88, &amp;x44);</span>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span><span class="lineCov">      32034 :     x176 = x88;</span>
+<span class="lineNum">      83 </span><span class="lineCov">    2850762 :     for (j=0; j&lt;88; j++) {</span>
+<span class="lineNum">      84 </span><span class="lineCov">    2818728 :         secp256k1_fe_sqr(&amp;x176, &amp;x176);</span>
+<span class="lineNum">      85 </span>            :     }
+<span class="lineNum">      86 </span><span class="lineCov">      32034 :     secp256k1_fe_mul(&amp;x176, &amp;x176, &amp;x88);</span>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">      32034 :     x220 = x176;</span>
+<span class="lineNum">      89 </span><span class="lineCov">    1441442 :     for (j=0; j&lt;44; j++) {</span>
+<span class="lineNum">      90 </span><span class="lineCov">    1409408 :         secp256k1_fe_sqr(&amp;x220, &amp;x220);</span>
+<span class="lineNum">      91 </span>            :     }
+<span class="lineNum">      92 </span><span class="lineCov">      32034 :     secp256k1_fe_mul(&amp;x220, &amp;x220, &amp;x44);</span>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span><span class="lineCov">      32034 :     x223 = x220;</span>
+<span class="lineNum">      95 </span><span class="lineCov">     128136 :     for (j=0; j&lt;3; j++) {</span>
+<span class="lineNum">      96 </span><span class="lineCov">      96102 :         secp256k1_fe_sqr(&amp;x223, &amp;x223);</span>
+<span class="lineNum">      97 </span>            :     }
+<span class="lineNum">      98 </span><span class="lineCov">      32034 :     secp256k1_fe_mul(&amp;x223, &amp;x223, &amp;x3);</span>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :     /* The final result is then assembled using a sliding window over the blocks. */
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span><span class="lineCov">      32034 :     t1 = x223;</span>
+<span class="lineNum">     103 </span><span class="lineCov">     768793 :     for (j=0; j&lt;23; j++) {</span>
+<span class="lineNum">     104 </span><span class="lineCov">     736759 :         secp256k1_fe_sqr(&amp;t1, &amp;t1);</span>
+<span class="lineNum">     105 </span>            :     }
+<span class="lineNum">     106 </span><span class="lineCov">      32034 :     secp256k1_fe_mul(&amp;t1, &amp;t1, &amp;x22);</span>
+<span class="lineNum">     107 </span><span class="lineCov">     224238 :     for (j=0; j&lt;6; j++) {</span>
+<span class="lineNum">     108 </span><span class="lineCov">     192204 :         secp256k1_fe_sqr(&amp;t1, &amp;t1);</span>
+<span class="lineNum">     109 </span>            :     }
+<span class="lineNum">     110 </span><span class="lineCov">      32034 :     secp256k1_fe_mul(&amp;t1, &amp;t1, &amp;x2);</span>
+<span class="lineNum">     111 </span><span class="lineCov">      32034 :     secp256k1_fe_sqr(&amp;t1, &amp;t1);</span>
+<span class="lineNum">     112 </span><span class="lineCov">      32034 :     secp256k1_fe_sqr(r, &amp;t1);</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :     /* Check that a square root was actually calculated */
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">      32034 :     secp256k1_fe_sqr(&amp;t1, r);</span>
+<span class="lineNum">     117 </span><span class="lineCov">      32034 :     return secp256k1_fe_equal_var(&amp;t1, a);</span>
+<span class="lineNum">     118 </span>            : }
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span><span class="lineCov">       1953 : static void secp256k1_fe_inv(secp256k1_fe_t *r, const secp256k1_fe_t *a) {</span>
+<span class="lineNum">     121 </span>            :     secp256k1_fe_t x2, x3, x6, x9, x11, x22, x44, x88, x176, x220, x223, t1;
+<span class="lineNum">     122 </span>            :     int j;
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :     /** The binary representation of (p - 2) has 5 blocks of 1s, with lengths in
+<span class="lineNum">     125 </span>            :      *  { 1, 2, 22, 223 }. Use an addition chain to calculate 2^n - 1 for each block:
+<span class="lineNum">     126 </span>            :      *  [1], [2], 3, 6, 9, 11, [22], 44, 88, 176, 220, [223]
+<span class="lineNum">     127 </span>            :      */
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span><span class="lineCov">       1953 :     secp256k1_fe_sqr(&amp;x2, a);</span>
+<span class="lineNum">     130 </span><span class="lineCov">       1953 :     secp256k1_fe_mul(&amp;x2, &amp;x2, a);</span>
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span><span class="lineCov">       1953 :     secp256k1_fe_sqr(&amp;x3, &amp;x2);</span>
+<span class="lineNum">     133 </span><span class="lineCov">       1953 :     secp256k1_fe_mul(&amp;x3, &amp;x3, a);</span>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineCov">       1953 :     x6 = x3;</span>
+<span class="lineNum">     136 </span><span class="lineCov">       7812 :     for (j=0; j&lt;3; j++) {</span>
+<span class="lineNum">     137 </span><span class="lineCov">       5859 :         secp256k1_fe_sqr(&amp;x6, &amp;x6);</span>
+<span class="lineNum">     138 </span>            :     }
+<span class="lineNum">     139 </span><span class="lineCov">       1953 :     secp256k1_fe_mul(&amp;x6, &amp;x6, &amp;x3);</span>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineCov">       1953 :     x9 = x6;</span>
+<span class="lineNum">     142 </span><span class="lineCov">       7812 :     for (j=0; j&lt;3; j++) {</span>
+<span class="lineNum">     143 </span><span class="lineCov">       5859 :         secp256k1_fe_sqr(&amp;x9, &amp;x9);</span>
+<span class="lineNum">     144 </span>            :     }
+<span class="lineNum">     145 </span><span class="lineCov">       1953 :     secp256k1_fe_mul(&amp;x9, &amp;x9, &amp;x3);</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">       1953 :     x11 = x9;</span>
+<span class="lineNum">     148 </span><span class="lineCov">       5859 :     for (j=0; j&lt;2; j++) {</span>
+<span class="lineNum">     149 </span><span class="lineCov">       3906 :         secp256k1_fe_sqr(&amp;x11, &amp;x11);</span>
+<span class="lineNum">     150 </span>            :     }
+<span class="lineNum">     151 </span><span class="lineCov">       1953 :     secp256k1_fe_mul(&amp;x11, &amp;x11, &amp;x2);</span>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineCov">       1953 :     x22 = x11;</span>
+<span class="lineNum">     154 </span><span class="lineCov">      23436 :     for (j=0; j&lt;11; j++) {</span>
+<span class="lineNum">     155 </span><span class="lineCov">      21483 :         secp256k1_fe_sqr(&amp;x22, &amp;x22);</span>
+<span class="lineNum">     156 </span>            :     }
+<span class="lineNum">     157 </span><span class="lineCov">       1953 :     secp256k1_fe_mul(&amp;x22, &amp;x22, &amp;x11);</span>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineCov">       1953 :     x44 = x22;</span>
+<span class="lineNum">     160 </span><span class="lineCov">      44919 :     for (j=0; j&lt;22; j++) {</span>
+<span class="lineNum">     161 </span><span class="lineCov">      42966 :         secp256k1_fe_sqr(&amp;x44, &amp;x44);</span>
+<span class="lineNum">     162 </span>            :     }
+<span class="lineNum">     163 </span><span class="lineCov">       1952 :     secp256k1_fe_mul(&amp;x44, &amp;x44, &amp;x22);</span>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineCov">       1952 :     x88 = x44;</span>
+<span class="lineNum">     166 </span><span class="lineCov">      87840 :     for (j=0; j&lt;44; j++) {</span>
+<span class="lineNum">     167 </span><span class="lineCov">      85888 :         secp256k1_fe_sqr(&amp;x88, &amp;x88);</span>
+<span class="lineNum">     168 </span>            :     }
+<span class="lineNum">     169 </span><span class="lineCov">       1953 :     secp256k1_fe_mul(&amp;x88, &amp;x88, &amp;x44);</span>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineCov">       1953 :     x176 = x88;</span>
+<span class="lineNum">     172 </span><span class="lineCov">     173729 :     for (j=0; j&lt;88; j++) {</span>
+<span class="lineNum">     173 </span><span class="lineCov">     171776 :         secp256k1_fe_sqr(&amp;x176, &amp;x176);</span>
+<span class="lineNum">     174 </span>            :     }
+<span class="lineNum">     175 </span><span class="lineCov">       1953 :     secp256k1_fe_mul(&amp;x176, &amp;x176, &amp;x88);</span>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineCov">       1953 :     x220 = x176;</span>
+<span class="lineNum">     178 </span><span class="lineCov">      87885 :     for (j=0; j&lt;44; j++) {</span>
+<span class="lineNum">     179 </span><span class="lineCov">      85932 :         secp256k1_fe_sqr(&amp;x220, &amp;x220);</span>
+<span class="lineNum">     180 </span>            :     }
+<span class="lineNum">     181 </span><span class="lineCov">       1953 :     secp256k1_fe_mul(&amp;x220, &amp;x220, &amp;x44);</span>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineCov">       1953 :     x223 = x220;</span>
+<span class="lineNum">     184 </span><span class="lineCov">       7812 :     for (j=0; j&lt;3; j++) {</span>
+<span class="lineNum">     185 </span><span class="lineCov">       5859 :         secp256k1_fe_sqr(&amp;x223, &amp;x223);</span>
+<span class="lineNum">     186 </span>            :     }
+<span class="lineNum">     187 </span><span class="lineCov">       1953 :     secp256k1_fe_mul(&amp;x223, &amp;x223, &amp;x3);</span>
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            :     /* The final result is then assembled using a sliding window over the blocks. */
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">       1953 :     t1 = x223;</span>
+<span class="lineNum">     192 </span><span class="lineCov">      46872 :     for (j=0; j&lt;23; j++) {</span>
+<span class="lineNum">     193 </span><span class="lineCov">      44919 :         secp256k1_fe_sqr(&amp;t1, &amp;t1);</span>
+<span class="lineNum">     194 </span>            :     }
+<span class="lineNum">     195 </span><span class="lineCov">       1953 :     secp256k1_fe_mul(&amp;t1, &amp;t1, &amp;x22);</span>
+<span class="lineNum">     196 </span><span class="lineCov">      11718 :     for (j=0; j&lt;5; j++) {</span>
+<span class="lineNum">     197 </span><span class="lineCov">       9765 :         secp256k1_fe_sqr(&amp;t1, &amp;t1);</span>
+<span class="lineNum">     198 </span>            :     }
+<span class="lineNum">     199 </span><span class="lineCov">       1953 :     secp256k1_fe_mul(&amp;t1, &amp;t1, a);</span>
+<span class="lineNum">     200 </span><span class="lineCov">       7812 :     for (j=0; j&lt;3; j++) {</span>
+<span class="lineNum">     201 </span><span class="lineCov">       5859 :         secp256k1_fe_sqr(&amp;t1, &amp;t1);</span>
+<span class="lineNum">     202 </span>            :     }
+<span class="lineNum">     203 </span><span class="lineCov">       1953 :     secp256k1_fe_mul(&amp;t1, &amp;t1, &amp;x2);</span>
+<span class="lineNum">     204 </span><span class="lineCov">       5859 :     for (j=0; j&lt;2; j++) {</span>
+<span class="lineNum">     205 </span><span class="lineCov">       3906 :         secp256k1_fe_sqr(&amp;t1, &amp;t1);</span>
+<span class="lineNum">     206 </span>            :     }
+<span class="lineNum">     207 </span><span class="lineCov">       1953 :     secp256k1_fe_mul(r, a, &amp;t1);</span>
+<a name="208"><span class="lineNum">     208 </span><span class="lineCov">       1953 : }</span></a>
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span><span class="lineCov">      32008 : static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {</span>
+<span class="lineNum">     211 </span>            : #if defined(USE_FIELD_INV_BUILTIN)
+<span class="lineNum">     212 </span>            :     secp256k1_fe_inv(r, a);
+<span class="lineNum">     213 </span>            : #elif defined(USE_FIELD_INV_NUM)
+<span class="lineNum">     214 </span>            :     secp256k1_num_t n, m;
+<span class="lineNum">     215 </span>            :     /* secp256k1 field prime, value p defined in &quot;Standards for Efficient Cryptography&quot; (SEC2) 2.7.1. */
+<span class="lineNum">     216 </span>            :     static const unsigned char prime[32] = {
+<span class="lineNum">     217 </span>            :         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+<span class="lineNum">     218 </span>            :         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+<span class="lineNum">     219 </span>            :         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+<span class="lineNum">     220 </span>            :         0xFF,0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F
+<span class="lineNum">     221 </span>            :     };
+<span class="lineNum">     222 </span>            :     unsigned char b[32];
+<span class="lineNum">     223 </span><span class="lineCov">      32008 :     secp256k1_fe_t c = *a;</span>
+<span class="lineNum">     224 </span><span class="lineCov">      32008 :     secp256k1_fe_normalize_var(&amp;c);</span>
+<span class="lineNum">     225 </span><span class="lineCov">      32008 :     secp256k1_fe_get_b32(b, &amp;c);</span>
+<span class="lineNum">     226 </span><span class="lineCov">      32008 :     secp256k1_num_set_bin(&amp;n, b, 32);</span>
+<span class="lineNum">     227 </span><span class="lineCov">      32008 :     secp256k1_num_set_bin(&amp;m, prime, 32);</span>
+<span class="lineNum">     228 </span><span class="lineCov">      32008 :     secp256k1_num_mod_inverse(&amp;n, &amp;n, &amp;m);</span>
+<span class="lineNum">     229 </span><span class="lineCov">      32008 :     secp256k1_num_get_bin(b, 32, &amp;n);</span>
+<span class="lineNum">     230 </span><span class="lineCov">      32008 :     VERIFY_CHECK(secp256k1_fe_set_b32(r, b));</span>
+<span class="lineNum">     231 </span>            : #else
+<span class="lineNum">     232 </span>            : #error &quot;Please select field inverse implementation&quot;
+<span class="lineNum">     233 </span>            : #endif
+<span class="lineNum">     234 </span><span class="lineCov">      32008 : }</span>
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span><span class="lineCov">          4 : static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe_t *r, const secp256k1_fe_t *a) {</span>
+<span class="lineNum">     237 </span>            :     secp256k1_fe_t u;
+<span class="lineNum">     238 </span>            :     size_t i;
+<span class="lineNum">     239 </span><span class="lineCov">          4 :     if (len &lt; 1) {</span>
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :         return;</span>
+<span class="lineNum">     241 </span>            :     }
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            :     VERIFY_CHECK((r + len &lt;= a) || (a + len &lt;= r));
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span><span class="lineCov">          4 :     r[0] = a[0];</span>
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span><span class="lineCov">          4 :     i = 0;</span>
+<span class="lineNum">     248 </span><span class="lineCov">      34820 :     while (++i &lt; len) {</span>
+<span class="lineNum">     249 </span><span class="lineCov">      34812 :         secp256k1_fe_mul(&amp;r[i], &amp;r[i - 1], &amp;a[i]);</span>
+<span class="lineNum">     250 </span>            :     }
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span><span class="lineCov">          4 :     secp256k1_fe_inv_var(&amp;u, &amp;r[--i]);</span>
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span><span class="lineCov">      34820 :     while (i &gt; 0) {</span>
+<span class="lineNum">     255 </span><span class="lineCov">      34812 :         int j = i--;</span>
+<span class="lineNum">     256 </span><span class="lineCov">      69624 :         secp256k1_fe_mul(&amp;r[j], &amp;r[i], &amp;u);</span>
+<span class="lineNum">     257 </span><span class="lineCov">      34812 :         secp256k1_fe_mul(&amp;u, &amp;u, &amp;a[j]);</span>
+<span class="lineNum">     258 </span>            :     }
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span><span class="lineCov">          4 :     r[0] = u;</span>
+<span class="lineNum">     261 </span>            : }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

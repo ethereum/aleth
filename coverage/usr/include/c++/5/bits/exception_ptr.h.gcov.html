@@ -1,0 +1,281 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/bits/exception_ptr.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5/bits</a> - exception_ptr.h<span style="font-size: 80%;"> (source / <a href="exception_ptr.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryLo">12.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Exception Handling support header (exception_ptr class) for -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2008-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of GCC.
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // GCC is free software; you can redistribute it and/or modify
+<span class="lineNum">       8 </span>            : // it under the terms of the GNU General Public License as published by
+<span class="lineNum">       9 </span>            : // the Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">      10 </span>            : // any later version.
+<span class="lineNum">      11 </span>            : // 
+<span class="lineNum">      12 </span>            : // GCC is distributed in the hope that it will be useful,
+<span class="lineNum">      13 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      14 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      15 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      16 </span>            : // 
+<span class="lineNum">      17 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      18 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      19 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      22 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      23 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      24 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : /** @file bits/exception_ptr.h
+<span class="lineNum">      27 </span>            :  *  This is an internal header file, included by other library headers.
+<span class="lineNum">      28 </span>            :  *  Do not attempt to use it directly. @headername{exception}
+<span class="lineNum">      29 </span>            :  */
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : #ifndef _EXCEPTION_PTR_H
+<span class="lineNum">      32 </span>            : #define _EXCEPTION_PTR_H
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #pragma GCC visibility push(default)
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #include &lt;bits/c++config.h&gt;
+<span class="lineNum">      37 </span>            : #include &lt;bits/exception_defines.h&gt;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : #if ATOMIC_INT_LOCK_FREE &lt; 2
+<span class="lineNum">      40 </span>            : #  error This platform does not support exception propagation.
+<span class="lineNum">      41 </span>            : #endif
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : extern &quot;C++&quot; {
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : namespace std 
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span>            :   class type_info;
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :   /**
+<span class="lineNum">      50 </span>            :    * @addtogroup exceptions
+<span class="lineNum">      51 </span>            :    * @{
+<span class="lineNum">      52 </span>            :    */
+<span class="lineNum">      53 </span>            :   namespace __exception_ptr
+<span class="lineNum">      54 </span>            :   {
+<span class="lineNum">      55 </span>            :     class exception_ptr;
+<span class="lineNum">      56 </span>            :   }
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            :   using __exception_ptr::exception_ptr;
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :   /** Obtain an exception_ptr to the currently handled exception. If there
+<span class="lineNum">      61 </span>            :    *  is none, or the currently handled exception is foreign, return the null
+<span class="lineNum">      62 </span>            :    *  value.
+<span class="lineNum">      63 </span>            :    */
+<span class="lineNum">      64 </span>            :   exception_ptr current_exception() _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :   /// Throw the object pointed to by the exception_ptr.
+<span class="lineNum">      67 </span>            :   void rethrow_exception(exception_ptr) __attribute__ ((__noreturn__));
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :   namespace __exception_ptr
+<span class="lineNum">      70 </span>            :   {
+<span class="lineNum">      71 </span>            :     /**
+<span class="lineNum">      72 </span>            :      *  @brief An opaque pointer to an arbitrary exception.
+<span class="lineNum">      73 </span>            :      *  @ingroup exceptions
+<span class="lineNum">      74 </span>            :      */
+<span class="lineNum">      75 </span>            :     class exception_ptr
+<span class="lineNum">      76 </span>            :     {
+<span class="lineNum">      77 </span>            :       void* _M_exception_object;
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :       explicit exception_ptr(void* __e) _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            :       void _M_addref() _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">      82 </span>            :       void _M_release() _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            :       void *_M_get() const _GLIBCXX_NOEXCEPT __attribute__ ((__pure__));
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            :       friend exception_ptr std::current_exception() _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">      87 </span>            :       friend void std::rethrow_exception(exception_ptr);
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :     public:
+<span class="lineNum">      90 </span>            :       exception_ptr() _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :       exception_ptr(const exception_ptr&amp;) _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">      95 </span>            :       exception_ptr(nullptr_t) noexcept
+<span class="lineNum">      96 </span><span class="lineCov">          1 :       : _M_exception_object(0)</span>
+<span class="lineNum">      97 </span>            :       { }
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :       exception_ptr(exception_ptr&amp;&amp; __o) noexcept
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :       : _M_exception_object(__o._M_exception_object)</span>
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :       { __o._M_exception_object = 0; }</span>
+<span class="lineNum">     102 </span>            : #endif
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            : #if (__cplusplus &lt; 201103L) || defined (_GLIBCXX_EH_PTR_COMPAT)
+<span class="lineNum">     105 </span>            :       typedef void (exception_ptr::*__safe_bool)();
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :       // For construction from nullptr or 0.
+<span class="lineNum">     108 </span>            :       exception_ptr(__safe_bool) _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">     109 </span>            : #endif
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            :       exception_ptr&amp; 
+<span class="lineNum">     112 </span>            :       operator=(const exception_ptr&amp;) _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     115 </span>            :       exception_ptr&amp; 
+<span class="lineNum">     116 </span>            :       operator=(exception_ptr&amp;&amp; __o) noexcept
+<span class="lineNum">     117 </span>            :       {
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :         exception_ptr(static_cast&lt;exception_ptr&amp;&amp;&gt;(__o)).swap(*this);</span>
+<span class="lineNum">     119 </span>            :         return *this;
+<span class="lineNum">     120 </span>            :       }
+<span class="lineNum">     121 </span>            : #endif
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            :       ~exception_ptr() _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :       void 
+<span class="lineNum">     126 </span>            :       swap(exception_ptr&amp;) _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : #ifdef _GLIBCXX_EH_PTR_COMPAT
+<span class="lineNum">     129 </span>            :       // Retained for compatibility with CXXABI_1.3.
+<span class="lineNum">     130 </span>            :       void _M_safe_bool_dummy() _GLIBCXX_USE_NOEXCEPT
+<span class="lineNum">     131 </span>            :         __attribute__ ((__const__));
+<span class="lineNum">     132 </span>            :       bool operator!() const _GLIBCXX_USE_NOEXCEPT
+<span class="lineNum">     133 </span>            :         __attribute__ ((__pure__));
+<span class="lineNum">     134 </span>            :       operator __safe_bool() const _GLIBCXX_USE_NOEXCEPT;
+<span class="lineNum">     135 </span>            : #endif
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     138 </span>            :       explicit operator bool() const
+<span class="lineNum">     139 </span>            :       { return _M_exception_object; }
+<span class="lineNum">     140 </span>            : #endif
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            :       friend bool 
+<span class="lineNum">     143 </span>            :       operator==(const exception_ptr&amp;, const exception_ptr&amp;)
+<span class="lineNum">     144 </span>            :         _GLIBCXX_USE_NOEXCEPT __attribute__ ((__pure__));
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :       const class std::type_info*
+<span class="lineNum">     147 </span>            :       __cxa_exception_type() const _GLIBCXX_USE_NOEXCEPT
+<span class="lineNum">     148 </span>            :         __attribute__ ((__pure__));
+<span class="lineNum">     149 </span>            :     };
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            :     bool 
+<span class="lineNum">     152 </span>            :     operator==(const exception_ptr&amp;, const exception_ptr&amp;)
+<span class="lineNum">     153 </span>            :       _GLIBCXX_USE_NOEXCEPT __attribute__ ((__pure__));
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            :     bool 
+<span class="lineNum">     156 </span>            :     operator!=(const exception_ptr&amp;, const exception_ptr&amp;)
+<span class="lineNum">     157 </span>            :       _GLIBCXX_USE_NOEXCEPT __attribute__ ((__pure__));
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :     inline void
+<span class="lineNum">     160 </span>            :     swap(exception_ptr&amp; __lhs, exception_ptr&amp; __rhs)
+<span class="lineNum">     161 </span>            :     { __lhs.swap(__rhs); }
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            :   } // namespace __exception_ptr
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :   /// Obtain an exception_ptr pointing to a copy of the supplied object.
+<a name="167"><span class="lineNum">     167 </span>            :   template&lt;typename _Ex&gt;</a>
+<span class="lineNum">     168 </span>            :     exception_ptr 
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :     make_exception_ptr(_Ex __ex) _GLIBCXX_USE_NOEXCEPT</span>
+<span class="lineNum">     170 </span>            :     {
+<span class="lineNum">     171 </span>            : #if __cpp_exceptions
+<span class="lineNum">     172 </span>            :       try
+<span class="lineNum">     173 </span>            :         {
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :           throw __ex;</span>
+<span class="lineNum">     175 </span>            :         }
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :       catch(...)</span>
+<span class="lineNum">     177 </span>            :         {
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :           return current_exception();</span>
+<span class="lineNum">     179 </span>            :         }
+<span class="lineNum">     180 </span>            : #else
+<span class="lineNum">     181 </span>            :       return exception_ptr();
+<span class="lineNum">     182 </span>            : #endif
+<span class="lineNum">     183 </span>            :     }
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :   // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     186 </span>            :   // 1130. copy_exception name misleading
+<span class="lineNum">     187 </span>            :   /// Obtain an exception_ptr pointing to a copy of the supplied object.
+<span class="lineNum">     188 </span>            :   /// This function is deprecated, use std::make_exception_ptr instead.
+<span class="lineNum">     189 </span>            :   template&lt;typename _Ex&gt;
+<span class="lineNum">     190 </span>            :     exception_ptr
+<span class="lineNum">     191 </span>            :     copy_exception(_Ex __ex) _GLIBCXX_USE_NOEXCEPT _GLIBCXX_DEPRECATED;
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            :   template&lt;typename _Ex&gt;
+<span class="lineNum">     194 </span>            :     exception_ptr
+<span class="lineNum">     195 </span>            :     copy_exception(_Ex __ex) _GLIBCXX_USE_NOEXCEPT
+<span class="lineNum">     196 </span>            :     { return std::make_exception_ptr&lt;_Ex&gt;(__ex); }
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :   // @} group exceptions
+<span class="lineNum">     199 </span>            : } // namespace std
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            : } // extern &quot;C++&quot;
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            : #pragma GCC visibility pop
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

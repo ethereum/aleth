@@ -1,0 +1,539 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libp2p/NodeTable.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libp2p</a> - NodeTable.h<span style="font-size: 80%;"> (source / <a href="NodeTable.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">87</td>
+            <td class="headerCovTableEntry">97</td>
+            <td class="headerCovTableEntryMed">89.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntry">32</td>
+            <td class="headerCovTableEntryHi">90.6 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :  This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :  cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :  it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :  the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :  (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :  cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :  but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :  GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :  You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :  along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            :  */
+<span class="lineNum">      17 </span>            : /** @file NodeTable.h
+<span class="lineNum">      18 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      25 </span>            : #include &lt;deque&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;boost/integer/static_log2.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #include &lt;libp2p/UDP.h&gt;
+<span class="lineNum">      30 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace dev
+<span class="lineNum">      33 </span>            : {
+<span class="lineNum">      34 </span>            : namespace p2p
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : /**
+<span class="lineNum">      38 </span>            :  * NodeEntry
+<span class="lineNum">      39 </span>            :  * @brief Entry in Node Table
+<span class="lineNum">      40 </span>            :  */
+<span class="lineNum">      41 </span><span class="lineCov">         20 : struct NodeEntry: public Node</span>
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span>            :         NodeEntry(NodeID const&amp; _src, Public const&amp; _pubk, NodeIPEndpoint const&amp; _gw);
+<span class="lineNum">      44 </span>            :         unsigned const distance;        ///&lt; Node's distance (xor of _src as integer).
+<span class="lineNum">      45 </span>            :         bool pending = true;            ///&lt; Node will be ignored until Pong is received
+<span class="lineNum">      46 </span>            : };
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : enum NodeTableEventType
+<span class="lineNum">      49 </span>            : {
+<span class="lineNum">      50 </span>            :         NodeEntryAdded,
+<span class="lineNum">      51 </span>            :         NodeEntryDropped
+<span class="lineNum">      52 </span>            : };
+<a name="53"><span class="lineNum">      53 </span>            : </a>
+<span class="lineNum">      54 </span>            : class NodeTable;
+<span class="lineNum">      55 </span><span class="lineCov">         84 : class NodeTableEventHandler</span>
+<span class="lineNum">      56 </span>            : {
+<span class="lineNum">      57 </span>            :         friend class NodeTable;
+<span class="lineNum">      58 </span>            : public:
+<span class="lineNum">      59 </span>            :         virtual void processEvent(NodeID const&amp; _n, NodeTableEventType const&amp; _e) = 0;
+<span class="lineNum">      60 </span>            : 
+<a name="61"><span class="lineNum">      61 </span>            : protected:</a>
+<span class="lineNum">      62 </span>            :         /// Called by NodeTable on behalf of an implementation (Host) to process new events without blocking nodetable.
+<span class="lineNum">      63 </span><span class="lineCov">        208 :         void processEvents()</span>
+<span class="lineNum">      64 </span>            :         {
+<span class="lineNum">      65 </span><span class="lineCov">        225 :                 std::list&lt;std::pair&lt;NodeID, NodeTableEventType&gt;&gt; events;</span>
+<span class="lineNum">      66 </span>            :                 {
+<span class="lineNum">      67 </span><span class="lineCov">        433 :                         Guard l(x_events);</span>
+<span class="lineNum">      68 </span><span class="lineCov">        416 :                         if (!m_nodeEventHandler.size())</span>
+<span class="lineNum">      69 </span><span class="lineCov">        191 :                                 return;</span>
+<span class="lineNum">      70 </span><span class="lineCov">         17 :                         m_nodeEventHandler.unique();</span>
+<span class="lineNum">      71 </span><span class="lineCov">         75 :                         for (auto const&amp; n: m_nodeEventHandler)</span>
+<span class="lineNum">      72 </span><span class="lineCov">         96 :                                 events.push_back(std::make_pair(n,m_events[n]));</span>
+<span class="lineNum">      73 </span><span class="lineCov">         34 :                         m_nodeEventHandler.clear();</span>
+<span class="lineNum">      74 </span><span class="lineCov">         34 :                         m_events.clear();</span>
+<span class="lineNum">      75 </span>            :                 }
+<span class="lineNum">      76 </span><span class="lineCov">         92 :                 for (auto const&amp; e: events)</span>
+<span class="lineNum">      77 </span><span class="lineCov">         24 :                         processEvent(e.first, e.second);</span>
+<span class="lineNum">      78 </span>            :         }
+<a name="79"><span class="lineNum">      79 </span>            : </a>
+<span class="lineNum">      80 </span>            :         /// Called by NodeTable to append event.
+<span class="lineNum">      81 </span><span class="lineCov">        120 :         virtual void appendEvent(NodeID _n, NodeTableEventType _e) { Guard l(x_events); m_nodeEventHandler.push_back(_n); m_events[_n] = _e; }</span>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :         Mutex x_events;
+<span class="lineNum">      84 </span>            :         std::list&lt;NodeID&gt; m_nodeEventHandler;
+<span class="lineNum">      85 </span>            :         std::unordered_map&lt;NodeID, NodeTableEventType&gt; m_events;
+<span class="lineNum">      86 </span>            : };
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : class NodeTable;
+<span class="lineNum">      89 </span>            : inline std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, NodeTable const&amp; _nodeTable);
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : /**
+<span class="lineNum">      92 </span>            :  * NodeTable using modified kademlia for node discovery and preference.
+<span class="lineNum">      93 </span>            :  * Node table requires an IO service, creates a socket for incoming
+<span class="lineNum">      94 </span>            :  * UDP messages and implements a kademlia-like protocol. Node requests and
+<span class="lineNum">      95 </span>            :  * responses are used to build a node table which can be queried to
+<span class="lineNum">      96 </span>            :  * obtain a list of potential nodes to connect to, and, passes events to
+<span class="lineNum">      97 </span>            :  * Host whenever a node is added or removed to/from the table.
+<span class="lineNum">      98 </span>            :  *
+<span class="lineNum">      99 </span>            :  * Thread-safety is ensured by modifying NodeEntry details via
+<span class="lineNum">     100 </span>            :  * shared_ptr replacement instead of mutating values.
+<span class="lineNum">     101 </span>            :  *
+<span class="lineNum">     102 </span>            :  * NodeTable accepts a port for UDP and will listen to the port on all available
+<span class="lineNum">     103 </span>            :  * interfaces.
+<span class="lineNum">     104 </span>            :  *
+<span class="lineNum">     105 </span>            :  * [Optimization]
+<span class="lineNum">     106 </span>            :  * @todo serialize evictions per-bucket
+<span class="lineNum">     107 </span>            :  * @todo store evictions in map, unit-test eviction logic
+<span class="lineNum">     108 </span>            :  * @todo store root node in table
+<span class="lineNum">     109 </span>            :  * @todo encapsulate discover into NetworkAlgorithm (task)
+<span class="lineNum">     110 </span>            :  * @todo expiration and sha3(id) 'to' for messages which are replies (prevents replay)
+<span class="lineNum">     111 </span>            :  * @todo cache Ping and FindSelf
+<span class="lineNum">     112 </span>            :  *
+<span class="lineNum">     113 </span>            :  * [Networking]
+<span class="lineNum">     114 </span>            :  * @todo eth/upnp/natpmp/stun/ice/etc for public-discovery
+<span class="lineNum">     115 </span>            :  * @todo firewall
+<span class="lineNum">     116 </span>            :  *
+<span class="lineNum">     117 </span>            :  * [Protocol]
+<span class="lineNum">     118 </span>            :  * @todo optimize knowledge at opposite edges; eg, s_bitsPerStep lookups. (Can be done via pointers to NodeBucket)
+<span class="lineNum">     119 </span>            :  * @todo ^ s_bitsPerStep = 8; // Denoted by b in [Kademlia]. Bits by which address space is divided.
+<span class="lineNum">     120 </span>            :  */
+<span class="lineNum">     121 </span>            : class NodeTable: UDPSocketEvents, public std::enable_shared_from_this&lt;NodeTable&gt;
+<span class="lineNum">     122 </span>            : {
+<span class="lineNum">     123 </span>            :         friend std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, NodeTable const&amp; _nodeTable);
+<span class="lineNum">     124 </span>            :         using NodeSocket = UDPSocket&lt;NodeTable, 1280&gt;;
+<span class="lineNum">     125 </span>            :         using TimePoint = std::chrono::steady_clock::time_point;        ///&lt; Steady time point.
+<span class="lineNum">     126 </span>            :         using NodeIdTimePoint = std::pair&lt;NodeID, TimePoint&gt;;
+<span class="lineNum">     127 </span>            :         using EvictionTimeout = std::pair&lt;NodeIdTimePoint, NodeID&gt;;       ///&lt; First NodeID (NodeIdTimePoint) may be evicted and replaced with second NodeID.
+<span class="lineNum">     128 </span>            :         
+<span class="lineNum">     129 </span>            : public:
+<span class="lineNum">     130 </span>            :         enum NodeRelation { Unknown = 0, Known };
+<span class="lineNum">     131 </span>            :         enum DiscoverType { Random = 0 };
+<span class="lineNum">     132 </span>            :         
+<span class="lineNum">     133 </span>            :         /// Constructor requiring host for I/O, credentials, and IP Address and port to listen on.
+<span class="lineNum">     134 </span>            :         NodeTable(ba::io_service&amp; _io, KeyPair const&amp; _alias, NodeIPEndpoint const&amp; _endpoint, bool _enabled = true);
+<span class="lineNum">     135 </span>            :         ~NodeTable();
+<a name="136"><span class="lineNum">     136 </span>            : </a>
+<span class="lineNum">     137 </span>            :         /// Returns distance based on xor metric two node ids. Used by NodeEntry and NodeTable.
+<span class="lineNum">     138 </span><span class="lineCov">      45616 :         static unsigned distance(NodeID const&amp; _a, NodeID const&amp; _b) { u256 d = sha3(_a) ^ sha3(_b); unsigned ret; for (ret = 0; d &gt;&gt;= 1; ++ret) {}; return ret; }</span>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :         /// Set event handler for NodeEntryAdded and NodeEntryDropped events.
+<span class="lineNum">     141 </span><span class="lineCov">         12 :         void setEventHandler(NodeTableEventHandler* _handler) { m_nodeEventHandler.reset(_handler); }</span>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :         /// Called by implementation which provided handler to process NodeEntryAdded/NodeEntryDropped events. Events are coalesced by type whereby old events are ignored.
+<span class="lineNum">     144 </span>            :         void processEvents();
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :         /// Add node. Node will be pinged and empty shared_ptr is returned if node has never been seen or NodeID is empty.
+<span class="lineNum">     147 </span>            :         std::shared_ptr&lt;NodeEntry&gt; addNode(Node const&amp; _node, NodeRelation _relation = NodeRelation::Unknown);
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            :         /// Returns list of node ids active in node table.
+<span class="lineNum">     150 </span>            :         std::list&lt;NodeID&gt; nodes() const;
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :         /// Returns node count.
+<span class="lineNum">     153 </span><span class="lineCov">          2 :         unsigned count() const { return m_nodes.size(); }</span>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            :         /// Returns snapshot of table.
+<span class="lineNum">     156 </span>            :         std::list&lt;NodeEntry&gt; snapshot() const;
+<a name="157"><span class="lineNum">     157 </span>            : </a>
+<span class="lineNum">     158 </span>            :         /// Returns true if node id is in node table.
+<span class="lineNum">     159 </span><span class="lineCov">         92 :         bool haveNode(NodeID const&amp; _id) { Guard l(x_nodes); return m_nodes.count(_id) &gt; 0; }</span>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :         /// Returns the Node to the corresponding node id or the empty Node if that id is not found.
+<span class="lineNum">     162 </span>            :         Node node(NodeID const&amp; _id);
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            : #if defined(BOOST_AUTO_TEST_SUITE) || defined(_MSC_VER) // MSVC includes access specifier in symbol name
+<span class="lineNum">     165 </span>            : protected:
+<span class="lineNum">     166 </span>            : #else
+<span class="lineNum">     167 </span>            : private:
+<span class="lineNum">     168 </span>            : #endif
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :         /// Constants for Kademlia, derived from address space.
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :         static unsigned const s_addressByteSize = h256::size;                                   ///&lt; Size of address type in bytes.
+<span class="lineNum">     173 </span>            :         static unsigned const s_bits = 8 * s_addressByteSize;                                   ///&lt; Denoted by n in [Kademlia].
+<span class="lineNum">     174 </span>            :         static unsigned const s_bins = s_bits - 1;                                                              ///&lt; Size of m_state (excludes root, which is us).
+<span class="lineNum">     175 </span>            :         static unsigned const s_maxSteps = boost::static_log2&lt;s_bits&gt;::value;     ///&lt; Max iterations of discovery. (discover)
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :         /// Chosen constants
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :         static unsigned const s_bucketSize = 16;                        ///&lt; Denoted by k in [Kademlia]. Number of nodes stored in each bucket.
+<span class="lineNum">     180 </span>            :         static unsigned const s_alpha = 3;                              ///&lt; Denoted by \alpha in [Kademlia]. Number of concurrent FindNode requests.
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            :         /// Intervals
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            :         /* todo: replace boost::posix_time; change constants to upper camelcase */
+<span class="lineNum">     185 </span>            :         std::chrono::milliseconds const c_evictionCheckInterval = std::chrono::milliseconds(75);        ///&lt; Interval at which eviction timeouts are checked.
+<span class="lineNum">     186 </span>            :         std::chrono::milliseconds const c_reqTimeout = std::chrono::milliseconds(300);                                          ///&lt; How long to wait for requests (evict, find iterations).
+<span class="lineNum">     187 </span>            :         std::chrono::milliseconds const c_bucketRefresh = std::chrono::milliseconds(7200);                                                      ///&lt; Refresh interval prevents bucket from becoming stale. [Kademlia]
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span><span class="lineCov">      22440 :         struct NodeBucket</span>
+<span class="lineNum">     190 </span>            :         {
+<span class="lineNum">     191 </span>            :                 unsigned distance;
+<span class="lineNum">     192 </span>            :                 std::list&lt;std::weak_ptr&lt;NodeEntry&gt;&gt; nodes;
+<span class="lineNum">     193 </span>            :         };
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            :         /// Used to ping endpoint.
+<span class="lineNum">     196 </span>            :         void ping(NodeIPEndpoint _to) const;
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :         /// Used ping known node. Used by node table when refreshing buckets and as part of eviction process (see evict).
+<span class="lineNum">     199 </span>            :         void ping(NodeEntry* _n) const;
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            :         /// Returns center node entry which describes this node and used with dist() to calculate xor metric for node table nodes.
+<span class="lineNum">     202 </span>            :         NodeEntry center() const { return NodeEntry(m_node.id, m_node.publicKey(), m_node.endpoint); }
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            :         /// Used by asynchronous operations to return NodeEntry which is active and managed by node table.
+<span class="lineNum">     205 </span>            :         std::shared_ptr&lt;NodeEntry&gt; nodeEntry(NodeID _id);
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :         /// Used to discovery nodes on network which are close to the given target.
+<span class="lineNum">     208 </span>            :         /// Sends s_alpha concurrent requests to nodes nearest to target, for nodes nearest to target, up to s_maxSteps rounds.
+<span class="lineNum">     209 </span>            :         void doDiscover(NodeID _target, unsigned _round = 0, std::shared_ptr&lt;std::set&lt;std::shared_ptr&lt;NodeEntry&gt;&gt;&gt; _tried = std::shared_ptr&lt;std::set&lt;std::shared_ptr&lt;NodeEntry&gt;&gt;&gt;());
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :         /// Returns nodes from node table which are closest to target.
+<span class="lineNum">     212 </span>            :         std::vector&lt;std::shared_ptr&lt;NodeEntry&gt;&gt; nearestNodeEntries(NodeID _target);
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            :         /// Asynchronously drops _leastSeen node if it doesn't reply and adds _new node, otherwise _new node is thrown away.
+<span class="lineNum">     215 </span>            :         void evict(std::shared_ptr&lt;NodeEntry&gt; _leastSeen, std::shared_ptr&lt;NodeEntry&gt; _new);
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :         /// Called whenever activity is received from a node in order to maintain node table.
+<span class="lineNum">     218 </span>            :         void noteActiveNode(Public const&amp; _pubk, bi::udp::endpoint const&amp; _endpoint);
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            :         /// Used to drop node when timeout occurs or when evict() result is to keep previous node.
+<span class="lineNum">     221 </span>            :         void dropNode(std::shared_ptr&lt;NodeEntry&gt; _n);
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            :         /// Returns references to bucket which corresponds to distance of node id.
+<span class="lineNum">     224 </span>            :         /// @warning Only use the return reference locked x_state mutex.
+<span class="lineNum">     225 </span>            :         // TODO p2p: Remove this method after removing offset-by-one functionality.
+<span class="lineNum">     226 </span>            :         NodeBucket&amp; bucket_UNSAFE(NodeEntry const* _n);
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :         /// General Network Events
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            :         /// Called by m_socket when packet is received.
+<span class="lineNum">     231 </span>            :         void onReceived(UDPSocketFace*, bi::udp::endpoint const&amp; _from, bytesConstRef _packet);
+<a name="232"><span class="lineNum">     232 </span>            : </a>
+<span class="lineNum">     233 </span>            :         /// Called by m_socket when socket is disconnected.
+<span class="lineNum">     234 </span><span class="lineCov">         22 :         void onDisconnected(UDPSocketFace*) {}</span>
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            :         /// Tasks
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span>            :         /// Called by evict() to ensure eviction check is scheduled to run and terminates when no evictions remain. Asynchronous.
+<span class="lineNum">     239 </span>            :         void doCheckEvictions();
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            :         /// Looks up a random node at @c_bucketRefresh interval.
+<span class="lineNum">     242 </span>            :         void doDiscovery();
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            :         std::unique_ptr&lt;NodeTableEventHandler&gt; m_nodeEventHandler;                ///&lt; Event handler for node events.
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            :         Node m_node;                                                                                                    ///&lt; This node. LOCK x_state if endpoint access or mutation is required. Do not modify id.
+<span class="lineNum">     247 </span>            :         Secret m_secret;                                                                                                ///&lt; This nodes secret key.
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            :         mutable Mutex x_nodes;                                                                                  ///&lt; LOCK x_state first if both locks are required. Mutable for thread-safe copy in nodes() const.
+<span class="lineNum">     250 </span>            :         std::unordered_map&lt;NodeID, std::shared_ptr&lt;NodeEntry&gt;&gt; m_nodes;     ///&lt; Known Node Endpoints
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            :         mutable Mutex x_state;                                                                                  ///&lt; LOCK x_state first if both x_nodes and x_state locks are required.
+<span class="lineNum">     253 </span>            :         std::array&lt;NodeBucket, s_bins&gt; m_state;                                                   ///&lt; State of p2p node network.
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            :         Mutex x_evictions;                                                                                              ///&lt; LOCK x_evictions first if both x_nodes and x_evictions locks are required.
+<span class="lineNum">     256 </span>            :         std::deque&lt;EvictionTimeout&gt; m_evictions;                                          ///&lt; Eviction timeouts.
+<span class="lineNum">     257 </span>            :         
+<span class="lineNum">     258 </span>            :         Mutex x_pubkDiscoverPings;                                                                              ///&lt; LOCK x_nodes first if both x_nodes and x_pubkDiscoverPings locks are required.
+<span class="lineNum">     259 </span>            :         std::unordered_map&lt;bi::address, TimePoint&gt; m_pubkDiscoverPings;   ///&lt; List of pending pings where node entry wasn't created due to unkown pubk.
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            :         Mutex x_findNodeTimeout;
+<span class="lineNum">     262 </span>            :         std::list&lt;NodeIdTimePoint&gt; m_findNodeTimeout;                                     ///&lt; Timeouts for pending Ping and FindNode requests.
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            :         std::shared_ptr&lt;NodeSocket&gt; m_socket;                                                     ///&lt; Shared pointer for our UDPSocket; ASIO requires shared_ptr.
+<span class="lineNum">     265 </span>            :         NodeSocket* m_socketPointer;                                                                    ///&lt; Set to m_socket.get(). Socket is created in constructor and disconnected in destructor to ensure access to pointer is safe.
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span>            :         DeadlineOps m_timers; ///&lt; this should be the last member - it must be destroyed first
+<span class="lineNum">     268 </span>            : };
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span>            : inline std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, NodeTable const&amp; _nodeTable)
+<span class="lineNum">     271 </span>            : {
+<span class="lineNum">     272 </span>            :         _out &lt;&lt; _nodeTable.center().address() &lt;&lt; &quot;\t&quot; &lt;&lt; &quot;0\t&quot; &lt;&lt; _nodeTable.center().endpoint.address &lt;&lt; &quot;:&quot; &lt;&lt; _nodeTable.center().endpoint.udpPort &lt;&lt; std::endl;
+<span class="lineNum">     273 </span>            :         auto s = _nodeTable.snapshot();
+<span class="lineNum">     274 </span>            :         for (auto n: s)
+<span class="lineNum">     275 </span>            :                 _out &lt;&lt; n.address() &lt;&lt; &quot;\t&quot; &lt;&lt; n.distance &lt;&lt; &quot;\t&quot; &lt;&lt; n.endpoint.address &lt;&lt; &quot;:&quot; &lt;&lt; n.endpoint.udpPort &lt;&lt; std::endl;
+<span class="lineNum">     276 </span>            :         return _out;
+<a name="277"><span class="lineNum">     277 </span>            : }</a>
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span><span class="lineCov">        454 : struct DiscoveryDatagram: public RLPXDatagramFace</span>
+<a name="280"><span class="lineNum">     280 </span>            : {</a>
+<span class="lineNum">     281 </span>            :         /// Constructor used for sending.
+<span class="lineNum">     282 </span><span class="lineCov">        275 :         DiscoveryDatagram(bi::udp::endpoint const&amp; _to): RLPXDatagramFace(_to), ts(futureFromEpoch(std::chrono::seconds(60))) {}</span>
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            :         /// Constructor used for parsing inbound packets.
+<span class="lineNum">     285 </span><span class="lineCov">        116 :         DiscoveryDatagram(bi::udp::endpoint const&amp; _from, NodeID const&amp; _fromid, h256 const&amp; _echo): RLPXDatagramFace(_from), sourceid(_fromid), echo(_echo) {}</span>
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            :         // These two are set for inbound packets only.
+<span class="lineNum">     288 </span>            :         NodeID sourceid; // sender public key (from signature)
+<span class="lineNum">     289 </span>            :         h256 echo;       // hash of encoded packet, for reply tracking
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            :         // All discovery packets carry a timestamp, which must be greater
+<span class="lineNum">     292 </span>            :         // than the current local time. This prevents replay attacks.
+<span class="lineNum">     293 </span>            :         uint32_t ts = 0;
+<span class="lineNum">     294 </span><span class="lineCov">         52 :         bool isExpired() const { return secondsSinceEpoch() &gt; ts; }</span>
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            :         /// Decodes UDP packets.
+<span class="lineNum">     297 </span>            :         static std::unique_ptr&lt;DiscoveryDatagram&gt; interpretUDP(bi::udp::endpoint const&amp; _from, bytesConstRef _packet);
+<span class="lineNum">     298 </span>            : };
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            : /**
+<span class="lineNum">     301 </span>            :  * Ping packet: Sent to check if node is alive.
+<span class="lineNum">     302 </span>            :  * PingNode is cached and regenerated after ts + t, where t is timeout.
+<span class="lineNum">     303 </span>            :  *
+<span class="lineNum">     304 </span>            :  * Ping is used to implement evict. When a new node is seen for
+<span class="lineNum">     305 </span>            :  * a given bucket which is full, the least-responsive node is pinged.
+<span class="lineNum">     306 </span>            :  * If the pinged node doesn't respond, then it is removed and the new
+<a name="307"><span class="lineNum">     307 </span>            :  * node is inserted.</a>
+<span class="lineNum">     308 </span>            :  */
+<span class="lineNum">     309 </span><span class="lineCov">        192 : struct PingNode: DiscoveryDatagram</span>
+<a name="310"><span class="lineNum">     310 </span>            : {</a>
+<a name="311"><span class="lineNum">     311 </span>            :         using DiscoveryDatagram::DiscoveryDatagram;</a>
+<span class="lineNum">     312 </span><span class="lineCov">        104 :         PingNode(NodeIPEndpoint const&amp; _src, NodeIPEndpoint const&amp; _dest): DiscoveryDatagram(_dest), source(_src), destination(_dest) {}</span>
+<span class="lineNum">     313 </span><span class="lineCov">        112 :         PingNode(bi::udp::endpoint const&amp; _from, NodeID const&amp; _fromid, h256 const&amp; _echo): DiscoveryDatagram(_from, _fromid, _echo) {}</span>
+<a name="314"><span class="lineNum">     314 </span>            : </a>
+<span class="lineNum">     315 </span>            :         static const uint8_t type = 1;
+<span class="lineNum">     316 </span><span class="lineCov">         78 :         uint8_t packetType() const { return type; }</span>
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            :         unsigned version = 0;
+<span class="lineNum">     319 </span>            :         NodeIPEndpoint source;
+<a name="320"><span class="lineNum">     320 </span>            :         NodeIPEndpoint destination;</a>
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span><span class="lineCov">         26 :         void streamRLP(RLPStream&amp; _s) const</span>
+<span class="lineNum">     323 </span>            :         {
+<span class="lineNum">     324 </span><span class="lineCov">         26 :                 _s.appendList(4);</span>
+<span class="lineNum">     325 </span><span class="lineCov">         52 :                 _s &lt;&lt; dev::p2p::c_protocolVersion;</span>
+<span class="lineNum">     326 </span><span class="lineCov">         26 :                 source.streamRLP(_s);</span>
+<span class="lineNum">     327 </span><span class="lineCov">         26 :                 destination.streamRLP(_s);</span>
+<a name="328"><span class="lineNum">     328 </span><span class="lineCov">         52 :                 _s &lt;&lt; ts;</span></a>
+<span class="lineNum">     329 </span><span class="lineCov">         26 :         }</span>
+<span class="lineNum">     330 </span><span class="lineCov">         28 :         void interpretRLP(bytesConstRef _bytes)</span>
+<span class="lineNum">     331 </span>            :         {
+<span class="lineNum">     332 </span><span class="lineCov">         28 :                 RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);</span>
+<span class="lineNum">     333 </span><span class="lineCov">         28 :                 version = r[0].toInt&lt;unsigned&gt;();</span>
+<span class="lineNum">     334 </span><span class="lineCov">         28 :                 source.interpretRLP(r[1]);</span>
+<span class="lineNum">     335 </span><span class="lineCov">         28 :                 destination.interpretRLP(r[2]);</span>
+<span class="lineNum">     336 </span><span class="lineCov">         28 :                 ts = r[3].toInt&lt;uint32_t&gt;();</span>
+<span class="lineNum">     337 </span><span class="lineCov">         28 :         }</span>
+<span class="lineNum">     338 </span>            : };
+<span class="lineNum">     339 </span>            : 
+<span class="lineNum">     340 </span>            : /**
+<a name="341"><span class="lineNum">     341 </span>            :  * Pong packet: Sent in response to ping</a>
+<span class="lineNum">     342 </span>            :  */
+<a name="343"><span class="lineNum">     343 </span><span class="lineCov">        160 : struct Pong: DiscoveryDatagram</span></a>
+<a name="344"><span class="lineNum">     344 </span>            : {</a>
+<span class="lineNum">     345 </span><span class="lineCov">         78 :         Pong(NodeIPEndpoint const&amp; _dest): DiscoveryDatagram((bi::udp::endpoint)_dest), destination(_dest) {}</span>
+<span class="lineNum">     346 </span><span class="lineCov">         81 :         Pong(bi::udp::endpoint const&amp; _from, NodeID const&amp; _fromid, h256 const&amp; _echo): DiscoveryDatagram(_from, _fromid, _echo) {}</span>
+<a name="347"><span class="lineNum">     347 </span>            : </a>
+<span class="lineNum">     348 </span>            :         static const uint8_t type = 2;
+<span class="lineNum">     349 </span><span class="lineCov">         78 :         uint8_t packetType() const { return type; }</span>
+<span class="lineNum">     350 </span>            : 
+<a name="351"><span class="lineNum">     351 </span>            :         NodeIPEndpoint destination;</a>
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span><span class="lineCov">         26 :         void streamRLP(RLPStream&amp; _s) const</span>
+<span class="lineNum">     354 </span>            :         {
+<span class="lineNum">     355 </span><span class="lineCov">         26 :                 _s.appendList(3);</span>
+<span class="lineNum">     356 </span><span class="lineCov">         26 :                 destination.streamRLP(_s);</span>
+<span class="lineNum">     357 </span><span class="lineCov">         26 :                 _s &lt;&lt; echo;</span>
+<a name="358"><span class="lineNum">     358 </span><span class="lineCov">         52 :                 _s &lt;&lt; ts;</span></a>
+<span class="lineNum">     359 </span><span class="lineCov">         26 :         }</span>
+<span class="lineNum">     360 </span><span class="lineCov">         27 :         void interpretRLP(bytesConstRef _bytes)</span>
+<span class="lineNum">     361 </span>            :         {
+<span class="lineNum">     362 </span><span class="lineCov">         27 :                 RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);</span>
+<span class="lineNum">     363 </span><span class="lineCov">         27 :                 destination.interpretRLP(r[0]);</span>
+<span class="lineNum">     364 </span><span class="lineCov">         54 :                 echo = (h256)r[1];</span>
+<span class="lineNum">     365 </span><span class="lineCov">         27 :                 ts = r[2].toInt&lt;uint32_t&gt;();</span>
+<span class="lineNum">     366 </span><span class="lineCov">         27 :         }</span>
+<span class="lineNum">     367 </span>            : };
+<span class="lineNum">     368 </span>            : 
+<span class="lineNum">     369 </span>            : /**
+<span class="lineNum">     370 </span>            :  * FindNode Packet: Request k-nodes, closest to the target.
+<span class="lineNum">     371 </span>            :  * FindNode is cached and regenerated after ts + t, where t is timeout.
+<span class="lineNum">     372 </span>            :  * FindNode implicitly results in finding neighbours of a given node.
+<span class="lineNum">     373 </span>            :  *
+<span class="lineNum">     374 </span>            :  * RLP Encoded Items: 2
+<span class="lineNum">     375 </span>            :  * Minimum Encoded Size: 21 bytes
+<span class="lineNum">     376 </span>            :  * Maximum Encoded Size: 30 bytes
+<span class="lineNum">     377 </span>            :  *
+<span class="lineNum">     378 </span>            :  * target: NodeID of node. The responding node will send back nodes closest to the target.
+<span class="lineNum">     379 </span>            :  *
+<span class="lineNum">     380 </span>            :  */
+<span class="lineNum">     381 </span><span class="lineCov">          3 : struct FindNode: DiscoveryDatagram</span>
+<a name="382"><span class="lineNum">     382 </span>            : {</a>
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 :         FindNode(bi::udp::endpoint _to, h512 _target): DiscoveryDatagram(_to), target(_target) {}</span>
+<span class="lineNum">     384 </span><span class="lineCov">          3 :         FindNode(bi::udp::endpoint const&amp; _from, NodeID const&amp; _fromid, h256 const&amp; _echo): DiscoveryDatagram(_from, _fromid, _echo) {}</span>
+<a name="385"><span class="lineNum">     385 </span>            : </a>
+<span class="lineNum">     386 </span>            :         static const uint8_t type = 3;
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 :         uint8_t packetType() const { return type; }</span>
+<span class="lineNum">     388 </span>            : 
+<a name="389"><span class="lineNum">     389 </span>            :         h512 target;</a>
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span><span class="lineNoCov">          0 :         void streamRLP(RLPStream&amp; _s) const</span>
+<span class="lineNum">     392 </span>            :         {
+<a name="393"><span class="lineNum">     393 </span><span class="lineNoCov">          0 :                 _s.appendList(2); _s &lt;&lt; target &lt;&lt; ts;</span></a>
+<span class="lineNum">     394 </span><span class="lineNoCov">          0 :         }</span>
+<span class="lineNum">     395 </span><span class="lineCov">          1 :         void interpretRLP(bytesConstRef _bytes)</span>
+<span class="lineNum">     396 </span>            :         {
+<span class="lineNum">     397 </span><span class="lineCov">          1 :                 RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);</span>
+<span class="lineNum">     398 </span><span class="lineCov">          1 :                 target = r[0].toHash&lt;h512&gt;();</span>
+<span class="lineNum">     399 </span><span class="lineCov">          1 :                 ts = r[1].toInt&lt;uint32_t&gt;();</span>
+<span class="lineNum">     400 </span><span class="lineCov">          1 :         }</span>
+<span class="lineNum">     401 </span>            : };
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span>            : /**
+<a name="404"><span class="lineNum">     404 </span>            :  * Node Packet: One or more node packets are sent in response to FindNode.</a>
+<span class="lineNum">     405 </span>            :  */
+<a name="406"><span class="lineNum">     406 </span><span class="lineCov">         13 : struct Neighbours: DiscoveryDatagram</span></a>
+<span class="lineNum">     407 </span>            : {
+<span class="lineNum">     408 </span><span class="lineNoCov">          0 :         Neighbours(bi::udp::endpoint _to, std::vector&lt;std::shared_ptr&lt;NodeEntry&gt;&gt; const&amp; _nearest, unsigned _offset = 0, unsigned _limit = 0): DiscoveryDatagram(_to)</span>
+<span class="lineNum">     409 </span>            :         {
+<span class="lineNum">     410 </span><span class="lineNoCov">          0 :                 auto limit = _limit ? std::min(_nearest.size(), (size_t)(_offset + _limit)) : _nearest.size();</span>
+<span class="lineNum">     411 </span><span class="lineNoCov">          0 :                 for (auto i = _offset; i &lt; limit; i++)</span>
+<span class="lineNum">     412 </span><span class="lineNoCov">          0 :                         neighbours.push_back(Neighbour(*_nearest[i]));</span>
+<span class="lineNum">     413 </span><span class="lineNoCov">          0 :         }</span>
+<span class="lineNum">     414 </span><span class="lineCov">          6 :         Neighbours(bi::udp::endpoint const&amp; _to): DiscoveryDatagram(_to) {}</span>
+<span class="lineNum">     415 </span><span class="lineCov">          6 :         Neighbours(bi::udp::endpoint const&amp; _from, NodeID const&amp; _fromid, h256 const&amp; _echo): DiscoveryDatagram(_from, _fromid, _echo) {}</span>
+<span class="lineNum">     416 </span>            : 
+<span class="lineNum">     417 </span><span class="lineCov">        206 :         struct Neighbour</span>
+<a name="418"><span class="lineNum">     418 </span>            :         {</a>
+<span class="lineNum">     419 </span><span class="lineCov">         64 :                 Neighbour(Node const&amp; _node): endpoint(_node.endpoint), node(_node.id) {}</span>
+<span class="lineNum">     420 </span><span class="lineCov">         80 :                 Neighbour(RLP const&amp; _r): endpoint(_r) { node = h512(_r[3].toBytes()); }</span>
+<a name="421"><span class="lineNum">     421 </span>            :                 NodeIPEndpoint endpoint;</a>
+<span class="lineNum">     422 </span>            :                 NodeID node;
+<span class="lineNum">     423 </span><span class="lineCov">         64 :                 void streamRLP(RLPStream&amp; _s) const { _s.appendList(4); endpoint.streamRLP(_s, NodeIPEndpoint::StreamInline); _s &lt;&lt; node; }</span>
+<span class="lineNum">     424 </span>            :         };
+<a name="425"><span class="lineNum">     425 </span>            : </a>
+<span class="lineNum">     426 </span>            :         static const uint8_t type = 4;
+<span class="lineNum">     427 </span><span class="lineCov">          6 :         uint8_t packetType() const { return type; }</span>
+<span class="lineNum">     428 </span>            : 
+<a name="429"><span class="lineNum">     429 </span>            :         std::vector&lt;Neighbour&gt; neighbours;</a>
+<span class="lineNum">     430 </span>            : 
+<span class="lineNum">     431 </span><span class="lineCov">          3 :         void streamRLP(RLPStream&amp; _s) const</span>
+<span class="lineNum">     432 </span>            :         {
+<span class="lineNum">     433 </span><span class="lineCov">          3 :                 _s.appendList(2);</span>
+<span class="lineNum">     434 </span><span class="lineCov">          6 :                 _s.appendList(neighbours.size());</span>
+<span class="lineNum">     435 </span><span class="lineCov">         44 :                 for (auto const&amp; n: neighbours)</span>
+<span class="lineNum">     436 </span><span class="lineCov">         32 :                         n.streamRLP(_s);</span>
+<a name="437"><span class="lineNum">     437 </span><span class="lineCov">          6 :                 _s &lt;&lt; ts;</span></a>
+<span class="lineNum">     438 </span><span class="lineCov">          3 :         }</span>
+<span class="lineNum">     439 </span><span class="lineCov">          2 :         void interpretRLP(bytesConstRef _bytes)</span>
+<span class="lineNum">     440 </span>            :         {
+<span class="lineNum">     441 </span><span class="lineCov">          2 :                 RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);</span>
+<span class="lineNum">     442 </span><span class="lineCov">         66 :                 for (auto const&amp; n: r[0])</span>
+<span class="lineNum">     443 </span><span class="lineCov">         20 :                         neighbours.emplace_back(n);</span>
+<span class="lineNum">     444 </span><span class="lineCov">          2 :                 ts = r[1].toInt&lt;uint32_t&gt;();</span>
+<span class="lineNum">     445 </span><span class="lineCov">          2 :         }</span>
+<span class="lineNum">     446 </span>            : };
+<span class="lineNum">     447 </span>            : 
+<span class="lineNum">     448 </span>            : struct NodeTableWarn: public LogChannel { static const char* name(); static const int verbosity = 0; };
+<span class="lineNum">     449 </span>            : struct NodeTableNote: public LogChannel { static const char* name(); static const int verbosity = 1; };
+<span class="lineNum">     450 </span>            : struct NodeTableMessageSummary: public LogChannel { static const char* name(); static const int verbosity = 2; };
+<span class="lineNum">     451 </span>            : struct NodeTableMessageDetail: public LogChannel { static const char* name(); static const int verbosity = 5; };
+<span class="lineNum">     452 </span>            : struct NodeTableConnect: public LogChannel { static const char* name(); static const int verbosity = 10; };
+<span class="lineNum">     453 </span>            : struct NodeTableEvent: public LogChannel { static const char* name(); static const int verbosity = 10; };
+<span class="lineNum">     454 </span>            : struct NodeTableTimer: public LogChannel { static const char* name(); static const int verbosity = 10; };
+<span class="lineNum">     455 </span>            : struct NodeTableUpdate: public LogChannel { static const char* name(); static const int verbosity = 10; };
+<span class="lineNum">     456 </span>            : struct NodeTableTriviaSummary: public LogChannel { static const char* name(); static const int verbosity = 10; };
+<span class="lineNum">     457 </span>            : struct NodeTableTriviaDetail: public LogChannel { static const char* name(); static const int verbosity = 11; };
+<span class="lineNum">     458 </span>            : struct NodeTableAllDetail: public LogChannel { static const char* name(); static const int verbosity = 13; };
+<span class="lineNum">     459 </span>            : struct NodeTableEgress: public LogChannel { static const char* name(); static const int verbosity = 14; };
+<span class="lineNum">     460 </span>            : struct NodeTableIngress: public LogChannel { static const char* name(); static const int verbosity = 15; };
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span>            : }
+<span class="lineNum">     463 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

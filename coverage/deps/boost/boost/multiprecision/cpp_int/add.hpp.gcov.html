@@ -1,0 +1,626 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/multiprecision/cpp_int/add.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/multiprecision/cpp_int</a> - add.hpp<span style="font-size: 80%;"> (source / <a href="add.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">175</td>
+            <td class="headerCovTableEntry">198</td>
+            <td class="headerCovTableEntryMed">88.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">56</td>
+            <td class="headerCovTableEntry">80</td>
+            <td class="headerCovTableEntryLo">70.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : ///////////////////////////////////////////////////////////////</a>
+<span class="lineNum">       2 </span>            : //  Copyright 2012 John Maddock. Distributed under the Boost
+<span class="lineNum">       3 </span>            : //  Software License, Version 1.0. (See accompanying file
+<span class="lineNum">       4 </span>            : //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_
+<span class="lineNum">       5 </span>            : //
+<span class="lineNum">       6 </span>            : // Comparison operators for cpp_int_backend:
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : #ifndef BOOST_MP_CPP_INT_ADD_HPP
+<span class="lineNum">       9 </span>            : #define BOOST_MP_CPP_INT_ADD_HPP
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : namespace boost{ namespace multiprecision{ namespace backends{
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #ifdef _MSC_VER
+<span class="lineNum">      14 </span>            : #pragma warning(push)
+<span class="lineNum">      15 </span>            : #pragma warning(disable:4127) // conditional expression is constant
+<span class="lineNum">      16 </span>            : #endif
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : //
+<span class="lineNum">      19 </span>            : // This is the key addition routine where all the argument types are non-trivial cpp_int's:
+<a name="20"><span class="lineNum">      20 </span>            : //</a>
+<span class="lineNum">      21 </span>            : template &lt;class CppInt1, class CppInt2, class CppInt3&gt;
+<span class="lineNum">      22 </span><span class="lineCov">    1649697 : inline void add_unsigned(CppInt1&amp; result, const CppInt2&amp; a, const CppInt3&amp; b) BOOST_MP_NOEXCEPT_IF(is_non_throwing_cpp_int&lt;CppInt1&gt;::value)</span>
+<span class="lineNum">      23 </span>            : {
+<span class="lineNum">      24 </span>            :    using std::swap;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            :    // Nothing fancy, just let uintmax_t take the strain:
+<span class="lineNum">      27 </span><span class="lineCov">    1649697 :    double_limb_type carry = 0;</span>
+<span class="lineNum">      28 </span>            :    unsigned m, x;
+<span class="lineNum">      29 </span><span class="lineCov">    3277835 :    unsigned as = a.size();</span>
+<span class="lineNum">      30 </span><span class="lineCov">    2980222 :    unsigned bs = b.size();</span>
+<span class="lineNum">      31 </span><span class="lineCov">    1649697 :    minmax(as, bs, m, x);</span>
+<span class="lineNum">      32 </span><span class="lineCov">    1649697 :    if(x == 1)</span>
+<span class="lineNum">      33 </span>            :    {
+<span class="lineNum">      34 </span><span class="lineCov">    1557165 :       bool s = a.sign();</span>
+<span class="lineNum">      35 </span><span class="lineCov">    3454171 :       result = static_cast&lt;double_limb_type&gt;(*a.limbs()) + static_cast&lt;double_limb_type&gt;(*b.limbs());</span>
+<span class="lineNum">      36 </span><span class="lineCov">    1860377 :       result.sign(s);</span>
+<span class="lineNum">      37 </span><span class="lineCov">    1536016 :       return;</span>
+<span class="lineNum">      38 </span>            :    }
+<span class="lineNum">      39 </span><span class="lineCov">     184584 :    result.resize(x, x);</span>
+<span class="lineNum">      40 </span><span class="lineCov">     185064 :    typename CppInt2::const_limb_pointer pa = a.limbs();</span>
+<span class="lineNum">      41 </span><span class="lineCov">     185064 :    typename CppInt3::const_limb_pointer pb = b.limbs();</span>
+<span class="lineNum">      42 </span><span class="lineCov">     185064 :    typename CppInt1::limb_pointer pr = result.limbs();</span>
+<span class="lineNum">      43 </span><span class="lineCov">      92532 :    typename CppInt1::limb_pointer pr_end = pr + m;</span>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">      92532 :    if(as &lt; bs)</span>
+<span class="lineNum">      46 </span>            :       swap(pa, pb);
+<span class="lineNum">      47 </span>            :    
+<span class="lineNum">      48 </span>            :    // First where a and b overlap:
+<span class="lineNum">      49 </span><span class="lineCov">     281768 :    while(pr != pr_end)</span>
+<span class="lineNum">      50 </span>            :    {
+<span class="lineNum">      51 </span><span class="lineCov">      94618 :       carry += static_cast&lt;double_limb_type&gt;(*pa) + static_cast&lt;double_limb_type&gt;(*pb);</span>
+<span class="lineNum">      52 </span>            : #ifdef __MSVC_RUNTIME_CHECKS
+<span class="lineNum">      53 </span>            :       *pr = static_cast&lt;limb_type&gt;(carry &amp; ~static_cast&lt;limb_type&gt;(0));
+<span class="lineNum">      54 </span>            : #else
+<span class="lineNum">      55 </span><span class="lineCov">      94618 :       *pr = static_cast&lt;limb_type&gt;(carry);</span>
+<span class="lineNum">      56 </span>            : #endif
+<span class="lineNum">      57 </span><span class="lineCov">      94618 :       carry &gt;&gt;= CppInt1::limb_bits;</span>
+<span class="lineNum">      58 </span><span class="lineCov">      94618 :       ++pr, ++pa, ++pb;</span>
+<span class="lineNum">      59 </span>            :    }
+<span class="lineNum">      60 </span><span class="lineCov">      92532 :    pr_end += x - m;</span>
+<span class="lineNum">      61 </span>            :    // Now where only a has digits:
+<span class="lineNum">      62 </span><span class="lineCov">     577336 :    while(pr != pr_end)</span>
+<span class="lineNum">      63 </span>            :    {
+<span class="lineNum">      64 </span><span class="lineCov">     252963 :       if(!carry)</span>
+<span class="lineNum">      65 </span>            :       {
+<span class="lineNum">      66 </span><span class="lineCov">      10561 :          if(pa != pr)</span>
+<span class="lineNum">      67 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &gt;= 1600)
+<span class="lineNum">      68 </span>            :             std::copy(pa, pa + (pr_end - pr), stdext::checked_array_iterator&lt;limb_type*&gt;(pr, result.size()));
+<span class="lineNum">      69 </span>            : #else
+<span class="lineNum">      70 </span><span class="lineCov">       4657 :             std::copy(pa, pa + (pr_end - pr), pr);</span>
+<span class="lineNum">      71 </span>            : #endif
+<span class="lineNum">      72 </span>            :          break;
+<span class="lineNum">      73 </span>            :       }
+<span class="lineNum">      74 </span><span class="lineCov">     242402 :       carry += static_cast&lt;double_limb_type&gt;(*pa);</span>
+<span class="lineNum">      75 </span>            : #ifdef __MSVC_RUNTIME_CHECKS
+<span class="lineNum">      76 </span>            :       *pr = static_cast&lt;limb_type&gt;(carry &amp; ~static_cast&lt;limb_type&gt;(0));
+<span class="lineNum">      77 </span>            : #else
+<span class="lineNum">      78 </span><span class="lineCov">     242402 :       *pr = static_cast&lt;limb_type&gt;(carry);</span>
+<span class="lineNum">      79 </span>            : #endif
+<span class="lineNum">      80 </span><span class="lineCov">     242402 :       carry &gt;&gt;= CppInt1::limb_bits;</span>
+<span class="lineNum">      81 </span><span class="lineCov">     242402 :       ++pr, ++pa;</span>
+<span class="lineNum">      82 </span>            :    }
+<span class="lineNum">      83 </span><span class="lineCov">      92532 :    if(carry)</span>
+<span class="lineNum">      84 </span>            :    {
+<span class="lineNum">      85 </span>            :       // We overflowed, need to add one more limb:
+<span class="lineNum">      86 </span><span class="lineCov">     162468 :       result.resize(x + 1, x + 1);</span>
+<span class="lineNum">      87 </span><span class="lineCov">      81234 :       if(CppInt1::variable || (result.size() &gt; x))</span>
+<span class="lineNum">      88 </span><span class="lineCov">        119 :          result.limbs()[x] = static_cast&lt;limb_type&gt;(carry);</span>
+<span class="lineNum">      89 </span>            :    }
+<span class="lineNum">      90 </span><span class="lineCov">      93012 :    result.normalize();</span>
+<span class="lineNum">      91 </span><span class="lineCov">        550 :    result.sign(a.sign());</span>
+<span class="lineNum">      92 </span>            : }
+<span class="lineNum">      93 </span>            : //
+<span class="lineNum">      94 </span>            : // As above, but for adding a single limb to a non-trivial cpp_int:
+<a name="95"><span class="lineNum">      95 </span>            : //</a>
+<span class="lineNum">      96 </span>            : template &lt;class CppInt1, class CppInt2&gt;
+<span class="lineNum">      97 </span><span class="lineCov">    7640730 : inline void add_unsigned(CppInt1&amp; result, const CppInt2&amp; a, const limb_type&amp; o) BOOST_MP_NOEXCEPT_IF(is_non_throwing_cpp_int&lt;CppInt1&gt;::value)</span>
+<span class="lineNum">      98 </span>            : {
+<span class="lineNum">      99 </span>            :    // Addition using modular arithmetic.
+<span class="lineNum">     100 </span>            :    // Nothing fancy, just let uintmax_t take the strain:
+<span class="lineNum">     101 </span><span class="lineCov">    7640730 :    if(&amp;result != &amp;a)</span>
+<span class="lineNum">     102 </span><span class="lineCov">     304531 :       result.resize(a.size(), a.size());</span>
+<span class="lineNum">     103 </span><span class="lineCov">    7640730 :    double_limb_type carry = o;</span>
+<span class="lineNum">     104 </span><span class="lineCov">   15281460 :    typename CppInt1::limb_pointer pr = result.limbs();</span>
+<span class="lineNum">     105 </span><span class="lineCov">   15281460 :    typename CppInt2::const_limb_pointer pa = a.limbs();</span>
+<span class="lineNum">     106 </span><span class="lineCov">    7640730 :    unsigned i = 0;</span>
+<span class="lineNum">     107 </span>            :    // Addition with carry until we either run out of digits or carry is zero:
+<span class="lineNum">     108 </span><span class="lineCov">   23116874 :    for(; carry &amp;&amp; (i &lt; result.size()); ++i)</span>
+<span class="lineNum">     109 </span>            :    {
+<span class="lineNum">     110 </span><span class="lineCov">    7597086 :       carry += static_cast&lt;double_limb_type&gt;(pa[i]);</span>
+<span class="lineNum">     111 </span>            : #ifdef __MSVC_RUNTIME_CHECKS
+<span class="lineNum">     112 </span>            :       pr[i] = static_cast&lt;limb_type&gt;(carry &amp; ~static_cast&lt;limb_type&gt;(0));
+<span class="lineNum">     113 </span>            : #else
+<span class="lineNum">     114 </span><span class="lineCov">    7597086 :       pr[i] = static_cast&lt;limb_type&gt;(carry);</span>
+<span class="lineNum">     115 </span>            : #endif
+<span class="lineNum">     116 </span><span class="lineCov">    7597086 :       carry &gt;&gt;= CppInt1::limb_bits;</span>
+<span class="lineNum">     117 </span>            :    }
+<span class="lineNum">     118 </span>            :    // Just copy any remaining digits:
+<span class="lineNum">     119 </span><span class="lineCov">    7640730 :    if(&amp;a != &amp;result)</span>
+<span class="lineNum">     120 </span>            :    {
+<span class="lineNum">     121 </span><span class="lineCov">     305152 :       for(; i &lt; result.size(); ++i)</span>
+<span class="lineNum">     122 </span><span class="lineCov">        207 :          pr[i] = pa[i];</span>
+<span class="lineNum">     123 </span>            :    }
+<span class="lineNum">     124 </span><span class="lineCov">    7640730 :    if(carry)</span>
+<span class="lineNum">     125 </span>            :    {
+<span class="lineNum">     126 </span>            :       // We overflowed, need to add one more limb:
+<span class="lineNum">     127 </span><span class="lineCov">         29 :       unsigned x = result.size();</span>
+<span class="lineNum">     128 </span><span class="lineCov">         29 :       result.resize(x + 1, x + 1);</span>
+<span class="lineNum">     129 </span><span class="lineCov">         24 :       if(CppInt1::variable || (result.size() &gt; x))</span>
+<span class="lineNum">     130 </span><span class="lineCov">         19 :          result.limbs()[x] = static_cast&lt;limb_type&gt;(carry);</span>
+<span class="lineNum">     131 </span>            :    }
+<span class="lineNum">     132 </span><span class="lineCov">   15281460 :    result.normalize();</span>
+<span class="lineNum">     133 </span><span class="lineCov">   14996300 :    result.sign(a.sign());</span>
+<span class="lineNum">     134 </span><span class="lineCov">    7640730 : }</span>
+<span class="lineNum">     135 </span>            : //
+<span class="lineNum">     136 </span>            : // Core subtraction routine for all non-trivial cpp_int's:
+<a name="137"><span class="lineNum">     137 </span>            : //</a>
+<span class="lineNum">     138 </span>            : template &lt;class CppInt1, class CppInt2, class CppInt3&gt;
+<span class="lineNum">     139 </span><span class="lineCov">    1198233 : inline void subtract_unsigned(CppInt1&amp; result, const CppInt2&amp; a, const CppInt3&amp; b) BOOST_MP_NOEXCEPT_IF(is_non_throwing_cpp_int&lt;CppInt1&gt;::value)</span>
+<span class="lineNum">     140 </span>            : {
+<span class="lineNum">     141 </span>            :    using std::swap;
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :    // Nothing fancy, just let uintmax_t take the strain:
+<span class="lineNum">     144 </span><span class="lineCov">    1198233 :    double_limb_type borrow = 0;</span>
+<span class="lineNum">     145 </span>            :    unsigned m, x;
+<span class="lineNum">     146 </span><span class="lineCov">    4731829 :    minmax(a.size(), b.size(), m, x);</span>
+<span class="lineNum">     147 </span>            :    //
+<span class="lineNum">     148 </span>            :    // special cases for small limb counts:
+<span class="lineNum">     149 </span>            :    //
+<span class="lineNum">     150 </span><span class="lineCov">    1198233 :    if(x == 1)</span>
+<span class="lineNum">     151 </span>            :    {
+<span class="lineNum">     152 </span><span class="lineCov">     409244 :       bool s = a.sign();</span>
+<span class="lineNum">     153 </span><span class="lineCov">     450833 :       limb_type al = *a.limbs();</span>
+<span class="lineNum">     154 </span><span class="lineCov">     428589 :       limb_type bl = *b.limbs();</span>
+<span class="lineNum">     155 </span><span class="lineCov">     409244 :       if(bl &gt; al)</span>
+<span class="lineNum">     156 </span>            :       {
+<span class="lineNum">     157 </span><span class="lineCov">      96722 :          std::swap(al, bl);</span>
+<span class="lineNum">     158 </span><span class="lineCov">      96722 :          s = !s;</span>
+<span class="lineNum">     159 </span>            :       }
+<span class="lineNum">     160 </span><span class="lineCov">     818488 :       result = al - bl;</span>
+<span class="lineNum">     161 </span><span class="lineCov">     409244 :       result.sign(s);</span>
+<span class="lineNum">     162 </span>            :       return;
+<span class="lineNum">     163 </span>            :    }
+<span class="lineNum">     164 </span>            :    // This isn't used till later, but comparison has to occur before we resize the result,
+<span class="lineNum">     165 </span>            :    // as that may also resize a or b if this is an inplace operation:
+<span class="lineNum">     166 </span><span class="lineCov">     788989 :    int c = a.compare_unsigned(b);</span>
+<span class="lineNum">     167 </span>            :    // Set up the result vector:
+<span class="lineNum">     168 </span><span class="lineCov">    1577809 :    result.resize(x, x);</span>
+<span class="lineNum">     169 </span>            :    // Now that a, b, and result are stable, get pointers to their limbs:
+<span class="lineNum">     170 </span><span class="lineCov">    1577978 :    typename CppInt2::const_limb_pointer pa = a.limbs();</span>
+<span class="lineNum">     171 </span><span class="lineCov">    1577978 :    typename CppInt3::const_limb_pointer pb = b.limbs();</span>
+<span class="lineNum">     172 </span><span class="lineCov">    1577978 :    typename CppInt1::limb_pointer pr = result.limbs();</span>
+<span class="lineNum">     173 </span><span class="lineCov">     788989 :    bool swapped = false;</span>
+<span class="lineNum">     174 </span><span class="lineCov">     788989 :    if(c &lt; 0)</span>
+<span class="lineNum">     175 </span>            :    {
+<span class="lineNum">     176 </span>            :       swap(pa, pb);
+<span class="lineNum">     177 </span>            :       swapped = true;
+<span class="lineNum">     178 </span>            :    }
+<span class="lineNum">     179 </span><span class="lineCov">     787135 :    else if(c == 0)</span>
+<span class="lineNum">     180 </span>            :    {
+<span class="lineNum">     181 </span>            :       result = static_cast&lt;limb_type&gt;(0);
+<span class="lineNum">     182 </span>            :       return;
+<span class="lineNum">     183 </span>            :    }
+<span class="lineNum">     184 </span>            :    
+<span class="lineNum">     185 </span><span class="lineCov">     787629 :    unsigned i = 0;</span>
+<span class="lineNum">     186 </span>            :    // First where a and b overlap:
+<span class="lineNum">     187 </span><span class="lineCov">    4015371 :    while(i &lt; m)</span>
+<span class="lineNum">     188 </span>            :    {
+<span class="lineNum">     189 </span><span class="lineCov">    1613871 :       borrow = static_cast&lt;double_limb_type&gt;(pa[i]) - static_cast&lt;double_limb_type&gt;(pb[i]) - borrow;</span>
+<span class="lineNum">     190 </span><span class="lineCov">    1613871 :       pr[i] = static_cast&lt;limb_type&gt;(borrow);</span>
+<span class="lineNum">     191 </span><span class="lineCov">    1613871 :       borrow = (borrow &gt;&gt; CppInt1::limb_bits) &amp; 1u;</span>
+<span class="lineNum">     192 </span><span class="lineCov">    1613871 :       ++i;</span>
+<span class="lineNum">     193 </span>            :    }
+<span class="lineNum">     194 </span>            :    // Now where only a has digits, only as long as we've borrowed:
+<span class="lineNum">     195 </span><span class="lineCov">     791377 :    while(borrow &amp;&amp; (i &lt; x))</span>
+<span class="lineNum">     196 </span>            :    {
+<span class="lineNum">     197 </span><span class="lineCov">       1874 :       borrow = static_cast&lt;double_limb_type&gt;(pa[i]) - borrow;</span>
+<span class="lineNum">     198 </span><span class="lineCov">       1874 :       pr[i] = static_cast&lt;limb_type&gt;(borrow);</span>
+<span class="lineNum">     199 </span><span class="lineCov">       1874 :       borrow = (borrow &gt;&gt; CppInt1::limb_bits) &amp; 1u;</span>
+<span class="lineNum">     200 </span><span class="lineCov">       1874 :       ++i;</span>
+<span class="lineNum">     201 </span>            :    }
+<span class="lineNum">     202 </span>            :    // Any remaining digits are the same as those in pa:
+<span class="lineNum">     203 </span><span class="lineCov">     787629 :    if((x != i) &amp;&amp; (pa != pr))</span>
+<span class="lineNum">     204 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &gt;= 1600)
+<span class="lineNum">     205 </span>            :       std::copy(pa + i, pa + x, stdext::checked_array_iterator&lt;limb_type*&gt;(pr + i, result.size() - i));
+<span class="lineNum">     206 </span>            : #else
+<span class="lineNum">     207 </span><span class="lineCov">     477508 :       std::copy(pa + i, pa + x, pr + i);</span>
+<span class="lineNum">     208 </span>            : #endif
+<span class="lineNum">     209 </span><span class="lineCov">     787629 :    BOOST_ASSERT(0 == borrow);</span>
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :    //
+<span class="lineNum">     212 </span>            :    // We may have lost digits, if so update limb usage count:
+<span class="lineNum">     213 </span>            :    //
+<span class="lineNum">     214 </span><span class="lineCov">     787869 :    result.normalize();</span>
+<span class="lineNum">     215 </span><span class="lineCov">    1096129 :    result.sign(a.sign());</span>
+<span class="lineNum">     216 </span><span class="lineCov">     787629 :    if(swapped)</span>
+<span class="lineNum">     217 </span><span class="lineCov">       1854 :       result.negate();</span>
+<span class="lineNum">     218 </span>            : }
+<span class="lineNum">     219 </span>            : //
+<span class="lineNum">     220 </span>            : // And again to subtract a single limb:
+<a name="221"><span class="lineNum">     221 </span>            : //</a>
+<span class="lineNum">     222 </span>            : template &lt;class CppInt1, class CppInt2&gt;
+<span class="lineNum">     223 </span><span class="lineCov">      40104 : inline void subtract_unsigned(CppInt1&amp; result, const CppInt2&amp; a, const limb_type&amp; b) BOOST_MP_NOEXCEPT_IF(is_non_throwing_cpp_int&lt;CppInt1&gt;::value)</span>
+<span class="lineNum">     224 </span>            : {
+<span class="lineNum">     225 </span>            :    // Subtract one limb.
+<span class="lineNum">     226 </span>            :    // Nothing fancy, just let uintmax_t take the strain:
+<span class="lineNum">     227 </span>            :    BOOST_STATIC_CONSTANT(double_limb_type, borrow = static_cast&lt;double_limb_type&gt;(CppInt1::max_limb_value) + 1);
+<span class="lineNum">     228 </span><span class="lineCov">      73142 :    result.resize(a.size(), a.size());</span>
+<span class="lineNum">     229 </span><span class="lineCov">      80208 :    typename CppInt1::limb_pointer pr = result.limbs();</span>
+<span class="lineNum">     230 </span><span class="lineCov">      80208 :    typename CppInt2::const_limb_pointer pa = a.limbs();</span>
+<span class="lineNum">     231 </span><span class="lineCov">      40104 :    if(*pa &gt;= b)</span>
+<span class="lineNum">     232 </span>            :    {
+<span class="lineNum">     233 </span><span class="lineCov">      32721 :       *pr = *pa - b;</span>
+<span class="lineNum">     234 </span><span class="lineCov">      32721 :       if(&amp;result != &amp;a)</span>
+<span class="lineNum">     235 </span>            :       {
+<span class="lineNum">     236 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &gt;= 1600)
+<span class="lineNum">     237 </span>            :          std::copy(pa + 1, pa + a.size(), stdext::checked_array_iterator&lt;limb_type*&gt;(pr + 1, result.size() - 1));
+<span class="lineNum">     238 </span>            : #else
+<span class="lineNum">     239 </span><span class="lineCov">        478 :          std::copy(pa + 1, pa + a.size(), pr + 1);</span>
+<span class="lineNum">     240 </span>            : #endif
+<span class="lineNum">     241 </span><span class="lineCov">        239 :          result.sign(a.sign());</span>
+<span class="lineNum">     242 </span>            :       }
+<span class="lineNum">     243 </span><span class="lineCov">      32482 :       else if((result.size() == 1) &amp;&amp; (*pr == 0))</span>
+<span class="lineNum">     244 </span>            :       {
+<span class="lineNum">     245 </span><span class="lineCov">       2178 :          result.sign(false); // zero is unsigned.</span>
+<span class="lineNum">     246 </span>            :       }
+<span class="lineNum">     247 </span>            :    }
+<span class="lineNum">     248 </span><span class="lineCov">       7383 :    else if(result.size() == 1)</span>
+<span class="lineNum">     249 </span>            :    {
+<span class="lineNum">     250 </span><span class="lineCov">       7378 :       *pr = b - *pa;</span>
+<span class="lineNum">     251 </span><span class="lineCov">       7378 :       result.sign(!a.sign());</span>
+<span class="lineNum">     252 </span>            :    }
+<span class="lineNum">     253 </span>            :    else
+<span class="lineNum">     254 </span>            :    {
+<span class="lineNum">     255 </span><span class="lineCov">          5 :       *pr = static_cast&lt;limb_type&gt;((borrow + *pa) - b);</span>
+<span class="lineNum">     256 </span><span class="lineCov">          5 :       unsigned i = 1;</span>
+<span class="lineNum">     257 </span><span class="lineCov">          5 :       while(!pa[i])</span>
+<span class="lineNum">     258 </span>            :       {
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :          pr[i] = CppInt1::max_limb_value;</span>
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :          ++i;</span>
+<span class="lineNum">     261 </span>            :       }
+<span class="lineNum">     262 </span><span class="lineCov">          5 :       pr[i] = pa[i] - 1;</span>
+<span class="lineNum">     263 </span><span class="lineCov">          5 :       if(&amp;result != &amp;a)</span>
+<span class="lineNum">     264 </span>            :       {
+<span class="lineNum">     265 </span><span class="lineNoCov">          0 :          ++i;</span>
+<span class="lineNum">     266 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &gt;= 1600)
+<span class="lineNum">     267 </span>            :          std::copy(pa + i, pa + a.size(), stdext::checked_array_iterator&lt;limb_type*&gt;(pr + i, result.size() - i));
+<span class="lineNum">     268 </span>            : #else
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :          std::copy(pa + i, pa + a.size(), pr + i);</span>
+<span class="lineNum">     270 </span>            : #endif
+<span class="lineNum">     271 </span>            :       }
+<span class="lineNum">     272 </span><span class="lineCov">         10 :       result.normalize();</span>
+<span class="lineNum">     273 </span><span class="lineCov">          5 :       result.sign(a.sign());</span>
+<span class="lineNum">     274 </span>            :    }
+<span class="lineNum">     275 </span><span class="lineCov">      40104 : }</span>
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            : //
+<span class="lineNum">     278 </span>            : // Now the actual functions called by the front end, all of which forward to one of the above:
+<span class="lineNum">     279 </span>            : //
+<span class="lineNum">     280 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2&gt;
+<span class="lineNum">     281 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt; &gt;::value &gt;::type 
+<span class="lineNum">     282 </span>            :    eval_add(
+<span class="lineNum">     283 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     284 </span>            :       const cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt;&amp; o) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     285 </span>            : {
+<span class="lineNum">     286 </span><span class="lineCov">    1347118 :    eval_add(result, result, o);</span>
+<span class="lineNum">     287 </span>            : }
+<a name="288"><span class="lineNum">     288 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2, unsigned MinBits3, unsigned MaxBits3, cpp_integer_type SignType3, cpp_int_check_type Checked3, class Allocator3&gt;</a>
+<span class="lineNum">     289 </span>            : inline typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt; &gt;::value &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits3, MaxBits3, SignType3, Checked3, Allocator3&gt; &gt;::value &gt;::type
+<span class="lineNum">     290 </span><span class="lineCov">     343617 :    eval_add(</span>
+<span class="lineNum">     291 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     292 </span>            :       const cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt;&amp; a, 
+<span class="lineNum">     293 </span>            :       const cpp_int_backend&lt;MinBits3, MaxBits3, SignType3, Checked3, Allocator3&gt;&amp; b) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     294 </span>            : {
+<span class="lineNum">     295 </span><span class="lineCov">    1668473 :    if(a.sign() != b.sign())</span>
+<span class="lineNum">     296 </span>            :    {
+<span class="lineNum">     297 </span><span class="lineCov">      18776 :       subtract_unsigned(result, a, b);</span>
+<span class="lineNum">     298 </span><span class="lineCov">      18776 :       return;</span>
+<span class="lineNum">     299 </span>            :    }
+<span class="lineNum">     300 </span><span class="lineCov">    1649697 :    add_unsigned(result, a, b);</span>
+<span class="lineNum">     301 </span>            : }
+<a name="302"><span class="lineNum">     302 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;</a>
+<span class="lineNum">     303 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type 
+<span class="lineNum">     304 </span><span class="lineCov">    7342573 :    eval_add(cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, const limb_type&amp; o) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))</span>
+<span class="lineNum">     305 </span>            : {
+<span class="lineNum">     306 </span><span class="lineCov">    7484410 :    if(result.sign())</span>
+<span class="lineNum">     307 </span>            :    {
+<span class="lineNum">     308 </span><span class="lineNoCov">          0 :       subtract_unsigned(result, result, o);</span>
+<span class="lineNum">     309 </span>            :    }
+<span class="lineNum">     310 </span>            :    else
+<span class="lineNum">     311 </span><span class="lineCov">    7484410 :       add_unsigned(result, result, o);</span>
+<span class="lineNum">     312 </span><span class="lineCov">    7342573 : }</span>
+<a name="313"><span class="lineNum">     313 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2&gt;</a>
+<span class="lineNum">     314 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt; &gt;::value &gt;::type 
+<span class="lineNum">     315 </span><span class="lineCov">      12997 :    eval_add(</span>
+<span class="lineNum">     316 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     317 </span>            :       const cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt;&amp; a, 
+<span class="lineNum">     318 </span>            :       const limb_type&amp; o) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     319 </span>            : {
+<span class="lineNum">     320 </span><span class="lineCov">     156320 :    if(a.sign())</span>
+<span class="lineNum">     321 </span>            :    {
+<span class="lineNum">     322 </span><span class="lineNoCov">          0 :       subtract_unsigned(result, a, o);</span>
+<span class="lineNum">     323 </span>            :    }
+<span class="lineNum">     324 </span>            :    else
+<span class="lineNum">     325 </span><span class="lineCov">     156320 :       add_unsigned(result, a, o);</span>
+<span class="lineNum">     326 </span><span class="lineCov">      12997 : }</span>
+<a name="327"><span class="lineNum">     327 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;</a>
+<span class="lineNum">     328 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type 
+<span class="lineNum">     329 </span><span class="lineCov">      55472 :    eval_add(</span>
+<span class="lineNum">     330 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     331 </span>            :       const signed_limb_type&amp; o) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     332 </span>            : {
+<span class="lineNum">     333 </span><span class="lineCov">      55472 :    if(o &lt; 0)</span>
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :       eval_subtract(result, static_cast&lt;limb_type&gt;(boost::multiprecision::detail::unsigned_abs(o)));</span>
+<span class="lineNum">     335 </span><span class="lineCov">      55472 :    else if(o &gt; 0)</span>
+<span class="lineNum">     336 </span><span class="lineCov">     110636 :       eval_add(result, static_cast&lt;limb_type&gt;(o));</span>
+<span class="lineNum">     337 </span><span class="lineCov">      55472 : }</span>
+<a name="338"><span class="lineNum">     338 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2&gt;</a>
+<span class="lineNum">     339 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt; &gt;::value &gt;::type 
+<span class="lineNum">     340 </span><span class="lineCov">     102516 :    eval_add(</span>
+<span class="lineNum">     341 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     342 </span>            :       const cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt;&amp; a, 
+<span class="lineNum">     343 </span>            :       const signed_limb_type&amp; o) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     344 </span>            : {
+<span class="lineNum">     345 </span><span class="lineCov">     102516 :    if(o &lt; 0)</span>
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :       eval_subtract(result, a, static_cast&lt;limb_type&gt;(boost::multiprecision::detail::unsigned_abs(o)));</span>
+<span class="lineNum">     347 </span><span class="lineCov">     102516 :    else if(o &gt; 0)</span>
+<span class="lineNum">     348 </span><span class="lineCov">     204537 :       eval_add(result, a, static_cast&lt;limb_type&gt;(o));</span>
+<span class="lineNum">     349 </span><span class="lineNoCov">          0 :    else if(&amp;result != &amp;a)</span>
+<span class="lineNum">     350 </span>            :       result = a;
+<span class="lineNum">     351 </span><span class="lineCov">     102516 : }</span>
+<a name="352"><span class="lineNum">     352 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;</a>
+<span class="lineNum">     353 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type 
+<span class="lineNum">     354 </span><span class="lineCov">      23585 :    eval_subtract(</span>
+<span class="lineNum">     355 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     356 </span>            :       const limb_type&amp; o) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     357 </span>            : {
+<span class="lineNum">     358 </span><span class="lineCov">      39865 :    if(result.sign())</span>
+<span class="lineNum">     359 </span>            :    {
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :       add_unsigned(result, result, o);</span>
+<span class="lineNum">     361 </span>            :    }
+<span class="lineNum">     362 </span>            :    else
+<span class="lineNum">     363 </span><span class="lineCov">      39865 :       subtract_unsigned(result, result, o);</span>
+<span class="lineNum">     364 </span><span class="lineCov">      23585 : }</span>
+<a name="365"><span class="lineNum">     365 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2&gt;</a>
+<span class="lineNum">     366 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt; &gt;::value &gt;::type 
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 :    eval_subtract(</span>
+<span class="lineNum">     368 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     369 </span>            :       const cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt;&amp; a, 
+<span class="lineNum">     370 </span>            :       const limb_type&amp; o) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     371 </span>            : {
+<span class="lineNum">     372 </span><span class="lineCov">        239 :    if(a.sign())</span>
+<span class="lineNum">     373 </span>            :    {
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 :       add_unsigned(result, a, o);</span>
+<span class="lineNum">     375 </span>            :    }
+<span class="lineNum">     376 </span>            :    else
+<span class="lineNum">     377 </span>            :    {
+<span class="lineNum">     378 </span><span class="lineCov">        239 :       subtract_unsigned(result, a, o);</span>
+<span class="lineNum">     379 </span>            :    }
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 : }</span>
+<a name="381"><span class="lineNum">     381 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;</a>
+<span class="lineNum">     382 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type 
+<span class="lineNum">     383 </span><span class="lineCov">      35773 :    eval_subtract(</span>
+<span class="lineNum">     384 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     385 </span>            :       const signed_limb_type&amp; o) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     386 </span>            : {
+<span class="lineNum">     387 </span><span class="lineCov">      35773 :    if(o)</span>
+<span class="lineNum">     388 </span>            :    {
+<span class="lineNum">     389 </span><span class="lineCov">      35773 :       if(o &lt; 0)</span>
+<span class="lineNum">     390 </span><span class="lineNoCov">          0 :          eval_add(result, static_cast&lt;limb_type&gt;(boost::multiprecision::detail::unsigned_abs(o)));</span>
+<span class="lineNum">     391 </span>            :       else
+<span class="lineNum">     392 </span><span class="lineCov">      47961 :          eval_subtract(result, static_cast&lt;limb_type&gt;(o));</span>
+<span class="lineNum">     393 </span>            :    }
+<span class="lineNum">     394 </span><span class="lineCov">      35773 : }</span>
+<a name="395"><span class="lineNum">     395 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2&gt;</a>
+<span class="lineNum">     396 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt; &gt;::value &gt;::type 
+<span class="lineNum">     397 </span><span class="lineCov">        239 :    eval_subtract(</span>
+<span class="lineNum">     398 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     399 </span>            :       const cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt;&amp; a, 
+<span class="lineNum">     400 </span>            :       const signed_limb_type&amp; o) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     401 </span>            : {
+<span class="lineNum">     402 </span><span class="lineCov">        239 :    if(o)</span>
+<span class="lineNum">     403 </span>            :    {
+<span class="lineNum">     404 </span><span class="lineCov">        239 :       if(o &lt; 0)</span>
+<span class="lineNum">     405 </span><span class="lineNoCov">          0 :          eval_add(result, a, static_cast&lt;limb_type&gt;(boost::multiprecision::detail::unsigned_abs(o)));</span>
+<span class="lineNum">     406 </span>            :       else
+<span class="lineNum">     407 </span><span class="lineCov">        478 :          eval_subtract(result, a, static_cast&lt;limb_type&gt;(o));</span>
+<span class="lineNum">     408 </span>            :    }
+<span class="lineNum">     409 </span><span class="lineNoCov">          0 :    else if(&amp;result != &amp;a)</span>
+<span class="lineNum">     410 </span>            :       result = a;
+<span class="lineNum">     411 </span><span class="lineCov">        239 : }</span>
+<span class="lineNum">     412 </span>            : 
+<a name="413"><span class="lineNum">     413 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;</a>
+<span class="lineNum">     414 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type 
+<span class="lineNum">     415 </span><span class="lineCov">     599312 :    eval_increment(cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))</span>
+<span class="lineNum">     416 </span>            : {
+<span class="lineNum">     417 </span>            :    static const limb_type one = 1;
+<span class="lineNum">     418 </span><span class="lineCov">     599312 :    if(!result.sign() &amp;&amp; (result.limbs()[0] &lt; cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::max_limb_value))</span>
+<span class="lineNum">     419 </span><span class="lineCov">     599297 :       ++result.limbs()[0];</span>
+<span class="lineNum">     420 </span><span class="lineCov">         15 :    else if(result.sign() &amp;&amp; result.limbs()[0])</span>
+<span class="lineNum">     421 </span><span class="lineNoCov">          0 :       --result.limbs()[0];</span>
+<span class="lineNum">     422 </span>            :    else
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 :       eval_add(result, one);</span>
+<span class="lineNum">     424 </span><span class="lineCov">     599312 : }</span>
+<a name="425"><span class="lineNum">     425 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;</a>
+<span class="lineNum">     426 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value&gt;::type 
+<span class="lineNum">     427 </span><span class="lineCov">          1 :    eval_decrement(cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))</span>
+<span class="lineNum">     428 </span>            : {
+<span class="lineNum">     429 </span>            :    static const limb_type one = 1;
+<span class="lineNum">     430 </span><span class="lineCov">          1 :    if(!result.sign() &amp;&amp; result.limbs()[0])</span>
+<span class="lineNum">     431 </span><span class="lineCov">          1 :       --result.limbs()[0];</span>
+<span class="lineNum">     432 </span><span class="lineNoCov">          0 :    else if(result.sign() &amp;&amp; (result.limbs()[0] &lt; cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::max_limb_value))</span>
+<span class="lineNum">     433 </span><span class="lineNoCov">          0 :       ++result.limbs()[0];</span>
+<span class="lineNum">     434 </span>            :    else
+<span class="lineNum">     435 </span><span class="lineNoCov">          0 :       eval_subtract(result, one);</span>
+<span class="lineNum">     436 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     437 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2&gt;
+<span class="lineNum">     438 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt; &gt;::value &gt;::type 
+<span class="lineNum">     439 </span>            :    eval_subtract(
+<span class="lineNum">     440 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     441 </span>            :       const cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt;&amp; o) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     442 </span>            : {
+<span class="lineNum">     443 </span><span class="lineCov">     382574 :    eval_subtract(result, result, o);</span>
+<span class="lineNum">     444 </span>            : }
+<a name="445"><span class="lineNum">     445 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2, unsigned MinBits3, unsigned MaxBits3, cpp_integer_type SignType3, cpp_int_check_type Checked3, class Allocator3&gt;</a>
+<span class="lineNum">     446 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;!is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt; &gt;::value &amp;&amp; !is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits3, MaxBits3, SignType3, Checked3, Allocator3&gt; &gt;::value &gt;::type
+<span class="lineNum">     447 </span><span class="lineCov">     332856 :    eval_subtract(</span>
+<span class="lineNum">     448 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     449 </span>            :       const cpp_int_backend&lt;MinBits2, MaxBits2, SignType2, Checked2, Allocator2&gt;&amp; a, 
+<span class="lineNum">     450 </span>            :       const cpp_int_backend&lt;MinBits3, MaxBits3, SignType3, Checked3, Allocator3&gt;&amp; b) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     451 </span>            : {
+<span class="lineNum">     452 </span><span class="lineCov">    1179457 :    if(a.sign() != b.sign())</span>
+<span class="lineNum">     453 </span>            :    {
+<span class="lineNum">     454 </span><span class="lineNoCov">          0 :       add_unsigned(result, a, b);</span>
+<span class="lineNum">     455 </span><span class="lineNoCov">          0 :       return;</span>
+<span class="lineNum">     456 </span>            :    }
+<span class="lineNum">     457 </span><span class="lineCov">    1179457 :    subtract_unsigned(result, a, b);</span>
+<span class="lineNum">     458 </span>            : }
+<span class="lineNum">     459 </span>            : 
+<span class="lineNum">     460 </span>            : //
+<span class="lineNum">     461 </span>            : // Simple addition and subtraction routine for trivial cpp_int's come last:
+<span class="lineNum">     462 </span>            : //
+<span class="lineNum">     463 </span>            : // One of the arguments is signed:
+<span class="lineNum">     464 </span>            : //
+<span class="lineNum">     465 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     466 </span>            : inline typename enable_if_c&lt;
+<span class="lineNum">     467 </span>            :          is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value 
+<span class="lineNum">     468 </span>            :          &amp;&amp; is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value
+<span class="lineNum">     469 </span>            :          &amp;&amp; (is_signed_number&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value || is_signed_number&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value)
+<span class="lineNum">     470 </span>            :          &gt;::type 
+<span class="lineNum">     471 </span>            :    eval_add(
+<span class="lineNum">     472 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     473 </span>            :       const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; o) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     474 </span>            : {
+<span class="lineNum">     475 </span>            :    if(result.sign() != o.sign())
+<span class="lineNum">     476 </span>            :    {
+<span class="lineNum">     477 </span>            :       if(*o.limbs() &gt; *result.limbs())
+<span class="lineNum">     478 </span>            :       {
+<span class="lineNum">     479 </span>            :          *result.limbs() = detail::checked_subtract(*o.limbs(), *result.limbs(), typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::checked_type());
+<span class="lineNum">     480 </span>            :          result.negate();
+<span class="lineNum">     481 </span>            :       }
+<span class="lineNum">     482 </span>            :       else
+<span class="lineNum">     483 </span>            :          *result.limbs() = detail::checked_subtract(*result.limbs(), *o.limbs(), typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::checked_type());
+<span class="lineNum">     484 </span>            :    }
+<span class="lineNum">     485 </span>            :    else
+<span class="lineNum">     486 </span>            :       *result.limbs() = detail::checked_add(*result.limbs(), *o.limbs(), typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::checked_type());
+<span class="lineNum">     487 </span>            :    result.normalize();
+<span class="lineNum">     488 </span>            : }
+<span class="lineNum">     489 </span>            : // Simple version for two unsigned arguments:
+<span class="lineNum">     490 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     491 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;
+<span class="lineNum">     492 </span>            :          is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value 
+<span class="lineNum">     493 </span>            :          &amp;&amp; is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value
+<span class="lineNum">     494 </span>            :          &amp;&amp; is_unsigned_number&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value 
+<span class="lineNum">     495 </span>            :          &amp;&amp; is_unsigned_number&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value
+<span class="lineNum">     496 </span>            :          &gt;::type 
+<span class="lineNum">     497 </span>            :    eval_add(cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     498 </span>            :       const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; o) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     499 </span>            : {
+<span class="lineNum">     500 </span><span class="lineCov">          2 :    *result.limbs() = detail::checked_add(*result.limbs(), *o.limbs(), typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::checked_type());</span>
+<span class="lineNum">     501 </span><span class="lineCov">          1 :    result.normalize();</span>
+<span class="lineNum">     502 </span>            : }
+<span class="lineNum">     503 </span>            : 
+<span class="lineNum">     504 </span>            : // signed subtraction:
+<span class="lineNum">     505 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     506 </span>            : inline typename enable_if_c&lt;
+<span class="lineNum">     507 </span>            :          is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value 
+<span class="lineNum">     508 </span>            :          &amp;&amp; is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value
+<span class="lineNum">     509 </span>            :          &amp;&amp; (is_signed_number&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value || is_signed_number&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value)
+<span class="lineNum">     510 </span>            :          &gt;::type 
+<span class="lineNum">     511 </span>            :    eval_subtract(
+<span class="lineNum">     512 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     513 </span>            :       const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; o) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     514 </span>            : {
+<span class="lineNum">     515 </span>            :    if(result.sign() != o.sign())
+<span class="lineNum">     516 </span>            :    {
+<span class="lineNum">     517 </span>            :       *result.limbs() = detail::checked_add(*result.limbs(), *o.limbs(), typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::checked_type());
+<span class="lineNum">     518 </span>            :    }
+<span class="lineNum">     519 </span>            :    else if(*result.limbs() &lt; *o.limbs())
+<span class="lineNum">     520 </span>            :    {
+<span class="lineNum">     521 </span>            :       *result.limbs() = detail::checked_subtract(*o.limbs(), *result.limbs(), typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::checked_type());
+<span class="lineNum">     522 </span>            :       result.negate();
+<span class="lineNum">     523 </span>            :    }
+<span class="lineNum">     524 </span>            :    else
+<span class="lineNum">     525 </span>            :       *result.limbs() = detail::checked_subtract(*result.limbs(), *o.limbs(), typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::checked_type());
+<span class="lineNum">     526 </span>            :    result.normalize();
+<span class="lineNum">     527 </span>            : }
+<span class="lineNum">     528 </span>            : 
+<span class="lineNum">     529 </span>            : template &lt;unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1&gt;
+<span class="lineNum">     530 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;
+<span class="lineNum">     531 </span>            :          is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value 
+<span class="lineNum">     532 </span>            :          &amp;&amp; is_trivial_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value
+<span class="lineNum">     533 </span>            :          &amp;&amp; is_unsigned_number&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value 
+<span class="lineNum">     534 </span>            :          &amp;&amp; is_unsigned_number&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value
+<span class="lineNum">     535 </span>            :          &gt;::type 
+<span class="lineNum">     536 </span>            :    eval_subtract(
+<span class="lineNum">     537 </span>            :       cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; result, 
+<span class="lineNum">     538 </span>            :       const cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;&amp; o) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int&lt;cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt; &gt;::value))
+<span class="lineNum">     539 </span>            : {
+<span class="lineNum">     540 </span><span class="lineCov">         16 :    *result.limbs() = detail::checked_subtract(*result.limbs(), *o.limbs(), typename cpp_int_backend&lt;MinBits1, MaxBits1, SignType1, Checked1, Allocator1&gt;::checked_type());</span>
+<span class="lineNum">     541 </span><span class="lineCov">          8 :    result.normalize();</span>
+<span class="lineNum">     542 </span>            : }
+<span class="lineNum">     543 </span>            : 
+<span class="lineNum">     544 </span>            : #ifdef _MSC_VER
+<span class="lineNum">     545 </span>            : #pragma warning(pop)
+<span class="lineNum">     546 </span>            : #endif
+<span class="lineNum">     547 </span>            : 
+<span class="lineNum">     548 </span>            : }}} // namespaces
+<span class="lineNum">     549 </span>            : 
+<span class="lineNum">     550 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

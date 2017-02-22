@@ -1,0 +1,1136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/multiprecision/detail/number_base.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/multiprecision/detail</a> - number_base.hpp<span style="font-size: 80%;"> (source / <a href="number_base.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">90.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntry">59</td>
+            <td class="headerCovTableEntryLo">50.8 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : ///////////////////////////////////////////////////////////////////////////////</a>
+<span class="lineNum">       2 </span>            : //  Copyright 2011 John Maddock. Distributed under the Boost
+<span class="lineNum">       3 </span>            : //  Software License, Version 1.0. (See accompanying file
+<span class="lineNum">       4 </span>            : //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : #ifndef BOOST_MATH_BIG_NUM_BASE_HPP
+<span class="lineNum">       7 </span>            : #define BOOST_MATH_BIG_NUM_BASE_HPP
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : #include &lt;limits&gt;
+<span class="lineNum">      10 </span>            : #include &lt;boost/utility/enable_if.hpp&gt;
+<span class="lineNum">      11 </span>            : #include &lt;boost/type_traits/is_convertible.hpp&gt;
+<span class="lineNum">      12 </span>            : #include &lt;boost/type_traits/is_constructible.hpp&gt;
+<span class="lineNum">      13 </span>            : #include &lt;boost/type_traits/decay.hpp&gt;
+<span class="lineNum">      14 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">      15 </span>            : #  pragma warning(push)
+<span class="lineNum">      16 </span>            : #  pragma warning(disable:4307)
+<span class="lineNum">      17 </span>            : #endif
+<span class="lineNum">      18 </span>            : #include &lt;boost/lexical_cast.hpp&gt;
+<span class="lineNum">      19 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">      20 </span>            : #  pragma warning(pop)
+<span class="lineNum">      21 </span>            : #endif
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #if defined(NDEBUG) &amp;&amp; !defined(_DEBUG)
+<span class="lineNum">      24 </span>            : #  define BOOST_MP_FORCEINLINE BOOST_FORCEINLINE
+<span class="lineNum">      25 </span>            : #else
+<span class="lineNum">      26 </span>            : #  define BOOST_MP_FORCEINLINE inline
+<span class="lineNum">      27 </span>            : #endif
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #if (defined(BOOST_GCC) &amp;&amp; (BOOST_GCC &lt;= 40700)) || BOOST_WORKAROUND(__SUNPRO_CC, &lt; 0x5140)
+<span class="lineNum">      30 </span>            : #  define BOOST_MP_NOEXCEPT_IF(x)
+<span class="lineNum">      31 </span>            : #else
+<span class="lineNum">      32 </span>            : #  define BOOST_MP_NOEXCEPT_IF(x) BOOST_NOEXCEPT_IF(x)
+<span class="lineNum">      33 </span>            : #endif
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #if defined(BOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS) || BOOST_WORKAROUND(__SUNPRO_CC, &lt; 0x5140)
+<span class="lineNum">      36 </span>            : #define BOOST_MP_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
+<span class="lineNum">      37 </span>            : #endif
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : //
+<span class="lineNum">      40 </span>            : // Thread local storage:
+<span class="lineNum">      41 </span>            : //
+<span class="lineNum">      42 </span>            : #if !defined(BOOST_NO_CXX11_THREAD_LOCAL) &amp;&amp; !defined(BOOST_INTEL)
+<span class="lineNum">      43 </span>            : #  define BOOST_MP_THREAD_LOCAL thread_local
+<span class="lineNum">      44 </span>            : #else
+<span class="lineNum">      45 </span>            : #  define BOOST_MP_THREAD_LOCAL
+<span class="lineNum">      46 </span>            : #endif
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">      49 </span>            : #  pragma warning(push)
+<span class="lineNum">      50 </span>            : #  pragma warning(disable:6326)
+<span class="lineNum">      51 </span>            : #endif
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : namespace boost{
+<span class="lineNum">      54 </span>            :    namespace multiprecision{
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : enum expression_template_option
+<span class="lineNum">      57 </span>            : {
+<span class="lineNum">      58 </span>            :    et_off  = 0,
+<span class="lineNum">      59 </span>            :    et_on   = 1
+<span class="lineNum">      60 </span>            : };
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : template &lt;class Backend&gt;
+<span class="lineNum">      63 </span>            : struct expression_template_default
+<span class="lineNum">      64 </span>            : {
+<span class="lineNum">      65 </span>            :    static const expression_template_option value = et_on;
+<span class="lineNum">      66 </span>            : };
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : template &lt;class Backend, expression_template_option ExpressionTemplates = expression_template_default&lt;Backend&gt;::value&gt;
+<span class="lineNum">      69 </span>            : class number;
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : template &lt;class T&gt;
+<span class="lineNum">      72 </span>            : struct is_number : public mpl::false_ {};
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : template &lt;class Backend, expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">      75 </span>            : struct is_number&lt;number&lt;Backend, ExpressionTemplates&gt; &gt; : public mpl::true_ {};
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : template &lt;class T&gt;
+<span class="lineNum">      78 </span>            : struct is_et_number : public mpl::false_ {};
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : template &lt;class Backend&gt;
+<span class="lineNum">      81 </span>            : struct is_et_number&lt;number&lt;Backend, et_on&gt; &gt; : public mpl::true_ {};
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : template &lt;class T&gt;
+<span class="lineNum">      84 </span>            : struct is_no_et_number : public mpl::false_ {};
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            : template &lt;class Backend&gt;
+<span class="lineNum">      87 </span>            : struct is_no_et_number&lt;number&lt;Backend, et_off&gt; &gt; : public mpl::true_ {};
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : namespace detail{
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : // Forward-declare an expression wrapper
+<span class="lineNum">      92 </span>            : template&lt;class tag, class Arg1 = void, class Arg2 = void, class Arg3 = void, class Arg4 = void&gt;
+<span class="lineNum">      93 </span>            : struct expression;
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : } // namespace detail
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : template &lt;class T&gt;
+<span class="lineNum">      98 </span>            : struct is_number_expression : public mpl::false_ {};
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : template&lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     101 </span>            : struct is_number_expression&lt;detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; : public mpl::true_ {};
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : template &lt;class T, class Num&gt;
+<span class="lineNum">     104 </span>            : struct is_compatible_arithmetic_type
+<span class="lineNum">     105 </span>            :    : public mpl::bool_&lt;
+<span class="lineNum">     106 </span>            :          is_convertible&lt;T, Num&gt;::value
+<span class="lineNum">     107 </span>            :          &amp;&amp; !is_same&lt;T, Num&gt;::value
+<span class="lineNum">     108 </span>            :          &amp;&amp; !is_number_expression&lt;T&gt;::value&gt;
+<span class="lineNum">     109 </span>            : {};
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            : namespace detail{
+<span class="lineNum">     112 </span>            : //
+<span class="lineNum">     113 </span>            : // Workaround for missing abs(boost::long_long_type) and abs(__int128) on some compilers:
+<span class="lineNum">     114 </span>            : //
+<span class="lineNum">     115 </span>            : template &lt;class T&gt;
+<span class="lineNum">     116 </span>            : BOOST_CONSTEXPR typename enable_if_c&lt;(is_signed&lt;T&gt;::value || is_floating_point&lt;T&gt;::value), T&gt;::type abs(T t) BOOST_NOEXCEPT
+<span class="lineNum">     117 </span>            : {
+<span class="lineNum">     118 </span>            :    // This strange expression avoids a hardware trap in the corner case
+<span class="lineNum">     119 </span>            :    // that val is the most negative value permitted in boost::long_long_type.
+<span class="lineNum">     120 </span>            :    // See https://svn.boost.org/trac/boost/ticket/9740.
+<span class="lineNum">     121 </span>            :    return t &lt; 0 ? T(1u) + T(-(t + 1)) : t;
+<span class="lineNum">     122 </span>            : }
+<span class="lineNum">     123 </span>            : template &lt;class T&gt;
+<span class="lineNum">     124 </span>            : BOOST_CONSTEXPR typename enable_if_c&lt;(is_unsigned&lt;T&gt;::value), T&gt;::type abs(T t) BOOST_NOEXCEPT
+<span class="lineNum">     125 </span>            : {
+<span class="lineNum">     126 </span>            :    return t;
+<span class="lineNum">     127 </span>            : }
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            : #define BOOST_MP_USING_ABS using boost::multiprecision::detail::abs;
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            : template &lt;class T&gt;
+<span class="lineNum">     132 </span>            : BOOST_CONSTEXPR typename enable_if_c&lt;(is_signed&lt;T&gt;::value || is_floating_point&lt;T&gt;::value), typename make_unsigned&lt;T&gt;::type&gt;::type unsigned_abs(T t) BOOST_NOEXCEPT
+<span class="lineNum">     133 </span>            : {
+<span class="lineNum">     134 </span>            :    // This strange expression avoids a hardware trap in the corner case
+<span class="lineNum">     135 </span>            :    // that val is the most negative value permitted in boost::long_long_type.
+<span class="lineNum">     136 </span>            :    // See https://svn.boost.org/trac/boost/ticket/9740.
+<span class="lineNum">     137 </span><span class="lineCov">     569692 :    return t &lt; 0 ? static_cast&lt;typename make_unsigned&lt;T&gt;::type&gt;(1u) + static_cast&lt;typename make_unsigned&lt;T&gt;::type&gt;(-(t + 1)) : static_cast&lt;typename make_unsigned&lt;T&gt;::type&gt;(t);</span>
+<span class="lineNum">     138 </span>            : }
+<span class="lineNum">     139 </span>            : template &lt;class T&gt;
+<span class="lineNum">     140 </span>            : BOOST_CONSTEXPR typename enable_if_c&lt;(is_unsigned&lt;T&gt;::value), T&gt;::type unsigned_abs(T t) BOOST_NOEXCEPT
+<span class="lineNum">     141 </span>            : {
+<span class="lineNum">     142 </span>            :    return t;
+<span class="lineNum">     143 </span>            : }
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : //
+<span class="lineNum">     146 </span>            : // Move support:
+<span class="lineNum">     147 </span>            : //
+<span class="lineNum">     148 </span>            : #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">     149 </span>            : #  define BOOST_MP_MOVE(x) std::move(x)
+<span class="lineNum">     150 </span>            : #else
+<span class="lineNum">     151 </span>            : #  define BOOST_MP_MOVE(x) x
+<span class="lineNum">     152 </span>            : #endif
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            : template &lt;class T&gt;
+<span class="lineNum">     155 </span>            : struct bits_of
+<span class="lineNum">     156 </span>            : {
+<span class="lineNum">     157 </span>            :    BOOST_STATIC_ASSERT(is_integral&lt;T&gt;::value || is_enum&lt;T&gt;::value || std::numeric_limits&lt;T&gt;::is_specialized);
+<span class="lineNum">     158 </span>            :    static const unsigned value =
+<span class="lineNum">     159 </span>            :       std::numeric_limits&lt;T&gt;::is_specialized ?
+<span class="lineNum">     160 </span>            :          std::numeric_limits&lt;T&gt;::digits
+<span class="lineNum">     161 </span>            :          : sizeof(T) * CHAR_BIT - (is_signed&lt;T&gt;::value ? 1 : 0);
+<span class="lineNum">     162 </span>            : };
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            : #if defined(_GLIBCXX_USE_FLOAT128) &amp;&amp; defined(BOOST_GCC) &amp;&amp; !defined(__STRICT_ANSI__)
+<span class="lineNum">     165 </span>            : template&lt;&gt; struct bits_of&lt;__float128&gt; { static const unsigned value = 113; };
+<span class="lineNum">     166 </span>            : #endif
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : template &lt;int b&gt;
+<span class="lineNum">     169 </span>            : struct has_enough_bits
+<span class="lineNum">     170 </span>            : {
+<span class="lineNum">     171 </span>            :    template &lt;class T&gt;
+<span class="lineNum">     172 </span>            :    struct type : public mpl::bool_&lt;bits_of&lt;T&gt;::value&gt;= b&gt;{};
+<span class="lineNum">     173 </span>            : };
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            : template &lt;class Val, class Backend, class Tag&gt;
+<span class="lineNum">     176 </span>            : struct canonical_imp
+<span class="lineNum">     177 </span>            : {
+<span class="lineNum">     178 </span>            :    typedef typename remove_cv&lt;typename decay&lt;const Val&gt;::type&gt;::type type;
+<span class="lineNum">     179 </span>            : };
+<span class="lineNum">     180 </span>            : template &lt;class B, class Backend, class Tag&gt;
+<span class="lineNum">     181 </span>            : struct canonical_imp&lt;number&lt;B, et_on&gt;, Backend, Tag&gt;
+<span class="lineNum">     182 </span>            : {
+<span class="lineNum">     183 </span>            :    typedef B type;
+<span class="lineNum">     184 </span>            : };
+<span class="lineNum">     185 </span>            : template &lt;class B, class Backend, class Tag&gt;
+<span class="lineNum">     186 </span>            : struct canonical_imp&lt;number&lt;B, et_off&gt;, Backend, Tag&gt;
+<span class="lineNum">     187 </span>            : {
+<span class="lineNum">     188 </span>            :    typedef B type;
+<span class="lineNum">     189 </span>            : };
+<span class="lineNum">     190 </span>            : #ifdef __SUNPRO_CC
+<span class="lineNum">     191 </span>            : template &lt;class B, class Backend&gt;
+<span class="lineNum">     192 </span>            : struct canonical_imp&lt;number&lt;B, et_on&gt;, Backend, mpl::int_&lt;3&gt; &gt;
+<span class="lineNum">     193 </span>            : {
+<span class="lineNum">     194 </span>            :    typedef B type;
+<span class="lineNum">     195 </span>            : };
+<span class="lineNum">     196 </span>            : template &lt;class B, class Backend&gt;
+<span class="lineNum">     197 </span>            : struct canonical_imp&lt;number&lt;B, et_off&gt;, Backend, mpl::int_&lt;3&gt; &gt;
+<span class="lineNum">     198 </span>            : {
+<span class="lineNum">     199 </span>            :    typedef B type;
+<span class="lineNum">     200 </span>            : };
+<span class="lineNum">     201 </span>            : #endif
+<span class="lineNum">     202 </span>            : template &lt;class Val, class Backend&gt;
+<span class="lineNum">     203 </span>            : struct canonical_imp&lt;Val, Backend, mpl::int_&lt;0&gt; &gt;
+<span class="lineNum">     204 </span>            : {
+<span class="lineNum">     205 </span>            :    typedef typename has_enough_bits&lt;bits_of&lt;Val&gt;::value&gt;::template type&lt;mpl::_&gt; pred_type;
+<span class="lineNum">     206 </span>            :    typedef typename mpl::find_if&lt;
+<span class="lineNum">     207 </span>            :       typename Backend::signed_types,
+<span class="lineNum">     208 </span>            :       pred_type
+<span class="lineNum">     209 </span>            :    &gt;::type iter_type;
+<span class="lineNum">     210 </span>            :    typedef typename mpl::end&lt;typename Backend::signed_types&gt;::type end_type;
+<span class="lineNum">     211 </span>            :    typedef typename mpl::eval_if&lt;boost::is_same&lt;iter_type, end_type&gt;, mpl::identity&lt;Val&gt;, mpl::deref&lt;iter_type&gt; &gt;::type type;
+<span class="lineNum">     212 </span>            : };
+<span class="lineNum">     213 </span>            : template &lt;class Val, class Backend&gt;
+<span class="lineNum">     214 </span>            : struct canonical_imp&lt;Val, Backend, mpl::int_&lt;1&gt; &gt;
+<span class="lineNum">     215 </span>            : {
+<span class="lineNum">     216 </span>            :    typedef typename has_enough_bits&lt;bits_of&lt;Val&gt;::value&gt;::template type&lt;mpl::_&gt; pred_type;
+<span class="lineNum">     217 </span>            :    typedef typename mpl::find_if&lt;
+<span class="lineNum">     218 </span>            :       typename Backend::unsigned_types,
+<span class="lineNum">     219 </span>            :       pred_type
+<span class="lineNum">     220 </span>            :    &gt;::type iter_type;
+<span class="lineNum">     221 </span>            :    typedef typename mpl::end&lt;typename Backend::unsigned_types&gt;::type end_type;
+<span class="lineNum">     222 </span>            :    typedef typename mpl::eval_if&lt;boost::is_same&lt;iter_type, end_type&gt;, mpl::identity&lt;Val&gt;, mpl::deref&lt;iter_type&gt; &gt;::type type;
+<span class="lineNum">     223 </span>            : };
+<span class="lineNum">     224 </span>            : template &lt;class Val, class Backend&gt;
+<span class="lineNum">     225 </span>            : struct canonical_imp&lt;Val, Backend, mpl::int_&lt;2&gt; &gt;
+<span class="lineNum">     226 </span>            : {
+<span class="lineNum">     227 </span>            :    typedef typename has_enough_bits&lt;bits_of&lt;Val&gt;::value&gt;::template type&lt;mpl::_&gt; pred_type;
+<span class="lineNum">     228 </span>            :    typedef typename mpl::find_if&lt;
+<span class="lineNum">     229 </span>            :       typename Backend::float_types,
+<span class="lineNum">     230 </span>            :       pred_type
+<span class="lineNum">     231 </span>            :    &gt;::type iter_type;
+<span class="lineNum">     232 </span>            :    typedef typename mpl::end&lt;typename Backend::float_types&gt;::type end_type;
+<span class="lineNum">     233 </span>            :    typedef typename mpl::eval_if&lt;boost::is_same&lt;iter_type, end_type&gt;, mpl::identity&lt;Val&gt;, mpl::deref&lt;iter_type&gt; &gt;::type type;
+<span class="lineNum">     234 </span>            : };
+<span class="lineNum">     235 </span>            : template &lt;class Val, class Backend&gt;
+<span class="lineNum">     236 </span>            : struct canonical_imp&lt;Val, Backend, mpl::int_&lt;3&gt; &gt;
+<span class="lineNum">     237 </span>            : {
+<span class="lineNum">     238 </span>            :    typedef const char* type;
+<span class="lineNum">     239 </span>            : };
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            : template &lt;class Val, class Backend&gt;
+<span class="lineNum">     242 </span>            : struct canonical
+<span class="lineNum">     243 </span>            : {
+<span class="lineNum">     244 </span>            :    typedef typename mpl::if_&lt;
+<span class="lineNum">     245 </span>            :       is_signed&lt;Val&gt;,
+<span class="lineNum">     246 </span>            :       mpl::int_&lt;0&gt;,
+<span class="lineNum">     247 </span>            :       typename mpl::if_&lt;
+<span class="lineNum">     248 </span>            :          is_unsigned&lt;Val&gt;,
+<span class="lineNum">     249 </span>            :          mpl::int_&lt;1&gt;,
+<span class="lineNum">     250 </span>            :          typename mpl::if_&lt;
+<span class="lineNum">     251 </span>            :             is_floating_point&lt;Val&gt;,
+<span class="lineNum">     252 </span>            :             mpl::int_&lt;2&gt;,
+<span class="lineNum">     253 </span>            :             typename mpl::if_&lt;
+<span class="lineNum">     254 </span>            :                mpl::or_&lt;
+<span class="lineNum">     255 </span>            :                   is_convertible&lt;Val, const char*&gt;,
+<span class="lineNum">     256 </span>            :                   is_same&lt;Val, std::string&gt;
+<span class="lineNum">     257 </span>            :                &gt;,
+<span class="lineNum">     258 </span>            :                mpl::int_&lt;3&gt;,
+<span class="lineNum">     259 </span>            :                mpl::int_&lt;4&gt;
+<span class="lineNum">     260 </span>            :             &gt;::type
+<span class="lineNum">     261 </span>            :          &gt;::type
+<span class="lineNum">     262 </span>            :       &gt;::type
+<span class="lineNum">     263 </span>            :    &gt;::type tag_type;
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :    typedef typename canonical_imp&lt;Val, Backend, tag_type&gt;::type type;
+<span class="lineNum">     266 </span>            : };
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            : struct terminal{};
+<span class="lineNum">     269 </span>            : struct negate{};
+<span class="lineNum">     270 </span>            : struct plus{};
+<span class="lineNum">     271 </span>            : struct minus{};
+<span class="lineNum">     272 </span>            : struct multiplies{};
+<span class="lineNum">     273 </span>            : struct divides{};
+<span class="lineNum">     274 </span>            : struct modulus{};
+<span class="lineNum">     275 </span>            : struct shift_left{};
+<span class="lineNum">     276 </span>            : struct shift_right{};
+<span class="lineNum">     277 </span>            : struct bitwise_and{};
+<span class="lineNum">     278 </span>            : struct bitwise_or{};
+<span class="lineNum">     279 </span>            : struct bitwise_xor{};
+<span class="lineNum">     280 </span>            : struct bitwise_complement{};
+<span class="lineNum">     281 </span>            : struct add_immediates{};
+<span class="lineNum">     282 </span>            : struct subtract_immediates{};
+<span class="lineNum">     283 </span>            : struct multiply_immediates{};
+<span class="lineNum">     284 </span>            : struct divide_immediates{};
+<span class="lineNum">     285 </span>            : struct modulus_immediates{};
+<span class="lineNum">     286 </span>            : struct bitwise_and_immediates{};
+<span class="lineNum">     287 </span>            : struct bitwise_or_immediates{};
+<span class="lineNum">     288 </span>            : struct bitwise_xor_immediates{};
+<span class="lineNum">     289 </span>            : struct complement_immediates{};
+<span class="lineNum">     290 </span>            : struct function{};
+<span class="lineNum">     291 </span>            : struct multiply_add{};
+<span class="lineNum">     292 </span>            : struct multiply_subtract{};
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            : template &lt;class T&gt;
+<span class="lineNum">     295 </span>            : struct backend_type;
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            : template &lt;class T, expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     298 </span>            : struct backend_type&lt;number&lt;T, ExpressionTemplates&gt; &gt;
+<span class="lineNum">     299 </span>            : {
+<span class="lineNum">     300 </span>            :    typedef T type;
+<span class="lineNum">     301 </span>            : };
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span>            : template &lt;class tag, class A1, class A2, class A3, class A4&gt;
+<span class="lineNum">     304 </span>            : struct backend_type&lt;expression&lt;tag, A1, A2, A3, A4&gt; &gt;
+<span class="lineNum">     305 </span>            : {
+<span class="lineNum">     306 </span>            :    typedef typename backend_type&lt;typename expression&lt;tag, A1, A2, A3, A4&gt;::result_type&gt;::type type;
+<span class="lineNum">     307 </span>            : };
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            : template &lt;class T1, class T2&gt;
+<span class="lineNum">     311 </span>            : struct combine_expression
+<span class="lineNum">     312 </span>            : {
+<span class="lineNum">     313 </span>            : #ifdef BOOST_NO_CXX11_DECLTYPE
+<span class="lineNum">     314 </span>            :    typedef typename mpl::if_c&lt;(sizeof(T1() + T2()) == sizeof(T1)), T1, T2&gt;::type type;
+<span class="lineNum">     315 </span>            : #else
+<span class="lineNum">     316 </span>            :    typedef decltype(T1() + T2()) type;
+<span class="lineNum">     317 </span>            : #endif
+<span class="lineNum">     318 </span>            : };
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span>            : template &lt;class T1, expression_template_option ExpressionTemplates, class T2&gt;
+<span class="lineNum">     321 </span>            : struct combine_expression&lt;number&lt;T1, ExpressionTemplates&gt;, T2&gt;
+<span class="lineNum">     322 </span>            : {
+<span class="lineNum">     323 </span>            :    typedef number&lt;T1, ExpressionTemplates&gt; type;
+<span class="lineNum">     324 </span>            : };
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span>            : template &lt;class T1, class T2, expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     327 </span>            : struct combine_expression&lt;T1, number&lt;T2, ExpressionTemplates&gt; &gt;
+<span class="lineNum">     328 </span>            : {
+<span class="lineNum">     329 </span>            :    typedef number&lt;T2, ExpressionTemplates&gt; type;
+<span class="lineNum">     330 </span>            : };
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span>            : template &lt;class T, expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     333 </span>            : struct combine_expression&lt;number&lt;T, ExpressionTemplates&gt;, number&lt;T, ExpressionTemplates&gt; &gt;
+<span class="lineNum">     334 </span>            : {
+<span class="lineNum">     335 </span>            :    typedef number&lt;T, ExpressionTemplates&gt; type;
+<span class="lineNum">     336 </span>            : };
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            : template &lt;class T1, expression_template_option ExpressionTemplates1, class T2, expression_template_option ExpressionTemplates2&gt;
+<span class="lineNum">     339 </span>            : struct combine_expression&lt;number&lt;T1, ExpressionTemplates1&gt;, number&lt;T2, ExpressionTemplates2&gt; &gt;
+<span class="lineNum">     340 </span>            : {
+<span class="lineNum">     341 </span>            :    typedef typename mpl::if_c&lt;
+<span class="lineNum">     342 </span>            :       is_convertible&lt;number&lt;T2, ExpressionTemplates2&gt;, number&lt;T1, ExpressionTemplates2&gt; &gt;::value,
+<span class="lineNum">     343 </span>            :       number&lt;T1, ExpressionTemplates1&gt;,
+<span class="lineNum">     344 </span>            :       number&lt;T2, ExpressionTemplates2&gt;
+<span class="lineNum">     345 </span>            :       &gt;::type type;
+<span class="lineNum">     346 </span>            : };
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            : template &lt;class T&gt;
+<span class="lineNum">     349 </span>            : struct arg_type
+<span class="lineNum">     350 </span>            : {
+<span class="lineNum">     351 </span>            :    typedef expression&lt;terminal, T&gt; type;
+<span class="lineNum">     352 </span>            : };
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span>            : template &lt;class Tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     355 </span>            : struct arg_type&lt;expression&lt;Tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;
+<span class="lineNum">     356 </span>            : {
+<span class="lineNum">     357 </span>            :    typedef expression&lt;Tag, Arg1, Arg2, Arg3, Arg4&gt; type;
+<span class="lineNum">     358 </span>            : };
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span>            : struct unmentionable
+<span class="lineNum">     361 </span>            : {
+<span class="lineNum">     362 </span>            :    unmentionable* proc(){ return 0; }
+<span class="lineNum">     363 </span>            : };
+<span class="lineNum">     364 </span>            : 
+<span class="lineNum">     365 </span>            : typedef unmentionable* (unmentionable::*unmentionable_type)();
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span>            : template &lt;class T&gt;
+<span class="lineNum">     368 </span>            : struct expression_storage
+<span class="lineNum">     369 </span>            : {
+<span class="lineNum">     370 </span>            :    typedef const T&amp; type;
+<span class="lineNum">     371 </span>            : };
+<span class="lineNum">     372 </span>            : 
+<span class="lineNum">     373 </span>            : template &lt;class T&gt;
+<span class="lineNum">     374 </span>            : struct expression_storage&lt;T*&gt;
+<span class="lineNum">     375 </span>            : {
+<span class="lineNum">     376 </span>            :    typedef T* type;
+<span class="lineNum">     377 </span>            : };
+<span class="lineNum">     378 </span>            : 
+<span class="lineNum">     379 </span>            : template &lt;class T&gt;
+<span class="lineNum">     380 </span>            : struct expression_storage&lt;const T*&gt;
+<span class="lineNum">     381 </span>            : {
+<span class="lineNum">     382 </span>            :    typedef const T* type;
+<span class="lineNum">     383 </span>            : };
+<span class="lineNum">     384 </span>            : 
+<span class="lineNum">     385 </span>            : template &lt;class tag, class A1, class A2, class A3, class A4&gt;
+<span class="lineNum">     386 </span>            : struct expression_storage&lt;expression&lt;tag, A1, A2, A3, A4&gt; &gt;
+<span class="lineNum">     387 </span>            : {
+<span class="lineNum">     388 </span>            :    typedef expression&lt;tag, A1, A2, A3, A4&gt; type;
+<span class="lineNum">     389 </span>            : };
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span>            : template&lt;class tag, class Arg1&gt;
+<span class="lineNum">     392 </span>            : struct expression&lt;tag, Arg1, void, void, void&gt;
+<span class="lineNum">     393 </span>            : {
+<span class="lineNum">     394 </span>            :    typedef mpl::int_&lt;1&gt; arity;
+<span class="lineNum">     395 </span>            :    typedef typename arg_type&lt;Arg1&gt;::type left_type;
+<span class="lineNum">     396 </span>            :    typedef typename left_type::result_type left_result_type;
+<span class="lineNum">     397 </span>            :    typedef typename left_type::result_type result_type;
+<span class="lineNum">     398 </span>            :    typedef tag tag_type;
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span>            :    explicit expression(const Arg1&amp; a) : arg(a) {}
+<span class="lineNum">     401 </span>            : 
+<span class="lineNum">     402 </span><span class="lineCov">        130 :    left_type left()const { return left_type(arg); }</span>
+<span class="lineNum">     403 </span>            : 
+<span class="lineNum">     404 </span>            :    const Arg1&amp; left_ref()const BOOST_NOEXCEPT { return arg; }
+<span class="lineNum">     405 </span>            : 
+<span class="lineNum">     406 </span>            :    static const unsigned depth = left_type::depth + 1;
+<span class="lineNum">     407 </span>            : #ifndef BOOST_MP_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
+<span class="lineNum">     408 </span>            : #  if (defined(__GNUC__) &amp;&amp; (__GNUC__ == 4) &amp;&amp; (__GNUC_MINOR__ &lt; 7) &amp;&amp; !defined(__clang__)) || (defined(BOOST_INTEL) &amp;&amp; (BOOST_INTEL &lt;= 1500))
+<span class="lineNum">     409 </span>            :    //
+<span class="lineNum">     410 </span>            :    // Horrible workaround for gcc-4.6.x which always prefers the template
+<span class="lineNum">     411 </span>            :    // operator bool() rather than the non-template operator when converting to
+<span class="lineNum">     412 </span>            :    // an arithmetic type:
+<span class="lineNum">     413 </span>            :    //
+<span class="lineNum">     414 </span>            :    template &lt;class T, typename boost::enable_if&lt;is_same&lt;T, bool&gt;, int&gt;::type = 0&gt;
+<span class="lineNum">     415 </span>            :    explicit operator T ()const
+<span class="lineNum">     416 </span>            :    {
+<span class="lineNum">     417 </span>            :       result_type r(*this);
+<span class="lineNum">     418 </span>            :       return static_cast&lt;bool&gt;(r);
+<span class="lineNum">     419 </span>            :    }
+<span class="lineNum">     420 </span>            :    template &lt;class T, typename boost::disable_if_c&lt;is_same&lt;T, bool&gt;::value || is_void&lt;T&gt;::value || is_number&lt;T&gt;::value, int&gt;::type = 0&gt;
+<span class="lineNum">     421 </span>            :    explicit operator T ()const
+<span class="lineNum">     422 </span>            :    {
+<span class="lineNum">     423 </span>            :       return static_cast&lt;T&gt;(static_cast&lt;result_type&gt;(*this));
+<span class="lineNum">     424 </span>            :    }
+<span class="lineNum">     425 </span>            : #  else
+<span class="lineNum">     426 </span>            :    template &lt;class T
+<span class="lineNum">     427 </span>            : #ifndef __SUNPRO_CC
+<span class="lineNum">     428 </span>            : , typename boost::disable_if_c&lt;is_number&lt;T&gt;::value || is_constructible&lt;T const&amp;, result_type&gt;::value, int&gt;::type = 0
+<span class="lineNum">     429 </span>            : #endif
+<span class="lineNum">     430 </span>            : &gt;
+<span class="lineNum">     431 </span>            :    explicit operator T()const
+<span class="lineNum">     432 </span>            :    {
+<span class="lineNum">     433 </span>            :       return static_cast&lt;T&gt;(static_cast&lt;result_type&gt;(*this));
+<span class="lineNum">     434 </span>            :    }
+<span class="lineNum">     435 </span>            :    BOOST_MP_FORCEINLINE explicit operator bool()const
+<span class="lineNum">     436 </span>            :    {
+<span class="lineNum">     437 </span>            :       result_type r(*this);
+<span class="lineNum">     438 </span>            :       return static_cast&lt;bool&gt;(r);
+<span class="lineNum">     439 </span>            :    }
+<span class="lineNum">     440 </span>            : #if BOOST_WORKAROUND(BOOST_GCC_VERSION, &lt; 40800)
+<span class="lineNum">     441 </span>            :    BOOST_MP_FORCEINLINE explicit operator void()const {}
+<span class="lineNum">     442 </span>            : #endif
+<span class="lineNum">     443 </span>            : #  endif
+<span class="lineNum">     444 </span>            : #else
+<span class="lineNum">     445 </span>            :    operator unmentionable_type()const
+<span class="lineNum">     446 </span>            :    {
+<span class="lineNum">     447 </span>            :       result_type r(*this);
+<span class="lineNum">     448 </span>            :       return r ? &amp;unmentionable::proc : 0;
+<span class="lineNum">     449 </span>            :    }
+<span class="lineNum">     450 </span>            : #endif
+<span class="lineNum">     451 </span>            : 
+<span class="lineNum">     452 </span>            :    template &lt;class T&gt;
+<span class="lineNum">     453 </span>            :    T convert_to()
+<span class="lineNum">     454 </span>            :    {
+<span class="lineNum">     455 </span>            :       result_type r(*this);
+<span class="lineNum">     456 </span>            :       return r.template convert_to&lt;T&gt;();
+<span class="lineNum">     457 </span>            :    }
+<span class="lineNum">     458 </span>            : 
+<span class="lineNum">     459 </span>            : private:
+<span class="lineNum">     460 </span>            :    typename expression_storage&lt;Arg1&gt;::type arg;
+<span class="lineNum">     461 </span>            :    expression&amp; operator=(const expression&amp;);
+<span class="lineNum">     462 </span>            : };
+<span class="lineNum">     463 </span>            : 
+<span class="lineNum">     464 </span>            : template&lt;class Arg1&gt;
+<span class="lineNum">     465 </span>            : struct expression&lt;terminal, Arg1, void, void, void&gt;
+<span class="lineNum">     466 </span>            : {
+<span class="lineNum">     467 </span>            :    typedef mpl::int_&lt;0&gt; arity;
+<span class="lineNum">     468 </span>            :    typedef Arg1 result_type;
+<span class="lineNum">     469 </span>            :    typedef terminal tag_type;
+<span class="lineNum">     470 </span>            : 
+<span class="lineNum">     471 </span>            :    explicit expression(const Arg1&amp; a) : arg(a) {}
+<span class="lineNum">     472 </span>            : 
+<span class="lineNum">     473 </span><span class="lineCov">     183337 :    const Arg1&amp; value()const BOOST_NOEXCEPT { return arg; }</span>
+<span class="lineNum">     474 </span>            : 
+<span class="lineNum">     475 </span>            :    static const unsigned depth = 0;
+<span class="lineNum">     476 </span>            : 
+<span class="lineNum">     477 </span>            : #ifndef BOOST_MP_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
+<span class="lineNum">     478 </span>            : #  if (defined(__GNUC__) &amp;&amp; (__GNUC__ == 4) &amp;&amp; (__GNUC_MINOR__ &lt; 7) &amp;&amp; !defined(__clang__)) || (defined(BOOST_INTEL) &amp;&amp; (BOOST_INTEL &lt;= 1500))
+<span class="lineNum">     479 </span>            :    //
+<span class="lineNum">     480 </span>            :    // Horrible workaround for gcc-4.6.x which always prefers the template
+<span class="lineNum">     481 </span>            :    // operator bool() rather than the non-template operator when converting to
+<span class="lineNum">     482 </span>            :    // an arithmetic type:
+<span class="lineNum">     483 </span>            :    //
+<span class="lineNum">     484 </span>            :    template &lt;class T, typename boost::enable_if&lt;is_same&lt;T, bool&gt;, int&gt;::type = 0&gt;
+<span class="lineNum">     485 </span>            :    explicit operator T ()const
+<span class="lineNum">     486 </span>            :    {
+<span class="lineNum">     487 </span>            :       result_type r(*this);
+<span class="lineNum">     488 </span>            :       return static_cast&lt;bool&gt;(r);
+<span class="lineNum">     489 </span>            : }
+<span class="lineNum">     490 </span>            :    template &lt;class T, typename boost::disable_if_c&lt;is_same&lt;T, bool&gt;::value || is_void&lt;T&gt;::value || is_number&lt;T&gt;::value, int&gt;::type = 0&gt;
+<span class="lineNum">     491 </span>            :    explicit operator T ()const
+<span class="lineNum">     492 </span>            :    {
+<span class="lineNum">     493 </span>            :       return static_cast&lt;T&gt;(static_cast&lt;result_type&gt;(*this));
+<span class="lineNum">     494 </span>            :    }
+<span class="lineNum">     495 </span>            : #  else
+<span class="lineNum">     496 </span>            :    template &lt;class T
+<span class="lineNum">     497 </span>            : #ifndef __SUNPRO_CC
+<span class="lineNum">     498 </span>            : , typename boost::disable_if_c&lt;is_number&lt;T&gt;::value || is_constructible&lt;T const&amp;, result_type&gt;::value, int&gt;::type = 0
+<span class="lineNum">     499 </span>            : #endif
+<span class="lineNum">     500 </span>            : &gt;
+<span class="lineNum">     501 </span>            :    explicit operator T()const
+<span class="lineNum">     502 </span>            :    {
+<span class="lineNum">     503 </span>            :       return static_cast&lt;T&gt;(static_cast&lt;result_type&gt;(*this));
+<span class="lineNum">     504 </span>            :    }
+<span class="lineNum">     505 </span>            :    BOOST_MP_FORCEINLINE explicit operator bool()const
+<span class="lineNum">     506 </span>            :    {
+<span class="lineNum">     507 </span>            :       result_type r(*this);
+<span class="lineNum">     508 </span>            :       return static_cast&lt;bool&gt;(r);
+<span class="lineNum">     509 </span>            :    }
+<span class="lineNum">     510 </span>            : #if BOOST_WORKAROUND(BOOST_GCC_VERSION, &lt; 40800)
+<span class="lineNum">     511 </span>            :    BOOST_MP_FORCEINLINE explicit operator void()const {}
+<span class="lineNum">     512 </span>            : #endif
+<span class="lineNum">     513 </span>            : #  endif
+<span class="lineNum">     514 </span>            : #else
+<span class="lineNum">     515 </span>            :    operator unmentionable_type()const
+<span class="lineNum">     516 </span>            :    {
+<span class="lineNum">     517 </span>            :       return arg ? &amp;unmentionable::proc : 0;
+<span class="lineNum">     518 </span>            :    }
+<span class="lineNum">     519 </span>            : #endif
+<span class="lineNum">     520 </span>            : 
+<span class="lineNum">     521 </span>            :    template &lt;class T&gt;
+<span class="lineNum">     522 </span>            :    T convert_to()
+<span class="lineNum">     523 </span>            :    {
+<span class="lineNum">     524 </span>            :       result_type r(*this);
+<span class="lineNum">     525 </span>            :       return r.template convert_to&lt;T&gt;();
+<span class="lineNum">     526 </span>            :    }
+<span class="lineNum">     527 </span>            : 
+<span class="lineNum">     528 </span>            : private:
+<span class="lineNum">     529 </span>            :    typename expression_storage&lt;Arg1&gt;::type arg;
+<span class="lineNum">     530 </span>            :    expression&amp; operator=(const expression&amp;);
+<span class="lineNum">     531 </span>            : };
+<span class="lineNum">     532 </span>            : 
+<span class="lineNum">     533 </span>            : template &lt;class tag, class Arg1, class Arg2&gt;
+<span class="lineNum">     534 </span>            : struct expression&lt;tag, Arg1, Arg2, void, void&gt;
+<span class="lineNum">     535 </span>            : {
+<span class="lineNum">     536 </span>            :    typedef mpl::int_&lt;2&gt; arity;
+<span class="lineNum">     537 </span>            :    typedef typename arg_type&lt;Arg1&gt;::type left_type;
+<span class="lineNum">     538 </span>            :    typedef typename arg_type&lt;Arg2&gt;::type right_type;
+<span class="lineNum">     539 </span>            :    typedef typename left_type::result_type left_result_type;
+<span class="lineNum">     540 </span>            :    typedef typename right_type::result_type right_result_type;
+<span class="lineNum">     541 </span>            :    typedef typename combine_expression&lt;left_result_type, right_result_type&gt;::type result_type;
+<span class="lineNum">     542 </span>            :    typedef tag tag_type;
+<span class="lineNum">     543 </span>            : 
+<span class="lineNum">     544 </span><span class="lineCov">      58095 :    expression(const Arg1&amp; a1, const Arg2&amp; a2) : arg1(a1), arg2(a2) {}</span>
+<span class="lineNum">     545 </span>            : 
+<span class="lineNum">     546 </span><span class="lineCov">     694352 :    left_type left()const { return left_type(arg1); }</span>
+<span class="lineNum">     547 </span><span class="lineCov">     731482 :    right_type right()const { return right_type(arg2); }</span>
+<span class="lineNum">     548 </span>            :    const Arg1&amp; left_ref()const BOOST_NOEXCEPT { return arg1; }
+<span class="lineNum">     549 </span>            :    const Arg2&amp; right_ref()const BOOST_NOEXCEPT { return arg2; }
+<span class="lineNum">     550 </span>            : 
+<span class="lineNum">     551 </span>            : #ifndef BOOST_MP_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
+<span class="lineNum">     552 </span>            : #  if (defined(__GNUC__) &amp;&amp; (__GNUC__ == 4) &amp;&amp; (__GNUC_MINOR__ &lt; 7) &amp;&amp; !defined(__clang__)) || (defined(BOOST_INTEL) &amp;&amp; (BOOST_INTEL &lt;= 1500))
+<span class="lineNum">     553 </span>            :       //
+<span class="lineNum">     554 </span>            :       // Horrible workaround for gcc-4.6.x which always prefers the template
+<span class="lineNum">     555 </span>            :       // operator bool() rather than the non-template operator when converting to
+<span class="lineNum">     556 </span>            :       // an arithmetic type:
+<span class="lineNum">     557 </span>            :       //
+<span class="lineNum">     558 </span>            :       template &lt;class T, typename boost::enable_if&lt;is_same&lt;T, bool&gt;, int&gt;::type = 0&gt;
+<span class="lineNum">     559 </span>            :    explicit operator T ()const
+<span class="lineNum">     560 </span>            :    {
+<span class="lineNum">     561 </span>            :       result_type r(*this);
+<span class="lineNum">     562 </span>            :       return static_cast&lt;bool&gt;(r);
+<span class="lineNum">     563 </span>            : }
+<span class="lineNum">     564 </span>            :    template &lt;class T, typename boost::disable_if_c&lt;is_same&lt;T, bool&gt;::value || is_void&lt;T&gt;::value || is_number&lt;T&gt;::value, int&gt;::type = 0&gt;
+<span class="lineNum">     565 </span>            :    explicit operator T ()const
+<span class="lineNum">     566 </span>            :    {
+<span class="lineNum">     567 </span>            :       return static_cast&lt;T&gt;(static_cast&lt;result_type&gt;(*this));
+<span class="lineNum">     568 </span>            :    }
+<span class="lineNum">     569 </span>            : #  else
+<span class="lineNum">     570 </span>            :    template &lt;class T
+<span class="lineNum">     571 </span>            : #ifndef __SUNPRO_CC
+<span class="lineNum">     572 </span>            : , typename boost::disable_if_c&lt;is_number&lt;T&gt;::value || is_constructible&lt;T const&amp;, result_type&gt;::value, int&gt;::type = 0
+<span class="lineNum">     573 </span>            : #endif
+<span class="lineNum">     574 </span>            : &gt;
+<span class="lineNum">     575 </span>            :    explicit operator T()const
+<span class="lineNum">     576 </span>            :    {
+<span class="lineNum">     577 </span>            :       return static_cast&lt;T&gt;(static_cast&lt;result_type&gt;(*this));
+<span class="lineNum">     578 </span>            :    }
+<span class="lineNum">     579 </span>            :    BOOST_MP_FORCEINLINE explicit operator bool()const
+<span class="lineNum">     580 </span>            :    {
+<span class="lineNum">     581 </span>            :       result_type r(*this);
+<span class="lineNum">     582 </span>            :       return static_cast&lt;bool&gt;(r);
+<span class="lineNum">     583 </span>            :    }
+<span class="lineNum">     584 </span>            : #if BOOST_WORKAROUND(BOOST_GCC_VERSION, &lt; 40800)
+<span class="lineNum">     585 </span>            :    BOOST_MP_FORCEINLINE explicit operator void()const {}
+<span class="lineNum">     586 </span>            : #endif
+<span class="lineNum">     587 </span>            : #  endif
+<span class="lineNum">     588 </span>            : #else
+<span class="lineNum">     589 </span>            :    operator unmentionable_type()const
+<span class="lineNum">     590 </span>            :    {
+<span class="lineNum">     591 </span>            :       result_type r(*this);
+<span class="lineNum">     592 </span>            :       return r ? &amp;unmentionable::proc : 0;
+<span class="lineNum">     593 </span>            :    }
+<span class="lineNum">     594 </span>            : #endif
+<span class="lineNum">     595 </span>            :    template &lt;class T&gt;
+<span class="lineNum">     596 </span>            :    T convert_to()
+<span class="lineNum">     597 </span>            :    {
+<span class="lineNum">     598 </span>            :       result_type r(*this);
+<span class="lineNum">     599 </span>            :       return r.template convert_to&lt;T&gt;();
+<span class="lineNum">     600 </span>            :    }
+<span class="lineNum">     601 </span>            : 
+<span class="lineNum">     602 </span>            :    static const unsigned left_depth = left_type::depth + 1;
+<span class="lineNum">     603 </span>            :    static const unsigned right_depth = right_type::depth + 1;
+<span class="lineNum">     604 </span>            :    static const unsigned depth = left_depth &gt; right_depth ? left_depth : right_depth;
+<span class="lineNum">     605 </span>            : private:
+<span class="lineNum">     606 </span>            :    typename expression_storage&lt;Arg1&gt;::type arg1;
+<span class="lineNum">     607 </span>            :    typename expression_storage&lt;Arg2&gt;::type arg2;
+<span class="lineNum">     608 </span>            :    expression&amp; operator=(const expression&amp;);
+<span class="lineNum">     609 </span>            : };
+<span class="lineNum">     610 </span>            : 
+<span class="lineNum">     611 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3&gt;
+<span class="lineNum">     612 </span>            : struct expression&lt;tag, Arg1, Arg2, Arg3, void&gt;
+<span class="lineNum">     613 </span>            : {
+<span class="lineNum">     614 </span>            :    typedef mpl::int_&lt;3&gt; arity;
+<span class="lineNum">     615 </span>            :    typedef typename arg_type&lt;Arg1&gt;::type left_type;
+<span class="lineNum">     616 </span>            :    typedef typename arg_type&lt;Arg2&gt;::type middle_type;
+<span class="lineNum">     617 </span>            :    typedef typename arg_type&lt;Arg3&gt;::type right_type;
+<span class="lineNum">     618 </span>            :    typedef typename left_type::result_type left_result_type;
+<span class="lineNum">     619 </span>            :    typedef typename middle_type::result_type middle_result_type;
+<span class="lineNum">     620 </span>            :    typedef typename right_type::result_type right_result_type;
+<span class="lineNum">     621 </span>            :    typedef typename combine_expression&lt;
+<span class="lineNum">     622 </span>            :       left_result_type,
+<span class="lineNum">     623 </span>            :       typename combine_expression&lt;right_result_type, middle_result_type&gt;::type
+<span class="lineNum">     624 </span>            :    &gt;::type result_type;
+<span class="lineNum">     625 </span>            :    typedef tag tag_type;
+<span class="lineNum">     626 </span>            : 
+<span class="lineNum">     627 </span>            :    expression(const Arg1&amp; a1, const Arg2&amp; a2, const Arg3&amp; a3) : arg1(a1), arg2(a2), arg3(a3) {}
+<span class="lineNum">     628 </span>            : 
+<span class="lineNum">     629 </span>            :    left_type left()const { return left_type(arg1); }
+<span class="lineNum">     630 </span>            :    middle_type middle()const { return middle_type(arg2); }
+<span class="lineNum">     631 </span><span class="lineCov">      23562 :    right_type right()const { return right_type(arg3); }</span>
+<span class="lineNum">     632 </span>            :    const Arg1&amp; left_ref()const BOOST_NOEXCEPT { return arg1; }
+<span class="lineNum">     633 </span>            :    const Arg2&amp; middle_ref()const BOOST_NOEXCEPT { return arg2; }
+<span class="lineNum">     634 </span>            :    const Arg3&amp; right_ref()const BOOST_NOEXCEPT { return arg3; }
+<span class="lineNum">     635 </span>            : 
+<span class="lineNum">     636 </span>            : #ifndef BOOST_MP_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
+<span class="lineNum">     637 </span>            : #  if (defined(__GNUC__) &amp;&amp; (__GNUC__ == 4) &amp;&amp; (__GNUC_MINOR__ &lt; 7) &amp;&amp; !defined(__clang__)) || (defined(BOOST_INTEL) &amp;&amp; (BOOST_INTEL &lt;= 1500))
+<span class="lineNum">     638 </span>            :       //
+<span class="lineNum">     639 </span>            :       // Horrible workaround for gcc-4.6.x which always prefers the template
+<span class="lineNum">     640 </span>            :       // operator bool() rather than the non-template operator when converting to
+<span class="lineNum">     641 </span>            :       // an arithmetic type:
+<span class="lineNum">     642 </span>            :       //
+<span class="lineNum">     643 </span>            :       template &lt;class T, typename boost::enable_if&lt;is_same&lt;T, bool&gt;, int&gt;::type = 0&gt;
+<span class="lineNum">     644 </span>            :    explicit operator T ()const
+<span class="lineNum">     645 </span>            :    {
+<span class="lineNum">     646 </span>            :       result_type r(*this);
+<span class="lineNum">     647 </span>            :       return static_cast&lt;bool&gt;(r);
+<span class="lineNum">     648 </span>            : }
+<span class="lineNum">     649 </span>            :    template &lt;class T, typename boost::disable_if_c&lt;is_same&lt;T, bool&gt;::value || is_void&lt;T&gt;::value || is_number&lt;T&gt;::value, int&gt;::type = 0&gt;
+<span class="lineNum">     650 </span>            :    explicit operator T ()const
+<span class="lineNum">     651 </span>            :    {
+<span class="lineNum">     652 </span>            :       return static_cast&lt;T&gt;(static_cast&lt;result_type&gt;(*this));
+<span class="lineNum">     653 </span>            :    }
+<span class="lineNum">     654 </span>            : #  else
+<span class="lineNum">     655 </span>            :    template &lt;class T
+<span class="lineNum">     656 </span>            : #ifndef __SUNPRO_CC
+<span class="lineNum">     657 </span>            : , typename boost::disable_if_c&lt;is_number&lt;T&gt;::value || is_constructible&lt;T const&amp;, result_type&gt;::value, int&gt;::type = 0
+<span class="lineNum">     658 </span>            : #endif
+<span class="lineNum">     659 </span>            : &gt;
+<span class="lineNum">     660 </span>            :    explicit operator T()const
+<span class="lineNum">     661 </span>            :    {
+<span class="lineNum">     662 </span>            :       return static_cast&lt;T&gt;(static_cast&lt;result_type&gt;(*this));
+<span class="lineNum">     663 </span>            :    }
+<span class="lineNum">     664 </span>            :    BOOST_MP_FORCEINLINE explicit operator bool()const
+<span class="lineNum">     665 </span>            :    {
+<span class="lineNum">     666 </span>            :       result_type r(*this);
+<span class="lineNum">     667 </span>            :       return static_cast&lt;bool&gt;(r);
+<span class="lineNum">     668 </span>            :    }
+<span class="lineNum">     669 </span>            : #if BOOST_WORKAROUND(BOOST_GCC_VERSION, &lt; 40800)
+<span class="lineNum">     670 </span>            :    BOOST_MP_FORCEINLINE explicit operator void()const {}
+<span class="lineNum">     671 </span>            : #endif
+<span class="lineNum">     672 </span>            : #  endif
+<span class="lineNum">     673 </span>            : #else
+<span class="lineNum">     674 </span>            :    operator unmentionable_type()const
+<span class="lineNum">     675 </span>            :    {
+<span class="lineNum">     676 </span>            :       result_type r(*this);
+<span class="lineNum">     677 </span>            :       return r ? &amp;unmentionable::proc : 0;
+<span class="lineNum">     678 </span>            :    }
+<span class="lineNum">     679 </span>            : #endif
+<span class="lineNum">     680 </span>            :    template &lt;class T&gt;
+<span class="lineNum">     681 </span>            :    T convert_to()
+<span class="lineNum">     682 </span>            :    {
+<span class="lineNum">     683 </span>            :       result_type r(*this);
+<span class="lineNum">     684 </span>            :       return r.template convert_to&lt;T&gt;();
+<span class="lineNum">     685 </span>            :    }
+<span class="lineNum">     686 </span>            : 
+<span class="lineNum">     687 </span>            :    static const unsigned left_depth = left_type::depth + 1;
+<span class="lineNum">     688 </span>            :    static const unsigned middle_depth = middle_type::depth + 1;
+<span class="lineNum">     689 </span>            :    static const unsigned right_depth = right_type::depth + 1;
+<span class="lineNum">     690 </span>            :    static const unsigned depth = left_depth &gt; right_depth ? (left_depth &gt; middle_depth ? left_depth : middle_depth) : (right_depth &gt; middle_depth ? right_depth : middle_depth);
+<span class="lineNum">     691 </span>            : private:
+<span class="lineNum">     692 </span>            :    typename expression_storage&lt;Arg1&gt;::type arg1;
+<span class="lineNum">     693 </span>            :    typename expression_storage&lt;Arg2&gt;::type arg2;
+<span class="lineNum">     694 </span>            :    typename expression_storage&lt;Arg3&gt;::type arg3;
+<span class="lineNum">     695 </span>            :    expression&amp; operator=(const expression&amp;);
+<span class="lineNum">     696 </span>            : };
+<span class="lineNum">     697 </span>            : 
+<span class="lineNum">     698 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     699 </span>            : struct expression
+<span class="lineNum">     700 </span>            : {
+<span class="lineNum">     701 </span>            :    typedef mpl::int_&lt;4&gt; arity;
+<span class="lineNum">     702 </span>            :    typedef typename arg_type&lt;Arg1&gt;::type left_type;
+<span class="lineNum">     703 </span>            :    typedef typename arg_type&lt;Arg2&gt;::type left_middle_type;
+<span class="lineNum">     704 </span>            :    typedef typename arg_type&lt;Arg3&gt;::type right_middle_type;
+<span class="lineNum">     705 </span>            :    typedef typename arg_type&lt;Arg4&gt;::type right_type;
+<span class="lineNum">     706 </span>            :    typedef typename left_type::result_type left_result_type;
+<span class="lineNum">     707 </span>            :    typedef typename left_middle_type::result_type left_middle_result_type;
+<span class="lineNum">     708 </span>            :    typedef typename right_middle_type::result_type right_middle_result_type;
+<span class="lineNum">     709 </span>            :    typedef typename right_type::result_type right_result_type;
+<span class="lineNum">     710 </span>            :    typedef typename combine_expression&lt;
+<span class="lineNum">     711 </span>            :       left_result_type,
+<span class="lineNum">     712 </span>            :       typename combine_expression&lt;
+<span class="lineNum">     713 </span>            :          left_middle_result_type,
+<span class="lineNum">     714 </span>            :          typename combine_expression&lt;right_middle_result_type, right_result_type&gt;::type
+<span class="lineNum">     715 </span>            :       &gt;::type
+<span class="lineNum">     716 </span>            :    &gt;::type result_type;
+<span class="lineNum">     717 </span>            :    typedef tag tag_type;
+<span class="lineNum">     718 </span>            : 
+<span class="lineNum">     719 </span>            :    expression(const Arg1&amp; a1, const Arg2&amp; a2, const Arg3&amp; a3, const Arg4&amp; a4) : arg1(a1), arg2(a2), arg3(a3), arg4(a4) {}
+<span class="lineNum">     720 </span>            : 
+<span class="lineNum">     721 </span>            :    left_type left()const { return left_type(arg1); }
+<span class="lineNum">     722 </span>            :    left_middle_type left_middle()const { return left_middle_type(arg2); }
+<span class="lineNum">     723 </span>            :    right_middle_type right_middle()const { return right_middle_type(arg3); }
+<span class="lineNum">     724 </span>            :    right_type right()const { return right_type(arg4); }
+<span class="lineNum">     725 </span>            :    const Arg1&amp; left_ref()const BOOST_NOEXCEPT { return arg1; }
+<span class="lineNum">     726 </span>            :    const Arg2&amp; left_middle_ref()const BOOST_NOEXCEPT { return arg2; }
+<span class="lineNum">     727 </span>            :    const Arg3&amp; right_middle_ref()const BOOST_NOEXCEPT { return arg3; }
+<span class="lineNum">     728 </span>            :    const Arg4&amp; right_ref()const BOOST_NOEXCEPT { return arg4; }
+<span class="lineNum">     729 </span>            : 
+<span class="lineNum">     730 </span>            : #ifndef BOOST_MP_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
+<span class="lineNum">     731 </span>            : #  if (defined(__GNUC__) &amp;&amp; (__GNUC__ == 4) &amp;&amp; (__GNUC_MINOR__ &lt; 7) &amp;&amp; !defined(__clang__)) || (defined(BOOST_INTEL) &amp;&amp; (BOOST_INTEL &lt;= 1500))
+<span class="lineNum">     732 </span>            :       //
+<span class="lineNum">     733 </span>            :       // Horrible workaround for gcc-4.6.x which always prefers the template
+<span class="lineNum">     734 </span>            :       // operator bool() rather than the non-template operator when converting to
+<span class="lineNum">     735 </span>            :       // an arithmetic type:
+<span class="lineNum">     736 </span>            :       //
+<span class="lineNum">     737 </span>            :       template &lt;class T, typename boost::enable_if&lt;is_same&lt;T, bool&gt;, int&gt;::type = 0&gt;
+<span class="lineNum">     738 </span>            :    explicit operator T ()const
+<span class="lineNum">     739 </span>            :    {
+<span class="lineNum">     740 </span>            :       result_type r(*this);
+<span class="lineNum">     741 </span>            :       return static_cast&lt;bool&gt;(r);
+<span class="lineNum">     742 </span>            : }
+<span class="lineNum">     743 </span>            :    template &lt;class T, typename boost::disable_if_c&lt;is_same&lt;T, bool&gt;::value || is_void&lt;T&gt;::value || is_number&lt;T&gt;::value, int&gt;::type = 0&gt;
+<span class="lineNum">     744 </span>            :    explicit operator T ()const
+<span class="lineNum">     745 </span>            :    {
+<span class="lineNum">     746 </span>            :       return static_cast&lt;T&gt;(static_cast&lt;result_type&gt;(*this));
+<span class="lineNum">     747 </span>            :    }
+<span class="lineNum">     748 </span>            : #  else
+<span class="lineNum">     749 </span>            :    template &lt;class T
+<span class="lineNum">     750 </span>            : #ifndef __SUNPRO_CC
+<span class="lineNum">     751 </span>            : , typename boost::disable_if_c&lt;is_number&lt;T&gt;::value || is_constructible&lt;T const&amp;, result_type&gt;::value, int&gt;::type = 0
+<span class="lineNum">     752 </span>            : #endif
+<span class="lineNum">     753 </span>            : &gt;
+<span class="lineNum">     754 </span>            :    explicit operator T()const
+<span class="lineNum">     755 </span>            :    {
+<span class="lineNum">     756 </span>            :       return static_cast&lt;T&gt;(static_cast&lt;result_type&gt;(*this));
+<span class="lineNum">     757 </span>            :    }
+<span class="lineNum">     758 </span>            :    BOOST_MP_FORCEINLINE explicit operator bool()const
+<span class="lineNum">     759 </span>            :    {
+<span class="lineNum">     760 </span>            :       result_type r(*this);
+<span class="lineNum">     761 </span>            :       return static_cast&lt;bool&gt;(r);
+<span class="lineNum">     762 </span>            :    }
+<span class="lineNum">     763 </span>            : #if BOOST_WORKAROUND(BOOST_GCC_VERSION, &lt; 40800)
+<span class="lineNum">     764 </span>            :    BOOST_MP_FORCEINLINE explicit operator void()const {}
+<span class="lineNum">     765 </span>            : #endif
+<span class="lineNum">     766 </span>            : #  endif
+<span class="lineNum">     767 </span>            : #else
+<span class="lineNum">     768 </span>            :    operator unmentionable_type()const
+<span class="lineNum">     769 </span>            :    {
+<span class="lineNum">     770 </span>            :       result_type r(*this);
+<span class="lineNum">     771 </span>            :       return r ? &amp;unmentionable::proc : 0;
+<span class="lineNum">     772 </span>            :    }
+<span class="lineNum">     773 </span>            : #endif
+<span class="lineNum">     774 </span>            :    template &lt;class T&gt;
+<span class="lineNum">     775 </span>            :    T convert_to()
+<span class="lineNum">     776 </span>            :    {
+<span class="lineNum">     777 </span>            :       result_type r(*this);
+<span class="lineNum">     778 </span>            :       return r.template convert_to&lt;T&gt;();
+<span class="lineNum">     779 </span>            :    }
+<span class="lineNum">     780 </span>            : 
+<span class="lineNum">     781 </span>            :    static const unsigned left_depth = left_type::depth + 1;
+<span class="lineNum">     782 </span>            :    static const unsigned left_middle_depth = left_middle_type::depth + 1;
+<span class="lineNum">     783 </span>            :    static const unsigned right_middle_depth = right_middle_type::depth + 1;
+<span class="lineNum">     784 </span>            :    static const unsigned right_depth = right_type::depth + 1;
+<span class="lineNum">     785 </span>            : 
+<span class="lineNum">     786 </span>            :    static const unsigned left_max_depth = left_depth &gt; left_middle_depth ? left_depth : left_middle_depth;
+<span class="lineNum">     787 </span>            :    static const unsigned right_max_depth = right_depth &gt; right_middle_depth ? right_depth : right_middle_depth;
+<span class="lineNum">     788 </span>            : 
+<span class="lineNum">     789 </span>            :    static const unsigned depth = left_max_depth &gt; right_max_depth ? left_max_depth : right_max_depth;
+<span class="lineNum">     790 </span>            : private:
+<span class="lineNum">     791 </span>            :    typename expression_storage&lt;Arg1&gt;::type arg1;
+<span class="lineNum">     792 </span>            :    typename expression_storage&lt;Arg2&gt;::type arg2;
+<span class="lineNum">     793 </span>            :    typename expression_storage&lt;Arg3&gt;::type arg3;
+<span class="lineNum">     794 </span>            :    typename expression_storage&lt;Arg4&gt;::type arg4;
+<span class="lineNum">     795 </span>            :    expression&amp; operator=(const expression&amp;);
+<span class="lineNum">     796 </span>            : };
+<span class="lineNum">     797 </span>            : 
+<span class="lineNum">     798 </span>            : template &lt;class T&gt;
+<span class="lineNum">     799 </span>            : struct digits2
+<span class="lineNum">     800 </span>            : {
+<span class="lineNum">     801 </span>            :    BOOST_STATIC_ASSERT(std::numeric_limits&lt;T&gt;::is_specialized);
+<span class="lineNum">     802 </span>            :    BOOST_STATIC_ASSERT((std::numeric_limits&lt;T&gt;::radix == 2) || (std::numeric_limits&lt;T&gt;::radix == 10));
+<span class="lineNum">     803 </span>            :    // If we really have so many digits that this fails, then we're probably going to hit other problems anyway:
+<span class="lineNum">     804 </span>            :    BOOST_STATIC_ASSERT(LONG_MAX / 1000 &gt; (std::numeric_limits&lt;T&gt;::digits + 1));
+<span class="lineNum">     805 </span>            :    static const long m_value = std::numeric_limits&lt;T&gt;::radix == 10 ?  (((std::numeric_limits&lt;T&gt;::digits + 1) * 1000L) / 301L) : std::numeric_limits&lt;T&gt;::digits;
+<span class="lineNum">     806 </span>            :    static inline BOOST_CONSTEXPR long value()BOOST_NOEXCEPT { return m_value; }
+<span class="lineNum">     807 </span>            : };
+<span class="lineNum">     808 </span>            : 
+<span class="lineNum">     809 </span>            : #ifndef BOOST_MP_MIN_EXPONENT_DIGITS
+<span class="lineNum">     810 </span>            : #ifdef _MSC_VER
+<span class="lineNum">     811 </span>            : #  define BOOST_MP_MIN_EXPONENT_DIGITS 2
+<span class="lineNum">     812 </span>            : #else
+<span class="lineNum">     813 </span>            : #  define BOOST_MP_MIN_EXPONENT_DIGITS 2
+<span class="lineNum">     814 </span>            : #endif
+<span class="lineNum">     815 </span>            : #endif
+<span class="lineNum">     816 </span>            : 
+<span class="lineNum">     817 </span>            : template &lt;class S&gt;
+<span class="lineNum">     818 </span>            : void format_float_string(S&amp; str, boost::intmax_t my_exp, boost::intmax_t digits, std::ios_base::fmtflags f, bool iszero)
+<span class="lineNum">     819 </span>            : {
+<span class="lineNum">     820 </span>            :    typedef typename S::size_type size_type;
+<span class="lineNum">     821 </span>            :    bool scientific = (f &amp; std::ios_base::scientific) == std::ios_base::scientific;
+<span class="lineNum">     822 </span>            :    bool fixed      = (f &amp; std::ios_base::fixed) == std::ios_base::fixed;
+<span class="lineNum">     823 </span>            :    bool showpoint  = (f &amp; std::ios_base::showpoint) == std::ios_base::showpoint;
+<span class="lineNum">     824 </span>            :    bool showpos     = (f &amp; std::ios_base::showpos) == std::ios_base::showpos;
+<span class="lineNum">     825 </span>            : 
+<span class="lineNum">     826 </span>            :    bool neg = str.size() &amp;&amp; (str[0] == '-');
+<span class="lineNum">     827 </span>            : 
+<span class="lineNum">     828 </span>            :    if(neg)
+<span class="lineNum">     829 </span>            :       str.erase(0, 1);
+<span class="lineNum">     830 </span>            : 
+<span class="lineNum">     831 </span>            :    if(digits == 0)
+<span class="lineNum">     832 </span>            :    {
+<span class="lineNum">     833 </span>            :       digits = (std::max)(str.size(), size_type(16));
+<span class="lineNum">     834 </span>            :    }
+<span class="lineNum">     835 </span>            : 
+<span class="lineNum">     836 </span>            :    if(iszero || str.empty() || (str.find_first_not_of('0') == S::npos))
+<span class="lineNum">     837 </span>            :    {
+<span class="lineNum">     838 </span>            :       // We will be printing zero, even though the value might not
+<span class="lineNum">     839 </span>            :       // actually be zero (it just may have been rounded to zero).
+<span class="lineNum">     840 </span>            :       str = &quot;0&quot;;
+<span class="lineNum">     841 </span>            :       if(scientific || fixed)
+<span class="lineNum">     842 </span>            :       {
+<span class="lineNum">     843 </span>            :          str.append(1, '.');
+<span class="lineNum">     844 </span>            :          str.append(size_type(digits), '0');
+<span class="lineNum">     845 </span>            :          if(scientific)
+<span class="lineNum">     846 </span>            :             str.append(&quot;e+00&quot;);
+<span class="lineNum">     847 </span>            :       }
+<span class="lineNum">     848 </span>            :       else
+<span class="lineNum">     849 </span>            :       {
+<span class="lineNum">     850 </span>            :          if(showpoint)
+<span class="lineNum">     851 </span>            :          {
+<span class="lineNum">     852 </span>            :             str.append(1, '.');
+<span class="lineNum">     853 </span>            :             if(digits &gt; 1)
+<span class="lineNum">     854 </span>            :                str.append(size_type(digits - 1), '0');
+<span class="lineNum">     855 </span>            :          }
+<span class="lineNum">     856 </span>            :       }
+<span class="lineNum">     857 </span>            :       if(neg)
+<span class="lineNum">     858 </span>            :          str.insert(static_cast&lt;std::string::size_type&gt;(0), 1, '-');
+<span class="lineNum">     859 </span>            :       else if(showpos)
+<span class="lineNum">     860 </span>            :          str.insert(static_cast&lt;std::string::size_type&gt;(0), 1, '+');
+<span class="lineNum">     861 </span>            :       return;
+<span class="lineNum">     862 </span>            :    }
+<span class="lineNum">     863 </span>            : 
+<span class="lineNum">     864 </span>            :    if(!fixed &amp;&amp; !scientific &amp;&amp; !showpoint)
+<span class="lineNum">     865 </span>            :    {
+<span class="lineNum">     866 </span>            :       //
+<span class="lineNum">     867 </span>            :       // Suppress trailing zeros:
+<span class="lineNum">     868 </span>            :       //
+<span class="lineNum">     869 </span>            :       std::string::iterator pos = str.end();
+<span class="lineNum">     870 </span>            :       while(pos != str.begin() &amp;&amp; *--pos == '0'){}
+<span class="lineNum">     871 </span>            :       if(pos != str.end())
+<span class="lineNum">     872 </span>            :          ++pos;
+<span class="lineNum">     873 </span>            :       str.erase(pos, str.end());
+<span class="lineNum">     874 </span>            :       if(str.empty())
+<span class="lineNum">     875 </span>            :          str = '0';
+<span class="lineNum">     876 </span>            :    }
+<span class="lineNum">     877 </span>            :    else if(!fixed || (my_exp &gt;= 0))
+<span class="lineNum">     878 </span>            :    {
+<span class="lineNum">     879 </span>            :       //
+<span class="lineNum">     880 </span>            :       // Pad out the end with zero's if we need to:
+<span class="lineNum">     881 </span>            :       //
+<span class="lineNum">     882 </span>            :       boost::intmax_t chars = str.size();
+<span class="lineNum">     883 </span>            :       chars = digits - chars;
+<span class="lineNum">     884 </span>            :       if(scientific)
+<span class="lineNum">     885 </span>            :          ++chars;
+<span class="lineNum">     886 </span>            :       if(chars &gt; 0)
+<span class="lineNum">     887 </span>            :       {
+<span class="lineNum">     888 </span>            :          str.append(static_cast&lt;std::string::size_type&gt;(chars), '0');
+<span class="lineNum">     889 </span>            :       }
+<span class="lineNum">     890 </span>            :    }
+<span class="lineNum">     891 </span>            : 
+<span class="lineNum">     892 </span>            :    if(fixed || (!scientific &amp;&amp; (my_exp &gt;= -4) &amp;&amp; (my_exp &lt; digits)))
+<span class="lineNum">     893 </span>            :    {
+<span class="lineNum">     894 </span>            :       if(1 + my_exp &gt; static_cast&lt;boost::intmax_t&gt;(str.size()))
+<span class="lineNum">     895 </span>            :       {
+<span class="lineNum">     896 </span>            :          // Just pad out the end with zeros:
+<span class="lineNum">     897 </span>            :          str.append(static_cast&lt;std::string::size_type&gt;(1 + my_exp - str.size()), '0');
+<span class="lineNum">     898 </span>            :          if(showpoint || fixed)
+<span class="lineNum">     899 </span>            :             str.append(&quot;.&quot;);
+<span class="lineNum">     900 </span>            :       }
+<span class="lineNum">     901 </span>            :       else if(my_exp + 1 &lt; static_cast&lt;boost::intmax_t&gt;(str.size()))
+<span class="lineNum">     902 </span>            :       {
+<span class="lineNum">     903 </span>            :          if(my_exp &lt; 0)
+<span class="lineNum">     904 </span>            :          {
+<span class="lineNum">     905 </span>            :             str.insert(static_cast&lt;std::string::size_type&gt;(0), static_cast&lt;std::string::size_type&gt;(-1 - my_exp), '0');
+<span class="lineNum">     906 </span>            :             str.insert(static_cast&lt;std::string::size_type&gt;(0), &quot;0.&quot;);
+<span class="lineNum">     907 </span>            :          }
+<span class="lineNum">     908 </span>            :          else
+<span class="lineNum">     909 </span>            :          {
+<span class="lineNum">     910 </span>            :             // Insert the decimal point:
+<span class="lineNum">     911 </span>            :             str.insert(static_cast&lt;std::string::size_type&gt;(my_exp + 1), 1, '.');
+<span class="lineNum">     912 </span>            :          }
+<span class="lineNum">     913 </span>            :       }
+<span class="lineNum">     914 </span>            :       else if(showpoint || fixed) // we have exactly the digits we require to left of the point
+<span class="lineNum">     915 </span>            :          str += &quot;.&quot;;
+<span class="lineNum">     916 </span>            : 
+<span class="lineNum">     917 </span>            :       if(fixed)
+<span class="lineNum">     918 </span>            :       {
+<span class="lineNum">     919 </span>            :          // We may need to add trailing zeros:
+<span class="lineNum">     920 </span>            :          boost::intmax_t l = str.find('.') + 1;
+<span class="lineNum">     921 </span>            :          l = digits - (str.size() - l);
+<span class="lineNum">     922 </span>            :          if(l &gt; 0)
+<span class="lineNum">     923 </span>            :             str.append(size_type(l), '0');
+<span class="lineNum">     924 </span>            :       }
+<span class="lineNum">     925 </span>            :    }
+<span class="lineNum">     926 </span>            :    else
+<span class="lineNum">     927 </span>            :    {
+<span class="lineNum">     928 </span>            :       BOOST_MP_USING_ABS
+<span class="lineNum">     929 </span>            :       // Scientific format:
+<span class="lineNum">     930 </span>            :       if(showpoint || (str.size() &gt; 1))
+<span class="lineNum">     931 </span>            :          str.insert(static_cast&lt;std::string::size_type&gt;(1u), 1, '.');
+<span class="lineNum">     932 </span>            :       str.append(static_cast&lt;std::string::size_type&gt;(1u), 'e');
+<span class="lineNum">     933 </span>            :       S e = boost::lexical_cast&lt;S&gt;(abs(my_exp));
+<span class="lineNum">     934 </span>            :       if(e.size() &lt; BOOST_MP_MIN_EXPONENT_DIGITS)
+<span class="lineNum">     935 </span>            :          e.insert(static_cast&lt;std::string::size_type&gt;(0), BOOST_MP_MIN_EXPONENT_DIGITS - e.size(), '0');
+<span class="lineNum">     936 </span>            :       if(my_exp &lt; 0)
+<span class="lineNum">     937 </span>            :          e.insert(static_cast&lt;std::string::size_type&gt;(0), 1, '-');
+<span class="lineNum">     938 </span>            :       else
+<span class="lineNum">     939 </span>            :          e.insert(static_cast&lt;std::string::size_type&gt;(0), 1, '+');
+<span class="lineNum">     940 </span>            :       str.append(e);
+<span class="lineNum">     941 </span>            :    }
+<span class="lineNum">     942 </span>            :    if(neg)
+<span class="lineNum">     943 </span>            :       str.insert(static_cast&lt;std::string::size_type&gt;(0), 1, '-');
+<span class="lineNum">     944 </span>            :    else if(showpos)
+<span class="lineNum">     945 </span>            :       str.insert(static_cast&lt;std::string::size_type&gt;(0), 1, '+');
+<span class="lineNum">     946 </span>            : }
+<span class="lineNum">     947 </span>            : 
+<span class="lineNum">     948 </span>            : template &lt;class V&gt;
+<span class="lineNum">     949 </span>            : void check_shift_range(V val, const mpl::true_&amp;, const mpl::true_&amp;)
+<span class="lineNum">     950 </span>            : {
+<span class="lineNum">     951 </span>            :    if(val &gt; (std::numeric_limits&lt;std::size_t&gt;::max)())
+<span class="lineNum">     952 </span>            :       BOOST_THROW_EXCEPTION(std::out_of_range(&quot;Can not shift by a value greater than std::numeric_limits&lt;std::size_t&gt;::max().&quot;));
+<span class="lineNum">     953 </span>            :    if(val &lt; 0)
+<span class="lineNum">     954 </span>            :       BOOST_THROW_EXCEPTION(std::out_of_range(&quot;Can not shift by a negative value.&quot;));
+<a name="955"><span class="lineNum">     955 </span>            : }</a>
+<span class="lineNum">     956 </span>            : template &lt;class V&gt;
+<span class="lineNum">     957 </span><span class="lineCov">  183232612 : void check_shift_range(V val, const mpl::false_&amp;, const mpl::true_&amp;)</span>
+<span class="lineNum">     958 </span>            : {
+<span class="lineNum">     959 </span><span class="lineCov">  183232612 :    if(val &lt; 0)</span>
+<span class="lineNum">     960 </span><span class="lineNoCov">          0 :       BOOST_THROW_EXCEPTION(std::out_of_range(&quot;Can not shift by a negative value.&quot;));</span>
+<span class="lineNum">     961 </span><span class="lineCov">  183232612 : }</span>
+<span class="lineNum">     962 </span>            : template &lt;class V&gt;
+<span class="lineNum">     963 </span>            : void check_shift_range(V val, const mpl::true_&amp;, const mpl::false_&amp;)
+<span class="lineNum">     964 </span>            : {
+<span class="lineNum">     965 </span>            :    if(val &gt; (std::numeric_limits&lt;std::size_t&gt;::max)())
+<span class="lineNum">     966 </span>            :       BOOST_THROW_EXCEPTION(std::out_of_range(&quot;Can not shift by a value greater than std::numeric_limits&lt;std::size_t&gt;::max().&quot;));
+<span class="lineNum">     967 </span>            : }
+<span class="lineNum">     968 </span>            : template &lt;class V&gt;
+<span class="lineNum">     969 </span>            : void check_shift_range(V, const mpl::false_&amp;, const mpl::false_&amp;) BOOST_NOEXCEPT{}
+<span class="lineNum">     970 </span>            : 
+<span class="lineNum">     971 </span>            : } // namespace detail
+<span class="lineNum">     972 </span>            : 
+<span class="lineNum">     973 </span>            : //
+<span class="lineNum">     974 </span>            : // Traits class, lets us know what kind of number we have, defaults to a floating point type:
+<span class="lineNum">     975 </span>            : //
+<span class="lineNum">     976 </span>            : enum number_category_type
+<span class="lineNum">     977 </span>            : {
+<span class="lineNum">     978 </span>            :    number_kind_unknown = -1,
+<span class="lineNum">     979 </span>            :    number_kind_integer = 0,
+<span class="lineNum">     980 </span>            :    number_kind_floating_point = 1,
+<span class="lineNum">     981 </span>            :    number_kind_rational = 2,
+<span class="lineNum">     982 </span>            :    number_kind_fixed_point = 3
+<span class="lineNum">     983 </span>            : };
+<span class="lineNum">     984 </span>            : 
+<span class="lineNum">     985 </span>            : template &lt;class Num&gt;
+<span class="lineNum">     986 </span>            : struct number_category : public mpl::int_&lt;std::numeric_limits&lt;Num&gt;::is_integer ? number_kind_integer : (std::numeric_limits&lt;Num&gt;::max_exponent ? number_kind_floating_point : number_kind_unknown)&gt; {};
+<span class="lineNum">     987 </span>            : template &lt;class Backend, expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     988 </span>            : struct number_category&lt;number&lt;Backend, ExpressionTemplates&gt; &gt; : public number_category&lt;Backend&gt;{};
+<span class="lineNum">     989 </span>            : template &lt;class tag, class A1, class A2, class A3, class A4&gt;
+<span class="lineNum">     990 </span>            : struct number_category&lt;detail::expression&lt;tag, A1, A2, A3, A4&gt; &gt; : public number_category&lt;typename detail::expression&lt;tag, A1, A2, A3, A4&gt;::result_type&gt;{};
+<span class="lineNum">     991 </span>            : 
+<span class="lineNum">     992 </span>            : template &lt;class T&gt;
+<span class="lineNum">     993 </span>            : struct component_type;
+<span class="lineNum">     994 </span>            : template &lt;class T, expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">     995 </span>            : struct component_type&lt;number&lt;T, ExpressionTemplates&gt; &gt; : public component_type&lt;T&gt;{};
+<span class="lineNum">     996 </span>            : template &lt;class tag, class A1, class A2, class A3, class A4&gt;
+<span class="lineNum">     997 </span>            : struct component_type&lt;detail::expression&lt;tag, A1, A2, A3, A4&gt; &gt; : public component_type&lt;typename detail::expression&lt;tag, A1, A2, A3, A4&gt;::result_type&gt;{};
+<span class="lineNum">     998 </span>            : 
+<span class="lineNum">     999 </span>            : template &lt;class T&gt;
+<span class="lineNum">    1000 </span>            : struct is_unsigned_number : public mpl::false_{};
+<span class="lineNum">    1001 </span>            : template &lt;class Backend, expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">    1002 </span>            : struct is_unsigned_number&lt;number&lt;Backend, ExpressionTemplates&gt; &gt; : public is_unsigned_number&lt;Backend&gt; {};
+<span class="lineNum">    1003 </span>            : template &lt;class T&gt;
+<span class="lineNum">    1004 </span>            : struct is_signed_number : public mpl::bool_&lt;!is_unsigned_number&lt;T&gt;::value&gt; {};
+<span class="lineNum">    1005 </span>            : template &lt;class T&gt;
+<span class="lineNum">    1006 </span>            : struct is_interval_number : public mpl::false_ {};
+<span class="lineNum">    1007 </span>            : template &lt;class Backend, expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">    1008 </span>            : struct is_interval_number&lt;number&lt;Backend, ExpressionTemplates&gt; &gt; : public is_interval_number&lt;Backend&gt;{};
+<span class="lineNum">    1009 </span>            : 
+<span class="lineNum">    1010 </span>            : }} // namespaces
+<span class="lineNum">    1011 </span>            : 
+<span class="lineNum">    1012 </span>            : namespace boost{ namespace math{ namespace tools{
+<span class="lineNum">    1013 </span>            : 
+<span class="lineNum">    1014 </span>            : template &lt;class T&gt;
+<span class="lineNum">    1015 </span>            : struct promote_arg;
+<span class="lineNum">    1016 </span>            : 
+<span class="lineNum">    1017 </span>            : template &lt;class tag, class A1, class A2, class A3, class A4&gt;
+<span class="lineNum">    1018 </span>            : struct promote_arg&lt;boost::multiprecision::detail::expression&lt;tag, A1, A2, A3, A4&gt; &gt;
+<span class="lineNum">    1019 </span>            : {
+<span class="lineNum">    1020 </span>            :    typedef typename boost::multiprecision::detail::expression&lt;tag, A1, A2, A3, A4&gt;::result_type type;
+<span class="lineNum">    1021 </span>            : };
+<span class="lineNum">    1022 </span>            : 
+<span class="lineNum">    1023 </span>            : template &lt;class R, class B, boost::multiprecision::expression_template_option ET&gt;
+<span class="lineNum">    1024 </span>            : inline R real_cast(const boost::multiprecision::number&lt;B, ET&gt;&amp; val)
+<span class="lineNum">    1025 </span>            : {
+<span class="lineNum">    1026 </span>            :    return val.template convert_to&lt;R&gt;();
+<span class="lineNum">    1027 </span>            : }
+<span class="lineNum">    1028 </span>            : 
+<span class="lineNum">    1029 </span>            : template &lt;class R, class tag, class A1, class A2, class A3, class A4&gt;
+<span class="lineNum">    1030 </span>            : inline R real_cast(const boost::multiprecision::detail::expression&lt;tag, A1, A2, A3, A4&gt;&amp; val)
+<span class="lineNum">    1031 </span>            : {
+<span class="lineNum">    1032 </span>            :    typedef typename boost::multiprecision::detail::expression&lt;tag, A1, A2, A3, A4&gt;::result_type val_type;
+<span class="lineNum">    1033 </span>            :    return val_type(val).template convert_to&lt;R&gt;();
+<span class="lineNum">    1034 </span>            : }
+<span class="lineNum">    1035 </span>            : 
+<span class="lineNum">    1036 </span>            : 
+<span class="lineNum">    1037 </span>            : }
+<span class="lineNum">    1038 </span>            : 
+<span class="lineNum">    1039 </span>            : namespace constants{
+<span class="lineNum">    1040 </span>            : 
+<span class="lineNum">    1041 </span>            :    template &lt;class T&gt;
+<span class="lineNum">    1042 </span>            :    struct is_explicitly_convertible_from_string;
+<span class="lineNum">    1043 </span>            : 
+<span class="lineNum">    1044 </span>            :    template &lt;class B, boost::multiprecision::expression_template_option ET&gt;
+<span class="lineNum">    1045 </span>            :    struct is_explicitly_convertible_from_string&lt;boost::multiprecision::number&lt;B, ET&gt; &gt;
+<span class="lineNum">    1046 </span>            :    {
+<span class="lineNum">    1047 </span>            :       static const bool value = true;
+<span class="lineNum">    1048 </span>            :    };
+<span class="lineNum">    1049 </span>            : 
+<span class="lineNum">    1050 </span>            : }
+<span class="lineNum">    1051 </span>            : 
+<span class="lineNum">    1052 </span>            : }}
+<span class="lineNum">    1053 </span>            : 
+<span class="lineNum">    1054 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">    1055 </span>            : #  pragma warning(pop)
+<span class="lineNum">    1056 </span>            : #endif
+<span class="lineNum">    1057 </span>            : 
+<span class="lineNum">    1058 </span>            : #endif // BOOST_MATH_BIG_NUM_BASE_HPP
+<span class="lineNum">    1059 </span>            : 
+<span class="lineNum">    1060 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

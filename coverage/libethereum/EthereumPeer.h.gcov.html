@@ -1,0 +1,276 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/EthereumPeer.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - EthereumPeer.h<span style="font-size: 80%;"> (source / <a href="EthereumPeer.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryMed">77.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">33.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file EthereumPeer.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;mutex&gt;
+<span class="lineNum">      25 </span>            : #include &lt;array&gt;
+<span class="lineNum">      26 </span>            : #include &lt;memory&gt;
+<span class="lineNum">      27 </span>            : #include &lt;utility&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #include &lt;libdevcore/RLP.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libdevcore/Guards.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libethcore/Common.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libp2p/Capability.h&gt;
+<span class="lineNum">      33 </span>            : #include &quot;CommonNet.h&quot;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : namespace dev
+<span class="lineNum">      36 </span>            : {
+<span class="lineNum">      37 </span>            : namespace eth
+<span class="lineNum">      38 </span>            : {
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">          6 : class EthereumPeerObserverFace</span>
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span>            : public:
+<span class="lineNum">      43 </span><span class="lineCov">          6 :         virtual ~EthereumPeerObserverFace() {}</span>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            :         virtual void onPeerStatus(std::shared_ptr&lt;EthereumPeer&gt; _peer) = 0;
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            :         virtual void onPeerTransactions(std::shared_ptr&lt;EthereumPeer&gt; _peer, RLP const&amp; _r) = 0;
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :         virtual void onPeerBlockHeaders(std::shared_ptr&lt;EthereumPeer&gt; _peer, RLP const&amp; _headers) = 0;
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            :         virtual void onPeerBlockBodies(std::shared_ptr&lt;EthereumPeer&gt; _peer, RLP const&amp; _r) = 0;
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            :         virtual void onPeerNewHashes(std::shared_ptr&lt;EthereumPeer&gt; _peer, std::vector&lt;std::pair&lt;h256, u256&gt;&gt; const&amp; _hashes) = 0;
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :         virtual void onPeerNewBlock(std::shared_ptr&lt;EthereumPeer&gt; _peer, RLP const&amp; _r) = 0;
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :         virtual void onPeerNodeData(std::shared_ptr&lt;EthereumPeer&gt; _peer, RLP const&amp; _r) = 0;
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            :         virtual void onPeerReceipts(std::shared_ptr&lt;EthereumPeer&gt; _peer, RLP const&amp; _r) = 0;
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            :         virtual void onPeerAborting() = 0;
+<span class="lineNum">      62 </span>            : };
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">          1 : class EthereumHostDataFace</span>
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span>            : public:
+<span class="lineNum">      67 </span><span class="lineCov">          1 :         virtual ~EthereumHostDataFace() {}</span>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :         virtual std::pair&lt;bytes, unsigned&gt; blockHeaders(RLP const&amp; _blockId, unsigned _maxHeaders, u256 _skip, bool _reverse) const = 0;
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            :         virtual std::pair&lt;bytes, unsigned&gt; blockBodies(RLP const&amp; _blockHashes) const = 0;
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :         virtual strings nodeData(RLP const&amp; _dataHashes) const = 0;
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            :         virtual std::pair&lt;bytes, unsigned&gt; receipts(RLP const&amp; _blockHashes) const = 0;
+<span class="lineNum">      76 </span>            : };
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : /**
+<span class="lineNum">      79 </span>            :  * @brief The EthereumPeer class
+<span class="lineNum">      80 </span>            :  * @todo Document fully.
+<span class="lineNum">      81 </span>            :  * @todo make state transitions thread-safe.
+<span class="lineNum">      82 </span>            :  */
+<span class="lineNum">      83 </span>            : class EthereumPeer: public p2p::Capability
+<span class="lineNum">      84 </span>            : {
+<span class="lineNum">      85 </span>            :         friend class EthereumHost; //TODO: remove this
+<span class="lineNum">      86 </span>            :         friend class BlockChainSync; //TODO: remove this
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : public:
+<span class="lineNum">      89 </span>            :         /// Basic constructor.
+<span class="lineNum">      90 </span>            :         EthereumPeer(std::shared_ptr&lt;p2p::SessionFace&gt; _s, p2p::HostCapabilityFace* _h, unsigned _i, p2p::CapDesc const&amp; _cap, uint16_t _capID);
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :         /// Basic destructor.
+<span class="lineNum">      93 </span>            :         virtual ~EthereumPeer();
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            :         /// What is our name?
+<span class="lineNum">      96 </span><span class="lineCov">         38 :         static std::string name() { return &quot;eth&quot;; }</span>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            :         /// What is our version?
+<span class="lineNum">      99 </span><span class="lineCov">          4 :         static u256 version() { return c_protocolVersion; }</span>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :         /// How many message types do we have?
+<span class="lineNum">     102 </span>            :         static unsigned messageCount() { return PacketCount; }
+<span class="lineNum">     103 </span>            : 
+<a name="104"><span class="lineNum">     104 </span>            :         void init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, std::shared_ptr&lt;EthereumHostDataFace&gt; _hostData, std::shared_ptr&lt;EthereumPeerObserverFace&gt; _observer);</a>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :         p2p::NodeID id() const { return session()-&gt;id(); }</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :         /// Abort sync and reset fetch
+<span class="lineNum">     109 </span>            :         void setIdle();
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            :         /// Request hashes for given parent hash.
+<span class="lineNum">     112 </span>            :         void requestBlockHeaders(h256 const&amp; _startHash, unsigned _count, unsigned _skip, bool _reverse);
+<span class="lineNum">     113 </span>            :         void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse);
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            :         /// Request specified blocks from peer.
+<span class="lineNum">     116 </span>            :         void requestBlockBodies(h256s const&amp; _blocks);
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :         /// Request values for specified keys from peer.
+<span class="lineNum">     119 </span>            :         void requestNodeData(h256s const&amp; _hashes);
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            :         /// Request receipts for specified blocks from peer.
+<span class="lineNum">     122 </span>            :         void requestReceipts(h256s const&amp; _blocks);
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :         /// Check if this node is rude.
+<span class="lineNum">     125 </span>            :         bool isRude() const;
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :         /// Set that it's a rude node.
+<span class="lineNum">     128 </span>            :         void setRude();
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :         /// Abort the sync operation.
+<span class="lineNum">     131 </span>            :         void abortSync();
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            : private:
+<span class="lineNum">     134 </span>            :         using p2p::Capability::sealAndSend;
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :         /// Figure out the amount of blocks we should be asking for.
+<span class="lineNum">     137 </span>            :         unsigned askOverride() const;
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :         /// Interpret an incoming message.
+<span class="lineNum">     140 </span>            :         virtual bool interpret(unsigned _id, RLP const&amp; _r);
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            :         /// Request status. Called from constructor
+<span class="lineNum">     143 </span>            :         void requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash);
+<a name="144"><span class="lineNum">     144 </span>            : </a>
+<span class="lineNum">     145 </span>            :         /// Clear all known transactions.
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :         void clearKnownTransactions() { std::lock_guard&lt;std::mutex&gt; l(x_knownTransactions); m_knownTransactions.clear(); }</span>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            :         // Request of type _packetType with _hashes as input parameters
+<span class="lineNum">     149 </span>            :         void requestByHashes(h256s const&amp; _hashes, Asking _asking, SubprotocolPacketType _packetType);
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            :         /// Update our asking state.
+<span class="lineNum">     152 </span>            :         void setAsking(Asking _g);
+<a name="153"><span class="lineNum">     153 </span>            : </a>
+<span class="lineNum">     154 </span>            :         /// Do we presently need syncing with this peer?
+<span class="lineNum">     155 </span><span class="lineCov">         22 :         bool needsSyncing() const { return !isRude() &amp;&amp; !!m_latestHash; }</span>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            :         /// Are we presently in the process of communicating with this peer?
+<span class="lineNum">     158 </span>            :         bool isConversing() const;
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            :         /// Are we presently in a critical part of the syncing process with this peer?
+<span class="lineNum">     161 </span>            :         bool isCriticalSyncing() const;
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            :         /// Runs period checks to check up on the peer.
+<span class="lineNum">     164 </span>            :         void tick();
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :         unsigned m_hostProtocolVersion = 0;
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :         /// Peer's protocol version.
+<span class="lineNum">     169 </span>            :         unsigned m_protocolVersion;
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            :         /// Peer's network id.
+<span class="lineNum">     172 </span>            :         u256 m_networkId;
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            :         /// What, if anything, we last asked the other peer for.
+<span class="lineNum">     175 </span>            :         Asking m_asking = Asking::Nothing;
+<span class="lineNum">     176 </span>            :         /// When we asked for it. Allows a time out.
+<span class="lineNum">     177 </span>            :         std::atomic&lt;time_t&gt; m_lastAsk;
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :         /// These are determined through either a Status message or from NewBlock.
+<span class="lineNum">     180 </span>            :         h256 m_latestHash;                                              ///&lt; Peer's latest block's hash that we know about or default null value if no need to sync.
+<span class="lineNum">     181 </span>            :         u256 m_totalDifficulty;                                 ///&lt; Peer's latest block's total difficulty.
+<span class="lineNum">     182 </span>            :         h256 m_genesisHash;                                             ///&lt; Peer's genesis hash
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            :         u256 const m_peerCapabilityVersion;                     ///&lt; Protocol version this peer supports received as capability
+<span class="lineNum">     185 </span>            :         /// Have we received a GetTransactions packet that we haven't yet answered?
+<span class="lineNum">     186 </span>            :         bool m_requireTransactions = false;
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :         Mutex x_knownBlocks;
+<span class="lineNum">     189 </span>            :         h256Hash m_knownBlocks;                                 ///&lt; Blocks that the peer already knows about (that don't need to be sent to them).
+<span class="lineNum">     190 </span>            :         Mutex x_knownTransactions;
+<span class="lineNum">     191 </span>            :         h256Hash m_knownTransactions;                   ///&lt; Transactions that the peer already knows of.
+<span class="lineNum">     192 </span>            :         unsigned m_unknownNewBlocks = 0;                ///&lt; Number of unknown NewBlocks received from this peer
+<span class="lineNum">     193 </span>            :         unsigned m_lastAskedHeaders = 0;                ///&lt; Number of hashes asked
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            :         std::shared_ptr&lt;EthereumPeerObserverFace&gt; m_observer;
+<span class="lineNum">     196 </span>            :         std::shared_ptr&lt;EthereumHostDataFace&gt; m_hostData;
+<span class="lineNum">     197 </span>            : };
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            : }
+<span class="lineNum">     200 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

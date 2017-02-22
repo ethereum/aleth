@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/impl/unit_test_monitor.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/impl</a> - unit_test_monitor.ipp<span style="font-size: 80%;"> (source / <a href="unit_test_monitor.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryLo">41.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : implements specific subclass of Executon Monitor used by Unit
+<span class="lineNum">      13 </span>            : //  Test Framework to monitor test cases run.
+<span class="lineNum">      14 </span>            : // ***************************************************************************
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #ifndef BOOST_TEST_UNIT_TEST_MONITOR_IPP_012205GER
+<span class="lineNum">      17 </span>            : #define BOOST_TEST_UNIT_TEST_MONITOR_IPP_012205GER
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : // Boost.Test
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/unit_test_monitor.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/test/framework.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/tree/test_unit.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/test/unit_test_parameters.hpp&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace boost {
+<span class="lineNum">      30 </span>            : namespace unit_test {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : // ************************************************************************** //
+<span class="lineNum">      33 </span>            : // **************               unit_test_monitor              ************** //
+<span class="lineNum">      34 </span>            : // ************************************************************************** //
+<a name="35"><span class="lineNum">      35 </span>            : </a>
+<span class="lineNum">      36 </span>            : unit_test_monitor_t::error_level
+<span class="lineNum">      37 </span><span class="lineCov">        312 : unit_test_monitor_t::execute_and_translate( boost::function&lt;void ()&gt; const&amp; func, unsigned timeout )</span>
+<span class="lineNum">      38 </span>            : {
+<span class="lineNum">      39 </span>            :     BOOST_TEST_I_TRY {
+<span class="lineNum">      40 </span><span class="lineCov">        624 :         p_catch_system_errors.value     = runtime_config::get&lt;bool&gt;( runtime_config::CATCH_SYS_ERRORS );</span>
+<span class="lineNum">      41 </span><span class="lineCov">        312 :         p_timeout.value                 = timeout;</span>
+<span class="lineNum">      42 </span><span class="lineCov">        624 :         p_auto_start_dbg.value          = runtime_config::get&lt;bool&gt;( runtime_config::AUTO_START_DBG );</span>
+<span class="lineNum">      43 </span><span class="lineCov">        624 :         p_use_alt_stack.value           = runtime_config::get&lt;bool&gt;( runtime_config::USE_ALT_STACK );</span>
+<span class="lineNum">      44 </span><span class="lineCov">        624 :         p_detect_fp_exceptions.value    = runtime_config::get&lt;bool&gt;( runtime_config::DETECT_FP_EXCEPT );</span>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span><span class="lineCov">        312 :         vexecute( func );</span>
+<span class="lineNum">      47 </span>            :     }
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 :     BOOST_TEST_I_CATCH( execution_exception, ex ) {</span>
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :         framework::exception_caught( ex );</span>
+<span class="lineNum">      50 </span><span class="lineNoCov">          0 :         framework::test_unit_aborted( framework::current_test_case() );</span>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            :         // translate execution_exception::error_code to error_level
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 :         switch( ex.code() ) {</span>
+<span class="lineNum">      54 </span>            :         case execution_exception::no_error:             return test_ok;
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :         case execution_exception::user_error:           return unexpected_exception;</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :         case execution_exception::cpp_exception_error:  return unexpected_exception;</span>
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 :         case execution_exception::system_error:         return os_exception;</span>
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :         case execution_exception::timeout_error:        return os_timeout;</span>
+<span class="lineNum">      59 </span>            :         case execution_exception::user_fatal_error:
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :         case execution_exception::system_fatal_error:   return fatal_error;</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :         default:                                        return unexpected_exception;</span>
+<span class="lineNum">      62 </span>            :         }
+<span class="lineNum">      63 </span>            :     }
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            :     return test_ok;
+<span class="lineNum">      66 </span>            : }
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : } // namespace unit_test
+<span class="lineNum">      71 </span>            : } // namespace boost
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : #endif // BOOST_TEST_UNIT_TEST_MONITOR_IPP_012205GER
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

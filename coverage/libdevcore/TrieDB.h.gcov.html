@@ -1,0 +1,1311 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/TrieDB.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - TrieDB.h<span style="font-size: 80%;"> (source / <a href="TrieDB.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">342</td>
+            <td class="headerCovTableEntry">366</td>
+            <td class="headerCovTableEntryHi">93.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">74</td>
+            <td class="headerCovTableEntry">89</td>
+            <td class="headerCovTableEntryMed">83.1 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file TrieDB.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;memory&gt;
+<span class="lineNum">      25 </span>            : #include &quot;db.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;Log.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;Exceptions.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;SHA3.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;MemoryDB.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;TrieCommon.h&quot;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace dev
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : struct TrieDBChannel: public LogChannel  { static const char* name(); static const int verbosity = 17; };
+<a name="37"><span class="lineNum">      37 </span>            : #define tdebug clog(TrieDBChannel)</a>
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span><span class="lineNoCov">          0 : struct InvalidTrie: virtual dev::Exception {};</span>
+<span class="lineNum">      40 </span>            : extern const h256 c_shaNull;
+<span class="lineNum">      41 </span>            : extern const h256 EmptyTrie;
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : enum class Verification {
+<span class="lineNum">      44 </span>            :         Skip,
+<span class="lineNum">      45 </span>            :         Normal
+<span class="lineNum">      46 </span>            : };
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : /**
+<span class="lineNum">      49 </span>            :  * @brief Merkle Patricia Tree &quot;Trie&quot;: a modifed base-16 Radix tree.
+<span class="lineNum">      50 </span>            :  * This version uses a database backend.
+<span class="lineNum">      51 </span>            :  * Usage:
+<span class="lineNum">      52 </span>            :  * @code
+<span class="lineNum">      53 </span>            :  * GenericTrieDB&lt;MyDB&gt; t(&amp;myDB);
+<span class="lineNum">      54 </span>            :  * assert(t.isNull());
+<span class="lineNum">      55 </span>            :  * t.init();
+<span class="lineNum">      56 </span>            :  * assert(t.isEmpty());
+<span class="lineNum">      57 </span>            :  * t.insert(x, y);
+<span class="lineNum">      58 </span>            :  * assert(t.at(x) == y.toString());
+<span class="lineNum">      59 </span>            :  * t.remove(x);
+<span class="lineNum">      60 </span>            :  * assert(t.isEmpty());
+<span class="lineNum">      61 </span>            :  * @endcode
+<span class="lineNum">      62 </span>            :  */
+<span class="lineNum">      63 </span>            : template &lt;class _DB&gt;
+<span class="lineNum">      64 </span>            : class GenericTrieDB
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span>            : public:
+<span class="lineNum">      67 </span>            :         using DB = _DB;
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span><span class="lineCov">     125658 :         explicit GenericTrieDB(DB* _db = nullptr): m_db(_db) {}</span>
+<span class="lineNum">      70 </span><span class="lineCov">    1691526 :         GenericTrieDB(DB* _db, h256 const&amp; _root, Verification _v = Verification::Normal) { open(_db, _root, _v); }</span>
+<span class="lineNum">      71 </span><span class="lineCov">     626671 :         ~GenericTrieDB() {}</span>
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :         void open(DB* _db) { m_db = _db; }
+<a name="74"><span class="lineNum">      74 </span><span class="lineCov">     592873 :         void open(DB* _db, h256 const&amp; _root, Verification _v = Verification::Normal) { m_db = _db; setRoot(_root, _v); }</span></a>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">     231340 :         void init() { setRoot(forceInsertNode(&amp;RLPNull)); assert(node(m_root).size()); }</span>
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span><span class="lineCov">     673072 :         void setRoot(h256 const&amp; _root, Verification _v = Verification::Normal)</span>
+<span class="lineNum">      79 </span>            :         {
+<span class="lineNum">      80 </span><span class="lineCov">     673072 :                 m_root = _root;</span>
+<span class="lineNum">      81 </span><span class="lineCov">     673072 :                 if (_v == Verification::Normal)</span>
+<span class="lineNum">      82 </span>            :                 {
+<span class="lineNum">      83 </span><span class="lineCov">     319680 :                         if (m_root == c_shaNull &amp;&amp; !m_db-&gt;exists(m_root))</span>
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :                                 init();</span>
+<span class="lineNum">      85 </span>            :                 }
+<span class="lineNum">      86 </span>            :                 /*std::cout &lt;&lt; &quot;Setting root to &quot; &lt;&lt; _root &lt;&lt; &quot; (patched to &quot; &lt;&lt; m_root &lt;&lt; &quot;)&quot; &lt;&lt; std::endl;*/
+<span class="lineNum">      87 </span>            : #if ETH_DEBUG
+<span class="lineNum">      88 </span>            :                 if (_v == Verification::Normal)
+<span class="lineNum">      89 </span>            : #endif
+<span class="lineNum">      90 </span><span class="lineCov">    2019216 :                         if (!node(m_root).size())</span>
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :                                 BOOST_THROW_EXCEPTION(RootNotFound());</span>
+<span class="lineNum">      92 </span><span class="lineCov">     673072 :         }</span>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :         /// True if the trie is uninitialised (i.e. that the DB doesn't contain the root node).
+<span class="lineNum">      95 </span>            :         bool isNull() const { return !node(m_root).size(); }
+<span class="lineNum">      96 </span>            :         /// True if the trie is initialised but empty (i.e. that the DB contains the root node which is empty).
+<a name="97"><span class="lineNum">      97 </span>            :         bool isEmpty() const { return m_root == c_shaNull &amp;&amp; node(m_root).size(); }</a>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineCov">    2386168 :         h256 const&amp; root() const { if (node(m_root).empty()) BOOST_THROW_EXCEPTION(BadRoot(m_root)); /*std::cout &lt;&lt; &quot;Returning root as &quot; &lt;&lt; ret &lt;&lt; &quot; (really &quot; &lt;&lt; m_root &lt;&lt; &quot;)&quot; &lt;&lt; std::endl;*/ return m_root; }  // patch the root in the case of the empty trie. TODO: handle this properly.</span>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :         std::string at(bytes const&amp; _key) const { return at(&amp;_key); }
+<span class="lineNum">     102 </span>            :         std::string at(bytesConstRef _key) const;
+<span class="lineNum">     103 </span>            :         void insert(bytes const&amp; _key, bytes const&amp; _value) { insert(&amp;_key, &amp;_value); }
+<span class="lineNum">     104 </span>            :         void insert(bytesConstRef _key, bytes const&amp; _value) { insert(_key, &amp;_value); }
+<span class="lineNum">     105 </span>            :         void insert(bytes const&amp; _key, bytesConstRef _value) { insert(&amp;_key, _value); }
+<span class="lineNum">     106 </span>            :         void insert(bytesConstRef _key, bytesConstRef _value);
+<span class="lineNum">     107 </span>            :         void remove(bytes const&amp; _key) { remove(&amp;_key); }
+<span class="lineNum">     108 </span>            :         void remove(bytesConstRef _key);
+<span class="lineNum">     109 </span>            :         bool contains(bytes const&amp; _key) { return contains(&amp;_key); }
+<span class="lineNum">     110 </span>            :         bool contains(bytesConstRef _key) { return !at(_key).empty(); }
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span><span class="lineCov">     121740 :         class iterator</span>
+<span class="lineNum">     113 </span>            :         {
+<span class="lineNum">     114 </span>            :         public:
+<span class="lineNum">     115 </span>            :                 using value_type = std::pair&lt;bytesConstRef, bytesConstRef&gt;;
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span><span class="lineCov">     126262 :                 iterator() {}</span>
+<span class="lineNum">     118 </span>            :                 explicit iterator(GenericTrieDB const* _db);
+<span class="lineNum">     119 </span>            :                 iterator(GenericTrieDB const* _db, bytesConstRef _key);
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineCov">      38289 :                 iterator&amp; operator++() { next(); return *this; }</span>
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span><span class="lineCov">       7168 :                 value_type operator*() const { return at(); }</span>
+<span class="lineNum">     124 </span>            :                 value_type operator-&gt;() const { return at(); }
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :                 bool operator==(iterator const&amp; _c) const { return _c.m_trail == m_trail; }</span>
+<span class="lineNum">     127 </span><span class="lineCov">     193800 :                 bool operator!=(iterator const&amp; _c) const { return _c.m_trail != m_trail; }</span>
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            :                 value_type at() const;
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            :         private:
+<span class="lineNum">     132 </span>            :                 void next();
+<a name="133"><span class="lineNum">     133 </span>            :                 void next(NibbleSlice _key);</a>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineCov">     982881 :                 struct Node</span>
+<span class="lineNum">     136 </span>            :                 {
+<span class="lineNum">     137 </span>            :                         std::string rlp;
+<span class="lineNum">     138 </span>            :                         std::string key;                // as hexPrefixEncoding.
+<span class="lineNum">     139 </span>            :                         byte child;                             // 255 -&gt; entering, 16 -&gt; actually at the node, 17 -&gt; exiting, 0-15 -&gt; actual children.
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            :                         // 255 -&gt; 16 -&gt; 0 -&gt; 1 -&gt; ... -&gt; 15 -&gt; 17
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :                         void setChild(unsigned _i) { child = _i; }
+<span class="lineNum">     144 </span><span class="lineCov">      14175 :                         void setFirstChild() { child = 16; }</span>
+<a name="145"><span class="lineNum">     145 </span><span class="lineCov">     227988 :                         void incrementChild() { child = child == 16 ? 0 : child == 15 ? 17 : (child + 1); }</span></a>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :                         bool operator==(Node const&amp; _c) const { return rlp == _c.rlp &amp;&amp; key == _c.key &amp;&amp; child == _c.child; }</span>
+<span class="lineNum">     148 </span>            :                         bool operator!=(Node const&amp; _c) const { return !operator==(_c); }
+<span class="lineNum">     149 </span>            :                 };
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            :         protected:
+<span class="lineNum">     152 </span>            :                 std::vector&lt;Node&gt; m_trail;
+<span class="lineNum">     153 </span>            :                 GenericTrieDB&lt;DB&gt; const* m_that;
+<span class="lineNum">     154 </span>            :         };
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineCov">        934 :         iterator begin() const { return iterator(this); }</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :         iterator end() const { return iterator(); }</span>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :         iterator lower_bound(bytesConstRef _key) const { return iterator(this, _key); }
+<a name="160"><span class="lineNum">     160 </span>            : </a>
+<span class="lineNum">     161 </span>            :         /// Used for debugging, scans the whole trie.
+<span class="lineNum">     162 </span><span class="lineCov">      41995 :         void descendKey(h256 const&amp; _k, h256Hash&amp; _keyMask, bool _wasExt, std::ostream* _out, int _indent = 0) const</span>
+<span class="lineNum">     163 </span>            :         {
+<span class="lineNum">     164 </span><span class="lineCov">      41995 :                 _keyMask.erase(_k);</span>
+<span class="lineNum">     165 </span><span class="lineCov">      90204 :                 if (_k == m_root &amp;&amp; _k == c_shaNull)    // root allowed to be empty</span>
+<span class="lineNum">     166 </span>            :                         return;
+<span class="lineNum">     167 </span><span class="lineCov">     165436 :                 descendList(RLP(node(_k)), _keyMask, _wasExt, _out, _indent);   // if not, it must be a list</span>
+<span class="lineNum">     168 </span>            :         }
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :         /// Used for debugging, scans the whole trie.
+<span class="lineNum">     171 </span><span class="lineCov">     105333 :         void descendEntry(RLP const&amp; _r, h256Hash&amp; _keyMask, bool _wasExt, std::ostream* _out, int _indent) const</span>
+<span class="lineNum">     172 </span>            :         {
+<span class="lineNum">     173 </span><span class="lineCov">     105333 :                 if (_r.isData() &amp;&amp; _r.size() == 32)</span>
+<span class="lineNum">     174 </span><span class="lineCov">      35781 :                         descendKey(_r.toHash&lt;h256&gt;(), _keyMask, _wasExt, _out, _indent);</span>
+<span class="lineNum">     175 </span><span class="lineCov">      69552 :                 else if (_r.isList())</span>
+<span class="lineNum">     176 </span><span class="lineCov">      69552 :                         descendList(_r, _keyMask, _wasExt, _out, _indent);</span>
+<span class="lineNum">     177 </span>            :                 else
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(InvalidTrie());</span>
+<span class="lineNum">     179 </span><span class="lineCov">     105333 :         }</span>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            :         /// Used for debugging, scans the whole trie.
+<span class="lineNum">     182 </span><span class="lineCov">     110911 :         void descendList(RLP const&amp; _r, h256Hash&amp; _keyMask, bool _wasExt, std::ostream* _out, int _indent) const</span>
+<span class="lineNum">     183 </span>            :         {
+<span class="lineNum">     184 </span><span class="lineCov">     110911 :                 if (_r.isList() &amp;&amp; _r.itemCount() == 2 &amp;&amp; (!_wasExt || _out))</span>
+<span class="lineNum">     185 </span>            :                 {
+<span class="lineNum">     186 </span><span class="lineCov">      69543 :                         if (_out)</span>
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :                                 (*_out) &lt;&lt; std::string(_indent * 2, ' ') &lt;&lt; (_wasExt ? &quot;!2 &quot; : &quot;2  &quot;) &lt;&lt; sha3(_r.data()) &lt;&lt; &quot;: &quot; &lt;&lt; _r &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     188 </span><span class="lineCov">      69543 :                         if (!isLeaf(_r))                                                // don't go down leaves</span>
+<span class="lineNum">     189 </span><span class="lineCov">       7822 :                                 descendEntry(_r[1], _keyMask, true, _out, _indent + 1);</span>
+<span class="lineNum">     190 </span>            :                 }
+<span class="lineNum">     191 </span><span class="lineCov">      41368 :                 else if (_r.isList() &amp;&amp; _r.itemCount() == 17)</span>
+<span class="lineNum">     192 </span>            :                 {
+<span class="lineNum">     193 </span><span class="lineCov">      41368 :                         if (_out)</span>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :                                 (*_out) &lt;&lt; std::string(_indent * 2, ' ') &lt;&lt; &quot;17 &quot; &lt;&lt; sha3(_r.data()) &lt;&lt; &quot;: &quot; &lt;&lt; _r &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     195 </span><span class="lineCov">    1365144 :                         for (unsigned i = 0; i &lt; 16; ++i)</span>
+<span class="lineNum">     196 </span><span class="lineCov">     661888 :                                 if (!_r[i].isEmpty())                           // 16 branches are allowed to be empty</span>
+<span class="lineNum">     197 </span><span class="lineCov">      97511 :                                         descendEntry(_r[i], _keyMask, false, _out, _indent + 1);</span>
+<span class="lineNum">     198 </span>            :                 }
+<span class="lineNum">     199 </span>            :                 else
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(InvalidTrie());</span>
+<span class="lineNum">     201 </span><span class="lineCov">     110911 :         }</span>
+<a name="202"><span class="lineNum">     202 </span>            : </a>
+<span class="lineNum">     203 </span>            :         /// Used for debugging, scans the whole trie.
+<span class="lineNum">     204 </span><span class="lineCov">       6214 :         h256Hash leftOvers(std::ostream* _out = nullptr) const</span>
+<span class="lineNum">     205 </span>            :         {
+<span class="lineNum">     206 </span><span class="lineCov">       6214 :                 h256Hash k = m_db-&gt;keys();</span>
+<span class="lineNum">     207 </span><span class="lineCov">       6214 :                 descendKey(m_root, k, false, _out);</span>
+<span class="lineNum">     208 </span><span class="lineCov">       6214 :                 return k;</span>
+<span class="lineNum">     209 </span>            :         }
+<a name="210"><span class="lineNum">     210 </span>            : </a>
+<span class="lineNum">     211 </span>            :         /// Used for debugging, scans the whole trie.
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :         void debugStructure(std::ostream&amp; _out) const</span>
+<span class="lineNum">     213 </span>            :         {
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :                 leftOvers(&amp;_out);</span>
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :         }</span>
+<span class="lineNum">     216 </span>            : 
+<a name="217"><span class="lineNum">     217 </span>            :         /// Used for debugging, scans the whole trie.</a>
+<span class="lineNum">     218 </span>            :         /// @param _requireNoLeftOvers if true, requires that all keys are reachable.
+<span class="lineNum">     219 </span><span class="lineCov">       6214 :         bool check(bool _requireNoLeftOvers) const</span>
+<span class="lineNum">     220 </span>            :         {
+<span class="lineNum">     221 </span>            :                 try
+<span class="lineNum">     222 </span>            :                 {
+<span class="lineNum">     223 </span><span class="lineCov">      18642 :                         return leftOvers().empty() || !_requireNoLeftOvers;</span>
+<span class="lineNum">     224 </span>            :                 }
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :                 catch (...)</span>
+<span class="lineNum">     226 </span>            :                 {
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :                         cwarn &lt;&lt; boost::current_exception_diagnostic_information();</span>
+<span class="lineNum">     228 </span>            :                         return false;
+<span class="lineNum">     229 </span>            :                 }
+<span class="lineNum">     230 </span>            :         }
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            :         /// Get the underlying database.
+<span class="lineNum">     233 </span>            :         /// @warning This can be used to bypass the trie code. Don't use these unless you *really*
+<span class="lineNum">     234 </span>            :         /// know what you're doing.
+<span class="lineNum">     235 </span>            :         DB const* db() const { return m_db; }
+<span class="lineNum">     236 </span>            :         DB* db() { return m_db; }
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span>            : private:
+<span class="lineNum">     239 </span>            :         RLPStream&amp; streamNode(RLPStream&amp; _s, bytes const&amp; _b);
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            :         std::string atAux(RLP const&amp; _here, NibbleSlice _key) const;
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            :         void mergeAtAux(RLPStream&amp; _out, RLP const&amp; _replace, NibbleSlice _key, bytesConstRef _value);
+<span class="lineNum">     244 </span>            :         bytes mergeAt(RLP const&amp; _replace, NibbleSlice _k, bytesConstRef _v, bool _inLine = false);
+<span class="lineNum">     245 </span>            :         bytes mergeAt(RLP const&amp; _replace, h256 const&amp; _replaceHash, NibbleSlice _k, bytesConstRef _v, bool _inLine = false);
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            :         bool deleteAtAux(RLPStream&amp; _out, RLP const&amp; _replace, NibbleSlice _key);
+<span class="lineNum">     248 </span>            :         bytes deleteAt(RLP const&amp; _replace, NibbleSlice _k);
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            :         // in: null (DEL)  -- OR --  [_k, V] (DEL)
+<span class="lineNum">     251 </span>            :         // out: [_k, _s]
+<span class="lineNum">     252 </span>            :         // -- OR --
+<span class="lineNum">     253 </span>            :         // in: [V0, ..., V15, S16] (DEL)  AND  _k == {}
+<span class="lineNum">     254 </span>            :         // out: [V0, ..., V15, _s]
+<span class="lineNum">     255 </span>            :         bytes place(RLP const&amp; _orig, NibbleSlice _k, bytesConstRef _s);
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            :         // in: [K, S] (DEL)
+<span class="lineNum">     258 </span>            :         // out: null
+<span class="lineNum">     259 </span>            :         // -- OR --
+<span class="lineNum">     260 </span>            :         // in: [V0, ..., V15, S] (DEL)
+<span class="lineNum">     261 </span>            :         // out: [V0, ..., V15, null]
+<span class="lineNum">     262 </span>            :         bytes remove(RLP const&amp; _orig);
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            :         // in: [K1 &amp; K2, V] (DEL) : nibbles(K1) == _s, 0 &lt; _s &lt;= nibbles(K1 &amp; K2)
+<span class="lineNum">     265 </span>            :         // out: [K1, H] ; [K2, V] =&gt; H (INS)  (being  [K1, [K2, V]]  if necessary)
+<span class="lineNum">     266 </span>            :         bytes cleve(RLP const&amp; _orig, unsigned _s);
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            :         // in: [K1, H] (DEL) ; H &lt;= [K2, V] (DEL)  (being  [K1, [K2, V]] (DEL)  if necessary)
+<span class="lineNum">     269 </span>            :         // out: [K1 &amp; K2, V]
+<span class="lineNum">     270 </span>            :         bytes graft(RLP const&amp; _orig);
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            :         // in: [V0, ... V15, S] (DEL)
+<span class="lineNum">     273 </span>            :         // out1: [k{i}, Vi]    where i &lt; 16
+<span class="lineNum">     274 </span>            :         // out2: [k{}, S]      where i == 16
+<span class="lineNum">     275 </span>            :         bytes merge(RLP const&amp; _orig, byte _i);
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            :         // in: [k{}, S] (DEL)
+<span class="lineNum">     278 </span>            :         // out: [null ** 16, S]
+<span class="lineNum">     279 </span>            :         // -- OR --
+<span class="lineNum">     280 </span>            :         // in: [k{i}, N] (DEL)
+<span class="lineNum">     281 </span>            :         // out: [null ** i, N, null ** (16 - i)]
+<span class="lineNum">     282 </span>            :         // -- OR --
+<span class="lineNum">     283 </span>            :         // in: [k{i}K, V] (DEL)
+<span class="lineNum">     284 </span>            :         // out: [null ** i, H, null ** (16 - i)] ; [K, V] =&gt; H (INS)  (being [null ** i, [K, V], null ** (16 - i)]  if necessary)
+<span class="lineNum">     285 </span>            :         bytes branch(RLP const&amp; _orig);
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            :         bool isTwoItemNode(RLP const&amp; _n) const;
+<span class="lineNum">     288 </span>            :         std::string deref(RLP const&amp; _n) const;
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span><span class="lineCov">    2408238 :         std::string node(h256 const&amp; _h) const { return m_db-&gt;lookup(_h); }</span>
+<a name="291"><span class="lineNum">     291 </span>            : </a>
+<span class="lineNum">     292 </span>            :         // These are low-level node insertion functions that just go straight through into the DB.
+<span class="lineNum">     293 </span><span class="lineCov">    1918506 :         h256 forceInsertNode(bytesConstRef _v) { auto h = sha3(_v); forceInsertNode(h, _v); return h; }</span>
+<span class="lineNum">     294 </span><span class="lineCov">     639502 :         void forceInsertNode(h256 const&amp; _h, bytesConstRef _v) { m_db-&gt;insert(_h, _v); }</span>
+<span class="lineNum">     295 </span><span class="lineCov">     416394 :         void forceKillNode(h256 const&amp; _h) { m_db-&gt;kill(_h); }</span>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            :         // This are semantically-aware node insertion functions that only kills when the node's
+<span class="lineNum">     298 </span>            :         // data is &lt; 32 bytes. It can safely be used when pruning the trie but won't work correctly
+<a name="299"><span class="lineNum">     299 </span>            :         // for the special case of the root (which is always looked up via a hash). In that case,</a>
+<span class="lineNum">     300 </span>            :         // use forceKillNode().
+<span class="lineNum">     301 </span><span class="lineCov">     446618 :         void killNode(RLP const&amp; _d) { if (_d.data().size() &gt;= 32) forceKillNode(sha3(_d.data())); }</span>
+<span class="lineNum">     302 </span><span class="lineCov">     288392 :         void killNode(RLP const&amp; _d, h256 const&amp; _h) { if (_d.data().size() &gt;= 32) forceKillNode(_h); }</span>
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span>            :         h256 m_root;
+<span class="lineNum">     305 </span>            :         DB* m_db = nullptr;
+<span class="lineNum">     306 </span>            : };
+<a name="307"><span class="lineNum">     307 </span>            : </a>
+<span class="lineNum">     308 </span>            : template &lt;class DB&gt;
+<span class="lineNum">     309 </span><span class="lineNoCov">          0 : std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, GenericTrieDB&lt;DB&gt; const&amp; _db)</span>
+<span class="lineNum">     310 </span>            : {
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :         for (auto const&amp; i: _db)</span>
+<span class="lineNum">     312 </span><span class="lineNoCov">          0 :                 _out &lt;&lt; escaped(i.first.toString(), false) &lt;&lt; &quot;: &quot; &lt;&lt; escaped(i.second.toString(), false) &lt;&lt; std::endl;</span>
+<span class="lineNum">     313 </span><span class="lineNoCov">          0 :         return _out;</span>
+<span class="lineNum">     314 </span>            : }
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span>            : /**
+<span class="lineNum">     317 </span>            :  * Different view on a GenericTrieDB that can use different key types.
+<span class="lineNum">     318 </span>            :  */
+<span class="lineNum">     319 </span>            : template &lt;class Generic, class _KeyType&gt;
+<span class="lineNum">     320 </span><span class="lineCov">    2505012 : class SpecificTrieDB: public Generic</span>
+<span class="lineNum">     321 </span>            : {
+<span class="lineNum">     322 </span>            : public:
+<span class="lineNum">     323 </span>            :         using DB = typename Generic::DB;
+<span class="lineNum">     324 </span>            :         using KeyType = _KeyType;
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span><span class="lineCov">     249644 :         SpecificTrieDB(DB* _db = nullptr): Generic(_db) {}</span>
+<span class="lineNum">     327 </span><span class="lineCov">    1691526 :         SpecificTrieDB(DB* _db, h256 _root, Verification _v = Verification::Normal): Generic(_db, _root, _v) {}</span>
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span>            :         std::string operator[](KeyType _k) const { return at(_k); }
+<span class="lineNum">     330 </span>            : 
+<span class="lineNum">     331 </span>            :         bool contains(KeyType _k) const { return Generic::contains(bytesConstRef((byte const*)&amp;_k, sizeof(KeyType))); }
+<a name="332"><span class="lineNum">     332 </span><span class="lineCov">     467028 :         std::string at(KeyType _k) const { return Generic::at(bytesConstRef((byte const*)&amp;_k, sizeof(KeyType))); }</span></a>
+<span class="lineNum">     333 </span><span class="lineCov">     375775 :         void insert(KeyType _k, bytesConstRef _value) { Generic::insert(bytesConstRef((byte const*)&amp;_k, sizeof(KeyType)), _value); }</span>
+<span class="lineNum">     334 </span><span class="lineCov">      44745 :         void insert(KeyType _k, bytes const&amp; _value) { insert(_k, bytesConstRef(&amp;_value)); }</span>
+<span class="lineNum">     335 </span><span class="lineCov">      12442 :         void remove(KeyType _k) { Generic::remove(bytesConstRef((byte const*)&amp;_k, sizeof(KeyType))); }</span>
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span><span class="lineCov">      16516 :         class iterator: public Generic::iterator</span>
+<span class="lineNum">     338 </span>            :         {
+<span class="lineNum">     339 </span>            :         public:
+<span class="lineNum">     340 </span>            :                 using Super = typename Generic::iterator;
+<span class="lineNum">     341 </span>            :                 using value_type = std::pair&lt;KeyType, bytesConstRef&gt;;
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span><span class="lineCov">      16516 :                 iterator() {}</span>
+<span class="lineNum">     344 </span><span class="lineCov">      16516 :                 iterator(Generic const* _db): Super(_db) {}</span>
+<span class="lineNum">     345 </span>            :                 iterator(Generic const* _db, bytesConstRef _k): Super(_db, _k) {}
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span><span class="lineCov">      34705 :                 value_type operator*() const { return at(); }</span>
+<span class="lineNum">     348 </span>            :                 value_type operator-&gt;() const { return at(); }
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span>            :                 value_type at() const;
+<span class="lineNum">     351 </span>            :         };
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span><span class="lineCov">      16516 :         iterator begin() const { return this; }</span>
+<span class="lineNum">     354 </span><span class="lineCov">       8258 :         iterator end() const { return iterator(); }</span>
+<span class="lineNum">     355 </span>            :         iterator lower_bound(KeyType _k) const { return iterator(this, bytesConstRef((byte const*)&amp;_k, sizeof(KeyType))); }
+<span class="lineNum">     356 </span>            : };
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span>            : template &lt;class Generic, class KeyType&gt;
+<span class="lineNum">     359 </span>            : std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, SpecificTrieDB&lt;Generic, KeyType&gt; const&amp; _db)
+<span class="lineNum">     360 </span>            : {
+<span class="lineNum">     361 </span>            :         for (auto const&amp; i: _db)
+<span class="lineNum">     362 </span>            :                 _out &lt;&lt; i.first &lt;&lt; &quot;: &quot; &lt;&lt; escaped(i.second.toString(), false) &lt;&lt; std::endl;
+<span class="lineNum">     363 </span>            :         return _out;
+<span class="lineNum">     364 </span>            : }
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span>            : template &lt;class _DB&gt;
+<span class="lineNum">     367 </span><span class="lineCov">        394 : class HashedGenericTrieDB: private SpecificTrieDB&lt;GenericTrieDB&lt;_DB&gt;, h256&gt;</span>
+<span class="lineNum">     368 </span>            : {
+<span class="lineNum">     369 </span>            :         using Super = SpecificTrieDB&lt;GenericTrieDB&lt;_DB&gt;, h256&gt;;
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span>            : public:
+<span class="lineNum">     372 </span>            :         using DB = _DB;
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span><span class="lineCov">        394 :         HashedGenericTrieDB(DB* _db = nullptr): Super(_db) {}</span>
+<span class="lineNum">     375 </span>            :         HashedGenericTrieDB(DB* _db, h256 _root, Verification _v = Verification::Normal): Super(_db, _root, _v) {}
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span>            :         using Super::open;
+<span class="lineNum">     378 </span>            :         using Super::init;
+<span class="lineNum">     379 </span>            :         using Super::setRoot;
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span>            :         /// True if the trie is uninitialised (i.e. that the DB doesn't contain the root node).
+<span class="lineNum">     382 </span>            :         using Super::isNull;
+<span class="lineNum">     383 </span>            :         /// True if the trie is initialised but empty (i.e. that the DB contains the root node which is empty).
+<span class="lineNum">     384 </span>            :         using Super::isEmpty;
+<span class="lineNum">     385 </span>            : 
+<span class="lineNum">     386 </span>            :         using Super::root;
+<span class="lineNum">     387 </span>            :         using Super::db;
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span>            :         using Super::leftOvers;
+<span class="lineNum">     390 </span>            :         using Super::check;
+<a name="391"><span class="lineNum">     391 </span>            :         using Super::debugStructure;</a>
+<span class="lineNum">     392 </span>            : 
+<a name="393"><span class="lineNum">     393 </span><span class="lineNoCov">          0 :         std::string at(bytesConstRef _key) const { return Super::at(sha3(_key)); }</span></a>
+<a name="394"><span class="lineNum">     394 </span>            :         bool contains(bytesConstRef _key) { return Super::contains(sha3(_key)); }</a>
+<span class="lineNum">     395 </span><span class="lineCov">       2718 :         void insert(bytesConstRef _key, bytesConstRef _value) { Super::insert(sha3(_key), _value); }</span>
+<span class="lineNum">     396 </span><span class="lineCov">         84 :         void remove(bytesConstRef _key) { Super::remove(sha3(_key)); }</span>
+<span class="lineNum">     397 </span>            : 
+<span class="lineNum">     398 </span>            :         // empty from the PoV of the iterator interface; still need a basic iterator impl though.
+<span class="lineNum">     399 </span>            :         class iterator
+<span class="lineNum">     400 </span>            :         {
+<span class="lineNum">     401 </span>            :         public:
+<span class="lineNum">     402 </span>            :                 using value_type = std::pair&lt;bytesConstRef, bytesConstRef&gt;;
+<span class="lineNum">     403 </span>            : 
+<span class="lineNum">     404 </span>            :                 iterator() {}
+<span class="lineNum">     405 </span>            :                 iterator(HashedGenericTrieDB const*) {}
+<span class="lineNum">     406 </span>            :                 iterator(HashedGenericTrieDB const*, bytesConstRef) {}
+<span class="lineNum">     407 </span>            : 
+<span class="lineNum">     408 </span>            :                 iterator&amp; operator++() { return *this; }
+<span class="lineNum">     409 </span>            :                 value_type operator*() const { return value_type(); }
+<span class="lineNum">     410 </span>            :                 value_type operator-&gt;() const { return value_type(); }
+<span class="lineNum">     411 </span>            : 
+<span class="lineNum">     412 </span>            :                 bool operator==(iterator const&amp;) const { return true; }
+<span class="lineNum">     413 </span>            :                 bool operator!=(iterator const&amp;) const { return false; }
+<span class="lineNum">     414 </span>            : 
+<span class="lineNum">     415 </span>            :                 value_type at() const { return value_type(); }
+<span class="lineNum">     416 </span>            :         };
+<span class="lineNum">     417 </span>            :         iterator begin() const { return iterator(); }
+<span class="lineNum">     418 </span>            :         iterator end() const { return iterator(); }
+<span class="lineNum">     419 </span>            :         iterator lower_bound(bytesConstRef) const { return iterator(); }
+<span class="lineNum">     420 </span>            : };
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span>            : // Hashed &amp; Hash-key mapping
+<span class="lineNum">     423 </span>            : template &lt;class _DB&gt;
+<span class="lineNum">     424 </span><span class="lineCov">    1252508 : class FatGenericTrieDB: private SpecificTrieDB&lt;GenericTrieDB&lt;_DB&gt;, h256&gt;</span>
+<span class="lineNum">     425 </span>            : {
+<span class="lineNum">     426 </span>            :         using Super = SpecificTrieDB&lt;GenericTrieDB&lt;_DB&gt;, h256&gt;;
+<span class="lineNum">     427 </span>            : 
+<span class="lineNum">     428 </span>            : public:
+<a name="429"><span class="lineNum">     429 </span>            :         using DB = _DB;</a>
+<span class="lineNum">     430 </span><span class="lineCov">     124824 :         FatGenericTrieDB(DB* _db = nullptr): Super(_db) {}</span>
+<span class="lineNum">     431 </span><span class="lineCov">    1127684 :         FatGenericTrieDB(DB* _db, h256 _root, Verification _v = Verification::Normal): Super(_db, _root, _v) {}</span>
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span>            :         using Super::init;
+<span class="lineNum">     434 </span>            :         using Super::isNull;
+<span class="lineNum">     435 </span>            :         using Super::isEmpty;
+<span class="lineNum">     436 </span>            :         using Super::root;
+<span class="lineNum">     437 </span>            :         using Super::leftOvers;
+<span class="lineNum">     438 </span>            :         using Super::check;
+<span class="lineNum">     439 </span>            :         using Super::open;
+<span class="lineNum">     440 </span>            :         using Super::setRoot;
+<span class="lineNum">     441 </span>            :         using Super::db;
+<a name="442"><span class="lineNum">     442 </span>            :         using Super::debugStructure;</a>
+<span class="lineNum">     443 </span>            : 
+<a name="444"><span class="lineNum">     444 </span><span class="lineCov">     700542 :         std::string at(bytesConstRef _key) const { return Super::at(sha3(_key)); }</span></a>
+<span class="lineNum">     445 </span>            :         bool contains(bytesConstRef _key) { return Super::contains(sha3(_key)); }
+<span class="lineNum">     446 </span><span class="lineCov">     187888 :         void insert(bytesConstRef _key, bytesConstRef _value)</span>
+<span class="lineNum">     447 </span>            :         {
+<span class="lineNum">     448 </span>            :                 h256 hash = sha3(_key);
+<span class="lineNum">     449 </span><span class="lineCov">     375776 :                 Super::insert(hash, _value);</span>
+<span class="lineNum">     450 </span><span class="lineCov">     187888 :                 Super::db()-&gt;insertAux(hash, _key);</span>
+<a name="451"><span class="lineNum">     451 </span><span class="lineCov">     187888 :         }</span></a>
+<span class="lineNum">     452 </span>            : 
+<span class="lineNum">     453 </span><span class="lineCov">      18663 :         void remove(bytesConstRef _key) { Super::remove(sha3(_key)); }</span>
+<a name="454"><span class="lineNum">     454 </span>            : </a>
+<span class="lineNum">     455 </span>            :         // iterates over &lt;key, value&gt; pairs
+<span class="lineNum">     456 </span><span class="lineCov">      55164 :         class iterator: public GenericTrieDB&lt;_DB&gt;::iterator</span>
+<span class="lineNum">     457 </span>            :         {
+<span class="lineNum">     458 </span>            :         public:
+<span class="lineNum">     459 </span>            :                 using Super = typename GenericTrieDB&lt;_DB&gt;::iterator;
+<span class="lineNum">     460 </span>            : 
+<span class="lineNum">     461 </span><span class="lineCov">      30390 :                 iterator() { }</span>
+<a name="462"><span class="lineNum">     462 </span><span class="lineCov">      16516 :                 iterator(FatGenericTrieDB const* _trie) : Super(_trie) { }</span></a>
+<span class="lineNum">     463 </span>            : 
+<span class="lineNum">     464 </span><span class="lineCov">      34705 :                 typename Super::value_type at() const</span>
+<span class="lineNum">     465 </span>            :                 {
+<span class="lineNum">     466 </span><span class="lineCov">      34705 :                         auto hashed = Super::at();</span>
+<span class="lineNum">     467 </span><span class="lineCov">     104115 :                         m_key = static_cast&lt;FatGenericTrieDB const*&gt;(Super::m_that)-&gt;db()-&gt;lookupAux(h256(hashed.first));</span>
+<span class="lineNum">     468 </span><span class="lineCov">     104115 :                         return std::make_pair(&amp;m_key, std::move(hashed.second));</span>
+<span class="lineNum">     469 </span>            :                 }
+<span class="lineNum">     470 </span>            : 
+<span class="lineNum">     471 </span>            :         private:
+<span class="lineNum">     472 </span>            :                 mutable bytes m_key;
+<span class="lineNum">     473 </span>            :         };
+<span class="lineNum">     474 </span>            : 
+<span class="lineNum">     475 </span><span class="lineCov">        936 :         iterator begin() const { return iterator(); }</span>
+<span class="lineNum">     476 </span><span class="lineCov">        936 :         iterator end() const { return iterator(); }</span>
+<span class="lineNum">     477 </span>            : 
+<span class="lineNum">     478 </span>            :         // iterates over &lt;hashedKey, value&gt; pairs
+<span class="lineNum">     479 </span><span class="lineCov">     204836 :         class HashedIterator: public GenericTrieDB&lt;_DB&gt;::iterator</span>
+<span class="lineNum">     480 </span>            :         {
+<span class="lineNum">     481 </span>            :         public:
+<span class="lineNum">     482 </span>            :                 using Super = typename GenericTrieDB&lt;_DB&gt;::iterator;
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span><span class="lineCov">     106002 :                 HashedIterator() {}</span>
+<a name="485"><span class="lineNum">     485 </span><span class="lineCov">      49417 :                 HashedIterator(FatGenericTrieDB const* _trie) : Super(_trie) {}</span></a>
+<span class="lineNum">     486 </span>            : 
+<span class="lineNum">     487 </span><span class="lineCov">       3584 :                 bytes key() const</span>
+<span class="lineNum">     488 </span>            :                 {
+<span class="lineNum">     489 </span><span class="lineCov">       3584 :                         auto hashed = Super::at();</span>
+<span class="lineNum">     490 </span><span class="lineCov">       3584 :                         return static_cast&lt;FatGenericTrieDB const*&gt;(Super::m_that)-&gt;db()-&gt;lookupAux(h256(hashed.first));</span>
+<span class="lineNum">     491 </span>            :                 }
+<span class="lineNum">     492 </span>            :         };
+<span class="lineNum">     493 </span>            : 
+<span class="lineNum">     494 </span><span class="lineNoCov">          0 :         HashedIterator hashedBegin() const { return HashedIterator(this); }</span>
+<span class="lineNum">     495 </span><span class="lineCov">      53001 :         HashedIterator hashedEnd() const { return HashedIterator(); }</span>
+<span class="lineNum">     496 </span>            : };
+<span class="lineNum">     497 </span>            : 
+<span class="lineNum">     498 </span>            : template &lt;class KeyType, class DB&gt; using TrieDB = SpecificTrieDB&lt;GenericTrieDB&lt;DB&gt;, KeyType&gt;;
+<span class="lineNum">     499 </span>            : 
+<span class="lineNum">     500 </span>            : }
+<span class="lineNum">     501 </span>            : 
+<span class="lineNum">     502 </span>            : // Template implementations...
+<span class="lineNum">     503 </span>            : namespace dev
+<a name="504"><span class="lineNum">     504 </span>            : {</a>
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span><span class="lineCov">     117218 : template &lt;class DB&gt; GenericTrieDB&lt;DB&gt;::iterator::iterator(GenericTrieDB const* _db)</span>
+<span class="lineNum">     507 </span>            : {
+<span class="lineNum">     508 </span><span class="lineCov">      58609 :         m_that = _db;</span>
+<span class="lineNum">     509 </span><span class="lineCov">     293979 :         m_trail.push_back({_db-&gt;node(_db-&gt;m_root), std::string(1, '\0'), 255});   // one null byte is the HPE for the empty key.</span>
+<span class="lineNum">     510 </span><span class="lineCov">      58609 :         next();</span>
+<span class="lineNum">     511 </span><span class="lineCov">      58609 : }</span>
+<span class="lineNum">     512 </span>            : 
+<span class="lineNum">     513 </span>            : template &lt;class DB&gt; GenericTrieDB&lt;DB&gt;::iterator::iterator(GenericTrieDB const* _db, bytesConstRef _fullKey)
+<span class="lineNum">     514 </span>            : {
+<span class="lineNum">     515 </span>            :         m_that = _db;
+<span class="lineNum">     516 </span>            :         m_trail.push_back({_db-&gt;node(_db-&gt;m_root), std::string(1, '\0'), 255});   // one null byte is the HPE for the empty key.
+<span class="lineNum">     517 </span>            :         next(_fullKey);
+<a name="518"><span class="lineNum">     518 </span>            : }</a>
+<span class="lineNum">     519 </span>            : 
+<span class="lineNum">     520 </span><span class="lineCov">      45457 : template &lt;class DB&gt; typename GenericTrieDB&lt;DB&gt;::iterator::value_type GenericTrieDB&lt;DB&gt;::iterator::at() const</span>
+<span class="lineNum">     521 </span>            : {
+<span class="lineNum">     522 </span><span class="lineCov">      90914 :         assert(m_trail.size());</span>
+<span class="lineNum">     523 </span><span class="lineCov">      90914 :         Node const&amp; b = m_trail.back();</span>
+<span class="lineNum">     524 </span><span class="lineCov">      45457 :         assert(b.key.size());</span>
+<span class="lineNum">     525 </span><span class="lineCov">      90914 :         assert(!(b.key[0] &amp; 0x10)); // should be an integer number of bytes (i.e. not an odd number of nibbles).</span>
+<span class="lineNum">     526 </span>            : 
+<span class="lineNum">     527 </span><span class="lineCov">      90914 :         RLP rlp(b.rlp);</span>
+<span class="lineNum">     528 </span><span class="lineCov">     181828 :         return std::make_pair(bytesConstRef(b.key).cropped(1), rlp[rlp.itemCount() == 2 ? 1 : 16].payload());</span>
+<span class="lineNum">     529 </span>            : }
+<span class="lineNum">     530 </span>            : 
+<span class="lineNum">     531 </span>            : template &lt;class DB&gt; void GenericTrieDB&lt;DB&gt;::iterator::next(NibbleSlice _key)
+<span class="lineNum">     532 </span>            : {
+<span class="lineNum">     533 </span>            :         NibbleSlice k = _key;
+<span class="lineNum">     534 </span>            :         while (true)
+<span class="lineNum">     535 </span>            :         {
+<span class="lineNum">     536 </span>            :                 if (m_trail.empty())
+<span class="lineNum">     537 </span>            :                 {
+<span class="lineNum">     538 </span>            :                         m_that = nullptr;
+<span class="lineNum">     539 </span>            :                         return;
+<span class="lineNum">     540 </span>            :                 }
+<span class="lineNum">     541 </span>            : 
+<span class="lineNum">     542 </span>            :                 Node const&amp; b = m_trail.back();
+<span class="lineNum">     543 </span>            :                 RLP rlp(b.rlp);
+<span class="lineNum">     544 </span>            : 
+<span class="lineNum">     545 </span>            :                 if (m_trail.back().child == 255)
+<span class="lineNum">     546 </span>            :                 {
+<span class="lineNum">     547 </span>            :                         // Entering. Look for first...
+<span class="lineNum">     548 </span>            :                         if (rlp.isEmpty())
+<span class="lineNum">     549 </span>            :                         {
+<span class="lineNum">     550 </span>            :                                 // Kill our search as soon as we hit an empty node.
+<span class="lineNum">     551 </span>            :                                 k.clear();
+<span class="lineNum">     552 </span>            :                                 m_trail.pop_back();
+<span class="lineNum">     553 </span>            :                                 continue;
+<span class="lineNum">     554 </span>            :                         }
+<span class="lineNum">     555 </span>            :                         if (!rlp.isList() || (rlp.itemCount() != 2 &amp;&amp; rlp.itemCount() != 17))
+<span class="lineNum">     556 </span>            :                         {
+<span class="lineNum">     557 </span>            : #if ETH_PARANOIA
+<span class="lineNum">     558 </span>            :                                 cwarn &lt;&lt; &quot;BIG FAT ERROR. STATE TRIE CORRUPTED!!!!!&quot;;
+<span class="lineNum">     559 </span>            :                                 cwarn &lt;&lt; b.rlp.size() &lt;&lt; toHex(b.rlp);
+<span class="lineNum">     560 </span>            :                                 cwarn &lt;&lt; rlp;
+<span class="lineNum">     561 </span>            :                                 auto c = rlp.itemCount();
+<span class="lineNum">     562 </span>            :                                 cwarn &lt;&lt; c;
+<span class="lineNum">     563 </span>            :                                 BOOST_THROW_EXCEPTION(InvalidTrie());
+<span class="lineNum">     564 </span>            : #else
+<span class="lineNum">     565 </span>            :                                 m_that = nullptr;
+<span class="lineNum">     566 </span>            :                                 return;
+<span class="lineNum">     567 </span>            : #endif
+<span class="lineNum">     568 </span>            :                         }
+<span class="lineNum">     569 </span>            :                         if (rlp.itemCount() == 2)
+<span class="lineNum">     570 </span>            :                         {
+<span class="lineNum">     571 </span>            :                                 // Just turn it into a valid Branch
+<span class="lineNum">     572 </span>            :                                 auto keyOfRLP = keyOf(rlp);
+<span class="lineNum">     573 </span>            : 
+<span class="lineNum">     574 </span>            :                                 // TODO: do something different depending on how keyOfRLP compares to k.mid(0, std::min(k.size(), keyOfRLP.size()));
+<span class="lineNum">     575 </span>            :                                 // if == all is good - continue descent.
+<span class="lineNum">     576 </span>            :                                 // if &gt; discard key and continue descent.
+<span class="lineNum">     577 </span>            :                                 // if &lt; discard key and skip node.
+<span class="lineNum">     578 </span>            : 
+<span class="lineNum">     579 </span>            :                                 if (!k.contains(keyOfRLP))
+<span class="lineNum">     580 </span>            :                                 {
+<span class="lineNum">     581 </span>            :                                         if (!k.isEarlierThan(keyOfRLP))
+<span class="lineNum">     582 </span>            :                                         {
+<span class="lineNum">     583 </span>            :                                                 k.clear();
+<span class="lineNum">     584 </span>            :                                                 m_trail.pop_back();
+<span class="lineNum">     585 </span>            :                                                 continue;
+<span class="lineNum">     586 </span>            :                                         }
+<span class="lineNum">     587 </span>            :                                         k.clear();
+<span class="lineNum">     588 </span>            :                                 }
+<span class="lineNum">     589 </span>            : 
+<span class="lineNum">     590 </span>            :                                 k = k.mid(std::min(k.size(), keyOfRLP.size()));
+<span class="lineNum">     591 </span>            :                                 m_trail.back().key = hexPrefixEncode(keyOf(m_trail.back().key), keyOfRLP, false);
+<span class="lineNum">     592 </span>            :                                 if (isLeaf(rlp))
+<span class="lineNum">     593 </span>            :                                 {
+<span class="lineNum">     594 </span>            :                                         // leaf - exit now.
+<span class="lineNum">     595 </span>            :                                         if (k.empty())
+<span class="lineNum">     596 </span>            :                                         {
+<span class="lineNum">     597 </span>            :                                                 m_trail.back().child = 0;
+<span class="lineNum">     598 </span>            :                                                 return;
+<span class="lineNum">     599 </span>            :                                         }
+<span class="lineNum">     600 </span>            :                                         // Still data in key we're supposed to be looking for when we're at a leaf. Go for next one.
+<span class="lineNum">     601 </span>            :                                         k.clear();
+<span class="lineNum">     602 </span>            :                                         m_trail.pop_back();
+<span class="lineNum">     603 </span>            :                                         continue;
+<span class="lineNum">     604 </span>            :                                 }
+<span class="lineNum">     605 </span>            : 
+<span class="lineNum">     606 </span>            :                                 // enter child.
+<span class="lineNum">     607 </span>            :                                 m_trail.back().rlp = m_that-&gt;deref(rlp[1]);
+<span class="lineNum">     608 </span>            :                                 // no need to set .child as 255 - it's already done.
+<span class="lineNum">     609 </span>            :                                 continue;
+<span class="lineNum">     610 </span>            :                         }
+<span class="lineNum">     611 </span>            :                         else
+<span class="lineNum">     612 </span>            :                         {
+<span class="lineNum">     613 </span>            :                                 // Already a branch - look for first valid.
+<span class="lineNum">     614 </span>            :                                 if (k.size())
+<span class="lineNum">     615 </span>            :                                 {
+<span class="lineNum">     616 </span>            :                                         m_trail.back().setChild(k[0]);
+<span class="lineNum">     617 </span>            :                                         k = k.mid(1);
+<span class="lineNum">     618 </span>            :                                 }
+<span class="lineNum">     619 </span>            :                                 else
+<span class="lineNum">     620 </span>            :                                         m_trail.back().setChild(16);
+<span class="lineNum">     621 </span>            :                                 // run through to...
+<span class="lineNum">     622 </span>            :                         }
+<span class="lineNum">     623 </span>            :                 }
+<span class="lineNum">     624 </span>            :                 else
+<span class="lineNum">     625 </span>            :                 {
+<span class="lineNum">     626 </span>            :                         // Continuing/exiting. Look for next...
+<span class="lineNum">     627 </span>            :                         if (!(rlp.isList() &amp;&amp; rlp.itemCount() == 17))
+<span class="lineNum">     628 </span>            :                         {
+<span class="lineNum">     629 </span>            :                                 k.clear();
+<span class="lineNum">     630 </span>            :                                 m_trail.pop_back();
+<span class="lineNum">     631 </span>            :                                 continue;
+<span class="lineNum">     632 </span>            :                         }
+<span class="lineNum">     633 </span>            :                         // else run through to...
+<span class="lineNum">     634 </span>            :                         m_trail.back().incrementChild();
+<span class="lineNum">     635 </span>            :                 }
+<span class="lineNum">     636 </span>            : 
+<span class="lineNum">     637 </span>            :                 // ...here. should only get here if we're a list.
+<span class="lineNum">     638 </span>            :                 assert(rlp.isList() &amp;&amp; rlp.itemCount() == 17);
+<span class="lineNum">     639 </span>            :                 for (;; m_trail.back().incrementChild())
+<span class="lineNum">     640 </span>            :                         if (m_trail.back().child == 17)
+<span class="lineNum">     641 </span>            :                         {
+<span class="lineNum">     642 </span>            :                                 // finished here.
+<span class="lineNum">     643 </span>            :                                 k.clear();
+<span class="lineNum">     644 </span>            :                                 m_trail.pop_back();
+<span class="lineNum">     645 </span>            :                                 break;
+<span class="lineNum">     646 </span>            :                         }
+<span class="lineNum">     647 </span>            :                         else if (!rlp[m_trail.back().child].isEmpty())
+<span class="lineNum">     648 </span>            :                         {
+<span class="lineNum">     649 </span>            :                                 if (m_trail.back().child == 16)
+<span class="lineNum">     650 </span>            :                                         return; // have a value at this node - exit now.
+<span class="lineNum">     651 </span>            :                                 else
+<span class="lineNum">     652 </span>            :                                 {
+<span class="lineNum">     653 </span>            :                                         // lead-on to another node - enter child.
+<span class="lineNum">     654 </span>            :                                         // fixed so that Node passed into push_back is constructed *before* m_trail is potentially resized (which invalidates back and rlp)
+<span class="lineNum">     655 </span>            :                                         Node const&amp; back = m_trail.back();
+<span class="lineNum">     656 </span>            :                                         m_trail.push_back(Node{
+<span class="lineNum">     657 </span>            :                                                 m_that-&gt;deref(rlp[back.child]),
+<span class="lineNum">     658 </span>            :                                                  hexPrefixEncode(keyOf(back.key), NibbleSlice(bytesConstRef(&amp;back.child, 1), 1), false),
+<span class="lineNum">     659 </span>            :                                                  255
+<span class="lineNum">     660 </span>            :                                                 });
+<span class="lineNum">     661 </span>            :                                         break;
+<span class="lineNum">     662 </span>            :                                 }
+<span class="lineNum">     663 </span>            :                         }
+<span class="lineNum">     664 </span>            :                 else
+<span class="lineNum">     665 </span>            :                         k.clear();
+<span class="lineNum">     666 </span>            :         }
+<a name="667"><span class="lineNum">     667 </span>            : }</a>
+<span class="lineNum">     668 </span>            : 
+<span class="lineNum">     669 </span><span class="lineCov">      96898 : template &lt;class DB&gt; void GenericTrieDB&lt;DB&gt;::iterator::next()</span>
+<span class="lineNum">     670 </span>            : {
+<span class="lineNum">     671 </span>            :         while (true)
+<span class="lineNum">     672 </span>            :         {
+<span class="lineNum">     673 </span><span class="lineCov">     483372 :                 if (m_trail.empty())</span>
+<span class="lineNum">     674 </span>            :                 {
+<span class="lineNum">     675 </span><span class="lineCov">      57676 :                         m_that = nullptr;</span>
+<span class="lineNum">     676 </span><span class="lineCov">     154574 :                         return;</span>
+<span class="lineNum">     677 </span>            :                 }
+<span class="lineNum">     678 </span>            : 
+<span class="lineNum">     679 </span><span class="lineCov">     368020 :                 Node const&amp; b = m_trail.back();</span>
+<span class="lineNum">     680 </span><span class="lineCov">     368020 :                 RLP rlp(b.rlp);</span>
+<span class="lineNum">     681 </span>            : 
+<span class="lineNum">     682 </span><span class="lineCov">     368020 :                 if (m_trail.back().child == 255)</span>
+<span class="lineNum">     683 </span>            :                 {
+<span class="lineNum">     684 </span>            :                         // Entering. Look for first...
+<span class="lineNum">     685 </span><span class="lineCov">     103003 :                         if (rlp.isEmpty())</span>
+<span class="lineNum">     686 </span>            :                         {
+<span class="lineNum">     687 </span><span class="lineCov">      48815 :                                 m_trail.pop_back();</span>
+<span class="lineNum">     688 </span><span class="lineCov">      87978 :                                 continue;</span>
+<span class="lineNum">     689 </span>            :                         }
+<span class="lineNum">     690 </span><span class="lineCov">      54188 :                         if (!(rlp.isList() &amp;&amp; (rlp.itemCount() == 2 || rlp.itemCount() == 17)))</span>
+<span class="lineNum">     691 </span>            :                         {
+<span class="lineNum">     692 </span>            : #if ETH_PARANOIA
+<span class="lineNum">     693 </span>            :                                 cwarn &lt;&lt; &quot;BIG FAT ERROR. STATE TRIE CORRUPTED!!!!!&quot;;
+<span class="lineNum">     694 </span>            :                                 cwarn &lt;&lt; b.rlp.size() &lt;&lt; toHex(b.rlp);
+<span class="lineNum">     695 </span>            :                                 cwarn &lt;&lt; rlp;
+<span class="lineNum">     696 </span>            :                                 auto c = rlp.itemCount();
+<span class="lineNum">     697 </span>            :                                 cwarn &lt;&lt; c;
+<span class="lineNum">     698 </span>            :                                 BOOST_THROW_EXCEPTION(InvalidTrie());
+<span class="lineNum">     699 </span>            : #else
+<span class="lineNum">     700 </span><span class="lineNoCov">          0 :                                 m_that = nullptr;</span>
+<span class="lineNum">     701 </span><span class="lineNoCov">          0 :                                 return;</span>
+<span class="lineNum">     702 </span>            : #endif
+<span class="lineNum">     703 </span>            :                         }
+<span class="lineNum">     704 </span><span class="lineCov">      54188 :                         if (rlp.itemCount() == 2)</span>
+<span class="lineNum">     705 </span>            :                         {
+<span class="lineNum">     706 </span>            :                                 // Just turn it into a valid Branch
+<span class="lineNum">     707 </span><span class="lineCov">     280091 :                                 m_trail.back().key = hexPrefixEncode(keyOf(m_trail.back().key), keyOf(rlp), false);</span>
+<span class="lineNum">     708 </span><span class="lineCov">      40013 :                                 if (isLeaf(rlp))</span>
+<span class="lineNum">     709 </span>            :                                 {
+<span class="lineNum">     710 </span>            :                                         // leaf - exit now.
+<span class="lineNum">     711 </span><span class="lineCov">      78278 :                                         m_trail.back().child = 0;</span>
+<span class="lineNum">     712 </span><span class="lineCov">      39139 :                                         return;</span>
+<span class="lineNum">     713 </span>            :                                 }
+<span class="lineNum">     714 </span>            : 
+<span class="lineNum">     715 </span>            :                                 // enter child.
+<span class="lineNum">     716 </span><span class="lineCov">       3496 :                                 m_trail.back().rlp = m_that-&gt;deref(rlp[1]);</span>
+<span class="lineNum">     717 </span>            :                                 // no need to set .child as 255 - it's already done.
+<span class="lineNum">     718 </span><span class="lineCov">        874 :                                 continue;</span>
+<span class="lineNum">     719 </span>            :                         }
+<span class="lineNum">     720 </span>            :                         else
+<span class="lineNum">     721 </span>            :                         {
+<span class="lineNum">     722 </span>            :                                 // Already a branch - look for first valid.
+<span class="lineNum">     723 </span><span class="lineCov">      28350 :                                 m_trail.back().setFirstChild();</span>
+<span class="lineNum">     724 </span>            :                                 // run through to...
+<span class="lineNum">     725 </span>            :                         }
+<span class="lineNum">     726 </span>            :                 }
+<span class="lineNum">     727 </span>            :                 else
+<span class="lineNum">     728 </span>            :                 {
+<span class="lineNum">     729 </span>            :                         // Continuing/exiting. Look for next...
+<span class="lineNum">     730 </span><span class="lineCov">      81007 :                         if (!(rlp.isList() &amp;&amp; rlp.itemCount() == 17))</span>
+<span class="lineNum">     731 </span>            :                         {
+<span class="lineNum">     732 </span><span class="lineCov">      38289 :                                 m_trail.pop_back();</span>
+<span class="lineNum">     733 </span>            :                                 continue;
+<span class="lineNum">     734 </span>            :                         }
+<span class="lineNum">     735 </span>            :                         // else run through to...
+<span class="lineNum">     736 </span><span class="lineCov">      85436 :                         m_trail.back().incrementChild();</span>
+<span class="lineNum">     737 </span>            :                 }
+<span class="lineNum">     738 </span>            : 
+<span class="lineNum">     739 </span>            :                 // ...here. should only get here if we're a list.
+<span class="lineNum">     740 </span><span class="lineCov">      56893 :                 assert(rlp.isList() &amp;&amp; rlp.itemCount() == 17);</span>
+<span class="lineNum">     741 </span><span class="lineCov">     370540 :                 for (;; m_trail.back().incrementChild())</span>
+<span class="lineNum">     742 </span><span class="lineCov">     484326 :                         if (m_trail.back().child == 17)</span>
+<span class="lineNum">     743 </span>            :                         {
+<span class="lineNum">     744 </span>            :                                 // finished here.
+<span class="lineNum">     745 </span><span class="lineCov">      13290 :                                 m_trail.pop_back();</span>
+<span class="lineNum">     746 </span>            :                                 break;
+<span class="lineNum">     747 </span>            :                         }
+<span class="lineNum">     748 </span><span class="lineCov">     457746 :                         else if (!rlp[m_trail.back().child].isEmpty())</span>
+<span class="lineNum">     749 </span>            :                         {
+<span class="lineNum">     750 </span><span class="lineCov">      87206 :                                 if (m_trail.back().child == 16)</span>
+<span class="lineNum">     751 </span>            :                                         return; // have a value at this node - exit now.
+<span class="lineNum">     752 </span>            :                                 else
+<span class="lineNum">     753 </span>            :                                 {
+<span class="lineNum">     754 </span>            :                                         // lead-on to another node - enter child.
+<span class="lineNum">     755 </span>            :                                         // fixed so that Node passed into push_back is constructed *before* m_trail is potentially resized (which invalidates back and rlp)
+<span class="lineNum">     756 </span><span class="lineCov">      87040 :                                         Node const&amp; back = m_trail.back();</span>
+<span class="lineNum">     757 </span><span class="lineCov">     217600 :                                         m_trail.push_back(Node{</span>
+<span class="lineNum">     758 </span><span class="lineCov">      87040 :                                                 m_that-&gt;deref(rlp[back.child]),</span>
+<span class="lineNum">     759 </span>            :                                                  hexPrefixEncode(keyOf(back.key), NibbleSlice(bytesConstRef(&amp;back.child, 1), 1), false),
+<span class="lineNum">     760 </span>            :                                                  255
+<span class="lineNum">     761 </span>            :                                                 });
+<span class="lineNum">     762 </span><span class="lineCov">      43520 :                                         break;</span>
+<span class="lineNum">     763 </span>            :                                 }
+<span class="lineNum">     764 </span>            :                         }
+<span class="lineNum">     765 </span>            :         }
+<a name="766"><span class="lineNum">     766 </span>            : }</a>
+<span class="lineNum">     767 </span>            : 
+<span class="lineNum">     768 </span><span class="lineCov">      34705 : template &lt;class KeyType, class DB&gt; typename SpecificTrieDB&lt;KeyType, DB&gt;::iterator::value_type SpecificTrieDB&lt;KeyType, DB&gt;::iterator::at() const</span>
+<span class="lineNum">     769 </span>            : {
+<span class="lineNum">     770 </span><span class="lineCov">      34705 :         auto p = Super::at();</span>
+<span class="lineNum">     771 </span><span class="lineCov">      34705 :         value_type ret;</span>
+<span class="lineNum">     772 </span><span class="lineCov">      34705 :         assert(p.first.size() == sizeof(KeyType));</span>
+<span class="lineNum">     773 </span><span class="lineCov">      34705 :         memcpy(&amp;ret.first, p.first.data(), sizeof(KeyType));</span>
+<span class="lineNum">     774 </span><span class="lineCov">      34705 :         ret.second = p.second;</span>
+<span class="lineNum">     775 </span><span class="lineCov">      34705 :         return ret;</span>
+<a name="776"><span class="lineNum">     776 </span>            : }</a>
+<span class="lineNum">     777 </span>            : 
+<span class="lineNum">     778 </span><span class="lineCov">     190726 : template &lt;class DB&gt; void GenericTrieDB&lt;DB&gt;::insert(bytesConstRef _key, bytesConstRef _value)</span>
+<span class="lineNum">     779 </span>            : {
+<span class="lineNum">     780 </span>            : #if ETH_PARANOIA
+<span class="lineNum">     781 </span>            :         tdebug &lt;&lt; &quot;Insert&quot; &lt;&lt; toHex(_key.cropped(0, 4)) &lt;&lt; &quot;=&gt;&quot; &lt;&lt; toHex(_value);
+<span class="lineNum">     782 </span>            : #endif
+<span class="lineNum">     783 </span>            : 
+<span class="lineNum">     784 </span><span class="lineCov">     572178 :         std::string rootValue = node(m_root);</span>
+<span class="lineNum">     785 </span><span class="lineCov">     190726 :         assert(rootValue.size());</span>
+<span class="lineNum">     786 </span><span class="lineCov">     572178 :         bytes b = mergeAt(RLP(rootValue), m_root, NibbleSlice(_key), _value);</span>
+<span class="lineNum">     787 </span>            : 
+<span class="lineNum">     788 </span>            :         // mergeAt won't attempt to delete the node if it's less than 32 bytes
+<span class="lineNum">     789 </span>            :         // However, we know it's the root node and thus always hashed.
+<span class="lineNum">     790 </span>            :         // So, if it's less than 32 (and thus should have been deleted but wasn't) then we delete it here.
+<span class="lineNum">     791 </span><span class="lineCov">     190726 :         if (rootValue.size() &lt; 32)</span>
+<span class="lineNum">     792 </span><span class="lineCov">      28655 :                 forceKillNode(m_root);</span>
+<span class="lineNum">     793 </span><span class="lineCov">     190726 :         m_root = forceInsertNode(&amp;b);</span>
+<a name="794"><span class="lineNum">     794 </span><span class="lineCov">     190726 : }</span></a>
+<span class="lineNum">     795 </span>            : 
+<span class="lineNum">     796 </span><span class="lineCov">     233541 : template &lt;class DB&gt; std::string GenericTrieDB&lt;DB&gt;::at(bytesConstRef _key) const</span>
+<span class="lineNum">     797 </span>            : {
+<span class="lineNum">     798 </span><span class="lineCov">     934164 :         return atAux(RLP(node(m_root)), _key);</span>
+<a name="799"><span class="lineNum">     799 </span>            : }</a>
+<span class="lineNum">     800 </span>            : 
+<span class="lineNum">     801 </span><span class="lineCov">     513021 : template &lt;class DB&gt; std::string GenericTrieDB&lt;DB&gt;::atAux(RLP const&amp; _here, NibbleSlice _key) const</span>
+<span class="lineNum">     802 </span>            : {
+<span class="lineNum">     803 </span><span class="lineCov">    1009996 :         if (_here.isEmpty() || _here.isNull())</span>
+<span class="lineNum">     804 </span>            :                 // not found.
+<span class="lineNum">     805 </span>            :                 return std::string();
+<span class="lineNum">     806 </span><span class="lineCov">     496975 :         unsigned itemCount = _here.itemCount();</span>
+<span class="lineNum">     807 </span><span class="lineCov">     496975 :         assert(_here.isList() &amp;&amp; (itemCount == 2 || itemCount == 17));</span>
+<span class="lineNum">     808 </span><span class="lineCov">     496975 :         if (itemCount == 2)</span>
+<span class="lineNum">     809 </span>            :         {
+<span class="lineNum">     810 </span><span class="lineCov">     130803 :                 auto k = keyOf(_here);</span>
+<span class="lineNum">     811 </span><span class="lineCov">     130803 :                 if (_key == k &amp;&amp; isLeaf(_here))</span>
+<span class="lineNum">     812 </span>            :                         // reached leaf and it's us
+<span class="lineNum">     813 </span><span class="lineCov">      81912 :                         return _here[1].toString();</span>
+<span class="lineNum">     814 </span><span class="lineCov">      48891 :                 else if (_key.contains(k) &amp;&amp; !isLeaf(_here))</span>
+<span class="lineNum">     815 </span>            :                         // not yet at leaf and it might yet be us. onwards...
+<span class="lineNum">     816 </span><span class="lineCov">      22408 :                         return atAux(_here[1].isList() ? _here[1] : RLP(node(_here[1].toHash&lt;h256&gt;())), _key.mid(k.size()));</span>
+<span class="lineNum">     817 </span>            :                 else
+<span class="lineNum">     818 </span>            :                         // not us.
+<span class="lineNum">     819 </span>            :                         return std::string();
+<span class="lineNum">     820 </span>            :         }
+<span class="lineNum">     821 </span>            :         else
+<span class="lineNum">     822 </span>            :         {
+<span class="lineNum">     823 </span><span class="lineCov">     366172 :                 if (_key.size() == 0)</span>
+<span class="lineNum">     824 </span><span class="lineCov">          3 :                         return _here[16].toString();</span>
+<span class="lineNum">     825 </span><span class="lineCov">     366169 :                 auto n = _here[_key[0]];</span>
+<span class="lineNum">     826 </span><span class="lineCov">     366169 :                 if (n.isEmpty())</span>
+<span class="lineNum">     827 </span>            :                         return std::string();
+<span class="lineNum">     828 </span>            :                 else
+<span class="lineNum">     829 </span><span class="lineCov">    1378697 :                         return atAux(n.isList() ? n : RLP(node(n.toHash&lt;h256&gt;())), _key.mid(1));</span>
+<span class="lineNum">     830 </span>            :         }
+<a name="831"><span class="lineNum">     831 </span>            : }</a>
+<span class="lineNum">     832 </span>            : 
+<span class="lineNum">     833 </span><span class="lineCov">     391607 : template &lt;class DB&gt; bytes GenericTrieDB&lt;DB&gt;::mergeAt(RLP const&amp; _orig, NibbleSlice _k, bytesConstRef _v, bool _inLine)</span>
+<span class="lineNum">     834 </span>            : {
+<span class="lineNum">     835 </span><span class="lineCov">     783214 :         return mergeAt(_orig, sha3(_orig.data()), _k, _v, _inLine);</span>
+<a name="836"><span class="lineNum">     836 </span>            : }</a>
+<span class="lineNum">     837 </span>            : 
+<span class="lineNum">     838 </span><span class="lineCov">     582333 : template &lt;class DB&gt; bytes GenericTrieDB&lt;DB&gt;::mergeAt(RLP const&amp; _orig, h256 const&amp; _origHash, NibbleSlice _k, bytesConstRef _v, bool _inLine)</span>
+<span class="lineNum">     839 </span>            : {
+<span class="lineNum">     840 </span>            : #if ETH_PARANOIA
+<span class="lineNum">     841 </span>            :         tdebug &lt;&lt; &quot;mergeAt &quot; &lt;&lt; _orig &lt;&lt; _k &lt;&lt; sha3(_orig.data());
+<span class="lineNum">     842 </span>            : #endif
+<span class="lineNum">     843 </span>            : 
+<span class="lineNum">     844 </span>            :         // The caller will make sure that the bytes are inserted properly.
+<span class="lineNum">     845 </span>            :         // - This might mean inserting an entry into m_over
+<span class="lineNum">     846 </span>            :         // We will take care to ensure that (our reference to) _orig is killed.
+<span class="lineNum">     847 </span>            : 
+<span class="lineNum">     848 </span>            :         // Empty - just insert here
+<span class="lineNum">     849 </span><span class="lineCov">     582333 :         if (_orig.isEmpty())</span>
+<span class="lineNum">     850 </span><span class="lineCov">     148087 :                 return place(_orig, _k, _v);</span>
+<span class="lineNum">     851 </span>            : 
+<span class="lineNum">     852 </span><span class="lineCov">     434246 :         unsigned itemCount = _orig.itemCount();</span>
+<span class="lineNum">     853 </span><span class="lineCov">     434246 :         assert(_orig.isList() &amp;&amp; (itemCount == 2 || itemCount == 17));</span>
+<span class="lineNum">     854 </span><span class="lineCov">     434246 :         if (itemCount == 2)</span>
+<span class="lineNum">     855 </span>            :         {
+<span class="lineNum">     856 </span>            :                 // pair...
+<span class="lineNum">     857 </span><span class="lineCov">      97483 :                 NibbleSlice k = keyOf(_orig);</span>
+<span class="lineNum">     858 </span>            : 
+<span class="lineNum">     859 </span>            :                 // exactly our node - place value in directly.
+<span class="lineNum">     860 </span><span class="lineCov">      97483 :                 if (k == _k &amp;&amp; isLeaf(_orig))</span>
+<span class="lineNum">     861 </span><span class="lineCov">      42418 :                         return place(_orig, _k, _v);</span>
+<span class="lineNum">     862 </span>            : 
+<span class="lineNum">     863 </span>            :                 // partial key is our key - move down.
+<span class="lineNum">     864 </span><span class="lineCov">      55065 :                 if (_k.contains(k) &amp;&amp; !isLeaf(_orig))</span>
+<span class="lineNum">     865 </span>            :                 {
+<span class="lineNum">     866 </span><span class="lineCov">       3547 :                         if (!_inLine)</span>
+<span class="lineNum">     867 </span>            :                                 killNode(_orig, _origHash);
+<span class="lineNum">     868 </span><span class="lineCov">       7094 :                         RLPStream s(2);</span>
+<span class="lineNum">     869 </span><span class="lineCov">       7094 :                         s.append(_orig[0]);</span>
+<span class="lineNum">     870 </span><span class="lineCov">       7094 :                         mergeAtAux(s, _orig[1], _k.mid(k.size()), _v);</span>
+<span class="lineNum">     871 </span><span class="lineCov">       3547 :                         return s.out();</span>
+<span class="lineNum">     872 </span>            :                 }
+<span class="lineNum">     873 </span>            : 
+<span class="lineNum">     874 </span><span class="lineCov">      51518 :                 auto sh = _k.shared(k);</span>
+<span class="lineNum">     875 </span>            : //              std::cout &lt;&lt; _k &lt;&lt; &quot; sh &quot; &lt;&lt; k &lt;&lt; &quot; = &quot; &lt;&lt; sh &lt;&lt; std::endl;
+<span class="lineNum">     876 </span><span class="lineCov">      51518 :                 if (sh)</span>
+<span class="lineNum">     877 </span>            :                 {
+<span class="lineNum">     878 </span>            :                         // shared stuff - cleve at disagreement.
+<span class="lineNum">     879 </span><span class="lineCov">       6396 :                         auto cleved = cleve(_orig, sh);</span>
+<span class="lineNum">     880 </span><span class="lineCov">       3198 :                         return mergeAt(RLP(cleved), _k, _v, true);</span>
+<span class="lineNum">     881 </span>            :                 }
+<span class="lineNum">     882 </span>            :                 else
+<span class="lineNum">     883 </span>            :                 {
+<span class="lineNum">     884 </span>            :                         // nothing shared - branch
+<span class="lineNum">     885 </span><span class="lineCov">      96640 :                         auto branched = branch(_orig);</span>
+<span class="lineNum">     886 </span><span class="lineCov">      48320 :                         return mergeAt(RLP(branched), _k, _v, true);</span>
+<span class="lineNum">     887 </span>            :                 }
+<span class="lineNum">     888 </span>            :         }
+<span class="lineNum">     889 </span>            :         else
+<span class="lineNum">     890 </span>            :         {
+<span class="lineNum">     891 </span>            :                 // branch...
+<span class="lineNum">     892 </span>            : 
+<span class="lineNum">     893 </span>            :                 // exactly our node - place value.
+<span class="lineNum">     894 </span><span class="lineCov">     336763 :                 if (_k.size() == 0)</span>
+<span class="lineNum">     895 </span><span class="lineCov">        221 :                         return place(_orig, _k, _v);</span>
+<span class="lineNum">     896 </span>            : 
+<span class="lineNum">     897 </span>            :                 // Kill the node.
+<span class="lineNum">     898 </span><span class="lineCov">     336542 :                 if (!_inLine)</span>
+<span class="lineNum">     899 </span>            :                         killNode(_orig, _origHash);
+<span class="lineNum">     900 </span>            : 
+<span class="lineNum">     901 </span>            :                 // not exactly our node - delve to next level at the correct index.
+<span class="lineNum">     902 </span><span class="lineCov">     336542 :                 byte n = _k[0];</span>
+<span class="lineNum">     903 </span><span class="lineCov">     673084 :                 RLPStream r(17);</span>
+<span class="lineNum">     904 </span><span class="lineCov">   11778970 :                 for (byte i = 0; i &lt; 17; ++i)</span>
+<span class="lineNum">     905 </span><span class="lineCov">    5721214 :                         if (i == n)</span>
+<span class="lineNum">     906 </span><span class="lineCov">     336542 :                                 mergeAtAux(r, _orig[i], _k.mid(1), _v);</span>
+<span class="lineNum">     907 </span>            :                         else
+<span class="lineNum">     908 </span><span class="lineCov">   10769344 :                                 r.append(_orig[i]);</span>
+<span class="lineNum">     909 </span><span class="lineCov">     336542 :                 return r.out();</span>
+<span class="lineNum">     910 </span>            :         }
+<span class="lineNum">     911 </span>            : 
+<a name="912"><span class="lineNum">     912 </span>            : }</a>
+<span class="lineNum">     913 </span>            : 
+<span class="lineNum">     914 </span><span class="lineCov">     340089 : template &lt;class DB&gt; void GenericTrieDB&lt;DB&gt;::mergeAtAux(RLPStream&amp; _out, RLP const&amp; _orig, NibbleSlice _k, bytesConstRef _v)</span>
+<span class="lineNum">     915 </span>            : {
+<span class="lineNum">     916 </span><span class="lineCov">     340089 :         RLP r = _orig;</span>
+<span class="lineNum">     917 </span><span class="lineCov">     680178 :         std::string s;</span>
+<span class="lineNum">     918 </span>            :         // _orig is always a segment of a node's RLP - removing it alone is pointless. However, if may be a hash, in which case we deref and we know it is removable.
+<span class="lineNum">     919 </span><span class="lineCov">     340089 :         bool isRemovable = false;</span>
+<span class="lineNum">     920 </span><span class="lineCov">     340089 :         if (!r.isList() &amp;&amp; !r.isEmpty())</span>
+<span class="lineNum">     921 </span>            :         {
+<span class="lineNum">     922 </span><span class="lineCov">     877952 :                 s = node(_orig.toHash&lt;h256&gt;());</span>
+<span class="lineNum">     923 </span><span class="lineCov">     219488 :                 r = RLP(s);</span>
+<span class="lineNum">     924 </span><span class="lineCov">     219488 :                 assert(!r.isNull());</span>
+<span class="lineNum">     925 </span>            :                 isRemovable = true;
+<span class="lineNum">     926 </span>            :         }
+<span class="lineNum">     927 </span><span class="lineCov">     680178 :         bytes b = mergeAt(r, _k, _v, !isRemovable);</span>
+<span class="lineNum">     928 </span><span class="lineCov">     340089 :         streamNode(_out, b);</span>
+<a name="929"><span class="lineNum">     929 </span><span class="lineCov">     340089 : }</span></a>
+<span class="lineNum">     930 </span>            : 
+<span class="lineNum">     931 </span><span class="lineCov">       7189 : template &lt;class DB&gt; void GenericTrieDB&lt;DB&gt;::remove(bytesConstRef _key)</span>
+<span class="lineNum">     932 </span>            : {
+<span class="lineNum">     933 </span>            : #if ETH_PARANOIA
+<span class="lineNum">     934 </span>            :         tdebug &lt;&lt; &quot;Remove&quot; &lt;&lt; toHex(_key.cropped(0, 4).toBytes());
+<span class="lineNum">     935 </span>            : #endif
+<span class="lineNum">     936 </span>            : 
+<span class="lineNum">     937 </span><span class="lineCov">      21567 :         std::string rv = node(m_root);</span>
+<span class="lineNum">     938 </span><span class="lineCov">      21567 :         bytes b = deleteAt(RLP(rv), NibbleSlice(_key));</span>
+<span class="lineNum">     939 </span><span class="lineCov">      14378 :         if (b.size())</span>
+<span class="lineNum">     940 </span>            :         {
+<span class="lineNum">     941 </span><span class="lineCov">       2249 :                 if (rv.size() &lt; 32)</span>
+<span class="lineNum">     942 </span><span class="lineCov">         25 :                         forceKillNode(m_root);</span>
+<span class="lineNum">     943 </span><span class="lineCov">       2249 :                 m_root = forceInsertNode(&amp;b);</span>
+<span class="lineNum">     944 </span>            :         }
+<a name="945"><span class="lineNum">     945 </span><span class="lineCov">       7189 : }</span></a>
+<span class="lineNum">     946 </span>            : 
+<span class="lineNum">     947 </span><span class="lineCov">       2014 : template &lt;class DB&gt; bool GenericTrieDB&lt;DB&gt;::isTwoItemNode(RLP const&amp; _n) const</span>
+<span class="lineNum">     948 </span>            : {
+<span class="lineNum">     949 </span><span class="lineCov">       9384 :         return (_n.isData() &amp;&amp; RLP(node(_n.toHash&lt;h256&gt;())).itemCount() == 2)</span>
+<span class="lineNum">     950 </span><span class="lineCov">       8886 :                         || (_n.isList() &amp;&amp; _n.itemCount() == 2);</span>
+<a name="951"><span class="lineNum">     951 </span>            : }</a>
+<span class="lineNum">     952 </span>            : 
+<span class="lineNum">     953 </span><span class="lineCov">      44394 : template &lt;class DB&gt; std::string GenericTrieDB&lt;DB&gt;::deref(RLP const&amp; _n) const</span>
+<span class="lineNum">     954 </span>            : {
+<span class="lineNum">     955 </span><span class="lineCov">     133088 :         return _n.isList() ? _n.data().toString() : node(_n.toHash&lt;h256&gt;());</span>
+<a name="956"><span class="lineNum">     956 </span>            : }</a>
+<span class="lineNum">     957 </span>            : 
+<span class="lineNum">     958 </span><span class="lineCov">      12533 : template &lt;class DB&gt; bytes GenericTrieDB&lt;DB&gt;::deleteAt(RLP const&amp; _orig, NibbleSlice _k)</span>
+<span class="lineNum">     959 </span>            : {
+<span class="lineNum">     960 </span>            : #if ETH_PARANOIA
+<span class="lineNum">     961 </span>            :         tdebug &lt;&lt; &quot;deleteAt &quot; &lt;&lt; _orig &lt;&lt; _k &lt;&lt; sha3(_orig.data());
+<span class="lineNum">     962 </span>            : #endif
+<span class="lineNum">     963 </span>            : 
+<span class="lineNum">     964 </span>            :         // The caller will make sure that the bytes are inserted properly.
+<span class="lineNum">     965 </span>            :         // - This might mean inserting an entry into m_over
+<span class="lineNum">     966 </span>            :         // We will take care to ensure that (our reference to) _orig is killed.
+<span class="lineNum">     967 </span>            : 
+<span class="lineNum">     968 </span>            :         // Empty - not found - no change.
+<span class="lineNum">     969 </span><span class="lineCov">      12533 :         if (_orig.isEmpty())</span>
+<span class="lineNum">     970 </span>            :                 return bytes();
+<span class="lineNum">     971 </span>            : 
+<span class="lineNum">     972 </span><span class="lineCov">       9917 :         assert(_orig.isList() &amp;&amp; (_orig.itemCount() == 2 || _orig.itemCount() == 17));</span>
+<span class="lineNum">     973 </span><span class="lineCov">       9917 :         if (_orig.itemCount() == 2)</span>
+<span class="lineNum">     974 </span>            :         {
+<span class="lineNum">     975 </span>            :                 // pair...
+<span class="lineNum">     976 </span><span class="lineCov">       4232 :                 NibbleSlice k = keyOf(_orig);</span>
+<span class="lineNum">     977 </span>            : 
+<span class="lineNum">     978 </span>            :                 // exactly our node - return null.
+<span class="lineNum">     979 </span><span class="lineCov">       4232 :                 if (k == _k &amp;&amp; isLeaf(_orig))</span>
+<span class="lineNum">     980 </span>            :                 {
+<span class="lineNum">     981 </span><span class="lineCov">       2074 :                         killNode(_orig);</span>
+<span class="lineNum">     982 </span><span class="lineCov">       2074 :                         return RLPNull;</span>
+<span class="lineNum">     983 </span>            :                 }
+<span class="lineNum">     984 </span>            : 
+<span class="lineNum">     985 </span>            :                 // partial key is our key - move down.
+<span class="lineNum">     986 </span><span class="lineCov">       2158 :                 if (_k.contains(k))</span>
+<span class="lineNum">     987 </span>            :                 {
+<span class="lineNum">     988 </span><span class="lineCov">       2050 :                         RLPStream s;</span>
+<span class="lineNum">     989 </span><span class="lineCov">       2050 :                         s.appendList(2) &lt;&lt; _orig[0];</span>
+<span class="lineNum">     990 </span><span class="lineCov">       2050 :                         if (!deleteAtAux(s, _orig[1], _k.mid(k.size())))</span>
+<span class="lineNum">     991 </span>            :                                 return bytes();
+<span class="lineNum">     992 </span><span class="lineCov">       1024 :                         killNode(_orig);</span>
+<span class="lineNum">     993 </span><span class="lineCov">       2048 :                         RLP r(s.out());</span>
+<span class="lineNum">     994 </span><span class="lineCov">       1024 :                         if (isTwoItemNode(r[1]))</span>
+<span class="lineNum">     995 </span><span class="lineCov">        289 :                                 return graft(r);</span>
+<span class="lineNum">     996 </span><span class="lineCov">        735 :                         return s.out();</span>
+<span class="lineNum">     997 </span>            :                 }
+<span class="lineNum">     998 </span>            :                 else
+<span class="lineNum">     999 </span>            :                         // not found - no change.
+<span class="lineNum">    1000 </span>            :                         return bytes();
+<span class="lineNum">    1001 </span>            :         }
+<span class="lineNum">    1002 </span>            :         else
+<span class="lineNum">    1003 </span>            :         {
+<span class="lineNum">    1004 </span>            :                 // branch...
+<span class="lineNum">    1005 </span>            : 
+<span class="lineNum">    1006 </span>            :                 // exactly our node - remove and rejig.
+<span class="lineNum">    1007 </span><span class="lineCov">      11370 :                 if (_k.size() == 0 &amp;&amp; !_orig[16].isEmpty())</span>
+<span class="lineNum">    1008 </span>            :                 {
+<span class="lineNum">    1009 </span>            :                         // Kill the node.
+<span class="lineNum">    1010 </span><span class="lineCov">        175 :                         killNode(_orig);</span>
+<span class="lineNum">    1011 </span>            : 
+<span class="lineNum">    1012 </span><span class="lineCov">        175 :                         byte used = uniqueInUse(_orig, 16);</span>
+<span class="lineNum">    1013 </span><span class="lineCov">        175 :                         if (used != 255)</span>
+<span class="lineNum">    1014 </span><span class="lineCov">         80 :                                 if (isTwoItemNode(_orig[used]))</span>
+<span class="lineNum">    1015 </span>            :                                 {
+<span class="lineNum">    1016 </span><span class="lineCov">        112 :                                         auto merged = merge(_orig, used);</span>
+<span class="lineNum">    1017 </span><span class="lineCov">         56 :                                         return graft(RLP(merged));</span>
+<span class="lineNum">    1018 </span>            :                                 }
+<span class="lineNum">    1019 </span>            :                                 else
+<span class="lineNum">    1020 </span><span class="lineCov">         24 :                                         return merge(_orig, used);</span>
+<span class="lineNum">    1021 </span>            :                         else
+<span class="lineNum">    1022 </span>            :                         {
+<span class="lineNum">    1023 </span><span class="lineCov">        190 :                                 RLPStream r(17);</span>
+<span class="lineNum">    1024 </span><span class="lineCov">       3135 :                                 for (byte i = 0; i &lt; 16; ++i)</span>
+<span class="lineNum">    1025 </span><span class="lineCov">       3040 :                                         r &lt;&lt; _orig[i];</span>
+<span class="lineNum">    1026 </span><span class="lineCov">         95 :                                 r &lt;&lt; &quot;&quot;;</span>
+<span class="lineNum">    1027 </span><span class="lineCov">         95 :                                 return r.out();</span>
+<span class="lineNum">    1028 </span>            :                         }
+<span class="lineNum">    1029 </span>            :                 }
+<span class="lineNum">    1030 </span>            :                 else
+<span class="lineNum">    1031 </span>            :                 {
+<span class="lineNum">    1032 </span>            :                         // not exactly our node - delve to next level at the correct index.
+<span class="lineNum">    1033 </span><span class="lineCov">      11020 :                         RLPStream r(17);</span>
+<span class="lineNum">    1034 </span><span class="lineCov">       5510 :                         byte n = _k[0];</span>
+<span class="lineNum">    1035 </span><span class="lineCov">      79023 :                         for (byte i = 0; i &lt; 17; ++i)</span>
+<span class="lineNum">    1036 </span><span class="lineCov">      75584 :                                 if (i == n)</span>
+<span class="lineNum">    1037 </span><span class="lineCov">       5510 :                                         if (!deleteAtAux(r, _orig[i], _k.mid(1)))       // bomb out if the key didn't turn up.</span>
+<span class="lineNum">    1038 </span>            :                                                 return bytes();
+<span class="lineNum">    1039 </span>            :                                         else {}
+<span class="lineNum">    1040 </span>            :                                 else
+<span class="lineNum">    1041 </span><span class="lineCov">      70074 :                                         r &lt;&lt; _orig[i];</span>
+<span class="lineNum">    1042 </span>            : 
+<span class="lineNum">    1043 </span>            :                         // Kill the node.
+<span class="lineNum">    1044 </span><span class="lineCov">       3439 :                         killNode(_orig);</span>
+<span class="lineNum">    1045 </span>            : 
+<span class="lineNum">    1046 </span>            :                         // check if we ended up leaving the node invalid.
+<span class="lineNum">    1047 </span><span class="lineCov">       6878 :                         RLP rlp(r.out());</span>
+<span class="lineNum">    1048 </span><span class="lineCov">       3439 :                         byte used = uniqueInUse(rlp, 255);</span>
+<span class="lineNum">    1049 </span><span class="lineCov">       3439 :                         if (used == 255)        // no - all ok.</span>
+<span class="lineNum">    1050 </span><span class="lineCov">       2529 :                                 return r.out();</span>
+<span class="lineNum">    1051 </span>            : 
+<span class="lineNum">    1052 </span>            :                         // yes; merge
+<span class="lineNum">    1053 </span><span class="lineCov">        910 :                         if (isTwoItemNode(rlp[used]))</span>
+<span class="lineNum">    1054 </span>            :                         {
+<span class="lineNum">    1055 </span><span class="lineCov">       1436 :                                 auto merged = merge(rlp, used);</span>
+<span class="lineNum">    1056 </span><span class="lineCov">        718 :                                 return graft(RLP(merged));</span>
+<span class="lineNum">    1057 </span>            :                         }
+<span class="lineNum">    1058 </span>            :                         else
+<span class="lineNum">    1059 </span><span class="lineCov">        192 :                                 return merge(rlp, used);</span>
+<span class="lineNum">    1060 </span>            :                 }
+<span class="lineNum">    1061 </span>            :         }
+<span class="lineNum">    1062 </span>            : 
+<a name="1063"><span class="lineNum">    1063 </span>            : }</a>
+<span class="lineNum">    1064 </span>            : 
+<span class="lineNum">    1065 </span><span class="lineCov">       6535 : template &lt;class DB&gt; bool GenericTrieDB&lt;DB&gt;::deleteAtAux(RLPStream&amp; _out, RLP const&amp; _orig, NibbleSlice _k)</span>
+<span class="lineNum">    1066 </span>            : {
+<span class="lineNum">    1067 </span>            : 
+<span class="lineNum">    1068 </span><span class="lineCov">      32286 :         bytes b = _orig.isEmpty() ? bytes() : deleteAt(_orig.isList() ? _orig : RLP(node(_orig.toHash&lt;h256&gt;())), _k);</span>
+<span class="lineNum">    1069 </span>            : 
+<span class="lineNum">    1070 </span><span class="lineCov">      13070 :         if (!b.size())  // not found - no change.</span>
+<span class="lineNum">    1071 </span>            :                 return false;
+<span class="lineNum">    1072 </span>            : 
+<span class="lineNum">    1073 </span>            : /*      if (_orig.isList())
+<span class="lineNum">    1074 </span>            :                 killNode(_orig);
+<span class="lineNum">    1075 </span>            :         else
+<span class="lineNum">    1076 </span>            :                 killNode(_orig.toHash&lt;h256&gt;());*/
+<span class="lineNum">    1077 </span>            : 
+<span class="lineNum">    1078 </span><span class="lineCov">       4463 :         streamNode(_out, b);</span>
+<span class="lineNum">    1079 </span>            :         return true;
+<a name="1080"><span class="lineNum">    1080 </span>            : }</a>
+<span class="lineNum">    1081 </span>            : 
+<span class="lineNum">    1082 </span><span class="lineCov">     190726 : template &lt;class DB&gt; bytes GenericTrieDB&lt;DB&gt;::place(RLP const&amp; _orig, NibbleSlice _k, bytesConstRef _s)</span>
+<span class="lineNum">    1083 </span>            : {
+<span class="lineNum">    1084 </span>            : #if ETH_PARANOIA
+<span class="lineNum">    1085 </span>            :         tdebug &lt;&lt; &quot;place &quot; &lt;&lt; _orig &lt;&lt; _k;
+<span class="lineNum">    1086 </span>            : #endif
+<span class="lineNum">    1087 </span>            : 
+<span class="lineNum">    1088 </span><span class="lineCov">     190726 :         killNode(_orig);</span>
+<span class="lineNum">    1089 </span><span class="lineCov">     190726 :         if (_orig.isEmpty())</span>
+<span class="lineNum">    1090 </span><span class="lineCov">     296174 :                 return rlpList(hexPrefixEncode(_k, true), _s);</span>
+<span class="lineNum">    1091 </span>            : 
+<span class="lineNum">    1092 </span><span class="lineCov">      42639 :         assert(_orig.isList() &amp;&amp; (_orig.itemCount() == 2 || _orig.itemCount() == 17));</span>
+<span class="lineNum">    1093 </span><span class="lineCov">      42639 :         if (_orig.itemCount() == 2)</span>
+<span class="lineNum">    1094 </span><span class="lineCov">      42418 :                 return rlpList(_orig[0], _s);</span>
+<span class="lineNum">    1095 </span>            : 
+<span class="lineNum">    1096 </span><span class="lineCov">        442 :         auto s = RLPStream(17);</span>
+<span class="lineNum">    1097 </span><span class="lineCov">       7293 :         for (unsigned i = 0; i &lt; 16; ++i)</span>
+<span class="lineNum">    1098 </span><span class="lineCov">       7072 :                 s &lt;&lt; _orig[i];</span>
+<span class="lineNum">    1099 </span><span class="lineCov">        221 :         s &lt;&lt; _s;</span>
+<span class="lineNum">    1100 </span><span class="lineCov">        221 :         return s.out();</span>
+<span class="lineNum">    1101 </span>            : }
+<span class="lineNum">    1102 </span>            : 
+<span class="lineNum">    1103 </span>            : // in1: [K, S] (DEL)
+<span class="lineNum">    1104 </span>            : // out1: null
+<span class="lineNum">    1105 </span>            : // in2: [V0, ..., V15, S] (DEL)
+<span class="lineNum">    1106 </span>            : // out2: [V0, ..., V15, null] iff exists i: !!Vi  -- OR --  null otherwise
+<span class="lineNum">    1107 </span>            : template &lt;class DB&gt; bytes GenericTrieDB&lt;DB&gt;::remove(RLP const&amp; _orig)
+<span class="lineNum">    1108 </span>            : {
+<span class="lineNum">    1109 </span>            : #if ETH_PARANOIA
+<span class="lineNum">    1110 </span>            :         tdebug &lt;&lt; &quot;kill &quot; &lt;&lt; _orig;
+<span class="lineNum">    1111 </span>            : #endif
+<span class="lineNum">    1112 </span>            : 
+<span class="lineNum">    1113 </span>            :         killNode(_orig);
+<span class="lineNum">    1114 </span>            : 
+<span class="lineNum">    1115 </span>            :         assert(_orig.isList() &amp;&amp; (_orig.itemCount() == 2 || _orig.itemCount() == 17));
+<span class="lineNum">    1116 </span>            :         if (_orig.itemCount() == 2)
+<span class="lineNum">    1117 </span>            :                 return RLPNull;
+<span class="lineNum">    1118 </span>            :         RLPStream r(17);
+<span class="lineNum">    1119 </span>            :         for (unsigned i = 0; i &lt; 16; ++i)
+<span class="lineNum">    1120 </span>            :                 r &lt;&lt; _orig[i];
+<span class="lineNum">    1121 </span>            :         r &lt;&lt; &quot;&quot;;
+<span class="lineNum">    1122 </span>            :         return r.out();
+<a name="1123"><span class="lineNum">    1123 </span>            : }</a>
+<span class="lineNum">    1124 </span>            : 
+<span class="lineNum">    1125 </span><span class="lineCov">     393557 : template &lt;class DB&gt; RLPStream&amp; GenericTrieDB&lt;DB&gt;::streamNode(RLPStream&amp; _s, bytes const&amp; _b)</span>
+<span class="lineNum">    1126 </span>            : {
+<span class="lineNum">    1127 </span><span class="lineCov">     787114 :         if (_b.size() &lt; 32)</span>
+<span class="lineNum">    1128 </span>            :                 _s.appendRaw(_b);
+<span class="lineNum">    1129 </span>            :         else
+<span class="lineNum">    1130 </span><span class="lineCov">     388692 :                 _s.append(forceInsertNode(&amp;_b));</span>
+<span class="lineNum">    1131 </span><span class="lineCov">     393557 :         return _s;</span>
+<a name="1132"><span class="lineNum">    1132 </span>            : }</a>
+<span class="lineNum">    1133 </span>            : 
+<span class="lineNum">    1134 </span><span class="lineCov">       3198 : template &lt;class DB&gt; bytes GenericTrieDB&lt;DB&gt;::cleve(RLP const&amp; _orig, unsigned _s)</span>
+<span class="lineNum">    1135 </span>            : {
+<span class="lineNum">    1136 </span>            : #if ETH_PARANOIA
+<span class="lineNum">    1137 </span>            :         tdebug &lt;&lt; &quot;cleve &quot; &lt;&lt; _orig &lt;&lt; _s;
+<span class="lineNum">    1138 </span>            : #endif
+<span class="lineNum">    1139 </span>            : 
+<span class="lineNum">    1140 </span><span class="lineCov">       3198 :         killNode(_orig);</span>
+<span class="lineNum">    1141 </span><span class="lineCov">       3198 :         assert(_orig.isList() &amp;&amp; _orig.itemCount() == 2);</span>
+<span class="lineNum">    1142 </span><span class="lineCov">       3198 :         auto k = keyOf(_orig);</span>
+<span class="lineNum">    1143 </span><span class="lineCov">       6396 :         assert(_s &amp;&amp; _s &lt;= k.size());</span>
+<span class="lineNum">    1144 </span>            : 
+<span class="lineNum">    1145 </span><span class="lineCov">       6396 :         RLPStream bottom(2);</span>
+<span class="lineNum">    1146 </span><span class="lineCov">      15990 :         bottom &lt;&lt; hexPrefixEncode(k, isLeaf(_orig), /*ugh*/(int)_s) &lt;&lt; _orig[1];</span>
+<span class="lineNum">    1147 </span>            : 
+<span class="lineNum">    1148 </span><span class="lineCov">       6396 :         RLPStream top(2);</span>
+<span class="lineNum">    1149 </span><span class="lineCov">       9594 :         top &lt;&lt; hexPrefixEncode(k, false, 0, /*ugh*/(int)_s);</span>
+<span class="lineNum">    1150 </span><span class="lineCov">       3198 :         streamNode(top, bottom.out());</span>
+<span class="lineNum">    1151 </span>            : 
+<span class="lineNum">    1152 </span><span class="lineCov">       6396 :         return top.out();</span>
+<a name="1153"><span class="lineNum">    1153 </span>            : }</a>
+<span class="lineNum">    1154 </span>            : 
+<span class="lineNum">    1155 </span><span class="lineCov">       1063 : template &lt;class DB&gt; bytes GenericTrieDB&lt;DB&gt;::graft(RLP const&amp; _orig)</span>
+<span class="lineNum">    1156 </span>            : {
+<span class="lineNum">    1157 </span>            : #if ETH_PARANOIA
+<span class="lineNum">    1158 </span>            :         tdebug &lt;&lt; &quot;graft &quot; &lt;&lt; _orig;
+<span class="lineNum">    1159 </span>            : #endif
+<span class="lineNum">    1160 </span>            : 
+<span class="lineNum">    1161 </span><span class="lineCov">       1063 :         assert(_orig.isList() &amp;&amp; _orig.itemCount() == 2);</span>
+<span class="lineNum">    1162 </span><span class="lineCov">       2126 :         std::string s;</span>
+<span class="lineNum">    1163 </span><span class="lineCov">       1063 :         RLP n;</span>
+<span class="lineNum">    1164 </span><span class="lineCov">       2126 :         if (_orig[1].isList())</span>
+<span class="lineNum">    1165 </span><span class="lineCov">        554 :                 n = _orig[1];</span>
+<span class="lineNum">    1166 </span>            :         else
+<span class="lineNum">    1167 </span>            :         {
+<span class="lineNum">    1168 </span>            :                 // remove second item from the trie after derefrencing it into s &amp; n.
+<span class="lineNum">    1169 </span><span class="lineCov">        509 :                 auto lh = _orig[1].toHash&lt;h256&gt;();</span>
+<span class="lineNum">    1170 </span><span class="lineCov">       2036 :                 s = node(lh);</span>
+<span class="lineNum">    1171 </span><span class="lineCov">       1018 :                 forceKillNode(lh);</span>
+<span class="lineNum">    1172 </span><span class="lineCov">        509 :                 n = RLP(s);</span>
+<span class="lineNum">    1173 </span>            :         }
+<span class="lineNum">    1174 </span><span class="lineCov">       1063 :         assert(n.itemCount() == 2);</span>
+<span class="lineNum">    1175 </span>            : 
+<span class="lineNum">    1176 </span><span class="lineCov">       4252 :         return rlpList(hexPrefixEncode(keyOf(_orig), keyOf(n), isLeaf(n)), n[1]);</span>
+<span class="lineNum">    1177 </span>            : //      auto ret =
+<span class="lineNum">    1178 </span>            : //      std::cout &lt;&lt; keyOf(_orig) &lt;&lt; &quot; ++ &quot; &lt;&lt; keyOf(n) &lt;&lt; &quot; == &quot; &lt;&lt; keyOf(RLP(ret)) &lt;&lt; std::endl;
+<span class="lineNum">    1179 </span>            : //      return ret;
+<a name="1180"><span class="lineNum">    1180 </span>            : }</a>
+<span class="lineNum">    1181 </span>            : 
+<span class="lineNum">    1182 </span><span class="lineCov">        990 : template &lt;class DB&gt; bytes GenericTrieDB&lt;DB&gt;::merge(RLP const&amp; _orig, byte _i)</span>
+<span class="lineNum">    1183 </span>            : {
+<span class="lineNum">    1184 </span>            : #if ETH_PARANOIA
+<span class="lineNum">    1185 </span>            :         tdebug &lt;&lt; &quot;merge &quot; &lt;&lt; _orig &lt;&lt; (int)_i;
+<span class="lineNum">    1186 </span>            : #endif
+<span class="lineNum">    1187 </span>            : 
+<span class="lineNum">    1188 </span><span class="lineCov">        990 :         assert(_orig.isList() &amp;&amp; _orig.itemCount() == 17);</span>
+<span class="lineNum">    1189 </span><span class="lineCov">       1980 :         RLPStream s(2);</span>
+<span class="lineNum">    1190 </span><span class="lineCov">        990 :         if (_i != 16)</span>
+<span class="lineNum">    1191 </span>            :         {
+<span class="lineNum">    1192 </span><span class="lineCov">        990 :                 assert(!_orig[_i].isEmpty());</span>
+<span class="lineNum">    1193 </span><span class="lineCov">       2970 :                 s &lt;&lt; hexPrefixEncode(bytesConstRef(&amp;_i, 1), false, 1, 2, 0);</span>
+<span class="lineNum">    1194 </span>            :         }
+<span class="lineNum">    1195 </span>            :         else
+<span class="lineNum">    1196 </span><span class="lineNoCov">          0 :                 s &lt;&lt; hexPrefixEncode(bytes(), true);</span>
+<span class="lineNum">    1197 </span><span class="lineCov">       1980 :         s &lt;&lt; _orig[_i];</span>
+<span class="lineNum">    1198 </span><span class="lineCov">       1980 :         return s.out();</span>
+<a name="1199"><span class="lineNum">    1199 </span>            : }</a>
+<span class="lineNum">    1200 </span>            : 
+<span class="lineNum">    1201 </span><span class="lineCov">      48320 : template &lt;class DB&gt; bytes GenericTrieDB&lt;DB&gt;::branch(RLP const&amp; _orig)</span>
+<span class="lineNum">    1202 </span>            : {
+<span class="lineNum">    1203 </span>            : #if ETH_PARANOIA
+<span class="lineNum">    1204 </span>            :         tdebug &lt;&lt; &quot;branch &quot; &lt;&lt; _orig;
+<span class="lineNum">    1205 </span>            : #endif
+<span class="lineNum">    1206 </span>            : 
+<span class="lineNum">    1207 </span><span class="lineCov">      48320 :         assert(_orig.isList() &amp;&amp; _orig.itemCount() == 2);</span>
+<span class="lineNum">    1208 </span><span class="lineCov">      48320 :         killNode(_orig);</span>
+<span class="lineNum">    1209 </span>            : 
+<span class="lineNum">    1210 </span><span class="lineCov">      48320 :         auto k = keyOf(_orig);</span>
+<span class="lineNum">    1211 </span><span class="lineCov">      96640 :         RLPStream r(17);</span>
+<span class="lineNum">    1212 </span><span class="lineCov">      48320 :         if (k.size() == 0)</span>
+<span class="lineNum">    1213 </span>            :         {
+<span class="lineNum">    1214 </span><span class="lineCov">        100 :                 assert(isLeaf(_orig));</span>
+<span class="lineNum">    1215 </span><span class="lineCov">       3300 :                 for (unsigned i = 0; i &lt; 16; ++i)</span>
+<span class="lineNum">    1216 </span><span class="lineCov">       1600 :                         r &lt;&lt; &quot;&quot;;</span>
+<span class="lineNum">    1217 </span><span class="lineCov">        100 :                 r &lt;&lt; _orig[1];</span>
+<span class="lineNum">    1218 </span>            :         }
+<span class="lineNum">    1219 </span>            :         else
+<span class="lineNum">    1220 </span>            :         {
+<span class="lineNum">    1221 </span><span class="lineCov">      48220 :                 byte b = k[0];</span>
+<span class="lineNum">    1222 </span><span class="lineCov">     819740 :                 for (unsigned i = 0; i &lt; 16; ++i)</span>
+<span class="lineNum">    1223 </span><span class="lineCov">     771520 :                         if (i == b)</span>
+<span class="lineNum">    1224 </span><span class="lineCov">      50716 :                                 if (isLeaf(_orig) || k.size() &gt; 1)</span>
+<span class="lineNum">    1225 </span><span class="lineCov">     229035 :                                         streamNode(r, rlpList(hexPrefixEncode(k.mid(1), isLeaf(_orig)), _orig[1]));</span>
+<span class="lineNum">    1226 </span>            :                                 else
+<span class="lineNum">    1227 </span><span class="lineCov">       2413 :                                         r &lt;&lt; _orig[1];</span>
+<span class="lineNum">    1228 </span>            :                         else
+<span class="lineNum">    1229 </span>            :                                 r &lt;&lt; &quot;&quot;;
+<span class="lineNum">    1230 </span>            :                 r &lt;&lt; &quot;&quot;;
+<span class="lineNum">    1231 </span>            :         }
+<span class="lineNum">    1232 </span><span class="lineCov">      96640 :         return r.out();</span>
+<span class="lineNum">    1233 </span>            : }
+<span class="lineNum">    1234 </span>            : 
+<span class="lineNum">    1235 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

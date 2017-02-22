@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/MemoryDB.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - MemoryDB.h<span style="font-size: 80%;"> (source / <a href="MemoryDB.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file MemoryDB.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;unordered_map&gt;
+<span class="lineNum">      25 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;Guards.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;FixedHash.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;Log.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;RLP.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;SHA3.h&quot;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace dev
+<span class="lineNum">      33 </span>            : {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : struct DBChannel: public LogChannel  { static const char* name(); static const int verbosity = 18; };
+<span class="lineNum">      36 </span>            : struct DBWarn: public LogChannel  { static const char* name(); static const int verbosity = 1; };
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #define dbdebug clog(DBChannel)
+<span class="lineNum">      39 </span>            : #define dbwarn clog(DBWarn)
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span><span class="lineCov">    1712397 : class MemoryDB</span>
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span>            :         friend class EnforceRefs;
+<span class="lineNum">      44 </span>            : 
+<a name="45"><span class="lineNum">      45 </span>            : public:</a>
+<span class="lineNum">      46 </span><span class="lineCov">     166106 :         MemoryDB() {}</span>
+<span class="lineNum">      47 </span><span class="lineCov">    1546290 :         MemoryDB(MemoryDB const&amp; _c) { operator=(_c); }</span>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :         MemoryDB&amp; operator=(MemoryDB const&amp; _c);
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineCov">         12 :         void clear() { m_main.clear(); m_aux.clear(); } // WARNING !!!! didn't originally clear m_refCount!!!</span>
+<span class="lineNum">      52 </span>            :         std::unordered_map&lt;h256, std::string&gt; get() const;
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            :         std::string lookup(h256 const&amp; _h) const;
+<span class="lineNum">      55 </span>            :         bool exists(h256 const&amp; _h) const;
+<span class="lineNum">      56 </span>            :         void insert(h256 const&amp; _h, bytesConstRef _v);
+<span class="lineNum">      57 </span>            :         bool kill(h256 const&amp; _h);
+<span class="lineNum">      58 </span>            :         void purge();
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :         bytes lookupAux(h256 const&amp; _h) const;
+<span class="lineNum">      61 </span>            :         void removeAux(h256 const&amp; _h);
+<span class="lineNum">      62 </span>            :         void insertAux(h256 const&amp; _h, bytesConstRef _v);
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :         h256Hash keys() const;
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : protected:
+<span class="lineNum">      67 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">      68 </span>            :         mutable SharedMutex x_this;
+<span class="lineNum">      69 </span>            : #endif
+<span class="lineNum">      70 </span>            :         std::unordered_map&lt;h256, std::pair&lt;std::string, unsigned&gt;&gt; m_main;
+<span class="lineNum">      71 </span>            :         std::unordered_map&lt;h256, std::pair&lt;bytes, bool&gt;&gt; m_aux;
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :         mutable bool m_enforceRefs = false;
+<span class="lineNum">      74 </span>            : };
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : class EnforceRefs
+<span class="lineNum">      77 </span>            : {
+<span class="lineNum">      78 </span>            : public:
+<span class="lineNum">      79 </span><span class="lineCov">       5519 :         EnforceRefs(MemoryDB const&amp; _o, bool _r): m_o(_o), m_r(_o.m_enforceRefs) { _o.m_enforceRefs = _r; }</span>
+<span class="lineNum">      80 </span><span class="lineCov">       5519 :         ~EnforceRefs() { m_o.m_enforceRefs = m_r; }</span>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : private:
+<span class="lineNum">      83 </span>            :         MemoryDB const&amp; m_o;
+<span class="lineNum">      84 </span>            :         bool m_r;
+<a name="85"><span class="lineNum">      85 </span>            : };</a>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">          1 : inline std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, MemoryDB const&amp; _m)</span>
+<span class="lineNum">      88 </span>            : {
+<span class="lineNum">      89 </span><span class="lineCov">          6 :         for (auto const&amp; i: _m.get())</span>
+<span class="lineNum">      90 </span>            :         {
+<span class="lineNum">      91 </span><span class="lineCov">          2 :                 _out &lt;&lt; i.first &lt;&lt; &quot;: &quot;;</span>
+<span class="lineNum">      92 </span><span class="lineCov">          4 :                 _out &lt;&lt; RLP(i.second);</span>
+<span class="lineNum">      93 </span><span class="lineCov">          8 :                 _out &lt;&lt; &quot; &quot; &lt;&lt; toHex(i.second);</span>
+<span class="lineNum">      94 </span><span class="lineCov">          2 :                 _out &lt;&lt; std::endl;</span>
+<span class="lineNum">      95 </span>            :         }
+<span class="lineNum">      96 </span><span class="lineCov">          1 :         return _out;</span>
+<span class="lineNum">      97 </span>            : }
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

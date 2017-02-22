@@ -1,0 +1,861 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/lexical_cast/detail/converter_lexical_streams.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/lexical_cast/detail</a> - converter_lexical_streams.hpp<span style="font-size: 80%;"> (source / <a href="converter_lexical_streams.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Copyright Kevlin Henney, 2000-2005.</a>
+<span class="lineNum">       2 </span>            : // Copyright Alexander Nasonov, 2006-2010.
+<span class="lineNum">       3 </span>            : // Copyright Antony Polukhin, 2011-2016.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">       6 </span>            : // accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       7 </span>            : // http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            : //
+<span class="lineNum">       9 </span>            : // what:  lexical_cast custom keyword cast
+<span class="lineNum">      10 </span>            : // who:   contributed by Kevlin Henney,
+<span class="lineNum">      11 </span>            : //        enhanced with contributions from Terje Slettebo,
+<span class="lineNum">      12 </span>            : //        with additional fixes and suggestions from Gennaro Prota,
+<span class="lineNum">      13 </span>            : //        Beman Dawes, Dave Abrahams, Daryle Walker, Peter Dimov,
+<span class="lineNum">      14 </span>            : //        Alexander Nasonov, Antony Polukhin, Justin Viiret, Michael Hofmann,
+<span class="lineNum">      15 </span>            : //        Cheng Yang, Matthew Bradbury, David W. Birdsall, Pavel Korzh and other Boosters
+<span class="lineNum">      16 </span>            : // when:  November 2000, March 2003, June 2005, June 2006, March 2011 - 2014, Nowember 2016
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #ifndef BOOST_LEXICAL_CAST_DETAIL_CONVERTER_LEXICAL_STREAMS_HPP
+<span class="lineNum">      19 </span>            : #define BOOST_LEXICAL_CAST_DETAIL_CONVERTER_LEXICAL_STREAMS_HPP
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      22 </span>            : #ifdef BOOST_HAS_PRAGMA_ONCE
+<span class="lineNum">      23 </span>            : #   pragma once
+<span class="lineNum">      24 </span>            : #endif
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #if defined(BOOST_NO_STRINGSTREAM) || defined(BOOST_NO_STD_WSTRING)
+<span class="lineNum">      28 </span>            : #define BOOST_LCAST_NO_WCHAR_T
+<span class="lineNum">      29 </span>            : #endif
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : #include &lt;cstddef&gt;
+<span class="lineNum">      32 </span>            : #include &lt;string&gt;
+<span class="lineNum">      33 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      34 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      35 </span>            : #include &lt;boost/limits.hpp&gt;
+<span class="lineNum">      36 </span>            : #include &lt;boost/mpl/if.hpp&gt;
+<span class="lineNum">      37 </span>            : #include &lt;boost/type_traits/is_pointer.hpp&gt;
+<span class="lineNum">      38 </span>            : #include &lt;boost/static_assert.hpp&gt;
+<span class="lineNum">      39 </span>            : #include &lt;boost/detail/workaround.hpp&gt;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : #ifndef BOOST_NO_STD_LOCALE
+<span class="lineNum">      43 </span>            : #   include &lt;locale&gt;
+<span class="lineNum">      44 </span>            : #else
+<span class="lineNum">      45 </span>            : #   ifndef BOOST_LEXICAL_CAST_ASSUME_C_LOCALE
+<span class="lineNum">      46 </span>            :         // Getting error at this point means, that your STL library is old/lame/misconfigured.
+<span class="lineNum">      47 </span>            :         // If nothing can be done with STL library, define BOOST_LEXICAL_CAST_ASSUME_C_LOCALE,
+<span class="lineNum">      48 </span>            :         // but beware: lexical_cast will understand only 'C' locale delimeters and thousands
+<span class="lineNum">      49 </span>            :         // separators.
+<span class="lineNum">      50 </span>            : #       error &quot;Unable to use &lt;locale&gt; header. Define BOOST_LEXICAL_CAST_ASSUME_C_LOCALE to force &quot;
+<span class="lineNum">      51 </span>            : #       error &quot;boost::lexical_cast to use only 'C' locale during conversions.&quot;
+<span class="lineNum">      52 </span>            : #   endif
+<span class="lineNum">      53 </span>            : #endif
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : #ifdef BOOST_NO_STRINGSTREAM
+<span class="lineNum">      56 </span>            : #include &lt;strstream&gt;
+<span class="lineNum">      57 </span>            : #else
+<span class="lineNum">      58 </span>            : #include &lt;sstream&gt;
+<span class="lineNum">      59 </span>            : #endif
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : #include &lt;boost/lexical_cast/detail/lcast_char_constants.hpp&gt;
+<span class="lineNum">      62 </span>            : #include &lt;boost/lexical_cast/detail/lcast_unsigned_converters.hpp&gt;
+<span class="lineNum">      63 </span>            : #include &lt;boost/lexical_cast/detail/inf_nan.hpp&gt;
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : #include &lt;istream&gt;
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : #ifndef BOOST_NO_CXX11_HDR_ARRAY
+<span class="lineNum">      68 </span>            : #include &lt;array&gt;
+<span class="lineNum">      69 </span>            : #endif
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : #include &lt;boost/array.hpp&gt;
+<span class="lineNum">      72 </span>            : #include &lt;boost/type_traits/make_unsigned.hpp&gt;
+<span class="lineNum">      73 </span>            : #include &lt;boost/type_traits/is_integral.hpp&gt;
+<span class="lineNum">      74 </span>            : #include &lt;boost/type_traits/is_float.hpp&gt;
+<span class="lineNum">      75 </span>            : #include &lt;boost/range/iterator_range_core.hpp&gt;
+<span class="lineNum">      76 </span>            : #include &lt;boost/container/container_fwd.hpp&gt;
+<span class="lineNum">      77 </span>            : #include &lt;boost/integer.hpp&gt;
+<span class="lineNum">      78 </span>            : #include &lt;boost/detail/basic_pointerbuf.hpp&gt;
+<span class="lineNum">      79 </span>            : #include &lt;boost/noncopyable.hpp&gt;
+<span class="lineNum">      80 </span>            : #ifndef BOOST_NO_CWCHAR
+<span class="lineNum">      81 </span>            : #   include &lt;cwchar&gt;
+<span class="lineNum">      82 </span>            : #endif
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : namespace boost {
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            :     namespace detail // basic_unlockedbuf
+<span class="lineNum">      87 </span>            :     {
+<span class="lineNum">      88 </span>            :         // acts as a stream buffer which wraps around a pair of pointers
+<span class="lineNum">      89 </span>            :         // and gives acces to internals
+<span class="lineNum">      90 </span>            :         template &lt;class BufferType, class CharT&gt;
+<span class="lineNum">      91 </span>            :         class basic_unlockedbuf : public basic_pointerbuf&lt;CharT, BufferType&gt; {
+<span class="lineNum">      92 </span>            :         public:
+<span class="lineNum">      93 </span>            :            typedef basic_pointerbuf&lt;CharT, BufferType&gt; base_type;
+<span class="lineNum">      94 </span>            :            typedef BOOST_DEDUCED_TYPENAME base_type::streamsize streamsize;
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : #ifndef BOOST_NO_USING_TEMPLATE
+<span class="lineNum">      97 </span>            :             using base_type::pptr;
+<span class="lineNum">      98 </span>            :             using base_type::pbase;
+<span class="lineNum">      99 </span>            :             using base_type::setbuf;
+<span class="lineNum">     100 </span>            : #else
+<span class="lineNum">     101 </span>            :             charT* pptr() const { return base_type::pptr(); }
+<span class="lineNum">     102 </span>            :             charT* pbase() const { return base_type::pbase(); }
+<span class="lineNum">     103 </span>            :             BufferType* setbuf(char_type* s, streamsize n) { return base_type::setbuf(s, n); }
+<span class="lineNum">     104 </span>            : #endif
+<span class="lineNum">     105 </span>            :         };
+<span class="lineNum">     106 </span>            :     }
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :     namespace detail
+<span class="lineNum">     109 </span>            :     {
+<span class="lineNum">     110 </span>            :         struct do_not_construct_out_buffer_t{};
+<span class="lineNum">     111 </span>            :         struct do_not_construct_out_stream_t{
+<span class="lineNum">     112 </span>            :             do_not_construct_out_stream_t(do_not_construct_out_buffer_t*){}
+<span class="lineNum">     113 </span>            :         };
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            :         template &lt;class CharT, class Traits&gt;
+<span class="lineNum">     116 </span>            :         struct out_stream_helper_trait {
+<span class="lineNum">     117 </span>            : #if defined(BOOST_NO_STRINGSTREAM)
+<span class="lineNum">     118 </span>            :             typedef std::ostream                                                    out_stream_t;
+<span class="lineNum">     119 </span>            :             typedef basic_unlockedbuf&lt;std::strstreambuf, char&gt;                      stringbuffer_t;
+<span class="lineNum">     120 </span>            : #elif defined(BOOST_NO_STD_LOCALE)
+<span class="lineNum">     121 </span>            :             typedef std::ostream                                                    out_stream_t;
+<span class="lineNum">     122 </span>            :             typedef basic_unlockedbuf&lt;std::stringbuf, char&gt;                         stringbuffer_t;
+<span class="lineNum">     123 </span>            :             typedef basic_unlockedbuf&lt;std::streambuf, char&gt;                         buffer_t;
+<span class="lineNum">     124 </span>            : #else
+<span class="lineNum">     125 </span>            :             typedef std::basic_ostream&lt;CharT, Traits&gt;                               out_stream_t;
+<span class="lineNum">     126 </span>            :             typedef basic_unlockedbuf&lt;std::basic_stringbuf&lt;CharT, Traits&gt;, CharT&gt;   stringbuffer_t;
+<span class="lineNum">     127 </span>            :             typedef basic_unlockedbuf&lt;std::basic_streambuf&lt;CharT, Traits&gt;, CharT&gt;   buffer_t;
+<span class="lineNum">     128 </span>            : #endif
+<span class="lineNum">     129 </span>            :         };
+<span class="lineNum">     130 </span>            :     }
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            :     namespace detail // optimized stream wrappers
+<span class="lineNum">     133 </span>            :     {
+<span class="lineNum">     134 </span>            :         template&lt; class CharT // a result of widest_char transformation
+<span class="lineNum">     135 </span>            :                 , class Traits
+<span class="lineNum">     136 </span>            :                 , bool RequiresStringbuffer
+<span class="lineNum">     137 </span>            :                 , std::size_t CharacterBufferSize
+<span class="lineNum">     138 </span>            :                 &gt;
+<span class="lineNum">     139 </span>            :         class lexical_istream_limited_src: boost::noncopyable {
+<span class="lineNum">     140 </span>            :             typedef BOOST_DEDUCED_TYPENAME boost::mpl::if_c&lt;
+<span class="lineNum">     141 </span>            :                 RequiresStringbuffer,
+<span class="lineNum">     142 </span>            :                 BOOST_DEDUCED_TYPENAME out_stream_helper_trait&lt;CharT, Traits&gt;::out_stream_t,
+<span class="lineNum">     143 </span>            :                 do_not_construct_out_stream_t
+<span class="lineNum">     144 </span>            :             &gt;::type deduced_out_stream_t;
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :             typedef BOOST_DEDUCED_TYPENAME boost::mpl::if_c&lt;
+<span class="lineNum">     147 </span>            :                 RequiresStringbuffer,
+<span class="lineNum">     148 </span>            :                 BOOST_DEDUCED_TYPENAME out_stream_helper_trait&lt;CharT, Traits&gt;::stringbuffer_t,
+<span class="lineNum">     149 </span>            :                 do_not_construct_out_buffer_t
+<span class="lineNum">     150 </span>            :             &gt;::type deduced_out_buffer_t;
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :             deduced_out_buffer_t out_buffer;
+<span class="lineNum">     153 </span>            :             deduced_out_stream_t out_stream;
+<span class="lineNum">     154 </span>            :             CharT   buffer[CharacterBufferSize];
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :             // After the `operator &lt;&lt;`  finishes, `[start, finish)` is
+<span class="lineNum">     157 </span>            :             // the range to output by `operator &gt;&gt;` 
+<span class="lineNum">     158 </span>            :             const CharT*  start;
+<span class="lineNum">     159 </span>            :             const CharT*  finish;
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :         public:
+<span class="lineNum">     162 </span>            :             lexical_istream_limited_src() BOOST_NOEXCEPT
+<span class="lineNum">     163 </span>            :               : out_buffer()
+<span class="lineNum">     164 </span>            :               , out_stream(&amp;out_buffer)
+<span class="lineNum">     165 </span>            :               , start(buffer)
+<span class="lineNum">     166 </span><span class="lineCov">      25554 :               , finish(buffer + CharacterBufferSize)</span>
+<span class="lineNum">     167 </span>            :             {}
+<span class="lineNum">     168 </span>            :     
+<span class="lineNum">     169 </span>            :             const CharT* cbegin() const BOOST_NOEXCEPT {
+<span class="lineNum">     170 </span>            :                 return start;
+<span class="lineNum">     171 </span>            :             }
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :             const CharT* cend() const BOOST_NOEXCEPT {
+<span class="lineNum">     174 </span>            :                 return finish;
+<span class="lineNum">     175 </span>            :             }
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :         private:
+<span class="lineNum">     178 </span>            : /************************************ HELPER FUNCTIONS FOR OPERATORS &lt;&lt; ( ... ) ********************************/
+<span class="lineNum">     179 </span>            :             bool shl_char(CharT ch) BOOST_NOEXCEPT {
+<span class="lineNum">     180 </span>            :                 Traits::assign(buffer[0], ch);
+<span class="lineNum">     181 </span>            :                 finish = start + 1;
+<span class="lineNum">     182 </span>            :                 return true;
+<span class="lineNum">     183 </span>            :             }
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            : #ifndef BOOST_LCAST_NO_WCHAR_T
+<span class="lineNum">     186 </span>            :             template &lt;class T&gt;
+<span class="lineNum">     187 </span>            :             bool shl_char(T ch) {
+<span class="lineNum">     188 </span>            :                 BOOST_STATIC_ASSERT_MSG(( sizeof(T) &lt;= sizeof(CharT)) ,
+<span class="lineNum">     189 </span>            :                     &quot;boost::lexical_cast does not support narrowing of char types.&quot;
+<span class="lineNum">     190 </span>            :                     &quot;Use boost::locale instead&quot; );
+<span class="lineNum">     191 </span>            : #ifndef BOOST_LEXICAL_CAST_ASSUME_C_LOCALE
+<span class="lineNum">     192 </span>            :                 std::locale loc;
+<span class="lineNum">     193 </span>            :                 CharT const w = BOOST_USE_FACET(std::ctype&lt;CharT&gt;, loc).widen(ch);
+<span class="lineNum">     194 </span>            : #else
+<span class="lineNum">     195 </span>            :                 CharT const w = static_cast&lt;CharT&gt;(ch);
+<span class="lineNum">     196 </span>            : #endif
+<span class="lineNum">     197 </span>            :                 Traits::assign(buffer[0], w);
+<span class="lineNum">     198 </span>            :                 finish = start + 1;
+<span class="lineNum">     199 </span>            :                 return true;
+<span class="lineNum">     200 </span>            :             }
+<span class="lineNum">     201 </span>            : #endif
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            :             bool shl_char_array(CharT const* str) BOOST_NOEXCEPT {
+<span class="lineNum">     204 </span>            :                 start = str;
+<span class="lineNum">     205 </span>            :                 finish = start + Traits::length(str);
+<span class="lineNum">     206 </span>            :                 return true;
+<span class="lineNum">     207 </span>            :             }
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            :             template &lt;class T&gt;
+<span class="lineNum">     210 </span>            :             bool shl_char_array(T const* str) {
+<span class="lineNum">     211 </span>            :                 BOOST_STATIC_ASSERT_MSG(( sizeof(T) &lt;= sizeof(CharT)),
+<span class="lineNum">     212 </span>            :                     &quot;boost::lexical_cast does not support narrowing of char types.&quot;
+<span class="lineNum">     213 </span>            :                     &quot;Use boost::locale instead&quot; );
+<span class="lineNum">     214 </span>            :                 return shl_input_streamable(str);
+<span class="lineNum">     215 </span>            :             }
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :             bool shl_char_array_limited(CharT const* str, std::size_t max_size) BOOST_NOEXCEPT {
+<span class="lineNum">     218 </span>            :                 start = str;
+<span class="lineNum">     219 </span>            :                 finish = std::find(start, start + max_size, Traits::to_char_type(0));
+<span class="lineNum">     220 </span>            :                 return true;
+<span class="lineNum">     221 </span>            :             }
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            :             template&lt;typename InputStreamable&gt;
+<span class="lineNum">     224 </span>            :             bool shl_input_streamable(InputStreamable&amp; input) {
+<span class="lineNum">     225 </span>            : #if defined(BOOST_NO_STRINGSTREAM) || defined(BOOST_NO_STD_LOCALE)
+<span class="lineNum">     226 </span>            :                 // If you have compilation error at this point, than your STL library
+<span class="lineNum">     227 </span>            :                 // does not support such conversions. Try updating it.
+<span class="lineNum">     228 </span>            :                 BOOST_STATIC_ASSERT((boost::is_same&lt;char, CharT&gt;::value));
+<span class="lineNum">     229 </span>            : #endif
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            : #ifndef BOOST_NO_EXCEPTIONS
+<span class="lineNum">     232 </span>            :                 out_stream.exceptions(std::ios::badbit);
+<span class="lineNum">     233 </span>            :                 try {
+<span class="lineNum">     234 </span>            : #endif
+<span class="lineNum">     235 </span>            :                 bool const result = !(out_stream &lt;&lt; input).fail();
+<span class="lineNum">     236 </span>            :                 const deduced_out_buffer_t* const p = static_cast&lt;deduced_out_buffer_t*&gt;(
+<span class="lineNum">     237 </span>            :                     out_stream.rdbuf()
+<span class="lineNum">     238 </span>            :                 );
+<span class="lineNum">     239 </span>            :                 start = p-&gt;pbase();
+<span class="lineNum">     240 </span>            :                 finish = p-&gt;pptr();
+<span class="lineNum">     241 </span>            :                 return result;
+<span class="lineNum">     242 </span>            : #ifndef BOOST_NO_EXCEPTIONS
+<span class="lineNum">     243 </span>            :                 } catch (const ::std::ios_base::failure&amp; /*f*/) {
+<span class="lineNum">     244 </span>            :                     return false;
+<span class="lineNum">     245 </span>            :                 }
+<span class="lineNum">     246 </span>            : #endif
+<span class="lineNum">     247 </span>            :             }
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            :             template &lt;class T&gt;
+<span class="lineNum">     250 </span>            :             inline bool shl_unsigned(const T n) {
+<span class="lineNum">     251 </span><span class="lineCov">      25554 :                 CharT* tmp_finish = buffer + CharacterBufferSize;</span>
+<span class="lineNum">     252 </span><span class="lineCov">      25554 :                 start = lcast_put_unsigned&lt;Traits, T, CharT&gt;(n, tmp_finish).convert();</span>
+<span class="lineNum">     253 </span><span class="lineCov">      25554 :                 finish = tmp_finish;</span>
+<span class="lineNum">     254 </span>            :                 return true;
+<span class="lineNum">     255 </span>            :             }
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            :             template &lt;class T&gt;
+<span class="lineNum">     258 </span>            :             inline bool shl_signed(const T n) {
+<span class="lineNum">     259 </span>            :                 CharT* tmp_finish = buffer + CharacterBufferSize;
+<span class="lineNum">     260 </span>            :                 typedef BOOST_DEDUCED_TYPENAME boost::make_unsigned&lt;T&gt;::type utype;
+<span class="lineNum">     261 </span>            :                 CharT* tmp_start = lcast_put_unsigned&lt;Traits, utype, CharT&gt;(lcast_to_unsigned(n), tmp_finish).convert();
+<span class="lineNum">     262 </span>            :                 if (n &lt; 0) {
+<span class="lineNum">     263 </span>            :                     --tmp_start;
+<span class="lineNum">     264 </span>            :                     CharT const minus = lcast_char_constants&lt;CharT&gt;::minus;
+<span class="lineNum">     265 </span>            :                     Traits::assign(*tmp_start, minus);
+<span class="lineNum">     266 </span>            :                 }
+<span class="lineNum">     267 </span>            :                 start = tmp_start;
+<span class="lineNum">     268 </span>            :                 finish = tmp_finish;
+<span class="lineNum">     269 </span>            :                 return true;
+<span class="lineNum">     270 </span>            :             }
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            :             template &lt;class T, class SomeCharT&gt;
+<span class="lineNum">     273 </span>            :             bool shl_real_type(const T&amp; val, SomeCharT* /*begin*/) {
+<span class="lineNum">     274 </span>            :                 lcast_set_precision(out_stream, &amp;val);
+<span class="lineNum">     275 </span>            :                 return shl_input_streamable(val);
+<span class="lineNum">     276 </span>            :             }
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span>            :             bool shl_real_type(float val, char* begin) {
+<span class="lineNum">     279 </span>            :                 using namespace std;
+<span class="lineNum">     280 </span>            :                 const double val_as_double = val;
+<span class="lineNum">     281 </span>            :                 finish = start +
+<span class="lineNum">     282 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1400) &amp;&amp; !defined(__SGI_STL_PORT) &amp;&amp; !defined(_STLPORT_VERSION)
+<span class="lineNum">     283 </span>            :                     sprintf_s(begin, CharacterBufferSize,
+<span class="lineNum">     284 </span>            : #else
+<span class="lineNum">     285 </span>            :                     sprintf(begin, 
+<span class="lineNum">     286 </span>            : #endif
+<span class="lineNum">     287 </span>            :                     &quot;%.*g&quot;, static_cast&lt;int&gt;(boost::detail::lcast_get_precision&lt;float&gt;()), val_as_double);
+<span class="lineNum">     288 </span>            :                 return finish &gt; start;
+<span class="lineNum">     289 </span>            :             }
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            :             bool shl_real_type(double val, char* begin) {
+<span class="lineNum">     292 </span>            :                 using namespace std;
+<span class="lineNum">     293 </span>            :                 finish = start +
+<span class="lineNum">     294 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1400) &amp;&amp; !defined(__SGI_STL_PORT) &amp;&amp; !defined(_STLPORT_VERSION)
+<span class="lineNum">     295 </span>            :                     sprintf_s(begin, CharacterBufferSize,
+<span class="lineNum">     296 </span>            : #else
+<span class="lineNum">     297 </span>            :                     sprintf(begin, 
+<span class="lineNum">     298 </span>            : #endif
+<span class="lineNum">     299 </span>            :                     &quot;%.*g&quot;, static_cast&lt;int&gt;(boost::detail::lcast_get_precision&lt;double&gt;()), val);
+<span class="lineNum">     300 </span>            :                 return finish &gt; start;
+<span class="lineNum">     301 </span>            :             }
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span>            : #ifndef __MINGW32__
+<span class="lineNum">     304 </span>            :             bool shl_real_type(long double val, char* begin) {
+<span class="lineNum">     305 </span>            :                 using namespace std;
+<span class="lineNum">     306 </span>            :                 finish = start +
+<span class="lineNum">     307 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1400) &amp;&amp; !defined(__SGI_STL_PORT) &amp;&amp; !defined(_STLPORT_VERSION)
+<span class="lineNum">     308 </span>            :                     sprintf_s(begin, CharacterBufferSize,
+<span class="lineNum">     309 </span>            : #else
+<span class="lineNum">     310 </span>            :                     sprintf(begin, 
+<span class="lineNum">     311 </span>            : #endif
+<span class="lineNum">     312 </span>            :                     &quot;%.*Lg&quot;, static_cast&lt;int&gt;(boost::detail::lcast_get_precision&lt;long double&gt;()), val );
+<span class="lineNum">     313 </span>            :                 return finish &gt; start;
+<span class="lineNum">     314 </span>            :             }
+<span class="lineNum">     315 </span>            : #endif
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            : #if !defined(BOOST_LCAST_NO_WCHAR_T) &amp;&amp; !defined(BOOST_NO_SWPRINTF) &amp;&amp; !defined(__MINGW32__)
+<span class="lineNum">     319 </span>            :             bool shl_real_type(float val, wchar_t* begin) {
+<span class="lineNum">     320 </span>            :                 using namespace std;
+<span class="lineNum">     321 </span>            :                 const double val_as_double = val;
+<span class="lineNum">     322 </span>            :                 finish = start + swprintf(begin, CharacterBufferSize,
+<span class="lineNum">     323 </span>            :                                        L&quot;%.*g&quot;,
+<span class="lineNum">     324 </span>            :                                        static_cast&lt;int&gt;(boost::detail::lcast_get_precision&lt;float &gt;()),
+<span class="lineNum">     325 </span>            :                                        val_as_double );
+<span class="lineNum">     326 </span>            :                 return finish &gt; start;
+<span class="lineNum">     327 </span>            :             }
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span>            :             bool shl_real_type(double val, wchar_t* begin) {
+<span class="lineNum">     330 </span>            :                 using namespace std;
+<span class="lineNum">     331 </span>            :                 finish = start + swprintf(begin, CharacterBufferSize,
+<span class="lineNum">     332 </span>            :                                           L&quot;%.*g&quot;, static_cast&lt;int&gt;(boost::detail::lcast_get_precision&lt;double &gt;()), val );
+<span class="lineNum">     333 </span>            :                 return finish &gt; start;
+<span class="lineNum">     334 </span>            :             }
+<span class="lineNum">     335 </span>            : 
+<span class="lineNum">     336 </span>            :             bool shl_real_type(long double val, wchar_t* begin) {
+<span class="lineNum">     337 </span>            :                 using namespace std;
+<span class="lineNum">     338 </span>            :                 finish = start + swprintf(begin, CharacterBufferSize,
+<span class="lineNum">     339 </span>            :                                           L&quot;%.*Lg&quot;, static_cast&lt;int&gt;(boost::detail::lcast_get_precision&lt;long double &gt;()), val );
+<span class="lineNum">     340 </span>            :                 return finish &gt; start;
+<span class="lineNum">     341 </span>            :             }
+<span class="lineNum">     342 </span>            : #endif
+<span class="lineNum">     343 </span>            :             template &lt;class T&gt;
+<span class="lineNum">     344 </span>            :             bool shl_real(T val) {
+<span class="lineNum">     345 </span>            :                 CharT* tmp_finish = buffer + CharacterBufferSize;
+<span class="lineNum">     346 </span>            :                 if (put_inf_nan(buffer, tmp_finish, val)) {
+<span class="lineNum">     347 </span>            :                     finish = tmp_finish;
+<span class="lineNum">     348 </span>            :                     return true;
+<span class="lineNum">     349 </span>            :                 }
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span>            :                 return shl_real_type(val, static_cast&lt;CharT*&gt;(buffer));
+<span class="lineNum">     352 </span>            :             }
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span>            : /************************************ OPERATORS &lt;&lt; ( ... ) ********************************/
+<span class="lineNum">     355 </span>            :         public:
+<span class="lineNum">     356 </span>            :             template&lt;class Alloc&gt;
+<span class="lineNum">     357 </span>            :             bool operator&lt;&lt;(std::basic_string&lt;CharT,Traits,Alloc&gt; const&amp; str) BOOST_NOEXCEPT {
+<span class="lineNum">     358 </span>            :                 start = str.data();
+<span class="lineNum">     359 </span>            :                 finish = start + str.length();
+<span class="lineNum">     360 </span>            :                 return true;
+<span class="lineNum">     361 </span>            :             }
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span>            :             template&lt;class Alloc&gt;
+<span class="lineNum">     364 </span>            :             bool operator&lt;&lt;(boost::container::basic_string&lt;CharT,Traits,Alloc&gt; const&amp; str) BOOST_NOEXCEPT {
+<span class="lineNum">     365 </span>            :                 start = str.data();
+<span class="lineNum">     366 </span>            :                 finish = start + str.length();
+<span class="lineNum">     367 </span>            :                 return true;
+<span class="lineNum">     368 </span>            :             }
+<span class="lineNum">     369 </span>            : 
+<span class="lineNum">     370 </span>            :             bool operator&lt;&lt;(bool value) BOOST_NOEXCEPT {
+<span class="lineNum">     371 </span>            :                 CharT const czero = lcast_char_constants&lt;CharT&gt;::zero;
+<span class="lineNum">     372 </span>            :                 Traits::assign(buffer[0], Traits::to_char_type(czero + value));
+<span class="lineNum">     373 </span>            :                 finish = start + 1;
+<span class="lineNum">     374 </span>            :                 return true;
+<span class="lineNum">     375 </span>            :             }
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span>            :             template &lt;class C&gt;
+<span class="lineNum">     378 </span>            :             BOOST_DEDUCED_TYPENAME boost::disable_if&lt;boost::is_const&lt;C&gt;, bool&gt;::type 
+<span class="lineNum">     379 </span>            :             operator&lt;&lt;(const iterator_range&lt;C*&gt;&amp; rng) BOOST_NOEXCEPT {
+<span class="lineNum">     380 </span>            :                 return (*this) &lt;&lt; iterator_range&lt;const C*&gt;(rng.begin(), rng.end());
+<span class="lineNum">     381 </span>            :             }
+<span class="lineNum">     382 </span>            :             
+<span class="lineNum">     383 </span>            :             bool operator&lt;&lt;(const iterator_range&lt;const CharT*&gt;&amp; rng) BOOST_NOEXCEPT {
+<span class="lineNum">     384 </span>            :                 start = rng.begin();
+<span class="lineNum">     385 </span>            :                 finish = rng.end();
+<span class="lineNum">     386 </span>            :                 return true; 
+<span class="lineNum">     387 </span>            :             }
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span>            :             bool operator&lt;&lt;(const iterator_range&lt;const signed char*&gt;&amp; rng) BOOST_NOEXCEPT {
+<span class="lineNum">     390 </span>            :                 return (*this) &lt;&lt; iterator_range&lt;const char*&gt;(
+<span class="lineNum">     391 </span>            :                     reinterpret_cast&lt;const char*&gt;(rng.begin()),
+<span class="lineNum">     392 </span>            :                     reinterpret_cast&lt;const char*&gt;(rng.end())
+<span class="lineNum">     393 </span>            :                 );
+<span class="lineNum">     394 </span>            :             }
+<span class="lineNum">     395 </span>            : 
+<span class="lineNum">     396 </span>            :             bool operator&lt;&lt;(const iterator_range&lt;const unsigned char*&gt;&amp; rng) BOOST_NOEXCEPT {
+<span class="lineNum">     397 </span>            :                 return (*this) &lt;&lt; iterator_range&lt;const char*&gt;(
+<span class="lineNum">     398 </span>            :                     reinterpret_cast&lt;const char*&gt;(rng.begin()),
+<span class="lineNum">     399 </span>            :                     reinterpret_cast&lt;const char*&gt;(rng.end())
+<span class="lineNum">     400 </span>            :                 );
+<span class="lineNum">     401 </span>            :             }
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span>            :             bool operator&lt;&lt;(char ch)                    { return shl_char(ch); }
+<span class="lineNum">     404 </span>            :             bool operator&lt;&lt;(unsigned char ch)           { return ((*this) &lt;&lt; static_cast&lt;char&gt;(ch)); }
+<span class="lineNum">     405 </span>            :             bool operator&lt;&lt;(signed char ch)             { return ((*this) &lt;&lt; static_cast&lt;char&gt;(ch)); }
+<span class="lineNum">     406 </span>            : #if !defined(BOOST_LCAST_NO_WCHAR_T)
+<span class="lineNum">     407 </span>            :             bool operator&lt;&lt;(wchar_t const* str)         { return shl_char_array(str); }
+<span class="lineNum">     408 </span>            :             bool operator&lt;&lt;(wchar_t * str)              { return shl_char_array(str); }
+<span class="lineNum">     409 </span>            : #ifndef BOOST_NO_INTRINSIC_WCHAR_T
+<span class="lineNum">     410 </span>            :             bool operator&lt;&lt;(wchar_t ch)                 { return shl_char(ch); }
+<span class="lineNum">     411 </span>            : #endif
+<span class="lineNum">     412 </span>            : #endif
+<span class="lineNum">     413 </span>            : #if !defined(BOOST_NO_CXX11_CHAR16_T) &amp;&amp; !defined(BOOST_NO_CXX11_UNICODE_LITERALS)
+<span class="lineNum">     414 </span>            :             bool operator&lt;&lt;(char16_t ch)                { return shl_char(ch); }
+<span class="lineNum">     415 </span>            :             bool operator&lt;&lt;(char16_t * str)             { return shl_char_array(str); }
+<span class="lineNum">     416 </span>            :             bool operator&lt;&lt;(char16_t const * str)       { return shl_char_array(str); }
+<span class="lineNum">     417 </span>            : #endif
+<span class="lineNum">     418 </span>            : #if !defined(BOOST_NO_CXX11_CHAR32_T) &amp;&amp; !defined(BOOST_NO_CXX11_UNICODE_LITERALS)
+<span class="lineNum">     419 </span>            :             bool operator&lt;&lt;(char32_t ch)                { return shl_char(ch); }
+<span class="lineNum">     420 </span>            :             bool operator&lt;&lt;(char32_t * str)             { return shl_char_array(str); }
+<span class="lineNum">     421 </span>            :             bool operator&lt;&lt;(char32_t const * str)       { return shl_char_array(str); }
+<span class="lineNum">     422 </span>            : #endif
+<span class="lineNum">     423 </span>            :             bool operator&lt;&lt;(unsigned char const* ch)    { return ((*this) &lt;&lt; reinterpret_cast&lt;char const*&gt;(ch)); }
+<span class="lineNum">     424 </span>            :             bool operator&lt;&lt;(unsigned char * ch)         { return ((*this) &lt;&lt; reinterpret_cast&lt;char *&gt;(ch)); }
+<span class="lineNum">     425 </span>            :             bool operator&lt;&lt;(signed char const* ch)      { return ((*this) &lt;&lt; reinterpret_cast&lt;char const*&gt;(ch)); }
+<span class="lineNum">     426 </span>            :             bool operator&lt;&lt;(signed char * ch)           { return ((*this) &lt;&lt; reinterpret_cast&lt;char *&gt;(ch)); }
+<span class="lineNum">     427 </span>            :             bool operator&lt;&lt;(char const* str)            { return shl_char_array(str); }
+<span class="lineNum">     428 </span>            :             bool operator&lt;&lt;(char* str)                  { return shl_char_array(str); }
+<span class="lineNum">     429 </span>            :             bool operator&lt;&lt;(short n)                    { return shl_signed(n); }
+<span class="lineNum">     430 </span>            :             bool operator&lt;&lt;(int n)                      { return shl_signed(n); }
+<span class="lineNum">     431 </span>            :             bool operator&lt;&lt;(long n)                     { return shl_signed(n); }
+<span class="lineNum">     432 </span>            :             bool operator&lt;&lt;(unsigned short n)           { return shl_unsigned(n); }
+<span class="lineNum">     433 </span>            :             bool operator&lt;&lt;(unsigned int n)             { return shl_unsigned(n); }
+<span class="lineNum">     434 </span>            :             bool operator&lt;&lt;(unsigned long n)            { return shl_unsigned(n); }
+<span class="lineNum">     435 </span>            : 
+<span class="lineNum">     436 </span>            : #if defined(BOOST_HAS_LONG_LONG)
+<span class="lineNum">     437 </span><span class="lineCov">      25554 :             bool operator&lt;&lt;(boost::ulong_long_type n)   { return shl_unsigned(n); }</span>
+<span class="lineNum">     438 </span>            :             bool operator&lt;&lt;(boost::long_long_type n)    { return shl_signed(n); }
+<span class="lineNum">     439 </span>            : #elif defined(BOOST_HAS_MS_INT64)
+<span class="lineNum">     440 </span>            :             bool operator&lt;&lt;(unsigned __int64 n)         { return shl_unsigned(n); }
+<span class="lineNum">     441 </span>            :             bool operator&lt;&lt;(         __int64 n)         { return shl_signed(n); }
+<span class="lineNum">     442 </span>            : #endif
+<span class="lineNum">     443 </span>            : 
+<span class="lineNum">     444 </span>            : #ifdef BOOST_HAS_INT128
+<span class="lineNum">     445 </span>            :             bool operator&lt;&lt;(const boost::uint128_type&amp; n)   { return shl_unsigned(n); }
+<span class="lineNum">     446 </span>            :             bool operator&lt;&lt;(const boost::int128_type&amp; n)    { return shl_signed(n); }
+<span class="lineNum">     447 </span>            : #endif
+<span class="lineNum">     448 </span>            :             bool operator&lt;&lt;(float val)                  { return shl_real(val); }
+<span class="lineNum">     449 </span>            :             bool operator&lt;&lt;(double val)                 { return shl_real(val); }
+<span class="lineNum">     450 </span>            :             bool operator&lt;&lt;(long double val)            {
+<span class="lineNum">     451 </span>            : #ifndef __MINGW32__
+<span class="lineNum">     452 </span>            :                 return shl_real(val);
+<span class="lineNum">     453 </span>            : #else
+<span class="lineNum">     454 </span>            :                 return shl_real(static_cast&lt;double&gt;(val));
+<span class="lineNum">     455 </span>            : #endif
+<span class="lineNum">     456 </span>            :             }
+<span class="lineNum">     457 </span>            :             
+<span class="lineNum">     458 </span>            :             // Adding constness to characters. Constness does not change layout
+<span class="lineNum">     459 </span>            :             template &lt;class C, std::size_t N&gt;
+<span class="lineNum">     460 </span>            :             BOOST_DEDUCED_TYPENAME boost::disable_if&lt;boost::is_const&lt;C&gt;, bool&gt;::type
+<span class="lineNum">     461 </span>            :             operator&lt;&lt;(boost::array&lt;C, N&gt; const&amp; input) BOOST_NOEXCEPT { 
+<span class="lineNum">     462 </span>            :                 BOOST_STATIC_ASSERT_MSG(
+<span class="lineNum">     463 </span>            :                     (sizeof(boost::array&lt;const C, N&gt;) == sizeof(boost::array&lt;C, N&gt;)),
+<span class="lineNum">     464 </span>            :                     &quot;boost::array&lt;C, N&gt; and boost::array&lt;const C, N&gt; must have exactly the same layout.&quot;
+<span class="lineNum">     465 </span>            :                 );
+<span class="lineNum">     466 </span>            :                 return ((*this) &lt;&lt; reinterpret_cast&lt;boost::array&lt;const C, N&gt; const&amp; &gt;(input)); 
+<span class="lineNum">     467 </span>            :             }
+<span class="lineNum">     468 </span>            : 
+<span class="lineNum">     469 </span>            :             template &lt;std::size_t N&gt;
+<span class="lineNum">     470 </span>            :             bool operator&lt;&lt;(boost::array&lt;const CharT, N&gt; const&amp; input) BOOST_NOEXCEPT { 
+<span class="lineNum">     471 </span>            :                 return shl_char_array_limited(input.data(), N);
+<span class="lineNum">     472 </span>            :             }
+<span class="lineNum">     473 </span>            : 
+<span class="lineNum">     474 </span>            :             template &lt;std::size_t N&gt;
+<span class="lineNum">     475 </span>            :             bool operator&lt;&lt;(boost::array&lt;const unsigned char, N&gt; const&amp; input) BOOST_NOEXCEPT { 
+<span class="lineNum">     476 </span>            :                 return ((*this) &lt;&lt; reinterpret_cast&lt;boost::array&lt;const char, N&gt; const&amp; &gt;(input)); 
+<span class="lineNum">     477 </span>            :             }
+<span class="lineNum">     478 </span>            : 
+<span class="lineNum">     479 </span>            :             template &lt;std::size_t N&gt;
+<span class="lineNum">     480 </span>            :             bool operator&lt;&lt;(boost::array&lt;const signed char, N&gt; const&amp; input) BOOST_NOEXCEPT { 
+<span class="lineNum">     481 </span>            :                 return ((*this) &lt;&lt; reinterpret_cast&lt;boost::array&lt;const char, N&gt; const&amp; &gt;(input)); 
+<span class="lineNum">     482 </span>            :             }
+<span class="lineNum">     483 </span>            :  
+<span class="lineNum">     484 </span>            : #ifndef BOOST_NO_CXX11_HDR_ARRAY
+<span class="lineNum">     485 </span>            :             // Making a Boost.Array from std::array
+<span class="lineNum">     486 </span>            :             template &lt;class C, std::size_t N&gt;
+<span class="lineNum">     487 </span>            :             bool operator&lt;&lt;(std::array&lt;C, N&gt; const&amp; input) BOOST_NOEXCEPT { 
+<span class="lineNum">     488 </span>            :                 BOOST_STATIC_ASSERT_MSG(
+<span class="lineNum">     489 </span>            :                     (sizeof(std::array&lt;C, N&gt;) == sizeof(boost::array&lt;C, N&gt;)),
+<span class="lineNum">     490 </span>            :                     &quot;std::array and boost::array must have exactly the same layout. &quot;
+<span class="lineNum">     491 </span>            :                     &quot;Bug in implementation of std::array or boost::array.&quot;
+<span class="lineNum">     492 </span>            :                 );
+<span class="lineNum">     493 </span>            :                 return ((*this) &lt;&lt; reinterpret_cast&lt;boost::array&lt;C, N&gt; const&amp; &gt;(input)); 
+<span class="lineNum">     494 </span>            :             }
+<span class="lineNum">     495 </span>            : #endif
+<span class="lineNum">     496 </span>            :             template &lt;class InStreamable&gt;
+<span class="lineNum">     497 </span>            :             bool operator&lt;&lt;(const InStreamable&amp; input)  { return shl_input_streamable(input); }
+<span class="lineNum">     498 </span>            :         };
+<span class="lineNum">     499 </span>            : 
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span>            :         template &lt;class CharT, class Traits&gt;
+<span class="lineNum">     502 </span>            :         class lexical_ostream_limited_src: boost::noncopyable {
+<span class="lineNum">     503 </span>            :             //`[start, finish)` is the range to output by `operator &gt;&gt;` 
+<span class="lineNum">     504 </span>            :             const CharT*        start;
+<span class="lineNum">     505 </span>            :             const CharT* const  finish;
+<span class="lineNum">     506 </span>            : 
+<span class="lineNum">     507 </span>            :         public:
+<span class="lineNum">     508 </span>            :             lexical_ostream_limited_src(const CharT* begin, const CharT* end) BOOST_NOEXCEPT
+<span class="lineNum">     509 </span>            :               : start(begin)
+<span class="lineNum">     510 </span><span class="lineCov">      25554 :               , finish(end)</span>
+<span class="lineNum">     511 </span>            :             {}
+<span class="lineNum">     512 </span>            : 
+<span class="lineNum">     513 </span>            : /************************************ HELPER FUNCTIONS FOR OPERATORS &gt;&gt; ( ... ) ********************************/
+<span class="lineNum">     514 </span>            :         private:
+<span class="lineNum">     515 </span>            :             template &lt;typename Type&gt;
+<span class="lineNum">     516 </span>            :             bool shr_unsigned(Type&amp; output) {
+<span class="lineNum">     517 </span>            :                 if (start == finish) return false;
+<span class="lineNum">     518 </span>            :                 CharT const minus = lcast_char_constants&lt;CharT&gt;::minus;
+<span class="lineNum">     519 </span>            :                 CharT const plus = lcast_char_constants&lt;CharT&gt;::plus;
+<span class="lineNum">     520 </span>            :                 bool const has_minus = Traits::eq(minus, *start);
+<span class="lineNum">     521 </span>            : 
+<span class="lineNum">     522 </span>            :                 /* We won`t use `start' any more, so no need in decrementing it after */
+<span class="lineNum">     523 </span>            :                 if (has_minus || Traits::eq(plus, *start)) {
+<span class="lineNum">     524 </span>            :                     ++start;
+<span class="lineNum">     525 </span>            :                 }
+<span class="lineNum">     526 </span>            : 
+<span class="lineNum">     527 </span>            :                 bool const succeed = lcast_ret_unsigned&lt;Traits, Type, CharT&gt;(output, start, finish).convert();
+<span class="lineNum">     528 </span>            : 
+<span class="lineNum">     529 </span>            :                 if (has_minus) {
+<span class="lineNum">     530 </span>            :                     output = static_cast&lt;Type&gt;(0u - output);
+<span class="lineNum">     531 </span>            :                 }
+<span class="lineNum">     532 </span>            : 
+<span class="lineNum">     533 </span>            :                 return succeed;
+<span class="lineNum">     534 </span>            :             }
+<span class="lineNum">     535 </span>            : 
+<span class="lineNum">     536 </span>            :             template &lt;typename Type&gt;
+<span class="lineNum">     537 </span>            :             bool shr_signed(Type&amp; output) {
+<span class="lineNum">     538 </span>            :                 if (start == finish) return false;
+<span class="lineNum">     539 </span>            :                 CharT const minus = lcast_char_constants&lt;CharT&gt;::minus;
+<span class="lineNum">     540 </span>            :                 CharT const plus = lcast_char_constants&lt;CharT&gt;::plus;
+<span class="lineNum">     541 </span>            :                 typedef BOOST_DEDUCED_TYPENAME make_unsigned&lt;Type&gt;::type utype;
+<span class="lineNum">     542 </span>            :                 utype out_tmp = 0;
+<span class="lineNum">     543 </span>            :                 bool const has_minus = Traits::eq(minus, *start);
+<span class="lineNum">     544 </span>            : 
+<span class="lineNum">     545 </span>            :                 /* We won`t use `start' any more, so no need in decrementing it after */
+<span class="lineNum">     546 </span>            :                 if (has_minus || Traits::eq(plus, *start)) {
+<span class="lineNum">     547 </span>            :                     ++start;
+<span class="lineNum">     548 </span>            :                 }
+<span class="lineNum">     549 </span>            : 
+<span class="lineNum">     550 </span>            :                 bool succeed = lcast_ret_unsigned&lt;Traits, utype, CharT&gt;(out_tmp, start, finish).convert();
+<span class="lineNum">     551 </span>            :                 if (has_minus) {
+<span class="lineNum">     552 </span>            :                     utype const comp_val = (static_cast&lt;utype&gt;(1) &lt;&lt; std::numeric_limits&lt;Type&gt;::digits);
+<span class="lineNum">     553 </span>            :                     succeed = succeed &amp;&amp; out_tmp&lt;=comp_val;
+<span class="lineNum">     554 </span>            :                     output = static_cast&lt;Type&gt;(0u - out_tmp);
+<span class="lineNum">     555 </span>            :                 } else {
+<span class="lineNum">     556 </span>            :                     utype const comp_val = static_cast&lt;utype&gt;((std::numeric_limits&lt;Type&gt;::max)());
+<span class="lineNum">     557 </span>            :                     succeed = succeed &amp;&amp; out_tmp&lt;=comp_val;
+<span class="lineNum">     558 </span>            :                     output = static_cast&lt;Type&gt;(out_tmp);
+<span class="lineNum">     559 </span>            :                 }
+<span class="lineNum">     560 </span>            :                 return succeed;
+<span class="lineNum">     561 </span>            :             }
+<span class="lineNum">     562 </span>            : 
+<span class="lineNum">     563 </span>            :             template&lt;typename InputStreamable&gt;
+<span class="lineNum">     564 </span>            :             bool shr_using_base_class(InputStreamable&amp; output)
+<span class="lineNum">     565 </span>            :             {
+<span class="lineNum">     566 </span>            :                 BOOST_STATIC_ASSERT_MSG(
+<span class="lineNum">     567 </span>            :                     (!boost::is_pointer&lt;InputStreamable&gt;::value),
+<span class="lineNum">     568 </span>            :                     &quot;boost::lexical_cast can not convert to pointers&quot;
+<span class="lineNum">     569 </span>            :                 );
+<span class="lineNum">     570 </span>            : 
+<span class="lineNum">     571 </span>            : #if defined(BOOST_NO_STRINGSTREAM) || defined(BOOST_NO_STD_LOCALE)
+<span class="lineNum">     572 </span>            :                 BOOST_STATIC_ASSERT_MSG((boost::is_same&lt;char, CharT&gt;::value),
+<span class="lineNum">     573 </span>            :                     &quot;boost::lexical_cast can not convert, because your STL library does not &quot;
+<span class="lineNum">     574 </span>            :                     &quot;support such conversions. Try updating it.&quot;
+<span class="lineNum">     575 </span>            :                 );
+<span class="lineNum">     576 </span>            : #endif
+<span class="lineNum">     577 </span>            : 
+<span class="lineNum">     578 </span>            : #if defined(BOOST_NO_STRINGSTREAM)
+<span class="lineNum">     579 </span>            :                 std::istrstream stream(start, finish - start);
+<span class="lineNum">     580 </span>            : #else
+<span class="lineNum">     581 </span>            :                 BOOST_DEDUCED_TYPENAME out_stream_helper_trait&lt;CharT, Traits&gt;::buffer_t buf;
+<span class="lineNum">     582 </span>            :                 // Usually `istream` and `basic_istream` do not modify 
+<span class="lineNum">     583 </span>            :                 // content of buffer; `buffer_t` assures that this is true
+<span class="lineNum">     584 </span>            :                 buf.setbuf(const_cast&lt;CharT*&gt;(start), finish - start);
+<span class="lineNum">     585 </span>            : #if defined(BOOST_NO_STD_LOCALE)
+<span class="lineNum">     586 </span>            :                 std::istream stream(&amp;buf);
+<span class="lineNum">     587 </span>            : #else
+<span class="lineNum">     588 </span>            :                 std::basic_istream&lt;CharT, Traits&gt; stream(&amp;buf);
+<span class="lineNum">     589 </span>            : #endif // BOOST_NO_STD_LOCALE
+<span class="lineNum">     590 </span>            : #endif // BOOST_NO_STRINGSTREAM
+<span class="lineNum">     591 </span>            : 
+<span class="lineNum">     592 </span>            : #ifndef BOOST_NO_EXCEPTIONS
+<span class="lineNum">     593 </span>            :                 stream.exceptions(std::ios::badbit);
+<span class="lineNum">     594 </span>            :                 try {
+<span class="lineNum">     595 </span>            : #endif
+<span class="lineNum">     596 </span>            :                 stream.unsetf(std::ios::skipws);
+<span class="lineNum">     597 </span>            :                 lcast_set_precision(stream, static_cast&lt;InputStreamable*&gt;(0));
+<span class="lineNum">     598 </span>            : 
+<span class="lineNum">     599 </span>            :                 return (stream &gt;&gt; output) 
+<span class="lineNum">     600 </span>            :                     &amp;&amp; (stream.get() == Traits::eof());
+<span class="lineNum">     601 </span>            : 
+<span class="lineNum">     602 </span>            : #ifndef BOOST_NO_EXCEPTIONS
+<span class="lineNum">     603 </span>            :                 } catch (const ::std::ios_base::failure&amp; /*f*/) {
+<span class="lineNum">     604 </span>            :                     return false;
+<span class="lineNum">     605 </span>            :                 }
+<span class="lineNum">     606 </span>            : #endif
+<span class="lineNum">     607 </span>            :             }
+<span class="lineNum">     608 </span>            : 
+<span class="lineNum">     609 </span>            :             template&lt;class T&gt;
+<span class="lineNum">     610 </span>            :             inline bool shr_xchar(T&amp; output) BOOST_NOEXCEPT {
+<span class="lineNum">     611 </span>            :                 BOOST_STATIC_ASSERT_MSG(( sizeof(CharT) == sizeof(T) ),
+<span class="lineNum">     612 </span>            :                     &quot;boost::lexical_cast does not support narrowing of character types.&quot;
+<span class="lineNum">     613 </span>            :                     &quot;Use boost::locale instead&quot; );
+<span class="lineNum">     614 </span>            :                 bool const ok = (finish - start == 1);
+<span class="lineNum">     615 </span>            :                 if (ok) {
+<span class="lineNum">     616 </span>            :                     CharT out;
+<span class="lineNum">     617 </span>            :                     Traits::assign(out, *start);
+<span class="lineNum">     618 </span>            :                     output = static_cast&lt;T&gt;(out);
+<span class="lineNum">     619 </span>            :                 }
+<span class="lineNum">     620 </span>            :                 return ok;
+<span class="lineNum">     621 </span>            :             }
+<span class="lineNum">     622 </span>            : 
+<span class="lineNum">     623 </span>            :             template &lt;std::size_t N, class ArrayT&gt;
+<span class="lineNum">     624 </span>            :             bool shr_std_array(ArrayT&amp; output) BOOST_NOEXCEPT {
+<span class="lineNum">     625 </span>            :                 using namespace std;
+<span class="lineNum">     626 </span>            :                 const std::size_t size = static_cast&lt;std::size_t&gt;(finish - start);
+<span class="lineNum">     627 </span>            :                 if (size &gt; N - 1) { // `-1` because we need to store \0 at the end 
+<span class="lineNum">     628 </span>            :                     return false;
+<span class="lineNum">     629 </span>            :                 }
+<span class="lineNum">     630 </span>            : 
+<span class="lineNum">     631 </span>            :                 memcpy(&amp;output[0], start, size * sizeof(CharT));
+<span class="lineNum">     632 </span>            :                 output[size] = Traits::to_char_type(0);
+<span class="lineNum">     633 </span>            :                 return true;
+<span class="lineNum">     634 </span>            :             }
+<span class="lineNum">     635 </span>            : 
+<span class="lineNum">     636 </span>            : /************************************ OPERATORS &gt;&gt; ( ... ) ********************************/
+<span class="lineNum">     637 </span>            :         public:
+<span class="lineNum">     638 </span>            :             bool operator&gt;&gt;(unsigned short&amp; output)             { return shr_unsigned(output); }
+<span class="lineNum">     639 </span>            :             bool operator&gt;&gt;(unsigned int&amp; output)               { return shr_unsigned(output); }
+<span class="lineNum">     640 </span>            :             bool operator&gt;&gt;(unsigned long int&amp; output)          { return shr_unsigned(output); }
+<span class="lineNum">     641 </span>            :             bool operator&gt;&gt;(short&amp; output)                      { return shr_signed(output); }
+<span class="lineNum">     642 </span>            :             bool operator&gt;&gt;(int&amp; output)                        { return shr_signed(output); }
+<span class="lineNum">     643 </span>            :             bool operator&gt;&gt;(long int&amp; output)                   { return shr_signed(output); }
+<span class="lineNum">     644 </span>            : #if defined(BOOST_HAS_LONG_LONG)
+<span class="lineNum">     645 </span>            :             bool operator&gt;&gt;(boost::ulong_long_type&amp; output)     { return shr_unsigned(output); }
+<span class="lineNum">     646 </span>            :             bool operator&gt;&gt;(boost::long_long_type&amp; output)      { return shr_signed(output); }
+<span class="lineNum">     647 </span>            : #elif defined(BOOST_HAS_MS_INT64)
+<span class="lineNum">     648 </span>            :             bool operator&gt;&gt;(unsigned __int64&amp; output)           { return shr_unsigned(output); }
+<span class="lineNum">     649 </span>            :             bool operator&gt;&gt;(__int64&amp; output)                    { return shr_signed(output); }
+<span class="lineNum">     650 </span>            : #endif
+<span class="lineNum">     651 </span>            : 
+<span class="lineNum">     652 </span>            : #ifdef BOOST_HAS_INT128
+<span class="lineNum">     653 </span>            :             bool operator&gt;&gt;(boost::uint128_type&amp; output)        { return shr_unsigned(output); }
+<span class="lineNum">     654 </span>            :             bool operator&gt;&gt;(boost::int128_type&amp; output)         { return shr_signed(output); }
+<span class="lineNum">     655 </span>            : #endif
+<span class="lineNum">     656 </span>            : 
+<span class="lineNum">     657 </span>            :             bool operator&gt;&gt;(char&amp; output)                       { return shr_xchar(output); }
+<span class="lineNum">     658 </span>            :             bool operator&gt;&gt;(unsigned char&amp; output)              { return shr_xchar(output); }
+<span class="lineNum">     659 </span>            :             bool operator&gt;&gt;(signed char&amp; output)                { return shr_xchar(output); }
+<span class="lineNum">     660 </span>            : #if !defined(BOOST_LCAST_NO_WCHAR_T) &amp;&amp; !defined(BOOST_NO_INTRINSIC_WCHAR_T)
+<span class="lineNum">     661 </span>            :             bool operator&gt;&gt;(wchar_t&amp; output)                    { return shr_xchar(output); }
+<span class="lineNum">     662 </span>            : #endif
+<span class="lineNum">     663 </span>            : #if !defined(BOOST_NO_CXX11_CHAR16_T) &amp;&amp; !defined(BOOST_NO_CXX11_UNICODE_LITERALS)
+<span class="lineNum">     664 </span>            :             bool operator&gt;&gt;(char16_t&amp; output)                   { return shr_xchar(output); }
+<span class="lineNum">     665 </span>            : #endif
+<span class="lineNum">     666 </span>            : #if !defined(BOOST_NO_CXX11_CHAR32_T) &amp;&amp; !defined(BOOST_NO_CXX11_UNICODE_LITERALS)
+<span class="lineNum">     667 </span>            :             bool operator&gt;&gt;(char32_t&amp; output)                   { return shr_xchar(output); }
+<span class="lineNum">     668 </span>            : #endif
+<span class="lineNum">     669 </span>            :             template&lt;class Alloc&gt;
+<span class="lineNum">     670 </span>            :             bool operator&gt;&gt;(std::basic_string&lt;CharT,Traits,Alloc&gt;&amp; str) { 
+<span class="lineNum">     671 </span><span class="lineCov">      51107 :                 str.assign(start, finish); return true; </span>
+<span class="lineNum">     672 </span>            :             }
+<span class="lineNum">     673 </span>            : 
+<span class="lineNum">     674 </span>            :             template&lt;class Alloc&gt;
+<span class="lineNum">     675 </span>            :             bool operator&gt;&gt;(boost::container::basic_string&lt;CharT,Traits,Alloc&gt;&amp; str) { 
+<span class="lineNum">     676 </span>            :                 str.assign(start, finish); return true; 
+<span class="lineNum">     677 </span>            :             }
+<span class="lineNum">     678 </span>            : 
+<span class="lineNum">     679 </span>            :             template &lt;std::size_t N&gt;
+<span class="lineNum">     680 </span>            :             bool operator&gt;&gt;(boost::array&lt;CharT, N&gt;&amp; output) BOOST_NOEXCEPT { 
+<span class="lineNum">     681 </span>            :                 return shr_std_array&lt;N&gt;(output); 
+<span class="lineNum">     682 </span>            :             }
+<span class="lineNum">     683 </span>            : 
+<span class="lineNum">     684 </span>            :             template &lt;std::size_t N&gt;
+<span class="lineNum">     685 </span>            :             bool operator&gt;&gt;(boost::array&lt;unsigned char, N&gt;&amp; output) BOOST_NOEXCEPT { 
+<span class="lineNum">     686 </span>            :                 return ((*this) &gt;&gt; reinterpret_cast&lt;boost::array&lt;char, N&gt;&amp; &gt;(output)); 
+<span class="lineNum">     687 </span>            :             }
+<span class="lineNum">     688 </span>            : 
+<span class="lineNum">     689 </span>            :             template &lt;std::size_t N&gt;
+<span class="lineNum">     690 </span>            :             bool operator&gt;&gt;(boost::array&lt;signed char, N&gt;&amp; output) BOOST_NOEXCEPT { 
+<span class="lineNum">     691 </span>            :                 return ((*this) &gt;&gt; reinterpret_cast&lt;boost::array&lt;char, N&gt;&amp; &gt;(output)); 
+<span class="lineNum">     692 </span>            :             }
+<span class="lineNum">     693 </span>            :  
+<span class="lineNum">     694 </span>            : #ifndef BOOST_NO_CXX11_HDR_ARRAY
+<span class="lineNum">     695 </span>            :             template &lt;class C, std::size_t N&gt;
+<span class="lineNum">     696 </span>            :             bool operator&gt;&gt;(std::array&lt;C, N&gt;&amp; output) BOOST_NOEXCEPT { 
+<span class="lineNum">     697 </span>            :                 BOOST_STATIC_ASSERT_MSG(
+<span class="lineNum">     698 </span>            :                     (sizeof(std::array&lt;C, N&gt;) == sizeof(boost::array&lt;C, N&gt;)),
+<span class="lineNum">     699 </span>            :                     &quot;std::array&lt;C, N&gt; and boost::array&lt;C, N&gt; must have exactly the same layout.&quot;
+<span class="lineNum">     700 </span>            :                 );
+<span class="lineNum">     701 </span>            :                 return ((*this) &gt;&gt; reinterpret_cast&lt;boost::array&lt;C, N&gt;&amp; &gt;(output));
+<span class="lineNum">     702 </span>            :             }
+<span class="lineNum">     703 </span>            : #endif
+<span class="lineNum">     704 </span>            : 
+<span class="lineNum">     705 </span>            :             bool operator&gt;&gt;(bool&amp; output) BOOST_NOEXCEPT {
+<span class="lineNum">     706 </span>            :                 output = false; // Suppress warning about uninitalized variable
+<span class="lineNum">     707 </span>            : 
+<span class="lineNum">     708 </span>            :                 if (start == finish) return false;
+<span class="lineNum">     709 </span>            :                 CharT const zero = lcast_char_constants&lt;CharT&gt;::zero;
+<span class="lineNum">     710 </span>            :                 CharT const plus = lcast_char_constants&lt;CharT&gt;::plus;
+<span class="lineNum">     711 </span>            :                 CharT const minus = lcast_char_constants&lt;CharT&gt;::minus;
+<span class="lineNum">     712 </span>            : 
+<span class="lineNum">     713 </span>            :                 const CharT* const dec_finish = finish - 1;
+<span class="lineNum">     714 </span>            :                 output = Traits::eq(*dec_finish, zero + 1);
+<span class="lineNum">     715 </span>            :                 if (!output &amp;&amp; !Traits::eq(*dec_finish, zero)) {
+<span class="lineNum">     716 </span>            :                     return false; // Does not ends on '0' or '1'
+<span class="lineNum">     717 </span>            :                 }
+<span class="lineNum">     718 </span>            : 
+<span class="lineNum">     719 </span>            :                 if (start == dec_finish) return true;
+<span class="lineNum">     720 </span>            : 
+<span class="lineNum">     721 </span>            :                 // We may have sign at the beginning
+<span class="lineNum">     722 </span>            :                 if (Traits::eq(plus, *start) || (Traits::eq(minus, *start) &amp;&amp; !output)) {
+<span class="lineNum">     723 </span>            :                     ++ start;
+<span class="lineNum">     724 </span>            :                 }
+<span class="lineNum">     725 </span>            : 
+<span class="lineNum">     726 </span>            :                 // Skipping zeros
+<span class="lineNum">     727 </span>            :                 while (start != dec_finish) {
+<span class="lineNum">     728 </span>            :                     if (!Traits::eq(zero, *start)) {
+<span class="lineNum">     729 </span>            :                         return false; // Not a zero =&gt; error
+<span class="lineNum">     730 </span>            :                     }
+<span class="lineNum">     731 </span>            : 
+<span class="lineNum">     732 </span>            :                     ++ start;
+<span class="lineNum">     733 </span>            :                 }
+<span class="lineNum">     734 </span>            : 
+<span class="lineNum">     735 </span>            :                 return true;
+<span class="lineNum">     736 </span>            :             }
+<span class="lineNum">     737 </span>            : 
+<span class="lineNum">     738 </span>            :         private:
+<span class="lineNum">     739 </span>            :             // Not optimised converter
+<span class="lineNum">     740 </span>            :             template &lt;class T&gt;
+<span class="lineNum">     741 </span>            :             bool float_types_converter_internal(T&amp; output) {
+<span class="lineNum">     742 </span>            :                 if (parse_inf_nan(start, finish, output)) return true;
+<span class="lineNum">     743 </span>            :                 bool const return_value = shr_using_base_class(output);
+<span class="lineNum">     744 </span>            : 
+<span class="lineNum">     745 </span>            :                 /* Some compilers and libraries successfully
+<span class="lineNum">     746 </span>            :                  * parse 'inf', 'INFINITY', '1.0E', '1.0E-'...
+<span class="lineNum">     747 </span>            :                  * We are trying to provide a unified behaviour,
+<span class="lineNum">     748 </span>            :                  * so we just forbid such conversions (as some
+<span class="lineNum">     749 </span>            :                  * of the most popular compilers/libraries do)
+<span class="lineNum">     750 </span>            :                  * */
+<span class="lineNum">     751 </span>            :                 CharT const minus = lcast_char_constants&lt;CharT&gt;::minus;
+<span class="lineNum">     752 </span>            :                 CharT const plus = lcast_char_constants&lt;CharT&gt;::plus;
+<span class="lineNum">     753 </span>            :                 CharT const capital_e = lcast_char_constants&lt;CharT&gt;::capital_e;
+<span class="lineNum">     754 </span>            :                 CharT const lowercase_e = lcast_char_constants&lt;CharT&gt;::lowercase_e;
+<span class="lineNum">     755 </span>            :                 if ( return_value &amp;&amp;
+<span class="lineNum">     756 </span>            :                      (
+<span class="lineNum">     757 </span>            :                         Traits::eq(*(finish-1), lowercase_e)                   // 1.0e
+<span class="lineNum">     758 </span>            :                         || Traits::eq(*(finish-1), capital_e)                  // 1.0E
+<span class="lineNum">     759 </span>            :                         || Traits::eq(*(finish-1), minus)                      // 1.0e- or 1.0E-
+<span class="lineNum">     760 </span>            :                         || Traits::eq(*(finish-1), plus)                       // 1.0e+ or 1.0E+
+<span class="lineNum">     761 </span>            :                      )
+<span class="lineNum">     762 </span>            :                 ) return false;
+<span class="lineNum">     763 </span>            : 
+<span class="lineNum">     764 </span>            :                 return return_value;
+<span class="lineNum">     765 </span>            :             }
+<span class="lineNum">     766 </span>            : 
+<span class="lineNum">     767 </span>            :         public:
+<span class="lineNum">     768 </span>            :             bool operator&gt;&gt;(float&amp; output) { return float_types_converter_internal(output); }
+<span class="lineNum">     769 </span>            :             bool operator&gt;&gt;(double&amp; output) { return float_types_converter_internal(output); }
+<span class="lineNum">     770 </span>            :             bool operator&gt;&gt;(long double&amp; output) { return float_types_converter_internal(output); }
+<span class="lineNum">     771 </span>            : 
+<span class="lineNum">     772 </span>            :             // Generic istream-based algorithm.
+<span class="lineNum">     773 </span>            :             // lcast_streambuf_for_target&lt;InputStreamable&gt;::value is true.
+<span class="lineNum">     774 </span>            :             template &lt;typename InputStreamable&gt;
+<span class="lineNum">     775 </span>            :             bool operator&gt;&gt;(InputStreamable&amp; output) { 
+<span class="lineNum">     776 </span>            :                 return shr_using_base_class(output); 
+<span class="lineNum">     777 </span>            :             }
+<span class="lineNum">     778 </span>            :         };
+<span class="lineNum">     779 </span>            :     }
+<span class="lineNum">     780 </span>            : } // namespace boost
+<span class="lineNum">     781 </span>            : 
+<span class="lineNum">     782 </span>            : #undef BOOST_LCAST_NO_WCHAR_T
+<span class="lineNum">     783 </span>            : 
+<span class="lineNum">     784 </span>            : #endif // BOOST_LEXICAL_CAST_DETAIL_CONVERTER_LEXICAL_HPP
+<span class="lineNum">     785 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

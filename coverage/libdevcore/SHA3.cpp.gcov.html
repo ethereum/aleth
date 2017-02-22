@@ -1,0 +1,300 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/SHA3.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - SHA3.cpp<span style="font-size: 80%;"> (source / <a href="SHA3.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntry">40</td>
+            <td class="headerCovTableEntryMed">87.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryLo">45.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file SHA3.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;SHA3.h&quot;
+<span class="lineNum">      23 </span>            : #include &lt;cstdint&gt;
+<span class="lineNum">      24 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      25 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      26 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      27 </span>            : #include &quot;RLP.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;picosha2.h&quot;
+<span class="lineNum">      29 </span>            : using namespace std;
+<span class="lineNum">      30 </span>            : using namespace dev;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace dev
+<span class="lineNum">      33 </span>            : {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span><span class="lineCov">          2 : h256 EmptySHA3 = sha3(bytesConstRef());</span>
+<span class="lineNum">      36 </span><span class="lineCov">          2 : h256 EmptyListSHA3 = sha3(rlpList());</span>
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : namespace keccak
+<span class="lineNum">      39 </span>            : {
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : /** libkeccak-tiny
+<span class="lineNum">      42 </span>            :  *
+<span class="lineNum">      43 </span>            :  * A single-file implementation of SHA-3 and SHAKE.
+<span class="lineNum">      44 </span>            :  *
+<span class="lineNum">      45 </span>            :  * Implementor: David Leon Gil
+<span class="lineNum">      46 </span>            :  * License: CC0, attribution kindly requested. Blame taken too,
+<span class="lineNum">      47 </span>            :  * but not liability.
+<span class="lineNum">      48 </span>            :  */
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : #define decshake(bits) \
+<span class="lineNum">      51 </span>            :   int shake##bits(uint8_t*, size_t, const uint8_t*, size_t);
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : #define decsha3(bits) \
+<span class="lineNum">      54 </span>            :   int sha3_##bits(uint8_t*, size_t, const uint8_t*, size_t);
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : decshake(128)
+<span class="lineNum">      57 </span>            : decshake(256)
+<span class="lineNum">      58 </span>            : decsha3(224)
+<span class="lineNum">      59 </span>            : decsha3(256)
+<span class="lineNum">      60 </span>            : decsha3(384)
+<span class="lineNum">      61 </span>            : decsha3(512)
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : /******** The Keccak-f[1600] permutation ********/
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : /*** Constants. ***/
+<span class="lineNum">      66 </span>            : static const uint8_t rho[24] = \
+<span class="lineNum">      67 </span>            :   { 1,  3,   6, 10, 15, 21,
+<span class="lineNum">      68 </span>            :         28, 36, 45, 55,  2, 14,
+<span class="lineNum">      69 </span>            :         27, 41, 56,  8, 25, 43,
+<span class="lineNum">      70 </span>            :         62, 18, 39, 61, 20, 44};
+<span class="lineNum">      71 </span>            : static const uint8_t pi[24] = \
+<span class="lineNum">      72 </span>            :   {10,  7, 11, 17, 18, 3,
+<span class="lineNum">      73 </span>            :         5, 16,  8, 21, 24, 4,
+<span class="lineNum">      74 </span>            :    15, 23, 19, 13, 12, 2,
+<span class="lineNum">      75 </span>            :    20, 14, 22,  9, 6,  1};
+<span class="lineNum">      76 </span>            : static const uint64_t RC[24] = \
+<span class="lineNum">      77 </span>            :   {1ULL, 0x8082ULL, 0x800000000000808aULL, 0x8000000080008000ULL,
+<span class="lineNum">      78 </span>            :    0x808bULL, 0x80000001ULL, 0x8000000080008081ULL, 0x8000000000008009ULL,
+<span class="lineNum">      79 </span>            :    0x8aULL, 0x88ULL, 0x80008009ULL, 0x8000000aULL,
+<span class="lineNum">      80 </span>            :    0x8000808bULL, 0x800000000000008bULL, 0x8000000000008089ULL, 0x8000000000008003ULL,
+<span class="lineNum">      81 </span>            :    0x8000000000008002ULL, 0x8000000000000080ULL, 0x800aULL, 0x800000008000000aULL,
+<span class="lineNum">      82 </span>            :    0x8000000080008081ULL, 0x8000000000008080ULL, 0x80000001ULL, 0x8000000080008008ULL};
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : /*** Helper macros to unroll the permutation. ***/
+<span class="lineNum">      85 </span>            : #define rol(x, s) (((x) &lt;&lt; s) | ((x) &gt;&gt; (64 - s)))
+<span class="lineNum">      86 </span>            : #define REPEAT6(e) e e e e e e
+<span class="lineNum">      87 </span>            : #define REPEAT24(e) REPEAT6(e e e e)
+<span class="lineNum">      88 </span>            : #define REPEAT5(e) e e e e e
+<span class="lineNum">      89 </span>            : #define FOR5(v, s, e) \
+<span class="lineNum">      90 </span>            :   v = 0;            \
+<span class="lineNum">      91 </span>            :   REPEAT5(e; v += s;)
+<a name="92"><span class="lineNum">      92 </span>            : </a>
+<span class="lineNum">      93 </span>            : /*** Keccak-f[1600] ***/
+<span class="lineNum">      94 </span><span class="lineCov">    4036174 : static inline void keccakf(void* state) {</span>
+<span class="lineNum">      95 </span><span class="lineCov">    4036174 :   uint64_t* a = (uint64_t*)state;</span>
+<span class="lineNum">      96 </span><span class="lineCov">    4036174 :   uint64_t b[5] = {0};</span>
+<span class="lineNum">      97 </span><span class="lineCov">    4036174 :   uint64_t t = 0;</span>
+<span class="lineNum">      98 </span>            :   uint8_t x, y;
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">  100904350 :   for (int i = 0; i &lt; 24; i++) {</span>
+<span class="lineNum">     101 </span>            :         // Theta
+<span class="lineNum">     102 </span><span class="lineCov">   96868176 :         FOR5(x, 1,</span>
+<span class="lineNum">     103 </span>            :                  b[x] = 0;
+<span class="lineNum">     104 </span>            :                  FOR5(y, 5,
+<span class="lineNum">     105 </span>            :                           b[x] ^= a[x + y]; ))
+<span class="lineNum">     106 </span><span class="lineCov">   96868176 :         FOR5(x, 1,</span>
+<span class="lineNum">     107 </span>            :                  FOR5(y, 5,
+<span class="lineNum">     108 </span>            :                           a[y + x] ^= b[(x + 4) % 5] ^ rol(b[(x + 1) % 5], 1); ))
+<span class="lineNum">     109 </span>            :         // Rho and pi
+<span class="lineNum">     110 </span><span class="lineCov">   96868176 :         t = a[1];</span>
+<span class="lineNum">     111 </span><span class="lineCov">   96868176 :         x = 0;</span>
+<span class="lineNum">     112 </span><span class="lineCov">   96868176 :         REPEAT24(b[0] = a[pi[x]];</span>
+<span class="lineNum">     113 </span>            :                          a[pi[x]] = rol(t, rho[x]);
+<span class="lineNum">     114 </span>            :                          t = b[0];
+<span class="lineNum">     115 </span>            :                          x++; )
+<span class="lineNum">     116 </span>            :         // Chi
+<span class="lineNum">     117 </span><span class="lineCov">   96868176 :         FOR5(y,</span>
+<span class="lineNum">     118 </span>            :            5,
+<span class="lineNum">     119 </span>            :            FOR5(x, 1,
+<span class="lineNum">     120 </span>            :                         b[x] = a[y + x];)
+<span class="lineNum">     121 </span>            :            FOR5(x, 1,
+<span class="lineNum">     122 </span>            :                         a[y + x] = b[x] ^ ((~b[(x + 1) % 5]) &amp; b[(x + 2) % 5]); ))
+<span class="lineNum">     123 </span>            :         // Iota
+<span class="lineNum">     124 </span><span class="lineCov">   96868176 :         a[0] ^= RC[i];</span>
+<span class="lineNum">     125 </span>            :   }
+<span class="lineNum">     126 </span><span class="lineCov">    4036174 : }</span>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : /******** The FIPS202-defined functions. ********/
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : /*** Some helper macros. ***/
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            : #define _(S) do { S } while (0)
+<span class="lineNum">     133 </span>            : #define FOR(i, ST, L, S) \
+<span class="lineNum">     134 </span>            :   _(for (size_t i = 0; i &lt; L; i += ST) { S; })
+<span class="lineNum">     135 </span>            : #define mkapply_ds(NAME, S)                                          \
+<span class="lineNum">     136 </span>            :   static inline void NAME(uint8_t* dst,                              \
+<span class="lineNum">     137 </span>            :                                                   const uint8_t* src,                        \
+<span class="lineNum">     138 </span>            :                                                   size_t len) {                              \
+<span class="lineNum">     139 </span>            :         FOR(i, 1, len, S);                                               \
+<span class="lineNum">     140 </span>            :   }
+<span class="lineNum">     141 </span>            : #define mkapply_sd(NAME, S)                                          \
+<span class="lineNum">     142 </span>            :   static inline void NAME(const uint8_t* src,                        \
+<span class="lineNum">     143 </span>            :                                                   uint8_t* dst,                              \
+<span class="lineNum">     144 </span>            :                                                   size_t len) {                              \
+<span class="lineNum">     145 </span>            :         FOR(i, 1, len, S);                                               \
+<span class="lineNum">     146 </span>            :   }
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineCov">  279874107 : mkapply_ds(xorin, dst[i] ^= src[i])  // xorin</span>
+<span class="lineNum">     149 </span><span class="lineCov">   66262879 : mkapply_sd(setout, dst[i] = src[i])  // setout</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            : #define P keccakf
+<span class="lineNum">     152 </span>            : #define Plen 200
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            : // Fold P*F over the full blocks of an input.
+<span class="lineNum">     155 </span>            : #define foldP(I, L, F) \
+<span class="lineNum">     156 </span>            :   while (L &gt;= rate) {  \
+<span class="lineNum">     157 </span>            :         F(a, I, rate);     \
+<span class="lineNum">     158 </span>            :         P(a);              \
+<span class="lineNum">     159 </span>            :         I += rate;         \
+<span class="lineNum">     160 </span>            :         L -= rate;         \
+<span class="lineNum">     161 </span>            :   }
+<a name="162"><span class="lineNum">     162 </span>            : </a>
+<span class="lineNum">     163 </span>            : /** The sponge-based hash construction. **/
+<span class="lineNum">     164 </span><span class="lineCov">    2007966 : static inline int hash(uint8_t* out, size_t outlen,</span>
+<span class="lineNum">     165 </span>            :                                            const uint8_t* in, size_t inlen,
+<span class="lineNum">     166 </span>            :                                            size_t rate, uint8_t delim) {
+<span class="lineNum">     167 </span><span class="lineCov">    2007966 :   if ((out == NULL) || ((in == NULL) &amp;&amp; inlen != 0) || (rate &gt;= Plen)) {</span>
+<span class="lineNum">     168 </span>            :         return -1;
+<span class="lineNum">     169 </span>            :   }
+<span class="lineNum">     170 </span><span class="lineCov">    2007967 :   uint8_t a[Plen] = {0};</span>
+<span class="lineNum">     171 </span>            :   // Absorb input.
+<span class="lineNum">     172 </span><span class="lineCov">    6064407 :   foldP(in, inlen, xorin);</span>
+<span class="lineNum">     173 </span>            :   // Xor in the DS and pad frame.
+<span class="lineNum">     174 </span><span class="lineCov">    2007967 :   a[inlen] ^= delim;</span>
+<span class="lineNum">     175 </span><span class="lineCov">    2007967 :   a[rate - 1] ^= 0x80;</span>
+<span class="lineNum">     176 </span>            :   // Xor in the last block.
+<span class="lineNum">     177 </span><span class="lineCov">    2007967 :   xorin(a, in, inlen);</span>
+<span class="lineNum">     178 </span>            :   // Apply P
+<span class="lineNum">     179 </span><span class="lineCov">    2007967 :   P(a);</span>
+<span class="lineNum">     180 </span>            :   // Squeeze output.
+<span class="lineNum">     181 </span><span class="lineCov">    2007967 :   foldP(out, outlen, setout);</span>
+<span class="lineNum">     182 </span><span class="lineCov">    2007967 :   setout(a, out, outlen);</span>
+<span class="lineNum">     183 </span><span class="lineCov">    2007967 :   memset(a, 0, 200);</span>
+<span class="lineNum">     184 </span><span class="lineCov">    2007967 :   return 0;</span>
+<span class="lineNum">     185 </span>            : }
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            : /*** Helper macros to define SHA3 and SHAKE instances. ***/
+<span class="lineNum">     188 </span>            : #define defshake(bits)                                            \
+<span class="lineNum">     189 </span>            :   int shake##bits(uint8_t* out, size_t outlen,                    \
+<span class="lineNum">     190 </span>            :                                   const uint8_t* in, size_t inlen) {              \
+<span class="lineNum">     191 </span>            :         return hash(out, outlen, in, inlen, 200 - (bits / 4), 0x1f);  \
+<span class="lineNum">     192 </span>            :   }
+<span class="lineNum">     193 </span>            : #define defsha3(bits)                                             \
+<span class="lineNum">     194 </span>            :   int sha3_##bits(uint8_t* out, size_t outlen,                    \
+<span class="lineNum">     195 </span>            :                                   const uint8_t* in, size_t inlen) {              \
+<span class="lineNum">     196 </span>            :         if (outlen &gt; (bits/8)) {                                      \
+<span class="lineNum">     197 </span>            :           return -1;                                                  \
+<span class="lineNum">     198 </span>            :         }                                                             \
+<span class="lineNum">     199 </span>            :         return hash(out, outlen, in, inlen, 200 - (bits / 4), 0x01);  \
+<span class="lineNum">     200 </span>            :   }
+<a name="201"><span class="lineNum">     201 </span>            : </a>
+<a name="202"><span class="lineNum">     202 </span>            : /*** FIPS202 SHAKE VOFs ***/</a>
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 : defshake(128)</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 : defshake(256)</span>
+<a name="205"><span class="lineNum">     205 </span>            : </a>
+<a name="206"><span class="lineNum">     206 </span>            : /*** FIPS202 SHA3 FOFs ***/</a>
+<a name="207"><span class="lineNum">     207 </span><span class="lineNoCov">          0 : defsha3(224)</span></a>
+<a name="208"><span class="lineNum">     208 </span><span class="lineCov">    2007966 : defsha3(256)</span></a>
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 : defsha3(384)</span>
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 : defsha3(512)</span>
+<span class="lineNum">     211 </span>            : 
+<a name="212"><span class="lineNum">     212 </span>            : }</a>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span><span class="lineCov">    2007964 : bool sha3(bytesConstRef _input, bytesRef o_output)</span>
+<span class="lineNum">     215 </span>            : {
+<span class="lineNum">     216 </span>            :         // FIXME: What with unaligned memory?
+<span class="lineNum">     217 </span><span class="lineCov">    2007966 :         if (o_output.size() != 32)</span>
+<span class="lineNum">     218 </span>            :                 return false;
+<span class="lineNum">     219 </span><span class="lineCov">    4015932 :         keccak::sha3_256(o_output.data(), 32, _input.data(), _input.size());</span>
+<span class="lineNum">     220 </span>            : //      keccak::keccak(ret.data(), 32, (uint64_t const*)_input.data(), _input.size());
+<span class="lineNum">     221 </span><span class="lineCov">    2007965 :         return true;</span>
+<a name="222"><span class="lineNum">     222 </span>            : }</a>
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

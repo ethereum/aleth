@@ -1,0 +1,298 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libevm/VMCalls.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libevm</a> - VMCalls.cpp<span style="font-size: 80%;"> (source / <a href="VMCalls.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">114</td>
+            <td class="headerCovTableEntry">115</td>
+            <td class="headerCovTableEntryHi">99.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #include &lt;libethereum/ExtVM.h&gt;
+<span class="lineNum">      20 </span>            : #include &quot;VMConfig.h&quot;
+<span class="lineNum">      21 </span>            : #include &quot;VM.h&quot;
+<span class="lineNum">      22 </span>            : using namespace std;
+<span class="lineNum">      23 </span>            : using namespace dev;
+<span class="lineNum">      24 </span>            : using namespace dev::eth;
+<span class="lineNum">      25 </span>            : 
+<a name="26"><span class="lineNum">      26 </span>            : </a>
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span><span class="lineCov">       4888 : void VM::copyDataToMemory(bytesConstRef _data, u256*&amp; _sp)</span>
+<span class="lineNum">      29 </span>            : {
+<span class="lineNum">      30 </span><span class="lineCov">       9776 :         auto offset = static_cast&lt;size_t&gt;(*_sp--);</span>
+<span class="lineNum">      31 </span><span class="lineCov">       9776 :         s512 bigIndex = *_sp--;</span>
+<span class="lineNum">      32 </span><span class="lineCov">       4888 :         auto index = static_cast&lt;size_t&gt;(bigIndex);</span>
+<span class="lineNum">      33 </span><span class="lineCov">       9776 :         auto size = static_cast&lt;size_t&gt;(*_sp--);</span>
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span><span class="lineCov">      10089 :         size_t sizeToBeCopied = bigIndex + size &gt; _data.size() ? _data.size() &lt; bigIndex ? 0 : _data.size() - index : size;</span>
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span><span class="lineCov">       4888 :         if (sizeToBeCopied &gt; 0)</span>
+<span class="lineNum">      38 </span><span class="lineCov">       9378 :                 std::memcpy(m_mem.data() + offset, _data.data() + index, sizeToBeCopied);</span>
+<span class="lineNum">      39 </span><span class="lineCov">       4888 :         if (size &gt; sizeToBeCopied)</span>
+<span class="lineNum">      40 </span><span class="lineCov">        574 :                 std::memset(m_mem.data() + offset + sizeToBeCopied, 0, size - sizeToBeCopied);</span>
+<span class="lineNum">      41 </span><span class="lineCov">       4888 : }</span>
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : // consolidate exception throws to avoid spraying boost code all over interpreter
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span><span class="lineCov">      96677 : void VM::throwOutOfGas()</span>
+<span class="lineNum">      47 </span>            : {
+<span class="lineNum">      48 </span><span class="lineCov">     193354 :         BOOST_THROW_EXCEPTION(OutOfGas());</span>
+<span class="lineNum">      49 </span>            : }
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineCov">        206 : void VM::throwBadInstruction()</span>
+<span class="lineNum">      52 </span>            : {
+<span class="lineNum">      53 </span><span class="lineCov">        412 :         BOOST_THROW_EXCEPTION(BadInstruction());</span>
+<span class="lineNum">      54 </span>            : }
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span><span class="lineCov">        100 : void VM::throwBadJumpDestination()</span>
+<span class="lineNum">      57 </span>            : {
+<span class="lineNum">      58 </span><span class="lineCov">        200 :         BOOST_THROW_EXCEPTION(BadJumpDestination());</span>
+<span class="lineNum">      59 </span>            : }
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineCov">       1106 : void VM::throwBadStack(unsigned _size, unsigned _removed, unsigned _added)</span>
+<span class="lineNum">      62 </span>            : {
+<span class="lineNum">      63 </span><span class="lineCov">       1106 :         if (_size &lt; _removed)</span>
+<span class="lineNum">      64 </span>            :         {
+<span class="lineNum">      65 </span><span class="lineCov">        765 :                 if (m_onFail)</span>
+<span class="lineNum">      66 </span><span class="lineCov">        765 :                         (this-&gt;*m_onFail)();</span>
+<span class="lineNum">      67 </span><span class="lineCov">       9945 :                 BOOST_THROW_EXCEPTION(StackUnderflow() &lt;&lt; RequirementError((bigint)_removed, (bigint)_size));</span>
+<span class="lineNum">      68 </span>            :         }
+<span class="lineNum">      69 </span><span class="lineCov">        341 :         if (_size - _removed + _added &gt; 1024)</span>
+<span class="lineNum">      70 </span>            :         {
+<span class="lineNum">      71 </span><span class="lineCov">        341 :                 if (m_onFail)</span>
+<span class="lineNum">      72 </span><span class="lineCov">        341 :                         (this-&gt;*m_onFail)();</span>
+<span class="lineNum">      73 </span><span class="lineCov">       4433 :                 BOOST_THROW_EXCEPTION(OutOfStack() &lt;&lt; RequirementError((bigint)(_added - _removed), (bigint)_size));</span>
+<span class="lineNum">      74 </span>            :         }
+<a name="75"><span class="lineNum">      75 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">   27323224 : int64_t VM::verifyJumpDest(u256 const&amp; _dest, bool _throw)</span>
+<span class="lineNum">      78 </span>            : {
+<span class="lineNum">      79 </span>            :         
+<span class="lineNum">      80 </span>            :         // check for overflow
+<span class="lineNum">      81 </span><span class="lineCov">   27323224 :         if (_dest &lt;= 0x7FFFFFFFFFFFFFFF) {</span>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :                 // check for within bounds and to a jump destination
+<span class="lineNum">      84 </span>            :                 // use binary search of array because hashtable collisions are exploitable
+<span class="lineNum">      85 </span><span class="lineCov">   27323205 :                 uint64_t pc = uint64_t(_dest);</span>
+<span class="lineNum">      86 </span><span class="lineCov">  109292820 :                 if (std::binary_search(m_jumpDests.begin(), m_jumpDests.end(), pc))</span>
+<span class="lineNum">      87 </span><span class="lineCov">   20511110 :                         return pc;</span>
+<span class="lineNum">      88 </span>            :         }
+<span class="lineNum">      89 </span><span class="lineCov">    6812114 :         if (_throw)</span>
+<span class="lineNum">      90 </span><span class="lineCov">        100 :                 throwBadJumpDestination();</span>
+<span class="lineNum">      91 </span>            :         return -1;
+<span class="lineNum">      92 </span>            : }
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : //
+<span class="lineNum">      96 </span>            : // interpreter cases that call out
+<a name="97"><span class="lineNum">      97 </span>            : //</a>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineCov">       3991 : void VM::caseCreate()</span>
+<span class="lineNum">     100 </span>            : {
+<span class="lineNum">     101 </span><span class="lineCov">       3991 :         m_bounce = &amp;VM::interpretCases;</span>
+<span class="lineNum">     102 </span><span class="lineCov">      11973 :         m_newMemSize = memNeed(*(m_sp - 1), *(m_sp - 2));</span>
+<span class="lineNum">     103 </span><span class="lineCov">       7972 :         m_runGas = toUint64(m_schedule-&gt;createGas);</span>
+<span class="lineNum">     104 </span><span class="lineCov">       3986 :         updateMem();</span>
+<span class="lineNum">     105 </span><span class="lineCov">       3938 :         ON_OP();</span>
+<span class="lineNum">     106 </span><span class="lineCov">       3938 :         updateIOGas();</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span><span class="lineCov">       3938 :         auto const&amp; endowment = *m_sp--;</span>
+<span class="lineNum">     109 </span><span class="lineCov">       7876 :         uint64_t initOff = (uint64_t)*m_sp--;</span>
+<span class="lineNum">     110 </span><span class="lineCov">       7876 :         uint64_t initSize = (uint64_t)*m_sp--;</span>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span><span class="lineCov">       7876 :         if (m_ext-&gt;balance(m_ext-&gt;myAddress) &gt;= endowment &amp;&amp; m_ext-&gt;depth &lt; 1024)</span>
+<span class="lineNum">     113 </span>            :         {
+<span class="lineNum">     114 </span><span class="lineCov">       7784 :                 *io_gas = m_io_gas;</span>
+<span class="lineNum">     115 </span><span class="lineCov">       7784 :                 u256 createGas = *io_gas;</span>
+<span class="lineNum">     116 </span><span class="lineCov">       3892 :                 if (!m_schedule-&gt;staticCallDepthLimit())</span>
+<span class="lineNum">     117 </span><span class="lineCov">       3180 :                         createGas -= createGas / 64;</span>
+<span class="lineNum">     118 </span><span class="lineCov">       3892 :                 u256 gas = createGas;</span>
+<span class="lineNum">     119 </span><span class="lineCov">      23352 :                 *++m_sp = (u160)m_ext-&gt;create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), m_onOp);</span>
+<span class="lineNum">     120 </span><span class="lineCov">       7784 :                 *io_gas -= (createGas - gas);</span>
+<span class="lineNum">     121 </span><span class="lineCov">       7784 :                 m_io_gas = uint64_t(*io_gas);</span>
+<span class="lineNum">     122 </span>            :         }
+<span class="lineNum">     123 </span>            :         else
+<span class="lineNum">     124 </span><span class="lineCov">         92 :                 *++m_sp = 0;</span>
+<span class="lineNum">     125 </span><span class="lineCov">       3938 :         ++m_pc;</span>
+<a name="126"><span class="lineNum">     126 </span><span class="lineCov">       3938 : }</span></a>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span><span class="lineCov">     244368 : void VM::caseCall()</span>
+<span class="lineNum">     129 </span>            : {
+<span class="lineNum">     130 </span><span class="lineCov">     244368 :         m_bounce = &amp;VM::interpretCases;</span>
+<span class="lineNum">     131 </span><span class="lineCov">     733104 :         unique_ptr&lt;CallParameters&gt; callParams(new CallParameters());</span>
+<span class="lineNum">     132 </span><span class="lineCov">     244368 :         bytesRef output;</span>
+<span class="lineNum">     133 </span><span class="lineCov">     244368 :         if (caseCallSetup(callParams.get(), output))</span>
+<span class="lineNum">     134 </span>            :         {
+<span class="lineNum">     135 </span><span class="lineCov">     975312 :                 if (boost::optional&lt;owning_bytes_ref&gt; r = m_ext-&gt;call(*callParams))</span>
+<span class="lineNum">     136 </span>            :                 {
+<span class="lineNum">     137 </span><span class="lineCov">     147753 :                         r-&gt;copyTo(output);</span>
+<span class="lineNum">     138 </span><span class="lineCov">     295506 :                         *++m_sp = 1;</span>
+<span class="lineNum">     139 </span>            :                 }
+<span class="lineNum">     140 </span>            :                 else
+<span class="lineNum">     141 </span><span class="lineCov">     192150 :                         *++m_sp = 0;</span>
+<span class="lineNum">     142 </span>            :         }
+<span class="lineNum">     143 </span>            :         else
+<span class="lineNum">     144 </span><span class="lineCov">        278 :                 *++m_sp = 0;</span>
+<span class="lineNum">     145 </span><span class="lineCov">     487934 :         m_io_gas += uint64_t(callParams-&gt;gas);</span>
+<span class="lineNum">     146 </span><span class="lineCov">     243967 :         ++m_pc;</span>
+<a name="147"><span class="lineNum">     147 </span><span class="lineCov">     243967 : }</span></a>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">     244368 : bool VM::caseCallSetup(CallParameters *callParams, bytesRef&amp; o_output)</span>
+<span class="lineNum">     150 </span>            : {
+<span class="lineNum">     151 </span><span class="lineCov">     488736 :         m_runGas = toUint64(m_schedule-&gt;callGas);</span>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineCov">     374930 :         if (m_op == Instruction::CALL &amp;&amp; !m_ext-&gt;exists(asAddress(*(m_sp - 1))))</span>
+<span class="lineNum">     154 </span><span class="lineCov">       1012 :                 if (*(m_sp - 2) &gt; 0 || m_schedule-&gt;zeroValueTransferChargesNewAccountGas())</span>
+<span class="lineNum">     155 </span><span class="lineCov">        464 :                         m_runGas += toUint64(m_schedule-&gt;callNewAccountGas);</span>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span><span class="lineCov">     388585 :         if (m_op != Instruction::DELEGATECALL &amp;&amp; *(m_sp - 2) &gt; 0)</span>
+<span class="lineNum">     158 </span><span class="lineCov">     102096 :                 m_runGas += toUint64(m_schedule-&gt;callValueTransferGas);</span>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineCov">     244368 :         size_t sizesOffset = m_op == Instruction::DELEGATECALL ? 3 : 4;</span>
+<span class="lineNum">     161 </span><span class="lineCov">     488736 :         u256 inputOffset = m_stack[(1 + m_sp - m_stack) - sizesOffset];</span>
+<span class="lineNum">     162 </span><span class="lineCov">     488736 :         u256 inputSize = m_stack[(1 + m_sp - m_stack) - sizesOffset - 1];</span>
+<span class="lineNum">     163 </span><span class="lineCov">     488736 :         u256 outputOffset = m_stack[(1 + m_sp - m_stack) - sizesOffset - 2];</span>
+<span class="lineNum">     164 </span><span class="lineCov">     488736 :         u256 outputSize = m_stack[(1 + m_sp - m_stack) - sizesOffset - 3];</span>
+<span class="lineNum">     165 </span><span class="lineCov">     488736 :         uint64_t inputMemNeed = memNeed(inputOffset, inputSize);</span>
+<span class="lineNum">     166 </span><span class="lineCov">     488706 :         uint64_t outputMemNeed = memNeed(outputOffset, outputSize);</span>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span><span class="lineCov">     244344 :         m_newMemSize = std::max(inputMemNeed, outputMemNeed);</span>
+<span class="lineNum">     169 </span><span class="lineCov">     244344 :         updateMem();</span>
+<span class="lineNum">     170 </span><span class="lineCov">     244185 :         updateIOGas();</span>
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :         // &quot;Static&quot; costs already applied. Calculate call gas.
+<span class="lineNum">     173 </span><span class="lineCov">     488370 :         if (m_schedule-&gt;staticCallDepthLimit())</span>
+<span class="lineNum">     174 </span>            :                 // With static call depth limit we just charge the provided gas amount.
+<span class="lineNum">     175 </span><span class="lineCov">     134991 :                 callParams-&gt;gas = *m_sp;</span>
+<span class="lineNum">     176 </span>            :         else
+<span class="lineNum">     177 </span>            :         {
+<span class="lineNum">     178 </span>            :                 // Apply &quot;all but one 64th&quot; rule.
+<span class="lineNum">     179 </span><span class="lineCov">     218388 :                 u256 maxAllowedCallGas = m_io_gas - m_io_gas / 64;</span>
+<span class="lineNum">     180 </span><span class="lineCov">     327582 :                 callParams-&gt;gas = std::min(*m_sp, maxAllowedCallGas);</span>
+<span class="lineNum">     181 </span>            :         }
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineCov">     732537 :         m_runGas = toUint64(callParams-&gt;gas);</span>
+<span class="lineNum">     184 </span><span class="lineCov">     244167 :         ON_OP();</span>
+<span class="lineNum">     185 </span><span class="lineCov">     244167 :         updateIOGas();</span>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">     387835 :         if (m_op != Instruction::DELEGATECALL &amp;&amp; *(m_sp - 2) &gt; 0)</span>
+<span class="lineNum">     188 </span><span class="lineCov">      50870 :                 callParams-&gt;gas += m_schedule-&gt;callStipend;</span>
+<span class="lineNum">     189 </span><span class="lineCov">     243967 :         --m_sp;</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">     487934 :         callParams-&gt;codeAddress = asAddress(*m_sp);</span>
+<span class="lineNum">     192 </span><span class="lineCov">     243967 :         --m_sp;</span>
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineCov">     243967 :         if (m_op == Instruction::DELEGATECALL)</span>
+<span class="lineNum">     195 </span>            :         {
+<span class="lineNum">     196 </span><span class="lineCov">     200198 :                 callParams-&gt;apparentValue = m_ext-&gt;value;</span>
+<span class="lineNum">     197 </span><span class="lineCov">     200198 :                 callParams-&gt;valueTransfer = 0;</span>
+<span class="lineNum">     198 </span>            :         }
+<span class="lineNum">     199 </span>            :         else
+<span class="lineNum">     200 </span>            :         {
+<span class="lineNum">     201 </span><span class="lineCov">     431604 :                 callParams-&gt;apparentValue = callParams-&gt;valueTransfer = *m_sp;</span>
+<span class="lineNum">     202 </span><span class="lineCov">     143868 :                 --m_sp;</span>
+<span class="lineNum">     203 </span>            :         }
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span><span class="lineCov">     487934 :         uint64_t inOff = (uint64_t)*m_sp--;</span>
+<span class="lineNum">     206 </span><span class="lineCov">     487934 :         uint64_t inSize = (uint64_t)*m_sp--;</span>
+<span class="lineNum">     207 </span><span class="lineCov">     487934 :         uint64_t outOff = (uint64_t)*m_sp--;</span>
+<span class="lineNum">     208 </span><span class="lineCov">     487934 :         uint64_t outSize = (uint64_t)*m_sp--;</span>
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span><span class="lineCov">     487934 :         if (m_ext-&gt;balance(m_ext-&gt;myAddress) &gt;= callParams-&gt;valueTransfer &amp;&amp; m_ext-&gt;depth &lt; 1024)</span>
+<span class="lineNum">     211 </span>            :         {
+<span class="lineNum">     212 </span><span class="lineCov">     243828 :                 callParams-&gt;onOp = m_onOp;</span>
+<span class="lineNum">     213 </span><span class="lineCov">     243828 :                 callParams-&gt;senderAddress = m_op == Instruction::DELEGATECALL ? m_ext-&gt;caller : m_ext-&gt;myAddress;</span>
+<span class="lineNum">     214 </span><span class="lineCov">     243828 :                 callParams-&gt;receiveAddress = m_op == Instruction::CALL ? callParams-&gt;codeAddress : m_ext-&gt;myAddress;</span>
+<span class="lineNum">     215 </span><span class="lineCov">     487656 :                 callParams-&gt;data = bytesConstRef(m_mem.data() + inOff, inSize);</span>
+<span class="lineNum">     216 </span><span class="lineCov">     487656 :                 o_output = bytesRef(m_mem.data() + outOff, outSize);</span>
+<span class="lineNum">     217 </span><span class="lineCov">     243828 :                 return true;</span>
+<span class="lineNum">     218 </span>            :         }
+<a name="219"><span class="lineNum">     219 </span>            :         else</a>
+<span class="lineNum">     220 </span>            :                 return false;
+<span class="lineNum">     221 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     222 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

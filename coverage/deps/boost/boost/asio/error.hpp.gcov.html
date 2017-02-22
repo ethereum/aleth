@@ -1,0 +1,417 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/error.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio</a> - error.hpp<span style="font-size: 80%;"> (source / <a href="error.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryMed">75.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // error.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_ERROR_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_ERROR_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/cerrno.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/system/error_code.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/system/system_error.hpp&gt;
+<span class="lineNum">      22 </span>            : #if defined(BOOST_ASIO_WINDOWS) \
+<span class="lineNum">      23 </span>            :   || defined(__CYGWIN__) \
+<span class="lineNum">      24 </span>            :   || defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">      25 </span>            : # include &lt;winerror.h&gt;
+<span class="lineNum">      26 </span>            : #else
+<span class="lineNum">      27 </span>            : # include &lt;cerrno&gt;
+<span class="lineNum">      28 </span>            : # include &lt;netdb.h&gt;
+<span class="lineNum">      29 </span>            : #endif
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : #if defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      32 </span>            : /// INTERNAL ONLY.
+<span class="lineNum">      33 </span>            : # define BOOST_ASIO_NATIVE_ERROR(e) implementation_defined
+<span class="lineNum">      34 </span>            : /// INTERNAL ONLY.
+<span class="lineNum">      35 </span>            : # define BOOST_ASIO_SOCKET_ERROR(e) implementation_defined
+<span class="lineNum">      36 </span>            : /// INTERNAL ONLY.
+<span class="lineNum">      37 </span>            : # define BOOST_ASIO_NETDB_ERROR(e) implementation_defined
+<span class="lineNum">      38 </span>            : /// INTERNAL ONLY.
+<span class="lineNum">      39 </span>            : # define BOOST_ASIO_GETADDRINFO_ERROR(e) implementation_defined
+<span class="lineNum">      40 </span>            : /// INTERNAL ONLY.
+<span class="lineNum">      41 </span>            : # define BOOST_ASIO_WIN_OR_POSIX(e_win, e_posix) implementation_defined
+<span class="lineNum">      42 </span>            : #elif defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">      43 </span>            : # define BOOST_ASIO_NATIVE_ERROR(e) __HRESULT_FROM_WIN32(e)
+<span class="lineNum">      44 </span>            : # define BOOST_ASIO_SOCKET_ERROR(e) __HRESULT_FROM_WIN32(WSA ## e)
+<span class="lineNum">      45 </span>            : # define BOOST_ASIO_NETDB_ERROR(e) __HRESULT_FROM_WIN32(WSA ## e)
+<span class="lineNum">      46 </span>            : # define BOOST_ASIO_GETADDRINFO_ERROR(e) __HRESULT_FROM_WIN32(WSA ## e)
+<span class="lineNum">      47 </span>            : # define BOOST_ASIO_WIN_OR_POSIX(e_win, e_posix) e_win
+<span class="lineNum">      48 </span>            : #elif defined(BOOST_ASIO_WINDOWS) || defined(__CYGWIN__)
+<span class="lineNum">      49 </span>            : # define BOOST_ASIO_NATIVE_ERROR(e) e
+<span class="lineNum">      50 </span>            : # define BOOST_ASIO_SOCKET_ERROR(e) WSA ## e
+<span class="lineNum">      51 </span>            : # define BOOST_ASIO_NETDB_ERROR(e) WSA ## e
+<span class="lineNum">      52 </span>            : # define BOOST_ASIO_GETADDRINFO_ERROR(e) WSA ## e
+<span class="lineNum">      53 </span>            : # define BOOST_ASIO_WIN_OR_POSIX(e_win, e_posix) e_win
+<span class="lineNum">      54 </span>            : #else
+<span class="lineNum">      55 </span>            : # define BOOST_ASIO_NATIVE_ERROR(e) e
+<span class="lineNum">      56 </span>            : # define BOOST_ASIO_SOCKET_ERROR(e) e
+<span class="lineNum">      57 </span>            : # define BOOST_ASIO_NETDB_ERROR(e) e
+<span class="lineNum">      58 </span>            : # define BOOST_ASIO_GETADDRINFO_ERROR(e) e
+<span class="lineNum">      59 </span>            : # define BOOST_ASIO_WIN_OR_POSIX(e_win, e_posix) e_posix
+<span class="lineNum">      60 </span>            : #endif
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : namespace boost {
+<span class="lineNum">      65 </span>            : namespace asio {
+<span class="lineNum">      66 </span>            : namespace error {
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : enum basic_errors
+<span class="lineNum">      69 </span>            : {
+<span class="lineNum">      70 </span>            :   /// Permission denied.
+<span class="lineNum">      71 </span>            :   access_denied = BOOST_ASIO_SOCKET_ERROR(EACCES),
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :   /// Address family not supported by protocol.
+<span class="lineNum">      74 </span>            :   address_family_not_supported = BOOST_ASIO_SOCKET_ERROR(EAFNOSUPPORT),
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            :   /// Address already in use.
+<span class="lineNum">      77 </span>            :   address_in_use = BOOST_ASIO_SOCKET_ERROR(EADDRINUSE),
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :   /// Transport endpoint is already connected.
+<span class="lineNum">      80 </span>            :   already_connected = BOOST_ASIO_SOCKET_ERROR(EISCONN),
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :   /// Operation already in progress.
+<span class="lineNum">      83 </span>            :   already_started = BOOST_ASIO_SOCKET_ERROR(EALREADY),
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            :   /// Broken pipe.
+<span class="lineNum">      86 </span>            :   broken_pipe = BOOST_ASIO_WIN_OR_POSIX(
+<span class="lineNum">      87 </span>            :       BOOST_ASIO_NATIVE_ERROR(ERROR_BROKEN_PIPE),
+<span class="lineNum">      88 </span>            :       BOOST_ASIO_NATIVE_ERROR(EPIPE)),
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            :   /// A connection has been aborted.
+<span class="lineNum">      91 </span>            :   connection_aborted = BOOST_ASIO_SOCKET_ERROR(ECONNABORTED),
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            :   /// Connection refused.
+<span class="lineNum">      94 </span>            :   connection_refused = BOOST_ASIO_SOCKET_ERROR(ECONNREFUSED),
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            :   /// Connection reset by peer.
+<span class="lineNum">      97 </span>            :   connection_reset = BOOST_ASIO_SOCKET_ERROR(ECONNRESET),
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :   /// Bad file descriptor.
+<span class="lineNum">     100 </span>            :   bad_descriptor = BOOST_ASIO_SOCKET_ERROR(EBADF),
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :   /// Bad address.
+<span class="lineNum">     103 </span>            :   fault = BOOST_ASIO_SOCKET_ERROR(EFAULT),
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            :   /// No route to host.
+<span class="lineNum">     106 </span>            :   host_unreachable = BOOST_ASIO_SOCKET_ERROR(EHOSTUNREACH),
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :   /// Operation now in progress.
+<span class="lineNum">     109 </span>            :   in_progress = BOOST_ASIO_SOCKET_ERROR(EINPROGRESS),
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            :   /// Interrupted system call.
+<span class="lineNum">     112 </span>            :   interrupted = BOOST_ASIO_SOCKET_ERROR(EINTR),
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :   /// Invalid argument.
+<span class="lineNum">     115 </span>            :   invalid_argument = BOOST_ASIO_SOCKET_ERROR(EINVAL),
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :   /// Message too long.
+<span class="lineNum">     118 </span>            :   message_size = BOOST_ASIO_SOCKET_ERROR(EMSGSIZE),
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            :   /// The name was too long.
+<span class="lineNum">     121 </span>            :   name_too_long = BOOST_ASIO_SOCKET_ERROR(ENAMETOOLONG),
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            :   /// Network is down.
+<span class="lineNum">     124 </span>            :   network_down = BOOST_ASIO_SOCKET_ERROR(ENETDOWN),
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            :   /// Network dropped connection on reset.
+<span class="lineNum">     127 </span>            :   network_reset = BOOST_ASIO_SOCKET_ERROR(ENETRESET),
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            :   /// Network is unreachable.
+<span class="lineNum">     130 </span>            :   network_unreachable = BOOST_ASIO_SOCKET_ERROR(ENETUNREACH),
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            :   /// Too many open files.
+<span class="lineNum">     133 </span>            :   no_descriptors = BOOST_ASIO_SOCKET_ERROR(EMFILE),
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            :   /// No buffer space available.
+<span class="lineNum">     136 </span>            :   no_buffer_space = BOOST_ASIO_SOCKET_ERROR(ENOBUFS),
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :   /// Cannot allocate memory.
+<span class="lineNum">     139 </span>            :   no_memory = BOOST_ASIO_WIN_OR_POSIX(
+<span class="lineNum">     140 </span>            :       BOOST_ASIO_NATIVE_ERROR(ERROR_OUTOFMEMORY),
+<span class="lineNum">     141 </span>            :       BOOST_ASIO_NATIVE_ERROR(ENOMEM)),
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :   /// Operation not permitted.
+<span class="lineNum">     144 </span>            :   no_permission = BOOST_ASIO_WIN_OR_POSIX(
+<span class="lineNum">     145 </span>            :       BOOST_ASIO_NATIVE_ERROR(ERROR_ACCESS_DENIED),
+<span class="lineNum">     146 </span>            :       BOOST_ASIO_NATIVE_ERROR(EPERM)),
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            :   /// Protocol not available.
+<span class="lineNum">     149 </span>            :   no_protocol_option = BOOST_ASIO_SOCKET_ERROR(ENOPROTOOPT),
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            :   /// No such device.
+<span class="lineNum">     152 </span>            :   no_such_device = BOOST_ASIO_WIN_OR_POSIX(
+<span class="lineNum">     153 </span>            :       BOOST_ASIO_NATIVE_ERROR(ERROR_BAD_UNIT),
+<span class="lineNum">     154 </span>            :       BOOST_ASIO_NATIVE_ERROR(ENODEV)),
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :   /// Transport endpoint is not connected.
+<span class="lineNum">     157 </span>            :   not_connected = BOOST_ASIO_SOCKET_ERROR(ENOTCONN),
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :   /// Socket operation on non-socket.
+<span class="lineNum">     160 </span>            :   not_socket = BOOST_ASIO_SOCKET_ERROR(ENOTSOCK),
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :   /// Operation cancelled.
+<span class="lineNum">     163 </span>            :   operation_aborted = BOOST_ASIO_WIN_OR_POSIX(
+<span class="lineNum">     164 </span>            :       BOOST_ASIO_NATIVE_ERROR(ERROR_OPERATION_ABORTED),
+<span class="lineNum">     165 </span>            :       BOOST_ASIO_NATIVE_ERROR(ECANCELED)),
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            :   /// Operation not supported.
+<span class="lineNum">     168 </span>            :   operation_not_supported = BOOST_ASIO_SOCKET_ERROR(EOPNOTSUPP),
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :   /// Cannot send after transport endpoint shutdown.
+<span class="lineNum">     171 </span>            :   shut_down = BOOST_ASIO_SOCKET_ERROR(ESHUTDOWN),
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :   /// Connection timed out.
+<span class="lineNum">     174 </span>            :   timed_out = BOOST_ASIO_SOCKET_ERROR(ETIMEDOUT),
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            :   /// Resource temporarily unavailable.
+<span class="lineNum">     177 </span>            :   try_again = BOOST_ASIO_WIN_OR_POSIX(
+<span class="lineNum">     178 </span>            :       BOOST_ASIO_NATIVE_ERROR(ERROR_RETRY),
+<span class="lineNum">     179 </span>            :       BOOST_ASIO_NATIVE_ERROR(EAGAIN)),
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            :   /// The socket is marked non-blocking and the requested operation would block.
+<span class="lineNum">     182 </span>            :   would_block = BOOST_ASIO_SOCKET_ERROR(EWOULDBLOCK)
+<span class="lineNum">     183 </span>            : };
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            : enum netdb_errors
+<span class="lineNum">     186 </span>            : {
+<span class="lineNum">     187 </span>            :   /// Host not found (authoritative).
+<span class="lineNum">     188 </span>            :   host_not_found = BOOST_ASIO_NETDB_ERROR(HOST_NOT_FOUND),
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            :   /// Host not found (non-authoritative).
+<span class="lineNum">     191 </span>            :   host_not_found_try_again = BOOST_ASIO_NETDB_ERROR(TRY_AGAIN),
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            :   /// The query is valid but does not have associated address data.
+<span class="lineNum">     194 </span>            :   no_data = BOOST_ASIO_NETDB_ERROR(NO_DATA),
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            :   /// A non-recoverable error occurred.
+<span class="lineNum">     197 </span>            :   no_recovery = BOOST_ASIO_NETDB_ERROR(NO_RECOVERY)
+<span class="lineNum">     198 </span>            : };
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            : enum addrinfo_errors
+<span class="lineNum">     201 </span>            : {
+<span class="lineNum">     202 </span>            :   /// The service is not supported for the given socket type.
+<span class="lineNum">     203 </span>            :   service_not_found = BOOST_ASIO_WIN_OR_POSIX(
+<span class="lineNum">     204 </span>            :       BOOST_ASIO_NATIVE_ERROR(WSATYPE_NOT_FOUND),
+<span class="lineNum">     205 </span>            :       BOOST_ASIO_GETADDRINFO_ERROR(EAI_SERVICE)),
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :   /// The socket type is not supported.
+<span class="lineNum">     208 </span>            :   socket_type_not_supported = BOOST_ASIO_WIN_OR_POSIX(
+<span class="lineNum">     209 </span>            :       BOOST_ASIO_NATIVE_ERROR(WSAESOCKTNOSUPPORT),
+<span class="lineNum">     210 </span>            :       BOOST_ASIO_GETADDRINFO_ERROR(EAI_SOCKTYPE))
+<span class="lineNum">     211 </span>            : };
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            : enum misc_errors
+<span class="lineNum">     214 </span>            : {
+<span class="lineNum">     215 </span>            :   /// Already open.
+<span class="lineNum">     216 </span>            :   already_open = 1,
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            :   /// End of file or stream.
+<span class="lineNum">     219 </span>            :   eof,
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            :   /// Element not found.
+<span class="lineNum">     222 </span>            :   not_found,
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            :   /// The descriptor cannot fit into the select system call's fd_set.
+<span class="lineNum">     225 </span>            :   fd_set_failure
+<span class="lineNum">     226 </span>            : };
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            : inline const boost::system::error_category&amp; get_system_category()
+<span class="lineNum">     229 </span>            : {
+<span class="lineNum">     230 </span><span class="lineCov">       5245 :   return boost::system::system_category();</span>
+<span class="lineNum">     231 </span>            : }
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            : #if !defined(BOOST_ASIO_WINDOWS) &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            : extern BOOST_ASIO_DECL
+<span class="lineNum">     236 </span>            : const boost::system::error_category&amp; get_netdb_category();
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span>            : extern BOOST_ASIO_DECL
+<span class="lineNum">     239 </span>            : const boost::system::error_category&amp; get_addrinfo_category();
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            : #else // !defined(BOOST_ASIO_WINDOWS) &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            : inline const boost::system::error_category&amp; get_netdb_category()
+<span class="lineNum">     244 </span>            : {
+<span class="lineNum">     245 </span>            :   return get_system_category();
+<span class="lineNum">     246 </span>            : }
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            : inline const boost::system::error_category&amp; get_addrinfo_category()
+<span class="lineNum">     249 </span>            : {
+<span class="lineNum">     250 </span>            :   return get_system_category();
+<span class="lineNum">     251 </span>            : }
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span>            : #endif // !defined(BOOST_ASIO_WINDOWS) &amp;&amp; !defined(__CYGWIN__)
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            : extern BOOST_ASIO_DECL
+<span class="lineNum">     256 </span>            : const boost::system::error_category&amp; get_misc_category();
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span><span class="lineCov">         43 : static const boost::system::error_category&amp; system_category</span>
+<span class="lineNum">     259 </span>            :   = boost::asio::error::get_system_category();
+<span class="lineNum">     260 </span><span class="lineCov">         43 : static const boost::system::error_category&amp; netdb_category</span>
+<span class="lineNum">     261 </span><span class="lineCov">         43 :   = boost::asio::error::get_netdb_category();</span>
+<span class="lineNum">     262 </span><span class="lineCov">         43 : static const boost::system::error_category&amp; addrinfo_category</span>
+<span class="lineNum">     263 </span><span class="lineCov">         43 :   = boost::asio::error::get_addrinfo_category();</span>
+<span class="lineNum">     264 </span><span class="lineCov">         43 : static const boost::system::error_category&amp; misc_category</span>
+<span class="lineNum">     265 </span><span class="lineCov">         43 :   = boost::asio::error::get_misc_category();</span>
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span>            : } // namespace error
+<span class="lineNum">     268 </span>            : } // namespace asio
+<span class="lineNum">     269 </span>            : } // namespace boost
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            : namespace boost {
+<span class="lineNum">     272 </span>            : namespace system {
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            : template&lt;&gt; struct is_error_code_enum&lt;boost::asio::error::basic_errors&gt;
+<span class="lineNum">     275 </span>            : {
+<span class="lineNum">     276 </span>            :   static const bool value = true;
+<span class="lineNum">     277 </span>            : };
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            : template&lt;&gt; struct is_error_code_enum&lt;boost::asio::error::netdb_errors&gt;
+<span class="lineNum">     280 </span>            : {
+<span class="lineNum">     281 </span>            :   static const bool value = true;
+<span class="lineNum">     282 </span>            : };
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            : template&lt;&gt; struct is_error_code_enum&lt;boost::asio::error::addrinfo_errors&gt;
+<span class="lineNum">     285 </span>            : {
+<span class="lineNum">     286 </span>            :   static const bool value = true;
+<span class="lineNum">     287 </span>            : };
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            : template&lt;&gt; struct is_error_code_enum&lt;boost::asio::error::misc_errors&gt;
+<span class="lineNum">     290 </span>            : {
+<span class="lineNum">     291 </span>            :   static const bool value = true;
+<span class="lineNum">     292 </span>            : };
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            : } // namespace system
+<span class="lineNum">     295 </span>            : } // namespace boost
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            : namespace boost {
+<span class="lineNum">     298 </span>            : namespace asio {
+<span class="lineNum">     299 </span>            : namespace error {
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span>            : inline boost::system::error_code make_error_code(basic_errors e)
+<span class="lineNum">     302 </span>            : {
+<span class="lineNum">     303 </span>            :   return boost::system::error_code(
+<span class="lineNum">     304 </span><span class="lineCov">       2994 :       static_cast&lt;int&gt;(e), get_system_category());</span>
+<span class="lineNum">     305 </span>            : }
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            : inline boost::system::error_code make_error_code(netdb_errors e)
+<span class="lineNum">     308 </span>            : {
+<span class="lineNum">     309 </span>            :   return boost::system::error_code(
+<span class="lineNum">     310 </span><span class="lineNoCov">          0 :       static_cast&lt;int&gt;(e), get_netdb_category());</span>
+<span class="lineNum">     311 </span>            : }
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            : inline boost::system::error_code make_error_code(addrinfo_errors e)
+<span class="lineNum">     314 </span>            : {
+<span class="lineNum">     315 </span>            :   return boost::system::error_code(
+<span class="lineNum">     316 </span><span class="lineNoCov">          0 :       static_cast&lt;int&gt;(e), get_addrinfo_category());</span>
+<span class="lineNum">     317 </span>            : }
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            : inline boost::system::error_code make_error_code(misc_errors e)
+<span class="lineNum">     320 </span>            : {
+<span class="lineNum">     321 </span>            :   return boost::system::error_code(
+<span class="lineNum">     322 </span><span class="lineNoCov">          0 :       static_cast&lt;int&gt;(e), get_misc_category());</span>
+<span class="lineNum">     323 </span>            : }
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span>            : } // namespace error
+<span class="lineNum">     326 </span>            : } // namespace asio
+<span class="lineNum">     327 </span>            : } // namespace boost
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     330 </span>            : 
+<span class="lineNum">     331 </span>            : #undef BOOST_ASIO_NATIVE_ERROR
+<span class="lineNum">     332 </span>            : #undef BOOST_ASIO_SOCKET_ERROR
+<span class="lineNum">     333 </span>            : #undef BOOST_ASIO_NETDB_ERROR
+<span class="lineNum">     334 </span>            : #undef BOOST_ASIO_GETADDRINFO_ERROR
+<span class="lineNum">     335 </span>            : #undef BOOST_ASIO_WIN_OR_POSIX
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span>            : #if defined(BOOST_ASIO_HEADER_ONLY)
+<span class="lineNum">     338 </span>            : # include &lt;boost/asio/impl/error.ipp&gt;
+<span class="lineNum">     339 </span>            : #endif // defined(BOOST_ASIO_HEADER_ONLY)
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span>            : #endif // BOOST_ASIO_ERROR_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

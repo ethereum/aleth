@@ -1,0 +1,598 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/utils/runtime/cla/parser.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/utils/runtime/cla</a> - parser.hpp<span style="font-size: 80%;"> (source / <a href="parser.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">44</td>
+            <td class="headerCovTableEntry">189</td>
+            <td class="headerCovTableEntryLo">23.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Use, modification, and distribution are subject to the
+<span class="lineNum">       3 </span>            : //  Boost Software License, Version 1.0. (See accompanying file
+<span class="lineNum">       4 </span>            : //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //!@file
+<span class="lineNum">       9 </span>            : //!@brief CLA parser
+<span class="lineNum">      10 </span>            : // ***************************************************************************
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #ifndef BOOST_TEST_UTILS_RUNTIME_CLA_PARSER_HPP
+<span class="lineNum">      13 </span>            : #define BOOST_TEST_UTILS_RUNTIME_CLA_PARSER_HPP
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : // Boost.Test Runtime parameters
+<span class="lineNum">      16 </span>            : #include &lt;boost/test/utils/runtime/argument.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/test/utils/runtime/modifier.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/test/utils/runtime/parameter.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/utils/runtime/cla/argv_traverser.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : // Boost.Test
+<span class="lineNum">      23 </span>            : #include &lt;boost/test/utils/foreach.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/utils/algorithm.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/detail/throw_exception.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/test/detail/global_typedef.hpp&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #include &lt;boost/algorithm/cxx11/all_of.hpp&gt; // !! ?? unnecessary after cxx11
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : // STL
+<span class="lineNum">      31 </span>            : // !! ?? #include &lt;unordered_set&gt;
+<span class="lineNum">      32 </span>            : #include &lt;set&gt;
+<span class="lineNum">      33 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : namespace boost {
+<span class="lineNum">      38 </span>            : namespace runtime {
+<span class="lineNum">      39 </span>            : namespace cla {
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : // ************************************************************************** //
+<span class="lineNum">      42 </span>            : // **************         runtime::cla::parameter_trie         ************** //
+<span class="lineNum">      43 </span>            : // ************************************************************************** //
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : namespace rt_cla_detail {
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : struct parameter_trie;
+<span class="lineNum">      48 </span>            : typedef shared_ptr&lt;parameter_trie&gt; parameter_trie_ptr;
+<span class="lineNum">      49 </span>            : typedef std::map&lt;char,parameter_trie_ptr&gt; trie_per_char;
+<a name="50"><span class="lineNum">      50 </span>            : typedef std::vector&lt;boost::reference_wrapper&lt;parameter_cla_id const&gt; &gt; param_cla_id_list;</a>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineCov">       2288 : struct parameter_trie {</span>
+<span class="lineNum">      53 </span><span class="lineCov">       2288 :     parameter_trie() : m_has_final_candidate( false ) {}</span>
+<a name="54"><span class="lineNum">      54 </span>            : </a>
+<span class="lineNum">      55 </span>            :     /// If subtrie corresponding to the char c exists returns it otherwise creates new
+<span class="lineNum">      56 </span><span class="lineCov">        675 :     parameter_trie_ptr  make_subtrie( char c )</span>
+<span class="lineNum">      57 </span>            :     {
+<span class="lineNum">      58 </span><span class="lineCov">       2025 :         trie_per_char::const_iterator it = m_subtrie.find( c );</span>
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span><span class="lineCov">       1350 :         if( it == m_subtrie.end() )</span>
+<span class="lineNum">      61 </span><span class="lineCov">       3414 :             it = m_subtrie.insert( std::make_pair( c, parameter_trie_ptr( new parameter_trie ) ) ).first;</span>
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineCov">       1350 :         return it-&gt;second;</span>
+<span class="lineNum">      64 </span>            :     }
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :     /// Creates series of sub-tries per characters in a string
+<span class="lineNum">      67 </span>            :     parameter_trie_ptr  make_subtrie( cstring s )
+<span class="lineNum">      68 </span>            :     {
+<span class="lineNum">      69 </span>            :         parameter_trie_ptr res;
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            :         BOOST_TEST_FOREACH( char, c, s )
+<span class="lineNum">      72 </span>            :             res = (res ? res-&gt;make_subtrie( c ) : make_subtrie( c ));
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :         return res;
+<span class="lineNum">      75 </span>            :     }
+<a name="76"><span class="lineNum">      76 </span>            : </a>
+<span class="lineNum">      77 </span>            :     /// Registers candidate parameter for this subtrie. If final, it needs to be unique
+<span class="lineNum">      78 </span><span class="lineCov">        675 :     void                add_candidate_id( parameter_cla_id const&amp; param_id, basic_param_ptr param_candidate, bool final )</span>
+<span class="lineNum">      79 </span>            :     {
+<span class="lineNum">      80 </span><span class="lineCov">        746 :         BOOST_TEST_I_ASSRT( !m_has_final_candidate &amp;&amp; (!final || m_id_candidates.empty()),</span>
+<span class="lineNum">      81 </span>            :           conflicting_param() &lt;&lt; &quot;Parameter cla id &quot; &lt;&lt; param_id.m_tag &lt;&lt; &quot; conflicts with the &quot;
+<span class="lineNum">      82 </span><span class="lineNoCov">          0 :                               &lt;&lt; &quot;parameter cla id &quot; &lt;&lt; m_id_candidates.back().get().m_tag );</span>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span><span class="lineCov">        675 :         m_has_final_candidate = final;</span>
+<span class="lineNum">      85 </span><span class="lineCov">        675 :         m_id_candidates.push_back( ref(param_id) );</span>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">       1350 :         if( m_id_candidates.size() == 1 )</span>
+<span class="lineNum">      88 </span><span class="lineCov">        569 :             m_param_candidate = param_candidate;</span>
+<span class="lineNum">      89 </span>            :         else
+<span class="lineNum">      90 </span><span class="lineCov">        106 :             m_param_candidate.reset();</span>
+<span class="lineNum">      91 </span><span class="lineCov">        675 :     }</span>
+<a name="92"><span class="lineNum">      92 </span>            : </a>
+<span class="lineNum">      93 </span>            :     /// Gets subtrie for specified char if present or nullptr otherwise
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :     parameter_trie_ptr  get_subtrie( char c ) const</span>
+<span class="lineNum">      95 </span>            :     {
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :         trie_per_char::const_iterator it = m_subtrie.find( c );</span>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :         return it != m_subtrie.end() ? it-&gt;second : parameter_trie_ptr();</span>
+<span class="lineNum">      99 </span>            :     }
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :     // Data members
+<span class="lineNum">     102 </span>            :     trie_per_char       m_subtrie;
+<span class="lineNum">     103 </span>            :     param_cla_id_list   m_id_candidates;
+<span class="lineNum">     104 </span>            :     basic_param_ptr     m_param_candidate;
+<span class="lineNum">     105 </span>            :     bool                m_has_final_candidate;
+<span class="lineNum">     106 </span>            : };
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : // ************************************************************************** //
+<span class="lineNum">     109 </span>            : // **************      runtime::cla::report_foreing_token      ************** //
+<span class="lineNum">     110 </span>            : // ************************************************************************** //
+<a name="111"><span class="lineNum">     111 </span>            : </a>
+<span class="lineNum">     112 </span>            : static void 
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 : report_foreing_token( cstring program_name, cstring token )</span>
+<span class="lineNum">     114 </span>            : {
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :     std::cerr &lt;&lt; &quot;Boost.Test WARNING: token \&quot;&quot; &lt;&lt; token &lt;&lt; &quot;\&quot; does not correspond to the Boost.Test argument \n&quot;</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :               &lt;&lt; &quot;                    and should be placed after all Boost.Test arguments and the -- separator.\n&quot;</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :               &lt;&lt; &quot;                    For example: &quot; &lt;&lt; program_name &lt;&lt; &quot; --random -- &quot; &lt;&lt; token &lt;&lt; &quot;\n&quot;; </span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : } // namespace rt_cla_detail
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : // ************************************************************************** //
+<span class="lineNum">     123 </span>            : // **************             runtime::cla::parser             ************** //
+<a name="124"><span class="lineNum">     124 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineCov">          4 : class parser {</span>
+<span class="lineNum">     127 </span>            : public:
+<span class="lineNum">     128 </span>            :     /// Initializes a parser and builds internal trie representation used for
+<span class="lineNum">     129 </span>            :     /// parsing based on the supplied parameters
+<a name="130"><span class="lineNum">     130 </span>            : #ifndef BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS</a>
+<span class="lineNum">     131 </span>            :     template&lt;typename Modifiers=nfp::no_params_type&gt;
+<span class="lineNum">     132 </span><span class="lineCov">          1 :     parser( parameters_store const&amp; parameters, Modifiers const&amp; m = nfp::no_params )</span>
+<span class="lineNum">     133 </span>            : #else
+<span class="lineNum">     134 </span>            :     template&lt;typename Modifiers&gt;
+<span class="lineNum">     135 </span>            :     parser( parameters_store const&amp; parameters, Modifiers const&amp; m )
+<span class="lineNum">     136 </span>            : #endif
+<span class="lineNum">     137 </span><span class="lineCov">          5 :     {</span>
+<span class="lineNum">     138 </span><span class="lineCov">          1 :         nfp::opt_assign( m_end_of_param_indicator, m, end_of_params );</span>
+<span class="lineNum">     139 </span><span class="lineCov">          1 :         nfp::opt_assign( m_negation_prefix, m, negation_prefix );</span>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineCov">          4 :         BOOST_TEST_I_ASSRT( algorithm::all_of( m_end_of_param_indicator.begin(),</span>
+<span class="lineNum">     142 </span>            :                                                m_end_of_param_indicator.end(),
+<span class="lineNum">     143 </span>            :                                                parameter_cla_id::valid_prefix_char ),
+<span class="lineNum">     144 </span>            :                             invalid_cla_id() &lt;&lt; &quot;End of parameters indicator can only consist of prefix characters.&quot; );
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineCov">          4 :         BOOST_TEST_I_ASSRT( algorithm::all_of( m_negation_prefix.begin(),</span>
+<span class="lineNum">     147 </span>            :                                                m_negation_prefix.end(),
+<span class="lineNum">     148 </span>            :                                                parameter_cla_id::valid_name_char ),
+<span class="lineNum">     149 </span>            :                             invalid_cla_id() &lt;&lt; &quot;Negation prefix can only consist of prefix characters.&quot; );
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineCov">          1 :         build_trie( parameters );</span>
+<span class="lineNum">     152 </span><span class="lineCov">          1 :     }</span>
+<span class="lineNum">     153 </span>            : 
+<a name="154"><span class="lineNum">     154 </span>            :     // input processing method</a>
+<span class="lineNum">     155 </span>            :     int
+<span class="lineNum">     156 </span><span class="lineCov">          1 :     parse( int argc, char** argv, runtime::arguments_store&amp; res )</span>
+<span class="lineNum">     157 </span>            :     {
+<span class="lineNum">     158 </span>            :         // save program name for help message
+<span class="lineNum">     159 </span><span class="lineCov">          2 :         m_program_name = argv[0];</span>
+<span class="lineNum">     160 </span><span class="lineCov">          1 :         cstring path_sep( &quot;\\/&quot; );</span>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span><span class="lineCov">          1 :         cstring::iterator it = unit_test::utils::find_last_of( m_program_name.begin(), m_program_name.end(),</span>
+<span class="lineNum">     163 </span><span class="lineCov">          1 :                                                                 path_sep.begin(), path_sep.end() );</span>
+<span class="lineNum">     164 </span><span class="lineCov">          1 :         if( it != m_program_name.end() )</span>
+<span class="lineNum">     165 </span><span class="lineCov">          1 :             m_program_name.trim_left( it + 1 );</span>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            :         // Set up the traverser
+<span class="lineNum">     168 </span>            :         argv_traverser tr( argc, (char const**)argv );
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :         // Loop till we reach end of input
+<span class="lineNum">     171 </span><span class="lineCov">          1 :         while( !tr.eoi() ) {</span>
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :             cstring curr_token = tr.current_token();</span>
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :             cstring prefix;</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :             cstring name;</span>
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :             cstring value_separator;</span>
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :             bool    negative_form = false;</span>
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :             // Perform format validations and split the argument into prefix, name and separator
+<span class="lineNum">     180 </span>            :             // False return value indicates end of params indicator is met
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :             if( !validate_token_format( curr_token, prefix, name, value_separator, negative_form ) ) {</span>
+<span class="lineNum">     182 </span>            :                 // get rid of &quot;end of params&quot; token
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :                 tr.next_token();</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :                 break;</span>
+<span class="lineNum">     185 </span>            :             }
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :             // Locate trie corresponding to found prefix and skip it in the input
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :             trie_ptr curr_trie = m_param_trie[prefix];</span>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :             if( !curr_trie ) {</span>
+<span class="lineNum">     191 </span>            :                 //  format_error() &lt;&lt; &quot;Unrecognized parameter prefix in the argument &quot; &lt;&lt; tr.current_token()
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :                 rt_cla_detail::report_foreing_token( m_program_name, curr_token );</span>
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :                 tr.save_token();</span>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :                 continue;</span>
+<span class="lineNum">     195 </span>            :             }
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :             curr_token.trim_left( prefix.size() );</span>
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            :             // Locate parameter based on a name and skip it in the input
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :             locate_result locate_res = locate_parameter( curr_trie, name, curr_token );</span>
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :             parameter_cla_id const&amp; found_id    = locate_res.first;</span>
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :             basic_param_ptr         found_param = locate_res.second;</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :             if( negative_form ) {</span>
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :                 BOOST_TEST_I_ASSRT( found_id.m_negatable,</span>
+<span class="lineNum">     206 </span>            :                                     format_error( found_param-&gt;p_name ) 
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :                                         &lt;&lt; &quot;Parameter tag &quot; &lt;&lt; found_id.m_tag &lt;&lt; &quot; is not negatable.&quot; );</span>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 :                 curr_token.trim_left( m_negation_prefix.size() );</span>
+<span class="lineNum">     210 </span>            :             }
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :             curr_token.trim_left( name.size() );</span>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :             cstring value;</span>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            :             // Skip validations if parameter has optional value and we are at the end of token
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :             if( !value_separator.is_empty() || !found_param-&gt;p_has_optional_value ) {</span>
+<span class="lineNum">     218 </span>            :                 // Validate and skip value separator in the input
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :                 BOOST_TEST_I_ASSRT( found_id.m_value_separator == value_separator,</span>
+<span class="lineNum">     220 </span>            :                                     format_error( found_param-&gt;p_name ) 
+<span class="lineNum">     221 </span>            :                                         &lt;&lt; &quot;Invalid separator for the parameter &quot;
+<span class="lineNum">     222 </span>            :                                         &lt;&lt; found_param-&gt;p_name
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :                                         &lt;&lt; &quot; in the argument &quot; &lt;&lt; tr.current_token() );</span>
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :                 curr_token.trim_left( value_separator.size() );</span>
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span>            :                 // Deduce value source
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :                 value = curr_token;</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :                 if( value.is_empty() ) {</span>
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :                     tr.next_token();</span>
+<span class="lineNum">     231 </span>            :                     value = tr.current_token();
+<span class="lineNum">     232 </span>            :                 }
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :                 BOOST_TEST_I_ASSRT( !value.is_empty(),</span>
+<span class="lineNum">     235 </span>            :                                     format_error( found_param-&gt;p_name )
+<span class="lineNum">     236 </span>            :                                         &lt;&lt; &quot;Missing an argument value for the parameter &quot;
+<span class="lineNum">     237 </span>            :                                         &lt;&lt; found_param-&gt;p_name
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :                                         &lt;&lt; &quot; in the argument &quot; &lt;&lt; tr.current_token() );</span>
+<span class="lineNum">     239 </span>            :             }
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            :             // Validate against argument duplication
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :             BOOST_TEST_I_ASSRT( !res.has( found_param-&gt;p_name ) || found_param-&gt;p_repeatable,</span>
+<span class="lineNum">     243 </span>            :                                 duplicate_arg( found_param-&gt;p_name )
+<span class="lineNum">     244 </span>            :                                     &lt;&lt; &quot;Duplicate argument value for the parameter &quot;
+<span class="lineNum">     245 </span>            :                                     &lt;&lt; found_param-&gt;p_name
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :                                     &lt;&lt; &quot; in the argument &quot; &lt;&lt; tr.current_token() );</span>
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :             // Produce argument value
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :             found_param-&gt;produce_argument( value, negative_form, res );</span>
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :             tr.next_token();</span>
+<span class="lineNum">     252 </span>            :         }
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            :         // generate the remainder and return it's size
+<span class="lineNum">     255 </span><span class="lineCov">          2 :         return tr.remainder();</span>
+<span class="lineNum">     256 </span>            :     }
+<span class="lineNum">     257 </span>            : 
+<a name="258"><span class="lineNum">     258 </span>            :     // help/usage/version</a>
+<span class="lineNum">     259 </span>            :     void
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :     version( std::ostream&amp; ostr )</span>
+<span class="lineNum">     261 </span>            :     {
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :        ostr &lt;&lt; &quot;Boost.Test module &quot;;</span>
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            : #if defined(BOOST_TEST_MODULE)
+<span class="lineNum">     265 </span>            :        // we do not want to refer to the master test suite there
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :        ostr &lt;&lt; '\'' &lt;&lt; BOOST_TEST_STRINGIZE( BOOST_TEST_MODULE ).trim( &quot;\&quot;&quot; ) &lt;&lt; &quot;' &quot;;</span>
+<span class="lineNum">     267 </span>            : #endif
+<span class="lineNum">     268 </span>            : 
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :        ostr &lt;&lt; &quot;in executable '&quot; &lt;&lt; m_program_name &lt;&lt; &quot;'\n&quot;;</span>
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :        ostr &lt;&lt; &quot;Compiled from Boost version &quot;</span>
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :             &lt;&lt; BOOST_VERSION/100000      &lt;&lt; &quot;.&quot;</span>
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :             &lt;&lt; BOOST_VERSION/100 % 1000  &lt;&lt; &quot;.&quot;</span>
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :             &lt;&lt; BOOST_VERSION % 100       ;</span>
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :        ostr &lt;&lt; &quot; with &quot;;</span>
+<span class="lineNum">     275 </span>            : #if defined(BOOST_TEST_INCLUDED)
+<span class="lineNum">     276 </span><span class="lineNoCov">          0 :        ostr &lt;&lt; &quot;single header inclusion of&quot;;</span>
+<span class="lineNum">     277 </span>            : #elif defined(BOOST_TEST_DYN_LINK)
+<span class="lineNum">     278 </span>            :        ostr &lt;&lt; &quot;dynamic linking to&quot;;
+<span class="lineNum">     279 </span>            : #else
+<span class="lineNum">     280 </span>            :        ostr &lt;&lt; &quot;static linking to&quot;;
+<span class="lineNum">     281 </span>            : #endif
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :        ostr &lt;&lt; &quot; Boost.Test\n&quot;;</span>
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :        ostr &lt;&lt; &quot;- Compiler: &quot; &lt;&lt; BOOST_COMPILER &lt;&lt; '\n'</span>
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot;- Platform: &quot; &lt;&lt; BOOST_PLATFORM &lt;&lt; '\n'</span>
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot;- STL     : &quot; &lt;&lt; BOOST_STDLIB;</span>
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :        ostr &lt;&lt; std::endl;</span>
+<span class="lineNum">     287 </span><span class="lineNoCov">          0 :     }</span>
+<a name="288"><span class="lineNum">     288 </span>            : </a>
+<span class="lineNum">     289 </span>            :     void
+<span class="lineNum">     290 </span><span class="lineNoCov">          0 :     usage( std::ostream&amp; ostr, cstring param_name = cstring() )</span>
+<span class="lineNum">     291 </span>            :     {
+<span class="lineNum">     292 </span><span class="lineNoCov">          0 :         if( !param_name.is_empty() ) {</span>
+<span class="lineNum">     293 </span><span class="lineNoCov">          0 :             basic_param_ptr param = locate_parameter( m_param_trie[help_prefix], param_name, &quot;&quot; ).second;</span>
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 :             param-&gt;usage( ostr, m_negation_prefix );</span>
+<span class="lineNum">     295 </span>            :         }
+<span class="lineNum">     296 </span>            :         else {
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; &quot;Usage: &quot; &lt;&lt; m_program_name &lt;&lt; &quot; [Boost.Test argument]... &quot;;</span>
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :             if( !m_end_of_param_indicator.empty() )</span>
+<span class="lineNum">     299 </span><span class="lineNoCov">          0 :                 ostr &lt;&lt; m_end_of_param_indicator &lt;&lt; &quot; [custom test module argument]...&quot;;</span>
+<span class="lineNum">     300 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     301 </span>            :         }
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; &quot;\nFor detailed help on Boost.Test parameters use:\n&quot;</span>
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 :              &lt;&lt; &quot;  &quot; &lt;&lt; m_program_name &lt;&lt; &quot; --help\n&quot;</span>
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 :              &lt;&lt; &quot;or\n&quot;</span>
+<span class="lineNum">     306 </span><span class="lineNoCov">          0 :              &lt;&lt; &quot;  &quot; &lt;&lt; m_program_name &lt;&lt; &quot; --help=&lt;parameter name&gt;\n&quot;;</span>
+<span class="lineNum">     307 </span><span class="lineNoCov">          0 :     }</span>
+<a name="308"><span class="lineNum">     308 </span>            : </a>
+<span class="lineNum">     309 </span>            :     void
+<span class="lineNum">     310 </span><span class="lineNoCov">          0 :     help( std::ostream&amp; ostr, parameters_store const&amp; parameters, cstring param_name )</span>
+<span class="lineNum">     311 </span>            :     {
+<span class="lineNum">     312 </span><span class="lineNoCov">          0 :         if( !param_name.is_empty() ) {</span>
+<span class="lineNum">     313 </span><span class="lineNoCov">          0 :             basic_param_ptr param = locate_parameter( m_param_trie[help_prefix], param_name, &quot;&quot; ).second;</span>
+<span class="lineNum">     314 </span><span class="lineNoCov">          0 :             param-&gt;help( ostr, m_negation_prefix );</span>
+<span class="lineNum">     315 </span>            :             return;
+<span class="lineNum">     316 </span>            :         }
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; &quot;Usage: &quot; &lt;&lt; m_program_name &lt;&lt; &quot; [Boost.Test argument]... &quot;;</span>
+<span class="lineNum">     319 </span><span class="lineNoCov">          0 :         if( !m_end_of_param_indicator.empty() )</span>
+<span class="lineNum">     320 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; m_end_of_param_indicator &lt;&lt; &quot; [custom test module argument]...&quot;;</span>
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span>            :         ostr &lt;&lt; &quot;\n\nBoost.Test arguments correspond to parameters listed below. &quot;
+<span class="lineNum">     323 </span>            :                 &quot;All parameters are optional. You can use specify parameter value either &quot;
+<span class="lineNum">     324 </span>            :                 &quot;as a command line argument or as a value of corresponding environment &quot;
+<span class="lineNum">     325 </span>            :                 &quot;variable. In case if argument for the same parameter is specified in both &quot;
+<span class="lineNum">     326 </span>            :                 &quot;places, command line is taking precedence. Command line argument format &quot;
+<span class="lineNum">     327 </span>            :                 &quot;supports parameter name guessing, so you can use any unambiguous &quot;
+<span class="lineNum">     328 </span><span class="lineNoCov">          0 :                 &quot;prefix to identify a parameter.&quot;;</span>
+<span class="lineNum">     329 </span><span class="lineNoCov">          0 :         if( !m_end_of_param_indicator.empty() )</span>
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; &quot; All the arguments after the &quot; &lt;&lt; m_end_of_param_indicator &lt;&lt; &quot; are ignored by the Boost.Test.&quot;;</span>
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; &quot;\n\nBoost.Test supports following parameters:\n&quot;;</span>
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :         BOOST_TEST_FOREACH( parameters_store::storage_type::value_type const&amp;, v, parameters.all() ) {</span>
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :             basic_param_ptr param = v.second;</span>
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span><span class="lineNoCov">          0 :             param-&gt;usage( ostr, m_negation_prefix );</span>
+<span class="lineNum">     338 </span>            :         }
+<span class="lineNum">     339 </span>            : 
+<span class="lineNum">     340 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; &quot;\nUse --help=&lt;parameter name&gt; to display detailed help for specific parameter.\n&quot;;</span>
+<span class="lineNum">     341 </span>            :     }
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span>            : private:
+<span class="lineNum">     344 </span>            :     typedef rt_cla_detail::parameter_trie_ptr   trie_ptr;
+<span class="lineNum">     345 </span>            :     typedef rt_cla_detail::trie_per_char        trie_per_char;
+<span class="lineNum">     346 </span>            :     typedef std::map&lt;cstring,trie_ptr&gt;          str_to_trie;
+<a name="347"><span class="lineNum">     347 </span>            : </a>
+<span class="lineNum">     348 </span>            :     void
+<span class="lineNum">     349 </span><span class="lineCov">          1 :     build_trie( parameters_store const&amp; parameters )</span>
+<span class="lineNum">     350 </span>            :     {
+<span class="lineNum">     351 </span>            :         // Iterate over all parameters
+<span class="lineNum">     352 </span><span class="lineCov">        119 :         BOOST_TEST_FOREACH( parameters_store::storage_type::value_type const&amp;, v, parameters.all() ) {</span>
+<span class="lineNum">     353 </span><span class="lineCov">         84 :             basic_param_ptr param = v.second;</span>
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span>            :             // Register all parameter's ids in trie.
+<span class="lineNum">     356 </span><span class="lineCov">       1216 :             BOOST_TEST_FOREACH( parameter_cla_id const&amp;, id, param-&gt;cla_ids() ) {</span>
+<span class="lineNum">     357 </span>            :                 // This is the trie corresponding to the prefix.
+<span class="lineNum">     358 </span><span class="lineCov">        284 :                 trie_ptr next_trie = m_param_trie[id.m_prefix];</span>
+<span class="lineNum">     359 </span><span class="lineCov">         71 :                 if( !next_trie )</span>
+<span class="lineNum">     360 </span><span class="lineCov">         15 :                     next_trie = m_param_trie[id.m_prefix] = trie_ptr( new rt_cla_detail::parameter_trie );</span>
+<span class="lineNum">     361 </span>            : 
+<span class="lineNum">     362 </span>            :                 // Build the trie, by following name's characters
+<span class="lineNum">     363 </span>            :                 // and register this parameter as candidate on each level
+<span class="lineNum">     364 </span><span class="lineCov">       1421 :                 for( size_t index = 0; index &lt; id.m_tag.size(); ++index ) {</span>
+<span class="lineNum">     365 </span><span class="lineCov">       3375 :                     next_trie = next_trie-&gt;make_subtrie( id.m_tag[index] );</span>
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span><span class="lineCov">       2700 :                     next_trie-&gt;add_candidate_id( id, param, index == (id.m_tag.size() - 1) );</span>
+<span class="lineNum">     368 </span>            :                 }
+<span class="lineNum">     369 </span>            :             }
+<span class="lineNum">     370 </span>            :         }
+<span class="lineNum">     371 </span><span class="lineCov">          1 :     }</span>
+<a name="372"><span class="lineNum">     372 </span>            : </a>
+<span class="lineNum">     373 </span>            :     bool
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 :     validate_token_format( cstring token, cstring&amp; prefix, cstring&amp; name, cstring&amp; separator, bool&amp; negative_form )</span>
+<span class="lineNum">     375 </span>            :     {
+<span class="lineNum">     376 </span>            :         // Match prefix
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 :         cstring::iterator it = token.begin();</span>
+<span class="lineNum">     378 </span><span class="lineNoCov">          0 :         while( it != token.end() &amp;&amp; parameter_cla_id::valid_prefix_char( *it ) )</span>
+<span class="lineNum">     379 </span><span class="lineNoCov">          0 :             ++it;</span>
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 :         prefix.assign( token.begin(), it );</span>
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 :         if( prefix.empty() )</span>
+<span class="lineNum">     384 </span>            :             return true;
+<span class="lineNum">     385 </span>            : 
+<span class="lineNum">     386 </span>            :         // Match name
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 :         while( it != token.end() &amp;&amp; parameter_cla_id::valid_name_char( *it ) )</span>
+<span class="lineNum">     388 </span><span class="lineNoCov">          0 :             ++it;</span>
+<span class="lineNum">     389 </span>            : 
+<span class="lineNum">     390 </span><span class="lineNoCov">          0 :         name.assign( prefix.end(), it );</span>
+<span class="lineNum">     391 </span>            : 
+<span class="lineNum">     392 </span><span class="lineNoCov">          0 :         if( name.empty() ) {</span>
+<span class="lineNum">     393 </span><span class="lineNoCov">          0 :             if( prefix == m_end_of_param_indicator )</span>
+<span class="lineNum">     394 </span>            :                 return false;
+<span class="lineNum">     395 </span>            : 
+<span class="lineNum">     396 </span><span class="lineNoCov">          0 :             BOOST_TEST_I_THROW( format_error() &lt;&lt; &quot;Invalid format for an actual argument &quot; &lt;&lt; token );</span>
+<span class="lineNum">     397 </span>            :         }
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span>            :         // Match value separator
+<span class="lineNum">     400 </span><span class="lineNoCov">          0 :         while( it != token.end() &amp;&amp; parameter_cla_id::valid_separator_char( *it ) )</span>
+<span class="lineNum">     401 </span><span class="lineNoCov">          0 :             ++it;</span>
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span><span class="lineNoCov">          0 :         separator.assign( name.end(), it );</span>
+<span class="lineNum">     404 </span>            : 
+<span class="lineNum">     405 </span>            :         // Match negation prefix
+<span class="lineNum">     406 </span><span class="lineNoCov">          0 :         negative_form = !m_negation_prefix.empty() &amp;&amp; ( name.substr( 0, m_negation_prefix.size() ) == m_negation_prefix );</span>
+<span class="lineNum">     407 </span><span class="lineNoCov">          0 :         if( negative_form )</span>
+<span class="lineNum">     408 </span><span class="lineNoCov">          0 :             name.trim_left( m_negation_prefix.size() );</span>
+<span class="lineNum">     409 </span>            : 
+<span class="lineNum">     410 </span>            :         return true;
+<span class="lineNum">     411 </span>            :     }
+<span class="lineNum">     412 </span>            : 
+<span class="lineNum">     413 </span>            :     // C++03: cannot have references as types
+<span class="lineNum">     414 </span>            :     typedef std::pair&lt;parameter_cla_id, basic_param_ptr&gt; locate_result;
+<a name="415"><span class="lineNum">     415 </span>            : </a>
+<span class="lineNum">     416 </span>            :     locate_result
+<span class="lineNum">     417 </span><span class="lineNoCov">          0 :     locate_parameter( trie_ptr curr_trie, cstring name, cstring token )</span>
+<span class="lineNum">     418 </span>            :     {
+<span class="lineNum">     419 </span><span class="lineNoCov">          0 :         std::vector&lt;trie_ptr&gt; typo_candidates;</span>
+<span class="lineNum">     420 </span><span class="lineNoCov">          0 :         std::vector&lt;trie_ptr&gt; next_typo_candidates;</span>
+<span class="lineNum">     421 </span><span class="lineNoCov">          0 :         trie_ptr next_trie;</span>
+<span class="lineNum">     422 </span>            : 
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 :         BOOST_TEST_FOREACH( char, c, name ) {</span>
+<span class="lineNum">     424 </span><span class="lineNoCov">          0 :             if( curr_trie ) {</span>
+<span class="lineNum">     425 </span>            :                 // locate next subtrie corresponding to the char
+<span class="lineNum">     426 </span><span class="lineNoCov">          0 :                 next_trie = curr_trie-&gt;get_subtrie( c );</span>
+<span class="lineNum">     427 </span>            : 
+<span class="lineNum">     428 </span><span class="lineNoCov">          0 :                 if( next_trie )</span>
+<span class="lineNum">     429 </span><span class="lineNoCov">          0 :                     curr_trie = next_trie;</span>
+<span class="lineNum">     430 </span>            :                 else {
+<span class="lineNum">     431 </span>            :                     // Initiate search for typo candicates. We will account for 'wrong char' typo
+<span class="lineNum">     432 </span>            :                     // 'missing char' typo and 'extra char' typo
+<span class="lineNum">     433 </span><span class="lineNoCov">          0 :                     BOOST_TEST_FOREACH( trie_per_char::value_type const&amp;, typo_cand, curr_trie-&gt;m_subtrie ) {</span>
+<span class="lineNum">     434 </span>            :                         // 'wrong char' typo
+<span class="lineNum">     435 </span><span class="lineNoCov">          0 :                         typo_candidates.push_back( typo_cand.second );</span>
+<span class="lineNum">     436 </span>            : 
+<span class="lineNum">     437 </span>            :                         // 'missing char' typo
+<span class="lineNum">     438 </span><span class="lineNoCov">          0 :                         if( (next_trie = typo_cand.second-&gt;get_subtrie( c )) )</span>
+<span class="lineNum">     439 </span><span class="lineNoCov">          0 :                             typo_candidates.push_back( next_trie );</span>
+<span class="lineNum">     440 </span>            :                     }
+<span class="lineNum">     441 </span>            : 
+<span class="lineNum">     442 </span>            :                     // 'extra char' typo
+<span class="lineNum">     443 </span><span class="lineNoCov">          0 :                     typo_candidates.push_back( curr_trie );</span>
+<span class="lineNum">     444 </span>            : 
+<span class="lineNum">     445 </span>            :                     curr_trie.reset();
+<span class="lineNum">     446 </span>            :                 }
+<span class="lineNum">     447 </span>            :             }
+<span class="lineNum">     448 </span>            :             else {
+<span class="lineNum">     449 </span>            :                 // go over existing typo candidates and see if they are still viable
+<span class="lineNum">     450 </span><span class="lineNoCov">          0 :                 BOOST_TEST_FOREACH( trie_ptr, typo_cand, typo_candidates ) {</span>
+<span class="lineNum">     451 </span><span class="lineNoCov">          0 :                     trie_ptr next_typo_cand = typo_cand-&gt;get_subtrie( c );</span>
+<span class="lineNum">     452 </span>            : 
+<span class="lineNum">     453 </span><span class="lineNoCov">          0 :                     if( next_typo_cand )</span>
+<span class="lineNum">     454 </span><span class="lineNoCov">          0 :                         next_typo_candidates.push_back( next_typo_cand );</span>
+<span class="lineNum">     455 </span>            :                 }
+<span class="lineNum">     456 </span>            : 
+<span class="lineNum">     457 </span><span class="lineNoCov">          0 :                 next_typo_candidates.swap( typo_candidates );</span>
+<span class="lineNum">     458 </span><span class="lineNoCov">          0 :                 next_typo_candidates.clear();</span>
+<span class="lineNum">     459 </span>            :             }
+<span class="lineNum">     460 </span>            :         }
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 :         if( !curr_trie ) {</span>
+<span class="lineNum">     463 </span><span class="lineNoCov">          0 :             std::vector&lt;cstring&gt; typo_candidate_names;</span>
+<span class="lineNum">     464 </span><span class="lineNoCov">          0 :             std::set&lt;parameter_cla_id const*&gt; unique_typo_candidate; // !! ?? unordered_set</span>
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :             typo_candidate_names.reserve( typo_candidates.size() );</span>
+<span class="lineNum">     466 </span>            : // !! ??            unique_typo_candidate.reserve( typo_candidates.size() );
+<span class="lineNum">     467 </span>            : 
+<span class="lineNum">     468 </span><span class="lineNoCov">          0 :             BOOST_TEST_FOREACH( trie_ptr, trie_cand, typo_candidates ) {</span>
+<span class="lineNum">     469 </span>            :                 // avoid ambiguos candidate trie
+<span class="lineNum">     470 </span><span class="lineNoCov">          0 :                 if( trie_cand-&gt;m_id_candidates.size() &gt; 1 )</span>
+<span class="lineNum">     471 </span>            :                     continue;
+<span class="lineNum">     472 </span>            : 
+<span class="lineNum">     473 </span><span class="lineNoCov">          0 :                 BOOST_TEST_FOREACH( parameter_cla_id const&amp;, param_cand, trie_cand-&gt;m_id_candidates ) {</span>
+<span class="lineNum">     474 </span><span class="lineNoCov">          0 :                     if( !unique_typo_candidate.insert( &amp;param_cand ).second )</span>
+<span class="lineNum">     475 </span>            :                         continue;
+<span class="lineNum">     476 </span>            : 
+<span class="lineNum">     477 </span><span class="lineNoCov">          0 :                     typo_candidate_names.push_back( param_cand.m_tag );</span>
+<span class="lineNum">     478 </span>            :                 }
+<span class="lineNum">     479 </span>            :             }
+<span class="lineNum">     480 </span>            : 
+<span class="lineNum">     481 </span>            : #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">     482 </span><span class="lineNoCov">          0 :             BOOST_TEST_I_THROW( unrecognized_param( std::move(typo_candidate_names) )</span>
+<span class="lineNum">     483 </span>            :                                 &lt;&lt; &quot;An unrecognized parameter in the argument &quot;
+<span class="lineNum">     484 </span><span class="lineNoCov">          0 :                                 &lt;&lt; token );</span>
+<span class="lineNum">     485 </span>            : #else
+<span class="lineNum">     486 </span>            :             BOOST_TEST_I_THROW( unrecognized_param( typo_candidate_names )
+<span class="lineNum">     487 </span>            :                                 &lt;&lt; &quot;An unrecognized parameter in the argument &quot;
+<span class="lineNum">     488 </span>            :                                 &lt;&lt; token );
+<span class="lineNum">     489 </span>            : #endif
+<span class="lineNum">     490 </span>            :         }
+<span class="lineNum">     491 </span>            : 
+<span class="lineNum">     492 </span><span class="lineNoCov">          0 :         if( curr_trie-&gt;m_id_candidates.size() &gt; 1 ) {</span>
+<span class="lineNum">     493 </span><span class="lineNoCov">          0 :             std::vector&lt;cstring&gt; amb_names;</span>
+<span class="lineNum">     494 </span><span class="lineNoCov">          0 :             BOOST_TEST_FOREACH( parameter_cla_id const&amp;, param_id, curr_trie-&gt;m_id_candidates )</span>
+<span class="lineNum">     495 </span><span class="lineNoCov">          0 :                 amb_names.push_back( param_id.m_tag );</span>
+<span class="lineNum">     496 </span>            : 
+<span class="lineNum">     497 </span>            : #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 :             BOOST_TEST_I_THROW( ambiguous_param( std::move( amb_names ) )</span>
+<span class="lineNum">     499 </span><span class="lineNoCov">          0 :                                 &lt;&lt; &quot;An ambiguous parameter name in the argument &quot; &lt;&lt; token );</span>
+<span class="lineNum">     500 </span>            : #else
+<span class="lineNum">     501 </span>            :             BOOST_TEST_I_THROW( ambiguous_param( amb_names )
+<span class="lineNum">     502 </span>            :                                 &lt;&lt; &quot;An ambiguous parameter name in the argument &quot; &lt;&lt; token );
+<span class="lineNum">     503 </span>            : #endif
+<span class="lineNum">     504 </span>            :         }
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span><span class="lineNoCov">          0 :         return locate_result( curr_trie-&gt;m_id_candidates.back().get(), curr_trie-&gt;m_param_candidate );</span>
+<span class="lineNum">     507 </span>            :     }
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            :     // Data members
+<span class="lineNum">     510 </span>            :     cstring     m_program_name;
+<span class="lineNum">     511 </span>            :     std::string m_end_of_param_indicator;
+<span class="lineNum">     512 </span>            :     std::string m_negation_prefix;
+<span class="lineNum">     513 </span>            :     str_to_trie m_param_trie;
+<span class="lineNum">     514 </span>            : };
+<span class="lineNum">     515 </span>            : 
+<span class="lineNum">     516 </span>            : } // namespace cla
+<span class="lineNum">     517 </span>            : } // namespace runtime
+<span class="lineNum">     518 </span>            : } // namespace boost
+<span class="lineNum">     519 </span>            : 
+<span class="lineNum">     520 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     521 </span>            : 
+<span class="lineNum">     522 </span>            : #endif // BOOST_TEST_UTILS_RUNTIME_CLA_PARSER_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,414 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/Block.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - Block.h<span style="font-size: 80%;"> (source / <a href="Block.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">27</td>
+            <td class="headerCovTableEntryLo">59.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryLo">35.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Block.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;array&gt;
+<span class="lineNum">      25 </span>            : #include &lt;unordered_map&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libdevcore/RLP.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libdevcore/TrieDB.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libdevcore/OverlayDB.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libethcore/Exceptions.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libethcore/BlockHeader.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libethcore/ChainOperationParams.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;libevm/ExtVMFace.h&gt;
+<span class="lineNum">      34 </span>            : #include &quot;Account.h&quot;
+<span class="lineNum">      35 </span>            : #include &quot;Transaction.h&quot;
+<span class="lineNum">      36 </span>            : #include &quot;TransactionReceipt.h&quot;
+<span class="lineNum">      37 </span>            : #include &quot;GasPricer.h&quot;
+<span class="lineNum">      38 </span>            : #include &quot;State.h&quot;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : namespace dev
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : namespace test { class ImportTest; class StateLoader; }
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : namespace eth
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : class SealEngineFace;
+<span class="lineNum">      49 </span>            : class BlockChain;
+<span class="lineNum">      50 </span>            : class State;
+<span class="lineNum">      51 </span>            : class TransactionQueue;
+<span class="lineNum">      52 </span>            : struct VerifiedBlockRef;
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : struct BlockChat: public LogChannel { static const char* name(); static const int verbosity = 4; };
+<span class="lineNum">      55 </span>            : struct BlockTrace: public LogChannel { static const char* name(); static const int verbosity = 5; };
+<span class="lineNum">      56 </span>            : struct BlockDetail: public LogChannel { static const char* name(); static const int verbosity = 14; };
+<span class="lineNum">      57 </span>            : struct BlockSafeExceptions: public LogChannel { static const char* name(); static const int verbosity = 21; };
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : struct PopulationStatistics
+<span class="lineNum">      60 </span>            : {
+<span class="lineNum">      61 </span>            :         double verify;
+<span class="lineNum">      62 </span>            :         double enact;
+<a name="63"><span class="lineNum">      63 </span>            : };</a>
+<a name="64"><span class="lineNum">      64 </span>            : </a>
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 : DEV_SIMPLE_EXCEPTION(ChainOperationWithUnknownBlockChain);</span>
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 : DEV_SIMPLE_EXCEPTION(InvalidOperationOnSealedBlock);</span>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : /**
+<span class="lineNum">      69 </span>            :  * @brief Active model of a block within the block chain.
+<span class="lineNum">      70 </span>            :  * Keeps track of all transactions, receipts and state for a particular block. Can apply all
+<a name="71"><span class="lineNum">      71 </span>            :  * needed transforms of the state for rewards and contains logic for sealing the block.</a>
+<span class="lineNum">      72 </span>            :  */
+<span class="lineNum">      73 </span><span class="lineCov">      37685 : class Block</span>
+<span class="lineNum">      74 </span>            : {
+<span class="lineNum">      75 </span>            :         friend class ExtVM;
+<span class="lineNum">      76 </span>            :         friend class dev::test::ImportTest;
+<span class="lineNum">      77 </span>            :         friend class dev::test::StateLoader;
+<span class="lineNum">      78 </span>            :         friend class Executive;
+<span class="lineNum">      79 </span>            :         friend class BlockChain;
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : public:
+<span class="lineNum">      82 </span>            :         // TODO: pass in ChainOperationParams rather than u256
+<a name="83"><span class="lineNum">      83 </span>            : </a>
+<span class="lineNum">      84 </span>            :         /// Default constructor; creates with a blank database prepopulated with the genesis block.
+<span class="lineNum">      85 </span><span class="lineCov">         24 :         Block(u256 const&amp; _accountStartNonce): m_state(_accountStartNonce, OverlayDB(), BaseState::Empty), m_precommit(_accountStartNonce) {}</span>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :         /// Basic state object from database.
+<span class="lineNum">      88 </span>            :         /// Use the default when you already have a database and you just want to make a Block object
+<span class="lineNum">      89 </span>            :         /// which uses it. If you have no preexisting database then set BaseState to something other
+<span class="lineNum">      90 </span>            :         /// than BaseState::PreExisting in order to prepopulate the Trie.
+<span class="lineNum">      91 </span>            :         /// You can also set the author address.
+<span class="lineNum">      92 </span>            :         Block(BlockChain const&amp; _bc, OverlayDB const&amp; _db, BaseState _bs = BaseState::PreExisting, Address const&amp; _author = Address());
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :         /// Basic state object from database.
+<span class="lineNum">      95 </span>            :         /// Use the default when you already have a database and you just want to make a Block object
+<span class="lineNum">      96 </span>            :         /// which uses it.
+<span class="lineNum">      97 </span>            :         /// Will throw InvalidRoot if the root passed is not in the database.
+<span class="lineNum">      98 </span>            :         /// You can also set the author address.
+<span class="lineNum">      99 </span>            :         Block(BlockChain const&amp; _bc, OverlayDB const&amp; _db, h256 const&amp; _root, Address const&amp; _author = Address());
+<a name="100"><span class="lineNum">     100 </span>            : </a>
+<span class="lineNum">     101 </span>            :         enum NullType { Null };
+<span class="lineNum">     102 </span><span class="lineCov">        370 :         Block(NullType): m_state(0, OverlayDB(), BaseState::Empty), m_precommit(0) {}</span>
+<a name="103"><span class="lineNum">     103 </span>            : </a>
+<span class="lineNum">     104 </span>            :         /// Construct from a given blockchain. Empty, but associated with @a _bc 's chain params.
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :         explicit Block(BlockChain const&amp; _bc): Block(Null) { noteChain(_bc); }</span>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :         /// Copy state object.
+<span class="lineNum">     108 </span>            :         Block(Block const&amp; _s);
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            :         /// Copy state object.
+<span class="lineNum">     111 </span>            :         Block&amp; operator=(Block const&amp; _s);
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :         /// Get the author address for any transactions we do and rewards we get.
+<span class="lineNum">     114 </span><span class="lineCov">          2 :         Address author() const { return m_author; }</span>
+<span class="lineNum">     115 </span>            : 
+<a name="116"><span class="lineNum">     116 </span>            :         /// Set the author address for any transactions we do and rewards we get.</a>
+<span class="lineNum">     117 </span>            :         /// This causes a complete reset of current block.
+<span class="lineNum">     118 </span><span class="lineCov">         36 :         void setAuthor(Address const&amp; _id) { m_author = _id; resetCurrent(); }</span>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            :         /// Note the fact that this block is being used with a particular chain.
+<span class="lineNum">     121 </span>            :         /// Call this before using any non-const methods.
+<span class="lineNum">     122 </span>            :         void noteChain(BlockChain const&amp; _bc);
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :         // Account-getters. All operate on the final state.
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            :         /// Get an account's balance.
+<span class="lineNum">     127 </span>            :         /// @returns 0 if the address has never been used.
+<span class="lineNum">     128 </span><span class="lineCov">          2 :         u256 balance(Address const&amp; _address) const { return m_state.balance(_address); }</span>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :         /// Get the number of transactions a particular address has sent (used for the transaction nonce).
+<span class="lineNum">     131 </span>            :         /// @returns 0 if the address has never been used.
+<span class="lineNum">     132 </span><span class="lineCov">          3 :         u256 transactionsFrom(Address const&amp; _address) const { return m_state.getNonce(_address); }</span>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            :         /// Check if the address is in use.
+<span class="lineNum">     135 </span>            :         bool addressInUse(Address const&amp; _address) const { return m_state.addressInUse(_address); }
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :         /// Check if the address contains executable code.
+<span class="lineNum">     138 </span>            :         bool addressHasCode(Address const&amp; _address) const { return m_state.addressHasCode(_address); }
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :         /// Get the root of the storage of an account.
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :         h256 storageRoot(Address const&amp; _contract) const { return m_state.storageRoot(_contract); }</span>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :         /// Get the value of a storage position of an account.
+<span class="lineNum">     144 </span>            :         /// @returns 0 if no account exists at that address.
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :         u256 storage(Address const&amp; _contract, u256 const&amp; _memory) const { return m_state.storage(_contract, _memory); }</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            :         /// Get the storage of an account.
+<span class="lineNum">     148 </span>            :         /// @note This is expensive. Don't use it unless you need to.
+<span class="lineNum">     149 </span>            :         /// @returns map of hashed keys to key-value pairs or empty map if no account exists at that address.
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :         std::map&lt;h256, std::pair&lt;u256, u256&gt;&gt; storage(Address const&amp; _contract) const { return m_state.storage(_contract); }</span>
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :         /// Get the code of an account.
+<span class="lineNum">     153 </span>            :         /// @returns bytes() if no account exists at that address.
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :         bytes const&amp; code(Address const&amp; _contract) const { return m_state.code(_contract); }</span>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :         /// Get the code hash of an account.
+<span class="lineNum">     157 </span>            :         /// @returns EmptySHA3 if no account exists at that address or if there is no code associated with the address.
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :         h256 codeHash(Address const&amp; _contract) const { return m_state.codeHash(_contract); }</span>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            :         // General information from state
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :         /// Get the backing state object.
+<span class="lineNum">     163 </span>            :         State const&amp; state() const { return m_state; }
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :         /// Open a DB - useful for passing into the constructor &amp; keeping for other states that are necessary.
+<span class="lineNum">     166 </span><span class="lineCov">       4925 :         OverlayDB const&amp; db() const { return m_state.db(); }</span>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :         /// The hash of the root of our state tree.
+<span class="lineNum">     169 </span><span class="lineCov">      19768 :         h256 rootHash() const { return m_state.rootHash(); }</span>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            :         /// @returns the set containing all addresses currently in use in Ethereum.
+<span class="lineNum">     172 </span>            :         /// @throws InterfaceNotSupported if compiled without ETH_FATDB.
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :         std::unordered_map&lt;Address, u256&gt; addresses() const { return m_state.addresses(); }</span>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :         // For altering accounts behind-the-scenes
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :         /// Get a mutable State object which is backing this block.
+<span class="lineNum">     178 </span>            :         /// @warning Only use this is you know what you're doing. If you use it while constructing a
+<span class="lineNum">     179 </span>            :         /// normal sealable block, don't expect things to work right.
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :         State&amp; mutableState() { return m_state; }</span>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            :         // Information concerning ongoing transactions
+<a name="183"><span class="lineNum">     183 </span>            : </a>
+<span class="lineNum">     184 </span>            :         /// Get the remaining gas limit in this block.
+<span class="lineNum">     185 </span><span class="lineCov">          6 :         u256 gasLimitRemaining() const { return m_currentBlock.gasLimit() - gasUsed(); }</span>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :         /// Get the list of pending transactions.
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :         Transactions const&amp; pending() const { return m_transactions; }</span>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            :         /// Get the list of hashes of pending transactions.
+<span class="lineNum">     191 </span>            :         h256Hash const&amp; pendingHashes() const { return m_transactionSet; }
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            :         /// Get the transaction receipt for the transaction of the given index.
+<span class="lineNum">     194 </span><span class="lineCov">      17701 :         TransactionReceipt const&amp; receipt(unsigned _i) const { return m_receipts[_i]; }</span>
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            :         /// Get the list of pending transactions.
+<span class="lineNum">     197 </span>            :         LogEntries const&amp; log(unsigned _i) const { return m_receipts[_i].log(); }
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            :         /// Get the bloom filter of all logs that happened in the block.
+<span class="lineNum">     200 </span>            :         LogBloom logBloom() const;
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            :         /// Get the bloom filter of a particular transaction that happened in the block.
+<span class="lineNum">     203 </span>            :         LogBloom const&amp; logBloom(unsigned _i) const { return m_receipts[_i].bloom(); }
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            :         /// Get the State immediately after the given number of pending transactions have been applied.
+<span class="lineNum">     206 </span>            :         /// If (_i == 0) returns the initial state of the block.
+<span class="lineNum">     207 </span>            :         /// If (_i == pending().size()) returns the final state of the block, prior to rewards.
+<span class="lineNum">     208 </span>            :         State fromPending(unsigned _i) const;
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :         // State-change operations
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            :         /// Construct state object from arbitrary point in blockchain.
+<span class="lineNum">     213 </span>            :         PopulationStatistics populateFromChain(BlockChain const&amp; _bc, h256 const&amp; _hash, ImportRequirements::value _ir = ImportRequirements::None);
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            :         /// Execute a given transaction.
+<span class="lineNum">     216 </span>            :         /// This will append @a _t to the transaction list and change the state accordingly.
+<span class="lineNum">     217 </span>            :         ExecutionResult execute(LastHashes const&amp; _lh, Transaction const&amp; _t, Permanence _p = Permanence::Committed, OnOpFunc const&amp; _onOp = OnOpFunc());
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            :         /// Sync our transactions, killing those from the queue that we have and assimilating those that we don't.
+<span class="lineNum">     220 </span>            :         /// @returns a list of receipts one for each transaction placed from the queue into the state and bool, true iff there are more transactions to be processed.
+<span class="lineNum">     221 </span>            :         std::pair&lt;TransactionReceipts, bool&gt; sync(BlockChain const&amp; _bc, TransactionQueue&amp; _tq, GasPricer const&amp; _gp, unsigned _msTimeout = 100);
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            :         /// Sync our state with the block chain.
+<span class="lineNum">     224 </span>            :         /// This basically involves wiping ourselves if we've been superceded and rebuilding from the transaction queue.
+<span class="lineNum">     225 </span>            :         bool sync(BlockChain const&amp; _bc);
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span>            :         /// Sync with the block chain, but rather than synching to the latest block, instead sync to the given block.
+<span class="lineNum">     228 </span>            :         bool sync(BlockChain const&amp; _bc, h256 const&amp; _blockHash, BlockHeader const&amp; _bi = BlockHeader());
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            :         /// Execute all transactions within a given block.
+<span class="lineNum">     231 </span>            :         /// @returns the additional total difficulty.
+<span class="lineNum">     232 </span>            :         u256 enactOn(VerifiedBlockRef const&amp; _block, BlockChain const&amp; _bc);
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            :         /// Returns back to a pristine state after having done a playback.
+<span class="lineNum">     235 </span>            :         /// @arg _fullCommit if true flush everything out to disk. If false, this effectively only validates
+<span class="lineNum">     236 </span>            :         /// the block since all state changes are ultimately reversed.
+<span class="lineNum">     237 </span>            :         void cleanup(bool _fullCommit);
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            :         /// Sets m_currentBlock to a clean state, (i.e. no change from m_previousBlock) and
+<span class="lineNum">     240 </span>            :         /// optionally modifies the timestamp.
+<span class="lineNum">     241 </span>            :         void resetCurrent(u256 const&amp; _timestamp = u256(utcTime()));
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            :         // Sealing
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span>            :         /// Prepares the current state for mining.
+<span class="lineNum">     246 </span>            :         /// Commits all transactions into the trie, compiles uncles and transactions list, applies all
+<span class="lineNum">     247 </span>            :         /// rewards and populates the current block header with the appropriate hashes.
+<span class="lineNum">     248 </span>            :         /// The only thing left to do after this is to actually mine().
+<span class="lineNum">     249 </span>            :         ///
+<span class="lineNum">     250 </span>            :         /// This may be called multiple times and without issue.
+<span class="lineNum">     251 </span>            :         void commitToSeal(BlockChain const&amp; _bc, bytes const&amp; _extraData = {});
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span>            :         /// Pass in a properly sealed header matching this block.
+<span class="lineNum">     254 </span>            :         /// @returns true iff we were previously committed to sealing, the header is valid and it
+<span class="lineNum">     255 </span>            :         /// corresponds to this block.
+<span class="lineNum">     256 </span>            :         /// TODO: verify it prior to calling this.
+<span class="lineNum">     257 </span>            :         /** Commit to DB and build the final block if the previous call to mine()'s result is completion.
+<span class="lineNum">     258 </span>            :          * Typically looks like:
+<span class="lineNum">     259 </span>            :          * @code
+<span class="lineNum">     260 </span>            :          * while (!isSealed)
+<span class="lineNum">     261 </span>            :          * {
+<span class="lineNum">     262 </span>            :          * // lock
+<span class="lineNum">     263 </span>            :          * commitToSeal(_blockChain);  // will call uncommitToSeal if a repeat.
+<span class="lineNum">     264 </span>            :          * sealBlock(sealedHeader);
+<span class="lineNum">     265 </span>            :          * // unlock
+<span class="lineNum">     266 </span>            :          * @endcode
+<span class="lineNum">     267 </span>            :          */
+<span class="lineNum">     268 </span><span class="lineCov">         18 :         bool sealBlock(bytes const&amp; _header) { return sealBlock(&amp;_header); }</span>
+<span class="lineNum">     269 </span>            :         bool sealBlock(bytesConstRef _header);
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            :         /// @returns true if sealed - in this case you can no longer append transactions.
+<span class="lineNum">     272 </span><span class="lineCov">     562038 :         bool isSealed() const { return !m_currentBytes.empty(); }</span>
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            :         /// Get the complete current block, including valid nonce.
+<span class="lineNum">     275 </span>            :         /// Only valid when isSealed() is true.
+<span class="lineNum">     276 </span><span class="lineCov">          4 :         bytes const&amp; blockData() const { return m_currentBytes; }</span>
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span>            :         /// Get the header information on the present block.
+<span class="lineNum">     279 </span><span class="lineCov">     280866 :         BlockHeader const&amp; info() const { return m_currentBlock; }</span>
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span>            : private:
+<span class="lineNum">     282 </span>            :         SealEngineFace* sealEngine() const;
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            :         /// Undo the changes to the state for committing to mine.
+<span class="lineNum">     285 </span>            :         void uncommitToSeal();
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            :         /// Retrieve all information about a given address into the cache.
+<span class="lineNum">     288 </span>            :         /// If _requireMemory is true, grab the full memory should it be a contract item.
+<span class="lineNum">     289 </span>            :         /// If _forceCreate is true, then insert a default item into the cache, in the case it doesn't
+<span class="lineNum">     290 </span>            :         /// exist in the DB.
+<span class="lineNum">     291 </span>            :         void ensureCached(Address const&amp; _a, bool _requireCode, bool _forceCreate) const;
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            :         /// Retrieve all information about a given address into a cache.
+<span class="lineNum">     294 </span>            :         void ensureCached(std::unordered_map&lt;Address, Account&gt;&amp; _cache, Address const&amp; _a, bool _requireCode, bool _forceCreate) const;
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            :         /// Execute the given block, assuming it corresponds to m_currentBlock.
+<span class="lineNum">     297 </span>            :         /// Throws on failure.
+<span class="lineNum">     298 </span>            :         u256 enact(VerifiedBlockRef const&amp; _block, BlockChain const&amp; _bc);
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            :         /// Finalise the block, applying the earned rewards.
+<span class="lineNum">     301 </span>            :         void applyRewards(std::vector&lt;BlockHeader&gt; const&amp; _uncleBlockHeaders, u256 const&amp; _blockReward);
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span>            :         /// @returns gas used by transactions thus far executed.
+<span class="lineNum">     304 </span><span class="lineCov">     857406 :         u256 gasUsed() const { return m_receipts.size() ? m_receipts.back().gasUsed() : 0; }</span>
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span>            :         /// Performs irregular modifications right after initialization, e.g. to implement a hard fork.
+<span class="lineNum">     307 </span>            :         void performIrregularModifications();
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span>            :         /// Provide a standard VM trace for debugging purposes.
+<span class="lineNum">     310 </span>            :         std::string vmTrace(bytesConstRef _block, BlockChain const&amp; _bc, ImportRequirements::value _ir);
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span>            :         State m_state;                                                          ///&lt; Our state tree, as an OverlayDB DB.
+<span class="lineNum">     313 </span>            :         Transactions m_transactions;                            ///&lt; The current list of transactions that we've included in the state.
+<span class="lineNum">     314 </span>            :         TransactionReceipts m_receipts;                         ///&lt; The corresponding list of transaction receipts.
+<span class="lineNum">     315 </span>            :         h256Hash m_transactionSet;                                      ///&lt; The set of transaction hashes that we've included in the state.
+<span class="lineNum">     316 </span>            :         State m_precommit;                                                      ///&lt; State at the point immediately prior to rewards.
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            :         BlockHeader m_previousBlock;                            ///&lt; The previous block's information.
+<span class="lineNum">     319 </span>            :         BlockHeader m_currentBlock;                                     ///&lt; The current block's information.
+<span class="lineNum">     320 </span>            :         bytes m_currentBytes;                                           ///&lt; The current block's bytes.
+<span class="lineNum">     321 </span>            :         bool m_committedToSeal = false;                         ///&lt; Have we committed to mine on the present m_currentBlock?
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span>            :         bytes m_currentTxs;                                                     ///&lt; The RLP-encoded block of transactions.
+<span class="lineNum">     324 </span>            :         bytes m_currentUncles;                                          ///&lt; The RLP-encoded block of uncles.
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span>            :         Address m_author;                                                       ///&lt; Our address (i.e. the address to which fees go).
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span>            :         SealEngineFace* m_sealEngine = nullptr;         ///&lt; The chain's seal engine.
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span>            :         friend std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, Block const&amp; _s);
+<span class="lineNum">     331 </span>            : };
+<span class="lineNum">     332 </span>            : 
+<span class="lineNum">     333 </span>            : std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, Block const&amp; _s);
+<span class="lineNum">     334 </span>            : 
+<span class="lineNum">     335 </span>            : 
+<span class="lineNum">     336 </span>            : }
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

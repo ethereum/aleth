@@ -1,0 +1,357 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libevmcore/Instruction.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libevmcore</a> - Instruction.h<span style="font-size: 80%;"> (source / <a href="Instruction.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Instruction.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;functional&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libdevcore/Assertions.h&gt;
+<span class="lineNum">      27 </span>            : #include &quot;Exceptions.h&quot;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace dev
+<span class="lineNum">      30 </span>            : {
+<span class="lineNum">      31 </span>            : namespace eth
+<span class="lineNum">      32 </span>            : {
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : /// Virtual machine bytecode instruction.
+<span class="lineNum">      35 </span>            : enum class Instruction: uint8_t
+<span class="lineNum">      36 </span>            : {
+<span class="lineNum">      37 </span>            :         STOP = 0x00,        ///&lt; halts execution
+<span class="lineNum">      38 </span>            :         ADD,                ///&lt; addition operation
+<span class="lineNum">      39 </span>            :         MUL,                ///&lt; mulitplication operation
+<span class="lineNum">      40 </span>            :         SUB,                ///&lt; subtraction operation
+<span class="lineNum">      41 </span>            :         DIV,                ///&lt; integer division operation
+<span class="lineNum">      42 </span>            :         SDIV,               ///&lt; signed integer division operation
+<span class="lineNum">      43 </span>            :         MOD,                ///&lt; modulo remainder operation
+<span class="lineNum">      44 </span>            :         SMOD,               ///&lt; signed modulo remainder operation
+<span class="lineNum">      45 </span>            :         ADDMOD,             ///&lt; unsigned modular addition
+<span class="lineNum">      46 </span>            :         MULMOD,             ///&lt; unsigned modular multiplication
+<span class="lineNum">      47 </span>            :         EXP,                ///&lt; exponential operation
+<span class="lineNum">      48 </span>            :         SIGNEXTEND,         ///&lt; extend length of signed integer
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            :         LT = 0x10,          ///&lt; less-than comparision
+<span class="lineNum">      51 </span>            :         GT,                 ///&lt; greater-than comparision
+<span class="lineNum">      52 </span>            :         SLT,                ///&lt; signed less-than comparision
+<span class="lineNum">      53 </span>            :         SGT,                ///&lt; signed greater-than comparision
+<span class="lineNum">      54 </span>            :         EQ,                 ///&lt; equality comparision
+<span class="lineNum">      55 </span>            :         ISZERO,             ///&lt; simple not operator
+<span class="lineNum">      56 </span>            :         AND,                ///&lt; bitwise AND operation
+<span class="lineNum">      57 </span>            :         OR,                 ///&lt; bitwise OR operation
+<span class="lineNum">      58 </span>            :         XOR,                ///&lt; bitwise XOR operation
+<span class="lineNum">      59 </span>            :         NOT,                ///&lt; bitwise NOT opertation
+<span class="lineNum">      60 </span>            :         BYTE,               ///&lt; retrieve single byte from word
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            :         SHA3 = 0x20,        ///&lt; compute SHA3-256 hash
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :         ADDRESS = 0x30,     ///&lt; get address of currently executing account
+<span class="lineNum">      65 </span>            :         BALANCE,            ///&lt; get balance of the given account
+<span class="lineNum">      66 </span>            :         ORIGIN,             ///&lt; get execution origination address
+<span class="lineNum">      67 </span>            :         CALLER,             ///&lt; get caller address
+<span class="lineNum">      68 </span>            :         CALLVALUE,          ///&lt; get deposited value by the instruction/transaction responsible for this execution
+<span class="lineNum">      69 </span>            :         CALLDATALOAD,       ///&lt; get input data of current environment
+<span class="lineNum">      70 </span>            :         CALLDATASIZE,       ///&lt; get size of input data in current environment
+<span class="lineNum">      71 </span>            :         CALLDATACOPY,       ///&lt; copy input data in current environment to memory
+<span class="lineNum">      72 </span>            :         CODESIZE,           ///&lt; get size of code running in current environment
+<span class="lineNum">      73 </span>            :         CODECOPY,           ///&lt; copy code running in current environment to memory
+<span class="lineNum">      74 </span>            :         GASPRICE,           ///&lt; get price of gas in current environment
+<span class="lineNum">      75 </span>            :         EXTCODESIZE,        ///&lt; get external code size (from another contract)
+<span class="lineNum">      76 </span>            :         EXTCODECOPY,        ///&lt; copy external code (from another contract)
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :         BLOCKHASH = 0x40,   ///&lt; get hash of most recent complete block
+<span class="lineNum">      79 </span>            :         COINBASE,           ///&lt; get the block's coinbase address
+<span class="lineNum">      80 </span>            :         TIMESTAMP,          ///&lt; get the block's timestamp
+<span class="lineNum">      81 </span>            :         NUMBER,             ///&lt; get the block's number
+<span class="lineNum">      82 </span>            :         DIFFICULTY,         ///&lt; get the block's difficulty
+<span class="lineNum">      83 </span>            :         GASLIMIT,           ///&lt; get the block's gas limit
+<span class="lineNum">      84 </span>            :         
+<span class="lineNum">      85 </span>            :         JUMPTO = 0x4a,      ///&lt; alter the program counter to a jumpdest
+<span class="lineNum">      86 </span>            :         JUMPIF,             ///&lt; conditionally alter the program counter
+<span class="lineNum">      87 </span>            :         JUMPV,              ///&lt; alter the program counter to a jumpdest
+<span class="lineNum">      88 </span>            :         JUMPSUB,            ///&lt; alter the program counter to a beginsub
+<span class="lineNum">      89 </span>            :         JUMPSUBV,           ///&lt; alter the program counter to a beginsub
+<span class="lineNum">      90 </span>            :         RETURNSUB,          ///&lt; return to subroutine jumped from
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :         POP = 0x50,         ///&lt; remove item from stack
+<span class="lineNum">      93 </span>            :         MLOAD,              ///&lt; load word from memory
+<span class="lineNum">      94 </span>            :         MSTORE,             ///&lt; save word to memory
+<span class="lineNum">      95 </span>            :         MSTORE8,            ///&lt; save byte to memory
+<span class="lineNum">      96 </span>            :         SLOAD,              ///&lt; load word from storage
+<span class="lineNum">      97 </span>            :         SSTORE,             ///&lt; save word to storage
+<span class="lineNum">      98 </span>            :         JUMP,               ///&lt; alter the program counter to a jumpdest
+<span class="lineNum">      99 </span>            :         JUMPI,              ///&lt; conditionally alter the program counter
+<span class="lineNum">     100 </span>            :         PC,                 ///&lt; get the program counter
+<span class="lineNum">     101 </span>            :         MSIZE,              ///&lt; get the size of active memory
+<span class="lineNum">     102 </span>            :         GAS,                ///&lt; get the amount of available gas
+<span class="lineNum">     103 </span>            :         JUMPDEST,           ///&lt; set a potential jump destination
+<span class="lineNum">     104 </span>            :         BEGINSUB,           ///&lt; set a potential jumpsub destination
+<span class="lineNum">     105 </span>            :         BEGINDATA,          ///&lt; begine the data section
+<span class="lineNum">     106 </span>            :         
+<span class="lineNum">     107 </span>            :         PUSH1 = 0x60,       ///&lt; place 1 byte item on stack
+<span class="lineNum">     108 </span>            :         PUSH2,              ///&lt; place 2 byte item on stack
+<span class="lineNum">     109 </span>            :         PUSH3,              ///&lt; place 3 byte item on stack
+<span class="lineNum">     110 </span>            :         PUSH4,              ///&lt; place 4 byte item on stack
+<span class="lineNum">     111 </span>            :         PUSH5,              ///&lt; place 5 byte item on stack
+<span class="lineNum">     112 </span>            :         PUSH6,              ///&lt; place 6 byte item on stack
+<span class="lineNum">     113 </span>            :         PUSH7,              ///&lt; place 7 byte item on stack
+<span class="lineNum">     114 </span>            :         PUSH8,              ///&lt; place 8 byte item on stack
+<span class="lineNum">     115 </span>            :         PUSH9,              ///&lt; place 9 byte item on stack
+<span class="lineNum">     116 </span>            :         PUSH10,             ///&lt; place 10 byte item on stack
+<span class="lineNum">     117 </span>            :         PUSH11,             ///&lt; place 11 byte item on stack
+<span class="lineNum">     118 </span>            :         PUSH12,             ///&lt; place 12 byte item on stack
+<span class="lineNum">     119 </span>            :         PUSH13,             ///&lt; place 13 byte item on stack
+<span class="lineNum">     120 </span>            :         PUSH14,             ///&lt; place 14 byte item on stack
+<span class="lineNum">     121 </span>            :         PUSH15,             ///&lt; place 15 byte item on stack
+<span class="lineNum">     122 </span>            :         PUSH16,             ///&lt; place 16 byte item on stack
+<span class="lineNum">     123 </span>            :         PUSH17,             ///&lt; place 17 byte item on stack
+<span class="lineNum">     124 </span>            :         PUSH18,             ///&lt; place 18 byte item on stack
+<span class="lineNum">     125 </span>            :         PUSH19,             ///&lt; place 19 byte item on stack
+<span class="lineNum">     126 </span>            :         PUSH20,             ///&lt; place 20 byte item on stack
+<span class="lineNum">     127 </span>            :         PUSH21,             ///&lt; place 21 byte item on stack
+<span class="lineNum">     128 </span>            :         PUSH22,             ///&lt; place 22 byte item on stack
+<span class="lineNum">     129 </span>            :         PUSH23,             ///&lt; place 23 byte item on stack
+<span class="lineNum">     130 </span>            :         PUSH24,             ///&lt; place 24 byte item on stack
+<span class="lineNum">     131 </span>            :         PUSH25,             ///&lt; place 25 byte item on stack
+<span class="lineNum">     132 </span>            :         PUSH26,             ///&lt; place 26 byte item on stack
+<span class="lineNum">     133 </span>            :         PUSH27,             ///&lt; place 27 byte item on stack
+<span class="lineNum">     134 </span>            :         PUSH28,             ///&lt; place 28 byte item on stack
+<span class="lineNum">     135 </span>            :         PUSH29,             ///&lt; place 29 byte item on stack
+<span class="lineNum">     136 </span>            :         PUSH30,             ///&lt; place 30 byte item on stack
+<span class="lineNum">     137 </span>            :         PUSH31,             ///&lt; place 31 byte item on stack
+<span class="lineNum">     138 </span>            :         PUSH32,             ///&lt; place 32 byte item on stack
+<span class="lineNum">     139 </span>            :         
+<span class="lineNum">     140 </span>            :         DUP1 = 0x80,        ///&lt; copies the highest item in the stack to the top of the stack
+<span class="lineNum">     141 </span>            :         DUP2,               ///&lt; copies the second highest item in the stack to the top of the stack
+<span class="lineNum">     142 </span>            :         DUP3,               ///&lt; copies the third highest item in the stack to the top of the stack
+<span class="lineNum">     143 </span>            :         DUP4,               ///&lt; copies the 4th highest item in the stack to the top of the stack
+<span class="lineNum">     144 </span>            :         DUP5,               ///&lt; copies the 5th highest item in the stack to the top of the stack
+<span class="lineNum">     145 </span>            :         DUP6,               ///&lt; copies the 6th highest item in the stack to the top of the stack
+<span class="lineNum">     146 </span>            :         DUP7,               ///&lt; copies the 7th highest item in the stack to the top of the stack
+<span class="lineNum">     147 </span>            :         DUP8,               ///&lt; copies the 8th highest item in the stack to the top of the stack
+<span class="lineNum">     148 </span>            :         DUP9,               ///&lt; copies the 9th highest item in the stack to the top of the stack
+<span class="lineNum">     149 </span>            :         DUP10,              ///&lt; copies the 10th highest item in the stack to the top of the stack
+<span class="lineNum">     150 </span>            :         DUP11,              ///&lt; copies the 11th highest item in the stack to the top of the stack
+<span class="lineNum">     151 </span>            :         DUP12,              ///&lt; copies the 12th highest item in the stack to the top of the stack
+<span class="lineNum">     152 </span>            :         DUP13,              ///&lt; copies the 13th highest item in the stack to the top of the stack
+<span class="lineNum">     153 </span>            :         DUP14,              ///&lt; copies the 14th highest item in the stack to the top of the stack
+<span class="lineNum">     154 </span>            :         DUP15,              ///&lt; copies the 15th highest item in the stack to the top of the stack
+<span class="lineNum">     155 </span>            :         DUP16,              ///&lt; copies the 16th highest item in the stack to the top of the stack
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            :         SWAP1 = 0x90,       ///&lt; swaps the highest and second highest value on the stack
+<span class="lineNum">     158 </span>            :         SWAP2,              ///&lt; swaps the highest and third highest value on the stack
+<span class="lineNum">     159 </span>            :         SWAP3,              ///&lt; swaps the highest and 4th highest value on the stack
+<span class="lineNum">     160 </span>            :         SWAP4,              ///&lt; swaps the highest and 5th highest value on the stack
+<span class="lineNum">     161 </span>            :         SWAP5,              ///&lt; swaps the highest and 6th highest value on the stack
+<span class="lineNum">     162 </span>            :         SWAP6,              ///&lt; swaps the highest and 7th highest value on the stack
+<span class="lineNum">     163 </span>            :         SWAP7,              ///&lt; swaps the highest and 8th highest value on the stack
+<span class="lineNum">     164 </span>            :         SWAP8,              ///&lt; swaps the highest and 9th highest value on the stack
+<span class="lineNum">     165 </span>            :         SWAP9,              ///&lt; swaps the highest and 10th highest value on the stack
+<span class="lineNum">     166 </span>            :         SWAP10,             ///&lt; swaps the highest and 11th highest value on the stack
+<span class="lineNum">     167 </span>            :         SWAP11,             ///&lt; swaps the highest and 12th highest value on the stack
+<span class="lineNum">     168 </span>            :         SWAP12,             ///&lt; swaps the highest and 13th highest value on the stack
+<span class="lineNum">     169 </span>            :         SWAP13,             ///&lt; swaps the highest and 14th highest value on the stack
+<span class="lineNum">     170 </span>            :         SWAP14,             ///&lt; swaps the highest and 15th highest value on the stack
+<span class="lineNum">     171 </span>            :         SWAP15,             ///&lt; swaps the highest and 16th highest value on the stack
+<span class="lineNum">     172 </span>            :         SWAP16,             ///&lt; swaps the highest and 17th highest value on the stack
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            :         LOG0 = 0xa0,        ///&lt; Makes a log entry; no topics.
+<span class="lineNum">     175 </span>            :         LOG1,               ///&lt; Makes a log entry; 1 topic.
+<span class="lineNum">     176 </span>            :         LOG2,               ///&lt; Makes a log entry; 2 topics.
+<span class="lineNum">     177 </span>            :         LOG3,               ///&lt; Makes a log entry; 3 topics.
+<span class="lineNum">     178 </span>            :         LOG4,               ///&lt; Makes a log entry; 4 topics.
+<span class="lineNum">     179 </span>            :         
+<span class="lineNum">     180 </span>            :         // these are generated by the interpreter - should never be in user code
+<span class="lineNum">     181 </span>            :         PUSHC = 0xac,       ///&lt; push value from constant pool
+<span class="lineNum">     182 </span>            :         JUMPC,              ///&lt; alter the program counter - pre-verified
+<span class="lineNum">     183 </span>            :         JUMPCI,             ///&lt; conditionally alter the program counter - pre-verified
+<span class="lineNum">     184 </span>            :         BAD,                ///&lt; placed to force invalid instruction exception
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :         CREATE = 0xf0,      ///&lt; create a new account with associated code
+<span class="lineNum">     187 </span>            :         CALL,               ///&lt; message-call into an account
+<span class="lineNum">     188 </span>            :         CALLCODE,           ///&lt; message-call with another account's code only
+<span class="lineNum">     189 </span>            :         RETURN,             ///&lt; halt execution returning output data
+<span class="lineNum">     190 </span>            :         DELEGATECALL,       ///&lt; like CALLCODE but keeps caller's value and sender
+<span class="lineNum">     191 </span>            :         SUICIDE = 0xff      ///&lt; halt execution and register account for later deletion
+<span class="lineNum">     192 </span>            : };
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            : /// @returns the number of PUSH Instruction _inst
+<span class="lineNum">     195 </span>            : inline unsigned getPushNumber(Instruction _inst)
+<span class="lineNum">     196 </span>            : {
+<span class="lineNum">     197 </span>            :         return (byte)_inst - unsigned(Instruction::PUSH1) + 1;
+<span class="lineNum">     198 </span>            : }
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            : /// @returns the number of DUP Instruction _inst
+<span class="lineNum">     201 </span>            : inline unsigned getDupNumber(Instruction _inst)
+<span class="lineNum">     202 </span>            : {
+<span class="lineNum">     203 </span>            :         return (byte)_inst - unsigned(Instruction::DUP1) + 1;
+<span class="lineNum">     204 </span>            : }
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            : /// @returns the number of SWAP Instruction _inst
+<span class="lineNum">     207 </span>            : inline unsigned getSwapNumber(Instruction _inst)
+<span class="lineNum">     208 </span>            : {
+<span class="lineNum">     209 </span>            :         return (byte)_inst - unsigned(Instruction::SWAP1) + 1;
+<span class="lineNum">     210 </span>            : }
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            : /// @returns the PUSH&lt;_number&gt; instruction
+<span class="lineNum">     213 </span>            : inline Instruction pushInstruction(unsigned _number)
+<span class="lineNum">     214 </span>            : {
+<span class="lineNum">     215 </span>            :         assertThrow(1 &lt;= _number &amp;&amp; _number &lt;= 32, InvalidOpcode, &quot;Invalid PUSH instruction requested.&quot;);
+<span class="lineNum">     216 </span>            :         return Instruction(unsigned(Instruction::PUSH1) + _number - 1);
+<span class="lineNum">     217 </span>            : }
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            : /// @returns the DUP&lt;_number&gt; instruction
+<span class="lineNum">     220 </span>            : inline Instruction dupInstruction(unsigned _number)
+<span class="lineNum">     221 </span>            : {
+<span class="lineNum">     222 </span>            :         assertThrow(1 &lt;= _number &amp;&amp; _number &lt;= 16, InvalidOpcode, &quot;Invalid DUP instruction requested.&quot;);
+<span class="lineNum">     223 </span>            :         return Instruction(unsigned(Instruction::DUP1) + _number - 1);
+<span class="lineNum">     224 </span>            : }
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            : /// @returns the SWAP&lt;_number&gt; instruction
+<span class="lineNum">     227 </span>            : inline Instruction swapInstruction(unsigned _number)
+<span class="lineNum">     228 </span>            : {
+<span class="lineNum">     229 </span>            :         assertThrow(1 &lt;= _number &amp;&amp; _number &lt;= 16, InvalidOpcode, &quot;Invalid SWAP instruction requested.&quot;);
+<span class="lineNum">     230 </span>            :         return Instruction(unsigned(Instruction::SWAP1) + _number - 1);
+<span class="lineNum">     231 </span>            : }
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            : /// @returns the LOG&lt;_number&gt; instruction
+<span class="lineNum">     234 </span>            : inline Instruction logInstruction(unsigned _number)
+<span class="lineNum">     235 </span>            : {
+<span class="lineNum">     236 </span>            :         assertThrow(_number &lt;= 4, InvalidOpcode, &quot;Invalid LOG instruction requested.&quot;);
+<span class="lineNum">     237 </span>            :         return Instruction(unsigned(Instruction::LOG0) + _number);
+<span class="lineNum">     238 </span>            : }
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            : enum class Tier : unsigned
+<span class="lineNum">     241 </span>            : {
+<span class="lineNum">     242 </span>            :         Zero = 0,   // 0, Zero
+<span class="lineNum">     243 </span>            :         Base,       // 2, Quick
+<span class="lineNum">     244 </span>            :         VeryLow,    // 3, Fastest
+<span class="lineNum">     245 </span>            :         Low,        // 5, Fast
+<span class="lineNum">     246 </span>            :         Mid,        // 8, Mid
+<span class="lineNum">     247 </span>            :         High,       // 10, Slow
+<span class="lineNum">     248 </span>            :         Ext,        // 20, Ext
+<span class="lineNum">     249 </span>            :         Special,    // multiparam or otherwise special
+<span class="lineNum">     250 </span>            :         Invalid     // Invalid.
+<span class="lineNum">     251 </span>            : };
+<a name="252"><span class="lineNum">     252 </span>            : </a>
+<span class="lineNum">     253 </span>            : /// Information structure for a particular instruction.
+<span class="lineNum">     254 </span><span class="lineCov">       2258 : struct InstructionInfo</span>
+<span class="lineNum">     255 </span>            : {
+<span class="lineNum">     256 </span>            :         std::string name;   ///&lt; The name of the instruction.
+<span class="lineNum">     257 </span>            :         int additional;     ///&lt; Additional items required in memory for this instructions (only for PUSH).
+<span class="lineNum">     258 </span>            :         int args;           ///&lt; Number of items required on the stack for this instruction (and, for the purposes of ret, the number taken from the stack).
+<span class="lineNum">     259 </span>            :         int ret;            ///&lt; Number of items placed (back) on the stack by this instruction, assuming args items were removed.
+<span class="lineNum">     260 </span>            :         bool sideEffects;   ///&lt; false if the only effect on the execution environment (apart from gas usage) is a change to a topmost segment of the stack
+<span class="lineNum">     261 </span>            :         Tier gasPriceTier;   ///&lt; Tier for gas pricing.
+<span class="lineNum">     262 </span>            : };
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            : /// Information on all the instructions.
+<span class="lineNum">     265 </span>            : InstructionInfo instructionInfo(Instruction _inst);
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span>            : /// check whether instructions exists
+<span class="lineNum">     268 </span>            : bool isValidInstruction(Instruction _inst);
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span>            : /// Convert from string mnemonic to Instruction type.
+<span class="lineNum">     271 </span>            : extern const std::map&lt;std::string, Instruction&gt; c_instructions;
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span>            : /// Iterate through EVM code and call a function on each instruction.
+<span class="lineNum">     274 </span>            : void eachInstruction(bytes const&amp; _mem, std::function&lt;void(Instruction,u256 const&amp;)&gt; const&amp; _onInstruction);
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span>            : /// Convert from EVM code to simple EVM assembly language.
+<span class="lineNum">     277 </span>            : std::string disassemble(bytes const&amp; _mem);
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            : }
+<span class="lineNum">     280 </span>            : }
+<span class="lineNum">     281 </span>            :         
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

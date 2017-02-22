@@ -1,0 +1,467 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/State.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - State.h<span style="font-size: 80%;"> (source / <a href="State.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">36</td>
+            <td class="headerCovTableEntry">39</td>
+            <td class="headerCovTableEntryHi">92.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryLo">38.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file State.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;array&gt;
+<span class="lineNum">      25 </span>            : #include &lt;unordered_map&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libdevcore/RLP.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libdevcore/TrieDB.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libdevcore/OverlayDB.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libethcore/Exceptions.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libethcore/BlockHeader.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libethereum/CodeSizeCache.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;libethereum/GenericMiner.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;libevm/ExtVMFace.h&gt;
+<span class="lineNum">      35 </span>            : #include &quot;Account.h&quot;
+<span class="lineNum">      36 </span>            : #include &quot;Transaction.h&quot;
+<span class="lineNum">      37 </span>            : #include &quot;TransactionReceipt.h&quot;
+<span class="lineNum">      38 </span>            : #include &quot;GasPricer.h&quot;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : namespace dev
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : namespace test { class ImportTest; class StateLoader; }
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : namespace eth
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : // Import-specific errinfos
+<span class="lineNum">      49 </span>            : using errinfo_uncleIndex = boost::error_info&lt;struct tag_uncleIndex, unsigned&gt;;
+<span class="lineNum">      50 </span>            : using errinfo_currentNumber = boost::error_info&lt;struct tag_currentNumber, u256&gt;;
+<span class="lineNum">      51 </span>            : using errinfo_uncleNumber = boost::error_info&lt;struct tag_uncleNumber, u256&gt;;
+<span class="lineNum">      52 </span>            : using errinfo_unclesExcluded = boost::error_info&lt;struct tag_unclesExcluded, h256Hash&gt;;
+<span class="lineNum">      53 </span>            : using errinfo_block = boost::error_info&lt;struct tag_block, bytes&gt;;
+<span class="lineNum">      54 </span>            : using errinfo_now = boost::error_info&lt;struct tag_now, unsigned&gt;;
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : using errinfo_transactionIndex = boost::error_info&lt;struct tag_transactionIndex, unsigned&gt;;
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : using errinfo_vmtrace = boost::error_info&lt;struct tag_vmtrace, std::string&gt;;
+<span class="lineNum">      59 </span>            : using errinfo_receipts = boost::error_info&lt;struct tag_receipts, std::vector&lt;bytes&gt;&gt;;
+<span class="lineNum">      60 </span>            : using errinfo_transaction = boost::error_info&lt;struct tag_transaction, bytes&gt;;
+<span class="lineNum">      61 </span>            : using errinfo_phase = boost::error_info&lt;struct tag_phase, unsigned&gt;;
+<span class="lineNum">      62 </span>            : using errinfo_required_LogBloom = boost::error_info&lt;struct tag_required_LogBloom, LogBloom&gt;;
+<span class="lineNum">      63 </span>            : using errinfo_got_LogBloom = boost::error_info&lt;struct tag_get_LogBloom, LogBloom&gt;;
+<span class="lineNum">      64 </span>            : using LogBloomRequirementError = boost::tuple&lt;errinfo_required_LogBloom, errinfo_got_LogBloom&gt;;
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : class BlockChain;
+<span class="lineNum">      67 </span>            : class State;
+<span class="lineNum">      68 </span>            : class TransactionQueue;
+<span class="lineNum">      69 </span>            : struct VerifiedBlockRef;
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : struct StateChat: public LogChannel { static const char* name(); static const int verbosity = 4; };
+<span class="lineNum">      72 </span>            : struct StateTrace: public LogChannel { static const char* name(); static const int verbosity = 5; };
+<span class="lineNum">      73 </span>            : struct StateDetail: public LogChannel { static const char* name(); static const int verbosity = 14; };
+<span class="lineNum">      74 </span>            : struct StateSafeExceptions: public LogChannel { static const char* name(); static const int verbosity = 21; };
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : enum class BaseState
+<span class="lineNum">      77 </span>            : {
+<span class="lineNum">      78 </span>            :         PreExisting,
+<span class="lineNum">      79 </span>            :         Empty
+<span class="lineNum">      80 </span>            : };
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : enum class Permanence
+<span class="lineNum">      83 </span>            : {
+<span class="lineNum">      84 </span>            :         Reverted,
+<span class="lineNum">      85 </span>            :         Committed
+<span class="lineNum">      86 </span>            : };
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : #if ETH_FATDB
+<span class="lineNum">      89 </span>            : template &lt;class KeyType, class DB&gt; using SecureTrieDB = SpecificTrieDB&lt;FatGenericTrieDB&lt;DB&gt;, KeyType&gt;;
+<span class="lineNum">      90 </span>            : #else
+<span class="lineNum">      91 </span>            : template &lt;class KeyType, class DB&gt; using SecureTrieDB = SpecificTrieDB&lt;HashedGenericTrieDB&lt;DB&gt;, KeyType&gt;;
+<a name="92"><span class="lineNum">      92 </span>            : #endif</a>
+<a name="93"><span class="lineNum">      93 </span>            : </a>
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 : DEV_SIMPLE_EXCEPTION(InvalidAccountStartNonceInState);</span>
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 : DEV_SIMPLE_EXCEPTION(IncorrectAccountStartNonceInState);</span>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : class SealEngineFace;
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : namespace detail
+<span class="lineNum">     101 </span>            : {
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : /// An atomic state changelog entry.
+<span class="lineNum">     104 </span><span class="lineCov">    1835241 : struct Change</span>
+<span class="lineNum">     105 </span>            : {
+<span class="lineNum">     106 </span>            :         enum Kind: int
+<span class="lineNum">     107 </span>            :         {
+<span class="lineNum">     108 </span>            :                 /// Account balance changed. Change::value contains the amount the
+<span class="lineNum">     109 </span>            :                 /// balance was increased by.
+<span class="lineNum">     110 </span>            :                 Balance,
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            :                 /// Account storage was modified. Change::key contains the storage key,
+<span class="lineNum">     113 </span>            :                 /// Change::value the storage value.
+<span class="lineNum">     114 </span>            :                 Storage,
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            :                 /// Account nonce was increased by 1.
+<span class="lineNum">     117 </span>            :                 Nonce,
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :                 /// Account was created (it was not existing before).
+<span class="lineNum">     120 </span>            :                 Create,
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :                 /// New code was added to an account (by &quot;create&quot; message execution).
+<span class="lineNum">     123 </span>            :                 NewCode,
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :                 /// Account was touched for the first time.
+<span class="lineNum">     126 </span>            :                 Touch
+<span class="lineNum">     127 </span>            :         };
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            :         Kind kind;        ///&lt; The kind of the change.
+<span class="lineNum">     130 </span>            :         Address address;  ///&lt; Changed account address.
+<span class="lineNum">     131 </span>            :         u256 value;       ///&lt; Change value, e.g. balance, storage.
+<span class="lineNum">     132 </span>            :         u256 key;         ///&lt; Storage key. Last because used only in one case.
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            :         /// Helper constructor to make change log update more readable.
+<span class="lineNum">     135 </span>            :         Change(Kind _kind, Address const&amp; _addr, u256 const&amp; _value = 0):
+<span class="lineNum">     136 </span><span class="lineCov">     685050 :                         kind(_kind), address(_addr), value(_value)</span>
+<span class="lineNum">     137 </span>            :         {}
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :         /// Helper constructor especially for storage change log.
+<span class="lineNum">     140 </span>            :         Change(Address const&amp; _addr, u256 const&amp; _key, u256 const&amp; _value):
+<span class="lineNum">     141 </span><span class="lineCov">     632454 :                         kind(Storage), address(_addr), value(_value), key(_key)</span>
+<span class="lineNum">     142 </span>            :         {}
+<span class="lineNum">     143 </span>            : };
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            : /**
+<span class="lineNum">     149 </span>            :  * Model of an Ethereum state, essentially a facade for the trie.
+<span class="lineNum">     150 </span>            :  *
+<span class="lineNum">     151 </span>            :  * Allows you to query the state of accounts as well as creating and modifying
+<span class="lineNum">     152 </span>            :  * accounts. It has built-in caching for various aspects of the state.
+<span class="lineNum">     153 </span>            :  *
+<span class="lineNum">     154 </span>            :  * # State Changelog
+<span class="lineNum">     155 </span>            :  *
+<span class="lineNum">     156 </span>            :  * Any atomic change to any account is registered and appended in the changelog.
+<span class="lineNum">     157 </span>            :  * In case some changes must be reverted, the changes are popped from the
+<span class="lineNum">     158 </span>            :  * changelog and undone. For possible atomic changes list @see Change::Kind.
+<a name="159"><span class="lineNum">     159 </span>            :  * The changelog is managed by savepoint(), rollback() and commit() methods.</a>
+<span class="lineNum">     160 </span>            :  */
+<span class="lineNum">     161 </span><span class="lineCov">    3608010 : class State</span>
+<span class="lineNum">     162 </span>            : {
+<span class="lineNum">     163 </span>            :         friend class ExtVM;
+<span class="lineNum">     164 </span>            :         friend class dev::test::ImportTest;
+<span class="lineNum">     165 </span>            :         friend class dev::test::StateLoader;
+<span class="lineNum">     166 </span>            :         friend class BlockChain;
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : public:
+<span class="lineNum">     169 </span>            :         enum class CommitBehaviour
+<span class="lineNum">     170 </span>            :         {
+<span class="lineNum">     171 </span>            :                 KeepEmptyAccounts,
+<span class="lineNum">     172 </span>            :                 RemoveEmptyAccounts
+<span class="lineNum">     173 </span>            :         };
+<a name="174"><span class="lineNum">     174 </span>            : </a>
+<span class="lineNum">     175 </span>            :         /// Default constructor; creates with a blank database prepopulated with the genesis block.
+<span class="lineNum">     176 </span><span class="lineCov">       9343 :         explicit State(u256 const&amp; _accountStartNonce): State(_accountStartNonce, OverlayDB(), BaseState::Empty) {}</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :         /// Basic state object from database.
+<span class="lineNum">     179 </span>            :         /// Use the default when you already have a database and you just want to make a State object
+<span class="lineNum">     180 </span>            :         /// which uses it. If you have no preexisting database then set BaseState to something other
+<span class="lineNum">     181 </span>            :         /// than BaseState::PreExisting in order to prepopulate the Trie.
+<span class="lineNum">     182 </span>            :         explicit State(u256 const&amp; _accountStartNonce, OverlayDB const&amp; _db, BaseState _bs = BaseState::PreExisting);
+<a name="183"><span class="lineNum">     183 </span>            : </a>
+<span class="lineNum">     184 </span>            :         enum NullType { Null };
+<span class="lineNum">     185 </span><span class="lineCov">       1701 :         State(NullType): State(Invalid256, OverlayDB(), BaseState::Empty) {}</span>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :         /// Copy state object.
+<span class="lineNum">     188 </span>            :         State(State const&amp; _s);
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            :         /// Copy state object.
+<span class="lineNum">     191 </span>            :         State&amp; operator=(State const&amp; _s);
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            :         /// Open a DB - useful for passing into the constructor &amp; keeping for other states that are necessary.
+<span class="lineNum">     194 </span>            :         static OverlayDB openDB(std::string const&amp; _path, h256 const&amp; _genesisHash, WithExisting _we = WithExisting::Trust);
+<span class="lineNum">     195 </span><span class="lineCov">       7618 :         OverlayDB const&amp; db() const { return m_db; }</span>
+<span class="lineNum">     196 </span><span class="lineCov">      12419 :         OverlayDB&amp; db() { return m_db; }</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :         /// Populate the state from the given AccountMap. Just uses dev::eth::commit().
+<span class="lineNum">     199 </span>            :         void populateFrom(AccountMap const&amp; _map);
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            :         /// @returns the set containing all addresses currently in use in Ethereum.
+<span class="lineNum">     202 </span>            :         /// @warning This is slowslowslow. Don't use it unless you want to lock the object for seconds or minutes at a time.
+<span class="lineNum">     203 </span>            :         /// @throws InterfaceNotSupported if compiled without ETH_FATDB.
+<span class="lineNum">     204 </span>            :         std::unordered_map&lt;Address, u256&gt; addresses() const;
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            :         /// Execute a given transaction.
+<span class="lineNum">     207 </span>            :         /// This will change the state accordingly.
+<span class="lineNum">     208 </span>            :         std::pair&lt;ExecutionResult, TransactionReceipt&gt; execute(EnvInfo const&amp; _envInfo, SealEngineFace const&amp; _sealEngine, Transaction const&amp; _t, Permanence _p = Permanence::Committed, OnOpFunc const&amp; _onOp = OnOpFunc());
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :         /// Check if the address is in use.
+<span class="lineNum">     211 </span>            :         bool addressInUse(Address const&amp; _address) const;
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            :         /// Check if the account exists in the state and is non empty (nonce &gt; 0 || balance &gt; 0 || code nonempty).
+<span class="lineNum">     214 </span>            :         /// These two notions are equivalent after EIP158.
+<span class="lineNum">     215 </span>            :         bool accountNonemptyAndExisting(Address const&amp; _address) const;
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :         /// Check if the address contains executable code.
+<span class="lineNum">     218 </span>            :         bool addressHasCode(Address const&amp; _address) const;
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            :         /// Get an account's balance.
+<span class="lineNum">     221 </span>            :         /// @returns 0 if the address has never been used.
+<span class="lineNum">     222 </span>            :         u256 balance(Address const&amp; _id) const;
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            :         /// Add some amount to balance.
+<span class="lineNum">     225 </span>            :         /// Will initialise the address if it has never been used.
+<span class="lineNum">     226 </span>            :         void addBalance(Address const&amp; _id, u256 const&amp; _amount);
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :         /// Subtract the @p _value amount from the balance of @p _addr account.
+<span class="lineNum">     229 </span>            :         /// @throws NotEnoughCash if the balance of the account is less than the
+<span class="lineNum">     230 </span>            :         /// amount to be subtrackted (also in case the account does not exist).
+<span class="lineNum">     231 </span>            :         void subBalance(Address const&amp; _addr, u256 const&amp; _value);
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            :         /**
+<span class="lineNum">     234 </span>            :          * @brief Transfers &quot;the balance @a _value between two accounts.
+<span class="lineNum">     235 </span>            :          * @param _from Account from which @a _value will be deducted.
+<span class="lineNum">     236 </span>            :          * @param _to Account to which @a _value will be added.
+<span class="lineNum">     237 </span>            :          * @param _value Amount to be transferred.
+<span class="lineNum">     238 </span>            :          */
+<span class="lineNum">     239 </span><span class="lineCov">     265146 :         void transferBalance(Address const&amp; _from, Address const&amp; _to, u256 const&amp; _value) { subBalance(_from, _value); addBalance(_to, _value); }</span>
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            :         /// Get the root of the storage of an account.
+<span class="lineNum">     242 </span>            :         h256 storageRoot(Address const&amp; _contract) const;
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            :         /// Get the value of a storage position of an account.
+<span class="lineNum">     245 </span>            :         /// @returns 0 if no account exists at that address.
+<span class="lineNum">     246 </span>            :         u256 storage(Address const&amp; _contract, u256 const&amp; _memory) const;
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :         /// Set the value of a storage position of an account.
+<span class="lineNum">     249 </span>            :         void setStorage(Address const&amp; _contract, u256 const&amp; _location, u256 const&amp; _value);
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            :         /// Create a contract at the given address (with unset code and unchanged balance).
+<span class="lineNum">     252 </span>            :         void createContract(Address const&amp; _address);
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            :         /// Sets the code of the account. Must only be called during / after contract creation.
+<span class="lineNum">     255 </span>            :         void setNewCode(Address const&amp; _address, bytes&amp;&amp; _code);
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            :         /// Delete an account (used for processing suicides).
+<span class="lineNum">     258 </span>            :         void kill(Address _a);
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span>            :         /// Get the storage of an account.
+<span class="lineNum">     261 </span>            :         /// @note This is expensive. Don't use it unless you need to.
+<span class="lineNum">     262 </span>            :         /// @returns map of hashed keys to key-value pairs or empty map if no account exists at that address.
+<span class="lineNum">     263 </span>            :         std::map&lt;h256, std::pair&lt;u256, u256&gt;&gt; storage(Address const&amp; _contract) const;
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :         /// Get the code of an account.
+<span class="lineNum">     266 </span>            :         /// @returns bytes() if no account exists at that address.
+<span class="lineNum">     267 </span>            :         /// @warning The reference to the code is only valid until the access to
+<span class="lineNum">     268 </span>            :         ///          other account. Do not keep it.
+<span class="lineNum">     269 </span>            :         bytes const&amp; code(Address const&amp; _addr) const;
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            :         /// Get the code hash of an account.
+<span class="lineNum">     272 </span>            :         /// @returns EmptySHA3 if no account exists at that address or if there is no code associated with the address.
+<span class="lineNum">     273 </span>            :         h256 codeHash(Address const&amp; _contract) const;
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            :         /// Get the byte-size of the code of an account.
+<span class="lineNum">     276 </span>            :         /// @returns code(_contract).size(), but utilizes CodeSizeHash.
+<span class="lineNum">     277 </span>            :         size_t codeSize(Address const&amp; _contract) const;
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            :         /// Increament the account nonce.
+<span class="lineNum">     280 </span>            :         void incNonce(Address const&amp; _id);
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span>            :         /// Get the account nonce -- the number of transactions it has sent.
+<span class="lineNum">     283 </span>            :         /// @returns 0 if the address has never been used.
+<span class="lineNum">     284 </span>            :         u256 getNonce(Address const&amp; _addr) const;
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            :         /// The hash of the root of our state tree.
+<span class="lineNum">     287 </span><span class="lineCov">      34260 :         h256 rootHash() const { return m_state.root(); }</span>
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            :         /// Commit all changes waiting in the address cache to the DB.
+<span class="lineNum">     290 </span>            :         /// @param _commitBehaviour whether or not to remove empty accounts during commit.
+<span class="lineNum">     291 </span>            :         void commit(CommitBehaviour _commitBehaviour);
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            :         /// Resets any uncommitted changes to the cache.
+<span class="lineNum">     294 </span>            :         void setRoot(h256 const&amp; _root);
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            :         /// Get the account start nonce. May be required.
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :         u256 const&amp; accountStartNonce() const { return m_accountStartNonce; }</span>
+<span class="lineNum">     298 </span>            :         u256 const&amp; requireAccountStartNonce() const;
+<span class="lineNum">     299 </span>            :         void noteAccountStartNonce(u256 const&amp; _actual);
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span>            :         /// Create a savepoint in the state changelog.  ///
+<span class="lineNum">     302 </span>            :         /// @return The savepoint index that can be used in rollback() function.
+<span class="lineNum">     303 </span>            :         size_t savepoint() const;
+<span class="lineNum">     304 </span>            : 
+<span class="lineNum">     305 </span>            :         /// Revert all recent changes up to the given @p _savepoint savepoint.
+<span class="lineNum">     306 </span>            :         void rollback(size_t _savepoint);
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            : private:
+<span class="lineNum">     309 </span>            :         /// Turns all &quot;touched&quot; empty accounts into non-alive accounts.
+<span class="lineNum">     310 </span>            :         void removeEmptyAccounts();
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span>            :         /// @returns the account at the given address or a null pointer if it does not exist.
+<span class="lineNum">     313 </span>            :         /// The pointer is valid until the next access to the state or account.
+<span class="lineNum">     314 </span>            :         Account const* account(Address const&amp; _addr) const;
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span>            :         /// @returns the account at the given address or a null pointer if it does not exist.
+<span class="lineNum">     317 </span>            :         /// The pointer is valid until the next access to the state or account.
+<span class="lineNum">     318 </span>            :         Account* account(Address const&amp; _addr);
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span>            :         /// Purges non-modified entries in m_cache if it grows too large.
+<span class="lineNum">     321 </span>            :         void clearCacheIfTooLarge() const;
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span>            :         void createAccount(Address const&amp; _address, Account const&amp;&amp; _account);
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span>            :         OverlayDB m_db;                                                         ///&lt; Our overlay for the state tree.
+<span class="lineNum">     326 </span>            :         SecureTrieDB&lt;Address, OverlayDB&gt; m_state; ///&lt; Our state tree, as an OverlayDB DB.
+<span class="lineNum">     327 </span>            :         mutable std::unordered_map&lt;Address, Account&gt; m_cache;     ///&lt; Our address cache. This stores the states of each address that has (or at least might have) been changed.
+<span class="lineNum">     328 </span>            :         mutable std::vector&lt;Address&gt; m_unchangedCacheEntries;     ///&lt; Tracks entries in m_cache that can potentially be purged if it grows too large.
+<span class="lineNum">     329 </span>            :         mutable std::set&lt;Address&gt; m_nonExistingAccountsCache;     ///&lt; Tracks addresses that are known to not exist.
+<span class="lineNum">     330 </span>            :         AddressHash m_touched;                                          ///&lt; Tracks all addresses touched so far.
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span>            :         u256 m_accountStartNonce;
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span>            :         friend std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, State const&amp; _s);
+<span class="lineNum">     335 </span>            :         std::vector&lt;detail::Change&gt; m_changeLog;
+<span class="lineNum">     336 </span>            : };
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            : std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, State const&amp; _s);
+<a name="339"><span class="lineNum">     339 </span>            : </a>
+<span class="lineNum">     340 </span>            : template &lt;class DB&gt;
+<span class="lineNum">     341 </span><span class="lineCov">      78145 : AddressHash commit(AccountMap const&amp; _cache, SecureTrieDB&lt;Address, DB&gt;&amp; _state)</span>
+<span class="lineNum">     342 </span>            : {
+<span class="lineNum">     343 </span><span class="lineCov">      78145 :         AddressHash ret;</span>
+<span class="lineNum">     344 </span><span class="lineCov">     409645 :         for (auto const&amp; i: _cache)</span>
+<span class="lineNum">     345 </span><span class="lineCov">     350420 :                 if (i.second.isDirty())</span>
+<span class="lineNum">     346 </span>            :                 {
+<span class="lineNum">     347 </span><span class="lineCov">     172927 :                         if (!i.second.isAlive())</span>
+<span class="lineNum">     348 </span>            :                                 _state.remove(i.first);
+<span class="lineNum">     349 </span>            :                         else
+<span class="lineNum">     350 </span>            :                         {
+<span class="lineNum">     351 </span><span class="lineCov">     344132 :                                 RLPStream s(4);</span>
+<span class="lineNum">     352 </span><span class="lineCov">     516198 :                                 s &lt;&lt; i.second.nonce() &lt;&lt; i.second.balance();</span>
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span><span class="lineCov">     344132 :                                 if (i.second.storageOverlay().empty())</span>
+<span class="lineNum">     355 </span>            :                                 {
+<span class="lineNum">     356 </span><span class="lineCov">     321380 :                                         assert(i.second.baseRoot());</span>
+<span class="lineNum">     357 </span><span class="lineCov">     160690 :                                         s.append(i.second.baseRoot());</span>
+<span class="lineNum">     358 </span>            :                                 }
+<span class="lineNum">     359 </span>            :                                 else
+<span class="lineNum">     360 </span>            :                                 {
+<span class="lineNum">     361 </span><span class="lineCov">      34128 :                                         SecureTrieDB&lt;h256, DB&gt; storageDB(_state.db(), i.second.baseRoot());</span>
+<span class="lineNum">     362 </span><span class="lineCov">      54375 :                                         for (auto const&amp; j: i.second.storageOverlay())</span>
+<span class="lineNum">     363 </span><span class="lineCov">      40494 :                                                 if (j.second)</span>
+<span class="lineNum">     364 </span><span class="lineCov">      44745 :                                                         storageDB.insert(j.first, rlp(j.second));</span>
+<span class="lineNum">     365 </span>            :                                                 else
+<span class="lineNum">     366 </span><span class="lineCov">      10664 :                                                         storageDB.remove(j.first);</span>
+<span class="lineNum">     367 </span><span class="lineCov">      22752 :                                         assert(storageDB.root());</span>
+<span class="lineNum">     368 </span><span class="lineCov">      11376 :                                         s.append(storageDB.root());</span>
+<span class="lineNum">     369 </span>            :                                 }
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span><span class="lineCov">     172066 :                                 if (i.second.hasNewCode())</span>
+<span class="lineNum">     372 </span>            :                                 {
+<span class="lineNum">     373 </span><span class="lineCov">      92462 :                                         h256 ch = i.second.codeHash();</span>
+<span class="lineNum">     374 </span>            :                                         // Store the size of the code
+<span class="lineNum">     375 </span><span class="lineCov">      92462 :                                         CodeSizeCache::instance().store(ch, i.second.code().size());</span>
+<span class="lineNum">     376 </span><span class="lineCov">      92462 :                                         _state.db()-&gt;insert(ch, &amp;i.second.code());</span>
+<span class="lineNum">     377 </span><span class="lineCov">      46231 :                                         s &lt;&lt; ch;</span>
+<span class="lineNum">     378 </span>            :                                 }
+<span class="lineNum">     379 </span>            :                                 else
+<span class="lineNum">     380 </span><span class="lineCov">     251670 :                                         s &lt;&lt; i.second.codeHash();</span>
+<span class="lineNum">     381 </span>            : 
+<span class="lineNum">     382 </span><span class="lineCov">     516198 :                                 _state.insert(i.first, &amp;s.out());</span>
+<span class="lineNum">     383 </span>            :                         }
+<span class="lineNum">     384 </span><span class="lineCov">     172927 :                         ret.insert(i.first);</span>
+<span class="lineNum">     385 </span>            :                 }
+<span class="lineNum">     386 </span><span class="lineCov">      78145 :         return ret;</span>
+<span class="lineNum">     387 </span>            : }
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span>            : }
+<span class="lineNum">     390 </span>            : }
+<span class="lineNum">     391 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

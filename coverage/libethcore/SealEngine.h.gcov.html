@@ -1,0 +1,217 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethcore/SealEngine.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethcore</a> - SealEngine.h<span style="font-size: 80%;"> (source / <a href="SealEngine.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntry">33</td>
+            <td class="headerCovTableEntryMed">75.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntry">34</td>
+            <td class="headerCovTableEntryLo">61.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file SealEngine.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  *
+<span class="lineNum">      21 </span>            :  * Determines the PoW algorithm.
+<span class="lineNum">      22 </span>            :  */
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #pragma once
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;functional&gt;
+<span class="lineNum">      27 </span>            : #include &lt;unordered_map&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libdevcore/Guards.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libdevcore/RLP.h&gt;
+<span class="lineNum">      30 </span>            : #include &quot;BlockHeader.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace dev
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span>            : namespace eth
+<span class="lineNum">      36 </span>            : {
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : class BlockHeader;
+<span class="lineNum">      39 </span>            : struct ChainOperationParams;
+<span class="lineNum">      40 </span>            : class Interface;
+<span class="lineNum">      41 </span>            : class PrecompiledFace;
+<span class="lineNum">      42 </span>            : class TransactionBase;
+<a name="43"><span class="lineNum">      43 </span>            : class EnvInfo;</a>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">      31125 : class SealEngineFace</span>
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span>            : public:
+<span class="lineNum">      48 </span><span class="lineCov">      20750 :         virtual ~SealEngineFace() {}</span>
+<a name="49"><span class="lineNum">      49 </span>            : </a>
+<a name="50"><span class="lineNum">      50 </span>            :         virtual std::string name() const = 0;</a>
+<a name="51"><span class="lineNum">      51 </span><span class="lineNoCov">          0 :         virtual unsigned revision() const { return 0; }</span></a>
+<a name="52"><span class="lineNum">      52 </span><span class="lineCov">          2 :         virtual unsigned sealFields() const { return 0; }</span></a>
+<span class="lineNum">      53 </span><span class="lineCov">          4 :         virtual bytes sealRLP() const { return bytes(); }</span>
+<span class="lineNum">      54 </span><span class="lineNoCov">          0 :         virtual StringHashMap jsInfo(BlockHeader const&amp;) const { return StringHashMap(); }</span>
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            :         /// Don't forget to call Super::verify when subclassing &amp; overriding.
+<span class="lineNum">      57 </span>            :         virtual void verify(Strictness _s, BlockHeader const&amp; _bi, BlockHeader const&amp; _parent = BlockHeader(), bytesConstRef _block = bytesConstRef()) const;
+<span class="lineNum">      58 </span>            :         /// Additional verification for transactions in blocks.
+<span class="lineNum">      59 </span>            :         virtual void verifyTransaction(ImportRequirements::value _ir, TransactionBase const&amp; _t, BlockHeader const&amp; _bi) const;
+<span class="lineNum">      60 </span>            :         /// Don't forget to call Super::populateFromParent when subclassing &amp; overriding.
+<a name="61"><span class="lineNum">      61 </span>            :         virtual void populateFromParent(BlockHeader&amp; _bi, BlockHeader const&amp; _parent) const;</a>
+<a name="62"><span class="lineNum">      62 </span>            : </a>
+<span class="lineNum">      63 </span><span class="lineCov">         68 :         bytes option(std::string const&amp; _name) const { Guard l(x_options); return m_options.count(_name) ? m_options.at(_name) : bytes(); }</span>
+<a name="64"><span class="lineNum">      64 </span><span class="lineCov">         16 :         bool setOption(std::string const&amp; _name, bytes const&amp; _value) { Guard l(x_options); try { if (onOptionChanging(_name, _value)) { m_options[_name] = _value; return true; } } catch (...) {} return false; }</span></a>
+<a name="65"><span class="lineNum">      65 </span>            : </a>
+<a name="66"><span class="lineNum">      66 </span><span class="lineNoCov">          0 :         virtual strings sealers() const { return { &quot;default&quot; }; }</span></a>
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :         virtual std::string sealer() const { return &quot;default&quot;; }</span>
+<a name="68"><span class="lineNum">      68 </span><span class="lineNoCov">          0 :         virtual void setSealer(std::string const&amp;) {}</span></a>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :         virtual bool shouldSeal(Interface*) { return true; }</span>
+<a name="71"><span class="lineNum">      71 </span>            :         virtual void generateSeal(BlockHeader const&amp; _bi) = 0;</a>
+<span class="lineNum">      72 </span>            :         virtual void onSealGenerated(std::function&lt;void(bytes const&amp; s)&gt; const&amp; _f) = 0;
+<span class="lineNum">      73 </span><span class="lineCov">         35 :         virtual void cancelGeneration() {}</span>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">     566332 :         ChainOperationParams const&amp; chainParams() const { return m_params; }</span>
+<span class="lineNum">      76 </span><span class="lineCov">      10375 :         void setChainParams(ChainOperationParams const&amp; _params) { m_params = _params; }</span>
+<span class="lineNum">      77 </span>            :         SealEngineFace* withChainParams(ChainOperationParams const&amp; _params) { setChainParams(_params); return this; }
+<a name="78"><span class="lineNum">      78 </span>            :         virtual EVMSchedule const&amp; evmSchedule(EnvInfo const&amp;) const = 0;</a>
+<a name="79"><span class="lineNum">      79 </span>            : </a>
+<a name="80"><span class="lineNum">      80 </span><span class="lineCov">     511598 :         virtual bool isPrecompiled(Address const&amp; _a) const { return m_params.precompiled.count(_a) != 0; }</span></a>
+<span class="lineNum">      81 </span><span class="lineCov">       1485 :         virtual bigint costOfPrecompiled(Address const&amp; _a, bytesConstRef _in) const { return m_params.precompiled.at(_a).cost(_in); }</span>
+<span class="lineNum">      82 </span><span class="lineCov">        820 :         virtual bytes executePrecompiled(Address const&amp; _a, bytesConstRef _in) const { return m_params.precompiled.at(_a).execute(_in); }</span>
+<a name="83"><span class="lineNum">      83 </span>            : </a>
+<span class="lineNum">      84 </span>            : protected:
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :         virtual bool onOptionChanging(std::string const&amp;, bytes const&amp;) { return true; }</span>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : private:
+<span class="lineNum">      88 </span>            :         mutable Mutex x_options;
+<span class="lineNum">      89 </span>            :         std::unordered_map&lt;std::string, bytes&gt; m_options;
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            :         ChainOperationParams m_params;
+<a name="92"><span class="lineNum">      92 </span>            : };</a>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span><span class="lineCov">      51875 : class SealEngineBase: public SealEngineFace</span>
+<a name="95"><span class="lineNum">      95 </span>            : {</a>
+<span class="lineNum">      96 </span>            : public:
+<span class="lineNum">      97 </span><span class="lineCov">          2 :         void generateSeal(BlockHeader const&amp; _bi) override</span>
+<span class="lineNum">      98 </span>            :         {
+<span class="lineNum">      99 </span><span class="lineCov">          4 :                 RLPStream ret;</span>
+<span class="lineNum">     100 </span><span class="lineCov">          2 :                 _bi.streamRLP(ret);</span>
+<span class="lineNum">     101 </span><span class="lineCov">          4 :                 if (m_onSealGenerated)</span>
+<a name="102"><span class="lineNum">     102 </span><span class="lineCov">          2 :                         m_onSealGenerated(ret.out());</span></a>
+<span class="lineNum">     103 </span><span class="lineCov">          2 :         }</span>
+<span class="lineNum">     104 </span><span class="lineCov">         36 :         void onSealGenerated(std::function&lt;void(bytes const&amp;)&gt; const&amp; _f) override { m_onSealGenerated = _f; }</span>
+<span class="lineNum">     105 </span>            :         EVMSchedule const&amp; evmSchedule(EnvInfo const&amp;) const override;
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : protected:
+<span class="lineNum">     108 </span>            :         std::function&lt;void(bytes const&amp; s)&gt; m_onSealGenerated;
+<span class="lineNum">     109 </span>            : };
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            : using SealEngineFactory = std::function&lt;SealEngineFace*()&gt;;
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineCov">          2 : class SealEngineRegistrar</span>
+<span class="lineNum">     114 </span>            : {
+<span class="lineNum">     115 </span>            : public:
+<span class="lineNum">     116 </span>            :         /// Creates the seal engine and uses it to &quot;polish&quot; the params (i.e. fill in implicit values) as necessary. Use this rather than the other two
+<a name="117"><span class="lineNum">     117 </span>            :         /// unless you *know* that the params contain all information regarding the seal on the Genesis block.</a>
+<span class="lineNum">     118 </span>            :         static SealEngineFace* create(ChainOperationParams const&amp; _params);
+<a name="119"><span class="lineNum">     119 </span><span class="lineCov">      41476 :         static SealEngineFace* create(std::string const&amp; _name) { if (!get()-&gt;m_sealEngines.count(_name)) return nullptr; return get()-&gt;m_sealEngines[_name](); }</span></a>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineCov">      10377 :         template &lt;class SealEngine&gt; static SealEngineFactory registerSealEngine(std::string const&amp; _name) { return (get()-&gt;m_sealEngines[_name] = [](){return new SealEngine;}); }</span>
+<span class="lineNum">     122 </span>            :         static void unregisterSealEngine(std::string const&amp; _name) { get()-&gt;m_sealEngines.erase(_name); }
+<a name="123"><span class="lineNum">     123 </span>            : </a>
+<span class="lineNum">     124 </span>            : private:
+<span class="lineNum">     125 </span><span class="lineCov">      20742 :         static SealEngineRegistrar* get() { if (!s_this) s_this = new SealEngineRegistrar; return s_this; }</span>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :         std::unordered_map&lt;std::string, SealEngineFactory&gt; m_sealEngines;
+<span class="lineNum">     128 </span>            :         static SealEngineRegistrar* s_this;
+<span class="lineNum">     129 </span>            : };
+<span class="lineNum">     130 </span>            : 
+<a name="131"><span class="lineNum">     131 </span>            : #define ETH_REGISTER_SEAL_ENGINE(Name) static SealEngineFactory __eth_registerSealEngineFactory ## Name = SealEngineRegistrar::registerSealEngine&lt;Name&gt;(#Name)</a>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineCov">          6 : class NoProof: public eth::SealEngineBase</span>
+<a name="134"><span class="lineNum">     134 </span>            : {</a>
+<span class="lineNum">     135 </span>            : public:
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :         std::string name() const override { return &quot;NoProof&quot;; }</span>
+<span class="lineNum">     137 </span>            :         static void init();
+<span class="lineNum">     138 </span>            : };
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : }
+<span class="lineNum">     141 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

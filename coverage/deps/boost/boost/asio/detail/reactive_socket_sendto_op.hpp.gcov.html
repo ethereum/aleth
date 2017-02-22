@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/detail/reactive_socket_sendto_op.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/detail</a> - reactive_socket_sendto_op.hpp<span style="font-size: 80%;"> (source / <a href="reactive_socket_sendto_op.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // detail/reactive_socket_sendto_op.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DETAIL_REACTIVE_SOCKET_SENDTO_OP_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DETAIL_REACTIVE_SOCKET_SENDTO_OP_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/asio/detail/addressof.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/asio/detail/bind_handler.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/asio/detail/buffer_sequence_adapter.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/asio/detail/fenced_block.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/asio/detail/reactor_op.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/detail/socket_ops.hpp&gt;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace boost {
+<span class="lineNum">      29 </span>            : namespace asio {
+<span class="lineNum">      30 </span>            : namespace detail {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : template &lt;typename ConstBufferSequence, typename Endpoint&gt;
+<span class="lineNum">      33 </span><span class="lineCov">        106 : class reactive_socket_sendto_op_base : public reactor_op</span>
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span>            : public:
+<span class="lineNum">      36 </span>            :   reactive_socket_sendto_op_base(socket_type socket,
+<span class="lineNum">      37 </span>            :       const ConstBufferSequence&amp; buffers, const Endpoint&amp; endpoint,
+<span class="lineNum">      38 </span>            :       socket_base::message_flags flags, func_type complete_func)
+<span class="lineNum">      39 </span>            :     : reactor_op(&amp;reactive_socket_sendto_op_base::do_perform, complete_func),
+<span class="lineNum">      40 </span>            :       socket_(socket),
+<span class="lineNum">      41 </span>            :       buffers_(buffers),
+<span class="lineNum">      42 </span>            :       destination_(endpoint),
+<span class="lineNum">      43 </span><span class="lineCov">        159 :       flags_(flags)</span>
+<span class="lineNum">      44 </span>            :   {
+<a name="45"><span class="lineNum">      45 </span>            :   }</a>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineCov">         53 :   static bool do_perform(reactor_op* base)</span>
+<span class="lineNum">      48 </span>            :   {
+<span class="lineNum">      49 </span>            :     reactive_socket_sendto_op_base* o(
+<span class="lineNum">      50 </span><span class="lineCov">         53 :         static_cast&lt;reactive_socket_sendto_op_base*&gt;(base));</span>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            :     buffer_sequence_adapter&lt;boost::asio::const_buffer,
+<span class="lineNum">      53 </span><span class="lineCov">        106 :         ConstBufferSequence&gt; bufs(o-&gt;buffers_);</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineCov">        159 :     return socket_ops::non_blocking_sendto(o-&gt;socket_,</span>
+<span class="lineNum">      56 </span>            :           bufs.buffers(), bufs.count(), o-&gt;flags_,
+<span class="lineNum">      57 </span>            :           o-&gt;destination_.data(), o-&gt;destination_.size(),
+<span class="lineNum">      58 </span><span class="lineCov">         53 :           o-&gt;ec_, o-&gt;bytes_transferred_);</span>
+<span class="lineNum">      59 </span>            :   }
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : private:
+<span class="lineNum">      62 </span>            :   socket_type socket_;
+<span class="lineNum">      63 </span>            :   ConstBufferSequence buffers_;
+<span class="lineNum">      64 </span>            :   Endpoint destination_;
+<span class="lineNum">      65 </span>            :   socket_base::message_flags flags_;
+<span class="lineNum">      66 </span>            : };
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : template &lt;typename ConstBufferSequence, typename Endpoint, typename Handler&gt;
+<span class="lineNum">      69 </span><span class="lineCov">        159 : class reactive_socket_sendto_op :</span>
+<span class="lineNum">      70 </span>            :   public reactive_socket_sendto_op_base&lt;ConstBufferSequence, Endpoint&gt;
+<a name="71"><span class="lineNum">      71 </span>            : {</a>
+<span class="lineNum">      72 </span>            : public:
+<a name="73"><span class="lineNum">      73 </span><span class="lineCov">        371 :   BOOST_ASIO_DEFINE_HANDLER_PTR(reactive_socket_sendto_op);</span></a>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">         53 :   reactive_socket_sendto_op(socket_type socket,</span>
+<span class="lineNum">      76 </span>            :       const ConstBufferSequence&amp; buffers, const Endpoint&amp; endpoint,
+<span class="lineNum">      77 </span>            :       socket_base::message_flags flags, Handler&amp; handler)
+<span class="lineNum">      78 </span>            :     : reactive_socket_sendto_op_base&lt;ConstBufferSequence, Endpoint&gt;(socket,
+<span class="lineNum">      79 </span>            :         buffers, endpoint, flags, &amp;reactive_socket_sendto_op::do_complete),
+<span class="lineNum">      80 </span><span class="lineCov">        159 :       handler_(BOOST_ASIO_MOVE_CAST(Handler)(handler))</span>
+<span class="lineNum">      81 </span>            :   {
+<a name="82"><span class="lineNum">      82 </span><span class="lineCov">         53 :   }</span></a>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span><span class="lineCov">         53 :   static void do_complete(io_service_impl* owner, operation* base,</span>
+<span class="lineNum">      85 </span>            :       const boost::system::error_code&amp; /*ec*/,
+<span class="lineNum">      86 </span>            :       std::size_t /*bytes_transferred*/)
+<span class="lineNum">      87 </span>            :   {
+<span class="lineNum">      88 </span>            :     // Take ownership of the handler object.
+<span class="lineNum">      89 </span><span class="lineCov">         53 :     reactive_socket_sendto_op* o(static_cast&lt;reactive_socket_sendto_op*&gt;(base));</span>
+<span class="lineNum">      90 </span><span class="lineCov">        159 :     ptr p = { boost::asio::detail::addressof(o-&gt;handler_), o, o };</span>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :     BOOST_ASIO_HANDLER_COMPLETION((o));
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :     // Make a copy of the handler so that the memory can be deallocated before
+<span class="lineNum">      95 </span>            :     // the upcall is made. Even if we're not about to make an upcall, a
+<span class="lineNum">      96 </span>            :     // sub-object of the handler may be the true owner of the memory associated
+<span class="lineNum">      97 </span>            :     // with the handler. Consequently, a local copy of the handler is required
+<span class="lineNum">      98 </span>            :     // to ensure that any owning sub-object remains valid until after we have
+<span class="lineNum">      99 </span>            :     // deallocated the memory here.
+<span class="lineNum">     100 </span>            :     detail::binder2&lt;Handler, boost::system::error_code, std::size_t&gt;
+<span class="lineNum">     101 </span><span class="lineCov">        159 :       handler(o-&gt;handler_, o-&gt;ec_, o-&gt;bytes_transferred_);</span>
+<span class="lineNum">     102 </span><span class="lineCov">         53 :     p.h = boost::asio::detail::addressof(handler.handler_);</span>
+<span class="lineNum">     103 </span><span class="lineCov">         53 :     p.reset();</span>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            :     // Make the upcall if required.
+<span class="lineNum">     106 </span><span class="lineCov">         53 :     if (owner)</span>
+<span class="lineNum">     107 </span>            :     {
+<span class="lineNum">     108 </span><span class="lineCov">        106 :       fenced_block b(fenced_block::half);</span>
+<span class="lineNum">     109 </span>            :       BOOST_ASIO_HANDLER_INVOCATION_BEGIN((handler.arg1_, handler.arg2_));
+<span class="lineNum">     110 </span><span class="lineCov">        106 :       boost_asio_handler_invoke_helpers::invoke(handler, handler.handler_);</span>
+<span class="lineNum">     111 </span>            :       BOOST_ASIO_HANDLER_INVOCATION_END;
+<span class="lineNum">     112 </span>            :     }
+<span class="lineNum">     113 </span><span class="lineCov">         53 :   }</span>
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : private:
+<span class="lineNum">     116 </span>            :   Handler handler_;
+<span class="lineNum">     117 </span>            : };
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : } // namespace detail
+<span class="lineNum">     120 </span>            : } // namespace asio
+<span class="lineNum">     121 </span>            : } // namespace boost
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            : #endif // BOOST_ASIO_DETAIL_REACTIVE_SOCKET_SENDTO_OP_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

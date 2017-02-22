@@ -1,0 +1,219 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/utils/xml_printer.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/utils</a> - xml_printer.hpp<span style="font-size: 80%;"> (source / <a href="xml_printer.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">27</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : common code used by any agent serving as OF_XML printer
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_UTILS_XML_PRINTER_HPP
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_UTILS_XML_PRINTER_HPP
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/utils/basic_cstring/basic_cstring.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/utils/custom_manip.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/test/utils/foreach.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/utils/basic_cstring/io.hpp&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : // Boost
+<span class="lineNum">      25 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : // STL
+<span class="lineNum">      28 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace boost {
+<span class="lineNum">      35 </span>            : namespace unit_test {
+<span class="lineNum">      36 </span>            : namespace utils {
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : // ************************************************************************** //
+<span class="lineNum">      39 </span>            : // **************               xml print helpers              ************** //
+<span class="lineNum">      40 </span>            : // ************************************************************************** //
+<a name="41"><span class="lineNum">      41 </span>            : </a>
+<span class="lineNum">      42 </span>            : inline void
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 : print_escaped( std::ostream&amp; where_to, const_string value )</span>
+<span class="lineNum">      44 </span>            : {
+<span class="lineNum">      45 </span>            : #if !defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST) &amp;&amp; !defined(BOOST_NO_CXX11_UNIFIED_INITIALIZATION_SYNTAX)
+<span class="lineNum">      46 </span>            :     static std::map&lt;char,char const*&gt; const char_type{{
+<span class="lineNum">      47 </span>            :         {'&lt;' , &quot;lt&quot;},
+<span class="lineNum">      48 </span>            :         {'&gt;' , &quot;gt&quot;},
+<span class="lineNum">      49 </span>            :         {'&amp;' , &quot;amp&quot;},
+<span class="lineNum">      50 </span>            :         {'\'', &quot;apos&quot;},
+<span class="lineNum">      51 </span>            :         {'&quot;' , &quot;quot&quot;}
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :     }};</span>
+<span class="lineNum">      53 </span>            : #else
+<span class="lineNum">      54 </span>            :     static std::map&lt;char,char const*&gt; char_type;
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            :     if( char_type.empty() ) {
+<span class="lineNum">      57 </span>            :         char_type['&lt;'] = &quot;lt&quot;;
+<span class="lineNum">      58 </span>            :         char_type['&gt;'] = &quot;gt&quot;;
+<span class="lineNum">      59 </span>            :         char_type['&amp;'] = &quot;amp&quot;;
+<span class="lineNum">      60 </span>            :         char_type['\'']= &quot;apos&quot;;
+<span class="lineNum">      61 </span>            :         char_type['&quot;'] = &quot;quot&quot;;
+<span class="lineNum">      62 </span>            :     }
+<span class="lineNum">      63 </span>            : #endif
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :     BOOST_TEST_FOREACH( char, c, value ) {</span>
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :         std::map&lt;char,char const*&gt;::const_iterator found_ref = char_type.find( c );</span>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :         if( found_ref != char_type.end() )</span>
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :             where_to &lt;&lt; '&amp;' &lt;&lt; found_ref-&gt;second &lt;&lt; ';';</span>
+<span class="lineNum">      70 </span>            :         else
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :             where_to &lt;&lt; c;</span>
+<span class="lineNum">      72 </span>            :     }
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : inline void
+<span class="lineNum">      78 </span>            : print_escaped( std::ostream&amp; where_to, std::string const&amp; value )
+<span class="lineNum">      79 </span>            : {
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :     print_escaped( where_to, const_string( value ) );</span>
+<span class="lineNum">      81 </span>            : }
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : template&lt;typename T&gt;
+<span class="lineNum">      86 </span>            : inline void
+<span class="lineNum">      87 </span>            : print_escaped( std::ostream&amp; where_to, T const&amp; value )
+<span class="lineNum">      88 </span>            : {
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 :     where_to &lt;&lt; value;</span>
+<span class="lineNum">      90 </span>            : }
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : //____________________________________________________________________________//
+<a name="93"><span class="lineNum">      93 </span>            : </a>
+<span class="lineNum">      94 </span>            : inline void
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 : print_escaped_cdata( std::ostream&amp; where_to, const_string value )</span>
+<span class="lineNum">      96 </span>            : {
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :     static const_string cdata_end( &quot;]]&gt;&quot; );</span>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :     const_string::size_type pos = value.find( cdata_end );</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :     if( pos == const_string::npos )</span>
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :         where_to &lt;&lt; value;</span>
+<span class="lineNum">     102 </span>            :     else {
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :         where_to &lt;&lt; value.substr( 0, pos+2 ) &lt;&lt; cdata_end</span>
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :                  &lt;&lt; BOOST_TEST_L( &quot;&lt;![CDATA[&quot; ) &lt;&lt; value.substr( pos+2 );</span>
+<span class="lineNum">     105 </span>            :     }
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            : typedef custom_manip&lt;struct attr_value_t&gt; attr_value;
+<span class="lineNum">     111 </span>            : 
+<a name="112"><span class="lineNum">     112 </span>            : template&lt;typename T&gt;</a>
+<span class="lineNum">     113 </span>            : inline std::ostream&amp;
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 : operator&lt;&lt;( custom_printer&lt;attr_value&gt; const&amp; p, T const&amp; value )</span>
+<span class="lineNum">     115 </span>            : {
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :     *p &lt;&lt; &quot;=\&quot;&quot;;</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :     print_escaped( *p, value );</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :     *p &lt;&lt; '&quot;';</span>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :     return *p;</span>
+<span class="lineNum">     121 </span>            : }
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            : typedef custom_manip&lt;struct cdata_t&gt; cdata;
+<a name="126"><span class="lineNum">     126 </span>            : </a>
+<span class="lineNum">     127 </span>            : inline std::ostream&amp;
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 : operator&lt;&lt;( custom_printer&lt;cdata&gt; const&amp; p, const_string value )</span>
+<span class="lineNum">     129 </span>            : {
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :     *p &lt;&lt; BOOST_TEST_L( &quot;&lt;![CDATA[&quot; );</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :     print_escaped_cdata( *p, value );</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :     return  *p &lt;&lt; BOOST_TEST_L( &quot;]]&gt;&quot; );</span>
+<span class="lineNum">     133 </span>            : }
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : } // namespace utils
+<span class="lineNum">     138 </span>            : } // namespace unit_test
+<span class="lineNum">     139 </span>            : } // namespace boost
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            : #endif // BOOST_TEST_UTILS_XML_PRINTER_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

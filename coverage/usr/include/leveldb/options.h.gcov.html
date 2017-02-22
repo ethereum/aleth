@@ -1,0 +1,271 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/leveldb/options.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">usr/include/leveldb</a> - options.h<span style="font-size: 80%;"> (source / <a href="options.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Copyright (c) 2011 The LevelDB Authors. All rights reserved.</a>
+<span class="lineNum">       2 </span>            : // Use of this source code is governed by a BSD-style license that can be
+<span class="lineNum">       3 </span>            : // found in the LICENSE file. See the AUTHORS file for names of contributors.
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            : #ifndef STORAGE_LEVELDB_INCLUDE_OPTIONS_H_
+<span class="lineNum">       6 </span>            : #define STORAGE_LEVELDB_INCLUDE_OPTIONS_H_
+<span class="lineNum">       7 </span>            : 
+<span class="lineNum">       8 </span>            : #include &lt;stddef.h&gt;
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : namespace leveldb {
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : class Cache;
+<span class="lineNum">      13 </span>            : class Comparator;
+<span class="lineNum">      14 </span>            : class Env;
+<span class="lineNum">      15 </span>            : class FilterPolicy;
+<span class="lineNum">      16 </span>            : class Logger;
+<span class="lineNum">      17 </span>            : class Snapshot;
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : // DB contents are stored in a set of blocks, each of which holds a
+<span class="lineNum">      20 </span>            : // sequence of key,value pairs.  Each block may be compressed before
+<span class="lineNum">      21 </span>            : // being stored in a file.  The following enum describes which
+<span class="lineNum">      22 </span>            : // compression method (if any) is used to compress a block.
+<span class="lineNum">      23 </span>            : enum CompressionType {
+<span class="lineNum">      24 </span>            :   // NOTE: do not change the values of existing entries, as these are
+<span class="lineNum">      25 </span>            :   // part of the persistent format on disk.
+<span class="lineNum">      26 </span>            :   kNoCompression     = 0x0,
+<span class="lineNum">      27 </span>            :   kSnappyCompression = 0x1
+<span class="lineNum">      28 </span>            : };
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : // Options to control the behavior of a database (passed to DB::Open)
+<span class="lineNum">      31 </span>            : struct Options {
+<span class="lineNum">      32 </span>            :   // -------------------
+<span class="lineNum">      33 </span>            :   // Parameters that affect behavior
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            :   // Comparator used to define the order of keys in the table.
+<span class="lineNum">      36 </span>            :   // Default: a comparator that uses lexicographic byte-wise ordering
+<span class="lineNum">      37 </span>            :   //
+<span class="lineNum">      38 </span>            :   // REQUIRES: The client must ensure that the comparator supplied
+<span class="lineNum">      39 </span>            :   // here has the same name and orders keys *exactly* the same as the
+<span class="lineNum">      40 </span>            :   // comparator provided to previous open calls on the same DB.
+<span class="lineNum">      41 </span>            :   const Comparator* comparator;
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            :   // If true, the database will be created if it is missing.
+<span class="lineNum">      44 </span>            :   // Default: false
+<span class="lineNum">      45 </span>            :   bool create_if_missing;
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            :   // If true, an error is raised if the database already exists.
+<span class="lineNum">      48 </span>            :   // Default: false
+<span class="lineNum">      49 </span>            :   bool error_if_exists;
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            :   // If true, the implementation will do aggressive checking of the
+<span class="lineNum">      52 </span>            :   // data it is processing and will stop early if it detects any
+<span class="lineNum">      53 </span>            :   // errors.  This may have unforeseen ramifications: for example, a
+<span class="lineNum">      54 </span>            :   // corruption of one DB entry may cause a large number of entries to
+<span class="lineNum">      55 </span>            :   // become unreadable or for the entire DB to become unopenable.
+<span class="lineNum">      56 </span>            :   // Default: false
+<span class="lineNum">      57 </span>            :   bool paranoid_checks;
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            :   // Use the specified object to interact with the environment,
+<span class="lineNum">      60 </span>            :   // e.g. to read/write files, schedule background work, etc.
+<span class="lineNum">      61 </span>            :   // Default: Env::Default()
+<span class="lineNum">      62 </span>            :   Env* env;
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :   // Any internal progress/error information generated by the db will
+<span class="lineNum">      65 </span>            :   // be written to info_log if it is non-NULL, or to a file stored
+<span class="lineNum">      66 </span>            :   // in the same directory as the DB contents if info_log is NULL.
+<span class="lineNum">      67 </span>            :   // Default: NULL
+<span class="lineNum">      68 </span>            :   Logger* info_log;
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            :   // -------------------
+<span class="lineNum">      71 </span>            :   // Parameters that affect performance
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :   // Amount of data to build up in memory (backed by an unsorted log
+<span class="lineNum">      74 </span>            :   // on disk) before converting to a sorted on-disk file.
+<span class="lineNum">      75 </span>            :   //
+<span class="lineNum">      76 </span>            :   // Larger values increase performance, especially during bulk loads.
+<span class="lineNum">      77 </span>            :   // Up to two write buffers may be held in memory at the same time,
+<span class="lineNum">      78 </span>            :   // so you may wish to adjust this parameter to control memory usage.
+<span class="lineNum">      79 </span>            :   // Also, a larger write buffer will result in a longer recovery time
+<span class="lineNum">      80 </span>            :   // the next time the database is opened.
+<span class="lineNum">      81 </span>            :   //
+<span class="lineNum">      82 </span>            :   // Default: 4MB
+<span class="lineNum">      83 </span>            :   size_t write_buffer_size;
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            :   // Number of open files that can be used by the DB.  You may need to
+<span class="lineNum">      86 </span>            :   // increase this if your database has a large working set (budget
+<span class="lineNum">      87 </span>            :   // one open file per 2MB of working set).
+<span class="lineNum">      88 </span>            :   //
+<span class="lineNum">      89 </span>            :   // Default: 1000
+<span class="lineNum">      90 </span>            :   int max_open_files;
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :   // Control over blocks (user data is stored in a set of blocks, and
+<span class="lineNum">      93 </span>            :   // a block is the unit of reading from disk).
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            :   // If non-NULL, use the specified cache for blocks.
+<span class="lineNum">      96 </span>            :   // If NULL, leveldb will automatically create and use an 8MB internal cache.
+<span class="lineNum">      97 </span>            :   // Default: NULL
+<span class="lineNum">      98 </span>            :   Cache* block_cache;
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :   // Approximate size of user data packed per block.  Note that the
+<span class="lineNum">     101 </span>            :   // block size specified here corresponds to uncompressed data.  The
+<span class="lineNum">     102 </span>            :   // actual size of the unit read from disk may be smaller if
+<span class="lineNum">     103 </span>            :   // compression is enabled.  This parameter can be changed dynamically.
+<span class="lineNum">     104 </span>            :   //
+<span class="lineNum">     105 </span>            :   // Default: 4K
+<span class="lineNum">     106 </span>            :   size_t block_size;
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :   // Number of keys between restart points for delta encoding of keys.
+<span class="lineNum">     109 </span>            :   // This parameter can be changed dynamically.  Most clients should
+<span class="lineNum">     110 </span>            :   // leave this parameter alone.
+<span class="lineNum">     111 </span>            :   //
+<span class="lineNum">     112 </span>            :   // Default: 16
+<span class="lineNum">     113 </span>            :   int block_restart_interval;
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            :   // Compress blocks using the specified compression algorithm.  This
+<span class="lineNum">     116 </span>            :   // parameter can be changed dynamically.
+<span class="lineNum">     117 </span>            :   //
+<span class="lineNum">     118 </span>            :   // Default: kSnappyCompression, which gives lightweight but fast
+<span class="lineNum">     119 </span>            :   // compression.
+<span class="lineNum">     120 </span>            :   //
+<span class="lineNum">     121 </span>            :   // Typical speeds of kSnappyCompression on an Intel(R) Core(TM)2 2.4GHz:
+<span class="lineNum">     122 </span>            :   //    ~200-500MB/s compression
+<span class="lineNum">     123 </span>            :   //    ~400-800MB/s decompression
+<span class="lineNum">     124 </span>            :   // Note that these speeds are significantly faster than most
+<span class="lineNum">     125 </span>            :   // persistent storage speeds, and therefore it is typically never
+<span class="lineNum">     126 </span>            :   // worth switching to kNoCompression.  Even if the input data is
+<span class="lineNum">     127 </span>            :   // incompressible, the kSnappyCompression implementation will
+<span class="lineNum">     128 </span>            :   // efficiently detect that and will switch to uncompressed mode.
+<span class="lineNum">     129 </span>            :   CompressionType compression;
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            :   // If non-NULL, use the specified filter policy to reduce disk reads.
+<span class="lineNum">     132 </span>            :   // Many applications will benefit from passing the result of
+<span class="lineNum">     133 </span>            :   // NewBloomFilterPolicy() here.
+<span class="lineNum">     134 </span>            :   //
+<span class="lineNum">     135 </span>            :   // Default: NULL
+<span class="lineNum">     136 </span>            :   const FilterPolicy* filter_policy;
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :   // Create an Options object with default values for all fields.
+<span class="lineNum">     139 </span>            :   Options();
+<span class="lineNum">     140 </span>            : };
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            : // Options that control read operations
+<span class="lineNum">     143 </span>            : struct ReadOptions {
+<span class="lineNum">     144 </span>            :   // If true, all data read from underlying storage will be
+<span class="lineNum">     145 </span>            :   // verified against corresponding checksums.
+<span class="lineNum">     146 </span>            :   // Default: false
+<span class="lineNum">     147 </span>            :   bool verify_checksums;
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            :   // Should the data read for this iteration be cached in memory?
+<span class="lineNum">     150 </span>            :   // Callers may wish to set this field to false for bulk scans.
+<span class="lineNum">     151 </span>            :   // Default: true
+<span class="lineNum">     152 </span>            :   bool fill_cache;
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            :   // If &quot;snapshot&quot; is non-NULL, read as of the supplied snapshot
+<span class="lineNum">     155 </span>            :   // (which must belong to the DB that is being read and which must
+<span class="lineNum">     156 </span>            :   // not have been released).  If &quot;snapshot&quot; is NULL, use an implicit
+<span class="lineNum">     157 </span>            :   // snapshot of the state at the beginning of this read operation.
+<span class="lineNum">     158 </span>            :   // Default: NULL
+<span class="lineNum">     159 </span>            :   const Snapshot* snapshot;
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :   ReadOptions()
+<span class="lineNum">     162 </span>            :       : verify_checksums(false),
+<span class="lineNum">     163 </span>            :         fill_cache(true),
+<span class="lineNum">     164 </span><span class="lineCov">      25068 :         snapshot(NULL) {</span>
+<span class="lineNum">     165 </span>            :   }
+<span class="lineNum">     166 </span>            : };
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : // Options that control write operations
+<span class="lineNum">     169 </span>            : struct WriteOptions {
+<span class="lineNum">     170 </span>            :   // If true, the write will be flushed from the operating system
+<span class="lineNum">     171 </span>            :   // buffer cache (by calling WritableFile::Sync()) before the write
+<span class="lineNum">     172 </span>            :   // is considered complete.  If this flag is true, writes will be
+<span class="lineNum">     173 </span>            :   // slower.
+<span class="lineNum">     174 </span>            :   //
+<span class="lineNum">     175 </span>            :   // If this flag is false, and the machine crashes, some recent
+<span class="lineNum">     176 </span>            :   // writes may be lost.  Note that if it is just the process that
+<span class="lineNum">     177 </span>            :   // crashes (i.e., the machine does not reboot), no writes will be
+<span class="lineNum">     178 </span>            :   // lost even if sync==false.
+<span class="lineNum">     179 </span>            :   //
+<span class="lineNum">     180 </span>            :   // In other words, a DB write with sync==false has similar
+<span class="lineNum">     181 </span>            :   // crash semantics as the &quot;write()&quot; system call.  A DB write
+<span class="lineNum">     182 </span>            :   // with sync==true has similar crash semantics to a &quot;write()&quot;
+<span class="lineNum">     183 </span>            :   // system call followed by &quot;fsync()&quot;.
+<span class="lineNum">     184 </span>            :   //
+<span class="lineNum">     185 </span>            :   // Default: false
+<span class="lineNum">     186 </span>            :   bool sync;
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :   WriteOptions()
+<span class="lineNum">     189 </span><span class="lineCov">      25068 :       : sync(false) {</span>
+<span class="lineNum">     190 </span>            :   }
+<span class="lineNum">     191 </span>            : };
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : }  // namespace leveldb
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            : #endif  // STORAGE_LEVELDB_INCLUDE_OPTIONS_H_
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/algorithm/string/detail/find_format_store.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/algorithm/string/detail</a> - find_format_store.hpp<span style="font-size: 80%;"> (source / <a href="find_format_store.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  Boost string_algo library find_format_store.hpp header file  ---------------------------//</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : //  Copyright Pavol Droba 2002-2003.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       6 </span>            : //    (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       7 </span>            : //          http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : //  See http://www.boost.org/ for updates, documentation, and revision history.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_STRING_FIND_FORMAT_STORE_DETAIL_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_STRING_FIND_FORMAT_STORE_DETAIL_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &lt;boost/algorithm/string/config.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/range/iterator_range_core.hpp&gt;
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : namespace boost {
+<span class="lineNum">      18 </span>            :     namespace algorithm {
+<span class="lineNum">      19 </span>            :         namespace detail {
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : //  temporary format and find result storage --------------------------------//
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &gt;= 1400)
+<span class="lineNum">      24 </span>            : #pragma warning(push)
+<span class="lineNum">      25 </span>            : #pragma warning(disable:4512) //assignment operator could not be generated
+<span class="lineNum">      26 </span>            : #endif
+<span class="lineNum">      27 </span>            :             template&lt; 
+<span class="lineNum">      28 </span>            :                 typename ForwardIteratorT,
+<span class="lineNum">      29 </span>            :                 typename FormatterT,
+<span class="lineNum">      30 </span>            :                 typename FormatResultT &gt;
+<span class="lineNum">      31 </span>            :             class find_format_store : 
+<span class="lineNum">      32 </span>            :                 public iterator_range&lt;ForwardIteratorT&gt;
+<span class="lineNum">      33 </span>            :             {
+<span class="lineNum">      34 </span>            :             public:
+<span class="lineNum">      35 </span>            :                 // typedefs
+<span class="lineNum">      36 </span>            :                 typedef iterator_range&lt;ForwardIteratorT&gt; base_type;
+<span class="lineNum">      37 </span>            :                 typedef FormatterT  formatter_type;
+<span class="lineNum">      38 </span>            :                 typedef FormatResultT format_result_type;
+<span class="lineNum">      39 </span>            :                 
+<span class="lineNum">      40 </span>            :             public:
+<span class="lineNum">      41 </span>            :                 // Construction
+<span class="lineNum">      42 </span>            :                 find_format_store( 
+<span class="lineNum">      43 </span>            :                         const base_type&amp; FindResult,
+<span class="lineNum">      44 </span>            :                         const format_result_type&amp; FormatResult,
+<span class="lineNum">      45 </span>            :                         const formatter_type&amp; Formatter ) :
+<span class="lineNum">      46 </span>            :                     base_type(FindResult),
+<span class="lineNum">      47 </span>            :                     m_FormatResult(FormatResult),
+<span class="lineNum">      48 </span><span class="lineCov">         14 :                     m_Formatter(Formatter) {}</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            :                 // Assignment
+<span class="lineNum">      51 </span>            :                 template&lt; typename FindResultT &gt;
+<span class="lineNum">      52 </span>            :                 find_format_store&amp; operator=( FindResultT FindResult )
+<span class="lineNum">      53 </span>            :                 {
+<span class="lineNum">      54 </span><span class="lineCov">        112 :                     iterator_range&lt;ForwardIteratorT&gt;::operator=(FindResult);</span>
+<span class="lineNum">      55 </span><span class="lineCov">        112 :                     if( !this-&gt;empty() ) {</span>
+<span class="lineNum">      56 </span><span class="lineCov">         42 :                         m_FormatResult=m_Formatter(FindResult);</span>
+<span class="lineNum">      57 </span>            :                     }
+<span class="lineNum">      58 </span>            :                     
+<span class="lineNum">      59 </span>            :                     return *this;
+<span class="lineNum">      60 </span>            :                 }
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            :                 // Retrieve format result
+<span class="lineNum">      63 </span>            :                 const format_result_type&amp; format_result()
+<span class="lineNum">      64 </span>            :                 {   
+<span class="lineNum">      65 </span>            :                     return m_FormatResult;
+<span class="lineNum">      66 </span>            :                 }
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            :             private:
+<span class="lineNum">      69 </span>            :                 format_result_type m_FormatResult;
+<span class="lineNum">      70 </span>            :                 const formatter_type&amp; m_Formatter;
+<span class="lineNum">      71 </span>            :             };
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :             template&lt;typename InputT, typename FindResultT&gt;
+<span class="lineNum">      74 </span>            :             bool check_find_result(InputT&amp;, FindResultT&amp; FindResult)
+<span class="lineNum">      75 </span>            :             {
+<span class="lineNum">      76 </span>            :                 typedef BOOST_STRING_TYPENAME 
+<span class="lineNum">      77 </span>            :                     range_const_iterator&lt;InputT&gt;::type input_iterator_type; 
+<span class="lineNum">      78 </span><span class="lineCov">         14 :                 iterator_range&lt;input_iterator_type&gt; ResultRange(FindResult);</span>
+<span class="lineNum">      79 </span><span class="lineCov">         14 :                 return !ResultRange.empty();</span>
+<span class="lineNum">      80 </span>            :             }
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &gt;= 1400)
+<span class="lineNum">      83 </span>            : #pragma warning(pop)
+<span class="lineNum">      84 </span>            : #endif
+<span class="lineNum">      85 </span>            :         } // namespace detail
+<span class="lineNum">      86 </span>            :     } // namespace algorithm
+<span class="lineNum">      87 </span>            : } // namespace boost
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : #endif  // BOOST_STRING_FIND_FORMAT_STORE_DETAIL_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

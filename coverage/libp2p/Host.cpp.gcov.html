@@ -1,0 +1,1027 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libp2p/Host.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libp2p</a> - Host.cpp<span style="font-size: 80%;"> (source / <a href="Host.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">354</td>
+            <td class="headerCovTableEntry">483</td>
+            <td class="headerCovTableEntryLo">73.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">38</td>
+            <td class="headerCovTableEntry">43</td>
+            <td class="headerCovTableEntryMed">88.4 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Host.cpp
+<span class="lineNum">      18 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      20 </span>            :  * @date 2014
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;set&gt;
+<span class="lineNum">      24 </span>            : #include &lt;chrono&gt;
+<span class="lineNum">      25 </span>            : #include &lt;thread&gt;
+<span class="lineNum">      26 </span>            : #include &lt;mutex&gt;
+<span class="lineNum">      27 </span>            : #include &lt;memory&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/algorithm/string.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libdevcore/Assertions.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libdevcore/CommonIO.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libdevcore/Exceptions.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;libdevcore/FileSystem.h&gt;
+<span class="lineNum">      34 </span>            : #include &quot;Session.h&quot;
+<span class="lineNum">      35 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      36 </span>            : #include &quot;Capability.h&quot;
+<span class="lineNum">      37 </span>            : #include &quot;UPnP.h&quot;
+<span class="lineNum">      38 </span>            : #include &quot;RLPxHandshake.h&quot;
+<span class="lineNum">      39 </span>            : #include &quot;Host.h&quot;
+<span class="lineNum">      40 </span>            : using namespace std;
+<span class="lineNum">      41 </span>            : using namespace dev;
+<span class="lineNum">      42 </span>            : using namespace dev::p2p;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : /// Interval at which Host::run will call keepAlivePeers to ping peers.
+<span class="lineNum">      45 </span>            : std::chrono::seconds const c_keepAliveInterval = std::chrono::seconds(30);
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : /// Disconnect timeout after failure to respond to keepAlivePeers ping.
+<a name="48"><span class="lineNum">      48 </span>            : std::chrono::milliseconds const c_keepAliveTimeOut = std::chrono::milliseconds(1000);</a>
+<span class="lineNum">      49 </span>            : 
+<a name="50"><span class="lineNum">      50 </span><span class="lineCov">         24 : HostNodeTableHandler::HostNodeTableHandler(Host&amp; _host): m_host(_host) {}</span></a>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineCov">         24 : void HostNodeTableHandler::processEvent(NodeID const&amp; _n, NodeTableEventType const&amp; _e)</span>
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span><span class="lineCov">         24 :         m_host.onNodeTableEvent(_n, _e);</span>
+<a name="55"><span class="lineNum">      55 </span><span class="lineCov">         24 : }</span></a>
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineCov">         52 : ReputationManager::ReputationManager()</span>
+<span class="lineNum">      58 </span>            : {
+<a name="59"><span class="lineNum">      59 </span><span class="lineCov">         26 : }</span></a>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineCov">          4 : void ReputationManager::noteRude(SessionFace const&amp; _s, std::string const&amp; _sub)</span>
+<span class="lineNum">      62 </span>            : {
+<span class="lineNum">      63 </span><span class="lineCov">         20 :         DEV_WRITE_GUARDED(x_nodes)</span>
+<span class="lineNum">      64 </span><span class="lineCov">         20 :                 m_nodes[make_pair(_s.id(), _s.info().clientVersion)].subs[_sub].isRude = true;</span>
+<a name="65"><span class="lineNum">      65 </span><span class="lineCov">          4 : }</span></a>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineCov">         16 : bool ReputationManager::isRude(SessionFace const&amp; _s, std::string const&amp; _sub) const</span>
+<span class="lineNum">      68 </span>            : {
+<span class="lineNum">      69 </span><span class="lineCov">         32 :         DEV_READ_GUARDED(x_nodes)</span>
+<span class="lineNum">      70 </span>            :         {
+<span class="lineNum">      71 </span><span class="lineCov">         64 :                 auto nit = m_nodes.find(make_pair(_s.id(), _s.info().clientVersion));</span>
+<span class="lineNum">      72 </span><span class="lineCov">         32 :                 if (nit == m_nodes.end())</span>
+<span class="lineNum">      73 </span>            :                         return false;
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :                 auto sit = nit-&gt;second.subs.find(_sub);</span>
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :                 bool ret = sit == nit-&gt;second.subs.end() ? false : sit-&gt;second.isRude;</span>
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :                 return _sub.empty() ? ret : (ret || isRude(_s));</span>
+<span class="lineNum">      77 </span>            :         }
+<span class="lineNum">      78 </span>            :         return false;
+<a name="79"><span class="lineNum">      79 </span>            : }</a>
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span><span class="lineCov">          4 : void ReputationManager::setData(SessionFace const&amp; _s, std::string const&amp; _sub, bytes const&amp; _data)</span>
+<span class="lineNum">      82 </span>            : {
+<span class="lineNum">      83 </span><span class="lineCov">         20 :         DEV_WRITE_GUARDED(x_nodes)</span>
+<span class="lineNum">      84 </span><span class="lineCov">         20 :                 m_nodes[make_pair(_s.id(), _s.info().clientVersion)].subs[_sub].data = _data;</span>
+<a name="85"><span class="lineNum">      85 </span><span class="lineCov">          4 : }</span></a>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">         12 : bytes ReputationManager::data(SessionFace const&amp; _s, std::string const&amp; _sub) const</span>
+<span class="lineNum">      88 </span>            : {
+<span class="lineNum">      89 </span><span class="lineCov">         24 :         DEV_READ_GUARDED(x_nodes)</span>
+<span class="lineNum">      90 </span>            :         {
+<span class="lineNum">      91 </span><span class="lineCov">         48 :                 auto nit = m_nodes.find(make_pair(_s.id(), _s.info().clientVersion));</span>
+<span class="lineNum">      92 </span><span class="lineCov">         24 :                 if (nit == m_nodes.end())</span>
+<span class="lineNum">      93 </span>            :                         return bytes();
+<span class="lineNum">      94 </span><span class="lineCov">          8 :                 auto sit = nit-&gt;second.subs.find(_sub);</span>
+<span class="lineNum">      95 </span><span class="lineCov">         12 :                 return sit == nit-&gt;second.subs.end() ? bytes() : sit-&gt;second.data;</span>
+<span class="lineNum">      96 </span>            :         }
+<span class="lineNum">      97 </span>            :         return bytes();
+<a name="98"><span class="lineNum">      98 </span>            : }</a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">         21 : Host::Host(string const&amp; _clientVersion, KeyPair const&amp; _alias, NetworkPreferences const&amp; _n):</span>
+<span class="lineNum">     101 </span>            :         Worker(&quot;p2p&quot;, 0),
+<span class="lineNum">     102 </span>            :         m_clientVersion(_clientVersion),
+<span class="lineNum">     103 </span>            :         m_netPrefs(_n),
+<span class="lineNum">     104 </span>            :         m_ifAddresses(Network::getInterfaceAddresses()),
+<span class="lineNum">     105 </span>            :         m_ioService(2),
+<span class="lineNum">     106 </span>            :         m_tcp4Acceptor(m_ioService),
+<span class="lineNum">     107 </span>            :         m_alias(_alias),
+<span class="lineNum">     108 </span><span class="lineCov">        504 :         m_lastPing(chrono::steady_clock::time_point::min())</span>
+<span class="lineNum">     109 </span>            : {
+<span class="lineNum">     110 </span><span class="lineCov">         21 :         clog(NetNote) &lt;&lt; &quot;Id:&quot; &lt;&lt; id();</span>
+<a name="111"><span class="lineNum">     111 </span><span class="lineCov">         21 : }</span></a>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineCov">         15 : Host::Host(string const&amp; _clientVersion, NetworkPreferences const&amp; _n, bytesConstRef _restoreNetwork):</span>
+<span class="lineNum">     114 </span><span class="lineCov">         30 :         Host(_clientVersion, networkAlias(_restoreNetwork), _n)</span>
+<span class="lineNum">     115 </span>            : {
+<span class="lineNum">     116 </span><span class="lineCov">         45 :         m_restoreNetwork = _restoreNetwork.toBytes();</span>
+<a name="117"><span class="lineNum">     117 </span><span class="lineCov">         15 : }</span></a>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineCov">        363 : Host::~Host()</span>
+<span class="lineNum">     120 </span>            : {
+<span class="lineNum">     121 </span><span class="lineCov">         21 :         stop();</span>
+<a name="122"><span class="lineNum">     122 </span><span class="lineCov">         27 : }</span></a>
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span><span class="lineCov">         12 : void Host::start()</span>
+<span class="lineNum">     125 </span>            : {
+<span class="lineNum">     126 </span><span class="lineCov">         36 :         DEV_TIMED_FUNCTION_ABOVE(500);</span>
+<span class="lineNum">     127 </span><span class="lineCov">         12 :         startWorking();</span>
+<span class="lineNum">     128 </span><span class="lineCov">         36 :         while (isWorking() &amp;&amp; !haveNetwork())</span>
+<span class="lineNum">     129 </span><span class="lineCov">         24 :                 this_thread::sleep_for(chrono::milliseconds(10));</span>
+<span class="lineNum">     130 </span>            :         
+<span class="lineNum">     131 </span>            :         // network start failed!
+<span class="lineNum">     132 </span><span class="lineCov">         12 :         if (isWorking())</span>
+<span class="lineNum">     133 </span><span class="lineCov">         12 :                 return;</span>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :         clog(NetWarn) &lt;&lt; &quot;Network start failed!&quot;;</span>
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :         doneWorking();</span>
+<a name="137"><span class="lineNum">     137 </span>            : }</a>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineCov">         23 : void Host::stop()</span>
+<span class="lineNum">     140 </span>            : {
+<span class="lineNum">     141 </span>            :         // called to force io_service to kill any remaining tasks it might have -
+<span class="lineNum">     142 </span>            :         // such tasks may involve socket reads from Capabilities that maintain references
+<span class="lineNum">     143 </span>            :         // to resources we're about to free.
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            :         {
+<span class="lineNum">     146 </span>            :                 // Although m_run is set by stop() or start(), it effects m_runTimer so x_runTimer is used instead of a mutex for m_run.
+<span class="lineNum">     147 </span><span class="lineCov">         46 :                 Guard l(x_runTimer);</span>
+<span class="lineNum">     148 </span>            :                 // ignore if already stopped/stopping
+<span class="lineNum">     149 </span><span class="lineCov">         23 :                 if (!m_run)</span>
+<span class="lineNum">     150 </span>            :                         return;
+<span class="lineNum">     151 </span>            :                 
+<span class="lineNum">     152 </span>            :                 // signal run() to prepare for shutdown and reset m_timer
+<span class="lineNum">     153 </span><span class="lineCov">         12 :                 m_run = false;</span>
+<span class="lineNum">     154 </span>            :         }
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :         // wait for m_timer to reset (indicating network scheduler has stopped)
+<span class="lineNum">     157 </span><span class="lineCov">         87 :         while (!!m_timer)</span>
+<span class="lineNum">     158 </span><span class="lineCov">         42 :                 this_thread::sleep_for(chrono::milliseconds(50));</span>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            :         // stop worker thread
+<span class="lineNum">     161 </span><span class="lineCov">         12 :         if (isWorking())</span>
+<span class="lineNum">     162 </span><span class="lineCov">         12 :                 stopWorking();</span>
+<a name="163"><span class="lineNum">     163 </span>            : }</a>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineCov">         12 : void Host::doneWorking()</span>
+<span class="lineNum">     166 </span>            : {
+<span class="lineNum">     167 </span>            :         // reset ioservice (cancels all timers and allows manually polling network, below)
+<span class="lineNum">     168 </span><span class="lineCov">         12 :         m_ioService.reset();</span>
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span><span class="lineCov">         60 :         DEV_GUARDED(x_timers)</span>
+<span class="lineNum">     171 </span><span class="lineCov">         24 :                 m_timers.clear();</span>
+<span class="lineNum">     172 </span>            :         
+<span class="lineNum">     173 </span>            :         // shutdown acceptor
+<span class="lineNum">     174 </span><span class="lineCov">         12 :         m_tcp4Acceptor.cancel();</span>
+<span class="lineNum">     175 </span><span class="lineCov">         24 :         if (m_tcp4Acceptor.is_open())</span>
+<span class="lineNum">     176 </span><span class="lineCov">         12 :                 m_tcp4Acceptor.close();</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :         // There maybe an incoming connection which started but hasn't finished.
+<span class="lineNum">     179 </span>            :         // Wait for acceptor to end itself instead of assuming it's complete.
+<span class="lineNum">     180 </span>            :         // This helps ensure a peer isn't stopped at the same time it's starting
+<span class="lineNum">     181 </span>            :         // and that socket for pending connection is closed.
+<span class="lineNum">     182 </span><span class="lineCov">         24 :         while (m_accepting)</span>
+<span class="lineNum">     183 </span><span class="lineCov">         12 :                 m_ioService.poll();</span>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :         // stop capabilities (eth: stops syncing or block/tx broadcast)
+<span class="lineNum">     186 </span><span class="lineCov">         48 :         for (auto const&amp; h: m_capabilities)</span>
+<span class="lineNum">     187 </span><span class="lineCov">         12 :                 h.second-&gt;onStopping();</span>
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            :         // disconnect pending handshake, before peers, as a handshake may create a peer
+<span class="lineNum">     190 </span>            :         for (unsigned n = 0;; n = 0)
+<span class="lineNum">     191 </span>            :         {
+<span class="lineNum">     192 </span><span class="lineCov">         48 :                 DEV_GUARDED(x_connecting)</span>
+<span class="lineNum">     193 </span><span class="lineCov">         36 :                         for (auto const&amp; i: m_connecting)</span>
+<span class="lineNum">     194 </span><span class="lineCov">          4 :                                 if (auto h = i.lock())</span>
+<span class="lineNum">     195 </span>            :                                 {
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :                                         h-&gt;cancel();</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :                                         n++;</span>
+<span class="lineNum">     198 </span>            :                                 }
+<span class="lineNum">     199 </span><span class="lineCov">         12 :                 if (!n)</span>
+<span class="lineNum">     200 </span>            :                         break;
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :                 m_ioService.poll();</span>
+<span class="lineNum">     202 </span>            :         }
+<span class="lineNum">     203 </span>            :         
+<span class="lineNum">     204 </span>            :         // disconnect peers
+<span class="lineNum">     205 </span>            :         for (unsigned n = 0;; n = 0)
+<span class="lineNum">     206 </span>            :         {
+<span class="lineNum">     207 </span><span class="lineCov">        100 :                 DEV_RECURSIVE_GUARDED(x_sessions)</span>
+<span class="lineNum">     208 </span><span class="lineCov">        180 :                         for (auto i: m_sessions)</span>
+<span class="lineNum">     209 </span><span class="lineCov">         80 :                                 if (auto p = i.second.lock())</span>
+<span class="lineNum">     210 </span><span class="lineCov">         12 :                                         if (p-&gt;isConnected())</span>
+<span class="lineNum">     211 </span>            :                                         {
+<span class="lineNum">     212 </span><span class="lineCov">         12 :                                                 p-&gt;disconnect(ClientQuit);</span>
+<span class="lineNum">     213 </span><span class="lineCov">         12 :                                                 n++;</span>
+<span class="lineNum">     214 </span>            :                                         }
+<span class="lineNum">     215 </span><span class="lineCov">         20 :                 if (!n)</span>
+<span class="lineNum">     216 </span>            :                         break;
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            :                 // poll so that peers send out disconnect packets
+<span class="lineNum">     219 </span><span class="lineCov">          8 :                 m_ioService.poll();</span>
+<span class="lineNum">     220 </span>            :         }
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            :         // stop network (again; helpful to call before subsequent reset())
+<span class="lineNum">     223 </span><span class="lineCov">         12 :         m_ioService.stop();</span>
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span>            :         // reset network (allows reusing ioservice in future)
+<span class="lineNum">     226 </span><span class="lineCov">         12 :         m_ioService.reset();</span>
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :         // finally, clear out peers (in case they're lingering)
+<span class="lineNum">     229 </span><span class="lineCov">         36 :         RecursiveGuard l(x_sessions);</span>
+<span class="lineNum">     230 </span><span class="lineCov">         24 :         m_sessions.clear();</span>
+<a name="231"><span class="lineNum">     231 </span><span class="lineCov">         12 : }</span></a>
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span><span class="lineCov">         37 : void Host::startPeerSession(Public const&amp; _id, RLP const&amp; _rlp, unique_ptr&lt;RLPXFrameCoder&gt;&amp;&amp; _io, std::shared_ptr&lt;RLPXSocket&gt; const&amp; _s)</span>
+<span class="lineNum">     234 </span>            : {
+<span class="lineNum">     235 </span>            :         // session maybe ingress or egress so m_peers and node table entries may not exist
+<span class="lineNum">     236 </span><span class="lineCov">         61 :         shared_ptr&lt;Peer&gt; p;</span>
+<span class="lineNum">     237 </span><span class="lineCov">        151 :         DEV_RECURSIVE_GUARDED(x_sessions)</span>
+<span class="lineNum">     238 </span>            :         {
+<span class="lineNum">     239 </span><span class="lineCov">         76 :                 if (m_peers.count(_id))</span>
+<span class="lineNum">     240 </span><span class="lineCov">         66 :                         p = m_peers[_id];</span>
+<span class="lineNum">     241 </span>            :                 else
+<span class="lineNum">     242 </span>            :                 {
+<span class="lineNum">     243 </span>            :                         // peer doesn't exist, try to get port info from node table
+<span class="lineNum">     244 </span><span class="lineCov">          5 :                         if (m_nodeTable)</span>
+<span class="lineNum">     245 </span><span class="lineCov">         10 :                                 if (Node n = m_nodeTable-&gt;node(_id))</span>
+<span class="lineNum">     246 </span><span class="lineCov">         15 :                                         p = make_shared&lt;Peer&gt;(n);</span>
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span><span class="lineCov">          5 :                         if (!p)</span>
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :                                 p = make_shared&lt;Peer&gt;(Node(_id, UnspecifiedNodeIPEndpoint));</span>
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span><span class="lineCov">         10 :                         m_peers[_id] = p;</span>
+<span class="lineNum">     252 </span>            :                 }
+<span class="lineNum">     253 </span>            :         }
+<span class="lineNum">     254 </span><span class="lineCov">         38 :         if (p-&gt;isOffline())</span>
+<span class="lineNum">     255 </span><span class="lineCov">         38 :                 p-&gt;m_lastConnected = std::chrono::system_clock::now();</span>
+<span class="lineNum">     256 </span><span class="lineCov">        114 :         p-&gt;endpoint.address = _s-&gt;remoteEndpoint().address();</span>
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span><span class="lineCov">         38 :         auto protocolVersion = _rlp[0].toInt&lt;unsigned&gt;();</span>
+<span class="lineNum">     259 </span><span class="lineCov">         62 :         auto clientVersion = _rlp[1].toString();</span>
+<span class="lineNum">     260 </span><span class="lineCov">         62 :         auto caps = _rlp[2].toVector&lt;CapDesc&gt;();</span>
+<span class="lineNum">     261 </span><span class="lineCov">         38 :         auto listenPort = _rlp[3].toInt&lt;unsigned short&gt;();</span>
+<span class="lineNum">     262 </span><span class="lineCov">         38 :         auto pub = _rlp[4].toHash&lt;Public&gt;();</span>
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span><span class="lineCov">         38 :         if (pub != _id)</span>
+<span class="lineNum">     265 </span>            :         {
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :                 cdebug &lt;&lt; &quot;Wrong ID: &quot; &lt;&lt; pub &lt;&lt; &quot; vs. &quot; &lt;&lt; _id;</span>
+<span class="lineNum">     267 </span><span class="lineCov">         14 :                 return;</span>
+<span class="lineNum">     268 </span>            :         }
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span>            :         // clang error (previously: ... &lt;&lt; hex &lt;&lt; caps ...)
+<span class="lineNum">     271 </span>            :         // &quot;'operator&lt;&lt;' should be declared prior to the call site or in an associated namespace of one of its arguments&quot;
+<span class="lineNum">     272 </span><span class="lineCov">         62 :         stringstream capslog;</span>
+<a name="273"><span class="lineNum">     273 </span>            : </a>
+<span class="lineNum">     274 </span>            :         // leave only highset mutually supported capability version
+<span class="lineNum">     275 </span><span class="lineCov">        494 :         caps.erase(remove_if(caps.begin(), caps.end(), [&amp;](CapDesc const&amp; _r){ return !haveCapability(_r) || any_of(caps.begin(), caps.end(), [&amp;](CapDesc const&amp; _o){ return _r.first == _o.first &amp;&amp; _o.second &gt; _r.second &amp;&amp; haveCapability(_o); }); }), caps.end());</span>
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span><span class="lineCov">        228 :         for (auto cap: caps)</span>
+<span class="lineNum">     278 </span><span class="lineCov">        150 :                 capslog &lt;&lt; &quot;(&quot; &lt;&lt; cap.first &lt;&lt; &quot;,&quot; &lt;&lt; dec &lt;&lt; cap.second &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span><span class="lineCov">         75 :         clog(NetMessageSummary) &lt;&lt; &quot;Hello: &quot; &lt;&lt; clientVersion &lt;&lt; &quot;V[&quot; &lt;&lt; protocolVersion &lt;&lt; &quot;]&quot; &lt;&lt; _id &lt;&lt; showbase &lt;&lt; capslog.str() &lt;&lt; dec &lt;&lt; listenPort;</span>
+<span class="lineNum">     281 </span>            :         
+<span class="lineNum">     282 </span>            :         // create session so disconnects are managed
+<span class="lineNum">     283 </span><span class="lineCov">        249 :         shared_ptr&lt;SessionFace&gt; ps = make_shared&lt;Session&gt;(this, move(_io), _s, p, PeerSessionInfo({_id, clientVersion, p-&gt;endpoint.address.to_string(), listenPort, chrono::steady_clock::duration(), _rlp[2].toSet&lt;CapDesc&gt;(), 0, map&lt;string, string&gt;(), protocolVersion}));</span>
+<span class="lineNum">     284 </span><span class="lineCov">         38 :         if (protocolVersion &lt; dev::p2p::c_protocolVersion - 1)</span>
+<span class="lineNum">     285 </span>            :         {
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :                 ps-&gt;disconnect(IncompatibleProtocol);</span>
+<span class="lineNum">     287 </span><span class="lineCov">         14 :                 return;</span>
+<span class="lineNum">     288 </span>            :         }
+<span class="lineNum">     289 </span><span class="lineCov">         38 :         if (caps.empty())</span>
+<span class="lineNum">     290 </span>            :         {
+<span class="lineNum">     291 </span><span class="lineNoCov">          0 :                 ps-&gt;disconnect(UselessPeer);</span>
+<span class="lineNum">     292 </span>            :                 return;
+<span class="lineNum">     293 </span>            :         }
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span><span class="lineCov">         38 :         if (m_netPrefs.pin &amp;&amp; !m_requiredPeers.count(_id))</span>
+<span class="lineNum">     296 </span>            :         {
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :                 cdebug &lt;&lt; &quot;Unexpected identity from peer (got&quot; &lt;&lt; _id &lt;&lt; &quot;, must be one of &quot; &lt;&lt; m_requiredPeers &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :                 ps-&gt;disconnect(UnexpectedIdentity);</span>
+<span class="lineNum">     299 </span>            :                 return;
+<span class="lineNum">     300 </span>            :         }
+<span class="lineNum">     301 </span>            :         
+<span class="lineNum">     302 </span>            :         {
+<span class="lineNum">     303 </span><span class="lineCov">        100 :                 RecursiveGuard l(x_sessions);</span>
+<span class="lineNum">     304 </span><span class="lineCov">        118 :                 if (m_sessions.count(_id) &amp;&amp; !!m_sessions[_id].lock())</span>
+<span class="lineNum">     305 </span><span class="lineCov">         42 :                         if (auto s = m_sessions[_id].lock())</span>
+<span class="lineNum">     306 </span><span class="lineCov">         14 :                                 if(s-&gt;isConnected())</span>
+<span class="lineNum">     307 </span>            :                                 {
+<span class="lineNum">     308 </span>            :                                         // Already connected.
+<span class="lineNum">     309 </span><span class="lineCov">         14 :                                         clog(NetWarn) &lt;&lt; &quot;Session already exists for peer with id&quot; &lt;&lt; _id;</span>
+<span class="lineNum">     310 </span><span class="lineCov">         14 :                                         ps-&gt;disconnect(DuplicatePeer);</span>
+<span class="lineNum">     311 </span><span class="lineCov">         14 :                                         return;</span>
+<span class="lineNum">     312 </span>            :                                 }
+<span class="lineNum">     313 </span>            :                 
+<span class="lineNum">     314 </span><span class="lineCov">         24 :                 if (!peerSlotsAvailable())</span>
+<span class="lineNum">     315 </span>            :                 {
+<span class="lineNum">     316 </span><span class="lineNoCov">          0 :                         ps-&gt;disconnect(TooManyPeers);</span>
+<span class="lineNum">     317 </span>            :                         return;
+<span class="lineNum">     318 </span>            :                 }
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span><span class="lineCov">         24 :                 unsigned offset = (unsigned)UserPacket;</span>
+<span class="lineNum">     321 </span><span class="lineCov">         24 :                 uint16_t cnt = 1;</span>
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span>            :                 // todo: mutex Session::m_capabilities and move for(:caps) out of mutex.
+<span class="lineNum">     324 </span><span class="lineCov">        120 :                 for (auto const&amp; i: caps)</span>
+<span class="lineNum">     325 </span>            :                 {
+<span class="lineNum">     326 </span><span class="lineCov">         72 :                         auto pcap = m_capabilities[i];</span>
+<span class="lineNum">     327 </span><span class="lineCov">         24 :                         if (!pcap)</span>
+<span class="lineNum">     328 </span><span class="lineNoCov">          0 :                                 return ps-&gt;disconnect(IncompatibleProtocol);</span>
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span><span class="lineCov">         24 :                         if (Session::isFramingAllowedForVersion(protocolVersion))</span>
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 :                                 pcap-&gt;newPeerCapability(ps, 0, i, cnt++);</span>
+<span class="lineNum">     332 </span>            :                         else
+<span class="lineNum">     333 </span>            :                         {
+<span class="lineNum">     334 </span><span class="lineCov">         48 :                                 pcap-&gt;newPeerCapability(ps, offset, i, 0);</span>
+<span class="lineNum">     335 </span><span class="lineCov">         24 :                                 offset += pcap-&gt;messageCount();</span>
+<span class="lineNum">     336 </span>            :                         }
+<span class="lineNum">     337 </span>            :                 }
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span><span class="lineCov">         24 :                 ps-&gt;start();</span>
+<span class="lineNum">     340 </span><span class="lineCov">         72 :                 m_sessions[_id] = ps;</span>
+<span class="lineNum">     341 </span>            :         }
+<span class="lineNum">     342 </span>            :         
+<span class="lineNum">     343 </span><span class="lineCov">         48 :         clog(NetP2PNote) &lt;&lt; &quot;p2p.host.peer.register&quot; &lt;&lt; _id;</span>
+<a name="344"><span class="lineNum">     344 </span>            : }</a>
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span><span class="lineCov">         24 : void Host::onNodeTableEvent(NodeID const&amp; _n, NodeTableEventType const&amp; _e)</span>
+<span class="lineNum">     347 </span>            : {
+<span class="lineNum">     348 </span><span class="lineCov">         24 :         if (_e == NodeEntryAdded)</span>
+<span class="lineNum">     349 </span>            :         {
+<span class="lineNum">     350 </span><span class="lineCov">         24 :                 clog(NetP2PNote) &lt;&lt; &quot;p2p.host.nodeTable.events.nodeEntryAdded &quot; &lt;&lt; _n;</span>
+<span class="lineNum">     351 </span>            :                 // only add iff node is in node table
+<span class="lineNum">     352 </span><span class="lineCov">         48 :                 if (Node n = m_nodeTable-&gt;node(_n))</span>
+<span class="lineNum">     353 </span>            :                 {
+<span class="lineNum">     354 </span><span class="lineCov">         48 :                         shared_ptr&lt;Peer&gt; p;</span>
+<span class="lineNum">     355 </span><span class="lineCov">         96 :                         DEV_RECURSIVE_GUARDED(x_sessions)</span>
+<span class="lineNum">     356 </span>            :                         {
+<span class="lineNum">     357 </span><span class="lineCov">         48 :                                 if (m_peers.count(_n))</span>
+<span class="lineNum">     358 </span>            :                                 {
+<span class="lineNum">     359 </span><span class="lineCov">         21 :                                         p = m_peers[_n];</span>
+<span class="lineNum">     360 </span><span class="lineCov">          7 :                                         p-&gt;endpoint = n.endpoint;</span>
+<span class="lineNum">     361 </span>            :                                 }
+<span class="lineNum">     362 </span>            :                                 else
+<span class="lineNum">     363 </span>            :                                 {
+<span class="lineNum">     364 </span><span class="lineCov">         51 :                                         p = make_shared&lt;Peer&gt;(n);</span>
+<span class="lineNum">     365 </span><span class="lineCov">         51 :                                         m_peers[_n] = p;</span>
+<span class="lineNum">     366 </span><span class="lineCov">         17 :                                         clog(NetP2PNote) &lt;&lt; &quot;p2p.host.peers.events.peerAdded &quot; &lt;&lt; _n &lt;&lt; p-&gt;endpoint;</span>
+<span class="lineNum">     367 </span>            :                                 }
+<span class="lineNum">     368 </span>            :                         }
+<span class="lineNum">     369 </span><span class="lineCov">         24 :                         if (peerSlotsAvailable(Egress))</span>
+<span class="lineNum">     370 </span><span class="lineCov">         24 :                                 connect(p);</span>
+<span class="lineNum">     371 </span>            :                 }
+<span class="lineNum">     372 </span>            :         }
+<span class="lineNum">     373 </span><span class="lineNoCov">          0 :         else if (_e == NodeEntryDropped)</span>
+<span class="lineNum">     374 </span>            :         {
+<span class="lineNum">     375 </span><span class="lineNoCov">          0 :                 clog(NetP2PNote) &lt;&lt; &quot;p2p.host.nodeTable.events.NodeEntryDropped &quot; &lt;&lt; _n;</span>
+<span class="lineNum">     376 </span><span class="lineNoCov">          0 :                 RecursiveGuard l(x_sessions);</span>
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 :                 if (m_peers.count(_n) &amp;&amp; m_peers[_n]-&gt;peerType == PeerType::Optional)</span>
+<span class="lineNum">     378 </span><span class="lineNoCov">          0 :                         m_peers.erase(_n);</span>
+<span class="lineNum">     379 </span>            :         }
+<a name="380"><span class="lineNum">     380 </span><span class="lineCov">         24 : }</span></a>
+<span class="lineNum">     381 </span>            : 
+<span class="lineNum">     382 </span><span class="lineCov">         12 : void Host::determinePublic()</span>
+<span class="lineNum">     383 </span>            : {
+<span class="lineNum">     384 </span>            :         // set m_tcpPublic := listenIP (if public) &gt; public &gt; upnp &gt; unspecified address.
+<span class="lineNum">     385 </span>            :         
+<span class="lineNum">     386 </span><span class="lineCov">         24 :         auto ifAddresses = Network::getInterfaceAddresses();</span>
+<span class="lineNum">     387 </span><span class="lineCov">         36 :         auto laddr = m_netPrefs.listenIPAddress.empty() ? bi::address() : bi::address::from_string(m_netPrefs.listenIPAddress);</span>
+<span class="lineNum">     388 </span><span class="lineCov">         12 :         auto lset = !laddr.is_unspecified();</span>
+<span class="lineNum">     389 </span><span class="lineCov">         24 :         auto paddr = m_netPrefs.publicIPAddress.empty() ? bi::address() : bi::address::from_string(m_netPrefs.publicIPAddress);</span>
+<span class="lineNum">     390 </span><span class="lineCov">         12 :         auto pset = !paddr.is_unspecified();</span>
+<span class="lineNum">     391 </span>            :         
+<span class="lineNum">     392 </span><span class="lineCov">         12 :         bool listenIsPublic = lset &amp;&amp; isPublicAddress(laddr);</span>
+<span class="lineNum">     393 </span><span class="lineCov">         12 :         bool publicIsHost = !lset &amp;&amp; pset &amp;&amp; ifAddresses.count(paddr);</span>
+<span class="lineNum">     394 </span>            :         
+<span class="lineNum">     395 </span><span class="lineCov">         36 :         bi::tcp::endpoint ep(bi::address(), m_listenPort);</span>
+<span class="lineNum">     396 </span><span class="lineCov">         12 :         if (m_netPrefs.traverseNAT &amp;&amp; listenIsPublic)</span>
+<span class="lineNum">     397 </span>            :         {
+<span class="lineNum">     398 </span><span class="lineNoCov">          0 :                 clog(NetNote) &lt;&lt; &quot;Listen address set to Public address:&quot; &lt;&lt; laddr &lt;&lt; &quot;. UPnP disabled.&quot;;</span>
+<span class="lineNum">     399 </span>            :                 ep.address(laddr);
+<span class="lineNum">     400 </span>            :         }
+<span class="lineNum">     401 </span><span class="lineCov">         12 :         else if (m_netPrefs.traverseNAT &amp;&amp; publicIsHost)</span>
+<span class="lineNum">     402 </span>            :         {
+<span class="lineNum">     403 </span><span class="lineNoCov">          0 :                 clog(NetNote) &lt;&lt; &quot;Public address set to Host configured address:&quot; &lt;&lt; paddr &lt;&lt; &quot;. UPnP disabled.&quot;;</span>
+<span class="lineNum">     404 </span>            :                 ep.address(paddr);
+<span class="lineNum">     405 </span>            :         }
+<span class="lineNum">     406 </span><span class="lineCov">         12 :         else if (m_netPrefs.traverseNAT)</span>
+<span class="lineNum">     407 </span>            :         {
+<span class="lineNum">     408 </span><span class="lineNoCov">          0 :                 bi::address natIFAddr;</span>
+<span class="lineNum">     409 </span><span class="lineNoCov">          0 :                 ep = Network::traverseNAT(lset &amp;&amp; ifAddresses.count(laddr) ? std::set&lt;bi::address&gt;({laddr}) : ifAddresses, m_listenPort, natIFAddr);</span>
+<span class="lineNum">     410 </span>            :                 
+<span class="lineNum">     411 </span><span class="lineNoCov">          0 :                 if (lset &amp;&amp; natIFAddr != laddr)</span>
+<span class="lineNum">     412 </span>            :                         // if listen address is set, Host will use it, even if upnp returns different
+<span class="lineNum">     413 </span><span class="lineNoCov">          0 :                         clog(NetWarn) &lt;&lt; &quot;Listen address&quot; &lt;&lt; laddr &lt;&lt; &quot;differs from local address&quot; &lt;&lt; natIFAddr &lt;&lt; &quot;returned by UPnP!&quot;;</span>
+<span class="lineNum">     414 </span>            :                 
+<span class="lineNum">     415 </span><span class="lineNoCov">          0 :                 if (pset &amp;&amp; ep.address() != paddr)</span>
+<span class="lineNum">     416 </span>            :                 {
+<span class="lineNum">     417 </span>            :                         // if public address is set, Host will advertise it, even if upnp returns different
+<span class="lineNum">     418 </span><span class="lineNoCov">          0 :                         clog(NetWarn) &lt;&lt; &quot;Specified public address&quot; &lt;&lt; paddr &lt;&lt; &quot;differs from external address&quot; &lt;&lt; ep.address() &lt;&lt; &quot;returned by UPnP!&quot;;</span>
+<span class="lineNum">     419 </span>            :                         ep.address(paddr);
+<span class="lineNum">     420 </span>            :                 }
+<span class="lineNum">     421 </span>            :         }
+<span class="lineNum">     422 </span><span class="lineCov">         12 :         else if (pset)</span>
+<span class="lineNum">     423 </span>            :                 ep.address(paddr);
+<span class="lineNum">     424 </span>            : 
+<span class="lineNum">     425 </span><span class="lineCov">         24 :         m_tcpPublic = ep;</span>
+<a name="426"><span class="lineNum">     426 </span><span class="lineCov">         12 : }</span></a>
+<span class="lineNum">     427 </span>            : 
+<span class="lineNum">     428 </span><span class="lineCov">         31 : void Host::runAcceptor()</span>
+<span class="lineNum">     429 </span>            : {
+<span class="lineNum">     430 </span><span class="lineCov">         31 :         assert(m_listenPort &gt; 0);</span>
+<span class="lineNum">     431 </span>            : 
+<span class="lineNum">     432 </span><span class="lineCov">         31 :         if (m_run &amp;&amp; !m_accepting)</span>
+<span class="lineNum">     433 </span>            :         {
+<span class="lineNum">     434 </span><span class="lineCov">         31 :                 clog(NetConnect) &lt;&lt; &quot;Listening on local port &quot; &lt;&lt; m_listenPort &lt;&lt; &quot; (public: &quot; &lt;&lt; m_tcpPublic &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">     435 </span><span class="lineCov">         31 :                 m_accepting = true;</span>
+<a name="436"><span class="lineNum">     436 </span>            : </a>
+<span class="lineNum">     437 </span><span class="lineCov">         93 :                 auto socket = make_shared&lt;RLPXSocket&gt;(m_ioService);</span>
+<span class="lineNum">     438 </span><span class="lineCov">        527 :                 m_tcp4Acceptor.async_accept(socket-&gt;ref(), [=](boost::system::error_code ec)</span>
+<span class="lineNum">     439 </span>            :                 {
+<span class="lineNum">     440 </span><span class="lineCov">         88 :                         m_accepting = false;</span>
+<span class="lineNum">     441 </span><span class="lineCov">         62 :                         if (ec || !m_run)</span>
+<span class="lineNum">     442 </span>            :                         {
+<span class="lineNum">     443 </span><span class="lineCov">         12 :                                 socket-&gt;close();</span>
+<span class="lineNum">     444 </span>            :                                 return;
+<span class="lineNum">     445 </span>            :                         }
+<span class="lineNum">     446 </span><span class="lineCov">         57 :                         if (peerCount() &gt; peerSlots(Ingress))</span>
+<span class="lineNum">     447 </span>            :                         {
+<span class="lineNum">     448 </span><span class="lineNoCov">          0 :                                 clog(NetConnect) &lt;&lt; &quot;Dropping incoming connect due to maximum peer count (&quot; &lt;&lt; Ingress &lt;&lt; &quot; * ideal peer count): &quot; &lt;&lt; socket-&gt;remoteEndpoint();</span>
+<span class="lineNum">     449 </span><span class="lineNoCov">          0 :                                 socket-&gt;close();</span>
+<span class="lineNum">     450 </span><span class="lineNoCov">          0 :                                 if (ec.value() &lt; 1)</span>
+<span class="lineNum">     451 </span><span class="lineNoCov">          0 :                                         runAcceptor();</span>
+<span class="lineNum">     452 </span>            :                                 return;
+<span class="lineNum">     453 </span>            :                         }
+<span class="lineNum">     454 </span>            :                         
+<span class="lineNum">     455 </span><span class="lineCov">         19 :                         bool success = false;</span>
+<span class="lineNum">     456 </span>            :                         try
+<span class="lineNum">     457 </span>            :                         {
+<span class="lineNum">     458 </span>            :                                 // incoming connection; we don't yet know nodeid
+<span class="lineNum">     459 </span><span class="lineCov">         57 :                                 auto handshake = make_shared&lt;RLPXHandshake&gt;(this, socket);</span>
+<span class="lineNum">     460 </span><span class="lineCov">         76 :                                 m_connecting.push_back(handshake);</span>
+<span class="lineNum">     461 </span><span class="lineCov">         19 :                                 handshake-&gt;start();</span>
+<span class="lineNum">     462 </span><span class="lineCov">         19 :                                 success = true;</span>
+<span class="lineNum">     463 </span>            :                         }
+<span class="lineNum">     464 </span><span class="lineNoCov">          0 :                         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     465 </span>            :                         {
+<span class="lineNum">     466 </span><span class="lineNoCov">          0 :                                 clog(NetWarn) &lt;&lt; &quot;ERROR: &quot; &lt;&lt; diagnostic_information(_e);</span>
+<span class="lineNum">     467 </span>            :                         }
+<span class="lineNum">     468 </span><span class="lineNoCov">          0 :                         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     469 </span>            :                         {
+<span class="lineNum">     470 </span><span class="lineNoCov">          0 :                                 clog(NetWarn) &lt;&lt; &quot;ERROR: &quot; &lt;&lt; _e.what();</span>
+<span class="lineNum">     471 </span>            :                         }
+<span class="lineNum">     472 </span>            : 
+<span class="lineNum">     473 </span><span class="lineCov">         19 :                         if (!success)</span>
+<span class="lineNum">     474 </span><span class="lineNoCov">          0 :                                 socket-&gt;ref().close();</span>
+<span class="lineNum">     475 </span><span class="lineCov">         19 :                         runAcceptor();</span>
+<span class="lineNum">     476 </span><span class="lineCov">         62 :                 });</span>
+<span class="lineNum">     477 </span>            :         }
+<a name="478"><span class="lineNum">     478 </span><span class="lineCov">         31 : }</span></a>
+<span class="lineNum">     479 </span>            : 
+<span class="lineNum">     480 </span><span class="lineNoCov">          0 : std::unordered_map&lt;Public, std::string&gt; Host::pocHosts()</span>
+<span class="lineNum">     481 </span>            : {
+<span class="lineNum">     482 </span>            :         return {
+<span class="lineNum">     483 </span>            :                 // Mainnet:
+<span class="lineNum">     484 </span>            :                 { Public(&quot;a979fb575495b8d6db44f750317d0f4622bf4c2aa3365d6af7c284339968eef29b69ad0dce72a4d8db5ebb4968de0e3bec910127f134779fbcb0cb6d3331163c&quot;), &quot;52.16.188.185:30303&quot; },
+<span class="lineNum">     485 </span>            :                 { Public(&quot;de471bccee3d042261d52e9bff31458daecc406142b401d4cd848f677479f73104b9fdeb090af9583d3391b7f10cb2ba9e26865dd5fca4fcdc0fb1e3b723c786&quot;), &quot;54.94.239.50:30303&quot; },
+<span class="lineNum">     486 </span>            :                 { Public(&quot;1118980bf48b0a3640bdba04e0fe78b1add18e1cd99bf22d53daac1fd9972ad650df52176e7c7d89d1114cfef2bc23a2959aa54998a46afcf7d91809f0855082&quot;), &quot;52.74.57.123:30303&quot; },
+<span class="lineNum">     487 </span>            :                 // Testnet:
+<span class="lineNum">     488 </span>            :                 { Public(&quot;e4533109cc9bd7604e4ff6c095f7a1d807e15b38e9bfeb05d3b7c423ba86af0a9e89abbf40bd9dde4250fef114cd09270fa4e224cbeef8b7bf05a51e8260d6b8&quot;), &quot;94.242.229.4:40404&quot; },
+<span class="lineNum">     489 </span>            :                 { Public(&quot;8c336ee6f03e99613ad21274f269479bf4413fb294d697ef15ab897598afb931f56beb8e97af530aee20ce2bcba5776f4a312bc168545de4d43736992c814592&quot;), &quot;94.242.229.203:30303&quot; },
+<span class="lineNum">     490 </span><span class="lineNoCov">          0 :         };</span>
+<a name="491"><span class="lineNum">     491 </span>            : }</a>
+<span class="lineNum">     492 </span>            : 
+<span class="lineNum">     493 </span><span class="lineNoCov">          0 : void Host::addPeer(NodeSpec const&amp; _s, PeerType _t)</span>
+<span class="lineNum">     494 </span>            : {
+<span class="lineNum">     495 </span><span class="lineNoCov">          0 :         if (_t == PeerType::Optional)</span>
+<span class="lineNum">     496 </span><span class="lineNoCov">          0 :                 addNode(_s.id(), _s.nodeIPEndpoint());</span>
+<span class="lineNum">     497 </span>            :         else
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 :                 requirePeer(_s.id(), _s.nodeIPEndpoint());</span>
+<a name="499"><span class="lineNum">     499 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span><span class="lineCov">         13 : void Host::addNode(NodeID const&amp; _node, NodeIPEndpoint const&amp; _endpoint)</span>
+<span class="lineNum">     502 </span>            : {
+<span class="lineNum">     503 </span>            :         // return if network is stopped while waiting on Host::run() or nodeTable to start
+<span class="lineNum">     504 </span><span class="lineCov">         13 :         while (!haveNetwork())</span>
+<span class="lineNum">     505 </span><span class="lineNoCov">          0 :                 if (isWorking())</span>
+<span class="lineNum">     506 </span><span class="lineNoCov">          0 :                         this_thread::sleep_for(chrono::milliseconds(50));</span>
+<span class="lineNum">     507 </span>            :                 else
+<span class="lineNum">     508 </span>            :                         return;
+<span class="lineNum">     509 </span>            : 
+<span class="lineNum">     510 </span><span class="lineCov">         13 :         if (_endpoint.tcpPort &lt; 30300 || _endpoint.tcpPort &gt; 30305)</span>
+<span class="lineNum">     511 </span><span class="lineCov">         11 :                 clog(NetConnect) &lt;&lt; &quot;Non-standard port being recorded: &quot; &lt;&lt; _endpoint.tcpPort;</span>
+<span class="lineNum">     512 </span>            : 
+<span class="lineNum">     513 </span><span class="lineCov">         13 :         if (m_nodeTable)</span>
+<span class="lineNum">     514 </span><span class="lineCov">         26 :                 m_nodeTable-&gt;addNode(Node(_node, _endpoint));</span>
+<a name="515"><span class="lineNum">     515 </span>            : }</a>
+<span class="lineNum">     516 </span>            : 
+<span class="lineNum">     517 </span><span class="lineCov">          2 : void Host::requirePeer(NodeID const&amp; _n, NodeIPEndpoint const&amp; _endpoint)</span>
+<span class="lineNum">     518 </span>            : {
+<span class="lineNum">     519 </span><span class="lineCov">          4 :         m_requiredPeers.insert(_n);</span>
+<span class="lineNum">     520 </span>            : 
+<span class="lineNum">     521 </span><span class="lineCov">          2 :         if (!m_run)</span>
+<span class="lineNum">     522 </span><span class="lineNoCov">          0 :                 return;</span>
+<span class="lineNum">     523 </span>            :         
+<span class="lineNum">     524 </span><span class="lineCov">          2 :         Node node(_n, _endpoint, PeerType::Required);</span>
+<span class="lineNum">     525 </span><span class="lineCov">          2 :         if (_n)</span>
+<span class="lineNum">     526 </span>            :         {
+<span class="lineNum">     527 </span>            :                 // create or update m_peers entry
+<span class="lineNum">     528 </span><span class="lineCov">          4 :                 shared_ptr&lt;Peer&gt; p;</span>
+<span class="lineNum">     529 </span><span class="lineCov">          8 :                 DEV_RECURSIVE_GUARDED(x_sessions)</span>
+<span class="lineNum">     530 </span><span class="lineCov">          4 :                         if (m_peers.count(_n))</span>
+<span class="lineNum">     531 </span>            :                         {
+<span class="lineNum">     532 </span><span class="lineNoCov">          0 :                                 p = m_peers[_n];</span>
+<span class="lineNum">     533 </span><span class="lineNoCov">          0 :                                 p-&gt;endpoint = node.endpoint;</span>
+<span class="lineNum">     534 </span><span class="lineNoCov">          0 :                                 p-&gt;peerType = PeerType::Required;</span>
+<span class="lineNum">     535 </span>            :                         }
+<span class="lineNum">     536 </span>            :                         else
+<span class="lineNum">     537 </span>            :                         {
+<span class="lineNum">     538 </span><span class="lineCov">          6 :                                 p = make_shared&lt;Peer&gt;(node);</span>
+<span class="lineNum">     539 </span><span class="lineCov">          4 :                                 m_peers[_n] = p;</span>
+<span class="lineNum">     540 </span>            :                         }
+<span class="lineNum">     541 </span>            :                 // required for discovery
+<span class="lineNum">     542 </span><span class="lineCov">          2 :                 if (m_nodeTable)</span>
+<span class="lineNum">     543 </span><span class="lineCov">          4 :                         m_nodeTable-&gt;addNode(*p, NodeTable::NodeRelation::Unknown);</span>
+<span class="lineNum">     544 </span>            :         }
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 :         else if (m_nodeTable)</span>
+<span class="lineNum">     546 </span>            :         {
+<span class="lineNum">     547 </span><span class="lineNoCov">          0 :                 m_nodeTable-&gt;addNode(node);</span>
+<a name="548"><span class="lineNum">     548 </span><span class="lineNoCov">          0 :                 auto t = make_shared&lt;boost::asio::deadline_timer&gt;(m_ioService);</span></a>
+<span class="lineNum">     549 </span><span class="lineNoCov">          0 :                 t-&gt;expires_from_now(boost::posix_time::milliseconds(600));</span>
+<span class="lineNum">     550 </span><span class="lineNoCov">          0 :                 t-&gt;async_wait([this, _n](boost::system::error_code const&amp; _ec)</span>
+<span class="lineNum">     551 </span><span class="lineNoCov">          0 :                 {</span>
+<span class="lineNum">     552 </span><span class="lineNoCov">          0 :                         if (!_ec)</span>
+<span class="lineNum">     553 </span><span class="lineNoCov">          0 :                                 if (m_nodeTable)</span>
+<span class="lineNum">     554 </span><span class="lineNoCov">          0 :                                         if (auto n = m_nodeTable-&gt;node(_n))</span>
+<span class="lineNum">     555 </span><span class="lineNoCov">          0 :                                                 requirePeer(n.id, n.endpoint);</span>
+<span class="lineNum">     556 </span><span class="lineNoCov">          0 :                 });</span>
+<span class="lineNum">     557 </span><span class="lineNoCov">          0 :                 DEV_GUARDED(x_timers)</span>
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 :                         m_timers.push_back(t);</span>
+<span class="lineNum">     559 </span>            :         }
+<a name="560"><span class="lineNum">     560 </span>            : }</a>
+<span class="lineNum">     561 </span>            : 
+<span class="lineNum">     562 </span><span class="lineCov">          1 : void Host::relinquishPeer(NodeID const&amp; _node)</span>
+<span class="lineNum">     563 </span>            : {
+<span class="lineNum">     564 </span><span class="lineCov">          3 :         Guard l(x_requiredPeers);</span>
+<span class="lineNum">     565 </span><span class="lineCov">          2 :         if (m_requiredPeers.count(_node))</span>
+<span class="lineNum">     566 </span><span class="lineCov">          1 :                 m_requiredPeers.erase(_node);</span>
+<a name="567"><span class="lineNum">     567 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     568 </span>            : 
+<span class="lineNum">     569 </span><span class="lineCov">         28 : void Host::connect(std::shared_ptr&lt;Peer&gt; const&amp; _p)</span>
+<span class="lineNum">     570 </span>            : {
+<span class="lineNum">     571 </span><span class="lineCov">         28 :         if (!m_run)</span>
+<span class="lineNum">     572 </span><span class="lineCov">          5 :                 return;</span>
+<span class="lineNum">     573 </span>            :         
+<span class="lineNum">     574 </span><span class="lineCov">         28 :         if (havePeerSession(_p-&gt;id))</span>
+<span class="lineNum">     575 </span>            :         {
+<span class="lineNum">     576 </span><span class="lineCov">          5 :                 clog(NetConnect) &lt;&lt; &quot;Aborted connect. Node already connected.&quot;;</span>
+<span class="lineNum">     577 </span><span class="lineCov">          5 :                 return;</span>
+<span class="lineNum">     578 </span>            :         }
+<span class="lineNum">     579 </span>            : 
+<span class="lineNum">     580 </span><span class="lineCov">         23 :         if (!!m_nodeTable &amp;&amp; !m_nodeTable-&gt;haveNode(_p-&gt;id) &amp;&amp; _p-&gt;peerType == PeerType::Optional)</span>
+<span class="lineNum">     581 </span>            :                 return;
+<span class="lineNum">     582 </span>            : 
+<span class="lineNum">     583 </span>            :         // prevent concurrently connecting to a node
+<span class="lineNum">     584 </span><span class="lineCov">         23 :         Peer *nptr = _p.get();</span>
+<span class="lineNum">     585 </span>            :         {
+<span class="lineNum">     586 </span><span class="lineCov">         69 :                 Guard l(x_pendingNodeConns);</span>
+<span class="lineNum">     587 </span><span class="lineCov">         46 :                 if (m_pendingPeerConns.count(nptr))</span>
+<span class="lineNum">     588 </span>            :                         return;
+<span class="lineNum">     589 </span><span class="lineCov">         46 :                 m_pendingPeerConns.insert(nptr);</span>
+<span class="lineNum">     590 </span>            :         }
+<span class="lineNum">     591 </span>            : 
+<span class="lineNum">     592 </span><span class="lineCov">         23 :         _p-&gt;m_lastAttempted = std::chrono::system_clock::now();</span>
+<span class="lineNum">     593 </span>            :         
+<span class="lineNum">     594 </span><span class="lineCov">         46 :         bi::tcp::endpoint ep(_p-&gt;endpoint);</span>
+<a name="595"><span class="lineNum">     595 </span><span class="lineCov">         46 :         clog(NetConnect) &lt;&lt; &quot;Attempting connection to node&quot; &lt;&lt; _p-&gt;id &lt;&lt; &quot;@&quot; &lt;&lt; ep &lt;&lt; &quot;from&quot; &lt;&lt; id();</span></a>
+<span class="lineNum">     596 </span><span class="lineCov">         69 :         auto socket = make_shared&lt;RLPXSocket&gt;(m_ioService);</span>
+<span class="lineNum">     597 </span><span class="lineCov">        667 :         socket-&gt;ref().async_connect(ep, [=](boost::system::error_code const&amp; ec)</span>
+<span class="lineNum">     598 </span>            :         {
+<span class="lineNum">     599 </span><span class="lineCov">         23 :                 _p-&gt;m_lastAttempted = std::chrono::system_clock::now();</span>
+<span class="lineNum">     600 </span><span class="lineCov">         23 :                 _p-&gt;m_failedAttempts++;</span>
+<span class="lineNum">     601 </span>            :                 
+<span class="lineNum">     602 </span><span class="lineCov">         46 :                 if (ec)</span>
+<span class="lineNum">     603 </span>            :                 {
+<span class="lineNum">     604 </span><span class="lineCov">          8 :                         clog(NetConnect) &lt;&lt; &quot;Connection refused to node&quot; &lt;&lt; _p-&gt;id &lt;&lt; &quot;@&quot; &lt;&lt; ep &lt;&lt; &quot;(&quot; &lt;&lt; ec.message() &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">     605 </span>            :                         // Manually set error (session not present)
+<span class="lineNum">     606 </span><span class="lineCov">          4 :                         _p-&gt;m_lastDisconnect = TCPError;</span>
+<span class="lineNum">     607 </span>            :                 }
+<span class="lineNum">     608 </span>            :                 else
+<span class="lineNum">     609 </span>            :                 {
+<span class="lineNum">     610 </span><span class="lineCov">         19 :                         clog(NetConnect) &lt;&lt; &quot;Connecting to&quot; &lt;&lt; _p-&gt;id &lt;&lt; &quot;@&quot; &lt;&lt; ep;</span>
+<span class="lineNum">     611 </span><span class="lineCov">         99 :                         auto handshake = make_shared&lt;RLPXHandshake&gt;(this, socket, _p-&gt;id);</span>
+<span class="lineNum">     612 </span>            :                         {
+<span class="lineNum">     613 </span><span class="lineCov">         57 :                                 Guard l(x_connecting);</span>
+<span class="lineNum">     614 </span><span class="lineCov">         76 :                                 m_connecting.push_back(handshake);</span>
+<span class="lineNum">     615 </span>            :                         }
+<span class="lineNum">     616 </span>            : 
+<span class="lineNum">     617 </span><span class="lineCov">         19 :                         handshake-&gt;start();</span>
+<span class="lineNum">     618 </span>            :                 }
+<span class="lineNum">     619 </span>            :                 
+<span class="lineNum">     620 </span><span class="lineCov">         69 :                 Guard l(x_pendingNodeConns);</span>
+<span class="lineNum">     621 </span><span class="lineCov">         69 :                 m_pendingPeerConns.erase(nptr);</span>
+<span class="lineNum">     622 </span><span class="lineCov">         46 :         });</span>
+<a name="623"><span class="lineNum">     623 </span>            : }</a>
+<span class="lineNum">     624 </span>            : 
+<span class="lineNum">     625 </span><span class="lineCov">          2 : PeerSessionInfos Host::peerSessionInfo() const</span>
+<span class="lineNum">     626 </span>            : {
+<span class="lineNum">     627 </span><span class="lineCov">          2 :         if (!m_run)</span>
+<span class="lineNum">     628 </span>            :                 return PeerSessionInfos();
+<span class="lineNum">     629 </span>            : 
+<span class="lineNum">     630 </span><span class="lineCov">          4 :         std::vector&lt;PeerSessionInfo&gt; ret;</span>
+<span class="lineNum">     631 </span><span class="lineCov">          6 :         RecursiveGuard l(x_sessions);</span>
+<span class="lineNum">     632 </span><span class="lineCov">          8 :         for (auto&amp; i: m_sessions)</span>
+<span class="lineNum">     633 </span><span class="lineCov">          6 :                 if (auto j = i.second.lock())</span>
+<span class="lineNum">     634 </span><span class="lineCov">          2 :                         if (j-&gt;isConnected())</span>
+<span class="lineNum">     635 </span><span class="lineCov">          4 :                                 ret.push_back(j-&gt;info());</span>
+<span class="lineNum">     636 </span><span class="lineCov">          2 :         return ret;</span>
+<a name="637"><span class="lineNum">     637 </span>            : }</a>
+<span class="lineNum">     638 </span>            : 
+<span class="lineNum">     639 </span><span class="lineCov">        938 : size_t Host::peerCount() const</span>
+<span class="lineNum">     640 </span>            : {
+<span class="lineNum">     641 </span><span class="lineCov">        938 :         unsigned retCount = 0;</span>
+<span class="lineNum">     642 </span><span class="lineCov">       2814 :         RecursiveGuard l(x_sessions);</span>
+<span class="lineNum">     643 </span><span class="lineCov">       3743 :         for (auto&amp; i: m_sessions)</span>
+<span class="lineNum">     644 </span><span class="lineCov">       2787 :                 if (std::shared_ptr&lt;SessionFace&gt; j = i.second.lock())</span>
+<span class="lineNum">     645 </span><span class="lineCov">        907 :                         if (j-&gt;isConnected())</span>
+<span class="lineNum">     646 </span><span class="lineCov">        906 :                                 retCount++;</span>
+<span class="lineNum">     647 </span><span class="lineCov">       1876 :         return retCount;</span>
+<a name="648"><span class="lineNum">     648 </span>            : }</a>
+<span class="lineNum">     649 </span>            : 
+<span class="lineNum">     650 </span><span class="lineCov">        220 : void Host::run(boost::system::error_code const&amp;)</span>
+<span class="lineNum">     651 </span>            : {
+<span class="lineNum">     652 </span><span class="lineCov">        220 :         if (!m_run)</span>
+<span class="lineNum">     653 </span>            :         {
+<span class="lineNum">     654 </span>            :                 // reset NodeTable
+<span class="lineNum">     655 </span><span class="lineCov">         24 :                 m_nodeTable.reset();</span>
+<span class="lineNum">     656 </span>            : 
+<span class="lineNum">     657 </span>            :                 // stopping io service allows running manual network operations for shutdown
+<span class="lineNum">     658 </span>            :                 // and also stops blocking worker thread, allowing worker thread to exit
+<span class="lineNum">     659 </span><span class="lineCov">         12 :                 m_ioService.stop();</span>
+<span class="lineNum">     660 </span>            : 
+<span class="lineNum">     661 </span>            :                 // resetting timer signals network that nothing else can be scheduled to run
+<span class="lineNum">     662 </span><span class="lineCov">         24 :                 m_timer.reset();</span>
+<span class="lineNum">     663 </span><span class="lineCov">         12 :                 return;</span>
+<span class="lineNum">     664 </span>            :         }
+<span class="lineNum">     665 </span>            : 
+<span class="lineNum">     666 </span><span class="lineCov">        208 :         m_nodeTable-&gt;processEvents();</span>
+<span class="lineNum">     667 </span>            : 
+<span class="lineNum">     668 </span>            :         // cleanup zombies
+<span class="lineNum">     669 </span><span class="lineCov">       1040 :         DEV_GUARDED(x_connecting)</span>
+<span class="lineNum">     670 </span><span class="lineCov">        294 :                 m_connecting.remove_if([](std::weak_ptr&lt;RLPXHandshake&gt; h){ return h.expired(); });</span>
+<span class="lineNum">     671 </span><span class="lineCov">        832 :         DEV_GUARDED(x_timers)</span>
+<span class="lineNum">     672 </span><span class="lineCov">        208 :                 m_timers.remove_if([](std::shared_ptr&lt;boost::asio::deadline_timer&gt; t)</span>
+<span class="lineNum">     673 </span>            :                 {
+<span class="lineNum">     674 </span><span class="lineNoCov">          0 :                         return t-&gt;expires_from_now().total_milliseconds() &lt; 0;</span>
+<span class="lineNum">     675 </span><span class="lineCov">        208 :                 });</span>
+<span class="lineNum">     676 </span>            : 
+<span class="lineNum">     677 </span><span class="lineCov">        208 :         keepAlivePeers();</span>
+<span class="lineNum">     678 </span>            :         
+<span class="lineNum">     679 </span>            :         // At this time peers will be disconnected based on natural TCP timeout.
+<span class="lineNum">     680 </span>            :         // disconnectLatePeers needs to be updated for the assumption that Session
+<span class="lineNum">     681 </span>            :         // is always live and to ensure reputation and fallback timers are properly
+<span class="lineNum">     682 </span>            :         // updated. // disconnectLatePeers();
+<span class="lineNum">     683 </span>            : 
+<span class="lineNum">     684 </span>            :         // todo: update peerSlotsAvailable()
+<span class="lineNum">     685 </span>            :         
+<span class="lineNum">     686 </span><span class="lineCov">        416 :         list&lt;shared_ptr&lt;Peer&gt;&gt; toConnect;</span>
+<span class="lineNum">     687 </span><span class="lineCov">        208 :         unsigned reqConn = 0;</span>
+<span class="lineNum">     688 </span>            :         {
+<span class="lineNum">     689 </span><span class="lineCov">        624 :                 RecursiveGuard l(x_sessions);</span>
+<span class="lineNum">     690 </span><span class="lineCov">        866 :                 for (auto const&amp; p: m_peers)</span>
+<span class="lineNum">     691 </span>            :                 {
+<span class="lineNum">     692 </span><span class="lineCov">        242 :                         bool haveSession = havePeerSession(p.second-&gt;id);</span>
+<span class="lineNum">     693 </span><span class="lineCov">        242 :                         bool required = p.second-&gt;peerType == PeerType::Required;</span>
+<span class="lineNum">     694 </span><span class="lineCov">        242 :                         if (haveSession &amp;&amp; required)</span>
+<span class="lineNum">     695 </span><span class="lineCov">         82 :                                 reqConn++;</span>
+<span class="lineNum">     696 </span><span class="lineCov">        160 :                         else if (!haveSession &amp;&amp; p.second-&gt;shouldReconnect() &amp;&amp; (!m_netPrefs.pin || required))</span>
+<span class="lineNum">     697 </span><span class="lineCov">          4 :                                 toConnect.push_back(p.second);</span>
+<span class="lineNum">     698 </span>            :                 }
+<span class="lineNum">     699 </span>            :         }
+<span class="lineNum">     700 </span>            : 
+<span class="lineNum">     701 </span><span class="lineCov">        632 :         for (auto p: toConnect)</span>
+<span class="lineNum">     702 </span><span class="lineCov">          4 :                 if (p-&gt;peerType == PeerType::Required &amp;&amp; reqConn++ &lt; m_idealPeerCount)</span>
+<span class="lineNum">     703 </span><span class="lineNoCov">          0 :                         connect(p);</span>
+<span class="lineNum">     704 </span>            :         
+<span class="lineNum">     705 </span><span class="lineCov">        208 :         if (!m_netPrefs.pin)</span>
+<span class="lineNum">     706 </span>            :         {
+<span class="lineNum">     707 </span><span class="lineCov">        208 :                 unsigned pendingCount = 0;</span>
+<span class="lineNum">     708 </span><span class="lineCov">       1040 :                 DEV_GUARDED(x_pendingNodeConns)</span>
+<span class="lineNum">     709 </span><span class="lineCov">        416 :                         pendingCount = m_pendingPeerConns.size();</span>
+<span class="lineNum">     710 </span><span class="lineCov">        208 :                 int openSlots = m_idealPeerCount - peerCount() - pendingCount + reqConn;</span>
+<span class="lineNum">     711 </span><span class="lineCov">        208 :                 if (openSlots &gt; 0)</span>
+<span class="lineNum">     712 </span><span class="lineCov">        632 :                         for (auto p: toConnect)</span>
+<span class="lineNum">     713 </span><span class="lineCov">          4 :                                 if (p-&gt;peerType == PeerType::Optional &amp;&amp; openSlots--)</span>
+<span class="lineNum">     714 </span><span class="lineCov">          4 :                                         connect(p);</span>
+<span class="lineNum">     715 </span>            :         }
+<span class="lineNum">     716 </span>            : 
+<span class="lineNum">     717 </span><span class="lineCov">        416 :         auto runcb = [this](boost::system::error_code const&amp; error) { run(error); };</span>
+<span class="lineNum">     718 </span><span class="lineCov">        416 :         m_timer-&gt;expires_from_now(boost::posix_time::milliseconds(c_timerInterval));</span>
+<span class="lineNum">     719 </span><span class="lineCov">        624 :         m_timer-&gt;async_wait(runcb);</span>
+<a name="720"><span class="lineNum">     720 </span>            : }</a>
+<span class="lineNum">     721 </span>            : 
+<span class="lineNum">     722 </span><span class="lineCov">         12 : void Host::startedWorking()</span>
+<span class="lineNum">     723 </span>            : {
+<span class="lineNum">     724 </span><span class="lineCov">         24 :         asserts(!m_timer);</span>
+<span class="lineNum">     725 </span>            : 
+<span class="lineNum">     726 </span>            :         {
+<span class="lineNum">     727 </span>            :                 // prevent m_run from being set to true at same time as set to false by stop()
+<span class="lineNum">     728 </span>            :                 // don't release mutex until m_timer is set so in case stop() is called at same
+<span class="lineNum">     729 </span>            :                 // time, stop will wait on m_timer and graceful network shutdown.
+<span class="lineNum">     730 </span><span class="lineCov">         36 :                 Guard l(x_runTimer);</span>
+<span class="lineNum">     731 </span>            :                 // create deadline timer
+<span class="lineNum">     732 </span><span class="lineCov">         36 :                 m_timer.reset(new boost::asio::deadline_timer(m_ioService));</span>
+<span class="lineNum">     733 </span><span class="lineCov">         12 :                 m_run = true;</span>
+<span class="lineNum">     734 </span>            :         }
+<span class="lineNum">     735 </span>            : 
+<span class="lineNum">     736 </span>            :         // start capability threads (ready for incoming connections)
+<span class="lineNum">     737 </span><span class="lineCov">         38 :         for (auto const&amp; h: m_capabilities)</span>
+<span class="lineNum">     738 </span><span class="lineCov">          2 :                 h.second-&gt;onStarting();</span>
+<span class="lineNum">     739 </span>            :         
+<span class="lineNum">     740 </span>            :         // try to open acceptor (todo: ipv6)
+<span class="lineNum">     741 </span><span class="lineCov">         12 :         int port = Network::tcp4Listen(m_tcp4Acceptor, m_netPrefs);</span>
+<span class="lineNum">     742 </span><span class="lineCov">         12 :         if (port &gt; 0)</span>
+<span class="lineNum">     743 </span>            :         {
+<span class="lineNum">     744 </span><span class="lineCov">         12 :                 m_listenPort = port;</span>
+<span class="lineNum">     745 </span><span class="lineCov">         12 :                 determinePublic();</span>
+<span class="lineNum">     746 </span><span class="lineCov">         12 :                 runAcceptor();</span>
+<span class="lineNum">     747 </span>            :         }
+<span class="lineNum">     748 </span>            :         else
+<span class="lineNum">     749 </span><span class="lineNoCov">          0 :                 clog(NetP2PNote) &lt;&lt; &quot;p2p.start.notice id:&quot; &lt;&lt; id() &lt;&lt; &quot;TCP Listen port is invalid or unavailable.&quot;;</span>
+<span class="lineNum">     750 </span>            : 
+<span class="lineNum">     751 </span>            :         auto nodeTable = make_shared&lt;NodeTable&gt;(
+<span class="lineNum">     752 </span>            :                 m_ioService,
+<span class="lineNum">     753 </span>            :                 m_alias,
+<span class="lineNum">     754 </span><span class="lineCov">         60 :                 NodeIPEndpoint(bi::address::from_string(listenAddress()), listenPort(), listenPort()),</span>
+<span class="lineNum">     755 </span>            :                 m_netPrefs.discovery
+<span class="lineNum">     756 </span><span class="lineCov">         72 :         );</span>
+<span class="lineNum">     757 </span><span class="lineCov">         36 :         nodeTable-&gt;setEventHandler(new HostNodeTableHandler(*this));</span>
+<span class="lineNum">     758 </span><span class="lineCov">         24 :         m_nodeTable = nodeTable;</span>
+<span class="lineNum">     759 </span><span class="lineCov">         24 :         restoreNetwork(&amp;m_restoreNetwork);</span>
+<span class="lineNum">     760 </span>            : 
+<span class="lineNum">     761 </span><span class="lineCov">         12 :         clog(NetP2PNote) &lt;&lt; &quot;p2p.started id:&quot; &lt;&lt; id();</span>
+<span class="lineNum">     762 </span>            : 
+<span class="lineNum">     763 </span><span class="lineCov">         12 :         run(boost::system::error_code());</span>
+<a name="764"><span class="lineNum">     764 </span><span class="lineCov">         12 : }</span></a>
+<span class="lineNum">     765 </span>            : 
+<span class="lineNum">     766 </span><span class="lineCov">  128215409 : void Host::doWork()</span>
+<span class="lineNum">     767 </span>            : {
+<span class="lineNum">     768 </span>            :         try
+<span class="lineNum">     769 </span>            :         {
+<span class="lineNum">     770 </span><span class="lineCov">  128215409 :                 if (m_run)</span>
+<span class="lineNum">     771 </span><span class="lineCov">         12 :                         m_ioService.run();</span>
+<span class="lineNum">     772 </span>            :         }
+<span class="lineNum">     773 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     774 </span>            :         {
+<span class="lineNum">     775 </span><span class="lineNoCov">          0 :                 clog(NetP2PWarn) &lt;&lt; &quot;Exception in Network Thread:&quot; &lt;&lt; _e.what();</span>
+<span class="lineNum">     776 </span><span class="lineNoCov">          0 :                 clog(NetP2PWarn) &lt;&lt; &quot;Network Restart is Recommended.&quot;;</span>
+<span class="lineNum">     777 </span>            :         }
+<a name="778"><span class="lineNum">     778 </span><span class="lineCov">  128215409 : }</span></a>
+<span class="lineNum">     779 </span>            : 
+<span class="lineNum">     780 </span><span class="lineCov">        208 : void Host::keepAlivePeers()</span>
+<span class="lineNum">     781 </span>            : {
+<span class="lineNum">     782 </span><span class="lineCov">        624 :         if (chrono::steady_clock::now() - c_keepAliveInterval &lt; m_lastPing)</span>
+<span class="lineNum">     783 </span>            :                 return;
+<span class="lineNum">     784 </span>            : 
+<span class="lineNum">     785 </span><span class="lineCov">         24 :         RecursiveGuard l(x_sessions);</span>
+<span class="lineNum">     786 </span><span class="lineCov">         36 :         for (auto it = m_sessions.begin(); it != m_sessions.end();)</span>
+<span class="lineNum">     787 </span><span class="lineNoCov">          0 :                 if (auto p = it-&gt;second.lock())</span>
+<span class="lineNum">     788 </span>            :                 {
+<span class="lineNum">     789 </span><span class="lineNoCov">          0 :                         p-&gt;ping();</span>
+<span class="lineNum">     790 </span>            :                         ++it;
+<span class="lineNum">     791 </span>            :                 }
+<span class="lineNum">     792 </span>            :                 else
+<span class="lineNum">     793 </span><span class="lineNoCov">          0 :                         it = m_sessions.erase(it);</span>
+<span class="lineNum">     794 </span>            : 
+<span class="lineNum">     795 </span><span class="lineCov">         12 :         m_lastPing = chrono::steady_clock::now();</span>
+<a name="796"><span class="lineNum">     796 </span>            : }</a>
+<span class="lineNum">     797 </span>            : 
+<span class="lineNum">     798 </span><span class="lineNoCov">          0 : void Host::disconnectLatePeers()</span>
+<span class="lineNum">     799 </span>            : {
+<span class="lineNum">     800 </span><span class="lineNoCov">          0 :         auto now = chrono::steady_clock::now();</span>
+<span class="lineNum">     801 </span><span class="lineNoCov">          0 :         if (now - c_keepAliveTimeOut &lt; m_lastPing)</span>
+<span class="lineNum">     802 </span>            :                 return;
+<span class="lineNum">     803 </span>            : 
+<span class="lineNum">     804 </span><span class="lineNoCov">          0 :         RecursiveGuard l(x_sessions);</span>
+<span class="lineNum">     805 </span><span class="lineNoCov">          0 :         for (auto p: m_sessions)</span>
+<span class="lineNum">     806 </span><span class="lineNoCov">          0 :                 if (auto pp = p.second.lock())</span>
+<span class="lineNum">     807 </span><span class="lineNoCov">          0 :                         if (now - c_keepAliveTimeOut &gt; m_lastPing &amp;&amp; pp-&gt;lastReceived() &lt; m_lastPing)</span>
+<span class="lineNum">     808 </span><span class="lineNoCov">          0 :                                 pp-&gt;disconnect(PingTimeout);</span>
+<a name="809"><span class="lineNum">     809 </span>            : }</a>
+<span class="lineNum">     810 </span>            : 
+<span class="lineNum">     811 </span><span class="lineCov">          3 : bytes Host::saveNetwork() const</span>
+<span class="lineNum">     812 </span>            : {
+<span class="lineNum">     813 </span><span class="lineCov">          6 :         std::list&lt;Peer&gt; peers;</span>
+<span class="lineNum">     814 </span>            :         {
+<span class="lineNum">     815 </span><span class="lineCov">          9 :                 RecursiveGuard l(x_sessions);</span>
+<span class="lineNum">     816 </span><span class="lineCov">         39 :                 for (auto p: m_peers)</span>
+<span class="lineNum">     817 </span><span class="lineCov">         10 :                         if (p.second)</span>
+<span class="lineNum">     818 </span><span class="lineCov">         10 :                                 peers.push_back(*p.second);</span>
+<span class="lineNum">     819 </span>            :         }
+<span class="lineNum">     820 </span><span class="lineCov">          3 :         peers.sort();</span>
+<span class="lineNum">     821 </span>            : 
+<span class="lineNum">     822 </span><span class="lineCov">          6 :         RLPStream network;</span>
+<span class="lineNum">     823 </span><span class="lineCov">          3 :         int count = 0;</span>
+<span class="lineNum">     824 </span><span class="lineCov">          9 :         for (auto const&amp; p: peers)</span>
+<span class="lineNum">     825 </span>            :         {
+<span class="lineNum">     826 </span>            :                 // todo: ipv6
+<span class="lineNum">     827 </span><span class="lineCov">         10 :                 if (!p.endpoint.address.is_v4())</span>
+<span class="lineNum">     828 </span>            :                         continue;
+<span class="lineNum">     829 </span>            : 
+<span class="lineNum">     830 </span>            :                 // Only save peers which have connected within 2 days, with properly-advertised port and public IP address
+<span class="lineNum">     831 </span><span class="lineCov">         60 :                 if (chrono::system_clock::now() - p.m_lastConnected &lt; chrono::seconds(3600 * 48) &amp;&amp; !!p.endpoint &amp;&amp; p.id != id() &amp;&amp; (p.peerType == PeerType::Required || p.endpoint.isAllowed()))</span>
+<span class="lineNum">     832 </span>            :                 {
+<span class="lineNum">     833 </span><span class="lineCov">         10 :                         network.appendList(11);</span>
+<span class="lineNum">     834 </span><span class="lineCov">         10 :                         p.endpoint.streamRLP(network, NodeIPEndpoint::StreamInline);</span>
+<span class="lineNum">     835 </span><span class="lineCov">         30 :                         network &lt;&lt; p.id &lt;&lt; (p.peerType == PeerType::Required ? true : false)</span>
+<span class="lineNum">     836 </span><span class="lineCov">         40 :                                 &lt;&lt; chrono::duration_cast&lt;chrono::seconds&gt;(p.m_lastConnected.time_since_epoch()).count()</span>
+<span class="lineNum">     837 </span><span class="lineCov">         40 :                                 &lt;&lt; chrono::duration_cast&lt;chrono::seconds&gt;(p.m_lastAttempted.time_since_epoch()).count()</span>
+<span class="lineNum">     838 </span><span class="lineCov">         50 :                                 &lt;&lt; p.m_failedAttempts &lt;&lt; (unsigned)p.m_lastDisconnect &lt;&lt; p.m_score &lt;&lt; p.m_rating;</span>
+<span class="lineNum">     839 </span><span class="lineCov">         10 :                         count++;</span>
+<span class="lineNum">     840 </span>            :                 }
+<span class="lineNum">     841 </span>            :         }
+<span class="lineNum">     842 </span>            : 
+<span class="lineNum">     843 </span><span class="lineCov">          3 :         if (!!m_nodeTable)</span>
+<span class="lineNum">     844 </span>            :         {
+<span class="lineNum">     845 </span><span class="lineCov">          4 :                 auto state = m_nodeTable-&gt;snapshot();</span>
+<span class="lineNum">     846 </span><span class="lineCov">          2 :                 state.sort();</span>
+<span class="lineNum">     847 </span><span class="lineCov">          6 :                 for (auto const&amp; entry: state)</span>
+<span class="lineNum">     848 </span>            :                 {
+<span class="lineNum">     849 </span><span class="lineCov">         10 :                         network.appendList(4);</span>
+<span class="lineNum">     850 </span><span class="lineCov">         10 :                         entry.endpoint.streamRLP(network, NodeIPEndpoint::StreamInline);</span>
+<span class="lineNum">     851 </span><span class="lineCov">         10 :                         network &lt;&lt; entry.id;</span>
+<span class="lineNum">     852 </span><span class="lineCov">         10 :                         count++;</span>
+<span class="lineNum">     853 </span>            :                 }
+<span class="lineNum">     854 </span>            :         }
+<span class="lineNum">     855 </span>            :         // else: TODO: use previous configuration if available
+<span class="lineNum">     856 </span>            : 
+<span class="lineNum">     857 </span><span class="lineCov">          6 :         RLPStream ret(3);</span>
+<span class="lineNum">     858 </span><span class="lineCov">         12 :         ret &lt;&lt; dev::p2p::c_protocolVersion &lt;&lt; m_alias.secret().ref();</span>
+<span class="lineNum">     859 </span><span class="lineCov">          3 :         ret.appendList(count);</span>
+<span class="lineNum">     860 </span><span class="lineCov">          3 :         if (!!count)</span>
+<span class="lineNum">     861 </span><span class="lineCov">          2 :                 ret.appendRaw(network.out(), count);</span>
+<span class="lineNum">     862 </span><span class="lineCov">          6 :         return ret.out();</span>
+<span class="lineNum">     863 </span>            : }
+<span class="lineNum">     864 </span>            : 
+<span class="lineNum">     865 </span><span class="lineCov">         12 : void Host::restoreNetwork(bytesConstRef _b)</span>
+<span class="lineNum">     866 </span>            : {
+<span class="lineNum">     867 </span><span class="lineCov">         12 :         if (!_b.size())</span>
+<span class="lineNum">     868 </span><span class="lineCov">         12 :                 return;</span>
+<span class="lineNum">     869 </span>            :         
+<span class="lineNum">     870 </span>            :         // nodes can only be added if network is added
+<span class="lineNum">     871 </span><span class="lineNoCov">          0 :         if (!isStarted())</span>
+<span class="lineNum">     872 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(NetworkStartRequired());</span>
+<span class="lineNum">     873 </span>            : 
+<span class="lineNum">     874 </span><span class="lineNoCov">          0 :         if (m_dropPeers)</span>
+<span class="lineNum">     875 </span>            :                 return;
+<span class="lineNum">     876 </span>            :         
+<span class="lineNum">     877 </span><span class="lineNoCov">          0 :         RecursiveGuard l(x_sessions);</span>
+<span class="lineNum">     878 </span><span class="lineNoCov">          0 :         RLP r(_b);</span>
+<span class="lineNum">     879 </span><span class="lineNoCov">          0 :         unsigned fileVersion = r[0].toInt&lt;unsigned&gt;();</span>
+<span class="lineNum">     880 </span><span class="lineNoCov">          0 :         if (r.itemCount() &gt; 0 &amp;&amp; r[0].isInt() &amp;&amp; fileVersion &gt;= dev::p2p::c_protocolVersion - 1)</span>
+<span class="lineNum">     881 </span>            :         {
+<span class="lineNum">     882 </span>            :                 // r[0] = version
+<span class="lineNum">     883 </span>            :                 // r[1] = key
+<span class="lineNum">     884 </span>            :                 // r[2] = nodes
+<span class="lineNum">     885 </span>            : 
+<span class="lineNum">     886 </span><span class="lineNoCov">          0 :                 for (auto i: r[2])</span>
+<span class="lineNum">     887 </span>            :                 {
+<span class="lineNum">     888 </span>            :                         // todo: ipv6
+<span class="lineNum">     889 </span><span class="lineNoCov">          0 :                         if (i[0].itemCount() != 4 &amp;&amp; i[0].size() != 4)</span>
+<span class="lineNum">     890 </span>            :                                 continue;
+<span class="lineNum">     891 </span>            : 
+<span class="lineNum">     892 </span><span class="lineNoCov">          0 :                         if (i.itemCount() == 4 || i.itemCount() == 11)</span>
+<span class="lineNum">     893 </span>            :                         {
+<span class="lineNum">     894 </span><span class="lineNoCov">          0 :                                 Node n((NodeID)i[3], NodeIPEndpoint(i));</span>
+<span class="lineNum">     895 </span><span class="lineNoCov">          0 :                                 if (i.itemCount() == 4 &amp;&amp; n.endpoint.isAllowed())</span>
+<span class="lineNum">     896 </span><span class="lineNoCov">          0 :                                         m_nodeTable-&gt;addNode(n);</span>
+<span class="lineNum">     897 </span><span class="lineNoCov">          0 :                                 else if (i.itemCount() == 11)</span>
+<span class="lineNum">     898 </span>            :                                 {
+<span class="lineNum">     899 </span><span class="lineNoCov">          0 :                                         n.peerType = i[4].toInt&lt;bool&gt;() ? PeerType::Required : PeerType::Optional;</span>
+<span class="lineNum">     900 </span><span class="lineNoCov">          0 :                                         if (!n.endpoint.isAllowed() &amp;&amp; n.peerType == PeerType::Optional)</span>
+<span class="lineNum">     901 </span><span class="lineNoCov">          0 :                                                 continue;</span>
+<span class="lineNum">     902 </span><span class="lineNoCov">          0 :                                         shared_ptr&lt;Peer&gt; p = make_shared&lt;Peer&gt;(n);</span>
+<span class="lineNum">     903 </span><span class="lineNoCov">          0 :                                         p-&gt;m_lastConnected = chrono::system_clock::time_point(chrono::seconds(i[5].toInt&lt;unsigned&gt;()));</span>
+<span class="lineNum">     904 </span><span class="lineNoCov">          0 :                                         p-&gt;m_lastAttempted = chrono::system_clock::time_point(chrono::seconds(i[6].toInt&lt;unsigned&gt;()));</span>
+<span class="lineNum">     905 </span><span class="lineNoCov">          0 :                                         p-&gt;m_failedAttempts = i[7].toInt&lt;unsigned&gt;();</span>
+<span class="lineNum">     906 </span><span class="lineNoCov">          0 :                                         p-&gt;m_lastDisconnect = (DisconnectReason)i[8].toInt&lt;unsigned&gt;();</span>
+<span class="lineNum">     907 </span><span class="lineNoCov">          0 :                                         p-&gt;m_score = (int)i[9].toInt&lt;unsigned&gt;();</span>
+<span class="lineNum">     908 </span><span class="lineNoCov">          0 :                                         p-&gt;m_rating = (int)i[10].toInt&lt;unsigned&gt;();</span>
+<span class="lineNum">     909 </span><span class="lineNoCov">          0 :                                         m_peers[p-&gt;id] = p;</span>
+<span class="lineNum">     910 </span><span class="lineNoCov">          0 :                                         if (p-&gt;peerType == PeerType::Required)</span>
+<span class="lineNum">     911 </span><span class="lineNoCov">          0 :                                                 requirePeer(p-&gt;id, n.endpoint);</span>
+<span class="lineNum">     912 </span>            :                                         else
+<span class="lineNum">     913 </span><span class="lineNoCov">          0 :                                                 m_nodeTable-&gt;addNode(*p.get(), NodeTable::NodeRelation::Known);</span>
+<span class="lineNum">     914 </span>            :                                 }
+<span class="lineNum">     915 </span>            :                         }
+<span class="lineNum">     916 </span><span class="lineNoCov">          0 :                         else if (i.itemCount() == 3 || i.itemCount() == 10)</span>
+<span class="lineNum">     917 </span>            :                         {
+<span class="lineNum">     918 </span><span class="lineNoCov">          0 :                                 Node n((NodeID)i[2], NodeIPEndpoint(bi::address_v4(i[0].toArray&lt;byte, 4&gt;()), i[1].toInt&lt;uint16_t&gt;(), i[1].toInt&lt;uint16_t&gt;()));</span>
+<span class="lineNum">     919 </span><span class="lineNoCov">          0 :                                 if (i.itemCount() == 3 &amp;&amp; n.endpoint.isAllowed())</span>
+<span class="lineNum">     920 </span><span class="lineNoCov">          0 :                                         m_nodeTable-&gt;addNode(n);</span>
+<span class="lineNum">     921 </span><span class="lineNoCov">          0 :                                 else if (i.itemCount() == 10)</span>
+<span class="lineNum">     922 </span>            :                                 {
+<span class="lineNum">     923 </span><span class="lineNoCov">          0 :                                         n.peerType = i[3].toInt&lt;bool&gt;() ? PeerType::Required : PeerType::Optional;</span>
+<span class="lineNum">     924 </span><span class="lineNoCov">          0 :                                         if (!n.endpoint.isAllowed() &amp;&amp; n.peerType == PeerType::Optional)</span>
+<span class="lineNum">     925 </span><span class="lineNoCov">          0 :                                                 continue;</span>
+<span class="lineNum">     926 </span><span class="lineNoCov">          0 :                                         shared_ptr&lt;Peer&gt; p = make_shared&lt;Peer&gt;(n);</span>
+<span class="lineNum">     927 </span><span class="lineNoCov">          0 :                                         p-&gt;m_lastConnected = chrono::system_clock::time_point(chrono::seconds(i[4].toInt&lt;unsigned&gt;()));</span>
+<span class="lineNum">     928 </span><span class="lineNoCov">          0 :                                         p-&gt;m_lastAttempted = chrono::system_clock::time_point(chrono::seconds(i[5].toInt&lt;unsigned&gt;()));</span>
+<span class="lineNum">     929 </span><span class="lineNoCov">          0 :                                         p-&gt;m_failedAttempts = i[6].toInt&lt;unsigned&gt;();</span>
+<span class="lineNum">     930 </span><span class="lineNoCov">          0 :                                         p-&gt;m_lastDisconnect = (DisconnectReason)i[7].toInt&lt;unsigned&gt;();</span>
+<span class="lineNum">     931 </span><span class="lineNoCov">          0 :                                         p-&gt;m_score = (int)i[8].toInt&lt;unsigned&gt;();</span>
+<span class="lineNum">     932 </span><span class="lineNoCov">          0 :                                         p-&gt;m_rating = (int)i[9].toInt&lt;unsigned&gt;();</span>
+<span class="lineNum">     933 </span><span class="lineNoCov">          0 :                                         m_peers[p-&gt;id] = p;</span>
+<span class="lineNum">     934 </span><span class="lineNoCov">          0 :                                         if (p-&gt;peerType == PeerType::Required)</span>
+<span class="lineNum">     935 </span><span class="lineNoCov">          0 :                                                 requirePeer(p-&gt;id, n.endpoint);</span>
+<span class="lineNum">     936 </span>            :                                         else
+<span class="lineNum">     937 </span><span class="lineNoCov">          0 :                                                 m_nodeTable-&gt;addNode(*p.get(), NodeTable::NodeRelation::Known);</span>
+<span class="lineNum">     938 </span>            :                                 }
+<span class="lineNum">     939 </span>            :                         }
+<span class="lineNum">     940 </span>            :                 }
+<span class="lineNum">     941 </span>            :         }
+<a name="942"><span class="lineNum">     942 </span>            : }</a>
+<span class="lineNum">     943 </span>            : 
+<span class="lineNum">     944 </span><span class="lineCov">         15 : KeyPair Host::networkAlias(bytesConstRef _b)</span>
+<span class="lineNum">     945 </span>            : {
+<span class="lineNum">     946 </span><span class="lineCov">         15 :         RLP r(_b);</span>
+<span class="lineNum">     947 </span><span class="lineCov">         15 :         if (r.itemCount() == 3 &amp;&amp; r[0].isInt() &amp;&amp; r[0].toInt&lt;unsigned&gt;() &gt;= 3)</span>
+<span class="lineNum">     948 </span><span class="lineCov">          4 :                 return KeyPair(Secret(r[1].toBytes()));</span>
+<a name="949"><span class="lineNum">     949 </span>            :         else</a>
+<span class="lineNum">     950 </span><span class="lineCov">         14 :                 return KeyPair::create();</span>
+<span class="lineNum">     951 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

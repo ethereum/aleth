@@ -1,0 +1,369 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - utils/secp256k1/hash_impl.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">utils/secp256k1</a> - hash_impl.h<span style="font-size: 80%;"> (source / <a href="hash_impl.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">178</td>
+            <td class="headerCovTableEntry">183</td>
+            <td class="headerCovTableEntryHi">97.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /**********************************************************************</a>
+<span class="lineNum">       2 </span>            :  * Copyright (c) 2014 Pieter Wuille                                   *
+<span class="lineNum">       3 </span>            :  * Distributed under the MIT software license, see the accompanying   *
+<span class="lineNum">       4 </span>            :  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+<span class="lineNum">       5 </span>            :  **********************************************************************/
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #ifndef _SECP256K1_HASH_IMPL_H_
+<span class="lineNum">       8 </span>            : #define _SECP256K1_HASH_IMPL_H_
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #include &quot;hash.h&quot;
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      13 </span>            : #include &lt;stdint.h&gt;
+<span class="lineNum">      14 </span>            : #include &lt;string.h&gt;
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #define Ch(x,y,z) ((z) ^ ((x) &amp; ((y) ^ (z))))
+<span class="lineNum">      17 </span>            : #define Maj(x,y,z) (((x) &amp; (y)) | ((z) &amp; ((x) | (y))))
+<span class="lineNum">      18 </span>            : #define Sigma0(x) (((x) &gt;&gt; 2 | (x) &lt;&lt; 30) ^ ((x) &gt;&gt; 13 | (x) &lt;&lt; 19) ^ ((x) &gt;&gt; 22 | (x) &lt;&lt; 10))
+<span class="lineNum">      19 </span>            : #define Sigma1(x) (((x) &gt;&gt; 6 | (x) &lt;&lt; 26) ^ ((x) &gt;&gt; 11 | (x) &lt;&lt; 21) ^ ((x) &gt;&gt; 25 | (x) &lt;&lt; 7))
+<span class="lineNum">      20 </span>            : #define sigma0(x) (((x) &gt;&gt; 7 | (x) &lt;&lt; 25) ^ ((x) &gt;&gt; 18 | (x) &lt;&lt; 14) ^ ((x) &gt;&gt; 3))
+<span class="lineNum">      21 </span>            : #define sigma1(x) (((x) &gt;&gt; 17 | (x) &lt;&lt; 15) ^ ((x) &gt;&gt; 19 | (x) &lt;&lt; 13) ^ ((x) &gt;&gt; 10))
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #define Round(a,b,c,d,e,f,g,h,k,w) do { \
+<span class="lineNum">      24 </span>            :     uint32_t t1 = (h) + Sigma1(e) + Ch((e), (f), (g)) + (k) + (w); \
+<span class="lineNum">      25 </span>            :     uint32_t t2 = Sigma0(a) + Maj((a), (b), (c)); \
+<span class="lineNum">      26 </span>            :     (d) += t1; \
+<span class="lineNum">      27 </span>            :     (h) = t1 + t2; \
+<span class="lineNum">      28 </span>            : } while(0)
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #ifdef WORDS_BIGENDIAN
+<span class="lineNum">      31 </span>            : #define BE32(x) (x)
+<span class="lineNum">      32 </span>            : #else
+<span class="lineNum">      33 </span>            : #define BE32(p) ((((p) &amp; 0xFF) &lt;&lt; 24) | (((p) &amp; 0xFF00) &lt;&lt; 8) | (((p) &amp; 0xFF0000) &gt;&gt; 8) | (((p) &amp; 0xFF000000) &gt;&gt; 24))
+<span class="lineNum">      34 </span>            : #endif
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : static void secp256k1_sha256_initialize(secp256k1_sha256_t *hash) {
+<span class="lineNum">      37 </span><span class="lineCov">      19552 :     hash-&gt;s[0] = 0x6a09e667ul;</span>
+<span class="lineNum">      38 </span><span class="lineCov">      19552 :     hash-&gt;s[1] = 0xbb67ae85ul;</span>
+<span class="lineNum">      39 </span><span class="lineCov">      19552 :     hash-&gt;s[2] = 0x3c6ef372ul;</span>
+<span class="lineNum">      40 </span><span class="lineCov">      19552 :     hash-&gt;s[3] = 0xa54ff53aul;</span>
+<span class="lineNum">      41 </span><span class="lineCov">      19552 :     hash-&gt;s[4] = 0x510e527ful;</span>
+<span class="lineNum">      42 </span><span class="lineCov">      19552 :     hash-&gt;s[5] = 0x9b05688cul;</span>
+<span class="lineNum">      43 </span><span class="lineCov">      19552 :     hash-&gt;s[6] = 0x1f83d9abul;</span>
+<span class="lineNum">      44 </span><span class="lineCov">      19552 :     hash-&gt;s[7] = 0x5be0cd19ul;</span>
+<span class="lineNum">      45 </span><span class="lineCov">      19552 :     hash-&gt;bytes = 0;</span>
+<span class="lineNum">      46 </span>            : }
+<a name="47"><span class="lineNum">      47 </span>            : </a>
+<span class="lineNum">      48 </span>            : /** Perform one SHA-256 transformation, processing 16 big endian 32-bit words. */
+<span class="lineNum">      49 </span><span class="lineCov">      43011 : static void secp256k1_sha256_transform(uint32_t* s, const uint32_t* chunk) {</span>
+<span class="lineNum">      50 </span><span class="lineCov">      43011 :     uint32_t a = s[0], b = s[1], c = s[2], d = s[3], e = s[4], f = s[5], g = s[6], h = s[7];</span>
+<span class="lineNum">      51 </span>            :     uint32_t w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13, w14, w15;
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineCov">      43011 :     Round(a, b, c, d, e, f, g, h, 0x428a2f98, w0 = BE32(chunk[0]));</span>
+<span class="lineNum">      54 </span><span class="lineCov">      43011 :     Round(h, a, b, c, d, e, f, g, 0x71374491, w1 = BE32(chunk[1]));</span>
+<span class="lineNum">      55 </span><span class="lineCov">      43011 :     Round(g, h, a, b, c, d, e, f, 0xb5c0fbcf, w2 = BE32(chunk[2]));</span>
+<span class="lineNum">      56 </span><span class="lineCov">      43011 :     Round(f, g, h, a, b, c, d, e, 0xe9b5dba5, w3 = BE32(chunk[3]));</span>
+<span class="lineNum">      57 </span><span class="lineCov">      43011 :     Round(e, f, g, h, a, b, c, d, 0x3956c25b, w4 = BE32(chunk[4]));</span>
+<span class="lineNum">      58 </span><span class="lineCov">      43011 :     Round(d, e, f, g, h, a, b, c, 0x59f111f1, w5 = BE32(chunk[5]));</span>
+<span class="lineNum">      59 </span><span class="lineCov">      43011 :     Round(c, d, e, f, g, h, a, b, 0x923f82a4, w6 = BE32(chunk[6]));</span>
+<span class="lineNum">      60 </span><span class="lineCov">      43011 :     Round(b, c, d, e, f, g, h, a, 0xab1c5ed5, w7 = BE32(chunk[7]));</span>
+<span class="lineNum">      61 </span><span class="lineCov">      43011 :     Round(a, b, c, d, e, f, g, h, 0xd807aa98, w8 = BE32(chunk[8]));</span>
+<span class="lineNum">      62 </span><span class="lineCov">      43011 :     Round(h, a, b, c, d, e, f, g, 0x12835b01, w9 = BE32(chunk[9]));</span>
+<span class="lineNum">      63 </span><span class="lineCov">      43011 :     Round(g, h, a, b, c, d, e, f, 0x243185be, w10 = BE32(chunk[10]));</span>
+<span class="lineNum">      64 </span><span class="lineCov">      43011 :     Round(f, g, h, a, b, c, d, e, 0x550c7dc3, w11 = BE32(chunk[11]));</span>
+<span class="lineNum">      65 </span><span class="lineCov">      43011 :     Round(e, f, g, h, a, b, c, d, 0x72be5d74, w12 = BE32(chunk[12]));</span>
+<span class="lineNum">      66 </span><span class="lineCov">      43011 :     Round(d, e, f, g, h, a, b, c, 0x80deb1fe, w13 = BE32(chunk[13]));</span>
+<span class="lineNum">      67 </span><span class="lineCov">      43011 :     Round(c, d, e, f, g, h, a, b, 0x9bdc06a7, w14 = BE32(chunk[14]));</span>
+<span class="lineNum">      68 </span><span class="lineCov">      43011 :     Round(b, c, d, e, f, g, h, a, 0xc19bf174, w15 = BE32(chunk[15]));</span>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineCov">      43011 :     Round(a, b, c, d, e, f, g, h, 0xe49b69c1, w0 += sigma1(w14) + w9 + sigma0(w1));</span>
+<span class="lineNum">      71 </span><span class="lineCov">      43011 :     Round(h, a, b, c, d, e, f, g, 0xefbe4786, w1 += sigma1(w15) + w10 + sigma0(w2));</span>
+<span class="lineNum">      72 </span><span class="lineCov">      43011 :     Round(g, h, a, b, c, d, e, f, 0x0fc19dc6, w2 += sigma1(w0) + w11 + sigma0(w3));</span>
+<span class="lineNum">      73 </span><span class="lineCov">      43011 :     Round(f, g, h, a, b, c, d, e, 0x240ca1cc, w3 += sigma1(w1) + w12 + sigma0(w4));</span>
+<span class="lineNum">      74 </span><span class="lineCov">      43011 :     Round(e, f, g, h, a, b, c, d, 0x2de92c6f, w4 += sigma1(w2) + w13 + sigma0(w5));</span>
+<span class="lineNum">      75 </span><span class="lineCov">      43011 :     Round(d, e, f, g, h, a, b, c, 0x4a7484aa, w5 += sigma1(w3) + w14 + sigma0(w6));</span>
+<span class="lineNum">      76 </span><span class="lineCov">      43011 :     Round(c, d, e, f, g, h, a, b, 0x5cb0a9dc, w6 += sigma1(w4) + w15 + sigma0(w7));</span>
+<span class="lineNum">      77 </span><span class="lineCov">      43011 :     Round(b, c, d, e, f, g, h, a, 0x76f988da, w7 += sigma1(w5) + w0 + sigma0(w8));</span>
+<span class="lineNum">      78 </span><span class="lineCov">      43011 :     Round(a, b, c, d, e, f, g, h, 0x983e5152, w8 += sigma1(w6) + w1 + sigma0(w9));</span>
+<span class="lineNum">      79 </span><span class="lineCov">      43011 :     Round(h, a, b, c, d, e, f, g, 0xa831c66d, w9 += sigma1(w7) + w2 + sigma0(w10));</span>
+<span class="lineNum">      80 </span><span class="lineCov">      43011 :     Round(g, h, a, b, c, d, e, f, 0xb00327c8, w10 += sigma1(w8) + w3 + sigma0(w11));</span>
+<span class="lineNum">      81 </span><span class="lineCov">      43011 :     Round(f, g, h, a, b, c, d, e, 0xbf597fc7, w11 += sigma1(w9) + w4 + sigma0(w12));</span>
+<span class="lineNum">      82 </span><span class="lineCov">      43011 :     Round(e, f, g, h, a, b, c, d, 0xc6e00bf3, w12 += sigma1(w10) + w5 + sigma0(w13));</span>
+<span class="lineNum">      83 </span><span class="lineCov">      43011 :     Round(d, e, f, g, h, a, b, c, 0xd5a79147, w13 += sigma1(w11) + w6 + sigma0(w14));</span>
+<span class="lineNum">      84 </span><span class="lineCov">      43011 :     Round(c, d, e, f, g, h, a, b, 0x06ca6351, w14 += sigma1(w12) + w7 + sigma0(w15));</span>
+<span class="lineNum">      85 </span><span class="lineCov">      43011 :     Round(b, c, d, e, f, g, h, a, 0x14292967, w15 += sigma1(w13) + w8 + sigma0(w0));</span>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">      43011 :     Round(a, b, c, d, e, f, g, h, 0x27b70a85, w0 += sigma1(w14) + w9 + sigma0(w1));</span>
+<span class="lineNum">      88 </span><span class="lineCov">      43011 :     Round(h, a, b, c, d, e, f, g, 0x2e1b2138, w1 += sigma1(w15) + w10 + sigma0(w2));</span>
+<span class="lineNum">      89 </span><span class="lineCov">      43011 :     Round(g, h, a, b, c, d, e, f, 0x4d2c6dfc, w2 += sigma1(w0) + w11 + sigma0(w3));</span>
+<span class="lineNum">      90 </span><span class="lineCov">      43011 :     Round(f, g, h, a, b, c, d, e, 0x53380d13, w3 += sigma1(w1) + w12 + sigma0(w4));</span>
+<span class="lineNum">      91 </span><span class="lineCov">      43011 :     Round(e, f, g, h, a, b, c, d, 0x650a7354, w4 += sigma1(w2) + w13 + sigma0(w5));</span>
+<span class="lineNum">      92 </span><span class="lineCov">      43011 :     Round(d, e, f, g, h, a, b, c, 0x766a0abb, w5 += sigma1(w3) + w14 + sigma0(w6));</span>
+<span class="lineNum">      93 </span><span class="lineCov">      43011 :     Round(c, d, e, f, g, h, a, b, 0x81c2c92e, w6 += sigma1(w4) + w15 + sigma0(w7));</span>
+<span class="lineNum">      94 </span><span class="lineCov">      43011 :     Round(b, c, d, e, f, g, h, a, 0x92722c85, w7 += sigma1(w5) + w0 + sigma0(w8));</span>
+<span class="lineNum">      95 </span><span class="lineCov">      43011 :     Round(a, b, c, d, e, f, g, h, 0xa2bfe8a1, w8 += sigma1(w6) + w1 + sigma0(w9));</span>
+<span class="lineNum">      96 </span><span class="lineCov">      43011 :     Round(h, a, b, c, d, e, f, g, 0xa81a664b, w9 += sigma1(w7) + w2 + sigma0(w10));</span>
+<span class="lineNum">      97 </span><span class="lineCov">      43011 :     Round(g, h, a, b, c, d, e, f, 0xc24b8b70, w10 += sigma1(w8) + w3 + sigma0(w11));</span>
+<span class="lineNum">      98 </span><span class="lineCov">      43011 :     Round(f, g, h, a, b, c, d, e, 0xc76c51a3, w11 += sigma1(w9) + w4 + sigma0(w12));</span>
+<span class="lineNum">      99 </span><span class="lineCov">      43011 :     Round(e, f, g, h, a, b, c, d, 0xd192e819, w12 += sigma1(w10) + w5 + sigma0(w13));</span>
+<span class="lineNum">     100 </span><span class="lineCov">      43011 :     Round(d, e, f, g, h, a, b, c, 0xd6990624, w13 += sigma1(w11) + w6 + sigma0(w14));</span>
+<span class="lineNum">     101 </span><span class="lineCov">      43011 :     Round(c, d, e, f, g, h, a, b, 0xf40e3585, w14 += sigma1(w12) + w7 + sigma0(w15));</span>
+<span class="lineNum">     102 </span><span class="lineCov">      43011 :     Round(b, c, d, e, f, g, h, a, 0x106aa070, w15 += sigma1(w13) + w8 + sigma0(w0));</span>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineCov">      43011 :     Round(a, b, c, d, e, f, g, h, 0x19a4c116, w0 += sigma1(w14) + w9 + sigma0(w1));</span>
+<span class="lineNum">     105 </span><span class="lineCov">      43011 :     Round(h, a, b, c, d, e, f, g, 0x1e376c08, w1 += sigma1(w15) + w10 + sigma0(w2));</span>
+<span class="lineNum">     106 </span><span class="lineCov">      43011 :     Round(g, h, a, b, c, d, e, f, 0x2748774c, w2 += sigma1(w0) + w11 + sigma0(w3));</span>
+<span class="lineNum">     107 </span><span class="lineCov">      43011 :     Round(f, g, h, a, b, c, d, e, 0x34b0bcb5, w3 += sigma1(w1) + w12 + sigma0(w4));</span>
+<span class="lineNum">     108 </span><span class="lineCov">      43011 :     Round(e, f, g, h, a, b, c, d, 0x391c0cb3, w4 += sigma1(w2) + w13 + sigma0(w5));</span>
+<span class="lineNum">     109 </span><span class="lineCov">      43011 :     Round(d, e, f, g, h, a, b, c, 0x4ed8aa4a, w5 += sigma1(w3) + w14 + sigma0(w6));</span>
+<span class="lineNum">     110 </span><span class="lineCov">      43011 :     Round(c, d, e, f, g, h, a, b, 0x5b9cca4f, w6 += sigma1(w4) + w15 + sigma0(w7));</span>
+<span class="lineNum">     111 </span><span class="lineCov">      43011 :     Round(b, c, d, e, f, g, h, a, 0x682e6ff3, w7 += sigma1(w5) + w0 + sigma0(w8));</span>
+<span class="lineNum">     112 </span><span class="lineCov">      43011 :     Round(a, b, c, d, e, f, g, h, 0x748f82ee, w8 += sigma1(w6) + w1 + sigma0(w9));</span>
+<span class="lineNum">     113 </span><span class="lineCov">      43011 :     Round(h, a, b, c, d, e, f, g, 0x78a5636f, w9 += sigma1(w7) + w2 + sigma0(w10));</span>
+<span class="lineNum">     114 </span><span class="lineCov">      43011 :     Round(g, h, a, b, c, d, e, f, 0x84c87814, w10 += sigma1(w8) + w3 + sigma0(w11));</span>
+<span class="lineNum">     115 </span><span class="lineCov">      43011 :     Round(f, g, h, a, b, c, d, e, 0x8cc70208, w11 += sigma1(w9) + w4 + sigma0(w12));</span>
+<span class="lineNum">     116 </span><span class="lineCov">      43011 :     Round(e, f, g, h, a, b, c, d, 0x90befffa, w12 += sigma1(w10) + w5 + sigma0(w13));</span>
+<span class="lineNum">     117 </span><span class="lineCov">      43011 :     Round(d, e, f, g, h, a, b, c, 0xa4506ceb, w13 += sigma1(w11) + w6 + sigma0(w14));</span>
+<span class="lineNum">     118 </span><span class="lineCov">      43011 :     Round(c, d, e, f, g, h, a, b, 0xbef9a3f7, w14 + sigma1(w12) + w7 + sigma0(w15));</span>
+<span class="lineNum">     119 </span><span class="lineCov">      43011 :     Round(b, c, d, e, f, g, h, a, 0xc67178f2, w15 + sigma1(w13) + w8 + sigma0(w0));</span>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineCov">      43011 :     s[0] += a;</span>
+<span class="lineNum">     122 </span><span class="lineCov">      43011 :     s[1] += b;</span>
+<span class="lineNum">     123 </span><span class="lineCov">      43011 :     s[2] += c;</span>
+<span class="lineNum">     124 </span><span class="lineCov">      43011 :     s[3] += d;</span>
+<span class="lineNum">     125 </span><span class="lineCov">      43011 :     s[4] += e;</span>
+<span class="lineNum">     126 </span><span class="lineCov">      43011 :     s[5] += f;</span>
+<span class="lineNum">     127 </span><span class="lineCov">      43011 :     s[6] += g;</span>
+<span class="lineNum">     128 </span><span class="lineCov">      43011 :     s[7] += h;</span>
+<a name="129"><span class="lineNum">     129 </span><span class="lineCov">      43011 : }</span></a>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">      89929 : static void secp256k1_sha256_write(secp256k1_sha256_t *hash, const unsigned char *data, size_t len) {</span>
+<span class="lineNum">     132 </span><span class="lineCov">      89929 :     size_t bufsize = hash-&gt;bytes &amp; 0x3F;</span>
+<span class="lineNum">     133 </span><span class="lineCov">      89929 :     hash-&gt;bytes += len;</span>
+<span class="lineNum">     134 </span><span class="lineCov">     222868 :     while (bufsize + len &gt;= 64) {</span>
+<span class="lineNum">     135 </span>            :         /* Fill the buffer, and process it. */
+<span class="lineNum">     136 </span><span class="lineCov">      86022 :         memcpy(((unsigned char*)hash-&gt;buf) + bufsize, data, 64 - bufsize);</span>
+<span class="lineNum">     137 </span><span class="lineCov">      43011 :         data += 64 - bufsize;</span>
+<span class="lineNum">     138 </span><span class="lineCov">      43011 :         len -= 64 - bufsize;</span>
+<span class="lineNum">     139 </span><span class="lineCov">      43011 :         secp256k1_sha256_transform(hash-&gt;s, hash-&gt;buf);</span>
+<span class="lineNum">     140 </span><span class="lineCov">      43011 :         bufsize = 0;</span>
+<span class="lineNum">     141 </span>            :     }
+<span class="lineNum">     142 </span><span class="lineCov">      89928 :     if (len) {</span>
+<span class="lineNum">     143 </span>            :         /* Fill the buffer with what remains. */
+<span class="lineNum">     144 </span><span class="lineCov">      50829 :         memcpy(((unsigned char*)hash-&gt;buf) + bufsize, data, len);</span>
+<span class="lineNum">     145 </span>            :     }
+<a name="146"><span class="lineNum">     146 </span><span class="lineCov">      89928 : }</span></a>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineCov">      19551 : static void secp256k1_sha256_finalize(secp256k1_sha256_t *hash, unsigned char *out32) {</span>
+<span class="lineNum">     149 </span>            :     static const unsigned char pad[64] = {0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+<span class="lineNum">     150 </span>            :     uint32_t sizedesc[2];
+<span class="lineNum">     151 </span>            :     uint32_t out[8];
+<span class="lineNum">     152 </span><span class="lineCov">      19551 :     int i = 0;</span>
+<span class="lineNum">     153 </span><span class="lineCov">      19551 :     sizedesc[0] = BE32(hash-&gt;bytes &gt;&gt; 29);</span>
+<span class="lineNum">     154 </span><span class="lineCov">      19551 :     sizedesc[1] = BE32(hash-&gt;bytes &lt;&lt; 3);</span>
+<span class="lineNum">     155 </span><span class="lineCov">      19551 :     secp256k1_sha256_write(hash, pad, 1 + ((119 - (hash-&gt;bytes % 64)) % 64));</span>
+<span class="lineNum">     156 </span><span class="lineCov">      19552 :     secp256k1_sha256_write(hash, (const unsigned char*)sizedesc, 8);</span>
+<span class="lineNum">     157 </span><span class="lineCov">     175960 :     for (i = 0; i &lt; 8; i++) {</span>
+<span class="lineNum">     158 </span><span class="lineCov">     156408 :         out[i] = BE32(hash-&gt;s[i]);</span>
+<span class="lineNum">     159 </span><span class="lineCov">     156408 :         hash-&gt;s[i] = 0;</span>
+<span class="lineNum">     160 </span>            :     }
+<span class="lineNum">     161 </span><span class="lineCov">      19552 :     memcpy(out32, (const unsigned char*)out, 32);</span>
+<a name="162"><span class="lineNum">     162 </span><span class="lineCov">      19552 : }</span></a>
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span><span class="lineCov">       9776 : static void secp256k1_hmac_sha256_initialize(secp256k1_hmac_sha256_t *hash, const unsigned char *key, size_t keylen) {</span>
+<span class="lineNum">     165 </span>            :     int n;
+<span class="lineNum">     166 </span>            :     unsigned char rkey[64];
+<span class="lineNum">     167 </span><span class="lineCov">       9776 :     if (keylen &lt;= 64) {</span>
+<span class="lineNum">     168 </span><span class="lineCov">       9776 :         memcpy(rkey, key, keylen);</span>
+<span class="lineNum">     169 </span><span class="lineCov">       9776 :         memset(rkey + keylen, 0, 64 - keylen);</span>
+<span class="lineNum">     170 </span>            :     } else {
+<span class="lineNum">     171 </span>            :         secp256k1_sha256_t sha256;
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :         secp256k1_sha256_initialize(&amp;sha256);</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :         secp256k1_sha256_write(&amp;sha256, key, keylen);</span>
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :         secp256k1_sha256_finalize(&amp;sha256, rkey);</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :         memset(rkey + 32, 0, 32);</span>
+<span class="lineNum">     176 </span>            :     }
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span><span class="lineCov">      19552 :     secp256k1_sha256_initialize(&amp;hash-&gt;outer);</span>
+<span class="lineNum">     179 </span><span class="lineCov">     635440 :     for (n = 0; n &lt; 64; n++) {</span>
+<span class="lineNum">     180 </span><span class="lineCov">     625664 :         rkey[n] ^= 0x5c;</span>
+<span class="lineNum">     181 </span>            :     }
+<span class="lineNum">     182 </span><span class="lineCov">       9776 :     secp256k1_sha256_write(&amp;hash-&gt;outer, rkey, 64);</span>
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span><span class="lineCov">      19552 :     secp256k1_sha256_initialize(&amp;hash-&gt;inner);</span>
+<span class="lineNum">     185 </span><span class="lineCov">     635440 :     for (n = 0; n &lt; 64; n++) {</span>
+<span class="lineNum">     186 </span><span class="lineCov">     625664 :         rkey[n] ^= 0x5c ^ 0x36;</span>
+<span class="lineNum">     187 </span>            :     }
+<span class="lineNum">     188 </span><span class="lineCov">       9776 :     secp256k1_sha256_write(&amp;hash-&gt;inner, rkey, 64);</span>
+<span class="lineNum">     189 </span><span class="lineCov">       9776 :     memset(rkey, 0, 64);</span>
+<span class="lineNum">     190 </span><span class="lineCov">       9776 : }</span>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            : static void secp256k1_hmac_sha256_write(secp256k1_hmac_sha256_t *hash, const unsigned char *data, size_t size) {
+<span class="lineNum">     193 </span><span class="lineCov">      21502 :     secp256k1_sha256_write(&amp;hash-&gt;inner, data, size);</span>
+<a name="194"><span class="lineNum">     194 </span>            : }</a>
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span><span class="lineCov">       9776 : static void secp256k1_hmac_sha256_finalize(secp256k1_hmac_sha256_t *hash, unsigned char *out32) {</span>
+<span class="lineNum">     197 </span>            :     unsigned char temp[32];
+<span class="lineNum">     198 </span><span class="lineCov">       9776 :     secp256k1_sha256_finalize(&amp;hash-&gt;inner, temp);</span>
+<span class="lineNum">     199 </span><span class="lineCov">       9776 :     secp256k1_sha256_write(&amp;hash-&gt;outer, temp, 32);</span>
+<span class="lineNum">     200 </span><span class="lineCov">       9776 :     memset(temp, 0, 32);</span>
+<span class="lineNum">     201 </span><span class="lineCov">       9776 :     secp256k1_sha256_finalize(&amp;hash-&gt;outer, out32);</span>
+<span class="lineNum">     202 </span><span class="lineCov">       9776 : }</span>
+<a name="203"><span class="lineNum">     203 </span>            : </a>
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span><span class="lineCov">       1954 : static void secp256k1_rfc6979_hmac_sha256_initialize(secp256k1_rfc6979_hmac_sha256_t *rng, const unsigned char *key, size_t keylen, const unsigned char *msg, size_t msglen, const unsigned char *rnd, size_t rndlen) {</span>
+<span class="lineNum">     206 </span>            :     secp256k1_hmac_sha256_t hmac;
+<span class="lineNum">     207 </span>            :     static const unsigned char zero[1] = {0x00};
+<span class="lineNum">     208 </span>            :     static const unsigned char one[1] = {0x01};
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span><span class="lineCov">       3908 :     memset(rng-&gt;v, 0x01, 32); /* RFC6979 3.2.b. */</span>
+<span class="lineNum">     211 </span><span class="lineCov">       3908 :     memset(rng-&gt;k, 0x00, 32); /* RFC6979 3.2.c. */</span>
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            :     /* RFC6979 3.2.d. */
+<span class="lineNum">     214 </span><span class="lineCov">       1954 :     secp256k1_hmac_sha256_initialize(&amp;hmac, rng-&gt;k, 32);</span>
+<span class="lineNum">     215 </span><span class="lineCov">       3908 :     secp256k1_hmac_sha256_write(&amp;hmac, rng-&gt;v, 32);</span>
+<span class="lineNum">     216 </span><span class="lineCov">       1954 :     secp256k1_hmac_sha256_write(&amp;hmac, zero, 1);</span>
+<span class="lineNum">     217 </span><span class="lineCov">       1954 :     secp256k1_hmac_sha256_write(&amp;hmac, key, keylen);</span>
+<span class="lineNum">     218 </span><span class="lineCov">       1954 :     secp256k1_hmac_sha256_write(&amp;hmac, msg, msglen);</span>
+<span class="lineNum">     219 </span><span class="lineCov">       1954 :     if (rnd &amp;&amp; rndlen) {</span>
+<span class="lineNum">     220 </span>            :         /* RFC6979 3.6 &quot;Additional data&quot;. */
+<span class="lineNum">     221 </span>            :         secp256k1_hmac_sha256_write(&amp;hmac, rnd, rndlen);
+<span class="lineNum">     222 </span>            :     }
+<span class="lineNum">     223 </span><span class="lineCov">       1954 :     secp256k1_hmac_sha256_finalize(&amp;hmac, rng-&gt;k);</span>
+<span class="lineNum">     224 </span><span class="lineCov">       1954 :     secp256k1_hmac_sha256_initialize(&amp;hmac, rng-&gt;k, 32);</span>
+<span class="lineNum">     225 </span><span class="lineCov">       3908 :     secp256k1_hmac_sha256_write(&amp;hmac, rng-&gt;v, 32);</span>
+<span class="lineNum">     226 </span><span class="lineCov">       1954 :     secp256k1_hmac_sha256_finalize(&amp;hmac, rng-&gt;v);</span>
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :     /* RFC6979 3.2.f. */
+<span class="lineNum">     229 </span><span class="lineCov">       1954 :     secp256k1_hmac_sha256_initialize(&amp;hmac, rng-&gt;k, 32);</span>
+<span class="lineNum">     230 </span><span class="lineCov">       3908 :     secp256k1_hmac_sha256_write(&amp;hmac, rng-&gt;v, 32);</span>
+<span class="lineNum">     231 </span><span class="lineCov">       1954 :     secp256k1_hmac_sha256_write(&amp;hmac, one, 1);</span>
+<span class="lineNum">     232 </span><span class="lineCov">       1954 :     secp256k1_hmac_sha256_write(&amp;hmac, key, keylen);</span>
+<span class="lineNum">     233 </span><span class="lineCov">       1954 :     secp256k1_hmac_sha256_write(&amp;hmac, msg, msglen);</span>
+<span class="lineNum">     234 </span><span class="lineCov">       1954 :     if (rnd &amp;&amp; rndlen) {</span>
+<span class="lineNum">     235 </span>            :         /* RFC6979 3.6 &quot;Additional data&quot;. */
+<span class="lineNum">     236 </span>            :         secp256k1_hmac_sha256_write(&amp;hmac, rnd, rndlen);
+<span class="lineNum">     237 </span>            :     }
+<span class="lineNum">     238 </span><span class="lineCov">       1954 :     secp256k1_hmac_sha256_finalize(&amp;hmac, rng-&gt;k);</span>
+<span class="lineNum">     239 </span><span class="lineCov">       1954 :     secp256k1_hmac_sha256_initialize(&amp;hmac, rng-&gt;k, 32);</span>
+<span class="lineNum">     240 </span><span class="lineCov">       3908 :     secp256k1_hmac_sha256_write(&amp;hmac, rng-&gt;v, 32);</span>
+<span class="lineNum">     241 </span><span class="lineCov">       1954 :     secp256k1_hmac_sha256_finalize(&amp;hmac, rng-&gt;v);</span>
+<span class="lineNum">     242 </span><span class="lineCov">       1954 :     rng-&gt;retry = 0;</span>
+<a name="243"><span class="lineNum">     243 </span><span class="lineCov">       1954 : }</span></a>
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span><span class="lineCov">       1956 : static void secp256k1_rfc6979_hmac_sha256_generate(secp256k1_rfc6979_hmac_sha256_t *rng, unsigned char *out, size_t outlen) {</span>
+<span class="lineNum">     246 </span>            :     /* RFC6979 3.2.h. */
+<span class="lineNum">     247 </span>            :     static const unsigned char zero[1] = {0x00};
+<span class="lineNum">     248 </span><span class="lineCov">       1956 :     if (rng-&gt;retry) {</span>
+<span class="lineNum">     249 </span>            :         secp256k1_hmac_sha256_t hmac;
+<span class="lineNum">     250 </span><span class="lineCov">          2 :         secp256k1_hmac_sha256_initialize(&amp;hmac, rng-&gt;k, 32);</span>
+<span class="lineNum">     251 </span><span class="lineCov">          4 :         secp256k1_hmac_sha256_write(&amp;hmac, rng-&gt;v, 32);</span>
+<span class="lineNum">     252 </span><span class="lineCov">          2 :         secp256k1_hmac_sha256_write(&amp;hmac, zero, 1);</span>
+<span class="lineNum">     253 </span><span class="lineCov">          2 :         secp256k1_hmac_sha256_finalize(&amp;hmac, rng-&gt;k);</span>
+<span class="lineNum">     254 </span><span class="lineCov">          2 :         secp256k1_hmac_sha256_initialize(&amp;hmac, rng-&gt;k, 32);</span>
+<span class="lineNum">     255 </span><span class="lineCov">          4 :         secp256k1_hmac_sha256_write(&amp;hmac, rng-&gt;v, 32);</span>
+<span class="lineNum">     256 </span><span class="lineCov">          2 :         secp256k1_hmac_sha256_finalize(&amp;hmac, rng-&gt;v);</span>
+<span class="lineNum">     257 </span>            :     }
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span><span class="lineCov">       3912 :     while (outlen &gt; 0) {</span>
+<span class="lineNum">     260 </span>            :         secp256k1_hmac_sha256_t hmac;
+<span class="lineNum">     261 </span><span class="lineCov">       1956 :         int now = outlen;</span>
+<span class="lineNum">     262 </span><span class="lineCov">       1956 :         secp256k1_hmac_sha256_initialize(&amp;hmac, rng-&gt;k, 32);</span>
+<span class="lineNum">     263 </span><span class="lineCov">       3912 :         secp256k1_hmac_sha256_write(&amp;hmac, rng-&gt;v, 32);</span>
+<span class="lineNum">     264 </span><span class="lineCov">       1956 :         secp256k1_hmac_sha256_finalize(&amp;hmac, rng-&gt;v);</span>
+<span class="lineNum">     265 </span><span class="lineCov">       1956 :         if (now &gt; 32) {</span>
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :             now = 32;</span>
+<span class="lineNum">     267 </span>            :         }
+<span class="lineNum">     268 </span><span class="lineCov">       3912 :         memcpy(out, rng-&gt;v, now);</span>
+<span class="lineNum">     269 </span><span class="lineCov">       1956 :         out += now;</span>
+<span class="lineNum">     270 </span><span class="lineCov">       1956 :         outlen -= now;</span>
+<span class="lineNum">     271 </span>            :     }
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span><span class="lineCov">       1956 :     rng-&gt;retry = 1;</span>
+<a name="274"><span class="lineNum">     274 </span><span class="lineCov">       1956 : }</span></a>
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span><span class="lineCov">       1954 : static void secp256k1_rfc6979_hmac_sha256_finalize(secp256k1_rfc6979_hmac_sha256_t *rng) {</span>
+<span class="lineNum">     277 </span><span class="lineCov">       3908 :     memset(rng-&gt;k, 0, 32);</span>
+<span class="lineNum">     278 </span><span class="lineCov">       3908 :     memset(rng-&gt;v, 0, 32);</span>
+<span class="lineNum">     279 </span><span class="lineCov">       1954 :     rng-&gt;retry = 0;</span>
+<span class="lineNum">     280 </span><span class="lineCov">       1954 : }</span>
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span>            : #undef Round
+<span class="lineNum">     284 </span>            : #undef sigma0
+<span class="lineNum">     285 </span>            : #undef sigma1
+<span class="lineNum">     286 </span>            : #undef Sigma0
+<span class="lineNum">     287 </span>            : #undef Sigma1
+<span class="lineNum">     288 </span>            : #undef Ch
+<span class="lineNum">     289 </span>            : #undef Maj
+<span class="lineNum">     290 </span>            : #undef ReadBE32
+<span class="lineNum">     291 </span>            : #undef WriteBE32
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,383 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/bits/predefined_ops.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5/bits</a> - predefined_ops.h<span style="font-size: 80%;"> (source / <a href="predefined_ops.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntryLo">62.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryLo">20.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Default predicates for internal use -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2013-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file predefined_ops.h
+<span class="lineNum">      26 </span>            :  *  This is an internal header file, included by other library headers.
+<span class="lineNum">      27 </span>            :  *  You should not attempt to use it directly.
+<span class="lineNum">      28 </span>            :  */
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #ifndef _GLIBCXX_PREDEFINED_OPS_H
+<span class="lineNum">      31 </span>            : #define _GLIBCXX_PREDEFINED_OPS_H       1
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace __gnu_cxx
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span>            : namespace __ops
+<span class="lineNum">      36 </span>            : {
+<span class="lineNum">      37 </span>            :   struct _Iter_less_iter
+<span class="lineNum">      38 </span>            :   {
+<span class="lineNum">      39 </span>            :     template&lt;typename _Iterator1, typename _Iterator2&gt;
+<span class="lineNum">      40 </span>            :       _GLIBCXX14_CONSTEXPR
+<span class="lineNum">      41 </span>            :       bool
+<span class="lineNum">      42 </span>            :       operator()(_Iterator1 __it1, _Iterator2 __it2) const
+<span class="lineNum">      43 </span><span class="lineCov">        559 :       { return *__it1 &lt; *__it2; }</span>
+<span class="lineNum">      44 </span>            :   };
+<span class="lineNum">      45 </span>            :   _GLIBCXX14_CONSTEXPR
+<span class="lineNum">      46 </span>            :   inline _Iter_less_iter
+<span class="lineNum">      47 </span>            :   __iter_less_iter()
+<span class="lineNum">      48 </span>            :   { return _Iter_less_iter(); }
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            :   struct _Iter_less_val
+<span class="lineNum">      51 </span>            :   {
+<span class="lineNum">      52 </span>            :     template&lt;typename _Iterator, typename _Value&gt;
+<span class="lineNum">      53 </span>            :       bool
+<span class="lineNum">      54 </span>            :       operator()(_Iterator __it, _Value&amp; __val) const
+<span class="lineNum">      55 </span><span class="lineCov">  216431610 :       { return *__it &lt; __val; }</span>
+<span class="lineNum">      56 </span>            :     };
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            :   inline _Iter_less_val
+<span class="lineNum">      59 </span>            :   __iter_less_val()
+<span class="lineNum">      60 </span>            :   { return _Iter_less_val(); }
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            :   inline _Iter_less_val
+<span class="lineNum">      63 </span>            :   __iter_comp_val(_Iter_less_iter)
+<span class="lineNum">      64 </span>            :   { return _Iter_less_val(); }
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :   struct _Val_less_iter
+<span class="lineNum">      67 </span>            :   {
+<span class="lineNum">      68 </span>            :     template&lt;typename _Value, typename _Iterator&gt;
+<span class="lineNum">      69 </span>            :       bool
+<span class="lineNum">      70 </span>            :       operator()(_Value&amp; __val, _Iterator __it) const
+<span class="lineNum">      71 </span>            :       { return __val &lt; *__it; }
+<span class="lineNum">      72 </span>            :     };
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :   inline _Val_less_iter
+<span class="lineNum">      75 </span>            :   __val_less_iter()
+<span class="lineNum">      76 </span>            :   { return _Val_less_iter(); }
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :   inline _Val_less_iter
+<span class="lineNum">      79 </span>            :   __val_comp_iter(_Iter_less_iter)
+<span class="lineNum">      80 </span>            :   { return _Val_less_iter(); }
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :   struct _Iter_equal_to_iter
+<span class="lineNum">      83 </span>            :   {
+<span class="lineNum">      84 </span>            :     template&lt;typename _Iterator1, typename _Iterator2&gt;
+<span class="lineNum">      85 </span>            :       bool
+<span class="lineNum">      86 </span>            :       operator()(_Iterator1 __it1, _Iterator2 __it2) const
+<span class="lineNum">      87 </span>            :       { return *__it1 == *__it2; }
+<span class="lineNum">      88 </span>            :     };
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            :   inline _Iter_equal_to_iter
+<span class="lineNum">      91 </span>            :   __iter_equal_to_iter()
+<span class="lineNum">      92 </span>            :   { return _Iter_equal_to_iter(); }
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :   struct _Iter_equal_to_val
+<span class="lineNum">      95 </span>            :   {
+<span class="lineNum">      96 </span>            :     template&lt;typename _Iterator, typename _Value&gt;
+<span class="lineNum">      97 </span>            :       bool
+<span class="lineNum">      98 </span>            :       operator()(_Iterator __it, _Value&amp; __val) const
+<span class="lineNum">      99 </span>            :       { return *__it == __val; }
+<span class="lineNum">     100 </span>            :     };
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :   inline _Iter_equal_to_val
+<span class="lineNum">     103 </span>            :   __iter_equal_to_val()
+<span class="lineNum">     104 </span>            :   { return _Iter_equal_to_val(); }
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            :   inline _Iter_equal_to_val
+<span class="lineNum">     107 </span>            :   __iter_comp_val(_Iter_equal_to_iter)
+<span class="lineNum">     108 </span>            :   { return _Iter_equal_to_val(); }
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            :   template&lt;typename _Compare&gt;
+<span class="lineNum">     111 </span>            :     struct _Iter_comp_iter
+<span class="lineNum">     112 </span>            :     {
+<span class="lineNum">     113 </span>            :       _Compare _M_comp;
+<span class="lineNum">     114 </span>            :       _GLIBCXX14_CONSTEXPR
+<span class="lineNum">     115 </span>            :       _Iter_comp_iter(_Compare __comp)
+<span class="lineNum">     116 </span>            :         : _M_comp(__comp)
+<span class="lineNum">     117 </span>            :       { }
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :       template&lt;typename _Iterator1, typename _Iterator2&gt;
+<a name="120"><span class="lineNum">     120 </span>            :         _GLIBCXX14_CONSTEXPR</a>
+<span class="lineNum">     121 </span>            :         bool
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :         operator()(_Iterator1 __it1, _Iterator2 __it2)</span>
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :         { return bool(_M_comp(*__it1, *__it2)); }</span>
+<span class="lineNum">     124 </span>            :     };
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            :   template&lt;typename _Compare&gt;
+<span class="lineNum">     127 </span>            :     _GLIBCXX14_CONSTEXPR
+<span class="lineNum">     128 </span>            :     inline _Iter_comp_iter&lt;_Compare&gt;
+<span class="lineNum">     129 </span>            :     __iter_comp_iter(_Compare __comp)
+<span class="lineNum">     130 </span>            :     { return _Iter_comp_iter&lt;_Compare&gt;(__comp); }
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            :   template&lt;typename _Compare&gt;
+<span class="lineNum">     133 </span>            :     struct _Iter_comp_val
+<span class="lineNum">     134 </span>            :     {
+<span class="lineNum">     135 </span>            :       _Compare _M_comp;
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :       _Iter_comp_val(_Compare __comp)
+<span class="lineNum">     138 </span>            :         : _M_comp(__comp)
+<span class="lineNum">     139 </span>            :       { }
+<span class="lineNum">     140 </span>            : 
+<a name="141"><span class="lineNum">     141 </span>            :       template&lt;typename _Iterator, typename _Value&gt;</a>
+<span class="lineNum">     142 </span>            :         bool
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :         operator()(_Iterator __it, _Value&amp; __val)</span>
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :         { return bool(_M_comp(*__it, __val)); }</span>
+<span class="lineNum">     145 </span>            :     };
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            :   template&lt;typename _Compare&gt;
+<span class="lineNum">     148 </span>            :    inline _Iter_comp_val&lt;_Compare&gt;
+<span class="lineNum">     149 </span>            :     __iter_comp_val(_Compare __comp)
+<span class="lineNum">     150 </span>            :     { return _Iter_comp_val&lt;_Compare&gt;(__comp); }
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :   template&lt;typename _Compare&gt;
+<span class="lineNum">     153 </span>            :     inline _Iter_comp_val&lt;_Compare&gt;
+<span class="lineNum">     154 </span>            :     __iter_comp_val(_Iter_comp_iter&lt;_Compare&gt; __comp)
+<span class="lineNum">     155 </span>            :     { return _Iter_comp_val&lt;_Compare&gt;(__comp._M_comp); }
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            :   template&lt;typename _Compare&gt;
+<span class="lineNum">     158 </span>            :     struct _Val_comp_iter
+<span class="lineNum">     159 </span>            :     {
+<span class="lineNum">     160 </span>            :       _Compare _M_comp;
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :       _Val_comp_iter(_Compare __comp)
+<span class="lineNum">     163 </span>            :         : _M_comp(__comp)
+<span class="lineNum">     164 </span>            :       { }
+<span class="lineNum">     165 </span>            : 
+<a name="166"><span class="lineNum">     166 </span>            :       template&lt;typename _Value, typename _Iterator&gt;</a>
+<span class="lineNum">     167 </span>            :         bool
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :         operator()(_Value&amp; __val, _Iterator __it)</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :         { return bool(_M_comp(__val, *__it)); }</span>
+<span class="lineNum">     170 </span>            :     };
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :   template&lt;typename _Compare&gt;
+<span class="lineNum">     173 </span>            :     inline _Val_comp_iter&lt;_Compare&gt;
+<span class="lineNum">     174 </span>            :     __val_comp_iter(_Compare __comp)
+<span class="lineNum">     175 </span>            :     { return _Val_comp_iter&lt;_Compare&gt;(__comp); }
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :   template&lt;typename _Compare&gt;
+<span class="lineNum">     178 </span>            :     inline _Val_comp_iter&lt;_Compare&gt;
+<span class="lineNum">     179 </span>            :     __val_comp_iter(_Iter_comp_iter&lt;_Compare&gt; __comp)
+<span class="lineNum">     180 </span>            :     { return _Val_comp_iter&lt;_Compare&gt;(__comp._M_comp); }
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            :   template&lt;typename _Value&gt;
+<span class="lineNum">     183 </span>            :     struct _Iter_equals_val
+<span class="lineNum">     184 </span>            :     {
+<span class="lineNum">     185 </span>            :       _Value&amp; _M_value;
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :       _Iter_equals_val(_Value&amp; __value)
+<span class="lineNum">     188 </span>            :         : _M_value(__value)
+<span class="lineNum">     189 </span>            :       { }
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            :       template&lt;typename _Iterator&gt;
+<span class="lineNum">     192 </span>            :         bool
+<span class="lineNum">     193 </span>            :         operator()(_Iterator __it)
+<span class="lineNum">     194 </span><span class="lineCov">       2199 :         { return *__it == _M_value; }</span>
+<span class="lineNum">     195 </span>            :     };
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :   template&lt;typename _Value&gt;
+<span class="lineNum">     198 </span>            :     inline _Iter_equals_val&lt;_Value&gt;
+<span class="lineNum">     199 </span>            :     __iter_equals_val(_Value&amp; __val)
+<span class="lineNum">     200 </span><span class="lineCov">        290 :     { return _Iter_equals_val&lt;_Value&gt;(__val); }</span>
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            :   template&lt;typename _Iterator1&gt;
+<span class="lineNum">     203 </span>            :     struct _Iter_equals_iter
+<span class="lineNum">     204 </span>            :     {
+<span class="lineNum">     205 </span>            :       typename std::iterator_traits&lt;_Iterator1&gt;::reference _M_ref;
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :       _Iter_equals_iter(_Iterator1 __it1)
+<span class="lineNum">     208 </span>            :         : _M_ref(*__it1)
+<span class="lineNum">     209 </span>            :       { }
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :       template&lt;typename _Iterator2&gt;
+<span class="lineNum">     212 </span>            :         bool
+<span class="lineNum">     213 </span>            :         operator()(_Iterator2 __it2)
+<span class="lineNum">     214 </span>            :         { return *__it2 == _M_ref; }
+<span class="lineNum">     215 </span>            :     };
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :   template&lt;typename _Iterator&gt;
+<span class="lineNum">     218 </span>            :     inline _Iter_equals_iter&lt;_Iterator&gt;
+<span class="lineNum">     219 </span>            :     __iter_comp_iter(_Iter_equal_to_iter, _Iterator __it)
+<span class="lineNum">     220 </span>            :     { return _Iter_equals_iter&lt;_Iterator&gt;(__it); }
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            :   template&lt;typename _Predicate&gt;
+<span class="lineNum">     223 </span><span class="lineCov">         12 :     struct _Iter_pred</span>
+<span class="lineNum">     224 </span>            :     {
+<span class="lineNum">     225 </span>            :       _Predicate _M_pred;
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span>            :       _Iter_pred(_Predicate __pred)
+<span class="lineNum">     228 </span><span class="lineCov">          4 :         : _M_pred(__pred)</span>
+<span class="lineNum">     229 </span>            :       { }
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :       template&lt;typename _Iterator&gt;
+<span class="lineNum">     232 </span>            :         bool
+<span class="lineNum">     233 </span>            :         operator()(_Iterator __it)
+<span class="lineNum">     234 </span><span class="lineCov">   47196133 :         { return bool(_M_pred(*__it)); }</span>
+<span class="lineNum">     235 </span>            :     };
+<span class="lineNum">     236 </span>            : 
+<a name="237"><span class="lineNum">     237 </span>            :   template&lt;typename _Predicate&gt;</a>
+<span class="lineNum">     238 </span>            :     inline _Iter_pred&lt;_Predicate&gt;
+<span class="lineNum">     239 </span><span class="lineCov">          4 :     __pred_iter(_Predicate __pred)</span>
+<span class="lineNum">     240 </span><span class="lineCov">         84 :     { return _Iter_pred&lt;_Predicate&gt;(__pred); }</span>
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            :   template&lt;typename _Compare, typename _Value&gt;
+<span class="lineNum">     243 </span>            :     struct _Iter_comp_to_val
+<span class="lineNum">     244 </span>            :     {
+<span class="lineNum">     245 </span>            :       _Compare _M_comp;
+<span class="lineNum">     246 </span>            :       _Value&amp; _M_value;
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :       _Iter_comp_to_val(_Compare __comp, _Value&amp; __value)
+<span class="lineNum">     249 </span>            :         : _M_comp(__comp), _M_value(__value)
+<span class="lineNum">     250 </span>            :       { }
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            :       template&lt;typename _Iterator&gt;
+<span class="lineNum">     253 </span>            :         bool
+<span class="lineNum">     254 </span>            :         operator()(_Iterator __it)
+<span class="lineNum">     255 </span>            :         { return bool(_M_comp(*__it, _M_value)); }
+<span class="lineNum">     256 </span>            :     };
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            :   template&lt;typename _Compare, typename _Value&gt;
+<span class="lineNum">     259 </span>            :     _Iter_comp_to_val&lt;_Compare, _Value&gt;
+<span class="lineNum">     260 </span>            :     __iter_comp_val(_Compare __comp, _Value &amp;__val)
+<span class="lineNum">     261 </span>            :     { return _Iter_comp_to_val&lt;_Compare, _Value&gt;(__comp, __val); }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            :   template&lt;typename _Compare, typename _Iterator1&gt;
+<span class="lineNum">     264 </span>            :     struct _Iter_comp_to_iter
+<span class="lineNum">     265 </span>            :     {
+<span class="lineNum">     266 </span>            :       _Compare _M_comp;
+<span class="lineNum">     267 </span>            :       typename std::iterator_traits&lt;_Iterator1&gt;::reference _M_ref;
+<span class="lineNum">     268 </span>            : 
+<span class="lineNum">     269 </span>            :       _Iter_comp_to_iter(_Compare __comp, _Iterator1 __it1)
+<span class="lineNum">     270 </span>            :         : _M_comp(__comp), _M_ref(*__it1)
+<span class="lineNum">     271 </span>            :       { }
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span>            :       template&lt;typename _Iterator2&gt;
+<span class="lineNum">     274 </span>            :         bool
+<span class="lineNum">     275 </span>            :         operator()(_Iterator2 __it2)
+<span class="lineNum">     276 </span>            :         { return bool(_M_comp(*__it2, _M_ref)); }
+<span class="lineNum">     277 </span>            :     };
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            :   template&lt;typename _Compare, typename _Iterator&gt;
+<span class="lineNum">     280 </span>            :     inline _Iter_comp_to_iter&lt;_Compare, _Iterator&gt;
+<span class="lineNum">     281 </span>            :     __iter_comp_iter(_Iter_comp_iter&lt;_Compare&gt; __comp, _Iterator __it)
+<span class="lineNum">     282 </span>            :     { return _Iter_comp_to_iter&lt;_Compare, _Iterator&gt;(__comp._M_comp, __it); }
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            :   template&lt;typename _Predicate&gt;
+<span class="lineNum">     285 </span>            :     struct _Iter_negate
+<span class="lineNum">     286 </span>            :     {
+<span class="lineNum">     287 </span>            :       _Predicate _M_pred;
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            :       _Iter_negate(_Predicate __pred)
+<span class="lineNum">     290 </span>            :         : _M_pred(__pred)
+<span class="lineNum">     291 </span>            :       { }
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            :       template&lt;typename _Iterator&gt;
+<span class="lineNum">     294 </span>            :         bool
+<span class="lineNum">     295 </span>            :         operator()(_Iterator __it)
+<span class="lineNum">     296 </span><span class="lineCov">        756 :         { return !bool(_M_pred(*__it)); }</span>
+<span class="lineNum">     297 </span>            :     };
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span>            :   template&lt;typename _Predicate&gt;
+<span class="lineNum">     300 </span>            :     inline _Iter_negate&lt;_Predicate&gt;
+<span class="lineNum">     301 </span>            :     __negate(_Iter_pred&lt;_Predicate&gt; __pred)
+<span class="lineNum">     302 </span>            :     { return _Iter_negate&lt;_Predicate&gt;(__pred._M_pred); }
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span>            : } // namespace __ops
+<span class="lineNum">     305 </span>            : } // namespace __gnu_cxx
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

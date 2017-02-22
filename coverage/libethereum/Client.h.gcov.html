@@ -1,0 +1,417 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/Client.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - Client.h<span style="font-size: 80%;"> (source / <a href="Client.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntryLo">68.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryMed">75.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Client.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;thread&gt;
+<span class="lineNum">      25 </span>            : #include &lt;condition_variable&gt;
+<span class="lineNum">      26 </span>            : #include &lt;mutex&gt;
+<span class="lineNum">      27 </span>            : #include &lt;list&gt;
+<span class="lineNum">      28 </span>            : #include &lt;queue&gt;
+<span class="lineNum">      29 </span>            : #include &lt;atomic&gt;
+<span class="lineNum">      30 </span>            : #include &lt;string&gt;
+<span class="lineNum">      31 </span>            : #include &lt;array&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;libdevcore/CommonIO.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;libdevcore/Guards.h&gt;
+<span class="lineNum">      35 </span>            : #include &lt;libdevcore/Worker.h&gt;
+<span class="lineNum">      36 </span>            : #include &lt;libethcore/SealEngine.h&gt;
+<span class="lineNum">      37 </span>            : #include &lt;libethcore/ABI.h&gt;
+<span class="lineNum">      38 </span>            : #include &lt;libp2p/Common.h&gt;
+<span class="lineNum">      39 </span>            : #include &quot;BlockChain.h&quot;
+<span class="lineNum">      40 </span>            : #include &quot;Block.h&quot;
+<span class="lineNum">      41 </span>            : #include &quot;CommonNet.h&quot;
+<span class="lineNum">      42 </span>            : #include &quot;ClientBase.h&quot;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : namespace dev
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span>            : namespace eth
+<span class="lineNum">      47 </span>            : {
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : class Client;
+<span class="lineNum">      50 </span>            : class DownloadMan;
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : enum ClientWorkState
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span>            :         Active = 0,
+<span class="lineNum">      55 </span>            :         Deleting,
+<span class="lineNum">      56 </span>            :         Deleted
+<span class="lineNum">      57 </span>            : };
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : struct ClientNote: public LogChannel { static const char* name(); static const int verbosity = 2; };
+<span class="lineNum">      60 </span>            : struct ClientChat: public LogChannel { static const char* name(); static const int verbosity = 4; };
+<span class="lineNum">      61 </span>            : struct ClientTrace: public LogChannel { static const char* name(); static const int verbosity = 7; };
+<span class="lineNum">      62 </span>            : struct ClientDetail: public LogChannel { static const char* name(); static const int verbosity = 14; };
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">          1 : struct ActivityReport</span>
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span>            :         unsigned ticks = 0;
+<span class="lineNum">      67 </span>            :         std::chrono::system_clock::time_point since = std::chrono::system_clock::now();
+<span class="lineNum">      68 </span>            : };
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, ActivityReport const&amp; _r);
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : /**
+<span class="lineNum">      73 </span>            :  * @brief Main API hub for interfacing with Ethereum.
+<span class="lineNum">      74 </span>            :  */
+<span class="lineNum">      75 </span>            : class Client: public ClientBase, protected Worker
+<span class="lineNum">      76 </span>            : {
+<span class="lineNum">      77 </span>            : public:
+<span class="lineNum">      78 </span>            :         Client(
+<span class="lineNum">      79 </span>            :                 ChainParams const&amp; _params,
+<span class="lineNum">      80 </span>            :                 int _networkID,
+<span class="lineNum">      81 </span>            :                 p2p::Host* _host,
+<span class="lineNum">      82 </span>            :                 std::shared_ptr&lt;GasPricer&gt; _gpForAdoption,
+<span class="lineNum">      83 </span>            :                 std::string const&amp; _dbPath = std::string(),
+<span class="lineNum">      84 </span>            :                 WithExisting _forceAction = WithExisting::Trust,
+<span class="lineNum">      85 </span>            :                 TransactionQueue::Limits const&amp; _l = TransactionQueue::Limits{1024, 1024}
+<span class="lineNum">      86 </span>            :         );
+<span class="lineNum">      87 </span>            :         /// Destructor.
+<span class="lineNum">      88 </span>            :         virtual ~Client();
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            :         /// Get information on this chain.
+<span class="lineNum">      91 </span><span class="lineCov">          3 :         ChainParams const&amp; chainParams() const { return bc().chainParams(); }</span>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            :         /// Resets the gas pricer to some other object.
+<span class="lineNum">      94 </span>            :         void setGasPricer(std::shared_ptr&lt;GasPricer&gt; _gp) { m_gp = _gp; }
+<span class="lineNum">      95 </span>            :         std::shared_ptr&lt;GasPricer&gt; gasPricer() const { return m_gp; }
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            :         /// Blocks until all pending transactions have been processed.
+<span class="lineNum">      98 </span>            :         virtual void flushTransactions() override;
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :         /// Queues a block for import.
+<span class="lineNum">     101 </span>            :         ImportResult queueBlock(bytes const&amp; _block, bool _isSafe = false);
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            :         using Interface::call; // to remove warning about hiding virtual function
+<span class="lineNum">     104 </span>            :         /// Makes the given call. Nothing is recorded into the state. This cheats by creating a null address and endowing it with a lot of ETH.
+<span class="lineNum">     105 </span>            :         ExecutionResult call(Address _dest, bytes const&amp; _data = bytes(), u256 _gas = 125000, u256 _value = 0, u256 _gasPrice = 1 * ether, Address const&amp; _from = Address());
+<a name="106"><span class="lineNum">     106 </span>            : </a>
+<span class="lineNum">     107 </span>            :         /// Get the remaining gas limit in this block.
+<a name="108"><span class="lineNum">     108 </span><span class="lineCov">          2 :         virtual u256 gasLimitRemaining() const override { return m_postSeal.gasLimitRemaining(); }</span></a>
+<span class="lineNum">     109 </span>            :         /// Get the gas bid price
+<span class="lineNum">     110 </span><span class="lineCov">          2 :         virtual u256 gasBidPrice() const override { return m_gp-&gt;bid(); }</span>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            :         // [PRIVATE API - only relevant for base clients, not available in general]
+<span class="lineNum">     113 </span>            :         /// Get the block.
+<span class="lineNum">     114 </span>            :         dev::eth::Block block(h256 const&amp; _blockHash, PopulationStatistics* o_stats) const;
+<span class="lineNum">     115 </span>            :         /// Get the state of the given block part way through execution, immediately before transaction
+<span class="lineNum">     116 </span>            :         /// index @a _txi.
+<span class="lineNum">     117 </span>            :         dev::eth::State state(unsigned _txi, h256 const&amp; _block) const;
+<span class="lineNum">     118 </span>            :         /// Get the state of the currently pending block part way through execution, immediately before
+<span class="lineNum">     119 </span>            :         /// transaction index @a _txi.
+<span class="lineNum">     120 </span>            :         dev::eth::State state(unsigned _txi) const;
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :         /// Get the object representing the current state of Ethereum.
+<span class="lineNum">     123 </span>            :         dev::eth::Block postState() const { ReadGuard l(x_postSeal); return m_postSeal; }
+<span class="lineNum">     124 </span>            :         /// Get the object representing the current canonical blockchain.
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :         BlockChain const&amp; blockChain() const { return bc(); }</span>
+<span class="lineNum">     126 </span>            :         /// Get some information on the block queue.
+<span class="lineNum">     127 </span>            :         BlockQueueStatus blockQueueStatus() const { return m_bq.status(); }
+<span class="lineNum">     128 </span>            :         /// Get some information on the block syncing.
+<span class="lineNum">     129 </span>            :         SyncStatus syncStatus() const override;
+<span class="lineNum">     130 </span>            :         /// Get the block queue.
+<span class="lineNum">     131 </span>            :         BlockQueue const&amp; blockQueue() const { return m_bq; }
+<span class="lineNum">     132 </span>            :         /// Get the block queue.
+<span class="lineNum">     133 </span>            :         OverlayDB const&amp; stateDB() const { return m_stateDB; }
+<span class="lineNum">     134 </span>            :         /// Get some information on the transaction queue.
+<span class="lineNum">     135 </span>            :         TransactionQueue::Status transactionQueueStatus() const { return m_tq.status(); }
+<span class="lineNum">     136 </span>            :         TransactionQueue::Limits transactionQueueLimits() const { return m_tq.limits(); }
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :         /// Freeze worker thread and sync some of the block queue.
+<span class="lineNum">     139 </span>            :         std::tuple&lt;ImportRoute, bool, unsigned&gt; syncQueue(unsigned _max = 1);
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            :         // Sealing stuff:
+<a name="142"><span class="lineNum">     142 </span>            :         // Note: &quot;mining&quot;/&quot;miner&quot; is deprecated. Use &quot;sealing&quot;/&quot;sealer&quot;.</a>
+<a name="143"><span class="lineNum">     143 </span>            : </a>
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :         virtual Address author() const override { ReadGuard l(x_preSeal); return m_preSeal.author(); }</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :         virtual void setAuthor(Address const&amp; _us) override { WriteGuard l(x_preSeal); m_preSeal.setAuthor(_us); }</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            :         /// Type of sealers available for this seal engine.
+<span class="lineNum">     148 </span>            :         strings sealers() const { return sealEngine()-&gt;sealers(); }
+<span class="lineNum">     149 </span>            :         /// Current sealer in use.
+<span class="lineNum">     150 </span>            :         std::string sealer() const { return sealEngine()-&gt;sealer(); }
+<span class="lineNum">     151 </span>            :         /// Change sealer.
+<span class="lineNum">     152 </span>            :         void setSealer(std::string const&amp; _id) { sealEngine()-&gt;setSealer(_id); if (wouldSeal()) startSealing(); }
+<span class="lineNum">     153 </span>            :         /// Review option for the sealer.
+<span class="lineNum">     154 </span>            :         bytes sealOption(std::string const&amp; _name) const { return sealEngine()-&gt;option(_name); }
+<span class="lineNum">     155 </span>            :         /// Set option for the sealer.
+<span class="lineNum">     156 </span>            :         bool setSealOption(std::string const&amp; _name, bytes const&amp; _value) { auto ret = sealEngine()-&gt;setOption(_name, _value); if (wouldSeal()) startSealing(); return ret; }
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            :         /// Start sealing.
+<a name="159"><span class="lineNum">     159 </span>            :         void startSealing() override;</a>
+<span class="lineNum">     160 </span>            :         /// Stop sealing.
+<a name="161"><span class="lineNum">     161 </span><span class="lineCov">          1 :         void stopSealing() override { m_wouldSeal = false; }</span></a>
+<span class="lineNum">     162 </span>            :         /// Are we sealing now?
+<span class="lineNum">     163 </span><span class="lineCov">         35 :         bool wouldSeal() const override { return m_wouldSeal; }</span>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :         /// Are we updating the chain (syncing or importing a new block)?
+<span class="lineNum">     166 </span>            :         bool isSyncing() const override;
+<span class="lineNum">     167 </span>            :         /// Are we syncing the chain?
+<span class="lineNum">     168 </span>            :         bool isMajorSyncing() const override;
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :         /// Gets the network id.
+<span class="lineNum">     171 </span>            :         u256 networkId() const override;
+<span class="lineNum">     172 </span>            :         /// Sets the network id.
+<span class="lineNum">     173 </span>            :         void setNetworkId(u256 const&amp; _n) override;
+<a name="174"><span class="lineNum">     174 </span>            : </a>
+<span class="lineNum">     175 </span>            :         /// Get the seal engine.
+<span class="lineNum">     176 </span><span class="lineCov">         70 :         SealEngineFace* sealEngine() const override { return bc().sealEngine(); }</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :         // Debug stuff:
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            :         DownloadMan const* downloadMan() const;
+<span class="lineNum">     181 </span>            :         /// Clears pending transactions. Just for debug use.
+<span class="lineNum">     182 </span>            :         void clearPending();
+<span class="lineNum">     183 </span>            :         /// Kills the blockchain. Just for debug use.
+<span class="lineNum">     184 </span>            :         void killChain() { reopenChain(WithExisting::Kill); }
+<span class="lineNum">     185 </span>            :         /// Reloads the blockchain. Just for debug use.
+<span class="lineNum">     186 </span>            :         void reopenChain(ChainParams const&amp; _p, WithExisting _we = WithExisting::Trust);
+<span class="lineNum">     187 </span>            :         void reopenChain(WithExisting _we);
+<span class="lineNum">     188 </span>            :         /// Retries all blocks with unknown parents.
+<span class="lineNum">     189 </span>            :         void retryUnknown() { m_bq.retryAllUnknown(); }
+<span class="lineNum">     190 </span>            :         /// Get a report of activity.
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :         ActivityReport activityReport() { ActivityReport ret; std::swap(m_report, ret); return ret; }</span>
+<span class="lineNum">     192 </span>            :         /// Set the extra data that goes into sealed blocks.
+<span class="lineNum">     193 </span><span class="lineCov">          1 :         void setExtraData(bytes const&amp; _extraData) { m_extraData = _extraData; }</span>
+<span class="lineNum">     194 </span>            :         /// Rewind to a prior head.
+<span class="lineNum">     195 </span>            :         void rewind(unsigned _n);
+<span class="lineNum">     196 </span>            :         /// Rescue the chain.
+<span class="lineNum">     197 </span>            :         void rescue() { bc().rescue(m_stateDB); }
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            :         /// Queues a function to be executed in the main thread (that owns the blockchain, etc).
+<span class="lineNum">     200 </span>            :         void executeInMainThread(std::function&lt;void()&gt; const&amp; _function);
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            :         virtual Block block(h256 const&amp; _block) const override;
+<span class="lineNum">     203 </span>            :         using ClientBase::block;
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            : protected:
+<span class="lineNum">     206 </span>            :         /// Perform critical setup functions.
+<span class="lineNum">     207 </span>            :         /// Must be called in the constructor of the finally derived class.
+<span class="lineNum">     208 </span>            :         void init(p2p::Host* _extNet, std::string const&amp; _dbPath, WithExisting _forceAction, u256 _networkId);
+<a name="209"><span class="lineNum">     209 </span>            : </a>
+<a name="210"><span class="lineNum">     210 </span>            :         /// InterfaceStub methods</a>
+<span class="lineNum">     211 </span><span class="lineCov">         40 :         BlockChain&amp; bc() override { return m_bc; }</span>
+<span class="lineNum">     212 </span><span class="lineCov">         36 :         BlockChain const&amp; bc() const override { return m_bc; }</span>
+<span class="lineNum">     213 </span>            : 
+<a name="214"><span class="lineNum">     214 </span>            :         /// Returns the state object for the full block (i.e. the terminal state) for index _h.</a>
+<a name="215"><span class="lineNum">     215 </span>            :         /// Works properly with LatestBlock and PendingBlock.</a>
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :         virtual Block preSeal() const override { ReadGuard l(x_preSeal); return m_preSeal; }</span>
+<span class="lineNum">     217 </span><span class="lineCov">         12 :         virtual Block postSeal() const override { ReadGuard l(x_postSeal); return m_postSeal; }</span>
+<span class="lineNum">     218 </span>            :         virtual void prepareForTransaction() override;
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            :         /// Collate the changed filters for the bloom filter of the given pending transaction.
+<span class="lineNum">     221 </span>            :         /// Insert any filters that are activated into @a o_changed.
+<span class="lineNum">     222 </span>            :         void appendFromNewPending(TransactionReceipt const&amp; _receipt, h256Hash&amp; io_changed, h256 _sha3);
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            :         /// Collate the changed filters for the hash of the given block.
+<span class="lineNum">     225 </span>            :         /// Insert any filters that are activated into @a o_changed.
+<span class="lineNum">     226 </span>            :         void appendFromBlock(h256 const&amp; _blockHash, BlockPolarity _polarity, h256Hash&amp; io_changed);
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :         /// Record that the set of filters @a _filters have changed.
+<span class="lineNum">     229 </span>            :         /// This doesn't actually make any callbacks, but incrememnts some counters in m_watches.
+<span class="lineNum">     230 </span>            :         void noteChanged(h256Hash const&amp; _filters);
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            :         /// Submit
+<span class="lineNum">     233 </span>            :         virtual bool submitSealed(bytes const&amp; _s);
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            : protected:
+<span class="lineNum">     236 </span>            :         /// Called when Worker is starting.
+<span class="lineNum">     237 </span>            :         void startedWorking() override;
+<span class="lineNum">     238 </span>            : 
+<a name="239"><span class="lineNum">     239 </span>            :         /// Do some work. Handles blockchain maintenance and sealing.</a>
+<span class="lineNum">     240 </span>            :         void doWork(bool _doWait);
+<span class="lineNum">     241 </span><span class="lineCov">         34 :         void doWork() override { doWork(true); }</span>
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            :         /// Called when Worker is exiting.
+<span class="lineNum">     244 </span>            :         void doneWorking() override;
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            :         /// Called when wouldSeal(), pendingTransactions() have changed.
+<span class="lineNum">     247 </span>            :         void rejigSealing();
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            :         /// Called on chain changes
+<span class="lineNum">     250 </span>            :         void onDeadBlocks(h256s const&amp; _blocks, h256Hash&amp; io_changed);
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            :         /// Called on chain changes
+<span class="lineNum">     253 </span>            :         virtual void onNewBlocks(h256s const&amp; _blocks, h256Hash&amp; io_changed);
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            :         /// Called after processing blocks by onChainChanged(_ir)
+<span class="lineNum">     256 </span>            :         void resyncStateFromChain();
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            :         /// Clear working state of transactions
+<span class="lineNum">     259 </span>            :         void resetState();
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            :         /// Magically called when the chain has changed. An import route is provided.
+<span class="lineNum">     262 </span>            :         /// Called by either submitWork() or in our main thread through syncBlockQueue().
+<span class="lineNum">     263 </span>            :         void onChainChanged(ImportRoute const&amp; _ir);
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :         /// Signal handler for when the block queue needs processing.
+<span class="lineNum">     266 </span>            :         void syncBlockQueue();
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            :         /// Signal handler for when the block queue needs processing.
+<span class="lineNum">     269 </span>            :         void syncTransactionQueue();
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            :         /// Magically called when m_tq needs syncing. Be nice and don't block.
+<span class="lineNum">     272 </span><span class="lineCov">          4 :         void onTransactionQueueReady() { m_syncTransactionQueue = true; m_signalled.notify_all(); }</span>
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            :         /// Magically called when m_bq needs syncing. Be nice and don't block.
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 :         void onBlockQueueReady() { m_syncBlockQueue = true; m_signalled.notify_all(); }</span>
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            :         /// Called when the post state has changed (i.e. when more transactions are in it or we're sealing on a new block).
+<span class="lineNum">     278 </span>            :         /// This updates m_sealingInfo.
+<span class="lineNum">     279 </span>            :         void onPostStateChanged();
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span>            :         /// Does garbage collection on watches.
+<span class="lineNum">     282 </span>            :         void checkWatchGarbage();
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            :         /// Ticks various system-level objects.
+<span class="lineNum">     285 </span>            :         void tick();
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            :         /// Called when we have attempted to import a bad block.
+<span class="lineNum">     288 </span>            :         /// @warning May be called from any thread.
+<span class="lineNum">     289 </span>            :         void onBadBlock(Exception&amp; _ex) const;
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            :         /// Executes the pending functions in m_functionQueue
+<span class="lineNum">     292 </span>            :         void callQueuedFunctions();
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            :         BlockChain m_bc;                                                ///&lt; Maintains block database and owns the seal engine.
+<span class="lineNum">     295 </span>            :         BlockQueue m_bq;                                                ///&lt; Maintains a list of incoming blocks not yet on the blockchain (to be imported).
+<span class="lineNum">     296 </span>            :         std::shared_ptr&lt;GasPricer&gt; m_gp;          ///&lt; The gas pricer.
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            :         OverlayDB m_stateDB;                                    ///&lt; Acts as the central point for the state database, so multiple States can share it.
+<span class="lineNum">     299 </span>            :         mutable SharedMutex x_preSeal;                  ///&lt; Lock on m_preSeal.
+<span class="lineNum">     300 </span>            :         Block m_preSeal;                                                ///&lt; The present state of the client.
+<span class="lineNum">     301 </span>            :         mutable SharedMutex x_postSeal;                 ///&lt; Lock on m_postSeal.
+<span class="lineNum">     302 </span>            :         Block m_postSeal;                                               ///&lt; The state of the client which we're sealing (i.e. it'll have all the rewards added).
+<span class="lineNum">     303 </span>            :         mutable SharedMutex x_working;                  ///&lt; Lock on m_working.
+<span class="lineNum">     304 </span>            :         Block m_working;                                                ///&lt; The state of the client which we're sealing (i.e. it'll have all the rewards added), while we're actually working on it.
+<span class="lineNum">     305 </span>            :         BlockHeader m_sealingInfo;                              ///&lt; The header we're attempting to seal on (derived from m_postSeal).
+<span class="lineNum">     306 </span>            :         bool remoteActive() const;                              ///&lt; Is there an active and valid remote worker?
+<span class="lineNum">     307 </span>            :         bool m_remoteWorking = false;                   ///&lt; Has the remote worker recently been reset?
+<span class="lineNum">     308 </span>            :         std::atomic&lt;bool&gt; m_needStateReset = { false };                   ///&lt; Need reset working state to premin on next sync
+<span class="lineNum">     309 </span>            :         std::chrono::system_clock::time_point m_lastGetWork;    ///&lt; Is there an active and valid remote worker?
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            :         std::weak_ptr&lt;EthereumHost&gt; m_host;               ///&lt; Our Ethereum Host. Don't do anything if we can't lock.
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            :         Handler&lt;&gt; m_tqReady;
+<span class="lineNum">     314 </span>            :         Handler&lt;h256 const&amp;&gt; m_tqReplaced;
+<span class="lineNum">     315 </span>            :         Handler&lt;&gt; m_bqReady;
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            :         bool m_wouldSeal = false;                               ///&lt; True if we /should/ be sealing.
+<span class="lineNum">     318 </span>            :         bool m_wouldButShouldnot = false;               ///&lt; True if the last time we called rejigSealing wouldSeal() was true but sealer's shouldSeal() was false.
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span>            :         mutable std::chrono::system_clock::time_point m_lastGarbageCollection;
+<span class="lineNum">     321 </span>            :                                                                                         ///&lt; When did we last both doing GC on the watches?
+<span class="lineNum">     322 </span>            :         mutable std::chrono::system_clock::time_point m_lastTick = std::chrono::system_clock::now();
+<span class="lineNum">     323 </span>            :                                                                                         ///&lt; When did we last tick()?
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span>            :         unsigned m_syncAmount = 50;                             ///&lt; Number of blocks to sync in each go.
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span>            :         ActivityReport m_report;
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span>            :         SharedMutex x_functionQueue;
+<span class="lineNum">     330 </span>            :         std::queue&lt;std::function&lt;void()&gt;&gt; m_functionQueue;  ///&lt; Functions waiting to be executed in the main thread.
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span>            :         std::condition_variable m_signalled;
+<span class="lineNum">     333 </span>            :         Mutex x_signalled;
+<span class="lineNum">     334 </span>            :         std::atomic&lt;bool&gt; m_syncTransactionQueue = {false};
+<span class="lineNum">     335 </span>            :         std::atomic&lt;bool&gt; m_syncBlockQueue = {false};
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span>            :         bytes m_extraData;
+<span class="lineNum">     338 </span>            : };
+<span class="lineNum">     339 </span>            : 
+<span class="lineNum">     340 </span>            : }
+<span class="lineNum">     341 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

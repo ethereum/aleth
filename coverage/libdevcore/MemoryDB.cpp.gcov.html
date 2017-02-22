@@ -1,0 +1,267 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/MemoryDB.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - MemoryDB.cpp<span style="font-size: 80%;"> (source / <a href="MemoryDB.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">58</td>
+            <td class="headerCovTableEntry">60</td>
+            <td class="headerCovTableEntryHi">96.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryMed">86.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file MemoryDB.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;MemoryDB.h&quot;
+<span class="lineNum">      24 </span>            : using namespace std;
+<span class="lineNum">      25 </span>            : using namespace dev;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : namespace dev
+<a name="28"><span class="lineNum">      28 </span>            : {</a>
+<a name="29"><span class="lineNum">      29 </span>            : </a>
+<span class="lineNum">      30 </span><span class="lineNoCov">          0 : const char* DBChannel::name() { return &quot;TDB&quot;; }</span>
+<a name="31"><span class="lineNum">      31 </span><span class="lineNoCov">          0 : const char* DBWarn::name() { return &quot;TDB&quot;; }</span></a>
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span><span class="lineCov">         46 : std::unordered_map&lt;h256, std::string&gt; MemoryDB::get() const</span>
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">      36 </span>            :         ReadGuard l(x_this);
+<span class="lineNum">      37 </span>            : #endif
+<span class="lineNum">      38 </span><span class="lineCov">         46 :         std::unordered_map&lt;h256, std::string&gt; ret;</span>
+<span class="lineNum">      39 </span><span class="lineCov">        166 :         for (auto const&amp; i: m_main)</span>
+<span class="lineNum">      40 </span><span class="lineCov">         28 :                 if (!m_enforceRefs || i.second.second &gt; 0)</span>
+<span class="lineNum">      41 </span><span class="lineCov">        104 :                         ret.insert(make_pair(i.first, i.second.first));</span>
+<span class="lineNum">      42 </span><span class="lineCov">         46 :         return ret;</span>
+<a name="43"><span class="lineNum">      43 </span>            : }</a>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">     544466 : MemoryDB&amp; MemoryDB::operator=(MemoryDB const&amp; _c)</span>
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span><span class="lineCov">     544466 :         if (this == &amp;_c)</span>
+<span class="lineNum">      48 </span>            :                 return *this;
+<span class="lineNum">      49 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">      50 </span>            :         ReadGuard l(_c.x_this);
+<span class="lineNum">      51 </span>            :         WriteGuard l2(x_this);
+<span class="lineNum">      52 </span>            : #endif
+<span class="lineNum">      53 </span><span class="lineCov">    1088932 :         m_main = _c.m_main;</span>
+<span class="lineNum">      54 </span><span class="lineCov">    1088932 :         m_aux = _c.m_aux;</span>
+<span class="lineNum">      55 </span><span class="lineCov">     544466 :         return *this;</span>
+<a name="56"><span class="lineNum">      56 </span>            : }</a>
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span><span class="lineCov">    2431123 : std::string MemoryDB::lookup(h256 const&amp; _h) const</span>
+<span class="lineNum">      59 </span>            : {
+<span class="lineNum">      60 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">      61 </span>            :         ReadGuard l(x_this);
+<span class="lineNum">      62 </span>            : #endif
+<span class="lineNum">      63 </span><span class="lineCov">    4862246 :         auto it = m_main.find(_h);</span>
+<span class="lineNum">      64 </span><span class="lineCov">    4862246 :         if (it != m_main.end())</span>
+<span class="lineNum">      65 </span>            :         {
+<span class="lineNum">      66 </span><span class="lineCov">    2295773 :                 if (!m_enforceRefs || it-&gt;second.second &gt; 0)</span>
+<span class="lineNum">      67 </span><span class="lineCov">    2232784 :                         return it-&gt;second.first;</span>
+<span class="lineNum">      68 </span>            :                 else
+<span class="lineNum">      69 </span><span class="lineCov">          1 :                         cwarn &lt;&lt; &quot;Lookup required for value with refcount == 0. This is probably a critical trie issue&quot; &lt;&lt; _h;</span>
+<span class="lineNum">      70 </span>            :         }
+<span class="lineNum">      71 </span>            :         return std::string();
+<a name="72"><span class="lineNum">      72 </span>            : }</a>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineCov">     134828 : bool MemoryDB::exists(h256 const&amp; _h) const</span>
+<span class="lineNum">      75 </span>            : {
+<span class="lineNum">      76 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">      77 </span>            :         ReadGuard l(x_this);
+<span class="lineNum">      78 </span>            : #endif
+<span class="lineNum">      79 </span><span class="lineCov">     269656 :         auto it = m_main.find(_h);</span>
+<span class="lineNum">      80 </span><span class="lineCov">     270251 :         if (it != m_main.end() &amp;&amp; (!m_enforceRefs || it-&gt;second.second &gt; 0))</span>
+<span class="lineNum">      81 </span>            :                 return true;
+<span class="lineNum">      82 </span><span class="lineCov">         23 :         return false;</span>
+<a name="83"><span class="lineNum">      83 </span>            : }</a>
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span><span class="lineCov">     685760 : void MemoryDB::insert(h256 const&amp; _h, bytesConstRef _v)</span>
+<span class="lineNum">      86 </span>            : {
+<span class="lineNum">      87 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">      88 </span>            :         WriteGuard l(x_this);
+<span class="lineNum">      89 </span>            : #endif
+<span class="lineNum">      90 </span><span class="lineCov">    1371520 :         auto it = m_main.find(_h);</span>
+<span class="lineNum">      91 </span><span class="lineCov">    1371520 :         if (it != m_main.end())</span>
+<span class="lineNum">      92 </span>            :         {
+<span class="lineNum">      93 </span><span class="lineCov">     161348 :                 it-&gt;second.first = _v.toString();</span>
+<span class="lineNum">      94 </span><span class="lineCov">      40337 :                 it-&gt;second.second++;</span>
+<span class="lineNum">      95 </span>            :         }
+<span class="lineNum">      96 </span>            :         else
+<span class="lineNum">      97 </span><span class="lineCov">    4517961 :                 m_main[_h] = make_pair(_v.toString(), 1);</span>
+<span class="lineNum">      98 </span>            : #if ETH_PARANOIA
+<span class="lineNum">      99 </span>            :         dbdebug &lt;&lt; &quot;INST&quot; &lt;&lt; _h &lt;&lt; &quot;=&gt;&quot; &lt;&lt; m_main[_h].second;
+<span class="lineNum">     100 </span>            : #endif
+<a name="101"><span class="lineNum">     101 </span><span class="lineCov">     685760 : }</span></a>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">     416400 : bool MemoryDB::kill(h256 const&amp; _h)</span>
+<span class="lineNum">     104 </span>            : {
+<span class="lineNum">     105 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">     106 </span>            :         ReadGuard l(x_this);
+<span class="lineNum">     107 </span>            : #endif
+<span class="lineNum">     108 </span><span class="lineCov">     832800 :         if (m_main.count(_h))</span>
+<span class="lineNum">     109 </span>            :         {
+<span class="lineNum">     110 </span><span class="lineCov">     790776 :                 if (m_main[_h].second &gt; 0)</span>
+<span class="lineNum">     111 </span>            :                 {
+<span class="lineNum">     112 </span><span class="lineCov">     769208 :                         m_main[_h].second--;</span>
+<span class="lineNum">     113 </span><span class="lineCov">     384604 :                         return true;</span>
+<span class="lineNum">     114 </span>            :                 }
+<span class="lineNum">     115 </span>            : #if ETH_PARANOIA
+<span class="lineNum">     116 </span>            :                 else
+<span class="lineNum">     117 </span>            :                 {
+<span class="lineNum">     118 </span>            :                         // If we get to this point, then there was probably a node in the level DB which we need to remove and which we have previously
+<span class="lineNum">     119 </span>            :                         // used as part of the memory-based MemoryDB. Nothing to be worried about *as long as the node exists in the DB*.
+<span class="lineNum">     120 </span>            :                         dbdebug &lt;&lt; &quot;NOKILL-WAS&quot; &lt;&lt; _h;
+<span class="lineNum">     121 </span>            :                 }
+<span class="lineNum">     122 </span>            :                 dbdebug &lt;&lt; &quot;KILL&quot; &lt;&lt; _h &lt;&lt; &quot;=&gt;&quot; &lt;&lt; m_main[_h].second;
+<span class="lineNum">     123 </span>            :         }
+<span class="lineNum">     124 </span>            :         else
+<span class="lineNum">     125 </span>            :         {
+<span class="lineNum">     126 </span>            :                 dbdebug &lt;&lt; &quot;NOKILL&quot; &lt;&lt; _h;
+<span class="lineNum">     127 </span>            : #endif
+<span class="lineNum">     128 </span>            :         }
+<span class="lineNum">     129 </span>            :         return false;
+<a name="130"><span class="lineNum">     130 </span>            : }</a>
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span><span class="lineCov">      38295 : bytes MemoryDB::lookupAux(h256 const&amp; _h) const</span>
+<span class="lineNum">     133 </span>            : {
+<span class="lineNum">     134 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">     135 </span>            :         ReadGuard l(x_this);
+<span class="lineNum">     136 </span>            : #endif
+<span class="lineNum">     137 </span><span class="lineCov">      76590 :         auto it = m_aux.find(_h);</span>
+<span class="lineNum">     138 </span><span class="lineCov">      76590 :         if (it != m_aux.end() &amp;&amp; (!m_enforceRefs || it-&gt;second.second))</span>
+<span class="lineNum">     139 </span><span class="lineCov">      32592 :                 return it-&gt;second.first;</span>
+<span class="lineNum">     140 </span>            :         return bytes();
+<a name="141"><span class="lineNum">     141 </span>            : }</a>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineCov">          1 : void MemoryDB::removeAux(h256 const&amp; _h)</span>
+<span class="lineNum">     144 </span>            : {
+<span class="lineNum">     145 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">     146 </span>            :         WriteGuard l(x_this);
+<span class="lineNum">     147 </span>            : #endif
+<span class="lineNum">     148 </span><span class="lineCov">          2 :         m_aux[_h].second = false;</span>
+<a name="149"><span class="lineNum">     149 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineCov">     187893 : void MemoryDB::insertAux(h256 const&amp; _h, bytesConstRef _v)</span>
+<span class="lineNum">     152 </span>            : {
+<span class="lineNum">     153 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">     154 </span>            :         WriteGuard l(x_this);
+<span class="lineNum">     155 </span>            : #endif
+<span class="lineNum">     156 </span><span class="lineCov">    1315251 :         m_aux[_h] = make_pair(_v.toBytes(), true);</span>
+<a name="157"><span class="lineNum">     157 </span><span class="lineCov">     187893 : }</span></a>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineCov">          4 : void MemoryDB::purge()</span>
+<span class="lineNum">     160 </span>            : {
+<span class="lineNum">     161 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">     162 </span>            :         WriteGuard l(x_this);
+<span class="lineNum">     163 </span>            : #endif
+<span class="lineNum">     164 </span>            :         // purge m_main
+<span class="lineNum">     165 </span><span class="lineCov">         15 :         for (auto it = m_main.begin(); it != m_main.end(); )</span>
+<span class="lineNum">     166 </span><span class="lineCov">          3 :                 if (it-&gt;second.second)</span>
+<span class="lineNum">     167 </span>            :                         ++it;
+<span class="lineNum">     168 </span>            :                 else
+<span class="lineNum">     169 </span><span class="lineCov">          6 :                         it = m_main.erase(it);</span>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            :         // purge m_aux
+<span class="lineNum">     172 </span><span class="lineCov">         13 :         for (auto it = m_aux.begin(); it != m_aux.end(); )</span>
+<span class="lineNum">     173 </span><span class="lineCov">          1 :                 if (it-&gt;second.second)</span>
+<span class="lineNum">     174 </span>            :                         ++it;
+<span class="lineNum">     175 </span>            :                 else
+<span class="lineNum">     176 </span><span class="lineCov">          2 :                         it = m_aux.erase(it);</span>
+<a name="177"><span class="lineNum">     177 </span><span class="lineCov">          4 : }</span></a>
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span><span class="lineCov">       6218 : h256Hash MemoryDB::keys() const</span>
+<span class="lineNum">     180 </span>            : {
+<span class="lineNum">     181 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">     182 </span>            :         ReadGuard l(x_this);
+<span class="lineNum">     183 </span>            : #endif
+<span class="lineNum">     184 </span><span class="lineCov">       6218 :         h256Hash ret;</span>
+<span class="lineNum">     185 </span><span class="lineCov">    7092275 :         for (auto const&amp; i: m_main)</span>
+<span class="lineNum">     186 </span><span class="lineCov">    7073621 :                 if (i.second.second)</span>
+<span class="lineNum">     187 </span><span class="lineCov">      42000 :                         ret.insert(i.first);</span>
+<span class="lineNum">     188 </span><span class="lineCov">       6218 :         return ret;</span>
+<a name="189"><span class="lineNum">     189 </span>            : }</a>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

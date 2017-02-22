@@ -1,0 +1,552 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/Executive.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - Executive.cpp<span style="font-size: 80%;"> (source / <a href="Executive.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">134</td>
+            <td class="headerCovTableEntry">235</td>
+            <td class="headerCovTableEntryLo">57.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       4 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       5 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       6 </span>            :         (at your option) any later version.
+<span class="lineNum">       7 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">       8 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">       9 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      10 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      11 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      12 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      13 </span>            : */
+<span class="lineNum">      14 </span>            : /** @file Executive.cpp
+<span class="lineNum">      15 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      16 </span>            :  * @date 2014
+<span class="lineNum">      17 </span>            :  */
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #include &quot;Executive.h&quot;
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : #include &lt;boost/timer.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;json/json.h&gt;
+<span class="lineNum">      23 </span>            : #include &lt;libdevcore/CommonIO.h&gt;
+<span class="lineNum">      24 </span>            : #include &lt;libevm/VMFactory.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libevm/VM.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libethcore/CommonJS.h&gt;
+<span class="lineNum">      27 </span>            : #include &quot;Interface.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;State.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;ExtVM.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;BlockChain.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;Block.h&quot;
+<span class="lineNum">      32 </span>            : using namespace std;
+<span class="lineNum">      33 </span>            : using namespace dev;
+<a name="34"><span class="lineNum">      34 </span>            : using namespace dev::eth;</a>
+<a name="35"><span class="lineNum">      35 </span>            : </a>
+<span class="lineNum">      36 </span><span class="lineNoCov">          0 : const char* VMTraceChannel::name() { return &quot;EVM&quot;; }</span>
+<a name="37"><span class="lineNum">      37 </span><span class="lineCov">     276544 : const char* ExecutiveWarnChannel::name() { return WarnChannel::name(); }</span></a>
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span><span class="lineNoCov">          0 : StandardTrace::StandardTrace():</span>
+<span class="lineNum">      40 </span><span class="lineNoCov">          0 :         m_trace(Json::arrayValue)</span>
+<a name="41"><span class="lineNum">      41 </span><span class="lineNoCov">          0 : {}</span></a>
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 : bool changesMemory(Instruction _inst)</span>
+<span class="lineNum">      44 </span>            : {
+<span class="lineNum">      45 </span>            :         return
+<span class="lineNum">      46 </span>            :                 _inst == Instruction::MSTORE ||
+<span class="lineNum">      47 </span><span class="lineNoCov">          0 :                 _inst == Instruction::MSTORE8 ||</span>
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 :                 _inst == Instruction::MLOAD ||</span>
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :                 _inst == Instruction::CREATE ||</span>
+<span class="lineNum">      50 </span><span class="lineNoCov">          0 :                 _inst == Instruction::CALL ||</span>
+<span class="lineNum">      51 </span>            :                 _inst == Instruction::CALLCODE ||
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :                 _inst == Instruction::SHA3 ||</span>
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 :                 _inst == Instruction::CALLDATACOPY ||</span>
+<span class="lineNum">      54 </span><span class="lineNoCov">          0 :                 _inst == Instruction::CODECOPY ||</span>
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :                 _inst == Instruction::EXTCODECOPY ||</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :                 _inst == Instruction::DELEGATECALL;</span>
+<a name="57"><span class="lineNum">      57 </span>            : }</a>
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 : bool changesStorage(Instruction _inst)</span>
+<span class="lineNum">      60 </span>            : {
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :         return _inst == Instruction::SSTORE;</span>
+<a name="62"><span class="lineNum">      62 </span>            : }</a>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 : void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, bigint newMemSize, bigint gasCost, bigint gas, VM* voidVM, ExtVMFace const* voidExt)</span>
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span>            :         (void)_steps;
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :         ExtVM const&amp; ext = dynamic_cast&lt;ExtVM const&amp;&gt;(*voidExt);</span>
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :         VM&amp; vm = *voidVM;</span>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :         Json::Value r(Json::objectValue);</span>
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :         Json::Value stack(Json::arrayValue);</span>
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :         if (!m_options.disableStack)</span>
+<span class="lineNum">      75 </span>            :         {
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :                 for (auto const&amp; i: vm.stack())</span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :                         stack.append(&quot;0x&quot; + toHex(toCompactBigEndian(i, 1)));</span>
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :                 r[&quot;stack&quot;] = stack;</span>
+<span class="lineNum">      79 </span>            :         }
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :         bool newContext = false;</span>
+<span class="lineNum">      82 </span><span class="lineNoCov">          0 :         Instruction lastInst = Instruction::STOP;</span>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :         if (m_lastInst.size() == ext.depth)</span>
+<span class="lineNum">      85 </span>            :         {
+<span class="lineNum">      86 </span>            :                 // starting a new context
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :                 assert(m_lastInst.size() == ext.depth);</span>
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 :                 m_lastInst.push_back(inst);</span>
+<span class="lineNum">      89 </span>            :                 newContext = true;
+<span class="lineNum">      90 </span>            :         }
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :         else if (m_lastInst.size() == ext.depth + 2)</span>
+<span class="lineNum">      92 </span>            :         {
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :                 m_lastInst.pop_back();</span>
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :                 lastInst = m_lastInst.back();</span>
+<span class="lineNum">      95 </span>            :         }
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :         else if (m_lastInst.size() == ext.depth + 1)</span>
+<span class="lineNum">      97 </span>            :         {
+<span class="lineNum">      98 </span>            :                 // continuing in previous context
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :                 lastInst = m_lastInst.back();</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :                 m_lastInst.back() = inst;</span>
+<span class="lineNum">     101 </span>            :         }
+<span class="lineNum">     102 </span>            :         else
+<span class="lineNum">     103 </span>            :         {
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;GAA!!! Tracing VM and more than one new/deleted stack frame between steps!&quot;;</span>
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Attmepting naive recovery...&quot;;</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :                 m_lastInst.resize(ext.depth + 1);</span>
+<span class="lineNum">     107 </span>            :         }
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :         Json::Value memJson(Json::arrayValue);</span>
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :         if (!m_options.disableMemory &amp;&amp; (changesMemory(lastInst) || newContext))</span>
+<span class="lineNum">     111 </span>            :         {
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :                 for (unsigned i = 0; i &lt; vm.memory().size(); i += 32)</span>
+<span class="lineNum">     113 </span>            :                 {
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :                         bytesConstRef memRef(vm.memory().data() + i, 32);</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :                         memJson.append(toHex(memRef, 2, HexPrefix::DontAdd));</span>
+<span class="lineNum">     116 </span>            :                 }
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :                 r[&quot;memory&quot;] = memJson;</span>
+<span class="lineNum">     118 </span>            :         }
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :         if (!m_options.disableStorage &amp;&amp; (m_options.fullStorage || changesStorage(lastInst) || newContext))</span>
+<span class="lineNum">     121 </span>            :         {
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :                 Json::Value storage(Json::objectValue);</span>
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :                 for (auto const&amp; i: ext.state().storage(ext.myAddress))</span>
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :                         storage[&quot;0x&quot; + toHex(toCompactBigEndian(i.second.first, 1))] = &quot;0x&quot; + toHex(toCompactBigEndian(i.second.second, 1));</span>
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :                 r[&quot;storage&quot;] = storage;</span>
+<span class="lineNum">     126 </span>            :         }
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :         if (m_showMnemonics)</span>
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :                 r[&quot;op&quot;] = instructionInfo(inst).name;</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :         r[&quot;pc&quot;] = toString(PC);</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :         r[&quot;gas&quot;] = toString(gas);</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :         r[&quot;gasCost&quot;] = toString(gasCost);</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :         if (!!newMemSize)</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :                 r[&quot;memexpand&quot;] = toString(newMemSize);</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :         m_trace.append(r);</span>
+<a name="137"><span class="lineNum">     137 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 : string StandardTrace::json(bool _styled) const</span>
+<span class="lineNum">     140 </span>            : {
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :         return _styled ? Json::StyledWriter().write(m_trace) : Json::FastWriter().write(m_trace);</span>
+<a name="142"><span class="lineNum">     142 </span>            : }</a>
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 : Executive::Executive(Block&amp; _s, BlockChain const&amp; _bc, unsigned _level):</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :         m_s(_s.mutableState()),</span>
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :         m_envInfo(_s.info(), _bc.lastHashes(_s.info().parentHash())),</span>
+<span class="lineNum">     147 </span>            :         m_depth(_level),
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :         m_sealEngine(*_bc.sealEngine())</span>
+<span class="lineNum">     149 </span>            : {
+<a name="150"><span class="lineNum">     150 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 : Executive::Executive(Block&amp; _s, LastHashes const&amp; _lh, unsigned _level):</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :         m_s(_s.mutableState()),</span>
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :         m_envInfo(_s.info(), _lh),</span>
+<span class="lineNum">     155 </span>            :         m_depth(_level),
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :         m_sealEngine(*_s.sealEngine())</span>
+<span class="lineNum">     157 </span>            : {
+<a name="158"><span class="lineNum">     158 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 : Executive::Executive(State&amp; _s, Block const&amp; _block, unsigned _txIndex, BlockChain const&amp; _bc, unsigned _level):</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :         m_s(_s = _block.fromPending(_txIndex)),</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :         m_envInfo(_block.info(), _bc.lastHashes(_block.info().parentHash()), _txIndex ? _block.receipt(_txIndex - 1).gasUsed() : 0),</span>
+<span class="lineNum">     163 </span>            :         m_depth(_level),
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :         m_sealEngine(*_bc.sealEngine())</span>
+<span class="lineNum">     165 </span>            : {
+<a name="166"><span class="lineNum">     166 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span><span class="lineCov">      26708 : u256 Executive::gasUsed() const</span>
+<span class="lineNum">     169 </span>            : {
+<span class="lineNum">     170 </span><span class="lineCov">      80124 :         return m_t.gas() - m_gas;</span>
+<a name="171"><span class="lineNum">     171 </span>            : }</a>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span><span class="lineCov">     228341 : void Executive::accrueSubState(SubState&amp; _parentContext)</span>
+<span class="lineNum">     174 </span>            : {
+<span class="lineNum">     175 </span><span class="lineCov">     228341 :         if (m_ext)</span>
+<span class="lineNum">     176 </span><span class="lineCov">     228341 :                 _parentContext += m_ext-&gt;sub;</span>
+<span class="lineNum">     177 </span><span class="lineCov">     228341 : }</span>
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span><span class="lineCov">     289898 : void Executive::initialize(Transaction const&amp; _transaction)</span>
+<span class="lineNum">     180 </span>            : {
+<span class="lineNum">     181 </span><span class="lineCov">     579796 :         m_t = _transaction;</span>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            :         // Avoid transactions that would take us beyond the block gas limit.
+<span class="lineNum">     184 </span><span class="lineCov">     579796 :         u256 startGasUsed = m_envInfo.gasUsed();</span>
+<span class="lineNum">     185 </span><span class="lineCov">    1449490 :         if (startGasUsed + (bigint)m_t.gas() &gt; m_envInfo.gasLimit())</span>
+<span class="lineNum">     186 </span>            :         {
+<span class="lineNum">     187 </span><span class="lineCov">     759915 :                 clog(ExecutiveWarnChannel) &lt;&lt; &quot;Cannot fit tx in block&quot; &lt;&lt; m_envInfo.number() &lt;&lt; &quot;: Require &lt;&quot; &lt;&lt; (m_envInfo.gasLimit() - startGasUsed) &lt;&lt; &quot; Got&quot; &lt;&lt; m_t.gas();</span>
+<span class="lineNum">     188 </span><span class="lineCov">     253305 :                 m_excepted = TransactionException::BlockGasLimitReached;</span>
+<span class="lineNum">     189 </span><span class="lineCov">    3546270 :                 BOOST_THROW_EXCEPTION(BlockGasLimitReached() &lt;&lt; RequirementError((bigint)(m_envInfo.gasLimit() - startGasUsed), (bigint)m_t.gas()));</span>
+<span class="lineNum">     190 </span>            :         }
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :         // Check gas cost is enough.
+<span class="lineNum">     193 </span><span class="lineCov">     146372 :         m_baseGasRequired = m_t.gasRequired(m_sealEngine.evmSchedule(m_envInfo));</span>
+<span class="lineNum">     194 </span><span class="lineCov">     109779 :         if (m_baseGasRequired &gt; m_t.gas())</span>
+<span class="lineNum">     195 </span>            :         {
+<span class="lineNum">     196 </span><span class="lineCov">        198 :                 clog(ExecutiveWarnChannel) &lt;&lt; &quot;Not enough gas to pay for the transaction: Require &gt;&quot; &lt;&lt; m_baseGasRequired &lt;&lt; &quot; Got&quot; &lt;&lt; m_t.gas();</span>
+<span class="lineNum">     197 </span><span class="lineCov">         99 :                 m_excepted = TransactionException::OutOfGasBase;</span>
+<span class="lineNum">     198 </span><span class="lineCov">       1188 :                 BOOST_THROW_EXCEPTION(OutOfGasBase() &lt;&lt; RequirementError(m_baseGasRequired, (bigint)m_t.gas()));</span>
+<span class="lineNum">     199 </span>            :         }
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            :         // Avoid invalid transactions.
+<span class="lineNum">     202 </span><span class="lineCov">      36494 :         u256 nonceReq;</span>
+<span class="lineNum">     203 </span>            :         try
+<span class="lineNum">     204 </span>            :         {
+<span class="lineNum">     205 </span><span class="lineCov">      72988 :                 nonceReq = m_s.getNonce(m_t.sender());</span>
+<span class="lineNum">     206 </span>            :         }
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     208 </span>            :         {
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 :                 clog(ExecutiveWarnChannel) &lt;&lt; &quot;Invalid Signature&quot;;</span>
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :                 m_excepted = TransactionException::InvalidSignature;</span>
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :                 throw;</span>
+<span class="lineNum">     212 </span>            :         }
+<span class="lineNum">     213 </span><span class="lineCov">     109482 :         if (m_t.nonce() != nonceReq)</span>
+<span class="lineNum">     214 </span>            :         {
+<span class="lineNum">     215 </span><span class="lineCov">      46220 :                 clog(ExecutiveWarnChannel) &lt;&lt; &quot;Invalid Nonce: Require&quot; &lt;&lt; nonceReq &lt;&lt; &quot; Got&quot; &lt;&lt; m_t.nonce();</span>
+<span class="lineNum">     216 </span><span class="lineCov">      23110 :                 m_excepted = TransactionException::InvalidNonce;</span>
+<span class="lineNum">     217 </span><span class="lineCov">     323540 :                 BOOST_THROW_EXCEPTION(InvalidNonce() &lt;&lt; RequirementError((bigint)nonceReq, (bigint)m_t.nonce()));</span>
+<span class="lineNum">     218 </span>            :         }
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            :         // Avoid unaffordable transactions.
+<span class="lineNum">     221 </span><span class="lineCov">      93688 :         bigint gasCost = (bigint)m_t.gas() * m_t.gasPrice();</span>
+<span class="lineNum">     222 </span><span class="lineCov">      53536 :         bigint totalCost = m_t.value() + gasCost;</span>
+<span class="lineNum">     223 </span><span class="lineCov">      26798 :         if (m_s.balance(m_t.sender()) &lt; totalCost)</span>
+<span class="lineNum">     224 </span>            :         {
+<span class="lineNum">     225 </span><span class="lineCov">        150 :                 clog(ExecutiveWarnChannel) &lt;&lt; &quot;Not enough cash: Require &gt;&quot; &lt;&lt; totalCost &lt;&lt; &quot;=&quot; &lt;&lt; m_t.gas() &lt;&lt; &quot;*&quot; &lt;&lt; m_t.gasPrice() &lt;&lt; &quot;+&quot; &lt;&lt; m_t.value() &lt;&lt; &quot; Got&quot; &lt;&lt; m_s.balance(m_t.sender()) &lt;&lt; &quot;for sender: &quot; &lt;&lt; m_t.sender();</span>
+<span class="lineNum">     226 </span><span class="lineCov">         30 :                 m_excepted = TransactionException::NotEnoughCash;</span>
+<span class="lineNum">     227 </span><span class="lineCov">        450 :                 BOOST_THROW_EXCEPTION(NotEnoughCash() &lt;&lt; RequirementError(totalCost, (bigint)m_s.balance(m_t.sender())) &lt;&lt; errinfo_comment(m_t.sender().abridged()));</span>
+<span class="lineNum">     228 </span>            :         }
+<span class="lineNum">     229 </span><span class="lineCov">      26708 :         m_gasCost = (u256)gasCost;  // Convert back to 256-bit, safe now.</span>
+<a name="230"><span class="lineNum">     230 </span><span class="lineCov">      13354 : }</span></a>
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span><span class="lineCov">      13354 : bool Executive::execute()</span>
+<span class="lineNum">     233 </span>            : {
+<span class="lineNum">     234 </span>            :         // Entry point for a user-executed transaction.
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            :         // Pay...
+<span class="lineNum">     237 </span><span class="lineCov">     120186 :         clog(StateDetail) &lt;&lt; &quot;Paying&quot; &lt;&lt; formatBalance(m_gasCost) &lt;&lt; &quot;from sender for gas (&quot; &lt;&lt; m_t.gas() &lt;&lt; &quot;gas at&quot; &lt;&lt; formatBalance(m_t.gasPrice()) &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">     238 </span><span class="lineCov">      13354 :         m_s.subBalance(m_t.sender(), m_gasCost);</span>
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span><span class="lineCov">      13354 :         if (m_t.isCreation())</span>
+<span class="lineNum">     241 </span><span class="lineCov">       9562 :                 return create(m_t.sender(), m_t.value(), m_t.gasPrice(), m_t.gas() - (u256)m_baseGasRequired, &amp;m_t.data(), m_t.sender());</span>
+<span class="lineNum">     242 </span>            :         else
+<span class="lineNum">     243 </span><span class="lineCov">      95904 :                 return call(m_t.receiveAddress(), m_t.sender(), m_t.value(), m_t.gasPrice(), bytesConstRef(&amp;m_t.data()), m_t.gas() - (u256)m_baseGasRequired);</span>
+<a name="244"><span class="lineNum">     244 </span>            : }</a>
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span><span class="lineCov">      11988 : bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256 _gas)</span>
+<span class="lineNum">     247 </span>            : {
+<span class="lineNum">     248 </span><span class="lineCov">      71928 :         CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _value, _value, _gas, _data, {}};</span>
+<span class="lineNum">     249 </span><span class="lineCov">      23976 :         return call(params, _gasPrice, _senderAddress);</span>
+<a name="250"><span class="lineNum">     250 </span>            : }</a>
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span><span class="lineCov">     255799 : bool Executive::call(CallParameters const&amp; _p, u256 const&amp; _gasPrice, Address const&amp; _origin)</span>
+<span class="lineNum">     253 </span>            : {
+<span class="lineNum">     254 </span>            :         // If external transaction.
+<span class="lineNum">     255 </span><span class="lineCov">     255799 :         if (m_t)</span>
+<span class="lineNum">     256 </span>            :         {
+<span class="lineNum">     257 </span>            :                 // FIXME: changelog contains unrevertable balance change that paid
+<span class="lineNum">     258 </span>            :                 //        for the transaction.
+<span class="lineNum">     259 </span>            :                 // Increment associated nonce for sender.
+<span class="lineNum">     260 </span><span class="lineCov">      11988 :                 m_s.incNonce(_p.senderAddress);</span>
+<span class="lineNum">     261 </span>            :         }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span><span class="lineCov">     255799 :         m_savepoint = m_s.savepoint();</span>
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span><span class="lineCov">     255799 :         if (m_sealEngine.isPrecompiled(_p.codeAddress))</span>
+<span class="lineNum">     266 </span>            :         {
+<span class="lineNum">     267 </span><span class="lineCov">        905 :                 bigint g = m_sealEngine.costOfPrecompiled(_p.codeAddress, _p.data);</span>
+<span class="lineNum">     268 </span><span class="lineCov">        990 :                 if (_p.gas &lt; g)</span>
+<span class="lineNum">     269 </span>            :                 {
+<span class="lineNum">     270 </span><span class="lineCov">         85 :                         m_excepted = TransactionException::OutOfGasBase;</span>
+<span class="lineNum">     271 </span>            :                         // Bail from exception.
+<span class="lineNum">     272 </span><span class="lineCov">        170 :                         return true;    // true actually means &quot;all finished - nothing more to be done regarding go().</span>
+<span class="lineNum">     273 </span>            :                 }
+<span class="lineNum">     274 </span>            :                 else
+<span class="lineNum">     275 </span>            :                 {
+<span class="lineNum">     276 </span><span class="lineCov">       1640 :                         m_gas = (u256)(_p.gas - g);</span>
+<span class="lineNum">     277 </span><span class="lineCov">        820 :                         bytes output = m_sealEngine.executePrecompiled(_p.codeAddress, _p.data);</span>
+<span class="lineNum">     278 </span><span class="lineCov">        820 :                         size_t outputSize = output.size();</span>
+<span class="lineNum">     279 </span><span class="lineCov">       1640 :                         m_output = owning_bytes_ref{std::move(output), 0, outputSize};</span>
+<span class="lineNum">     280 </span>            :                 }
+<span class="lineNum">     281 </span>            :         }
+<span class="lineNum">     282 </span>            :         else
+<span class="lineNum">     283 </span>            :         {
+<span class="lineNum">     284 </span><span class="lineCov">     510608 :                 m_gas = _p.gas;</span>
+<span class="lineNum">     285 </span><span class="lineCov">     255304 :                 if (m_s.addressHasCode(_p.codeAddress))</span>
+<span class="lineNum">     286 </span>            :                 {
+<span class="lineNum">     287 </span><span class="lineCov">     232253 :                         bytes const&amp; c = m_s.code(_p.codeAddress);</span>
+<span class="lineNum">     288 </span><span class="lineCov">     232253 :                         h256 codeHash = m_s.codeHash(_p.codeAddress);</span>
+<span class="lineNum">     289 </span><span class="lineCov">     929012 :                         m_ext = make_shared&lt;ExtVM&gt;(m_s, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &amp;c, codeHash, m_depth);</span>
+<span class="lineNum">     290 </span>            :                 }
+<span class="lineNum">     291 </span>            :         }
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            :         // Transfer ether.
+<span class="lineNum">     294 </span><span class="lineCov">     511428 :         m_s.transferBalance(_p.senderAddress, _p.receiveAddress, _p.valueTransfer);</span>
+<span class="lineNum">     295 </span><span class="lineCov">     255714 :         return !m_ext;</span>
+<a name="296"><span class="lineNum">     296 </span>            : }</a>
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span><span class="lineCov">       5256 : bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)</span>
+<span class="lineNum">     299 </span>            : {
+<span class="lineNum">     300 </span><span class="lineCov">       5256 :         u256 nonce = m_s.getNonce(_sender);</span>
+<span class="lineNum">     301 </span><span class="lineCov">       5256 :         m_s.incNonce(_sender);</span>
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span><span class="lineCov">       5256 :         m_savepoint = m_s.savepoint();</span>
+<span class="lineNum">     304 </span>            : 
+<span class="lineNum">     305 </span><span class="lineCov">       5256 :         m_isCreation = true;</span>
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            :         // We can allow for the reverted state (i.e. that with which m_ext is constructed) to contain the m_orig.address, since
+<span class="lineNum">     308 </span>            :         // we delete it explicitly if we decide we need to revert.
+<span class="lineNum">     309 </span><span class="lineCov">      15768 :         m_newAddress = right160(sha3(rlpList(_sender, nonce)));</span>
+<span class="lineNum">     310 </span><span class="lineCov">      10512 :         m_gas = _gas;</span>
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span>            :         // Transfer ether before deploying the code. This will also create new
+<span class="lineNum">     313 </span>            :         // account if it does not exist yet.
+<span class="lineNum">     314 </span><span class="lineCov">      10512 :         m_s.transferBalance(_sender, m_newAddress, _endowment);</span>
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span><span class="lineCov">      31536 :         if (m_envInfo.number() &gt;= m_sealEngine.chainParams().u256Param(&quot;EIP158ForkBlock&quot;))</span>
+<span class="lineNum">     317 </span><span class="lineCov">       1556 :                 m_s.incNonce(m_newAddress);</span>
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            :         // Schedule _init execution if not empty.
+<span class="lineNum">     320 </span><span class="lineCov">       5256 :         if (!_init.empty())</span>
+<span class="lineNum">     321 </span><span class="lineCov">      25215 :                 m_ext = make_shared&lt;ExtVM&gt;(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);</span>
+<span class="lineNum">     322 </span><span class="lineCov">        213 :         else if (m_s.addressHasCode(m_newAddress))</span>
+<span class="lineNum">     323 </span>            :                 // Overwrite with empty code in case the account already has a code
+<span class="lineNum">     324 </span>            :                 // (address collision -- not real life case but we can check it with
+<span class="lineNum">     325 </span>            :                 // synthetic tests).
+<span class="lineNum">     326 </span><span class="lineCov">         64 :                 m_s.setNewCode(m_newAddress, {});</span>
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span><span class="lineCov">       5256 :         return !m_ext;</span>
+<a name="329"><span class="lineNum">     329 </span>            : }</a>
+<span class="lineNum">     330 </span>            : 
+<a name="331"><span class="lineNum">     331 </span><span class="lineNoCov">          0 : OnOpFunc Executive::simpleTrace()</span></a>
+<span class="lineNum">     332 </span>            : {
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :         return [](uint64_t steps, uint64_t PC, Instruction inst, bigint newMemSize, bigint gasCost, bigint gas, VM* voidVM, ExtVMFace const* voidExt)</span>
+<span class="lineNum">     334 </span>            :         {
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :                 ExtVM const&amp; ext = *static_cast&lt;ExtVM const*&gt;(voidExt);</span>
+<span class="lineNum">     336 </span><span class="lineNoCov">          0 :                 VM&amp; vm = *voidVM;</span>
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span><span class="lineNoCov">          0 :                 ostringstream o;</span>
+<span class="lineNum">     339 </span><span class="lineNoCov">          0 :                 o &lt;&lt; endl &lt;&lt; &quot;    STACK&quot; &lt;&lt; endl;</span>
+<span class="lineNum">     340 </span><span class="lineNoCov">          0 :                 for (auto i: vm.stack())</span>
+<span class="lineNum">     341 </span><span class="lineNoCov">          0 :                         o &lt;&lt; (h256)i &lt;&lt; endl;</span>
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 :                 o &lt;&lt; &quot;    MEMORY&quot; &lt;&lt; endl &lt;&lt; ((vm.memory().size() &gt; 1000) ? &quot; mem size greater than 1000 bytes &quot; : memDump(vm.memory()));</span>
+<span class="lineNum">     343 </span><span class="lineNoCov">          0 :                 o &lt;&lt; &quot;    STORAGE&quot; &lt;&lt; endl;</span>
+<span class="lineNum">     344 </span><span class="lineNoCov">          0 :                 for (auto const&amp; i: ext.state().storage(ext.myAddress))</span>
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :                         o &lt;&lt; showbase &lt;&lt; hex &lt;&lt; i.second.first &lt;&lt; &quot;: &quot; &lt;&lt; i.second.second &lt;&lt; endl;</span>
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :                 dev::LogOutputStream&lt;VMTraceChannel, false&gt;() &lt;&lt; o.str();</span>
+<span class="lineNum">     347 </span><span class="lineNoCov">          0 :                 dev::LogOutputStream&lt;VMTraceChannel, false&gt;() &lt;&lt; &quot; &lt; &quot; &lt;&lt; dec &lt;&lt; ext.depth &lt;&lt; &quot; : &quot; &lt;&lt; ext.myAddress &lt;&lt; &quot; : #&quot; &lt;&lt; steps &lt;&lt; &quot; : &quot; &lt;&lt; hex &lt;&lt; setw(4) &lt;&lt; setfill('0') &lt;&lt; PC &lt;&lt; &quot; : &quot; &lt;&lt; instructionInfo(inst).name &lt;&lt; &quot; : &quot; &lt;&lt; dec &lt;&lt; gas &lt;&lt; &quot; : -&quot; &lt;&lt; dec &lt;&lt; gasCost &lt;&lt; &quot; : &quot; &lt;&lt; newMemSize &lt;&lt; &quot;x32&quot; &lt;&lt; &quot; &gt;&quot;;</span>
+<span class="lineNum">     348 </span><span class="lineNoCov">          0 :         };</span>
+<span class="lineNum">     349 </span>            : }
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span><span class="lineCov">     237296 : bool Executive::go(OnOpFunc const&amp; _onOp)</span>
+<span class="lineNum">     352 </span>            : {
+<span class="lineNum">     353 </span><span class="lineCov">     237296 :         if (m_ext)</span>
+<span class="lineNum">     354 </span>            :         {
+<span class="lineNum">     355 </span>            : #if ETH_TIMED_EXECUTIONS
+<span class="lineNum">     356 </span>            :                 Timer t;
+<span class="lineNum">     357 </span>            : #endif
+<span class="lineNum">     358 </span>            :                 try
+<span class="lineNum">     359 </span>            :                 {
+<span class="lineNum">     360 </span>            :                         // Create VM instance. Force Interpreter if tracing requested.
+<span class="lineNum">     361 </span><span class="lineCov">     474592 :                         auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();</span>
+<span class="lineNum">     362 </span><span class="lineCov">     237296 :                         if (m_isCreation)</span>
+<span class="lineNum">     363 </span>            :                         {
+<span class="lineNum">     364 </span><span class="lineCov">       9152 :                                 auto out = vm-&gt;exec(m_gas, *m_ext, _onOp);</span>
+<span class="lineNum">     365 </span><span class="lineCov">       4109 :                                 if (m_res)</span>
+<span class="lineNum">     366 </span>            :                                 {
+<span class="lineNum">     367 </span><span class="lineCov">       1038 :                                         m_res-&gt;gasForDeposit = m_gas;</span>
+<span class="lineNum">     368 </span><span class="lineCov">        519 :                                         m_res-&gt;depositSize = out.size();</span>
+<span class="lineNum">     369 </span>            :                                 }
+<span class="lineNum">     370 </span><span class="lineCov">       8218 :                                 if (out.size() &gt; m_ext-&gt;evmSchedule().maxCodeSize)</span>
+<span class="lineNum">     371 </span><span class="lineCov">          9 :                                         BOOST_THROW_EXCEPTION(OutOfGas());</span>
+<span class="lineNum">     372 </span><span class="lineCov">      12318 :                                 else if (out.size() * m_ext-&gt;evmSchedule().createDataGas &lt;= m_gas)</span>
+<span class="lineNum">     373 </span>            :                                 {
+<span class="lineNum">     374 </span><span class="lineCov">       4092 :                                         if (m_res)</span>
+<span class="lineNum">     375 </span><span class="lineCov">        502 :                                                 m_res-&gt;codeDeposit = CodeDeposit::Success;</span>
+<span class="lineNum">     376 </span><span class="lineCov">      12276 :                                         m_gas -= out.size() * m_ext-&gt;evmSchedule().createDataGas;</span>
+<span class="lineNum">     377 </span>            :                                 }
+<span class="lineNum">     378 </span>            :                                 else
+<span class="lineNum">     379 </span>            :                                 {
+<span class="lineNum">     380 </span><span class="lineCov">         28 :                                         if (m_ext-&gt;evmSchedule().exceptionalFailedCodeDeposit)</span>
+<span class="lineNum">     381 </span><span class="lineCov">         24 :                                                 BOOST_THROW_EXCEPTION(OutOfGas());</span>
+<span class="lineNum">     382 </span>            :                                         else
+<span class="lineNum">     383 </span>            :                                         {
+<span class="lineNum">     384 </span><span class="lineCov">          6 :                                                 if (m_res)</span>
+<span class="lineNum">     385 </span><span class="lineCov">          6 :                                                         m_res-&gt;codeDeposit = CodeDeposit::Failed;</span>
+<span class="lineNum">     386 </span><span class="lineCov">         24 :                                                 out = {};</span>
+<span class="lineNum">     387 </span>            :                                         }
+<span class="lineNum">     388 </span>            :                                 }
+<span class="lineNum">     389 </span><span class="lineCov">       4098 :                                 if (m_res)</span>
+<span class="lineNum">     390 </span><span class="lineCov">       1524 :                                         m_res-&gt;output = out.toVector(); // copy output to execution result</span>
+<span class="lineNum">     391 </span><span class="lineCov">       8196 :                                 m_s.setNewCode(m_ext-&gt;myAddress, out.toVector());</span>
+<span class="lineNum">     392 </span>            :                         }
+<span class="lineNum">     393 </span>            :                         else
+<span class="lineNum">     394 </span>            :                         {
+<span class="lineNum">     395 </span><span class="lineCov">     502705 :                                 m_output = vm-&gt;exec(m_gas, *m_ext, _onOp);</span>
+<span class="lineNum">     396 </span><span class="lineCov">     135226 :                                 if (m_res)</span>
+<span class="lineNum">     397 </span>            :                                         // Copy full output:
+<span class="lineNum">     398 </span><span class="lineCov">      26568 :                                         m_res-&gt;output = m_output.toVector();</span>
+<span class="lineNum">     399 </span>            :                         }
+<span class="lineNum">     400 </span>            :                 }
+<span class="lineNum">     401 </span><span class="lineCov">     195944 :                 catch (VMException const&amp; _e)</span>
+<span class="lineNum">     402 </span>            :                 {
+<span class="lineNum">     403 </span><span class="lineCov">     195944 :                         clog(StateSafeExceptions) &lt;&lt; &quot;Safe VM Exception. &quot; &lt;&lt; diagnostic_information(_e);</span>
+<span class="lineNum">     404 </span><span class="lineCov">     195944 :                         m_gas = 0;</span>
+<span class="lineNum">     405 </span><span class="lineCov">      97972 :                         m_excepted = toTransactionException(_e);</span>
+<span class="lineNum">     406 </span><span class="lineCov">      97972 :                         revert();</span>
+<span class="lineNum">     407 </span>            :                 }
+<span class="lineNum">     408 </span><span class="lineNoCov">          0 :                 catch (Exception const&amp; _e)</span>
+<span class="lineNum">     409 </span>            :                 {
+<span class="lineNum">     410 </span>            :                         // TODO: AUDIT: check that this can never reasonably happen. Consider what to do if it does.
+<span class="lineNum">     411 </span><span class="lineNoCov">          0 :                         cwarn &lt;&lt; &quot;Unexpected exception in VM. There may be a bug in this implementation. &quot; &lt;&lt; diagnostic_information(_e);</span>
+<span class="lineNum">     412 </span><span class="lineNoCov">          0 :                         exit(1);</span>
+<span class="lineNum">     413 </span>            :                         // Another solution would be to reject this transaction, but that also
+<span class="lineNum">     414 </span>            :                         // has drawbacks. Essentially, the amount of ram has to be increased here.
+<span class="lineNum">     415 </span>            :                 }
+<span class="lineNum">     416 </span><span class="lineNoCov">          0 :                 catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     417 </span>            :                 {
+<span class="lineNum">     418 </span>            :                         // TODO: AUDIT: check that this can never reasonably happen. Consider what to do if it does.
+<span class="lineNum">     419 </span><span class="lineNoCov">          0 :                         cwarn &lt;&lt; &quot;Unexpected std::exception in VM. Not enough RAM? &quot; &lt;&lt; _e.what();</span>
+<span class="lineNum">     420 </span><span class="lineNoCov">          0 :                         exit(1);</span>
+<span class="lineNum">     421 </span>            :                         // Another solution would be to reject this transaction, but that also
+<span class="lineNum">     422 </span>            :                         // has drawbacks. Essentially, the amount of ram has to be increased here.
+<span class="lineNum">     423 </span>            :                 }
+<span class="lineNum">     424 </span>            : #if ETH_TIMED_EXECUTIONS
+<span class="lineNum">     425 </span>            :                 cnote &lt;&lt; &quot;VM took:&quot; &lt;&lt; t.elapsed() &lt;&lt; &quot;; gas used: &quot; &lt;&lt; (sgas - m_endGas);
+<span class="lineNum">     426 </span>            : #endif
+<span class="lineNum">     427 </span>            :         }
+<span class="lineNum">     428 </span><span class="lineCov">     237296 :         return true;</span>
+<a name="429"><span class="lineNum">     429 </span>            : }</a>
+<span class="lineNum">     430 </span>            : 
+<span class="lineNum">     431 </span><span class="lineCov">      13354 : void Executive::finalize()</span>
+<span class="lineNum">     432 </span>            : {
+<span class="lineNum">     433 </span>            :         // Accumulate refunds for suicides.
+<span class="lineNum">     434 </span><span class="lineCov">      13354 :         if (m_ext)</span>
+<span class="lineNum">     435 </span><span class="lineCov">      35820 :                 m_ext-&gt;sub.refunds += m_ext-&gt;evmSchedule().suicideRefundGas * m_ext-&gt;sub.suicides.size();</span>
+<span class="lineNum">     436 </span>            : 
+<span class="lineNum">     437 </span>            :         // SSTORE refunds...
+<span class="lineNum">     438 </span>            :         // must be done before the miner gets the fees.
+<span class="lineNum">     439 </span><span class="lineCov">      80281 :         m_refunded = m_ext ? min((m_t.gas() - m_gas) / 2, m_ext-&gt;sub.refunds) : 0;</span>
+<span class="lineNum">     440 </span><span class="lineCov">      26708 :         m_gas += m_refunded;</span>
+<span class="lineNum">     441 </span>            : 
+<span class="lineNum">     442 </span><span class="lineCov">      13354 :         if (m_t)</span>
+<span class="lineNum">     443 </span>            :         {
+<span class="lineNum">     444 </span><span class="lineCov">      40062 :                 m_s.addBalance(m_t.sender(), m_gas * m_t.gasPrice());</span>
+<span class="lineNum">     445 </span>            : 
+<span class="lineNum">     446 </span><span class="lineCov">      66770 :                 u256 feesEarned = (m_t.gas() - m_gas) * m_t.gasPrice();</span>
+<span class="lineNum">     447 </span><span class="lineCov">      26708 :                 m_s.addBalance(m_envInfo.author(), feesEarned);</span>
+<span class="lineNum">     448 </span>            :         }
+<span class="lineNum">     449 </span>            : 
+<span class="lineNum">     450 </span>            :         // Suicides...
+<span class="lineNum">     451 </span><span class="lineCov">      13354 :         if (m_ext)</span>
+<span class="lineNum">     452 </span><span class="lineCov">      27554 :                 for (auto a: m_ext-&gt;sub.suicides)</span>
+<span class="lineNum">     453 </span><span class="lineCov">        689 :                         m_s.kill(a);</span>
+<span class="lineNum">     454 </span>            : 
+<span class="lineNum">     455 </span>            :         // Logs..
+<span class="lineNum">     456 </span><span class="lineCov">      13354 :         if (m_ext)</span>
+<span class="lineNum">     457 </span><span class="lineCov">       8955 :                 m_logs = m_ext-&gt;sub.logs;</span>
+<span class="lineNum">     458 </span>            : 
+<span class="lineNum">     459 </span><span class="lineCov">      13354 :         if (m_res) // Collect results</span>
+<span class="lineNum">     460 </span>            :         {
+<span class="lineNum">     461 </span><span class="lineCov">      26708 :                 m_res-&gt;gasUsed = gasUsed();</span>
+<span class="lineNum">     462 </span><span class="lineCov">      13354 :                 m_res-&gt;excepted = m_excepted; // TODO: m_except is used only in ExtVM::call</span>
+<span class="lineNum">     463 </span><span class="lineCov">      13354 :                 m_res-&gt;newAddress = m_newAddress;</span>
+<span class="lineNum">     464 </span><span class="lineCov">      40062 :                 m_res-&gt;gasRefunded = m_ext ? m_ext-&gt;sub.refunds : 0;</span>
+<span class="lineNum">     465 </span>            :         }
+<a name="466"><span class="lineNum">     466 </span><span class="lineCov">      13354 : }</span></a>
+<span class="lineNum">     467 </span>            : 
+<span class="lineNum">     468 </span><span class="lineCov">      97972 : void Executive::revert()</span>
+<span class="lineNum">     469 </span>            : {
+<span class="lineNum">     470 </span><span class="lineCov">      97972 :         if (m_ext)</span>
+<span class="lineNum">     471 </span><span class="lineCov">      97972 :                 m_ext-&gt;sub.clear();</span>
+<span class="lineNum">     472 </span>            : 
+<span class="lineNum">     473 </span>            :         // Set result address to the null one.
+<a name="474"><span class="lineNum">     474 </span><span class="lineCov">      97972 :         m_newAddress = {};</span></a>
+<span class="lineNum">     475 </span><span class="lineCov">      97972 :         m_s.rollback(m_savepoint);</span>
+<span class="lineNum">     476 </span><span class="lineCov">      97975 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

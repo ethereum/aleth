@@ -1,0 +1,673 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libethereum/State.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libethereum</a> - State.cpp<span style="font-size: 80%;"> (source / <a href="State.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">27</td>
+            <td class="headerCovTableEntryLo">3.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">66.7 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file state.cpp
+<span class="lineNum">      18 </span>            :  * @author Christoph Jentzsch &lt;cj@ethdev.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  * State test functions.
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;boost/filesystem/operations.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/unit_test.hpp&gt;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;json_spirit/JsonSpiritHeaders.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libdevcore/CommonIO.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libethereum/BlockChain.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libethereum/State.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libethereum/ExtVM.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libethereum/Defaults.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libevm/VM.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : using namespace std;
+<span class="lineNum">      36 </span>            : using namespace json_spirit;
+<span class="lineNum">      37 </span>            : using namespace dev;
+<span class="lineNum">      38 </span>            : using namespace dev::eth;
+<span class="lineNum">      39 </span>            : 
+<a name="40"><span class="lineNum">      40 </span>            : namespace dev {  namespace test {</a>
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span><span class="lineNoCov">          0 : void doStateTests(json_spirit::mValue&amp; _v, bool _fillin)</span>
+<span class="lineNum">      43 </span>            : {
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :         if (string(boost::unit_test::framework::current_test_case().p_name) != &quot;stRandom&quot;)</span>
+<span class="lineNum">      45 </span><span class="lineNoCov">          0 :                 TestOutputHelper::initTest(_v);</span>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineNoCov">          0 :         for (auto&amp; i: _v.get_obj())</span>
+<span class="lineNum">      48 </span>            :         {
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :                 string testname = i.first;</span>
+<span class="lineNum">      50 </span><span class="lineNoCov">          0 :                 json_spirit::mObject&amp; o = i.second.get_obj();</span>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :                 if (!TestOutputHelper::passTest(o, testname))</span>
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 :                         continue;</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :                 BOOST_REQUIRE_MESSAGE(o.count(&quot;env&quot;) &gt; 0, testname + &quot;env not set!&quot;);</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :                 BOOST_REQUIRE_MESSAGE(o.count(&quot;pre&quot;) &gt; 0, testname + &quot;pre not set!&quot;);</span>
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 :                 BOOST_REQUIRE_MESSAGE(o.count(&quot;transaction&quot;) &gt; 0, testname + &quot;transaction not set!&quot;);</span>
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :                 ImportTest importer(o, _fillin, testType::StateTests);</span>
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :                 const State importedStatePost = importer.m_statePost;</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :                 bytes output;</span>
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :                 Listener::ExecTimeGuard guard{i.first};</span>
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :                 output = importer.executeTest();</span>
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :                 if (_fillin)</span>
+<span class="lineNum">      67 </span>            :                 {
+<span class="lineNum">      68 </span>            : #if ETH_FATDB
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :                         if (importer.exportTest(output))</span>
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :                                 cerr &lt;&lt; testname &lt;&lt; endl;</span>
+<span class="lineNum">      71 </span>            : #else
+<span class="lineNum">      72 </span>            :                         BOOST_THROW_EXCEPTION(Exception() &lt;&lt; errinfo_comment(testname + &quot;You can not fill tests when FATDB is switched off&quot;));
+<span class="lineNum">      73 </span>            : #endif
+<span class="lineNum">      74 </span>            :                 }
+<span class="lineNum">      75 </span>            :                 else
+<span class="lineNum">      76 </span>            :                 {
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :                         BOOST_REQUIRE(o.count(&quot;post&quot;) &gt; 0);</span>
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :                         BOOST_REQUIRE(o.count(&quot;out&quot;) &gt; 0);</span>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            :                         // check output
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :                         checkOutput(&amp;output, o);</span>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :                         // check logs
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :                         checkLog(importer.m_logs, importer.m_logsExpected);</span>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            :                         // check addresses
+<span class="lineNum">      87 </span>            : #if ETH_FATDB
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 :                         ImportTest::compareStates(importedStatePost, importer.m_statePost);</span>
+<span class="lineNum">      89 </span>            : #endif
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 :                         BOOST_CHECK_MESSAGE(importer.m_statePost.rootHash() == h256(o[&quot;postStateRoot&quot;].get_str()), testname + &quot;wrong post state root&quot;);</span>
+<span class="lineNum">      91 </span>            :                 }
+<a name="92"><span class="lineNum">      92 </span>            :         }</a>
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      94 </span><span class="lineCov">          3 : } }// Namespace Close</span>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : //BOOST_AUTO_TEST_SUITE(StateTestsEIP158)
+<span class="lineNum">      97 </span>            : //BOOST_AUTO_TEST_CASE(stZeroCallsRevertTestEIP158)
+<span class="lineNum">      98 </span>            : //{
+<span class="lineNum">      99 </span>            : //      dev::test::executeTests(&quot;stZeroCallsRevertTest&quot;, &quot;/StateTests/EIP158&quot;, &quot;/StateTestsFiller/EIP158&quot;, dev::test::doStateTests);
+<span class="lineNum">     100 </span>            : //}
+<span class="lineNum">     101 </span>            : //BOOST_AUTO_TEST_CASE(stCodeSizeLimitEIP158)
+<span class="lineNum">     102 </span>            : //{
+<span class="lineNum">     103 </span>            : //      dev::test::executeTests(&quot;stCodeSizeLimit&quot;, &quot;/StateTests/EIP158&quot;, &quot;/StateTestsFiller/EIP158&quot;, dev::test::doStateTests);
+<span class="lineNum">     104 </span>            : //}
+<span class="lineNum">     105 </span>            : //BOOST_AUTO_TEST_CASE(stCreateTestEIP158)
+<span class="lineNum">     106 </span>            : //{
+<span class="lineNum">     107 </span>            : //      dev::test::executeTests(&quot;stCreateTest&quot;, &quot;/StateTests/EIP158&quot;, &quot;/StateTestsFiller/EIP158&quot;, dev::test::doStateTests);
+<span class="lineNum">     108 </span>            : //}
+<span class="lineNum">     109 </span>            : //BOOST_AUTO_TEST_CASE(stEIP158SpecificTest)
+<span class="lineNum">     110 </span>            : //{
+<span class="lineNum">     111 </span>            : //      dev::test::executeTests(&quot;stEIP158SpecificTest&quot;, &quot;/StateTests/EIP158&quot;, &quot;/StateTestsFiller/EIP158&quot;, dev::test::doStateTests);
+<span class="lineNum">     112 </span>            : //}
+<span class="lineNum">     113 </span>            : //BOOST_AUTO_TEST_CASE(stNonZeroCallsTest)
+<span class="lineNum">     114 </span>            : //{
+<span class="lineNum">     115 </span>            : //      dev::test::executeTests(&quot;stNonZeroCallsTest&quot;, &quot;/StateTests/EIP158&quot;, &quot;/StateTestsFiller/EIP158&quot;, dev::test::doStateTests);
+<span class="lineNum">     116 </span>            : //}
+<span class="lineNum">     117 </span>            : //BOOST_AUTO_TEST_CASE(stZeroCallsTest)
+<span class="lineNum">     118 </span>            : //{
+<span class="lineNum">     119 </span>            : //      dev::test::executeTests(&quot;stZeroCallsTest&quot;, &quot;/StateTests/EIP158&quot;, &quot;/StateTestsFiller/EIP158&quot;, dev::test::doStateTests);
+<span class="lineNum">     120 </span>            : //}
+<span class="lineNum">     121 </span>            : //BOOST_AUTO_TEST_CASE(stChangedTestsEIP150)
+<span class="lineNum">     122 </span>            : //{
+<span class="lineNum">     123 </span>            : //      dev::test::executeTests(&quot;stChangedTests&quot;, &quot;/StateTests/EIP158/EIP150&quot;, &quot;/StateTestsFiller/EIP158/EIP150&quot;, dev::test::doStateTests);
+<span class="lineNum">     124 </span>            : //}
+<span class="lineNum">     125 </span>            : //BOOST_AUTO_TEST_CASE(stEIPsingleCodeGasPricesEIP150)
+<span class="lineNum">     126 </span>            : //{
+<span class="lineNum">     127 </span>            : //      dev::test::executeTests(&quot;stEIPsingleCodeGasPrices&quot;, &quot;/StateTests/EIP158/EIP150&quot;, &quot;/StateTestsFiller/EIP158/EIP150&quot;, dev::test::doStateTests);
+<span class="lineNum">     128 </span>            : //}
+<span class="lineNum">     129 </span>            : //BOOST_AUTO_TEST_CASE(stEIPSpecificTestEIP150)
+<span class="lineNum">     130 </span>            : //{
+<span class="lineNum">     131 </span>            : //      dev::test::executeTests(&quot;stEIPSpecificTest&quot;, &quot;/StateTests/EIP158/EIP150&quot;, &quot;/StateTestsFiller/EIP158/EIP150&quot;, dev::test::doStateTests);
+<span class="lineNum">     132 </span>            : //}
+<span class="lineNum">     133 </span>            : //BOOST_AUTO_TEST_CASE(stMemExpandingEIPCallsEIP150)
+<span class="lineNum">     134 </span>            : //{
+<span class="lineNum">     135 </span>            : //      dev::test::executeTests(&quot;stMemExpandingEIPCalls&quot;, &quot;/StateTests/EIP158/EIP150&quot;, &quot;/StateTestsFiller/EIP158/EIP150&quot;, dev::test::doStateTests);
+<span class="lineNum">     136 </span>            : //}
+<span class="lineNum">     137 </span>            : //BOOST_AUTO_TEST_CASE(stBoundsTestEIP)
+<span class="lineNum">     138 </span>            : //{
+<span class="lineNum">     139 </span>            : //      dev::test::executeTests(&quot;stBoundsTest&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     140 </span>            : //}
+<span class="lineNum">     141 </span>            : //BOOST_AUTO_TEST_CASE(stHomeSteadSpecificEIP)
+<span class="lineNum">     142 </span>            : //{
+<span class="lineNum">     143 </span>            : //      dev::test::executeTests(&quot;stHomeSteadSpecific&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     144 </span>            : //}
+<span class="lineNum">     145 </span>            : //BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCodeEIP)
+<span class="lineNum">     146 </span>            : //{
+<span class="lineNum">     147 </span>            : //      dev::test::executeTests(&quot;stCallDelegateCodesCallCode&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     148 </span>            : //}
+<span class="lineNum">     149 </span>            : //BOOST_AUTO_TEST_CASE(stCallDelegateCodesEIP)
+<span class="lineNum">     150 </span>            : //{
+<span class="lineNum">     151 </span>            : //      dev::test::executeTests(&quot;stCallDelegateCodes&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     152 </span>            : //}
+<span class="lineNum">     153 </span>            : //BOOST_AUTO_TEST_CASE(stDelegatecallTestEIP)
+<span class="lineNum">     154 </span>            : //{
+<span class="lineNum">     155 </span>            : //      dev::test::executeTests(&quot;stDelegatecallTest&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     156 </span>            : //}
+<span class="lineNum">     157 </span>            : //BOOST_AUTO_TEST_CASE(stCallCodesEIP)
+<span class="lineNum">     158 </span>            : //{
+<span class="lineNum">     159 </span>            : //      dev::test::executeTests(&quot;stCallCodes&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     160 </span>            : //}
+<span class="lineNum">     161 </span>            : //BOOST_AUTO_TEST_CASE(stSystemOperationsTestEIP)
+<span class="lineNum">     162 </span>            : //{
+<span class="lineNum">     163 </span>            : //      dev::test::executeTests(&quot;stSystemOperationsTest&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     164 </span>            : //}
+<span class="lineNum">     165 </span>            : //BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTestEIP)
+<span class="lineNum">     166 </span>            : //{
+<span class="lineNum">     167 </span>            : //      dev::test::executeTests(&quot;stCallCreateCallCodeTest&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     168 </span>            : //}
+<span class="lineNum">     169 </span>            : //BOOST_AUTO_TEST_CASE(stPreCompiledContractsEIP)
+<span class="lineNum">     170 </span>            : //{
+<span class="lineNum">     171 </span>            : //      dev::test::executeTests(&quot;stPreCompiledContracts&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     172 </span>            : //}
+<span class="lineNum">     173 </span>            : //BOOST_AUTO_TEST_CASE(stLogTestsEIP)
+<span class="lineNum">     174 </span>            : //{
+<span class="lineNum">     175 </span>            : //      dev::test::executeTests(&quot;stLogTests&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     176 </span>            : //}
+<span class="lineNum">     177 </span>            : //BOOST_AUTO_TEST_CASE(stRecursiveCreateEIP)
+<span class="lineNum">     178 </span>            : //{
+<span class="lineNum">     179 </span>            : //      dev::test::executeTests(&quot;stRecursiveCreate&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     180 </span>            : //}
+<span class="lineNum">     181 </span>            : //BOOST_AUTO_TEST_CASE(stInitCodeTestEIP)
+<span class="lineNum">     182 </span>            : //{
+<span class="lineNum">     183 </span>            : //      dev::test::executeTests(&quot;stInitCodeTest&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     184 </span>            : //}
+<span class="lineNum">     185 </span>            : //BOOST_AUTO_TEST_CASE(stTransactionTestEIP)
+<span class="lineNum">     186 </span>            : //{
+<span class="lineNum">     187 </span>            : //      dev::test::executeTests(&quot;stTransactionTest&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     188 </span>            : //}
+<span class="lineNum">     189 </span>            : //BOOST_AUTO_TEST_CASE(stSpecialTestEIP)
+<span class="lineNum">     190 </span>            : //{
+<span class="lineNum">     191 </span>            : //      dev::test::executeTests(&quot;stSpecialTest&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     192 </span>            : //}
+<span class="lineNum">     193 </span>            : //BOOST_AUTO_TEST_CASE(stRefundTestEIP)
+<span class="lineNum">     194 </span>            : //{
+<span class="lineNum">     195 </span>            : //      dev::test::executeTests(&quot;stRefundTest&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     196 </span>            : //}
+<span class="lineNum">     197 </span>            : //BOOST_AUTO_TEST_CASE(stQuadraticComplexityTestEIP)
+<span class="lineNum">     198 </span>            : //{
+<span class="lineNum">     199 </span>            : //      if (test::Options::get().quadratic)
+<span class="lineNum">     200 </span>            : //              dev::test::executeTests(&quot;stQuadraticComplexityTest&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     201 </span>            : //}
+<span class="lineNum">     202 </span>            : //BOOST_AUTO_TEST_CASE(stMemoryStressTestEIP)
+<span class="lineNum">     203 </span>            : //{
+<span class="lineNum">     204 </span>            : //      if (test::Options::get().memory)
+<span class="lineNum">     205 </span>            : //              dev::test::executeTests(&quot;stMemoryStressTest&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     206 </span>            : //}
+<span class="lineNum">     207 </span>            : //BOOST_AUTO_TEST_CASE(stMemoryTestEIP)
+<span class="lineNum">     208 </span>            : //{
+<span class="lineNum">     209 </span>            : //      dev::test::executeTests(&quot;stMemoryTest&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     210 </span>            : //}
+<span class="lineNum">     211 </span>            : //BOOST_AUTO_TEST_CASE(stWalletTestEIP)
+<span class="lineNum">     212 </span>            : //{
+<span class="lineNum">     213 </span>            : //      dev::test::executeTests(&quot;stWalletTest&quot;, &quot;/StateTests/EIP158/Homestead&quot;, &quot;/StateTestsFiller/EIP158/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     214 </span>            : //}
+<span class="lineNum">     215 </span>            : //BOOST_AUTO_TEST_SUITE_END()
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            : //BOOST_AUTO_TEST_SUITE(StateTestsEIP)
+<span class="lineNum">     218 </span>            : //BOOST_AUTO_TEST_CASE(stChangedOnEIPTest)
+<span class="lineNum">     219 </span>            : //{
+<span class="lineNum">     220 </span>            : //      dev::test::executeTests(&quot;stChangedTests&quot;, &quot;/StateTests/EIP150&quot;, &quot;/StateTestsFiller/EIP150&quot;, dev::test::doStateTests);
+<span class="lineNum">     221 </span>            : //}
+<span class="lineNum">     222 </span>            : //BOOST_AUTO_TEST_CASE(stEIPSpecificTest)
+<span class="lineNum">     223 </span>            : //{
+<span class="lineNum">     224 </span>            : //      dev::test::executeTests(&quot;stEIPSpecificTest&quot;, &quot;/StateTests/EIP150&quot;, &quot;/StateTestsFiller/EIP150&quot;, dev::test::doStateTests);
+<span class="lineNum">     225 </span>            : //}
+<span class="lineNum">     226 </span>            : //BOOST_AUTO_TEST_CASE(stEIPsingleCodeGasPrices)
+<span class="lineNum">     227 </span>            : //{
+<span class="lineNum">     228 </span>            : //      dev::test::executeTests(&quot;stEIPsingleCodeGasPrices&quot;, &quot;/StateTests/EIP150&quot;, &quot;/StateTestsFiller/EIP150&quot;, dev::test::doStateTests);
+<span class="lineNum">     229 </span>            : //}
+<span class="lineNum">     230 </span>            : //BOOST_AUTO_TEST_CASE(stMemExpandingEIPCalls)
+<span class="lineNum">     231 </span>            : //{
+<span class="lineNum">     232 </span>            : //      dev::test::executeTests(&quot;stMemExpandingEIPCalls&quot;, &quot;/StateTests/EIP150&quot;, &quot;/StateTestsFiller/EIP150&quot;, dev::test::doStateTests);
+<span class="lineNum">     233 </span>            : //}
+<span class="lineNum">     234 </span>            : //BOOST_AUTO_TEST_CASE(stBoundsTestEIP)
+<span class="lineNum">     235 </span>            : //{
+<span class="lineNum">     236 </span>            : //      dev::test::executeTests(&quot;stBoundsTest&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     237 </span>            : //}
+<span class="lineNum">     238 </span>            : //BOOST_AUTO_TEST_CASE(stHomeSteadSpecificEIP)
+<span class="lineNum">     239 </span>            : //{
+<span class="lineNum">     240 </span>            : //      dev::test::executeTests(&quot;stHomeSteadSpecific&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     241 </span>            : //}
+<span class="lineNum">     242 </span>            : //BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCodeEIP)
+<span class="lineNum">     243 </span>            : //{
+<span class="lineNum">     244 </span>            : //      dev::test::executeTests(&quot;stCallDelegateCodesCallCode&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     245 </span>            : //}
+<span class="lineNum">     246 </span>            : //BOOST_AUTO_TEST_CASE(stCallDelegateCodesEIP)
+<span class="lineNum">     247 </span>            : //{
+<span class="lineNum">     248 </span>            : //      dev::test::executeTests(&quot;stCallDelegateCodes&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     249 </span>            : //}
+<span class="lineNum">     250 </span>            : //BOOST_AUTO_TEST_CASE(stDelegatecallTestEIP)
+<span class="lineNum">     251 </span>            : //{
+<span class="lineNum">     252 </span>            : //      dev::test::executeTests(&quot;stDelegatecallTest&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     253 </span>            : //}
+<span class="lineNum">     254 </span>            : //BOOST_AUTO_TEST_CASE(stCallCodesEIP)
+<span class="lineNum">     255 </span>            : //{
+<span class="lineNum">     256 </span>            : //      dev::test::executeTests(&quot;stCallCodes&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     257 </span>            : //}
+<span class="lineNum">     258 </span>            : //BOOST_AUTO_TEST_CASE(stSystemOperationsTestEIP)
+<span class="lineNum">     259 </span>            : //{
+<span class="lineNum">     260 </span>            : //      dev::test::executeTests(&quot;stSystemOperationsTest&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     261 </span>            : //}
+<span class="lineNum">     262 </span>            : //BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTestEIP)
+<span class="lineNum">     263 </span>            : //{
+<span class="lineNum">     264 </span>            : //      dev::test::executeTests(&quot;stCallCreateCallCodeTest&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     265 </span>            : //}
+<span class="lineNum">     266 </span>            : //BOOST_AUTO_TEST_CASE(stPreCompiledContractsEIP)
+<span class="lineNum">     267 </span>            : //{
+<span class="lineNum">     268 </span>            : //      dev::test::executeTests(&quot;stPreCompiledContracts&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     269 </span>            : //}
+<span class="lineNum">     270 </span>            : //BOOST_AUTO_TEST_CASE(stLogTestsEIP)
+<span class="lineNum">     271 </span>            : //{
+<span class="lineNum">     272 </span>            : //      dev::test::executeTests(&quot;stLogTests&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     273 </span>            : //}
+<span class="lineNum">     274 </span>            : //BOOST_AUTO_TEST_CASE(stRecursiveCreateEIP)
+<span class="lineNum">     275 </span>            : //{
+<span class="lineNum">     276 </span>            : //      dev::test::executeTests(&quot;stRecursiveCreate&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     277 </span>            : //}
+<span class="lineNum">     278 </span>            : //BOOST_AUTO_TEST_CASE(stInitCodeTestEIP)
+<span class="lineNum">     279 </span>            : //{
+<span class="lineNum">     280 </span>            : //      dev::test::executeTests(&quot;stInitCodeTest&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     281 </span>            : //}
+<span class="lineNum">     282 </span>            : //BOOST_AUTO_TEST_CASE(stTransactionTestEIP)
+<span class="lineNum">     283 </span>            : //{
+<span class="lineNum">     284 </span>            : //      dev::test::executeTests(&quot;stTransactionTest&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     285 </span>            : //}
+<span class="lineNum">     286 </span>            : //BOOST_AUTO_TEST_CASE(stSpecialTestEIP)
+<span class="lineNum">     287 </span>            : //{
+<span class="lineNum">     288 </span>            : //      dev::test::executeTests(&quot;stSpecialTest&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     289 </span>            : //}
+<span class="lineNum">     290 </span>            : //BOOST_AUTO_TEST_CASE(stRefundTestEIP)
+<span class="lineNum">     291 </span>            : //{
+<span class="lineNum">     292 </span>            : //      dev::test::executeTests(&quot;stRefundTest&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     293 </span>            : //}
+<span class="lineNum">     294 </span>            : //BOOST_AUTO_TEST_CASE(stQuadraticComplexityTestEIP)
+<span class="lineNum">     295 </span>            : //{
+<span class="lineNum">     296 </span>            : //      if (test::Options::get().quadratic)
+<span class="lineNum">     297 </span>            : //              dev::test::executeTests(&quot;stQuadraticComplexityTest&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     298 </span>            : //}
+<span class="lineNum">     299 </span>            : //BOOST_AUTO_TEST_CASE(stMemoryStressTestEIP)
+<span class="lineNum">     300 </span>            : //{
+<span class="lineNum">     301 </span>            : //      if (test::Options::get().memory)
+<span class="lineNum">     302 </span>            : //              dev::test::executeTests(&quot;stMemoryStressTest&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     303 </span>            : //}
+<span class="lineNum">     304 </span>            : //BOOST_AUTO_TEST_CASE(stMemoryTestEIP)
+<span class="lineNum">     305 </span>            : //{
+<span class="lineNum">     306 </span>            : //      dev::test::executeTests(&quot;stMemoryTest&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     307 </span>            : //}
+<span class="lineNum">     308 </span>            : //BOOST_AUTO_TEST_CASE(stWalletTestEIP)
+<span class="lineNum">     309 </span>            : //{
+<span class="lineNum">     310 </span>            : //      dev::test::executeTests(&quot;stWalletTest&quot;, &quot;/StateTests/EIP150/Homestead&quot;, &quot;/StateTestsFiller/EIP150/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     311 </span>            : //}
+<span class="lineNum">     312 </span>            : //BOOST_AUTO_TEST_SUITE_END()
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span>            : //BOOST_AUTO_TEST_SUITE(StateTestsHomestead)
+<span class="lineNum">     315 </span>            : //BOOST_AUTO_TEST_CASE(stZeroCallsRevertTest)
+<span class="lineNum">     316 </span>            : //{
+<span class="lineNum">     317 </span>            : //      dev::test::executeTests(&quot;stZeroCallsRevertTest&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     318 </span>            : //}
+<span class="lineNum">     319 </span>            : //BOOST_AUTO_TEST_CASE(stBoundsTestHomestead)
+<span class="lineNum">     320 </span>            : //{
+<span class="lineNum">     321 </span>            : //      dev::test::executeTests(&quot;stBoundsTest&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     322 </span>            : //}
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span>            : //BOOST_AUTO_TEST_CASE(stHomeSteadSpecific)
+<span class="lineNum">     325 </span>            : //{
+<span class="lineNum">     326 </span>            : //      dev::test::executeTests(&quot;stHomeSteadSpecific&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     327 </span>            : //}
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span>            : //BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCodeHomestead)
+<span class="lineNum">     330 </span>            : //{
+<span class="lineNum">     331 </span>            : //      dev::test::executeTests(&quot;stCallDelegateCodesCallCode&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     332 </span>            : //}
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span>            : //BOOST_AUTO_TEST_CASE(stCallDelegateCodesHomestead)
+<span class="lineNum">     335 </span>            : //{
+<span class="lineNum">     336 </span>            : //      dev::test::executeTests(&quot;stCallDelegateCodes&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     337 </span>            : //}
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span>            : //BOOST_AUTO_TEST_CASE(stDelegatecallTestHomestead)
+<span class="lineNum">     340 </span>            : //{
+<span class="lineNum">     341 </span>            : //      dev::test::executeTests(&quot;stDelegatecallTest&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     342 </span>            : //}
+<span class="lineNum">     343 </span>            : 
+<span class="lineNum">     344 </span>            : //BOOST_AUTO_TEST_CASE(stCallCodesHomestead)
+<span class="lineNum">     345 </span>            : //{
+<span class="lineNum">     346 </span>            : //      dev::test::executeTests(&quot;stCallCodes&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     347 </span>            : //}
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span>            : //BOOST_AUTO_TEST_CASE(stSystemOperationsTestHomestead)
+<span class="lineNum">     350 </span>            : //{
+<span class="lineNum">     351 </span>            : //      dev::test::executeTests(&quot;stSystemOperationsTest&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     352 </span>            : //}
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span>            : //BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTestHomestead)
+<span class="lineNum">     355 </span>            : //{
+<span class="lineNum">     356 </span>            : //      dev::test::executeTests(&quot;stCallCreateCallCodeTest&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     357 </span>            : //}
+<span class="lineNum">     358 </span>            : 
+<span class="lineNum">     359 </span>            : //BOOST_AUTO_TEST_CASE(stPreCompiledContractsHomestead)
+<span class="lineNum">     360 </span>            : //{
+<span class="lineNum">     361 </span>            : //      dev::test::executeTests(&quot;stPreCompiledContracts&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     362 </span>            : //}
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span>            : //BOOST_AUTO_TEST_CASE(stLogTestsHomestead)
+<span class="lineNum">     365 </span>            : //{
+<span class="lineNum">     366 </span>            : //      dev::test::executeTests(&quot;stLogTests&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     367 </span>            : //}
+<span class="lineNum">     368 </span>            : 
+<span class="lineNum">     369 </span>            : //BOOST_AUTO_TEST_CASE(stRecursiveCreateHomestead)
+<span class="lineNum">     370 </span>            : //{
+<span class="lineNum">     371 </span>            : //      dev::test::executeTests(&quot;stRecursiveCreate&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     372 </span>            : //}
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span>            : //BOOST_AUTO_TEST_CASE(stInitCodeTestHomestead)
+<span class="lineNum">     375 </span>            : //{
+<span class="lineNum">     376 </span>            : //      dev::test::executeTests(&quot;stInitCodeTest&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     377 </span>            : //}
+<span class="lineNum">     378 </span>            : 
+<span class="lineNum">     379 </span>            : //BOOST_AUTO_TEST_CASE(stTransactionTestHomestead)
+<span class="lineNum">     380 </span>            : //{
+<span class="lineNum">     381 </span>            : //      dev::test::executeTests(&quot;stTransactionTest&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     382 </span>            : //}
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span>            : //BOOST_AUTO_TEST_CASE(stSpecialTestHomestead)
+<span class="lineNum">     385 </span>            : //{
+<span class="lineNum">     386 </span>            : //      dev::test::executeTests(&quot;stSpecialTest&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     387 </span>            : //}
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span>            : //BOOST_AUTO_TEST_CASE(stRefundTestHomestead)
+<span class="lineNum">     390 </span>            : //{
+<span class="lineNum">     391 </span>            : //      dev::test::executeTests(&quot;stRefundTest&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     392 </span>            : //}
+<span class="lineNum">     393 </span>            : 
+<span class="lineNum">     394 </span>            : //BOOST_AUTO_TEST_CASE(stQuadraticComplexityTestHomestead)
+<span class="lineNum">     395 </span>            : //{
+<span class="lineNum">     396 </span>            : //      if (test::Options::get().quadratic)
+<span class="lineNum">     397 </span>            : //              dev::test::executeTests(&quot;stQuadraticComplexityTest&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     398 </span>            : //}
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span>            : //BOOST_AUTO_TEST_CASE(stMemoryStressTestHomestead)
+<span class="lineNum">     401 </span>            : //{
+<span class="lineNum">     402 </span>            : //      if (test::Options::get().memory)
+<span class="lineNum">     403 </span>            : //              dev::test::executeTests(&quot;stMemoryStressTest&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     404 </span>            : //}
+<span class="lineNum">     405 </span>            : 
+<span class="lineNum">     406 </span>            : //BOOST_AUTO_TEST_CASE(stMemoryTestHomestead)
+<span class="lineNum">     407 </span>            : //{
+<span class="lineNum">     408 </span>            : //      dev::test::executeTests(&quot;stMemoryTest&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     409 </span>            : //}
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span>            : //BOOST_AUTO_TEST_CASE(stWalletTestHomestead)
+<span class="lineNum">     412 </span>            : //{
+<span class="lineNum">     413 </span>            : //      dev::test::executeTests(&quot;stWalletTest&quot;, &quot;/StateTests/Homestead&quot;, &quot;/StateTestsFiller/Homestead&quot;, dev::test::doStateTests);
+<span class="lineNum">     414 </span>            : //}
+<span class="lineNum">     415 </span>            : 
+<span class="lineNum">     416 </span>            : //BOOST_AUTO_TEST_SUITE_END()
+<span class="lineNum">     417 </span>            : 
+<span class="lineNum">     418 </span>            : 
+<span class="lineNum">     419 </span>            : //BOOST_AUTO_TEST_SUITE(StateTests)
+<span class="lineNum">     420 </span>            : //BOOST_AUTO_TEST_CASE(stCallCodes)
+<span class="lineNum">     421 </span>            : //{
+<span class="lineNum">     422 </span>            : //      dev::test::executeTests(&quot;stCallCodes&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     423 </span>            : //}
+<span class="lineNum">     424 </span>            : 
+<span class="lineNum">     425 </span>            : //BOOST_AUTO_TEST_CASE(stExample)
+<span class="lineNum">     426 </span>            : //{
+<span class="lineNum">     427 </span>            : //      dev::test::executeTests(&quot;stExample&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     428 </span>            : //}
+<span class="lineNum">     429 </span>            : 
+<span class="lineNum">     430 </span>            : //BOOST_AUTO_TEST_CASE(stSystemOperationsTest)
+<span class="lineNum">     431 </span>            : //{
+<span class="lineNum">     432 </span>            : //      dev::test::executeTests(&quot;stSystemOperationsTest&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     433 </span>            : //}
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span>            : //BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest)
+<span class="lineNum">     436 </span>            : //{
+<span class="lineNum">     437 </span>            : //      dev::test::executeTests(&quot;stCallCreateCallCodeTest&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     438 </span>            : //}
+<span class="lineNum">     439 </span>            : 
+<span class="lineNum">     440 </span>            : //BOOST_AUTO_TEST_CASE(stPreCompiledContracts)
+<span class="lineNum">     441 </span>            : //{
+<span class="lineNum">     442 </span>            : //      dev::test::executeTests(&quot;stPreCompiledContracts&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     443 </span>            : //}
+<span class="lineNum">     444 </span>            : 
+<span class="lineNum">     445 </span>            : //BOOST_AUTO_TEST_CASE(stLogTests)
+<span class="lineNum">     446 </span>            : //{
+<span class="lineNum">     447 </span>            : //      dev::test::executeTests(&quot;stLogTests&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     448 </span>            : //}
+<span class="lineNum">     449 </span>            : 
+<span class="lineNum">     450 </span>            : //BOOST_AUTO_TEST_CASE(stRecursiveCreate)
+<span class="lineNum">     451 </span>            : //{
+<span class="lineNum">     452 </span>            : //      dev::test::executeTests(&quot;stRecursiveCreate&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     453 </span>            : //}
+<span class="lineNum">     454 </span>            : 
+<span class="lineNum">     455 </span>            : //BOOST_AUTO_TEST_CASE(stInitCodeTest)
+<span class="lineNum">     456 </span>            : //{
+<span class="lineNum">     457 </span>            : //      dev::test::executeTests(&quot;stInitCodeTest&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     458 </span>            : //}
+<span class="lineNum">     459 </span>            : 
+<span class="lineNum">     460 </span>            : //BOOST_AUTO_TEST_CASE(stTransactionTest)
+<span class="lineNum">     461 </span>            : //{
+<span class="lineNum">     462 </span>            : //      dev::test::executeTests(&quot;stTransactionTest&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     463 </span>            : //}
+<span class="lineNum">     464 </span>            : 
+<span class="lineNum">     465 </span>            : //BOOST_AUTO_TEST_CASE(stSpecialTest)
+<span class="lineNum">     466 </span>            : //{
+<span class="lineNum">     467 </span>            : //      dev::test::executeTests(&quot;stSpecialTest&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     468 </span>            : //}
+<span class="lineNum">     469 </span>            : 
+<span class="lineNum">     470 </span>            : //BOOST_AUTO_TEST_CASE(stRefundTest)
+<span class="lineNum">     471 </span>            : //{
+<span class="lineNum">     472 </span>            : //      dev::test::executeTests(&quot;stRefundTest&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     473 </span>            : //}
+<span class="lineNum">     474 </span>            : 
+<span class="lineNum">     475 </span>            : //BOOST_AUTO_TEST_CASE(stBlockHashTest)
+<span class="lineNum">     476 </span>            : //{
+<span class="lineNum">     477 </span>            : //      dev::test::executeTests(&quot;stBlockHashTest&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     478 </span>            : //}
+<span class="lineNum">     479 </span>            : 
+<span class="lineNum">     480 </span>            : //BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest)
+<span class="lineNum">     481 </span>            : //{
+<span class="lineNum">     482 </span>            : //      if (test::Options::get().quadratic)
+<span class="lineNum">     483 </span>            : //              dev::test::executeTests(&quot;stQuadraticComplexityTest&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     484 </span>            : //}
+<span class="lineNum">     485 </span>            : 
+<span class="lineNum">     486 </span>            : //BOOST_AUTO_TEST_CASE(stMemoryStressTest)
+<span class="lineNum">     487 </span>            : //{
+<span class="lineNum">     488 </span>            : //      if (test::Options::get().memory)
+<span class="lineNum">     489 </span>            : //              dev::test::executeTests(&quot;stMemoryStressTest&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     490 </span>            : //}
+<span class="lineNum">     491 </span>            : 
+<span class="lineNum">     492 </span>            : //BOOST_AUTO_TEST_CASE(stSolidityTest)
+<span class="lineNum">     493 </span>            : //{
+<span class="lineNum">     494 </span>            : //      dev::test::executeTests(&quot;stSolidityTest&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     495 </span>            : //}
+<span class="lineNum">     496 </span>            : 
+<span class="lineNum">     497 </span>            : //BOOST_AUTO_TEST_CASE(stMemoryTest)
+<span class="lineNum">     498 </span>            : //{
+<span class="lineNum">     499 </span>            : //      dev::test::executeTests(&quot;stMemoryTest&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     500 </span>            : //}
+<span class="lineNum">     501 </span>            : 
+<span class="lineNum">     502 </span>            : //BOOST_AUTO_TEST_CASE(stWalletTest)
+<span class="lineNum">     503 </span>            : //{
+<span class="lineNum">     504 </span>            : //      dev::test::executeTests(&quot;stWalletTest&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     505 </span>            : //}
+<span class="lineNum">     506 </span>            : 
+<span class="lineNum">     507 </span>            : //BOOST_AUTO_TEST_CASE(stTransitionTest)
+<span class="lineNum">     508 </span>            : //{
+<span class="lineNum">     509 </span>            : //      dev::test::executeTests(&quot;stTransitionTest&quot;, &quot;/StateTests&quot;, &quot;/StateTestsFiller&quot;, dev::test::doStateTests);
+<span class="lineNum">     510 </span>            : //}
+<span class="lineNum">     511 </span>            : 
+<span class="lineNum">     512 </span>            : ////todo: Force stRandom to be tested on Homestead Seal Engine ?
+<span class="lineNum">     513 </span>            : //BOOST_AUTO_TEST_CASE(stRandom)
+<span class="lineNum">     514 </span>            : //{
+<span class="lineNum">     515 </span>            : //      test::Options::get(); // parse command line options, e.g. to enable JIT
+<span class="lineNum">     516 </span>            : //      string testPath = dev::test::getTestPath() + &quot;/StateTests/RandomTests&quot;;
+<span class="lineNum">     517 </span>            : //      string fillersPath = dev::test::getTestPath() + &quot;/src/StateTestsFiller/RandomTests&quot;;
+<span class="lineNum">     518 </span>            : 
+<span class="lineNum">     519 </span>            : //      if (dev::test::Options::get().filltests)
+<span class="lineNum">     520 </span>            : //      {
+<span class="lineNum">     521 </span>            : //              test::TestOutputHelper::initTest();
+<span class="lineNum">     522 </span>            : //              vector&lt;boost::filesystem::path&gt; testFiles;
+<span class="lineNum">     523 </span>            : //              boost::filesystem::directory_iterator iterator(fillersPath);
+<span class="lineNum">     524 </span>            : //              for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
+<span class="lineNum">     525 </span>            : //                      if (boost::filesystem::is_regular_file(iterator-&gt;path()) &amp;&amp; iterator-&gt;path().extension() == &quot;.json&quot;)
+<span class="lineNum">     526 </span>            : //                      {
+<span class="lineNum">     527 </span>            : //                              if (test::Options::get().singleTest)
+<span class="lineNum">     528 </span>            : //                              {
+<span class="lineNum">     529 </span>            : //                                      string fileboost = iterator-&gt;path().filename().string();
+<span class="lineNum">     530 </span>            : //                                      string filesingletest = test::Options::get().singleTestName; //parse singletest as a filename of random test
+<span class="lineNum">     531 </span>            : //                                      if (fileboost == filesingletest || fileboost.substr(0, fileboost.length()-5) == filesingletest)
+<span class="lineNum">     532 </span>            : //                                              testFiles.push_back(iterator-&gt;path());
+<span class="lineNum">     533 </span>            : //                              }
+<span class="lineNum">     534 </span>            : //                              else
+<span class="lineNum">     535 </span>            : //                                      testFiles.push_back(iterator-&gt;path());
+<span class="lineNum">     536 </span>            : //                      }
+<span class="lineNum">     537 </span>            : 
+<span class="lineNum">     538 </span>            : //              test::TestOutputHelper::setMaxTests(testFiles.size() * 2);
+<span class="lineNum">     539 </span>            : //              for (auto&amp; path: testFiles)
+<span class="lineNum">     540 </span>            : //              {
+<span class="lineNum">     541 </span>            : //                      std::string filename = path.filename().string();
+<span class="lineNum">     542 </span>            : //                      test::TestOutputHelper::setCurrentTestFileName(filename);
+<span class="lineNum">     543 </span>            : //                      filename = filename.substr(0, filename.length() - 5); //without .json
+<span class="lineNum">     544 </span>            : //                      dev::test::executeTests(filename, &quot;/StateTests/RandomTests&quot;, &quot;/StateTestsFiller/RandomTests&quot;, dev::test::doStateTests, false);
+<span class="lineNum">     545 </span>            : //              }
+<span class="lineNum">     546 </span>            : //              return; //executeTests has already run test after filling
+<span class="lineNum">     547 </span>            : //      }
+<span class="lineNum">     548 </span>            : 
+<span class="lineNum">     549 </span>            : //      vector&lt;boost::filesystem::path&gt; testFiles;
+<span class="lineNum">     550 </span>            : //      boost::filesystem::directory_iterator iterator(testPath);
+<span class="lineNum">     551 </span>            : //      for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
+<span class="lineNum">     552 </span>            : //              if (boost::filesystem::is_regular_file(iterator-&gt;path()) &amp;&amp; iterator-&gt;path().extension() == &quot;.json&quot;)
+<span class="lineNum">     553 </span>            : //              {
+<span class="lineNum">     554 </span>            : //                      if (test::Options::get().singleTest)
+<span class="lineNum">     555 </span>            : //                      {
+<span class="lineNum">     556 </span>            : //                              string fileboost = iterator-&gt;path().filename().string();
+<span class="lineNum">     557 </span>            : //                              string filesingletest = test::Options::get().singleTestName; //parse singletest as a filename of random test
+<span class="lineNum">     558 </span>            : //                              if (fileboost == filesingletest || fileboost.substr(0, fileboost.length()-5) == filesingletest)
+<span class="lineNum">     559 </span>            : //                                      testFiles.push_back(iterator-&gt;path());
+<span class="lineNum">     560 </span>            : //                      }
+<span class="lineNum">     561 </span>            : //                      else
+<span class="lineNum">     562 </span>            : //                              testFiles.push_back(iterator-&gt;path());
+<span class="lineNum">     563 </span>            : //              }
+<span class="lineNum">     564 </span>            : 
+<span class="lineNum">     565 </span>            : //      test::TestOutputHelper::initTest();
+<span class="lineNum">     566 </span>            : //      test::TestOutputHelper::setMaxTests(testFiles.size());
+<span class="lineNum">     567 </span>            : 
+<span class="lineNum">     568 </span>            : //      for (auto&amp; path: testFiles)
+<span class="lineNum">     569 </span>            : //      {
+<span class="lineNum">     570 </span>            : //              try
+<span class="lineNum">     571 </span>            : //              {
+<span class="lineNum">     572 </span>            : //                      cnote &lt;&lt; &quot;Testing ...&quot; &lt;&lt; path.filename();
+<span class="lineNum">     573 </span>            : //                      test::TestOutputHelper::setCurrentTestFileName(path.filename().string());
+<span class="lineNum">     574 </span>            : //                      json_spirit::mValue v;
+<span class="lineNum">     575 </span>            : //                      string s = asString(dev::contents(path.string()));
+<span class="lineNum">     576 </span>            : //                      BOOST_REQUIRE_MESSAGE(s.length() &gt; 0, &quot;Content of &quot; + path.string() + &quot; is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?&quot;);
+<span class="lineNum">     577 </span>            : //                      json_spirit::read_string(s, v);
+<span class="lineNum">     578 </span>            : //                      test::Listener::notifySuiteStarted(path.filename().string());
+<span class="lineNum">     579 </span>            : //                      dev::test::doStateTests(v, false);
+<span class="lineNum">     580 </span>            : //              }
+<span class="lineNum">     581 </span>            : //              catch (Exception const&amp; _e)
+<span class="lineNum">     582 </span>            : //              {
+<span class="lineNum">     583 </span>            : //                      BOOST_ERROR(path.filename().string() + &quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));
+<span class="lineNum">     584 </span>            : //              }
+<span class="lineNum">     585 </span>            : //              catch (std::exception const&amp; _e)
+<span class="lineNum">     586 </span>            : //              {
+<span class="lineNum">     587 </span>            : //                      BOOST_ERROR(path.filename().string() + &quot;Failed test with Exception: &quot; &lt;&lt; _e.what());
+<span class="lineNum">     588 </span>            : //              }
+<span class="lineNum">     589 </span>            : //      }
+<span class="lineNum">     590 </span>            : //}
+<span class="lineNum">     591 </span>            : 
+<span class="lineNum">     592 </span>            : //BOOST_AUTO_TEST_CASE(userDefinedFileState)
+<span class="lineNum">     593 </span>            : //{
+<span class="lineNum">     594 </span>            : //      dev::test::userDefinedTest(dev::test::doStateTests);
+<span class="lineNum">     595 </span>            : //}
+<span class="lineNum">     596 </span>            : 
+<span class="lineNum">     597 </span>            : //BOOST_AUTO_TEST_SUITE_END()
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

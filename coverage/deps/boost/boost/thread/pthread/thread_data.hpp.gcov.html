@@ -1,0 +1,368 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/thread/pthread/thread_data.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/thread/pthread</a> - thread_data.hpp<span style="font-size: 80%;"> (source / <a href="thread_data.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntry">46</td>
+            <td class="headerCovTableEntryLo">63.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">47</td>
+            <td class="headerCovTableEntryLo">12.8 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef BOOST_THREAD_PTHREAD_THREAD_DATA_HPP</a>
+<span class="lineNum">       2 </span>            : #define BOOST_THREAD_PTHREAD_THREAD_DATA_HPP
+<span class="lineNum">       3 </span>            : // Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">       4 </span>            : // accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       5 </span>            : // http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       6 </span>            : // (C) Copyright 2007 Anthony Williams
+<span class="lineNum">       7 </span>            : // (C) Copyright 2011-2012 Vicente J. Botet Escriba
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : #include &lt;boost/thread/detail/config.hpp&gt;
+<span class="lineNum">      10 </span>            : #include &lt;boost/thread/exceptions.hpp&gt;
+<span class="lineNum">      11 </span>            : #include &lt;boost/thread/lock_guard.hpp&gt;
+<span class="lineNum">      12 </span>            : #include &lt;boost/thread/lock_types.hpp&gt;
+<span class="lineNum">      13 </span>            : #include &lt;boost/thread/mutex.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/thread/pthread/condition_variable_fwd.hpp&gt;
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #include &lt;boost/shared_ptr.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/enable_shared_from_this.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/assert.hpp&gt;
+<span class="lineNum">      19 </span>            : #ifdef BOOST_THREAD_USES_CHRONO
+<span class="lineNum">      20 </span>            : #include &lt;boost/chrono/system_clocks.hpp&gt;
+<span class="lineNum">      21 </span>            : #endif
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;map&gt;
+<span class="lineNum">      24 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      25 </span>            : #include &lt;utility&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #if defined(__ANDROID__)
+<span class="lineNum">      28 </span>            : # ifndef PAGE_SIZE
+<span class="lineNum">      29 </span>            : #  define PAGE_SIZE 4096
+<span class="lineNum">      30 </span>            : # endif
+<span class="lineNum">      31 </span>            : #endif
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #include &lt;pthread.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;unistd.h&gt;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #include &lt;boost/config/abi_prefix.hpp&gt;
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : namespace boost
+<span class="lineNum">      39 </span>            : {
+<a name="40"><span class="lineNum">      40 </span>            :     class thread_attributes {</a>
+<span class="lineNum">      41 </span>            :     public:
+<span class="lineNum">      42 </span><span class="lineCov">         75 :         thread_attributes() BOOST_NOEXCEPT {</span>
+<span class="lineNum">      43 </span><span class="lineCov">         75 :             int res = pthread_attr_init(&amp;val_);</span>
+<a name="44"><span class="lineNum">      44 </span><span class="lineCov">         75 :             BOOST_VERIFY(!res &amp;&amp; &quot;pthread_attr_init failed&quot;);</span></a>
+<span class="lineNum">      45 </span><span class="lineCov">         75 :         }</span>
+<span class="lineNum">      46 </span><span class="lineCov">        150 :         ~thread_attributes() {</span>
+<span class="lineNum">      47 </span><span class="lineCov">         75 :           int res = pthread_attr_destroy(&amp;val_);</span>
+<span class="lineNum">      48 </span><span class="lineCov">         75 :           BOOST_VERIFY(!res &amp;&amp; &quot;pthread_attr_destroy failed&quot;);</span>
+<a name="49"><span class="lineNum">      49 </span><span class="lineCov">         75 :         }</span></a>
+<span class="lineNum">      50 </span>            :         // stack
+<span class="lineNum">      51 </span><span class="lineCov">         75 :         void set_stack_size(std::size_t size) BOOST_NOEXCEPT {</span>
+<span class="lineNum">      52 </span><span class="lineCov">         75 :           if (size==0) return;</span>
+<span class="lineNum">      53 </span><span class="lineCov">         75 :           std::size_t page_size = getpagesize();</span>
+<span class="lineNum">      54 </span>            : #ifdef PTHREAD_STACK_MIN
+<span class="lineNum">      55 </span><span class="lineCov">         75 :           if (size&lt;PTHREAD_STACK_MIN) size=PTHREAD_STACK_MIN;</span>
+<span class="lineNum">      56 </span>            : #endif
+<span class="lineNum">      57 </span><span class="lineCov">         75 :           size = ((size+page_size-1)/page_size)*page_size;</span>
+<span class="lineNum">      58 </span><span class="lineCov">         75 :           int res = pthread_attr_setstacksize(&amp;val_, size);</span>
+<span class="lineNum">      59 </span><span class="lineCov">         75 :           BOOST_VERIFY(!res &amp;&amp; &quot;pthread_attr_setstacksize failed&quot;);</span>
+<span class="lineNum">      60 </span>            :         }
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            :         std::size_t get_stack_size() const BOOST_NOEXCEPT {
+<span class="lineNum">      63 </span>            :             std::size_t size;
+<span class="lineNum">      64 </span>            :             int res = pthread_attr_getstacksize(&amp;val_, &amp;size);
+<span class="lineNum">      65 </span>            :             BOOST_VERIFY(!res &amp;&amp; &quot;pthread_attr_getstacksize failed&quot;);
+<span class="lineNum">      66 </span>            :             return size;
+<span class="lineNum">      67 </span>            :         }
+<span class="lineNum">      68 </span>            : #define BOOST_THREAD_DEFINES_THREAD_ATTRIBUTES_NATIVE_HANDLE
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            :         typedef pthread_attr_t native_handle_type;
+<span class="lineNum">      71 </span>            :         native_handle_type* native_handle() BOOST_NOEXCEPT {
+<span class="lineNum">      72 </span>            :           return &amp;val_;
+<span class="lineNum">      73 </span>            :         }
+<span class="lineNum">      74 </span>            :         const native_handle_type* native_handle() const BOOST_NOEXCEPT {
+<span class="lineNum">      75 </span>            :           return &amp;val_;
+<span class="lineNum">      76 </span>            :         }
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :     private:
+<span class="lineNum">      79 </span>            :         pthread_attr_t val_;
+<span class="lineNum">      80 </span>            :     };
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :     class thread;
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            :     namespace detail
+<span class="lineNum">      85 </span>            :     {
+<span class="lineNum">      86 </span>            :         struct shared_state_base;
+<span class="lineNum">      87 </span>            :         struct tss_cleanup_function;
+<span class="lineNum">      88 </span>            :         struct thread_exit_callback_node;
+<span class="lineNum">      89 </span>            :         struct tss_data_node
+<span class="lineNum">      90 </span>            :         {
+<span class="lineNum">      91 </span>            :             boost::shared_ptr&lt;boost::detail::tss_cleanup_function&gt; func;
+<span class="lineNum">      92 </span>            :             void* value;
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :             tss_data_node(boost::shared_ptr&lt;boost::detail::tss_cleanup_function&gt; func_,
+<span class="lineNum">      95 </span>            :                           void* value_):
+<span class="lineNum">      96 </span>            :                 func(func_),value(value_)
+<span class="lineNum">      97 </span>            :             {}
+<span class="lineNum">      98 </span>            :         };
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :         struct thread_data_base;
+<span class="lineNum">     101 </span>            :         typedef boost::shared_ptr&lt;thread_data_base&gt; thread_data_ptr;
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            :         struct BOOST_THREAD_DECL thread_data_base:
+<span class="lineNum">     104 </span>            :             enable_shared_from_this&lt;thread_data_base&gt;
+<span class="lineNum">     105 </span>            :         {
+<span class="lineNum">     106 </span>            :             thread_data_ptr self;
+<span class="lineNum">     107 </span>            :             pthread_t thread_handle;
+<span class="lineNum">     108 </span>            :             boost::mutex data_mutex;
+<span class="lineNum">     109 </span>            :             boost::condition_variable done_condition;
+<span class="lineNum">     110 </span>            :             boost::mutex sleep_mutex;
+<span class="lineNum">     111 </span>            :             boost::condition_variable sleep_condition;
+<span class="lineNum">     112 </span>            :             bool done;
+<span class="lineNum">     113 </span>            :             bool join_started;
+<span class="lineNum">     114 </span>            :             bool joined;
+<span class="lineNum">     115 </span>            :             boost::detail::thread_exit_callback_node* thread_exit_callbacks;
+<span class="lineNum">     116 </span>            :             std::map&lt;void const*,boost::detail::tss_data_node&gt; tss_data;
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : //#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">     119 </span>            :             // These data must be at the end so that the access to the other fields doesn't change
+<span class="lineNum">     120 </span>            :             // when BOOST_THREAD_PROVIDES_INTERRUPTIONS is defined.
+<span class="lineNum">     121 </span>            :             // Another option is to have them always
+<span class="lineNum">     122 </span>            :             pthread_mutex_t* cond_mutex;
+<span class="lineNum">     123 </span>            :             pthread_cond_t* current_cond;
+<span class="lineNum">     124 </span>            : //#endif
+<span class="lineNum">     125 </span>            :             typedef std::vector&lt;std::pair&lt;condition_variable*, mutex*&gt;
+<span class="lineNum">     126 </span>            :             //, hidden_allocator&lt;std::pair&lt;condition_variable*, mutex*&gt; &gt;
+<span class="lineNum">     127 </span>            :             &gt; notify_list_t;
+<span class="lineNum">     128 </span>            :             notify_list_t notify;
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :             typedef std::vector&lt;shared_ptr&lt;shared_state_base&gt; &gt; async_states_t;
+<span class="lineNum">     131 </span>            :             async_states_t async_states_;
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            : //#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">     134 </span>            :             // These data must be at the end so that the access to the other fields doesn't change
+<span class="lineNum">     135 </span>            :             // when BOOST_THREAD_PROVIDES_INTERRUPTIONS is defined.
+<span class="lineNum">     136 </span>            :             // Another option is to have them always
+<span class="lineNum">     137 </span>            :             bool interrupt_enabled;
+<a name="138"><span class="lineNum">     138 </span>            :             bool interrupt_requested;</a>
+<span class="lineNum">     139 </span>            : //#endif
+<span class="lineNum">     140 </span><span class="lineCov">         75 :             thread_data_base():</span>
+<span class="lineNum">     141 </span>            :                 thread_handle(0),
+<span class="lineNum">     142 </span>            :                 done(false),join_started(false),joined(false),
+<span class="lineNum">     143 </span>            :                 thread_exit_callbacks(0),
+<span class="lineNum">     144 </span>            : //#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">     145 </span>            :                 cond_mutex(0),
+<span class="lineNum">     146 </span>            :                 current_cond(0),
+<span class="lineNum">     147 </span>            : //#endif
+<span class="lineNum">     148 </span>            :                 notify(),
+<span class="lineNum">     149 </span>            :                 async_states_()
+<span class="lineNum">     150 </span>            : //#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">     151 </span>            :                 , interrupt_enabled(true)
+<span class="lineNum">     152 </span><span class="lineCov">        450 :                 , interrupt_requested(false)</span>
+<span class="lineNum">     153 </span>            : //#endif
+<span class="lineNum">     154 </span><span class="lineCov">         75 :             {}</span>
+<span class="lineNum">     155 </span>            :             virtual ~thread_data_base();
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            :             typedef pthread_t native_handle_type;
+<a name="158"><span class="lineNum">     158 </span>            : </a>
+<span class="lineNum">     159 </span>            :             virtual void run()=0;
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :             virtual void notify_all_at_thread_exit(condition_variable* cv, mutex* m)</span>
+<span class="lineNum">     161 </span>            :             {
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :               notify.push_back(std::pair&lt;condition_variable*, mutex*&gt;(cv, m));</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :             }</span>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :             void make_ready_at_thread_exit(shared_ptr&lt;shared_state_base&gt; as)
+<span class="lineNum">     166 </span>            :             {
+<span class="lineNum">     167 </span>            :               async_states_.push_back(as);
+<span class="lineNum">     168 </span>            :             }
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :         };
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :         BOOST_THREAD_DECL thread_data_base* get_current_thread_data();
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">     175 </span>            :         class interruption_checker
+<span class="lineNum">     176 </span>            :         {
+<span class="lineNum">     177 </span>            :             thread_data_base* const thread_info;
+<span class="lineNum">     178 </span>            :             pthread_mutex_t* m;
+<a name="179"><span class="lineNum">     179 </span>            :             bool set;</a>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :             void check_for_interruption()</span>
+<span class="lineNum">     182 </span>            :             {
+<span class="lineNum">     183 </span>            : #ifndef BOOST_NO_EXCEPTIONS
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :                 if(thread_info-&gt;interrupt_requested)</span>
+<span class="lineNum">     185 </span>            :                 {
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :                     thread_info-&gt;interrupt_requested=false;</span>
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :                     throw thread_interrupted(); // BOOST_NO_EXCEPTIONS protected</span>
+<span class="lineNum">     188 </span>            :                 }
+<span class="lineNum">     189 </span>            : #endif
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :             }</span>
+<span class="lineNum">     191 </span>            : 
+<a name="192"><span class="lineNum">     192 </span>            :             void operator=(interruption_checker&amp;);</a>
+<span class="lineNum">     193 </span>            :         public:
+<span class="lineNum">     194 </span><span class="lineCov">         79 :             explicit interruption_checker(pthread_mutex_t* cond_mutex,pthread_cond_t* cond):</span>
+<span class="lineNum">     195 </span><span class="lineCov">         79 :                 thread_info(detail::get_current_thread_data()),m(cond_mutex),</span>
+<span class="lineNum">     196 </span><span class="lineCov">         79 :                 set(thread_info &amp;&amp; thread_info-&gt;interrupt_enabled)</span>
+<span class="lineNum">     197 </span>            :             {
+<span class="lineNum">     198 </span><span class="lineCov">         79 :                 if(set)</span>
+<span class="lineNum">     199 </span>            :                 {
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :                     lock_guard&lt;mutex&gt; guard(thread_info-&gt;data_mutex);</span>
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :                     check_for_interruption();</span>
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :                     thread_info-&gt;cond_mutex=cond_mutex;</span>
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :                     thread_info-&gt;current_cond=cond;</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :                     BOOST_VERIFY(!pthread_mutex_lock(m));</span>
+<span class="lineNum">     205 </span>            :                 }
+<span class="lineNum">     206 </span>            :                 else
+<span class="lineNum">     207 </span>            :                 {
+<span class="lineNum">     208 </span><span class="lineCov">         79 :                     BOOST_VERIFY(!pthread_mutex_lock(m));</span>
+<a name="209"><span class="lineNum">     209 </span>            :                 }</a>
+<span class="lineNum">     210 </span><span class="lineCov">         79 :             }</span>
+<span class="lineNum">     211 </span><span class="lineCov">         79 :             ~interruption_checker()</span>
+<span class="lineNum">     212 </span><span class="lineCov">         79 :             {</span>
+<span class="lineNum">     213 </span><span class="lineCov">         79 :                 if(set)</span>
+<span class="lineNum">     214 </span>            :                 {
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :                     BOOST_VERIFY(!pthread_mutex_unlock(m));</span>
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :                     lock_guard&lt;mutex&gt; guard(thread_info-&gt;data_mutex);</span>
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :                     thread_info-&gt;cond_mutex=NULL;</span>
+<span class="lineNum">     218 </span><span class="lineNoCov">          0 :                     thread_info-&gt;current_cond=NULL;</span>
+<span class="lineNum">     219 </span>            :                 }
+<span class="lineNum">     220 </span>            :                 else
+<span class="lineNum">     221 </span>            :                 {
+<span class="lineNum">     222 </span><span class="lineCov">         79 :                     BOOST_VERIFY(!pthread_mutex_unlock(m));</span>
+<span class="lineNum">     223 </span>            :                 }
+<span class="lineNum">     224 </span><span class="lineCov">         79 :             }</span>
+<span class="lineNum">     225 </span>            :         };
+<span class="lineNum">     226 </span>            : #endif
+<span class="lineNum">     227 </span>            :     }
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            :     namespace this_thread
+<span class="lineNum">     230 </span>            :     {
+<span class="lineNum">     231 </span>            :         namespace hidden
+<span class="lineNum">     232 </span>            :         {
+<span class="lineNum">     233 </span>            :           void BOOST_THREAD_DECL sleep_for(const timespec&amp; ts);
+<span class="lineNum">     234 </span>            :           void BOOST_THREAD_DECL sleep_until(const timespec&amp; ts);
+<span class="lineNum">     235 </span>            :         }
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            : #ifdef BOOST_THREAD_USES_CHRONO
+<span class="lineNum">     238 </span>            : #ifdef BOOST_THREAD_SLEEP_FOR_IS_STEADY
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            :         inline
+<span class="lineNum">     241 </span>            :         void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds&amp; ns)
+<span class="lineNum">     242 </span>            :         {
+<span class="lineNum">     243 </span>            :             return boost::this_thread::hidden::sleep_for(boost::detail::to_timespec(ns));
+<span class="lineNum">     244 </span>            :         }
+<span class="lineNum">     245 </span>            : #endif
+<span class="lineNum">     246 </span>            : #endif // BOOST_THREAD_USES_CHRONO
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :         namespace no_interruption_point
+<span class="lineNum">     249 </span>            :         {
+<span class="lineNum">     250 </span>            :           namespace hidden
+<span class="lineNum">     251 </span>            :           {
+<span class="lineNum">     252 </span>            :             void BOOST_THREAD_DECL sleep_for(const timespec&amp; ts);
+<span class="lineNum">     253 </span>            :             void BOOST_THREAD_DECL sleep_until(const timespec&amp; ts);
+<span class="lineNum">     254 </span>            :           }
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            :     #ifdef BOOST_THREAD_USES_CHRONO
+<span class="lineNum">     257 </span>            :     #ifdef BOOST_THREAD_SLEEP_FOR_IS_STEADY
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            :           inline
+<span class="lineNum">     260 </span>            :           void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds&amp; ns)
+<span class="lineNum">     261 </span>            :           {
+<span class="lineNum">     262 </span>            :               return boost::this_thread::no_interruption_point::hidden::sleep_for(boost::detail::to_timespec(ns));
+<span class="lineNum">     263 </span>            :           }
+<span class="lineNum">     264 </span>            :     #endif
+<span class="lineNum">     265 </span>            :     #endif // BOOST_THREAD_USES_CHRONO
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span>            :         } // no_interruption_point
+<span class="lineNum">     268 </span>            : 
+<span class="lineNum">     269 </span>            :         void BOOST_THREAD_DECL yield() BOOST_NOEXCEPT;
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            : #if defined BOOST_THREAD_USES_DATETIME
+<span class="lineNum">     272 </span>            : #ifdef __DECXXX
+<span class="lineNum">     273 </span>            :         /// Workaround of DECCXX issue of incorrect template substitution
+<span class="lineNum">     274 </span>            :         template&lt;&gt;
+<span class="lineNum">     275 </span>            : #endif
+<span class="lineNum">     276 </span>            :         inline void sleep(system_time const&amp; abs_time)
+<span class="lineNum">     277 </span>            :         {
+<span class="lineNum">     278 </span>            :           return boost::this_thread::hidden::sleep_until(boost::detail::to_timespec(abs_time));
+<span class="lineNum">     279 </span>            :         }
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span>            :         template&lt;typename TimeDuration&gt;
+<span class="lineNum">     282 </span>            :         inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const&amp; rel_time)
+<span class="lineNum">     283 </span>            :         {
+<span class="lineNum">     284 </span>            :             this_thread::sleep(get_system_time()+rel_time);
+<span class="lineNum">     285 </span>            :         }
+<span class="lineNum">     286 </span>            : #endif // BOOST_THREAD_USES_DATETIME
+<span class="lineNum">     287 </span>            :     } // this_thread
+<span class="lineNum">     288 </span>            : }
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            : #include &lt;boost/config/abi_suffix.hpp&gt;
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

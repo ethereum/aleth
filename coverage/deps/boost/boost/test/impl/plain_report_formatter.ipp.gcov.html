@@ -1,0 +1,283 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/impl/plain_report_formatter.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/impl</a> - plain_report_formatter.ipp<span style="font-size: 80%;"> (source / <a href="plain_report_formatter.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">70</td>
+            <td class="headerCovTableEntryLo">18.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryLo">42.9 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : plain report formatter definition
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_PLAIN_REPORT_FORMATTER_IPP_020105GER
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_PLAIN_REPORT_FORMATTER_IPP_020105GER
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/output/plain_report_formatter.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/utils/custom_manip.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/test/results_collector.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/unit_test_parameters.hpp&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/tree/test_unit.hpp&gt;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;boost/test/utils/basic_cstring/io.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/test/utils/setcolor.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : // STL
+<span class="lineNum">      30 </span>            : #include &lt;iomanip&gt;
+<span class="lineNum">      31 </span>            : #include &lt;boost/config/no_tr1/cmath.hpp&gt;
+<span class="lineNum">      32 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : # ifdef BOOST_NO_STDC_NAMESPACE
+<span class="lineNum">      37 </span>            : namespace std { using ::log10; }
+<span class="lineNum">      38 </span>            : # endif
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : namespace boost {
+<span class="lineNum">      43 </span>            : namespace unit_test {
+<span class="lineNum">      44 </span>            : namespace output {
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : namespace {
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : typedef utils::custom_manip&lt;struct quote_t&gt; quote;
+<span class="lineNum">      49 </span>            : 
+<a name="50"><span class="lineNum">      50 </span>            : template&lt;typename T&gt;</a>
+<span class="lineNum">      51 </span>            : inline std::ostream&amp;
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 : operator&lt;&lt;( utils::custom_printer&lt;quote&gt; const&amp; p, T const&amp; value )</span>
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span><span class="lineNoCov">          0 :     *p &lt;&lt; '&quot;' &lt;&lt; value &lt;&lt; '&quot;';</span>
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :     return *p;</span>
+<span class="lineNum">      57 </span>            : }
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : //____________________________________________________________________________//
+<a name="60"><span class="lineNum">      60 </span>            : </a>
+<span class="lineNum">      61 </span>            : void
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 : print_stat_value( std::ostream&amp; ostr, counter_t v, counter_t indent, counter_t total, const_string name, const_string res )</span>
+<span class="lineNum">      63 </span>            : {
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :     if( v == 0 )</span>
+<span class="lineNum">      65 </span>            :         return;
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :     if( total &gt; 0 )</span>
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; std::setw( static_cast&lt;int&gt;(indent) ) &lt;&lt; &quot;&quot; &lt;&lt; v &lt;&lt; ' ' &lt;&lt; name &lt;&lt; ( v != 1 ? &quot;s&quot; : &quot;&quot; )</span>
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :              &lt;&lt; &quot; out of &quot; &lt;&lt; total &lt;&lt; ' ' &lt;&lt; res &lt;&lt; '\n';</span>
+<span class="lineNum">      70 </span>            :     else
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; std::setw( static_cast&lt;int&gt;(indent) ) &lt;&lt; &quot;&quot; &lt;&lt; v &lt;&lt; ' ' &lt;&lt; res &lt;&lt; ' ' &lt;&lt; name &lt;&lt; ( v != 1 ? &quot;s&quot; : &quot;&quot; ) &lt;&lt; '\n';</span>
+<span class="lineNum">      72 </span>            : }
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : } // local namespace
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : // ************************************************************************** //
+<span class="lineNum">      79 </span>            : // **************             plain_report_formatter           ************** //
+<span class="lineNum">      80 </span>            : // ************************************************************************** //
+<a name="81"><span class="lineNum">      81 </span>            : </a>
+<span class="lineNum">      82 </span>            : void
+<span class="lineNum">      83 </span><span class="lineCov">          1 : plain_report_formatter::results_report_start( std::ostream&amp; ostr )</span>
+<span class="lineNum">      84 </span>            : {
+<span class="lineNum">      85 </span><span class="lineCov">          1 :     m_indent = 0;</span>
+<span class="lineNum">      86 </span><span class="lineCov">          2 :     m_color_output = runtime_config::get&lt;bool&gt;( runtime_config::COLOR_OUTPUT );</span>
+<span class="lineNum">      87 </span><span class="lineCov">          1 :     ostr &lt;&lt; '\n';</span>
+<span class="lineNum">      88 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : //____________________________________________________________________________//
+<a name="91"><span class="lineNum">      91 </span>            : </a>
+<span class="lineNum">      92 </span>            : void
+<span class="lineNum">      93 </span><span class="lineCov">          1 : plain_report_formatter::results_report_finish( std::ostream&amp; ostr )</span>
+<span class="lineNum">      94 </span>            : {
+<span class="lineNum">      95 </span><span class="lineCov">          1 :     ostr.flush();</span>
+<span class="lineNum">      96 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : //____________________________________________________________________________//
+<a name="99"><span class="lineNum">      99 </span>            : </a>
+<span class="lineNum">     100 </span>            : void
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 : plain_report_formatter::test_unit_report_start( test_unit const&amp; tu, std::ostream&amp; ostr )</span>
+<span class="lineNum">     102 </span>            : {
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :     test_results const&amp; tr = results_collector.results( tu.p_id );</span>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :     const_string descr;</span>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :     if( tr.passed() )</span>
+<span class="lineNum">     108 </span>            :         descr = &quot;has passed&quot;;
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :     else if( tr.p_skipped )</span>
+<span class="lineNum">     110 </span>            :         descr = &quot;was skipped&quot;;
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :     else if( tr.p_aborted )</span>
+<span class="lineNum">     112 </span>            :         descr = &quot;was aborted&quot;;
+<span class="lineNum">     113 </span>            :     else
+<span class="lineNum">     114 </span>            :         descr = &quot;has failed&quot;;
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; std::setw( static_cast&lt;int&gt;(m_indent) ) &lt;&lt; &quot;&quot;</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :          &lt;&lt; &quot;Test &quot; &lt;&lt; tu.p_type_name &lt;&lt; ' ' &lt;&lt; quote() &lt;&lt; tu.full_name() &lt;&lt; ' ' &lt;&lt; descr;</span>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :     if( tr.p_skipped ) {</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :         ostr  &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :         m_indent += 2;</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :         return;</span>
+<span class="lineNum">     123 </span>            :     }
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :     counter_t total_assertions  = tr.p_assertions_passed + tr.p_assertions_failed;</span>
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :     counter_t total_tc          = tr.p_test_cases_passed + tr.p_test_cases_warned + tr.p_test_cases_failed + tr.p_test_cases_skipped;</span>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :     if( total_assertions &gt; 0 || total_tc &gt; 0 || tr.p_warnings_failed &gt; 0)</span>
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; &quot; with:&quot;;</span>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; '\n';</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :     m_indent += 2;</span>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :     print_stat_value( ostr, tr.p_test_cases_passed , m_indent, total_tc        , &quot;test case&quot;, &quot;passed&quot; );</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :     print_stat_value( ostr, tr.p_test_cases_warned , m_indent, total_tc        , &quot;test case&quot;, &quot;passed with warnings&quot; );</span>
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :     print_stat_value( ostr, tr.p_test_cases_failed , m_indent, total_tc        , &quot;test case&quot;, &quot;failed&quot; );</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :     print_stat_value( ostr, tr.p_test_cases_skipped, m_indent, total_tc        , &quot;test case&quot;, &quot;skipped&quot; );</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :     print_stat_value( ostr, tr.p_test_cases_aborted, m_indent, total_tc        , &quot;test case&quot;, &quot;aborted&quot; );</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :     print_stat_value( ostr, tr.p_assertions_passed , m_indent, total_assertions, &quot;assertion&quot;, &quot;passed&quot; );</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :     print_stat_value( ostr, tr.p_assertions_failed , m_indent, total_assertions, &quot;assertion&quot;, &quot;failed&quot; );</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :     print_stat_value( ostr, tr.p_warnings_failed   , m_indent, 0               , &quot;warning&quot;  , &quot;failed&quot; );</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :     print_stat_value( ostr, tr.p_expected_failures , m_indent, 0               , &quot;failure&quot;  , &quot;expected&quot; );</span>
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; '\n';</span>
+<span class="lineNum">     145 </span>            : }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : //____________________________________________________________________________//
+<a name="148"><span class="lineNum">     148 </span>            : </a>
+<span class="lineNum">     149 </span>            : void
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 : plain_report_formatter::test_unit_report_finish( test_unit const&amp;, std::ostream&amp; )</span>
+<span class="lineNum">     151 </span>            : {
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :     m_indent -= 2;</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            : //____________________________________________________________________________//
+<a name="156"><span class="lineNum">     156 </span>            : </a>
+<span class="lineNum">     157 </span>            : void
+<span class="lineNum">     158 </span><span class="lineCov">          1 : plain_report_formatter::do_confirmation_report( test_unit const&amp; tu, std::ostream&amp; ostr )</span>
+<span class="lineNum">     159 </span>            : {
+<span class="lineNum">     160 </span><span class="lineCov">          2 :     test_results const&amp; tr = results_collector.results( tu.p_id );</span>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span><span class="lineCov">          1 :     if( tr.passed() ) {</span>
+<span class="lineNum">     163 </span><span class="lineCov">          3 :         BOOST_TEST_SCOPE_SETCOLOR( m_color_output, ostr, term_attr::BRIGHT, term_color::GREEN );</span>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineCov">          1 :         ostr &lt;&lt; &quot;*** No errors detected\n&quot;;</span>
+<span class="lineNum">     166 </span>            :         return;
+<span class="lineNum">     167 </span>            :     }
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :     BOOST_TEST_SCOPE_SETCOLOR( m_color_output, ostr, term_attr::BRIGHT, term_color::RED );</span>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :     if( tr.p_skipped ) {</span>
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; &quot;*** The test &quot; &lt;&lt; tu.p_type_name &lt;&lt; ' ' &lt;&lt; quote() &lt;&lt; tu.full_name() &lt;&lt; &quot; was skipped&quot;</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :              &lt;&lt; &quot;; see standard output for details\n&quot;;</span>
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :         return;</span>
+<span class="lineNum">     175 </span>            :     }
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :     if( tr.p_aborted ) {</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; &quot;*** The test &quot; &lt;&lt; tu.p_type_name &lt;&lt; ' ' &lt;&lt; quote() &lt;&lt; tu.full_name() &lt;&lt; &quot; was aborted&quot;</span>
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :              &lt;&lt; &quot;; see standard output for details\n&quot;;</span>
+<span class="lineNum">     180 </span>            :     }
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :     if( tr.p_assertions_failed == 0 ) {</span>
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :         if( !tr.p_aborted )</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :             ostr &lt;&lt; &quot;*** Errors were detected in the test &quot; &lt;&lt; tu.p_type_name &lt;&lt; ' ' &lt;&lt; quote() &lt;&lt; tu.full_name()</span>
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :                  &lt;&lt; &quot;; see standard output for details\n&quot;;</span>
+<span class="lineNum">     186 </span>            :         return;
+<span class="lineNum">     187 </span>            :     }
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :     counter_t num_failures = tr.p_assertions_failed;</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; &quot;*** &quot; &lt;&lt; num_failures &lt;&lt; &quot; failure&quot; &lt;&lt; ( num_failures != 1 ? &quot;s are&quot; : &quot; is&quot; ) &lt;&lt; &quot; detected&quot;;</span>
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :     if( tr.p_expected_failures &gt; 0 )</span>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; &quot; (&quot; &lt;&lt; tr.p_expected_failures &lt;&lt; &quot; failure&quot; &lt;&lt; ( tr.p_expected_failures != 1 ? &quot;s are&quot; : &quot; is&quot; ) &lt;&lt; &quot; expected)&quot;;</span>
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; &quot; in the test &quot; &lt;&lt; tu.p_type_name &lt;&lt; &quot; &quot; &lt;&lt; quote() &lt;&lt; tu.full_name() &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     197 </span>            : }
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            : } // namespace output
+<span class="lineNum">     202 </span>            : } // namespace unit_test
+<span class="lineNum">     203 </span>            : } // namespace boost
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            : #endif // BOOST_TEST_PLAIN_REPORT_FORMATTER_IPP_020105GER
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

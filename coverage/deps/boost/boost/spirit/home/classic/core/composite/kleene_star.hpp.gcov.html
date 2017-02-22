@@ -1,0 +1,185 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/spirit/home/classic/core/composite/kleene_star.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/spirit/home/classic/core/composite</a> - kleene_star.hpp<span style="font-size: 80%;"> (source / <a href="kleene_star.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*=============================================================================</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 1998-2003 Joel de Guzman
+<span class="lineNum">       3 </span>            :     Copyright (c) 2001 Daniel Nuffer
+<span class="lineNum">       4 </span>            :     Copyright (c) 2002 Hartmut Kaiser
+<span class="lineNum">       5 </span>            :     http://spirit.sourceforge.net/
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :   Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            :   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : =============================================================================*/
+<span class="lineNum">      10 </span>            : #if !defined(BOOST_SPIRIT_KLEENE_STAR_HPP)
+<span class="lineNum">      11 </span>            : #define BOOST_SPIRIT_KLEENE_STAR_HPP
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #include &lt;boost/spirit/home/classic/namespace.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/spirit/home/classic/core/parser.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/spirit/home/classic/core/primitives/primitives.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/spirit/home/classic/core/composite/composite.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/spirit/home/classic/meta/as_parser.hpp&gt;
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : namespace boost { namespace spirit {
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      24 </span>            :     //
+<span class="lineNum">      25 </span>            :     //  kleene_star class
+<span class="lineNum">      26 </span>            :     //
+<span class="lineNum">      27 </span>            :     //      Handles expressions of the form:
+<span class="lineNum">      28 </span>            :     //
+<span class="lineNum">      29 </span>            :     //          *a
+<span class="lineNum">      30 </span>            :     //
+<span class="lineNum">      31 </span>            :     //      where a is a parser. The expression returns a composite
+<span class="lineNum">      32 </span>            :     //      parser that matches its subject zero (0) or more times.
+<span class="lineNum">      33 </span>            :     //
+<span class="lineNum">      34 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      35 </span>            :     struct kleene_star_parser_gen;
+<span class="lineNum">      36 </span>            :     
+<span class="lineNum">      37 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &gt;= 1400)
+<span class="lineNum">      38 </span>            : #pragma warning(push)
+<span class="lineNum">      39 </span>            : #pragma warning(disable:4512) //assignment operator could not be generated
+<span class="lineNum">      40 </span>            : #endif
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            :     template &lt;typename S&gt;
+<span class="lineNum">      43 </span>            :     struct kleene_star
+<span class="lineNum">      44 </span>            :     :   public unary&lt;S, parser&lt;kleene_star&lt;S&gt; &gt; &gt;
+<span class="lineNum">      45 </span>            :     {
+<span class="lineNum">      46 </span>            :         typedef kleene_star&lt;S&gt;              self_t;
+<span class="lineNum">      47 </span>            :         typedef unary_parser_category       parser_category_t;
+<span class="lineNum">      48 </span>            :         typedef kleene_star_parser_gen      parser_generator_t;
+<span class="lineNum">      49 </span>            :         typedef unary&lt;S, parser&lt;self_t&gt; &gt;   base_t;
+<span class="lineNum">      50 </span>            :     
+<span class="lineNum">      51 </span>            :         kleene_star(S const&amp; a)
+<span class="lineNum">      52 </span><span class="lineCov">    2596463 :         : base_t(a) {}</span>
+<span class="lineNum">      53 </span>            :     
+<a name="54"><span class="lineNum">      54 </span>            :         template &lt;typename ScannerT&gt;</a>
+<span class="lineNum">      55 </span>            :         typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">      56 </span><span class="lineCov">    2959592 :         parse(ScannerT const&amp; scan) const</span>
+<span class="lineNum">      57 </span>            :         {
+<span class="lineNum">      58 </span>            :             typedef typename parser_result&lt;self_t, ScannerT&gt;::type result_t;
+<span class="lineNum">      59 </span>            :             typedef typename ScannerT::iterator_t iterator_t;
+<span class="lineNum">      60 </span><span class="lineCov">    5919184 :             result_t hit = scan.empty_match();</span>
+<span class="lineNum">      61 </span>            :     
+<span class="lineNum">      62 </span>            :             for (;;)
+<span class="lineNum">      63 </span>            :             {
+<span class="lineNum">      64 </span><span class="lineCov">  204089192 :                 iterator_t save = scan.first;</span>
+<span class="lineNum">      65 </span><span class="lineCov">  612267576 :                 if (result_t next = this-&gt;subject().parse(scan))</span>
+<span class="lineNum">      66 </span>            :                 {
+<span class="lineNum">      67 </span><span class="lineCov">  402259200 :                     scan.concat_match(hit, next);</span>
+<span class="lineNum">      68 </span>            :                 }
+<span class="lineNum">      69 </span>            :                 else
+<span class="lineNum">      70 </span>            :                 {
+<span class="lineNum">      71 </span><span class="lineCov">    2959592 :                     scan.first = save;</span>
+<span class="lineNum">      72 </span><span class="lineCov">    2959592 :                     return hit;</span>
+<span class="lineNum">      73 </span>            :                 }
+<span class="lineNum">      74 </span>            :             }
+<span class="lineNum">      75 </span>            :         }
+<span class="lineNum">      76 </span>            :     };
+<span class="lineNum">      77 </span>            :     
+<span class="lineNum">      78 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &gt;= 1400)
+<span class="lineNum">      79 </span>            : #pragma warning(pop)
+<span class="lineNum">      80 </span>            : #endif
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :     struct kleene_star_parser_gen
+<span class="lineNum">      83 </span>            :     {
+<span class="lineNum">      84 </span>            :         template &lt;typename S&gt;
+<span class="lineNum">      85 </span>            :         struct result 
+<span class="lineNum">      86 </span>            :         {
+<span class="lineNum">      87 </span>            :             typedef kleene_star&lt;S&gt; type;
+<span class="lineNum">      88 </span>            :         };
+<span class="lineNum">      89 </span>            :     
+<span class="lineNum">      90 </span>            :         template &lt;typename S&gt;
+<span class="lineNum">      91 </span>            :         static kleene_star&lt;S&gt;
+<span class="lineNum">      92 </span>            :         generate(parser&lt;S&gt; const&amp; a)
+<span class="lineNum">      93 </span>            :         {
+<span class="lineNum">      94 </span><span class="lineCov">    4900402 :             return kleene_star&lt;S&gt;(a.derived());</span>
+<span class="lineNum">      95 </span>            :         }
+<span class="lineNum">      96 </span>            :     };
+<span class="lineNum">      97 </span>            :     
+<span class="lineNum">      98 </span>            :     //////////////////////////////////
+<span class="lineNum">      99 </span>            :     template &lt;typename S&gt;
+<span class="lineNum">     100 </span>            :     kleene_star&lt;S&gt;
+<span class="lineNum">     101 </span>            :     operator*(parser&lt;S&gt; const&amp; a);
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_END
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : }} // namespace BOOST_SPIRIT_CLASSIC_NS
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : #endif
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : #include &lt;boost/spirit/home/classic/core/composite/impl/kleene_star.ipp&gt;
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

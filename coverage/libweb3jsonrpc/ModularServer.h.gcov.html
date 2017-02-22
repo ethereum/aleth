@@ -1,0 +1,254 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libweb3jsonrpc/ModularServer.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libweb3jsonrpc</a> - ModularServer.h<span style="font-size: 80%;"> (source / <a href="ModularServer.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntryLo">8.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file ModularServer.h
+<span class="lineNum">      18 </span>            :  * @author Marek Kotewicz &lt;marek@ethdev.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;map&gt;
+<span class="lineNum">      25 </span>            : #include &lt;memory&gt;
+<span class="lineNum">      26 </span>            : #include &lt;string&gt;
+<span class="lineNum">      27 </span>            : #include &lt;tuple&gt;
+<span class="lineNum">      28 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #include &lt;jsonrpccpp/common/procedure.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;jsonrpccpp/server/iprocedureinvokationhandler.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;jsonrpccpp/server/abstractserverconnector.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;jsonrpccpp/server/requesthandlerfactory.h&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : template &lt;class I&gt; using AbstractMethodPointer = void(I::*)(Json::Value const&amp; _parameter, Json::Value&amp; _result);
+<span class="lineNum">      36 </span>            : template &lt;class I&gt; using AbstractNotificationPointer = void(I::*)(Json::Value const&amp; _parameter);
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : template &lt;class I&gt;
+<span class="lineNum">      39 </span><span class="lineCov">          6 : class ServerInterface</span>
+<span class="lineNum">      40 </span>            : {
+<span class="lineNum">      41 </span>            : public:
+<span class="lineNum">      42 </span>            :         using MethodPointer = AbstractMethodPointer&lt;I&gt;;
+<span class="lineNum">      43 </span>            :         using NotificationPointer = AbstractNotificationPointer&lt;I&gt;;
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            :         using MethodBinding = std::tuple&lt;jsonrpc::Procedure, AbstractMethodPointer&lt;I&gt;&gt;;
+<span class="lineNum">      46 </span>            :         using NotificationBinding = std::tuple&lt;jsonrpc::Procedure, AbstractNotificationPointer&lt;I&gt;&gt;;
+<a name="47"><span class="lineNum">      47 </span>            :         using Methods = std::vector&lt;MethodBinding&gt;;</a>
+<span class="lineNum">      48 </span>            :         using Notifications = std::vector&lt;NotificationBinding&gt;;
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :         struct RPCModule { std::string name; std::string version; };</span>
+<span class="lineNum">      50 </span>            :         using RPCModules = std::vector&lt;RPCModule&gt;;
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineCov">          2 :         virtual ~ServerInterface() {}</span>
+<span class="lineNum">      53 </span>            :         Methods const&amp; methods() const { return m_methods; }
+<span class="lineNum">      54 </span>            :         Notifications const&amp; notifications() const { return m_notifications; }
+<span class="lineNum">      55 </span>            :         /// @returns which interfaces (eth, admin, db, ...) this class implements in which version.
+<span class="lineNum">      56 </span>            :         virtual RPCModules implementedModules() const = 0;
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : protected:
+<span class="lineNum">      59 </span><span class="lineCov">         56 :         void bindAndAddMethod(jsonrpc::Procedure const&amp; _proc, MethodPointer _pointer) { m_methods.emplace_back(_proc, _pointer); }</span>
+<span class="lineNum">      60 </span>            :         void bindAndAddNotification(jsonrpc::Procedure const&amp; _proc, NotificationPointer _pointer) { m_notifications.emplace_back(_proc, _pointer); }
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : private:
+<span class="lineNum">      63 </span>            :         Methods m_methods;
+<span class="lineNum">      64 </span>            :         Notifications m_notifications;
+<span class="lineNum">      65 </span>            : };
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : template &lt;class... Is&gt;
+<span class="lineNum">      68 </span>            : class ModularServer: public jsonrpc::IProcedureInvokationHandler
+<span class="lineNum">      69 </span>            : {
+<span class="lineNum">      70 </span>            : public:
+<span class="lineNum">      71 </span>            :         ModularServer()
+<span class="lineNum">      72 </span>            :         : m_handler(jsonrpc::RequestHandlerFactory::createProtocolHandler(jsonrpc::JSONRPC_SERVER_V2, *this))
+<span class="lineNum">      73 </span>            :         {
+<span class="lineNum">      74 </span>            :                 m_handler-&gt;AddProcedure(jsonrpc::Procedure(&quot;rpc_modules&quot;, jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, NULL));
+<a name="75"><span class="lineNum">      75 </span>            :                 m_implementedModules = Json::objectValue;</a>
+<span class="lineNum">      76 </span>            :         }
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :         inline virtual void modules(const Json::Value &amp;request, Json::Value &amp;response)</span>
+<span class="lineNum">      78 </span>            :         {
+<span class="lineNum">      79 </span>            :                 (void)request;
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :                 response = m_implementedModules;</span>
+<a name="81"><span class="lineNum">      81 </span><span class="lineNoCov">          0 :         }</span></a>
+<span class="lineNum">      82 </span>            : 
+<a name="83"><span class="lineNum">      83 </span><span class="lineNoCov">          0 :         virtual ~ModularServer() { StopListening(); }</span></a>
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :         virtual void StartListening()</span>
+<span class="lineNum">      86 </span>            :         {
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :                 for (auto const&amp; connector: m_connectors)</span>
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 :                         connector-&gt;StartListening();</span>
+<a name="89"><span class="lineNum">      89 </span><span class="lineNoCov">          0 :         }</span></a>
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :         virtual void StopListening()</span>
+<span class="lineNum">      92 </span>            :         {
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :                 for (auto const&amp; connector: m_connectors)</span>
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :                         connector-&gt;StopListening();</span>
+<a name="95"><span class="lineNum">      95 </span><span class="lineNoCov">          0 :         }</span></a>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :         virtual void HandleMethodCall(jsonrpc::Procedure&amp; _proc, Json::Value const&amp; _input, Json::Value&amp; _output) override</span>
+<span class="lineNum">      98 </span>            :         {
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :                 if (_proc.GetProcedureName() == &quot;rpc_modules&quot;)</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :                         modules(_input, _output);</span>
+<a name="101"><span class="lineNum">     101 </span><span class="lineNoCov">          0 :         }</span></a>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :         virtual void HandleNotificationCall(jsonrpc::Procedure&amp; _proc, Json::Value const&amp; _input) override</span>
+<span class="lineNum">     104 </span>            :         {
+<span class="lineNum">     105 </span>            :                 (void)_proc;
+<span class="lineNum">     106 </span>            :                 (void)_input;
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :         }</span>
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            :         /// server takes ownership of the connector
+<span class="lineNum">     110 </span>            :         unsigned addConnector(jsonrpc::AbstractServerConnector* _connector)
+<span class="lineNum">     111 </span>            :         {
+<span class="lineNum">     112 </span>            :                 m_connectors.emplace_back(_connector);
+<span class="lineNum">     113 </span>            :                 _connector-&gt;SetHandler(m_handler.get());
+<span class="lineNum">     114 </span>            :                 return m_connectors.size() - 1;
+<span class="lineNum">     115 </span>            :         }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :         jsonrpc::AbstractServerConnector* connector(unsigned _i) const
+<span class="lineNum">     118 </span>            :         {
+<span class="lineNum">     119 </span>            :                 return m_connectors.at(_i).get();
+<span class="lineNum">     120 </span>            :         }
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : protected:
+<span class="lineNum">     123 </span>            :         std::vector&lt;std::unique_ptr&lt;jsonrpc::AbstractServerConnector&gt;&gt; m_connectors;
+<span class="lineNum">     124 </span>            :         std::unique_ptr&lt;jsonrpc::IProtocolHandler&gt; m_handler;
+<span class="lineNum">     125 </span>            :         /// Mapping for implemented modules, to be filled by subclasses during construction.
+<span class="lineNum">     126 </span>            :         Json::Value m_implementedModules;
+<span class="lineNum">     127 </span>            : };
+<a name="128"><span class="lineNum">     128 </span>            : </a>
+<span class="lineNum">     129 </span>            : template &lt;class I, class... Is&gt;
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 : class ModularServer&lt;I, Is...&gt; : public ModularServer&lt;Is...&gt;</span>
+<span class="lineNum">     131 </span>            : {
+<span class="lineNum">     132 </span>            : public:
+<span class="lineNum">     133 </span>            :         using MethodPointer = AbstractMethodPointer&lt;I&gt;;
+<span class="lineNum">     134 </span>            :         using NotificationPointer = AbstractNotificationPointer&lt;I&gt;;
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :         ModularServer&lt;I, Is...&gt;(I* _i, Is*... _is): ModularServer&lt;Is...&gt;(_is...), m_interface(_i)
+<span class="lineNum">     137 </span>            :         {
+<span class="lineNum">     138 </span>            :                 if (!m_interface)
+<span class="lineNum">     139 </span>            :                         return;
+<span class="lineNum">     140 </span>            :                 for (auto const&amp; method: m_interface-&gt;methods())
+<span class="lineNum">     141 </span>            :                 {
+<span class="lineNum">     142 </span>            :                         m_methods[std::get&lt;0&gt;(method).GetProcedureName()] = std::get&lt;1&gt;(method);
+<span class="lineNum">     143 </span>            :                         this-&gt;m_handler-&gt;AddProcedure(std::get&lt;0&gt;(method));
+<span class="lineNum">     144 </span>            :                 }
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :                 for (auto const&amp; notification: m_interface-&gt;notifications())
+<span class="lineNum">     147 </span>            :                 {
+<span class="lineNum">     148 </span>            :                         m_notifications[std::get&lt;0&gt;(notification).GetProcedureName()] = std::get&lt;1&gt;(notification);
+<span class="lineNum">     149 </span>            :                         this-&gt;m_handler-&gt;AddProcedure(std::get&lt;0&gt;(notification));
+<span class="lineNum">     150 </span>            :                 }
+<span class="lineNum">     151 </span>            :                 // Store module with version.
+<span class="lineNum">     152 </span>            :                 for (auto const&amp; module: m_interface-&gt;implementedModules())
+<span class="lineNum">     153 </span>            :                         this-&gt;m_implementedModules[module.name] = module.version;
+<a name="154"><span class="lineNum">     154 </span>            :         }</a>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :         virtual void HandleMethodCall(jsonrpc::Procedure&amp; _proc, Json::Value const&amp; _input, Json::Value&amp; _output) override</span>
+<span class="lineNum">     157 </span>            :         {
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :                 auto pointer = m_methods.find(_proc.GetProcedureName());</span>
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :                 if (pointer != m_methods.end())</span>
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :                         (m_interface.get()-&gt;*(pointer-&gt;second))(_input, _output);</span>
+<span class="lineNum">     161 </span>            :                 else
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :                         ModularServer&lt;Is...&gt;::HandleMethodCall(_proc, _input, _output);</span>
+<a name="163"><span class="lineNum">     163 </span><span class="lineNoCov">          0 :         }</span></a>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :         virtual void HandleNotificationCall(jsonrpc::Procedure&amp; _proc, Json::Value const&amp; _input) override</span>
+<span class="lineNum">     166 </span>            :         {
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :                 auto pointer = m_notifications.find(_proc.GetProcedureName());</span>
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :                 if (pointer != m_notifications.end())</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :                         (m_interface.get()-&gt;*(pointer-&gt;second))(_input);</span>
+<span class="lineNum">     170 </span>            :                 else
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :                         ModularServer&lt;Is...&gt;::HandleNotificationCall(_proc, _input);</span>
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :         }</span>
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : private:
+<span class="lineNum">     175 </span>            :         std::unique_ptr&lt;I&gt; m_interface;
+<span class="lineNum">     176 </span>            :         std::map&lt;std::string, MethodPointer&gt; m_methods;
+<span class="lineNum">     177 </span>            :         std::map&lt;std::string, NotificationPointer&gt; m_notifications;
+<span class="lineNum">     178 </span>            : };
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/detail/impl/service_registry.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/detail/impl</a> - service_registry.hpp<span style="font-size: 80%;"> (source / <a href="service_registry.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // detail/impl/service_registry.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DETAIL_IMPL_SERVICE_REGISTRY_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DETAIL_IMPL_SERVICE_REGISTRY_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : namespace boost {
+<span class="lineNum">      21 </span>            : namespace asio {
+<span class="lineNum">      22 </span>            : namespace detail {
+<a name="23"><span class="lineNum">      23 </span>            : </a>
+<span class="lineNum">      24 </span>            : template &lt;typename Service, typename Arg&gt;
+<span class="lineNum">      25 </span><span class="lineCov">         30 : service_registry::service_registry(</span>
+<span class="lineNum">      26 </span>            :     boost::asio::io_service&amp; o, Service*, Arg arg)
+<span class="lineNum">      27 </span>            :   : owner_(o),
+<span class="lineNum">      28 </span><span class="lineCov">         30 :     first_service_(new Service(o, arg))</span>
+<span class="lineNum">      29 </span>            : {
+<span class="lineNum">      30 </span><span class="lineCov">         30 :   boost::asio::io_service::service::key key;</span>
+<span class="lineNum">      31 </span><span class="lineCov">         60 :   init_key(key, Service::id);</span>
+<span class="lineNum">      32 </span><span class="lineCov">         30 :   first_service_-&gt;key_ = key;</span>
+<span class="lineNum">      33 </span><span class="lineCov">         30 :   first_service_-&gt;next_ = 0;</span>
+<span class="lineNum">      34 </span><span class="lineCov">         30 : }</span>
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : template &lt;typename Service&gt;
+<span class="lineNum">      37 </span>            : Service&amp; service_registry::first_service()
+<span class="lineNum">      38 </span>            : {
+<span class="lineNum">      39 </span>            :   return *static_cast&lt;Service*&gt;(first_service_);
+<span class="lineNum">      40 </span>            : }
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : template &lt;typename Service&gt;
+<span class="lineNum">      43 </span>            : Service&amp; service_registry::use_service()
+<span class="lineNum">      44 </span>            : {
+<span class="lineNum">      45 </span><span class="lineCov">        706 :   boost::asio::io_service::service::key key;</span>
+<span class="lineNum">      46 </span><span class="lineCov">       1412 :   init_key(key, Service::id);</span>
+<span class="lineNum">      47 </span><span class="lineCov">        706 :   factory_type factory = &amp;service_registry::create&lt;Service&gt;;</span>
+<span class="lineNum">      48 </span><span class="lineCov">        706 :   return *static_cast&lt;Service*&gt;(do_use_service(key, factory));</span>
+<span class="lineNum">      49 </span>            : }
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : template &lt;typename Service&gt;
+<span class="lineNum">      52 </span>            : void service_registry::add_service(Service* new_service)
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span>            :   boost::asio::io_service::service::key key;
+<span class="lineNum">      55 </span>            :   init_key(key, Service::id);
+<span class="lineNum">      56 </span>            :   return do_add_service(key, new_service);
+<span class="lineNum">      57 </span>            : }
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : template &lt;typename Service&gt;
+<span class="lineNum">      60 </span>            : bool service_registry::has_service() const
+<span class="lineNum">      61 </span>            : {
+<span class="lineNum">      62 </span>            :   boost::asio::io_service::service::key key;
+<span class="lineNum">      63 </span>            :   init_key(key, Service::id);
+<span class="lineNum">      64 </span>            :   return do_has_service(key);
+<span class="lineNum">      65 </span>            : }
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : #if !defined(BOOST_ASIO_NO_TYPEID)
+<span class="lineNum">      68 </span>            : template &lt;typename Service&gt;
+<span class="lineNum">      69 </span>            : void service_registry::init_key(boost::asio::io_service::service::key&amp; key,
+<span class="lineNum">      70 </span>            :     const boost::asio::detail::service_id&lt;Service&gt;&amp; /*id*/)
+<span class="lineNum">      71 </span>            : {
+<span class="lineNum">      72 </span><span class="lineCov">        736 :   key.type_info_ = &amp;typeid(typeid_wrapper&lt;Service&gt;);</span>
+<span class="lineNum">      73 </span><span class="lineCov">         30 :   key.id_ = 0;</span>
+<span class="lineNum">      74 </span>            : }
+<span class="lineNum">      75 </span>            : #endif // !defined(BOOST_ASIO_NO_TYPEID)
+<a name="76"><span class="lineNum">      76 </span>            : </a>
+<span class="lineNum">      77 </span>            : template &lt;typename Service&gt;
+<span class="lineNum">      78 </span><span class="lineCov">        110 : boost::asio::io_service::service* service_registry::create(</span>
+<span class="lineNum">      79 </span>            :     boost::asio::io_service&amp; owner)
+<span class="lineNum">      80 </span>            : {
+<span class="lineNum">      81 </span><span class="lineCov">        190 :   return new Service(owner);</span>
+<span class="lineNum">      82 </span>            : }
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : } // namespace detail
+<span class="lineNum">      85 </span>            : } // namespace asio
+<span class="lineNum">      86 </span>            : } // namespace boost
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : #endif // BOOST_ASIO_DETAIL_IMPL_SERVICE_REGISTRY_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

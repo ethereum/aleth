@@ -1,0 +1,243 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/smart_ptr/scoped_ptr.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/smart_ptr</a> - scoped_ptr.hpp<span style="font-size: 80%;"> (source / <a href="scoped_ptr.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryHi">92.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryMed">80.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef BOOST_SMART_PTR_SCOPED_PTR_HPP_INCLUDED</a>
+<span class="lineNum">       2 </span>            : #define BOOST_SMART_PTR_SCOPED_PTR_HPP_INCLUDED
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : //  (C) Copyright Greg Colvin and Beman Dawes 1998, 1999.
+<span class="lineNum">       5 </span>            : //  Copyright (c) 2001, 2002 Peter Dimov
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : //  Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">       8 </span>            : //  accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       9 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">      10 </span>            : //
+<span class="lineNum">      11 </span>            : //  http://www.boost.org/libs/smart_ptr/scoped_ptr.htm
+<span class="lineNum">      12 </span>            : //
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/assert.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/checked_delete.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/smart_ptr/detail/sp_nullptr_t.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/smart_ptr/detail/sp_disable_deprecated.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/detail/workaround.hpp&gt;
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : #ifndef BOOST_NO_AUTO_PTR
+<span class="lineNum">      22 </span>            : # include &lt;memory&gt;          // for std::auto_ptr
+<span class="lineNum">      23 </span>            : #endif
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #if defined( BOOST_SP_DISABLE_DEPRECATED )
+<span class="lineNum">      26 </span>            : #pragma GCC diagnostic push
+<span class="lineNum">      27 </span>            : #pragma GCC diagnostic ignored &quot;-Wdeprecated-declarations&quot;
+<span class="lineNum">      28 </span>            : #endif
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace boost
+<span class="lineNum">      31 </span>            : {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : // Debug hooks
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #if defined(BOOST_SP_ENABLE_DEBUG_HOOKS)
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : void sp_scalar_constructor_hook(void * p);
+<span class="lineNum">      38 </span>            : void sp_scalar_destructor_hook(void * p);
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : #endif
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : //  scoped_ptr mimics a built-in pointer except that it guarantees deletion
+<span class="lineNum">      43 </span>            : //  of the object pointed to, either on destruction of the scoped_ptr or via
+<span class="lineNum">      44 </span>            : //  an explicit reset(). scoped_ptr is a simple solution for simple needs;
+<span class="lineNum">      45 </span>            : //  use shared_ptr or std::auto_ptr if your needs are more complex.
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : template&lt;class T&gt; class scoped_ptr // noncopyable
+<span class="lineNum">      48 </span>            : {
+<span class="lineNum">      49 </span>            : private:
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            :     T * px;
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            :     scoped_ptr(scoped_ptr const &amp;);
+<span class="lineNum">      54 </span>            :     scoped_ptr &amp; operator=(scoped_ptr const &amp;);
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            :     typedef scoped_ptr&lt;T&gt; this_type;
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            :     void operator==( scoped_ptr const&amp; ) const;
+<span class="lineNum">      59 </span>            :     void operator!=( scoped_ptr const&amp; ) const;
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : public:
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            :     typedef T element_type;
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineCov">     438789 :     explicit scoped_ptr( T * p = 0 ): px( p ) // never throws</span>
+<span class="lineNum">      66 </span>            :     {
+<span class="lineNum">      67 </span>            : #if defined(BOOST_SP_ENABLE_DEBUG_HOOKS)
+<span class="lineNum">      68 </span>            :         boost::sp_scalar_constructor_hook( px );
+<span class="lineNum">      69 </span>            : #endif
+<span class="lineNum">      70 </span>            :     }
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : #ifndef BOOST_NO_AUTO_PTR
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :     explicit scoped_ptr( std::auto_ptr&lt;T&gt; p ) BOOST_NOEXCEPT : px( p.release() )
+<span class="lineNum">      75 </span>            :     {
+<span class="lineNum">      76 </span>            : #if defined(BOOST_SP_ENABLE_DEBUG_HOOKS)
+<span class="lineNum">      77 </span>            :         boost::sp_scalar_constructor_hook( px );
+<span class="lineNum">      78 </span>            : #endif
+<span class="lineNum">      79 </span>            :     }
+<span class="lineNum">      80 </span>            : 
+<a name="81"><span class="lineNum">      81 </span>            : #endif</a>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span><span class="lineCov">          2 :     ~scoped_ptr() // never throws</span>
+<span class="lineNum">      84 </span>            :     {
+<span class="lineNum">      85 </span>            : #if defined(BOOST_SP_ENABLE_DEBUG_HOOKS)
+<span class="lineNum">      86 </span>            :         boost::sp_scalar_destructor_hook( px );
+<span class="lineNum">      87 </span>            : #endif
+<span class="lineNum">      88 </span><span class="lineCov">    1755152 :         boost::checked_delete( px );</span>
+<a name="89"><span class="lineNum">      89 </span><span class="lineCov">     438789 :     }</span></a>
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span><span class="lineCov">     438788 :     void reset(T * p = 0) // never throws</span>
+<span class="lineNum">      92 </span>            :     {
+<span class="lineNum">      93 </span><span class="lineCov">     438788 :         BOOST_ASSERT( p == 0 || p != px ); // catch self-reset errors</span>
+<span class="lineNum">      94 </span><span class="lineCov">    1316363 :         this_type(p).swap(*this);</span>
+<span class="lineNum">      95 </span><span class="lineCov">     438788 :     }</span>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            :     T &amp; operator*() const // never throws
+<span class="lineNum">      98 </span>            :     {
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :         BOOST_ASSERT( px != 0 );</span>
+<span class="lineNum">     100 </span>            :         return *px;
+<span class="lineNum">     101 </span>            :     }
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            :     T * operator-&gt;() const // never throws
+<span class="lineNum">     104 </span>            :     {
+<span class="lineNum">     105 </span><span class="lineCov">          4 :         BOOST_ASSERT( px != 0 );</span>
+<span class="lineNum">     106 </span>            :         return px;
+<span class="lineNum">     107 </span>            :     }
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            :     T * get() const BOOST_NOEXCEPT
+<span class="lineNum">     110 </span>            :     {
+<span class="lineNum">     111 </span><span class="lineCov">    8575015 :         return px;</span>
+<span class="lineNum">     112 </span>            :     }
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            : // implicit conversion to &quot;bool&quot;
+<span class="lineNum">     115 </span>            : #include &lt;boost/smart_ptr/detail/operator_bool.hpp&gt;
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :     void swap(scoped_ptr &amp; b) BOOST_NOEXCEPT
+<span class="lineNum">     118 </span>            :     {
+<span class="lineNum">     119 </span><span class="lineCov">     438788 :         T * tmp = b.px;</span>
+<span class="lineNum">     120 </span><span class="lineCov">     438788 :         b.px = px;</span>
+<span class="lineNum">     121 </span><span class="lineCov">          1 :         px = tmp;</span>
+<span class="lineNum">     122 </span>            :     }
+<span class="lineNum">     123 </span>            : };
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            : #if !defined( BOOST_NO_CXX11_NULLPTR )
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : template&lt;class T&gt; inline bool operator==( scoped_ptr&lt;T&gt; const &amp; p, boost::detail::sp_nullptr_t ) BOOST_NOEXCEPT
+<span class="lineNum">     128 </span>            : {
+<span class="lineNum">     129 </span>            :     return p.get() == 0;
+<span class="lineNum">     130 </span>            : }
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            : template&lt;class T&gt; inline bool operator==( boost::detail::sp_nullptr_t, scoped_ptr&lt;T&gt; const &amp; p ) BOOST_NOEXCEPT
+<span class="lineNum">     133 </span>            : {
+<span class="lineNum">     134 </span>            :     return p.get() == 0;
+<span class="lineNum">     135 </span>            : }
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : template&lt;class T&gt; inline bool operator!=( scoped_ptr&lt;T&gt; const &amp; p, boost::detail::sp_nullptr_t ) BOOST_NOEXCEPT
+<span class="lineNum">     138 </span>            : {
+<span class="lineNum">     139 </span>            :     return p.get() != 0;
+<span class="lineNum">     140 </span>            : }
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            : template&lt;class T&gt; inline bool operator!=( boost::detail::sp_nullptr_t, scoped_ptr&lt;T&gt; const &amp; p ) BOOST_NOEXCEPT
+<span class="lineNum">     143 </span>            : {
+<span class="lineNum">     144 </span>            :     return p.get() != 0;
+<span class="lineNum">     145 </span>            : }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : #endif
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            : template&lt;class T&gt; inline void swap(scoped_ptr&lt;T&gt; &amp; a, scoped_ptr&lt;T&gt; &amp; b) BOOST_NOEXCEPT
+<span class="lineNum">     150 </span>            : {
+<span class="lineNum">     151 </span>            :     a.swap(b);
+<span class="lineNum">     152 </span>            : }
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            : // get_pointer(p) is a generic way to say p.get()
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            : template&lt;class T&gt; inline T * get_pointer(scoped_ptr&lt;T&gt; const &amp; p) BOOST_NOEXCEPT
+<span class="lineNum">     157 </span>            : {
+<span class="lineNum">     158 </span>            :     return p.get();
+<span class="lineNum">     159 </span>            : }
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            : } // namespace boost
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            : #if defined( BOOST_SP_DISABLE_DEPRECATED )
+<span class="lineNum">     164 </span>            : #pragma GCC diagnostic pop
+<span class="lineNum">     165 </span>            : #endif
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            : #endif // #ifndef BOOST_SMART_PTR_SCOPED_PTR_HPP_INCLUDED
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

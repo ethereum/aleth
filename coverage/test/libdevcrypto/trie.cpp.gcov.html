@@ -1,0 +1,692 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libdevcrypto/trie.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libdevcrypto</a> - trie.cpp<span style="font-size: 80%;"> (source / <a href="trie.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">329</td>
+            <td class="headerCovTableEntry">395</td>
+            <td class="headerCovTableEntryMed">83.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntryMed">88.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;fstream&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/unit_test.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;json_spirit/JsonSpiritHeaders.h&gt;
+<span class="lineNum">      21 </span>            : #include &lt;libdevcore/CommonIO.h&gt;
+<span class="lineNum">      22 </span>            : #include &lt;libdevcore/TrieDB.h&gt;
+<span class="lineNum">      23 </span>            : #include &lt;libdevcore/TrieHash.h&gt;
+<span class="lineNum">      24 </span>            : #include &quot;MemTrie.h&quot;
+<span class="lineNum">      25 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : using namespace std;
+<span class="lineNum">      28 </span>            : using namespace dev;
+<span class="lineNum">      29 </span>            : using namespace dev::test;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : namespace js = json_spirit;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : static unsigned fac(unsigned _i)
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span><span class="lineCov">        687 :         return _i &gt; 2 ? _i * fac(_i - 1) : _i;</span>
+<span class="lineNum">      36 </span>            : }
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : using dev::operator &lt;&lt;;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">          3 : BOOST_AUTO_TEST_SUITE(Crypto)</span>
+<span class="lineNum">      41 </span>            : 
+<a name="42"><span class="lineNum">      42 </span><span class="lineCov">          3 : BOOST_FIXTURE_TEST_SUITE(Trie, TestOutputHelper)</span></a>
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(fat_trie)</span>
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span><span class="lineCov">          1 :         h256 r;</span>
+<span class="lineNum">      47 </span><span class="lineCov">          2 :         MemoryDB fm;</span>
+<span class="lineNum">      48 </span>            :         {
+<span class="lineNum">      49 </span><span class="lineCov">          2 :                 FatGenericTrieDB&lt;MemoryDB&gt; ft(&amp;fm);</span>
+<span class="lineNum">      50 </span><span class="lineCov">          1 :                 ft.init();</span>
+<span class="lineNum">      51 </span><span class="lineCov">         11 :                 ft.insert(h256(&quot;69&quot;, h256::FromHex, h256::AlignRight).ref(), h256(&quot;414243&quot;, h256::FromHex, h256::AlignRight).ref());</span>
+<span class="lineNum">      52 </span><span class="lineCov">          4 :                 for (auto i: ft)</span>
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 :                         cnote &lt;&lt; i.first &lt;&lt; i.second;</span>
+<span class="lineNum">      54 </span><span class="lineCov">          1 :                 r = ft.root();</span>
+<span class="lineNum">      55 </span>            :         }
+<span class="lineNum">      56 </span>            :         {
+<span class="lineNum">      57 </span><span class="lineCov">          2 :                 FatGenericTrieDB&lt;MemoryDB&gt; ft(&amp;fm);</span>
+<span class="lineNum">      58 </span><span class="lineCov">          1 :                 ft.setRoot(r);</span>
+<span class="lineNum">      59 </span><span class="lineCov">          4 :                 for (auto i: ft)</span>
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :                         cnote &lt;&lt; i.first &lt;&lt; i.second;</span>
+<span class="lineNum">      61 </span>            :         }
+<a name="62"><span class="lineNum">      62 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(hex_encoded_securetrie_test)</span>
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span><span class="lineCov">          2 :         string testPath = test::getTestPath();</span>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">          1 :         testPath += &quot;/TrieTests&quot;;</span>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineCov">          1 :         cnote &lt;&lt; &quot;Testing Secure Trie...&quot;;</span>
+<span class="lineNum">      71 </span><span class="lineCov">          2 :         js::mValue v;</span>
+<span class="lineNum">      72 </span><span class="lineCov">          3 :         string s = contentsString(testPath + &quot;/hex_encoded_securetrie_test.json&quot;);</span>
+<span class="lineNum">      73 </span><span class="lineCov">          7 :         BOOST_REQUIRE_MESSAGE(s.length() &gt; 0, &quot;Contents of 'hex_encoded_securetrie_test.json' is empty. Have you cloned the 'tests' repo branch develop?&quot;);</span>
+<span class="lineNum">      74 </span><span class="lineCov">          1 :         js::read_string(s, v);</span>
+<span class="lineNum">      75 </span><span class="lineCov">          6 :         for (auto&amp; i: v.get_obj())</span>
+<span class="lineNum">      76 </span>            :         {
+<span class="lineNum">      77 </span><span class="lineCov">          3 :                 cnote &lt;&lt; i.first;</span>
+<span class="lineNum">      78 </span><span class="lineCov">          3 :                 js::mObject&amp; o = i.second.get_obj();</span>
+<span class="lineNum">      79 </span><span class="lineCov">          6 :                 vector&lt;pair&lt;string, string&gt;&gt; ss;</span>
+<span class="lineNum">      80 </span><span class="lineCov">         42 :                 for (auto i: o[&quot;in&quot;].get_obj())</span>
+<span class="lineNum">      81 </span>            :                 {
+<span class="lineNum">      82 </span><span class="lineCov">         36 :                         ss.push_back(make_pair(i.first, i.second.get_str()));</span>
+<span class="lineNum">      83 </span><span class="lineCov">         24 :                         if (!ss.back().first.find(&quot;0x&quot;))</span>
+<span class="lineNum">      84 </span><span class="lineCov">         84 :                                 ss.back().first = asString(fromHex(ss.back().first.substr(2)));</span>
+<span class="lineNum">      85 </span><span class="lineCov">         24 :                         if (!ss.back().second.find(&quot;0x&quot;))</span>
+<span class="lineNum">      86 </span><span class="lineCov">         84 :                                 ss.back().second = asString(fromHex(ss.back().second.substr(2)));</span>
+<span class="lineNum">      87 </span>            :                 }
+<span class="lineNum">      88 </span><span class="lineCov">        612 :                 for (unsigned j = 0; j &lt; min(1000000000u, fac((unsigned)ss.size())); ++j)</span>
+<span class="lineNum">      89 </span>            :                 {
+<span class="lineNum">      90 </span><span class="lineCov">        450 :                         next_permutation(ss.begin(), ss.end());</span>
+<span class="lineNum">      91 </span><span class="lineCov">        300 :                         MemoryDB m;</span>
+<span class="lineNum">      92 </span><span class="lineCov">        300 :                         EnforceRefs r(m, true);</span>
+<span class="lineNum">      93 </span><span class="lineCov">        300 :                         GenericTrieDB&lt;MemoryDB&gt; t(&amp;m);</span>
+<span class="lineNum">      94 </span><span class="lineCov">        300 :                         MemoryDB hm;</span>
+<span class="lineNum">      95 </span><span class="lineCov">        300 :                         EnforceRefs hr(hm, true);</span>
+<span class="lineNum">      96 </span><span class="lineCov">        300 :                         HashedGenericTrieDB&lt;MemoryDB&gt; ht(&amp;hm);</span>
+<span class="lineNum">      97 </span><span class="lineCov">        300 :                         MemoryDB fm;</span>
+<span class="lineNum">      98 </span><span class="lineCov">        300 :                         EnforceRefs fr(fm, true);</span>
+<span class="lineNum">      99 </span><span class="lineCov">        300 :                         FatGenericTrieDB&lt;MemoryDB&gt; ft(&amp;fm);</span>
+<span class="lineNum">     100 </span><span class="lineCov">        150 :                         t.init();</span>
+<span class="lineNum">     101 </span><span class="lineCov">        150 :                         ht.init();</span>
+<span class="lineNum">     102 </span><span class="lineCov">        150 :                         ft.init();</span>
+<span class="lineNum">     103 </span><span class="lineCov">       1200 :                         BOOST_REQUIRE(t.check(true));</span>
+<span class="lineNum">     104 </span><span class="lineCov">       1200 :                         BOOST_REQUIRE(ht.check(true));</span>
+<span class="lineNum">     105 </span><span class="lineCov">       1200 :                         BOOST_REQUIRE(ft.check(true));</span>
+<span class="lineNum">     106 </span><span class="lineCov">       1314 :                         for (auto const&amp; k: ss)</span>
+<span class="lineNum">     107 </span>            :                         {
+<span class="lineNum">     108 </span><span class="lineCov">       2142 :                                 t.insert(k.first, k.second);</span>
+<span class="lineNum">     109 </span><span class="lineCov">       2142 :                                 ht.insert(k.first, k.second);</span>
+<span class="lineNum">     110 </span><span class="lineCov">       2142 :                                 ft.insert(k.first, k.second);</span>
+<span class="lineNum">     111 </span><span class="lineCov">       5712 :                                 BOOST_REQUIRE(t.check(true));</span>
+<span class="lineNum">     112 </span><span class="lineCov">       5712 :                                 BOOST_REQUIRE(ht.check(true));</span>
+<span class="lineNum">     113 </span><span class="lineCov">       5712 :                                 BOOST_REQUIRE(ft.check(true));</span>
+<span class="lineNum">     114 </span><span class="lineCov">       2142 :                                 auto i = ft.begin();</span>
+<span class="lineNum">     115 </span><span class="lineCov">        714 :                                 auto j = t.begin();</span>
+<span class="lineNum">     116 </span><span class="lineCov">       2142 :                                 for (; i != ft.end() &amp;&amp; j != t.end(); ++i, ++j)</span>
+<span class="lineNum">     117 </span>            :                                 {
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :                                         BOOST_CHECK_EQUAL(i == ft.end(), j == t.end());</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :                                         BOOST_REQUIRE((*i).first.toBytes() == (*j).first.toBytes());</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :                                         BOOST_REQUIRE((*i).second.toBytes() == (*j).second.toBytes());</span>
+<span class="lineNum">     121 </span>            :                                 }
+<span class="lineNum">     122 </span><span class="lineCov">       3570 :                                 BOOST_CHECK_EQUAL(ht.root(), ft.root());</span>
+<span class="lineNum">     123 </span>            :                         }
+<span class="lineNum">     124 </span><span class="lineCov">       1800 :                         BOOST_REQUIRE(!o[&quot;root&quot;].is_null());</span>
+<span class="lineNum">     125 </span><span class="lineCov">       1650 :                         BOOST_CHECK_EQUAL(o[&quot;root&quot;].get_str(), &quot;0x&quot; + toHex(ht.root().asArray()));</span>
+<span class="lineNum">     126 </span><span class="lineCov">       1650 :                         BOOST_CHECK_EQUAL(o[&quot;root&quot;].get_str(), &quot;0x&quot; + toHex(ft.root().asArray()));</span>
+<span class="lineNum">     127 </span>            :                 }
+<span class="lineNum">     128 </span>            :         }
+<a name="129"><span class="lineNum">     129 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(trie_test_anyorder)</span>
+<span class="lineNum">     132 </span>            : {
+<span class="lineNum">     133 </span><span class="lineCov">          2 :         string testPath = test::getTestPath();</span>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineCov">          1 :         testPath += &quot;/TrieTests&quot;;</span>
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span><span class="lineCov">          1 :         cnote &lt;&lt; &quot;Testing Trie...&quot;;</span>
+<span class="lineNum">     138 </span><span class="lineCov">          2 :         js::mValue v;</span>
+<span class="lineNum">     139 </span><span class="lineCov">          3 :         string s = contentsString(testPath + &quot;/trieanyorder.json&quot;);</span>
+<span class="lineNum">     140 </span><span class="lineCov">          7 :         BOOST_REQUIRE_MESSAGE(s.length() &gt; 0, &quot;Contents of 'trieanyorder.json' is empty. Have you cloned the 'tests' repo branch develop?&quot;);</span>
+<span class="lineNum">     141 </span><span class="lineCov">          1 :         js::read_string(s, v);</span>
+<span class="lineNum">     142 </span><span class="lineCov">         10 :         for (auto&amp; i: v.get_obj())</span>
+<span class="lineNum">     143 </span>            :         {
+<span class="lineNum">     144 </span><span class="lineCov">          7 :                 cnote &lt;&lt; i.first;</span>
+<span class="lineNum">     145 </span><span class="lineCov">          7 :                 js::mObject&amp; o = i.second.get_obj();</span>
+<span class="lineNum">     146 </span><span class="lineCov">         14 :                 vector&lt;pair&lt;string, string&gt;&gt; ss;</span>
+<span class="lineNum">     147 </span><span class="lineCov">         76 :                 for (auto i: o[&quot;in&quot;].get_obj())</span>
+<span class="lineNum">     148 </span>            :                 {
+<span class="lineNum">     149 </span><span class="lineCov">         51 :                         ss.push_back(make_pair(i.first, i.second.get_str()));</span>
+<span class="lineNum">     150 </span><span class="lineCov">         34 :                         if (!ss.back().first.find(&quot;0x&quot;))</span>
+<span class="lineNum">     151 </span><span class="lineCov">         14 :                                 ss.back().first = asString(fromHex(ss.back().first.substr(2)));</span>
+<span class="lineNum">     152 </span><span class="lineCov">         34 :                         if (!ss.back().second.find(&quot;0x&quot;))</span>
+<span class="lineNum">     153 </span><span class="lineCov">         14 :                                 ss.back().second = asString(fromHex(ss.back().second.substr(2)));</span>
+<span class="lineNum">     154 </span>            :                 }
+<span class="lineNum">     155 </span><span class="lineCov">        200 :                 for (unsigned j = 0; j &lt; min(1000u, fac((unsigned)ss.size())); ++j)</span>
+<span class="lineNum">     156 </span>            :                 {
+<span class="lineNum">     157 </span><span class="lineCov">        129 :                         next_permutation(ss.begin(), ss.end());</span>
+<span class="lineNum">     158 </span><span class="lineCov">         86 :                         MemoryDB m;</span>
+<span class="lineNum">     159 </span><span class="lineCov">         86 :                         EnforceRefs r(m, true);</span>
+<span class="lineNum">     160 </span><span class="lineCov">         86 :                         GenericTrieDB&lt;MemoryDB&gt; t(&amp;m);</span>
+<span class="lineNum">     161 </span><span class="lineCov">         86 :                         MemoryDB hm;</span>
+<span class="lineNum">     162 </span><span class="lineCov">         86 :                         EnforceRefs hr(hm, true);</span>
+<span class="lineNum">     163 </span><span class="lineCov">         86 :                         HashedGenericTrieDB&lt;MemoryDB&gt; ht(&amp;hm);</span>
+<span class="lineNum">     164 </span><span class="lineCov">         86 :                         MemoryDB fm;</span>
+<span class="lineNum">     165 </span><span class="lineCov">         86 :                         EnforceRefs fr(fm, true);</span>
+<span class="lineNum">     166 </span><span class="lineCov">         86 :                         FatGenericTrieDB&lt;MemoryDB&gt; ft(&amp;fm);</span>
+<span class="lineNum">     167 </span><span class="lineCov">         43 :                         t.init();</span>
+<span class="lineNum">     168 </span><span class="lineCov">         43 :                         ht.init();</span>
+<span class="lineNum">     169 </span><span class="lineCov">         43 :                         ft.init();</span>
+<span class="lineNum">     170 </span><span class="lineCov">        344 :                         BOOST_REQUIRE(t.check(true));</span>
+<span class="lineNum">     171 </span><span class="lineCov">        344 :                         BOOST_REQUIRE(ht.check(true));</span>
+<span class="lineNum">     172 </span><span class="lineCov">        344 :                         BOOST_REQUIRE(ft.check(true));</span>
+<span class="lineNum">     173 </span><span class="lineCov">        317 :                         for (auto const&amp; k: ss)</span>
+<span class="lineNum">     174 </span>            :                         {
+<span class="lineNum">     175 </span><span class="lineCov">        435 :                                 t.insert(k.first, k.second);</span>
+<span class="lineNum">     176 </span><span class="lineCov">        435 :                                 ht.insert(k.first, k.second);</span>
+<span class="lineNum">     177 </span><span class="lineCov">        435 :                                 ft.insert(k.first, k.second);</span>
+<span class="lineNum">     178 </span><span class="lineCov">       1160 :                                 BOOST_REQUIRE(t.check(true));</span>
+<span class="lineNum">     179 </span><span class="lineCov">       1160 :                                 BOOST_REQUIRE(ht.check(true));</span>
+<span class="lineNum">     180 </span><span class="lineCov">       1160 :                                 BOOST_REQUIRE(ft.check(true));</span>
+<span class="lineNum">     181 </span><span class="lineCov">        435 :                                 auto i = ft.begin();</span>
+<span class="lineNum">     182 </span><span class="lineCov">        145 :                                 auto j = t.begin();</span>
+<span class="lineNum">     183 </span><span class="lineCov">        435 :                                 for (; i != ft.end() &amp;&amp; j != t.end(); ++i, ++j)</span>
+<span class="lineNum">     184 </span>            :                                 {
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :                                         BOOST_CHECK_EQUAL(i == ft.end(), j == t.end());</span>
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :                                         BOOST_REQUIRE((*i).first.toBytes() == (*j).first.toBytes());</span>
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :                                         BOOST_REQUIRE((*i).second.toBytes() == (*j).second.toBytes());</span>
+<span class="lineNum">     188 </span>            :                                 }
+<span class="lineNum">     189 </span><span class="lineCov">        725 :                                 BOOST_CHECK_EQUAL(ht.root(), ft.root());</span>
+<span class="lineNum">     190 </span>            :                         }
+<span class="lineNum">     191 </span><span class="lineCov">        516 :                         BOOST_REQUIRE(!o[&quot;root&quot;].is_null());</span>
+<span class="lineNum">     192 </span><span class="lineCov">        473 :                         BOOST_CHECK_EQUAL(o[&quot;root&quot;].get_str(), &quot;0x&quot; + toHex(t.root().asArray()));</span>
+<span class="lineNum">     193 </span><span class="lineCov">        215 :                         BOOST_CHECK_EQUAL(ht.root(), ft.root());</span>
+<span class="lineNum">     194 </span>            :                 }
+<span class="lineNum">     195 </span>            :         }
+<a name="196"><span class="lineNum">     196 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(trie_tests_ordered)</span>
+<span class="lineNum">     199 </span>            : {
+<span class="lineNum">     200 </span><span class="lineCov">          2 :         string testPath = test::getTestPath();</span>
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span><span class="lineCov">          1 :         testPath += &quot;/TrieTests&quot;;</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineCov">          1 :         cnote &lt;&lt; &quot;Testing Trie...&quot;;</span>
+<span class="lineNum">     205 </span><span class="lineCov">          2 :         js::mValue v;</span>
+<span class="lineNum">     206 </span><span class="lineCov">          3 :         string s = contentsString(testPath + &quot;/trietest.json&quot;);</span>
+<span class="lineNum">     207 </span><span class="lineCov">          7 :         BOOST_REQUIRE_MESSAGE(s.length() &gt; 0, &quot;Contents of 'trietest.json' is empty. Have you cloned the 'tests' repo branch develop?&quot;);</span>
+<span class="lineNum">     208 </span><span class="lineCov">          1 :         js::read_string(s, v);</span>
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span><span class="lineCov">          7 :         for (auto&amp; i: v.get_obj())</span>
+<span class="lineNum">     211 </span>            :         {
+<span class="lineNum">     212 </span><span class="lineCov">          4 :                 cnote &lt;&lt; i.first;</span>
+<span class="lineNum">     213 </span><span class="lineCov">          4 :                 js::mObject&amp; o = i.second.get_obj();</span>
+<span class="lineNum">     214 </span><span class="lineCov">          8 :                 vector&lt;pair&lt;string, string&gt;&gt; ss;</span>
+<span class="lineNum">     215 </span><span class="lineCov">          8 :                 vector&lt;string&gt; keysToBeDeleted;</span>
+<span class="lineNum">     216 </span><span class="lineCov">        103 :                 for (auto&amp; i: o[&quot;in&quot;].get_array())</span>
+<span class="lineNum">     217 </span>            :                 {
+<span class="lineNum">     218 </span><span class="lineCov">        150 :                         vector&lt;string&gt; values;</span>
+<span class="lineNum">     219 </span><span class="lineCov">        450 :                         for (auto&amp; s: i.get_array())</span>
+<span class="lineNum">     220 </span>            :                         {
+<span class="lineNum">     221 </span><span class="lineCov">        150 :                                 if (s.type() == json_spirit::str_type)</span>
+<span class="lineNum">     222 </span><span class="lineCov">        122 :                                         values.push_back(s.get_str());</span>
+<span class="lineNum">     223 </span><span class="lineCov">         28 :                                 else if (s.type() == json_spirit::null_type)</span>
+<span class="lineNum">     224 </span>            :                                 {
+<span class="lineNum">     225 </span>            :                                         // mark entry for deletion
+<span class="lineNum">     226 </span><span class="lineCov">        140 :                                         values.push_back(&quot;&quot;);</span>
+<span class="lineNum">     227 </span><span class="lineCov">         56 :                                         if (!values[0].find(&quot;0x&quot;))</span>
+<span class="lineNum">     228 </span><span class="lineCov">        156 :                                                 values[0] = asString(fromHex(values[0].substr(2)));</span>
+<span class="lineNum">     229 </span><span class="lineCov">         28 :                                         keysToBeDeleted.push_back(values[0]);</span>
+<span class="lineNum">     230 </span>            :                                 }
+<span class="lineNum">     231 </span>            :                                 else
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :                                         BOOST_FAIL(&quot;Bad type (expected string)&quot;);</span>
+<span class="lineNum">     233 </span>            :                         }
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span><span class="lineCov">        675 :                         BOOST_REQUIRE(values.size() == 2);</span>
+<span class="lineNum">     236 </span><span class="lineCov">        300 :                         ss.push_back(make_pair(values[0], values[1]));</span>
+<span class="lineNum">     237 </span><span class="lineCov">        150 :                         if (!ss.back().first.find(&quot;0x&quot;))</span>
+<span class="lineNum">     238 </span><span class="lineCov">        245 :                                 ss.back().first = asString(fromHex(ss.back().first.substr(2)));</span>
+<span class="lineNum">     239 </span><span class="lineCov">        150 :                         if (!ss.back().second.find(&quot;0x&quot;))</span>
+<span class="lineNum">     240 </span><span class="lineCov">         70 :                                 ss.back().second = asString(fromHex(ss.back().second.substr(2)));</span>
+<span class="lineNum">     241 </span>            :                 }
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span><span class="lineCov">          8 :                 MemoryDB m;</span>
+<span class="lineNum">     244 </span><span class="lineCov">          8 :                 EnforceRefs r(m, true);</span>
+<span class="lineNum">     245 </span><span class="lineCov">          8 :                 GenericTrieDB&lt;MemoryDB&gt; t(&amp;m);</span>
+<span class="lineNum">     246 </span><span class="lineCov">          8 :                 MemoryDB hm;</span>
+<span class="lineNum">     247 </span><span class="lineCov">          8 :                 EnforceRefs hr(hm, true);</span>
+<span class="lineNum">     248 </span><span class="lineCov">          8 :                 HashedGenericTrieDB&lt;MemoryDB&gt; ht(&amp;hm);</span>
+<span class="lineNum">     249 </span><span class="lineCov">          8 :                 MemoryDB fm;</span>
+<span class="lineNum">     250 </span><span class="lineCov">          8 :                 EnforceRefs fr(fm, true);</span>
+<span class="lineNum">     251 </span><span class="lineCov">          8 :                 FatGenericTrieDB&lt;MemoryDB&gt; ft(&amp;fm);</span>
+<span class="lineNum">     252 </span><span class="lineCov">          4 :                 t.init();</span>
+<span class="lineNum">     253 </span><span class="lineCov">          4 :                 ht.init();</span>
+<span class="lineNum">     254 </span><span class="lineCov">          4 :                 ft.init();</span>
+<span class="lineNum">     255 </span><span class="lineCov">         32 :                 BOOST_REQUIRE(t.check(true));</span>
+<span class="lineNum">     256 </span><span class="lineCov">         32 :                 BOOST_REQUIRE(ht.check(true));</span>
+<span class="lineNum">     257 </span><span class="lineCov">         32 :                 BOOST_REQUIRE(ft.check(true));</span>
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span><span class="lineCov">         91 :                 for (auto const&amp; k: ss)</span>
+<span class="lineNum">     260 </span>            :                 {
+<span class="lineNum">     261 </span><span class="lineCov">        431 :                         if (find(keysToBeDeleted.begin(), keysToBeDeleted.end(), k.first) != keysToBeDeleted.end() &amp;&amp; k.second.empty())</span>
+<span class="lineNum">     262 </span><span class="lineCov">        112 :                                 t.remove(k.first), ht.remove(k.first), ft.remove(k.first);</span>
+<span class="lineNum">     263 </span>            :                         else
+<span class="lineNum">     264 </span><span class="lineCov">        329 :                                 t.insert(k.first, k.second), ht.insert(k.first, k.second), ft.insert(k.first, k.second);</span>
+<span class="lineNum">     265 </span><span class="lineCov">        600 :                         BOOST_REQUIRE(t.check(true));</span>
+<span class="lineNum">     266 </span><span class="lineCov">        600 :                         BOOST_REQUIRE(ht.check(true));</span>
+<span class="lineNum">     267 </span><span class="lineCov">        600 :                         BOOST_REQUIRE(ft.check(true));</span>
+<span class="lineNum">     268 </span><span class="lineCov">        225 :                         auto i = ft.begin();</span>
+<span class="lineNum">     269 </span><span class="lineCov">         75 :                         auto j = t.begin();</span>
+<span class="lineNum">     270 </span><span class="lineCov">        225 :                         for (; i != ft.end() &amp;&amp; j != t.end(); ++i, ++j)</span>
+<span class="lineNum">     271 </span>            :                         {
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :                                 BOOST_CHECK_EQUAL(i == ft.end(), j == t.end());</span>
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :                                 BOOST_REQUIRE((*i).first.toBytes() == (*j).first.toBytes());</span>
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :                                 BOOST_REQUIRE((*i).second.toBytes() == (*j).second.toBytes());</span>
+<span class="lineNum">     275 </span>            :                         }
+<span class="lineNum">     276 </span><span class="lineCov">        375 :                         BOOST_CHECK_EQUAL(ht.root(), ft.root());</span>
+<span class="lineNum">     277 </span>            :                 }
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span><span class="lineCov">         48 :                 BOOST_REQUIRE(!o[&quot;root&quot;].is_null());</span>
+<span class="lineNum">     280 </span><span class="lineCov">         44 :                 BOOST_CHECK_EQUAL(o[&quot;root&quot;].get_str(), &quot;0x&quot; + toHex(t.root().asArray()));</span>
+<span class="lineNum">     281 </span>            :         }
+<a name="282"><span class="lineNum">     282 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span><span class="lineCov">       3842 : h256 stringMapHash256(StringMap const&amp; _s)</span>
+<span class="lineNum">     285 </span>            : {
+<span class="lineNum">     286 </span><span class="lineCov">       7684 :         BytesMap bytesMap;</span>
+<span class="lineNum">     287 </span><span class="lineCov">      99212 :         for (auto const&amp; _v: _s)</span>
+<span class="lineNum">     288 </span><span class="lineCov">    1052232 :                 bytesMap.insert(std::make_pair(bytes(_v.first.begin(), _v.first.end()), bytes(_v.second.begin(), _v.second.end())));</span>
+<span class="lineNum">     289 </span><span class="lineCov">       7684 :         return hash256(bytesMap);</span>
+<a name="290"><span class="lineNum">     290 </span>            : }</a>
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span><span class="lineCov">          1 : bytes stringMapRlp256(StringMap const&amp; _s)</span>
+<span class="lineNum">     293 </span>            : {
+<span class="lineNum">     294 </span><span class="lineCov">          2 :         BytesMap bytesMap;</span>
+<span class="lineNum">     295 </span><span class="lineCov">          5 :         for (auto const&amp; _v: _s)</span>
+<span class="lineNum">     296 </span><span class="lineCov">         24 :                 bytesMap.insert(std::make_pair(bytes(_v.first.begin(), _v.first.end()), bytes(_v.second.begin(), _v.second.end())));</span>
+<span class="lineNum">     297 </span><span class="lineCov">          2 :         return rlp256(bytesMap);</span>
+<a name="298"><span class="lineNum">     298 </span>            : }</a>
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(moreTrieTests)</span>
+<span class="lineNum">     301 </span>            : {
+<span class="lineNum">     302 </span><span class="lineCov">          1 :         cnote &lt;&lt; &quot;Testing Trie more...&quot;;</span>
+<span class="lineNum">     303 </span>            :         // More tests...
+<span class="lineNum">     304 </span>            :         {
+<span class="lineNum">     305 </span><span class="lineCov">          2 :                 MemoryDB m;</span>
+<span class="lineNum">     306 </span><span class="lineCov">          2 :                 GenericTrieDB&lt;MemoryDB&gt; t(&amp;m);</span>
+<span class="lineNum">     307 </span><span class="lineCov">          1 :                 t.init();       // initialise as empty tree.</span>
+<span class="lineNum">     308 </span><span class="lineCov">          1 :                 cnote &lt;&lt; t;</span>
+<span class="lineNum">     309 </span><span class="lineCov">          1 :                 cnote &lt;&lt; m;</span>
+<span class="lineNum">     310 </span><span class="lineCov">          1 :                 cnote &lt;&lt; t.root();</span>
+<span class="lineNum">     311 </span><span class="lineCov">          2 :                 cnote &lt;&lt; stringMapHash256(StringMap());</span>
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span><span class="lineCov">          9 :                 t.insert(string(&quot;tesz&quot;), string(&quot;test&quot;));</span>
+<span class="lineNum">     314 </span><span class="lineCov">          1 :                 cnote &lt;&lt; t;</span>
+<span class="lineNum">     315 </span><span class="lineCov">          1 :                 cnote &lt;&lt; m;</span>
+<span class="lineNum">     316 </span><span class="lineCov">          1 :                 cnote &lt;&lt; t.root();</span>
+<span class="lineNum">     317 </span><span class="lineCov">          4 :                 cnote &lt;&lt; stringMapHash256({{&quot;test&quot;, &quot;test&quot;}});</span>
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span><span class="lineCov">          9 :                 t.insert(string(&quot;tesa&quot;), string(&quot;testy&quot;));</span>
+<span class="lineNum">     320 </span><span class="lineCov">          1 :                 cnote &lt;&lt; t;</span>
+<span class="lineNum">     321 </span><span class="lineCov">          1 :                 cnote &lt;&lt; m;</span>
+<span class="lineNum">     322 </span><span class="lineCov">          1 :                 cnote &lt;&lt; t.root();</span>
+<span class="lineNum">     323 </span><span class="lineCov">          4 :                 cnote &lt;&lt; stringMapHash256({{&quot;test&quot;, &quot;test&quot;}, {&quot;te&quot;, &quot;testy&quot;}});</span>
+<span class="lineNum">     324 </span><span class="lineCov">          6 :                 cnote &lt;&lt; t.at(string(&quot;test&quot;));</span>
+<span class="lineNum">     325 </span><span class="lineCov">          6 :                 cnote &lt;&lt; t.at(string(&quot;te&quot;));</span>
+<span class="lineNum">     326 </span><span class="lineCov">          6 :                 cnote &lt;&lt; t.at(string(&quot;t&quot;));</span>
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span><span class="lineCov">          5 :                 t.remove(string(&quot;te&quot;));</span>
+<span class="lineNum">     329 </span><span class="lineCov">          1 :                 cnote &lt;&lt; m;</span>
+<span class="lineNum">     330 </span><span class="lineCov">          1 :                 cnote &lt;&lt; t.root();</span>
+<span class="lineNum">     331 </span><span class="lineCov">          4 :                 cnote &lt;&lt; stringMapHash256({{&quot;test&quot;, &quot;test&quot;}});</span>
+<span class="lineNum">     332 </span>            : 
+<span class="lineNum">     333 </span><span class="lineCov">          5 :                 t.remove(string(&quot;test&quot;));</span>
+<span class="lineNum">     334 </span><span class="lineCov">          1 :                 cnote &lt;&lt; m;</span>
+<span class="lineNum">     335 </span><span class="lineCov">          1 :                 cnote &lt;&lt; t.root();</span>
+<span class="lineNum">     336 </span><span class="lineCov">          2 :                 cnote &lt;&lt; stringMapHash256(StringMap());</span>
+<span class="lineNum">     337 </span>            :         }
+<span class="lineNum">     338 </span>            :         {
+<span class="lineNum">     339 </span><span class="lineCov">          2 :                 MemoryDB m;</span>
+<span class="lineNum">     340 </span><span class="lineCov">          2 :                 GenericTrieDB&lt;MemoryDB&gt; t(&amp;m);</span>
+<span class="lineNum">     341 </span><span class="lineCov">          1 :                 t.init();       // initialise as empty tree.</span>
+<span class="lineNum">     342 </span><span class="lineCov">          9 :                 t.insert(string(&quot;a&quot;), string(&quot;A&quot;));</span>
+<span class="lineNum">     343 </span><span class="lineCov">          9 :                 t.insert(string(&quot;b&quot;), string(&quot;B&quot;));</span>
+<span class="lineNum">     344 </span><span class="lineCov">          1 :                 cnote &lt;&lt; t;</span>
+<span class="lineNum">     345 </span><span class="lineCov">          1 :                 cnote &lt;&lt; m;</span>
+<span class="lineNum">     346 </span><span class="lineCov">          1 :                 cnote &lt;&lt; t.root();</span>
+<span class="lineNum">     347 </span><span class="lineCov">          4 :                 cnote &lt;&lt; stringMapHash256({{&quot;b&quot;, &quot;B&quot;}, {&quot;a&quot;, &quot;A&quot;}});</span>
+<span class="lineNum">     348 </span><span class="lineCov">          5 :                 bytes r(stringMapRlp256({{&quot;b&quot;, &quot;B&quot;}, {&quot;a&quot;, &quot;A&quot;}}));</span>
+<span class="lineNum">     349 </span><span class="lineCov">          1 :                 cnote &lt;&lt; RLP(r);</span>
+<span class="lineNum">     350 </span>            :         }
+<span class="lineNum">     351 </span>            :         {
+<span class="lineNum">     352 </span><span class="lineCov">          2 :                 MemTrie t;</span>
+<span class="lineNum">     353 </span><span class="lineCov">          7 :                 t.insert(&quot;dog&quot;, &quot;puppy&quot;);</span>
+<span class="lineNum">     354 </span><span class="lineCov">          1 :                 cnote &lt;&lt; hex &lt;&lt; t.hash256();</span>
+<span class="lineNum">     355 </span><span class="lineCov">          2 :                 bytes r(t.rlp());</span>
+<span class="lineNum">     356 </span><span class="lineCov">          1 :                 cnote &lt;&lt; RLP(r);</span>
+<span class="lineNum">     357 </span>            :         }
+<span class="lineNum">     358 </span>            :         {
+<span class="lineNum">     359 </span><span class="lineCov">          2 :                 MemTrie t;</span>
+<span class="lineNum">     360 </span><span class="lineCov">          7 :                 t.insert(&quot;bed&quot;, &quot;d&quot;);</span>
+<span class="lineNum">     361 </span><span class="lineCov">          7 :                 t.insert(&quot;be&quot;, &quot;e&quot;);</span>
+<span class="lineNum">     362 </span><span class="lineCov">          1 :                 cnote &lt;&lt; hex &lt;&lt; t.hash256();</span>
+<span class="lineNum">     363 </span><span class="lineCov">          2 :                 bytes r(t.rlp());</span>
+<span class="lineNum">     364 </span><span class="lineCov">          1 :                 cnote &lt;&lt; RLP(r);</span>
+<span class="lineNum">     365 </span>            :         }
+<span class="lineNum">     366 </span>            :         {
+<span class="lineNum">     367 </span><span class="lineCov">          4 :                 cnote &lt;&lt; hex &lt;&lt; stringMapHash256({{&quot;dog&quot;, &quot;puppy&quot;}, {&quot;doe&quot;, &quot;reindeer&quot;}});</span>
+<span class="lineNum">     368 </span><span class="lineCov">          2 :                 MemTrie t;</span>
+<span class="lineNum">     369 </span><span class="lineCov">          7 :                 t.insert(&quot;dog&quot;, &quot;puppy&quot;);</span>
+<span class="lineNum">     370 </span><span class="lineCov">          7 :                 t.insert(&quot;doe&quot;, &quot;reindeer&quot;);</span>
+<span class="lineNum">     371 </span><span class="lineCov">          1 :                 cnote &lt;&lt; hex &lt;&lt; t.hash256();</span>
+<span class="lineNum">     372 </span><span class="lineCov">          2 :                 bytes r(t.rlp());</span>
+<span class="lineNum">     373 </span><span class="lineCov">          1 :                 cnote &lt;&lt; RLP(r);</span>
+<span class="lineNum">     374 </span><span class="lineCov">          3 :                 cnote &lt;&lt; toHex(t.rlp());</span>
+<span class="lineNum">     375 </span>            :         }
+<span class="lineNum">     376 </span>            :         {
+<span class="lineNum">     377 </span><span class="lineCov">          2 :                 MemoryDB m;</span>
+<span class="lineNum">     378 </span><span class="lineCov">          2 :                 EnforceRefs r(m, true);</span>
+<span class="lineNum">     379 </span><span class="lineCov">          2 :                 GenericTrieDB&lt;MemoryDB&gt; d(&amp;m);</span>
+<span class="lineNum">     380 </span><span class="lineCov">          1 :                 d.init();       // initialise as empty tree.</span>
+<span class="lineNum">     381 </span><span class="lineCov">          2 :                 MemTrie t;</span>
+<a name="382"><span class="lineNum">     382 </span><span class="lineCov">          2 :                 StringMap s;</span></a>
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span><span class="lineCov">          5 :                 auto add = [&amp;](char const* a, char const* b)</span>
+<span class="lineNum">     385 </span>            :                 {
+<span class="lineNum">     386 </span><span class="lineCov">         77 :                         d.insert(string(a), string(b));</span>
+<span class="lineNum">     387 </span><span class="lineCov">         52 :                         t.insert(a, b);</span>
+<span class="lineNum">     388 </span><span class="lineCov">         40 :                         s[a] = b;</span>
+<span class="lineNum">     389 </span>            : 
+<span class="lineNum">     390 </span><span class="lineCov">          5 :                         cnote &lt;&lt; &quot;/n-------------------------------&quot;;</span>
+<span class="lineNum">     391 </span><span class="lineCov">          5 :                         cnote &lt;&lt; a &lt;&lt; &quot; -&gt; &quot; &lt;&lt; b;</span>
+<span class="lineNum">     392 </span><span class="lineCov">          5 :                         cnote &lt;&lt; d;</span>
+<span class="lineNum">     393 </span><span class="lineCov">          5 :                         cnote &lt;&lt; m;</span>
+<span class="lineNum">     394 </span><span class="lineCov">          5 :                         cnote &lt;&lt; d.root();</span>
+<span class="lineNum">     395 </span><span class="lineCov">          5 :                         cnote &lt;&lt; stringMapHash256(s);</span>
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span><span class="lineCov">         45 :                         BOOST_REQUIRE(d.check(true));</span>
+<span class="lineNum">     398 </span><span class="lineCov">         35 :                         BOOST_REQUIRE_EQUAL(t.hash256(), stringMapHash256(s));</span>
+<span class="lineNum">     399 </span><span class="lineCov">         35 :                         BOOST_REQUIRE_EQUAL(d.root(), stringMapHash256(s));</span>
+<span class="lineNum">     400 </span><span class="lineCov">         27 :                         for (auto const&amp; i: s)</span>
+<span class="lineNum">     401 </span>            :                         {
+<span class="lineNum">     402 </span>            :                                 (void)i;
+<span class="lineNum">     403 </span><span class="lineCov">         72 :                                 BOOST_REQUIRE_EQUAL(t.at(i.first), i.second);</span>
+<span class="lineNum">     404 </span><span class="lineCov">         96 :                                 BOOST_REQUIRE_EQUAL(d.at(i.first), i.second);</span>
+<span class="lineNum">     405 </span>            :                         }
+<a name="406"><span class="lineNum">     406 </span><span class="lineCov">          6 :                 };</span></a>
+<span class="lineNum">     407 </span>            : 
+<span class="lineNum">     408 </span><span class="lineCov">          5 :                 auto remove = [&amp;](char const* a)</span>
+<span class="lineNum">     409 </span>            :                 {
+<span class="lineNum">     410 </span><span class="lineCov">         35 :                         s.erase(a);</span>
+<span class="lineNum">     411 </span><span class="lineCov">         37 :                         t.remove(a);</span>
+<span class="lineNum">     412 </span><span class="lineCov">         47 :                         d.remove(string(a));</span>
+<span class="lineNum">     413 </span>            : 
+<span class="lineNum">     414 </span>            :                         /*cnote &lt;&lt; endl &lt;&lt; &quot;-------------------------------&quot;;
+<span class="lineNum">     415 </span>            :                         cnote &lt;&lt; &quot;X &quot; &lt;&lt; a;
+<span class="lineNum">     416 </span>            :                         cnote &lt;&lt; d;
+<span class="lineNum">     417 </span>            :                         cnote &lt;&lt; m;
+<span class="lineNum">     418 </span>            :                         cnote &lt;&lt; d.root();
+<span class="lineNum">     419 </span>            :                         cnote &lt;&lt; hash256(s);*/
+<span class="lineNum">     420 </span>            : 
+<span class="lineNum">     421 </span><span class="lineCov">         45 :                         BOOST_REQUIRE(d.check(true));</span>
+<span class="lineNum">     422 </span><span class="lineCov">         65 :                         BOOST_REQUIRE(t.at(a).empty());</span>
+<span class="lineNum">     423 </span><span class="lineCov">         75 :                         BOOST_REQUIRE(d.at(string(a)).empty());</span>
+<span class="lineNum">     424 </span><span class="lineCov">         35 :                         BOOST_REQUIRE_EQUAL(t.hash256(), stringMapHash256(s));</span>
+<span class="lineNum">     425 </span><span class="lineCov">         35 :                         BOOST_REQUIRE_EQUAL(d.root(), stringMapHash256(s));</span>
+<span class="lineNum">     426 </span><span class="lineCov">         22 :                         for (auto const&amp; i: s)</span>
+<span class="lineNum">     427 </span>            :                         {
+<span class="lineNum">     428 </span>            :                                 (void)i;
+<span class="lineNum">     429 </span><span class="lineCov">         42 :                                 BOOST_REQUIRE_EQUAL(t.at(i.first), i.second);</span>
+<span class="lineNum">     430 </span><span class="lineCov">         56 :                                 BOOST_REQUIRE_EQUAL(d.at(i.first), i.second);</span>
+<span class="lineNum">     431 </span>            :                         }
+<span class="lineNum">     432 </span><span class="lineCov">          6 :                 };</span>
+<span class="lineNum">     433 </span>            : 
+<span class="lineNum">     434 </span><span class="lineCov">          1 :                 add(&quot;dogglesworth&quot;, &quot;cat&quot;);</span>
+<span class="lineNum">     435 </span><span class="lineCov">          1 :                 add(&quot;doe&quot;, &quot;reindeer&quot;);</span>
+<span class="lineNum">     436 </span><span class="lineCov">          1 :                 remove(&quot;dogglesworth&quot;);</span>
+<span class="lineNum">     437 </span><span class="lineCov">          1 :                 add(&quot;horse&quot;, &quot;stallion&quot;);</span>
+<span class="lineNum">     438 </span><span class="lineCov">          1 :                 add(&quot;do&quot;, &quot;verb&quot;);</span>
+<span class="lineNum">     439 </span><span class="lineCov">          1 :                 add(&quot;doge&quot;, &quot;coin&quot;);</span>
+<span class="lineNum">     440 </span><span class="lineCov">          1 :                 remove(&quot;horse&quot;);</span>
+<span class="lineNum">     441 </span><span class="lineCov">          1 :                 remove(&quot;do&quot;);</span>
+<span class="lineNum">     442 </span><span class="lineCov">          1 :                 remove(&quot;doge&quot;);</span>
+<span class="lineNum">     443 </span><span class="lineCov">          1 :                 remove(&quot;doe&quot;);</span>
+<span class="lineNum">     444 </span>            :         }
+<a name="445"><span class="lineNum">     445 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     446 </span>            : 
+<span class="lineNum">     447 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(trieLowerBound)</span>
+<span class="lineNum">     448 </span>            : {
+<span class="lineNum">     449 </span><span class="lineCov">          1 :         cnote &lt;&lt; &quot;Stress-testing Trie.lower_bound...&quot;;</span>
+<span class="lineNum">     450 </span>            :         if (0)
+<span class="lineNum">     451 </span>            :         {
+<span class="lineNum">     452 </span>            :                 MemoryDB dm;
+<span class="lineNum">     453 </span>            :                 EnforceRefs e(dm, true);
+<span class="lineNum">     454 </span>            :                 GenericTrieDB&lt;MemoryDB&gt; d(&amp;dm);
+<span class="lineNum">     455 </span>            :                 d.init();       // initialise as empty tree.
+<span class="lineNum">     456 </span>            :                 for (int a = 0; a &lt; 20; ++a)
+<span class="lineNum">     457 </span>            :                 {
+<span class="lineNum">     458 </span>            :                         StringMap m;
+<span class="lineNum">     459 </span>            :                         for (int i = 0; i &lt; 50; ++i)
+<span class="lineNum">     460 </span>            :                         {
+<span class="lineNum">     461 </span>            :                                 auto k = randomWord();
+<span class="lineNum">     462 </span>            :                                 auto v = toString(i);
+<span class="lineNum">     463 </span>            :                                 m[k] = v;
+<span class="lineNum">     464 </span>            :                                 d.insert(k, v);
+<span class="lineNum">     465 </span>            :                         }
+<span class="lineNum">     466 </span>            : 
+<span class="lineNum">     467 </span>            :                         for (auto i: d)
+<span class="lineNum">     468 </span>            :                         {
+<span class="lineNum">     469 </span>            :                                 auto it = d.lower_bound(i.first);
+<span class="lineNum">     470 </span>            :                                 for (auto iit = d.begin(); iit != d.end(); ++iit)
+<span class="lineNum">     471 </span>            :                                         if ((*iit).first.toString() &gt;= i.first.toString())
+<span class="lineNum">     472 </span>            :                                         {
+<span class="lineNum">     473 </span>            :                                                 BOOST_REQUIRE(it == iit);
+<span class="lineNum">     474 </span>            :                                                 break;
+<span class="lineNum">     475 </span>            :                                         }
+<span class="lineNum">     476 </span>            :                         }
+<span class="lineNum">     477 </span>            :                         for (unsigned i = 0; i &lt; 100; ++i)
+<span class="lineNum">     478 </span>            :                         {
+<span class="lineNum">     479 </span>            :                                 auto k = randomWord();
+<span class="lineNum">     480 </span>            :                                 auto it = d.lower_bound(k);
+<span class="lineNum">     481 </span>            :                                 for (auto iit = d.begin(); iit != d.end(); ++iit)
+<span class="lineNum">     482 </span>            :                                         if ((*iit).first.toString() &gt;= k)
+<span class="lineNum">     483 </span>            :                                         {
+<span class="lineNum">     484 </span>            :                                                 BOOST_REQUIRE(it == iit);
+<span class="lineNum">     485 </span>            :                                                 break;
+<span class="lineNum">     486 </span>            :                                         }
+<span class="lineNum">     487 </span>            :                         }
+<span class="lineNum">     488 </span>            : 
+<span class="lineNum">     489 </span>            :                 }
+<span class="lineNum">     490 </span>            :         }
+<a name="491"><span class="lineNum">     491 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     492 </span>            : 
+<span class="lineNum">     493 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(trieStess)</span>
+<span class="lineNum">     494 </span>            : {
+<span class="lineNum">     495 </span><span class="lineCov">          1 :         cnote &lt;&lt; &quot;Stress-testing Trie...&quot;;</span>
+<span class="lineNum">     496 </span>            :         {
+<span class="lineNum">     497 </span><span class="lineCov">          2 :                 MemoryDB m;</span>
+<span class="lineNum">     498 </span><span class="lineCov">          2 :                 MemoryDB dm;</span>
+<span class="lineNum">     499 </span><span class="lineCov">          2 :                 EnforceRefs e(dm, true);</span>
+<span class="lineNum">     500 </span><span class="lineCov">          2 :                 GenericTrieDB&lt;MemoryDB&gt; d(&amp;dm);</span>
+<span class="lineNum">     501 </span><span class="lineCov">          1 :                 d.init();       // initialise as empty tree.</span>
+<span class="lineNum">     502 </span><span class="lineCov">          1 :                 MemTrie t;</span>
+<span class="lineNum">     503 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(d.check(true));</span>
+<span class="lineNum">     504 </span><span class="lineCov">         21 :                 for (int a = 0; a &lt; 20; ++a)</span>
+<span class="lineNum">     505 </span>            :                 {
+<span class="lineNum">     506 </span><span class="lineCov">         40 :                         StringMap m;</span>
+<span class="lineNum">     507 </span><span class="lineCov">       1020 :                         for (int i = 0; i &lt; 50; ++i)</span>
+<span class="lineNum">     508 </span>            :                         {
+<span class="lineNum">     509 </span><span class="lineCov">       2000 :                                 auto k = randomWord();</span>
+<span class="lineNum">     510 </span><span class="lineCov">       2000 :                                 auto v = toString(i);</span>
+<span class="lineNum">     511 </span><span class="lineCov">       2000 :                                 m[k] = v;</span>
+<span class="lineNum">     512 </span><span class="lineCov">       1000 :                                 t.insert(k, v);</span>
+<span class="lineNum">     513 </span><span class="lineCov">       2000 :                                 d.insert(k, v);</span>
+<span class="lineNum">     514 </span><span class="lineCov">       5000 :                                 BOOST_REQUIRE_EQUAL(stringMapHash256(m), t.hash256());</span>
+<span class="lineNum">     515 </span><span class="lineCov">       5000 :                                 BOOST_REQUIRE_EQUAL(stringMapHash256(m), d.root());</span>
+<span class="lineNum">     516 </span><span class="lineCov">       8000 :                                 BOOST_REQUIRE(d.check(true));</span>
+<span class="lineNum">     517 </span>            :                         }
+<span class="lineNum">     518 </span><span class="lineCov">       1830 :                         while (!m.empty())</span>
+<span class="lineNum">     519 </span>            :                         {
+<span class="lineNum">     520 </span><span class="lineCov">       3620 :                                 auto k = m.begin()-&gt;first;</span>
+<span class="lineNum">     521 </span><span class="lineCov">       3620 :                                 auto v = m.begin()-&gt;second;</span>
+<span class="lineNum">     522 </span><span class="lineCov">        905 :                                 d.remove(k);</span>
+<span class="lineNum">     523 </span><span class="lineCov">        905 :                                 t.remove(k);</span>
+<span class="lineNum">     524 </span><span class="lineCov">        905 :                                 m.erase(k);</span>
+<span class="lineNum">     525 </span><span class="lineCov">        905 :                                 if (!d.check(true))</span>
+<span class="lineNum">     526 </span>            :                                 {
+<span class="lineNum">     527 </span>            :                                         // cwarn &lt;&lt; m;
+<span class="lineNum">     528 </span><span class="lineNoCov">          0 :                                         for (auto i: d)</span>
+<span class="lineNum">     529 </span><span class="lineNoCov">          0 :                                                 cwarn &lt;&lt; i.first.toString() &lt;&lt; i.second.toString();</span>
+<span class="lineNum">     530 </span>            : 
+<span class="lineNum">     531 </span><span class="lineNoCov">          0 :                                         MemoryDB dm2;</span>
+<span class="lineNum">     532 </span><span class="lineNoCov">          0 :                                         EnforceRefs e2(dm2, true);</span>
+<span class="lineNum">     533 </span><span class="lineNoCov">          0 :                                         GenericTrieDB&lt;MemoryDB&gt; d2(&amp;dm2);</span>
+<span class="lineNum">     534 </span><span class="lineNoCov">          0 :                                         d2.init();      // initialise as empty tree.</span>
+<span class="lineNum">     535 </span><span class="lineNoCov">          0 :                                         for (auto i: d)</span>
+<span class="lineNum">     536 </span><span class="lineNoCov">          0 :                                                 d2.insert(i.first, i.second);</span>
+<span class="lineNum">     537 </span>            : 
+<span class="lineNum">     538 </span><span class="lineNoCov">          0 :                                         cwarn &lt;&lt; &quot;Good:&quot; &lt;&lt; d2.root();</span>
+<span class="lineNum">     539 </span>            : //                                      for (auto i: dm2.get())
+<span class="lineNum">     540 </span>            : //                                              cwarn &lt;&lt; i.first &lt;&lt; &quot;: &quot; &lt;&lt; RLP(i.second);
+<span class="lineNum">     541 </span><span class="lineNoCov">          0 :                                         d2.debugStructure(cerr);</span>
+<span class="lineNum">     542 </span><span class="lineNoCov">          0 :                                         cwarn &lt;&lt; &quot;Broken:&quot; &lt;&lt; d.root();   // Leaves an extension -&gt; extension (3c1... -&gt; 742...)</span>
+<span class="lineNum">     543 </span>            : //                                      for (auto i: dm.get())
+<span class="lineNum">     544 </span>            : //                                              cwarn &lt;&lt; i.first &lt;&lt; &quot;: &quot; &lt;&lt; RLP(i.second);
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 :                                         d.debugStructure(cerr);</span>
+<span class="lineNum">     546 </span>            : 
+<span class="lineNum">     547 </span><span class="lineNoCov">          0 :                                         d2.insert(k, v);</span>
+<span class="lineNum">     548 </span><span class="lineNoCov">          0 :                                         cwarn &lt;&lt; &quot;Pres:&quot; &lt;&lt; d2.root();</span>
+<span class="lineNum">     549 </span>            : //                                      for (auto i: dm2.get())
+<span class="lineNum">     550 </span>            : //                                              cwarn &lt;&lt; i.first &lt;&lt; &quot;: &quot; &lt;&lt; RLP(i.second);
+<span class="lineNum">     551 </span><span class="lineNoCov">          0 :                                         d2.debugStructure(cerr);</span>
+<span class="lineNum">     552 </span><span class="lineNoCov">          0 :                                         if (g_logVerbosity != -1)</span>
+<span class="lineNum">     553 </span><span class="lineNoCov">          0 :                                                 g_logVerbosity = 99;</span>
+<span class="lineNum">     554 </span><span class="lineNoCov">          0 :                                         d2.remove(k);</span>
+<span class="lineNum">     555 </span><span class="lineNoCov">          0 :                                         if (g_logVerbosity != -1)</span>
+<span class="lineNum">     556 </span><span class="lineNoCov">          0 :                                                 g_logVerbosity = 4;</span>
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 :                                         cwarn &lt;&lt; &quot;Good?&quot; &lt;&lt; d2.root();</span>
+<span class="lineNum">     559 </span>            :                                 }
+<span class="lineNum">     560 </span><span class="lineCov">       7240 :                                 BOOST_REQUIRE(d.check(true));</span>
+<span class="lineNum">     561 </span><span class="lineCov">       4525 :                                 BOOST_REQUIRE_EQUAL(stringMapHash256(m), t.hash256());</span>
+<span class="lineNum">     562 </span><span class="lineCov">       4525 :                                 BOOST_REQUIRE_EQUAL(stringMapHash256(m), d.root());</span>
+<span class="lineNum">     563 </span>            :                         }
+<span class="lineNum">     564 </span>            :                 }
+<span class="lineNum">     565 </span>            :         }
+<a name="566"><span class="lineNum">     566 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     567 </span>            : 
+<span class="lineNum">     568 </span><span class="lineNoCov">          0 : template&lt;typename Trie&gt; void perfTestTrie(char const* _name)</span>
+<span class="lineNum">     569 </span>            : {
+<span class="lineNum">     570 </span><span class="lineNoCov">          0 :         for (size_t p = 1000; p != 1000000; p*=10)</span>
+<span class="lineNum">     571 </span>            :         {
+<span class="lineNum">     572 </span><span class="lineNoCov">          0 :                 MemoryDB dm;</span>
+<span class="lineNum">     573 </span><span class="lineNoCov">          0 :                 Trie d(&amp;dm);</span>
+<span class="lineNum">     574 </span><span class="lineNoCov">          0 :                 d.init();</span>
+<span class="lineNum">     575 </span><span class="lineNoCov">          0 :                 cnote &lt;&lt; &quot;TriePerf &quot; &lt;&lt; _name &lt;&lt; p;</span>
+<span class="lineNum">     576 </span><span class="lineNoCov">          0 :                 std::vector&lt;h256&gt; keys(1000);</span>
+<span class="lineNum">     577 </span><span class="lineNoCov">          0 :                 Timer t;</span>
+<span class="lineNum">     578 </span><span class="lineNoCov">          0 :                 size_t ki = 0;</span>
+<span class="lineNum">     579 </span><span class="lineNoCov">          0 :                 for (size_t i = 0; i &lt; p; ++i)</span>
+<span class="lineNum">     580 </span>            :                 {
+<span class="lineNum">     581 </span><span class="lineNoCov">          0 :                         auto k = h256::random();</span>
+<span class="lineNum">     582 </span><span class="lineNoCov">          0 :                         auto v = toString(i);</span>
+<span class="lineNum">     583 </span><span class="lineNoCov">          0 :                         d.insert(k, v);</span>
+<span class="lineNum">     584 </span>            : 
+<span class="lineNum">     585 </span><span class="lineNoCov">          0 :                         if (i % (p / 1000) == 0)</span>
+<span class="lineNum">     586 </span><span class="lineNoCov">          0 :                                 keys[ki++] = k;</span>
+<span class="lineNum">     587 </span>            :                 }
+<span class="lineNum">     588 </span><span class="lineNoCov">          0 :                 cnote &lt;&lt; &quot;Insert &quot; &lt;&lt; p &lt;&lt; &quot;values: &quot; &lt;&lt; t.elapsed();</span>
+<span class="lineNum">     589 </span><span class="lineNoCov">          0 :                 t.restart();</span>
+<span class="lineNum">     590 </span><span class="lineNoCov">          0 :                 for (auto k: keys)</span>
+<span class="lineNum">     591 </span><span class="lineNoCov">          0 :                         d.at(k);</span>
+<span class="lineNum">     592 </span><span class="lineNoCov">          0 :                 cnote &lt;&lt; &quot;Query 1000 values: &quot; &lt;&lt; t.elapsed();</span>
+<span class="lineNum">     593 </span><span class="lineNoCov">          0 :                 t.restart();</span>
+<span class="lineNum">     594 </span><span class="lineNoCov">          0 :                 size_t i = 0;</span>
+<span class="lineNum">     595 </span><span class="lineNoCov">          0 :                 for (auto it = d.begin(); i &lt; 1000 &amp;&amp; it != d.end(); ++it, ++i)</span>
+<span class="lineNum">     596 </span><span class="lineNoCov">          0 :                         *it;</span>
+<span class="lineNum">     597 </span><span class="lineNoCov">          0 :                 cnote &lt;&lt; &quot;Iterate 1000 values: &quot; &lt;&lt; t.elapsed();</span>
+<span class="lineNum">     598 </span><span class="lineNoCov">          0 :                 t.restart();</span>
+<span class="lineNum">     599 </span><span class="lineNoCov">          0 :                 for (auto k: keys)</span>
+<span class="lineNum">     600 </span><span class="lineNoCov">          0 :                         d.remove(k);</span>
+<span class="lineNum">     601 </span><span class="lineNoCov">          0 :                 cnote &lt;&lt; &quot;Remove 1000 values:&quot; &lt;&lt; t.elapsed() &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     602 </span>            :         }
+<a name="603"><span class="lineNum">     603 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     604 </span>            : 
+<span class="lineNum">     605 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(triePerf)</span>
+<span class="lineNum">     606 </span>            : {
+<span class="lineNum">     607 </span><span class="lineCov">          1 :         if (test::Options::get().performance)</span>
+<span class="lineNum">     608 </span>            :         {
+<span class="lineNum">     609 </span><span class="lineNoCov">          0 :                 perfTestTrie&lt;SpecificTrieDB&lt;GenericTrieDB&lt;MemoryDB&gt;, h256&gt;&gt;(&quot;GenericTrieDB&quot;);</span>
+<span class="lineNum">     610 </span><span class="lineNoCov">          0 :                 perfTestTrie&lt;SpecificTrieDB&lt;HashedGenericTrieDB&lt;MemoryDB&gt;, h256&gt;&gt;(&quot;HashedGenericTrieDB&quot;);</span>
+<span class="lineNum">     611 </span><span class="lineNoCov">          0 :                 perfTestTrie&lt;SpecificTrieDB&lt;FatGenericTrieDB&lt;MemoryDB&gt;, h256&gt;&gt;(&quot;FatGenericTrieDB&quot;);</span>
+<span class="lineNum">     612 </span>            :         }
+<span class="lineNum">     613 </span><span class="lineCov">          1 : }</span>
+<a name="614"><span class="lineNum">     614 </span>            : </a>
+<span class="lineNum">     615 </span><span class="lineCov">          1 : BOOST_AUTO_TEST_SUITE_END()</span>
+<span class="lineNum">     616 </span><span class="lineCov">          3 : BOOST_AUTO_TEST_SUITE_END()</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

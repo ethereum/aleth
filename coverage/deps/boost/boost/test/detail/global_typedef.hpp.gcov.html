@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/detail/global_typedef.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/detail</a> - global_typedef.hpp<span style="font-size: 80%;"> (source / <a href="global_typedef.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //!@file
+<span class="lineNum">       9 </span>            : //!@brief some trivial global typedefs
+<span class="lineNum">      10 </span>            : // ***************************************************************************
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #ifndef BOOST_TEST_GLOBAL_TYPEDEF_HPP_021005GER
+<span class="lineNum">      13 </span>            : #define BOOST_TEST_GLOBAL_TYPEDEF_HPP_021005GER
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #include &lt;boost/test/utils/basic_cstring/basic_cstring.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/test/detail/workaround.hpp&gt;
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #define BOOST_TEST_L( s )         ::boost::unit_test::const_string( s, sizeof( s ) - 1 )
+<span class="lineNum">      19 </span>            : #define BOOST_TEST_STRINGIZE( s ) BOOST_TEST_L( BOOST_STRINGIZE( s ) )
+<span class="lineNum">      20 </span>            : #define BOOST_TEST_EMPTY_STRING   BOOST_TEST_L( &quot;&quot; )
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : namespace boost {
+<span class="lineNum">      27 </span>            : namespace unit_test {
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : typedef unsigned long   counter_t;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : enum report_level  { INV_REPORT_LEVEL, CONFIRMATION_REPORT, SHORT_REPORT, DETAILED_REPORT, NO_REPORT };
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : //! Indicates the output format for the loggers or the test tree printing
+<span class="lineNum">      38 </span>            : enum output_format { OF_INVALID,
+<span class="lineNum">      39 </span>            :                      OF_CLF,      ///&lt; compiler log format
+<span class="lineNum">      40 </span>            :                      OF_XML,      ///&lt; XML format for report and log,
+<span class="lineNum">      41 </span>            :                      OF_JUNIT,    ///&lt; JUNIT format for report and log,
+<span class="lineNum">      42 </span>            :                      OF_CUSTOM_LOGGER, ///&lt; User specified logger.
+<span class="lineNum">      43 </span>            :                      OF_DOT       ///&lt; dot format for output content
+<span class="lineNum">      44 </span>            : };
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : enum test_unit_type { TUT_CASE = 0x01, TUT_SUITE = 0x10, TUT_ANY = 0x11 };
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : enum assertion_result { AR_FAILED, AR_PASSED, AR_TRIGGERED };
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : typedef unsigned long   test_unit_id;
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : const test_unit_id INV_TEST_UNIT_ID  = 0xFFFFFFFF;
+<span class="lineNum">      59 </span>            : const test_unit_id MAX_TEST_CASE_ID  = 0xFFFFFFFE;
+<span class="lineNum">      60 </span>            : const test_unit_id MIN_TEST_CASE_ID  = 0x00010000;
+<span class="lineNum">      61 </span>            : const test_unit_id MAX_TEST_SUITE_ID = 0x0000FF00;
+<span class="lineNum">      62 </span>            : const test_unit_id MIN_TEST_SUITE_ID = 0x00000001;
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : namespace ut_detail {
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : inline test_unit_type
+<span class="lineNum">      69 </span>            : test_id_2_unit_type( test_unit_id id )
+<span class="lineNum">      70 </span>            : {
+<span class="lineNum">      71 </span><span class="lineCov">       3124 :     return (id &amp; 0xFFFF0000) != 0 ? TUT_CASE : TUT_SUITE;</span>
+<span class="lineNum">      72 </span>            : }
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : } // namespace ut_detail
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : // helper templates to prevent ODR violations
+<span class="lineNum">      79 </span>            : template&lt;class T&gt;
+<span class="lineNum">      80 </span>            : struct static_constant {
+<span class="lineNum">      81 </span>            :     static T value;
+<span class="lineNum">      82 </span>            : };
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : template&lt;class T&gt;
+<span class="lineNum">      85 </span>            : T static_constant&lt;T&gt;::value;
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : } // namespace unit_test
+<span class="lineNum">      90 </span>            : } // namespace boost
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : #endif // BOOST_TEST_GLOBAL_TYPEDEF_HPP_021005GER
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/date_time/posix_time/ptime.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/date_time/posix_time</a> - ptime.hpp<span style="font-size: 80%;"> (source / <a href="ptime.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef POSIX_PTIME_HPP___</a>
+<span class="lineNum">       2 </span>            : #define POSIX_PTIME_HPP___
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
+<span class="lineNum">       5 </span>            :  * Use, modification and distribution is subject to the 
+<span class="lineNum">       6 </span>            :  * Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       7 </span>            :  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            :  * Author: Jeff Garland 
+<span class="lineNum">       9 </span>            :  * $Date$
+<span class="lineNum">      10 </span>            :  */
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #include &quot;boost/date_time/posix_time/posix_time_system.hpp&quot;
+<span class="lineNum">      13 </span>            : #include &quot;boost/date_time/time.hpp&quot;
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : namespace boost {
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : namespace posix_time {
+<span class="lineNum">      18 </span>            :  
+<span class="lineNum">      19 </span>            :   //bring special enum values into the namespace
+<span class="lineNum">      20 </span>            :   using date_time::special_values;
+<span class="lineNum">      21 </span>            :   using date_time::not_special;
+<span class="lineNum">      22 </span>            :   using date_time::neg_infin;
+<span class="lineNum">      23 </span>            :   using date_time::pos_infin;
+<span class="lineNum">      24 </span>            :   using date_time::not_a_date_time;
+<span class="lineNum">      25 </span>            :   using date_time::max_date_time;
+<span class="lineNum">      26 </span>            :   using date_time::min_date_time; 
+<span class="lineNum">      27 </span>            :   
+<span class="lineNum">      28 </span>            :   //! Time type with no timezone or other adjustments
+<span class="lineNum">      29 </span>            :   /*! \ingroup time_basics
+<span class="lineNum">      30 </span>            :    */
+<span class="lineNum">      31 </span>            :   class ptime : public date_time::base_time&lt;ptime, posix_time_system&gt;
+<span class="lineNum">      32 </span>            :   {
+<span class="lineNum">      33 </span>            :   public:
+<span class="lineNum">      34 </span>            :     typedef posix_time_system time_system_type;
+<span class="lineNum">      35 </span>            :     typedef time_system_type::time_rep_type time_rep_type;
+<span class="lineNum">      36 </span>            :     typedef time_system_type::time_duration_type time_duration_type;
+<span class="lineNum">      37 </span>            :     typedef ptime time_type;
+<span class="lineNum">      38 </span>            :     //! Construct with date and offset in day
+<span class="lineNum">      39 </span><span class="lineCov">       5456 :     ptime(gregorian::date d,time_duration_type td) : date_time::base_time&lt;time_type,time_system_type&gt;(d,td)</span>
+<span class="lineNum">      40 </span>            :     {}
+<span class="lineNum">      41 </span>            :     //! Construct a time at start of the given day (midnight)
+<span class="lineNum">      42 </span>            :     explicit ptime(gregorian::date d) : date_time::base_time&lt;time_type,time_system_type&gt;(d,time_duration_type(0,0,0))
+<span class="lineNum">      43 </span>            :     {}
+<span class="lineNum">      44 </span>            :     //! Copy from time_rep
+<span class="lineNum">      45 </span>            :     ptime(const time_rep_type&amp; rhs):
+<span class="lineNum">      46 </span><span class="lineCov">       1604 :       date_time::base_time&lt;time_type,time_system_type&gt;(rhs)</span>
+<span class="lineNum">      47 </span>            :     {}
+<span class="lineNum">      48 </span>            :     //! Construct from special value
+<span class="lineNum">      49 </span>            :     ptime(const special_values sv) : date_time::base_time&lt;time_type,time_system_type&gt;(sv)
+<span class="lineNum">      50 </span>            :     {}
+<a name="51"><span class="lineNum">      51 </span>            : #if !defined(DATE_TIME_NO_DEFAULT_CONSTRUCTOR)</a>
+<span class="lineNum">      52 </span>            :     // Default constructor constructs to not_a_date_time
+<span class="lineNum">      53 </span><span class="lineCov">       2880 :     ptime() : date_time::base_time&lt;time_type,time_system_type&gt;(gregorian::date(not_a_date_time), time_duration_type(not_a_date_time))</span>
+<span class="lineNum">      54 </span><span class="lineCov">        960 :     {}</span>
+<span class="lineNum">      55 </span>            : #endif // DATE_TIME_NO_DEFAULT_CONSTRUCTOR
+<span class="lineNum">      56 </span>            :       
+<span class="lineNum">      57 </span>            :   };
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : } }//namespace posix_time
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : #endif
+<span class="lineNum">      65 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

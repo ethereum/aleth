@@ -1,0 +1,325 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/variant/detail/initializer.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/variant/detail</a> - initializer.hpp<span style="font-size: 80%;"> (source / <a href="initializer.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //-----------------------------------------------------------------------------</a>
+<span class="lineNum">       2 </span>            : // boost variant/detail/initializer.hpp header file
+<span class="lineNum">       3 </span>            : // See http://www.boost.org for updates, documentation, and revision history.
+<span class="lineNum">       4 </span>            : //-----------------------------------------------------------------------------
+<span class="lineNum">       5 </span>            : //
+<span class="lineNum">       6 </span>            : // Copyright (c) 2002-2003
+<span class="lineNum">       7 </span>            : // Eric Friedman, Itay Maman
+<span class="lineNum">       8 </span>            : //
+<span class="lineNum">       9 </span>            : // Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">      10 </span>            : // accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">      11 </span>            : // http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #ifndef BOOST_VARIANT_DETAIL_INITIALIZER_HPP
+<span class="lineNum">      14 </span>            : #define BOOST_VARIANT_DETAIL_INITIALIZER_HPP
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #include &lt;new&gt; // for placement new
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #include &lt;boost/call_traits.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/detail/reference_content.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/variant/recursive_wrapper_fwd.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/variant/detail/move.hpp&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #if !defined(BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE)
+<span class="lineNum">      26 </span>            : #   include &lt;boost/mpl/aux_/value_wknd.hpp&gt;
+<span class="lineNum">      27 </span>            : #   include &lt;boost/mpl/int.hpp&gt;
+<span class="lineNum">      28 </span>            : #   include &lt;boost/mpl/iter_fold.hpp&gt;
+<span class="lineNum">      29 </span>            : #   include &lt;boost/mpl/next.hpp&gt;
+<span class="lineNum">      30 </span>            : #   include &lt;boost/mpl/deref.hpp&gt;
+<span class="lineNum">      31 </span>            : #   include &lt;boost/mpl/pair.hpp&gt;
+<span class="lineNum">      32 </span>            : #   include &lt;boost/mpl/protect.hpp&gt;
+<span class="lineNum">      33 </span>            : #else
+<span class="lineNum">      34 </span>            : #   include &lt;boost/variant/variant_fwd.hpp&gt;
+<span class="lineNum">      35 </span>            : #   include &lt;boost/preprocessor/cat.hpp&gt;
+<span class="lineNum">      36 </span>            : #   include &lt;boost/preprocessor/enum.hpp&gt;
+<span class="lineNum">      37 </span>            : #   include &lt;boost/preprocessor/repeat.hpp&gt;
+<span class="lineNum">      38 </span>            : #endif
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : namespace boost {
+<span class="lineNum">      41 </span>            : namespace detail { namespace variant {
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      44 </span>            : // (detail) support to simulate standard overload resolution rules
+<span class="lineNum">      45 </span>            : //
+<span class="lineNum">      46 </span>            : // The below initializers allows variant to follow standard overload
+<span class="lineNum">      47 </span>            : // resolution rules over the specified set of bounded types.
+<span class="lineNum">      48 </span>            : //
+<span class="lineNum">      49 </span>            : // On compilers where using declarations in class templates can correctly
+<span class="lineNum">      50 </span>            : // avoid name hiding, use an optimal solution based on the variant's typelist.
+<span class="lineNum">      51 </span>            : //
+<span class="lineNum">      52 </span>            : // Otherwise, use a preprocessor workaround based on knowledge of the fixed
+<span class="lineNum">      53 </span>            : // size of the variant's psuedo-variadic template parameter list.
+<span class="lineNum">      54 </span>            : //
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : #if !defined(BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE)
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : // (detail) quoted metafunction make_initializer_node
+<span class="lineNum">      59 </span>            : //
+<span class="lineNum">      60 </span>            : // Exposes a pair whose first type is a node in the initializer hierarchy.
+<span class="lineNum">      61 </span>            : //
+<span class="lineNum">      62 </span>            : struct make_initializer_node
+<span class="lineNum">      63 </span>            : {
+<span class="lineNum">      64 </span>            :     template &lt;typename BaseIndexPair, typename Iterator&gt;
+<span class="lineNum">      65 </span>            :     struct apply
+<span class="lineNum">      66 </span>            :     {
+<span class="lineNum">      67 </span>            :     private: // helpers, for metafunction result (below)
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :         typedef typename BaseIndexPair::first
+<span class="lineNum">      70 </span>            :             base;
+<span class="lineNum">      71 </span>            :         typedef typename BaseIndexPair::second
+<span class="lineNum">      72 </span>            :             index;
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :         class initializer_node
+<span class="lineNum">      75 </span>            :             : public base
+<span class="lineNum">      76 </span>            :         {
+<span class="lineNum">      77 </span>            :         private: // helpers, for static functions (below)
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :             typedef typename mpl::deref&lt;Iterator&gt;::type
+<span class="lineNum">      80 </span>            :                 recursive_enabled_T;
+<span class="lineNum">      81 </span>            :             typedef typename unwrap_recursive&lt;recursive_enabled_T&gt;::type
+<span class="lineNum">      82 </span>            :                 public_T;
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">      85 </span>            :             typedef boost::is_reference&lt;public_T&gt; 
+<span class="lineNum">      86 </span>            :                 is_reference_content_t;
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            :             typedef typename boost::mpl::if_&lt;is_reference_content_t, public_T, const public_T&amp; &gt;::type 
+<span class="lineNum">      89 </span>            :                 param_T;
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            :             template &lt;class T&gt; struct disable_overload{};
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            :             typedef typename boost::mpl::if_&lt;is_reference_content_t, disable_overload&lt;public_T&gt;, public_T&amp;&amp; &gt;::type 
+<span class="lineNum">      94 </span>            :                 param2_T;
+<span class="lineNum">      95 </span>            : #else
+<span class="lineNum">      96 </span>            :             typedef typename call_traits&lt;public_T&gt;::param_type
+<span class="lineNum">      97 </span>            :                 param_T;
+<span class="lineNum">      98 </span>            : #endif
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :         public: // static functions
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :             using base::initialize;
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :             static int initialize(void* dest, param_T operand)
+<span class="lineNum">     105 </span>            :             {
+<span class="lineNum">     106 </span>            :                 typedef typename boost::detail::make_reference_content&lt;
+<span class="lineNum">     107 </span>            :                       recursive_enabled_T
+<span class="lineNum">     108 </span>            :                     &gt;::type internal_T;
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineCov">    1897943 :                 new(dest) internal_T(operand);</span>
+<span class="lineNum">     111 </span>            :                 return BOOST_MPL_AUX_VALUE_WKND(index)::value; // which
+<span class="lineNum">     112 </span>            :             }
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            : #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">     115 </span>            :             static int initialize(void* dest, param2_T operand)
+<span class="lineNum">     116 </span>            :             {
+<span class="lineNum">     117 </span>            :                 // This assert must newer trigger, because all the reference contents are
+<span class="lineNum">     118 </span>            :                 // handled by the initilize(void* dest, param_T operand) function above
+<span class="lineNum">     119 </span>            :                 BOOST_ASSERT(!is_reference_content_t::value);
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            :                 typedef typename boost::mpl::if_&lt;is_reference_content_t, param2_T, recursive_enabled_T&gt;::type value_T;
+<span class="lineNum">     122 </span><span class="lineCov">        733 :                 new(dest) value_T( boost::detail::variant::move(operand) );</span>
+<span class="lineNum">     123 </span>            :                 return BOOST_MPL_AUX_VALUE_WKND(index)::value; // which
+<span class="lineNum">     124 </span>            :             }
+<span class="lineNum">     125 </span>            : #endif
+<span class="lineNum">     126 </span>            :         };
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            :         friend class initializer_node;
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :     public: // metafunction result
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            :         typedef mpl::pair&lt;
+<span class="lineNum">     133 </span>            :               initializer_node
+<span class="lineNum">     134 </span>            :             , typename mpl::next&lt; index &gt;::type
+<span class="lineNum">     135 </span>            :             &gt; type;
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :     };
+<span class="lineNum">     138 </span>            : };
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : // (detail) class initializer_root
+<span class="lineNum">     141 </span>            : //
+<span class="lineNum">     142 </span>            : // Every level of the initializer hierarchy must expose the name
+<span class="lineNum">     143 </span>            : // &quot;initialize,&quot; so initializer_root provides a dummy function:
+<span class="lineNum">     144 </span>            : //
+<span class="lineNum">     145 </span>            : class initializer_root
+<span class="lineNum">     146 </span>            : {
+<span class="lineNum">     147 </span>            : public: // static functions
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            :     static void initialize();
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            : };
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            : #else // defined(BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE)
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            :     // Obsolete. Remove.
+<span class="lineNum">     156 </span>            :     #define BOOST_VARIANT_AUX_PP_INITIALIZER_TEMPLATE_PARAMS \
+<span class="lineNum">     157 </span>            :           BOOST_VARIANT_ENUM_PARAMS(typename recursive_enabled_T) \
+<span class="lineNum">     158 </span>            :     /**/
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            :     // Obsolete. Remove.
+<span class="lineNum">     161 </span>            :     #define BOOST_VARIANT_AUX_PP_INITIALIZER_DEFINE_PARAM_T(N) \
+<span class="lineNum">     162 </span>            :         typedef typename unwrap_recursive&lt; \
+<span class="lineNum">     163 </span>            :               BOOST_PP_CAT(recursive_enabled_T,N) \
+<span class="lineNum">     164 </span>            :             &gt;::type BOOST_PP_CAT(public_T,N); \
+<span class="lineNum">     165 </span>            :         typedef typename call_traits&lt; \
+<span class="lineNum">     166 </span>            :               BOOST_PP_CAT(public_T,N) \
+<span class="lineNum">     167 </span>            :             &gt;::param_type BOOST_PP_CAT(param_T,N); \
+<span class="lineNum">     168 </span>            :     /**/
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            : template &lt; BOOST_VARIANT_ENUM_PARAMS(typename recursive_enabled_T) &gt;
+<span class="lineNum">     171 </span>            : struct preprocessor_list_initializer
+<span class="lineNum">     172 </span>            : {
+<span class="lineNum">     173 </span>            : public: // static functions
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :     #define BOOST_VARIANT_AUX_PP_INITIALIZE_FUNCTION(z,N,_) \
+<span class="lineNum">     176 </span>            :         typedef typename unwrap_recursive&lt; \
+<span class="lineNum">     177 </span>            :               BOOST_PP_CAT(recursive_enabled_T,N) \
+<span class="lineNum">     178 </span>            :             &gt;::type BOOST_PP_CAT(public_T,N); \
+<span class="lineNum">     179 </span>            :         typedef typename call_traits&lt; \
+<span class="lineNum">     180 </span>            :               BOOST_PP_CAT(public_T,N) \
+<span class="lineNum">     181 </span>            :             &gt;::param_type BOOST_PP_CAT(param_T,N); \
+<span class="lineNum">     182 </span>            :         static int initialize( \
+<span class="lineNum">     183 </span>            :               void* dest \
+<span class="lineNum">     184 </span>            :             , BOOST_PP_CAT(param_T,N) operand \
+<span class="lineNum">     185 </span>            :             ) \
+<span class="lineNum">     186 </span>            :         { \
+<span class="lineNum">     187 </span>            :             typedef typename boost::detail::make_reference_content&lt; \
+<span class="lineNum">     188 </span>            :                   BOOST_PP_CAT(recursive_enabled_T,N) \
+<span class="lineNum">     189 </span>            :                 &gt;::type internal_T; \
+<span class="lineNum">     190 </span>            :             \
+<span class="lineNum">     191 </span>            :             new(dest) internal_T(operand); \
+<span class="lineNum">     192 </span>            :             return (N); /*which*/ \
+<span class="lineNum">     193 </span>            :         } \
+<span class="lineNum">     194 </span>            :         /**/
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            :     BOOST_PP_REPEAT(
+<span class="lineNum">     197 </span>            :           BOOST_VARIANT_LIMIT_TYPES
+<span class="lineNum">     198 </span>            :         , BOOST_VARIANT_AUX_PP_INITIALIZE_FUNCTION
+<span class="lineNum">     199 </span>            :         , _
+<span class="lineNum">     200 </span>            :         )
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            :     #undef BOOST_VARIANT_AUX_PP_INITIALIZE_FUNCTION
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            : };
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            : #endif // BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE workaround
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            : }} // namespace detail::variant
+<span class="lineNum">     209 </span>            : } // namespace boost
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     212 </span>            : // macro BOOST_VARIANT_AUX_INITIALIZER_T
+<span class="lineNum">     213 </span>            : //
+<span class="lineNum">     214 </span>            : // Given both the variant's typelist and a basename for forming the list of
+<span class="lineNum">     215 </span>            : // bounded types (i.e., T becomes T1, T2, etc.), exposes the initializer
+<span class="lineNum">     216 </span>            : // most appropriate to the current compiler.
+<span class="lineNum">     217 </span>            : //
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            : #if !defined(BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE)
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            : #define BOOST_VARIANT_AUX_INITIALIZER_T( mpl_seq, typename_base ) \
+<span class="lineNum">     222 </span>            :     ::boost::mpl::iter_fold&lt; \
+<span class="lineNum">     223 </span>            :           mpl_seq \
+<span class="lineNum">     224 </span>            :         , ::boost::mpl::pair&lt; \
+<span class="lineNum">     225 </span>            :               ::boost::detail::variant::initializer_root \
+<span class="lineNum">     226 </span>            :             , ::boost::mpl::int_&lt;0&gt; \
+<span class="lineNum">     227 </span>            :             &gt; \
+<span class="lineNum">     228 </span>            :         , ::boost::mpl::protect&lt; \
+<span class="lineNum">     229 </span>            :               ::boost::detail::variant::make_initializer_node \
+<span class="lineNum">     230 </span>            :             &gt; \
+<span class="lineNum">     231 </span>            :         &gt;::type::first \
+<span class="lineNum">     232 </span>            :     /**/
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            : #else // defined(BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE)
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            :     // Obsolete. Remove.
+<span class="lineNum">     237 </span>            :     #define BOOST_VARIANT_AUX_PP_INITIALIZER_TEMPLATE_ARGS(typename_base) \
+<span class="lineNum">     238 </span>            :           BOOST_VARIANT_ENUM_PARAMS(typename_base) \
+<span class="lineNum">     239 </span>            :         /**/
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            : #define BOOST_VARIANT_AUX_INITIALIZER_T( mpl_seq, typename_base ) \
+<span class="lineNum">     242 </span>            :     ::boost::detail::variant::preprocessor_list_initializer&lt; \
+<span class="lineNum">     243 </span>            :           BOOST_VARIANT_ENUM_PARAMS(typename_base) \
+<span class="lineNum">     244 </span>            :         &gt; \
+<span class="lineNum">     245 </span>            :     /**/
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            : #endif // BOOST_NO_USING_DECLARATION_OVERLOADS_FROM_TYPENAME_BASE workaround
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            : #endif // BOOST_VARIANT_DETAIL_INITIALIZER_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

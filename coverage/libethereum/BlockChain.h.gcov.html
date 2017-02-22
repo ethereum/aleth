@@ -1,0 +1,491 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/BlockChain.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - BlockChain.h<span style="font-size: 80%;"> (source / <a href="BlockChain.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">36</td>
+            <td class="headerCovTableEntry">49</td>
+            <td class="headerCovTableEntryLo">73.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntryLo">45.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file BlockChain.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;deque&gt;
+<span class="lineNum">      25 </span>            : #include &lt;chrono&gt;
+<span class="lineNum">      26 </span>            : #include &lt;unordered_map&gt;
+<span class="lineNum">      27 </span>            : #include &lt;unordered_set&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libdevcore/db.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libdevcore/Log.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libdevcore/Exceptions.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libdevcore/Guards.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libethcore/Common.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;libethcore/BlockHeader.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;libethcore/SealEngine.h&gt;
+<span class="lineNum">      35 </span>            : #include &lt;libevm/ExtVMFace.h&gt;
+<span class="lineNum">      36 </span>            : #include &quot;BlockDetails.h&quot;
+<span class="lineNum">      37 </span>            : #include &quot;Account.h&quot;
+<span class="lineNum">      38 </span>            : #include &quot;Transaction.h&quot;
+<span class="lineNum">      39 </span>            : #include &quot;BlockQueue.h&quot;
+<span class="lineNum">      40 </span>            : #include &quot;VerifiedBlock.h&quot;
+<span class="lineNum">      41 </span>            : #include &quot;ChainParams.h&quot;
+<span class="lineNum">      42 </span>            : #include &quot;State.h&quot;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : namespace std
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span>            : template &lt;&gt; struct hash&lt;pair&lt;dev::h256, unsigned&gt;&gt;
+<span class="lineNum">      47 </span>            : {
+<span class="lineNum">      48 </span><span class="lineCov">      81972 :         size_t operator()(pair&lt;dev::h256, unsigned&gt; const&amp; _x) const { return hash&lt;dev::h256&gt;()(_x.first) ^ hash&lt;unsigned&gt;()(_x.second); }</span>
+<span class="lineNum">      49 </span>            : };
+<span class="lineNum">      50 </span>            : }
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : namespace dev
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : class OverlayDB;
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : namespace eth
+<span class="lineNum">      58 </span>            : {
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span><span class="lineCov">         37 : static const h256s NullH256s;</span>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : class State;
+<a name="63"><span class="lineNum">      63 </span>            : class Block;</a>
+<a name="64"><span class="lineNum">      64 </span>            : </a>
+<a name="65"><span class="lineNum">      65 </span><span class="lineCov">         45 : DEV_SIMPLE_EXCEPTION(AlreadyHaveBlock);</span></a>
+<span class="lineNum">      66 </span><span class="lineCov">         45 : DEV_SIMPLE_EXCEPTION(FutureTime);</span>
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 : DEV_SIMPLE_EXCEPTION(TransientError);</span>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : struct BlockChainChat: public LogChannel { static const char* name(); static const int verbosity = 5; };
+<span class="lineNum">      70 </span>            : struct BlockChainNote: public LogChannel { static const char* name(); static const int verbosity = 3; };
+<span class="lineNum">      71 </span>            : struct BlockChainWarn: public LogChannel { static const char* name(); static const int verbosity = 1; };
+<span class="lineNum">      72 </span>            : struct BlockChainDebug: public LogChannel { static const char* name(); static const int verbosity = 0; };
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : // TODO: Move all this Genesis stuff into Genesis.h/.cpp
+<span class="lineNum">      75 </span>            : std::unordered_map&lt;Address, Account&gt; const&amp; genesisState();
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : ldb::Slice toSlice(h256 const&amp; _h, unsigned _sub = 0);
+<span class="lineNum">      78 </span>            : ldb::Slice toSlice(uint64_t _n, unsigned _sub = 0);
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : using BlocksHash = std::unordered_map&lt;h256, bytes&gt;;
+<span class="lineNum">      81 </span>            : using TransactionHashes = h256s;
+<span class="lineNum">      82 </span>            : using UncleHashes = h256s;
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : enum {
+<span class="lineNum">      85 </span>            :         ExtraDetails = 0,
+<span class="lineNum">      86 </span>            :         ExtraBlockHash,
+<span class="lineNum">      87 </span>            :         ExtraTransactionAddress,
+<span class="lineNum">      88 </span>            :         ExtraLogBlooms,
+<span class="lineNum">      89 </span>            :         ExtraReceipts,
+<span class="lineNum">      90 </span>            :         ExtraBlocksBlooms
+<span class="lineNum">      91 </span>            : };
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : using ProgressCallback = std::function&lt;void(unsigned, unsigned)&gt;;
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : class VersionChecker
+<span class="lineNum">      96 </span>            : {
+<span class="lineNum">      97 </span>            : public:
+<span class="lineNum">      98 </span>            :         VersionChecker(std::string const&amp; _dbPath, h256 const&amp; _genesisHash);
+<span class="lineNum">      99 </span>            : };
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : /**
+<span class="lineNum">     102 </span>            :  * @brief Implements the blockchain database. All data this gives is disk-backed.
+<span class="lineNum">     103 </span>            :  * @threadsafe
+<span class="lineNum">     104 </span>            :  */
+<span class="lineNum">     105 </span>            : class BlockChain
+<span class="lineNum">     106 </span>            : {
+<span class="lineNum">     107 </span>            : public:
+<span class="lineNum">     108 </span>            :         /// Doesn't open the database - if you want it open it's up to you to subclass this and open it
+<span class="lineNum">     109 </span>            :         /// in the constructor there.
+<span class="lineNum">     110 </span>            :         BlockChain(ChainParams const&amp; _p, std::string const&amp; _path, WithExisting _we = WithExisting::Trust, ProgressCallback const&amp; _pc = ProgressCallback());
+<span class="lineNum">     111 </span>            :         ~BlockChain();
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :         /// Reopen everything.
+<span class="lineNum">     114 </span>            :         void reopen(WithExisting _we = WithExisting::Trust, ProgressCallback const&amp; _pc = ProgressCallback()) { reopen(m_params, _we, _pc); }
+<span class="lineNum">     115 </span>            :         void reopen(ChainParams const&amp; _p, WithExisting _we = WithExisting::Trust, ProgressCallback const&amp; _pc = ProgressCallback());
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :         /// (Potentially) renders invalid existing bytesConstRef returned by lastBlock.
+<span class="lineNum">     118 </span>            :         /// To be called from main loop every 100ms or so.
+<span class="lineNum">     119 </span>            :         void process();
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            :         /// Sync the chain with any incoming blocks. All blocks should, if processed in order.
+<span class="lineNum">     122 </span>            :         /// @returns fresh blocks, dead blocks and true iff there are additional blocks to be processed waiting.
+<span class="lineNum">     123 </span>            :         std::tuple&lt;ImportRoute, bool, unsigned&gt; sync(BlockQueue&amp; _bq, OverlayDB const&amp; _stateDB, unsigned _max);
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :         /// Attempt to import the given block directly into the BlockChain and sync with the state DB.
+<span class="lineNum">     126 </span>            :         /// @returns the block hashes of any blocks that came into/went out of the canonical block chain.
+<span class="lineNum">     127 </span>            :         std::pair&lt;ImportResult, ImportRoute&gt; attemptImport(bytes const&amp; _block, OverlayDB const&amp; _stateDB, bool _mutBeNew = true) noexcept;
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            :         /// Import block into disk-backed DB.
+<span class="lineNum">     130 </span>            :         /// @returns the block hashes of any blocks that came into/went out of the canonical block chain.
+<span class="lineNum">     131 </span>            :         ImportRoute import(bytes const&amp; _block, OverlayDB const&amp; _stateDB, bool _mustBeNew = true);
+<span class="lineNum">     132 </span>            :         ImportRoute import(VerifiedBlockRef const&amp; _block, OverlayDB const&amp; _db, bool _mustBeNew = true);
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            :         /// Import data into disk-backed DB.
+<span class="lineNum">     135 </span>            :         /// This will not execute the block and populate the state trie, but rather will simply add the
+<span class="lineNum">     136 </span>            :         /// block/header and receipts directly into the databases.
+<span class="lineNum">     137 </span>            :         void insert(bytes const&amp; _block, bytesConstRef _receipts, bool _mustBeNew = true);
+<span class="lineNum">     138 </span>            :         void insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _mustBeNew = true);
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :         /// Returns true if the given block is known (though not necessarily a part of the canon chain).
+<span class="lineNum">     141 </span>            :         bool isKnown(h256 const&amp; _hash, bool _isCurrent = true) const;
+<a name="142"><span class="lineNum">     142 </span>            : </a>
+<a name="143"><span class="lineNum">     143 </span>            :         /// Get the partial-header of a block (or the most recent mined if none given). Thread-safe.</a>
+<span class="lineNum">     144 </span><span class="lineCov">     228656 :         BlockHeader info(h256 const&amp; _hash) const { return BlockHeader(headerData(_hash), HeaderData); }</span>
+<span class="lineNum">     145 </span><span class="lineCov">         14 :         BlockHeader info() const { return info(currentHash()); }</span>
+<span class="lineNum">     146 </span>            : 
+<a name="147"><span class="lineNum">     147 </span>            :         /// Get a block (RLP format) for the given hash (or the most recent mined if none given). Thread-safe.</a>
+<span class="lineNum">     148 </span>            :         bytes block(h256 const&amp; _hash) const;
+<span class="lineNum">     149 </span><span class="lineCov">       4737 :         bytes block() const { return block(currentHash()); }</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            :         /// Get a block (RLP format) for the given hash (or the most recent mined if none given). Thread-safe.
+<span class="lineNum">     152 </span>            :         bytes headerData(h256 const&amp; _hash) const;
+<span class="lineNum">     153 </span>            :         bytes headerData() const { return headerData(currentHash()); }
+<span class="lineNum">     154 </span>            : 
+<a name="155"><span class="lineNum">     155 </span>            :         /// Get the familial details concerning a block (or the most recent mined if none given). Thread-safe.</a>
+<span class="lineNum">     156 </span><span class="lineCov">     135019 :         BlockDetails details(h256 const&amp; _hash) const { return queryExtras&lt;BlockDetails, ExtraDetails&gt;(_hash, m_details, x_details, NullBlockDetails); }</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :         BlockDetails details() const { return details(currentHash()); }</span>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :         /// Get the transactions' log blooms of a block (or the most recent mined if none given). Thread-safe.
+<span class="lineNum">     160 </span>            :         BlockLogBlooms logBlooms(h256 const&amp; _hash) const { return queryExtras&lt;BlockLogBlooms, ExtraLogBlooms&gt;(_hash, m_logBlooms, x_logBlooms, NullBlockLogBlooms); }
+<span class="lineNum">     161 </span>            :         BlockLogBlooms logBlooms() const { return logBlooms(currentHash()); }
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            :         /// Get the transactions' receipts of a block (or the most recent mined if none given). Thread-safe.
+<span class="lineNum">     164 </span>            :         /// receipts are given in the same order are in the same order as the transactions
+<span class="lineNum">     165 </span><span class="lineCov">        138 :         BlockReceipts receipts(h256 const&amp; _hash) const { return queryExtras&lt;BlockReceipts, ExtraReceipts&gt;(_hash, m_receipts, x_receipts, NullBlockReceipts); }</span>
+<span class="lineNum">     166 </span>            :         BlockReceipts receipts() const { return receipts(currentHash()); }
+<a name="167"><span class="lineNum">     167 </span>            : </a>
+<span class="lineNum">     168 </span>            :         /// Get the transaction by block hash and index;
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :         TransactionReceipt transactionReceipt(h256 const&amp; _blockHash, unsigned _i) const { return receipts(_blockHash).receipts[_i]; }</span>
+<a name="170"><span class="lineNum">     170 </span>            : </a>
+<span class="lineNum">     171 </span>            :         /// Get the transaction receipt by transaction hash. Thread-safe.
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :         TransactionReceipt transactionReceipt(h256 const&amp; _transactionHash) const { TransactionAddress ta = queryExtras&lt;TransactionAddress, ExtraTransactionAddress&gt;(_transactionHash, m_transactionAddresses, x_transactionAddresses, NullTransactionAddress); if (!ta) return bytesConstRef(); return transactionReceipt(ta.blockHash, ta.index); }</span>
+<a name="173"><span class="lineNum">     173 </span>            : </a>
+<span class="lineNum">     174 </span>            :         /// Get a list of transaction hashes for a given block. Thread-safe.
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :         TransactionHashes transactionHashes(h256 const&amp; _hash) const { auto b = block(_hash); RLP rlp(b); h256s ret; for (auto t: rlp[1]) ret.push_back(sha3(t.data())); return ret; }</span>
+<span class="lineNum">     176 </span>            :         TransactionHashes transactionHashes() const { return transactionHashes(currentHash()); }
+<a name="177"><span class="lineNum">     177 </span>            : </a>
+<span class="lineNum">     178 </span>            :         /// Get a list of uncle hashes for a given block. Thread-safe.
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :         UncleHashes uncleHashes(h256 const&amp; _hash) const { auto b = block(_hash); RLP rlp(b); h256s ret; for (auto t: rlp[2]) ret.push_back(sha3(t.data())); return ret; }</span>
+<span class="lineNum">     180 </span>            :         UncleHashes uncleHashes() const { return uncleHashes(currentHash()); }
+<a name="181"><span class="lineNum">     181 </span>            :         </a>
+<span class="lineNum">     182 </span>            :         /// Get the hash for a given block's number.
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :         h256 numberHash(unsigned _i) const { if (!_i) return genesisHash(); return queryExtras&lt;BlockHash, uint64_t, ExtraBlockHash&gt;(_i, m_blockHashes, x_blockHashes, NullBlockHash).value; }</span>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :         /// Get the last N hashes for a given block. (N is determined by the LastHashes type.)
+<span class="lineNum">     186 </span><span class="lineCov">         50 :         LastHashes lastHashes() const { return lastHashes(m_lastBlockHash); }</span>
+<span class="lineNum">     187 </span>            :         LastHashes lastHashes(h256 const&amp; _mostRecentHash) const;
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            :         /** Get the block blooms for a number of blocks. Thread-safe.
+<span class="lineNum">     190 </span>            :          * @returns the object pertaining to the blocks:
+<span class="lineNum">     191 </span>            :          * level 0:
+<span class="lineNum">     192 </span>            :          * 0x, 0x + 1, .. (1x - 1)
+<span class="lineNum">     193 </span>            :          * 1x, 1x + 1, .. (2x - 1)
+<span class="lineNum">     194 </span>            :          * ...
+<span class="lineNum">     195 </span>            :          * (255x .. (256x - 1))
+<span class="lineNum">     196 </span>            :          * level 1:
+<span class="lineNum">     197 </span>            :          * 0x .. (1x - 1), 1x .. (2x - 1), ..., (255x .. (256x - 1))
+<span class="lineNum">     198 </span>            :          * 256x .. (257x - 1), 257x .. (258x - 1), ..., (511x .. (512x - 1))
+<span class="lineNum">     199 </span>            :          * ...
+<span class="lineNum">     200 </span>            :          * level n, index i, offset o:
+<a name="201"><span class="lineNum">     201 </span>            :          * i * (x ^ n) + o * x ^ (n - 1)</a>
+<span class="lineNum">     202 </span>            :          */
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :         BlocksBlooms blocksBlooms(unsigned _level, unsigned _index) const { return blocksBlooms(chunkId(_level, _index)); }</span>
+<span class="lineNum">     204 </span><span class="lineCov">      15588 :         BlocksBlooms blocksBlooms(h256 const&amp; _chunkId) const { return queryExtras&lt;BlocksBlooms, ExtraBlocksBlooms&gt;(_chunkId, m_blocksBlooms, x_blocksBlooms, NullBlocksBlooms); }</span>
+<span class="lineNum">     205 </span>            :         LogBloom blockBloom(unsigned _number) const { return blocksBlooms(chunkId(0, _number / c_bloomIndexSize)).blooms[_number % c_bloomIndexSize]; }
+<span class="lineNum">     206 </span>            :         std::vector&lt;unsigned&gt; withBlockBloom(LogBloom const&amp; _b, unsigned _earliest, unsigned _latest) const;
+<span class="lineNum">     207 </span>            :         std::vector&lt;unsigned&gt; withBlockBloom(LogBloom const&amp; _b, unsigned _earliest, unsigned _latest, unsigned _topLevel, unsigned _index) const;
+<a name="208"><span class="lineNum">     208 </span>            : </a>
+<span class="lineNum">     209 </span>            :         /// Returns true if transaction is known. Thread-safe
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :         bool isKnownTransaction(h256 const&amp; _transactionHash) const { TransactionAddress ta = queryExtras&lt;TransactionAddress, ExtraTransactionAddress&gt;(_transactionHash, m_transactionAddresses, x_transactionAddresses, NullTransactionAddress); return !!ta; }</span>
+<a name="211"><span class="lineNum">     211 </span>            : </a>
+<a name="212"><span class="lineNum">     212 </span>            :         /// Get a transaction from its hash. Thread-safe.</a>
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :         bytes transaction(h256 const&amp; _transactionHash) const { TransactionAddress ta = queryExtras&lt;TransactionAddress, ExtraTransactionAddress&gt;(_transactionHash, m_transactionAddresses, x_transactionAddresses, NullTransactionAddress); if (!ta) return bytes(); return transaction(ta.blockHash, ta.index); }</span>
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :         std::pair&lt;h256, unsigned&gt; transactionLocation(h256 const&amp; _transactionHash) const { TransactionAddress ta = queryExtras&lt;TransactionAddress, ExtraTransactionAddress&gt;(_transactionHash, m_transactionAddresses, x_transactionAddresses, NullTransactionAddress); if (!ta) return std::pair&lt;h256, unsigned&gt;(h256(), 0); return std::make_pair(ta.blockHash, ta.index); }</span>
+<a name="215"><span class="lineNum">     215 </span>            : </a>
+<span class="lineNum">     216 </span>            :         /// Get a block's transaction (RLP format) for the given block hash (or the most recent mined if none given) &amp; index. Thread-safe.
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :         bytes transaction(h256 const&amp; _blockHash, unsigned _i) const { bytes b = block(_blockHash); return RLP(b)[1][_i].data().toBytes(); }</span>
+<span class="lineNum">     218 </span>            :         bytes transaction(unsigned _i) const { return transaction(currentHash(), _i); }
+<a name="219"><span class="lineNum">     219 </span>            : </a>
+<a name="220"><span class="lineNum">     220 </span>            :         /// Get all transactions from a block.</a>
+<span class="lineNum">     221 </span><span class="lineCov">         11 :         std::vector&lt;bytes&gt; transactions(h256 const&amp; _blockHash) const { bytes b = block(_blockHash); std::vector&lt;bytes&gt; ret; for (auto const&amp; i: RLP(b)[1]) ret.push_back(i.data().toBytes()); return ret; }</span>
+<span class="lineNum">     222 </span><span class="lineCov">          1 :         std::vector&lt;bytes&gt; transactions() const { return transactions(currentHash()); }</span>
+<a name="223"><span class="lineNum">     223 </span>            : </a>
+<span class="lineNum">     224 </span>            :         /// Get a number for the given hash (or the most recent mined if none given). Thread-safe.
+<span class="lineNum">     225 </span><span class="lineCov">       4395 :         unsigned number(h256 const&amp; _hash) const { return details(_hash).number; }</span>
+<span class="lineNum">     226 </span>            :         unsigned number() const { return m_lastBlockNumber; }
+<a name="227"><span class="lineNum">     227 </span>            : </a>
+<span class="lineNum">     228 </span>            :         /// Get a given block (RLP format). Thread-safe.
+<span class="lineNum">     229 </span><span class="lineCov">      55479 :         h256 currentHash() const { ReadGuard l(x_lastBlockHash); return m_lastBlockHash; }</span>
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :         /// Get the hash of the genesis block. Thread-safe.
+<span class="lineNum">     232 </span><span class="lineCov">         22 :         h256 genesisHash() const { return m_genesisHash; }</span>
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            :         /// Get all blocks not allowed as uncles given a parent (i.e. featured as uncles/main in parent, parent + 1, ... parent + @a _generations).
+<span class="lineNum">     235 </span>            :         /// @returns set including the header-hash of every parent (including @a _parent) up to and including generation + @a _generations
+<span class="lineNum">     236 </span>            :         /// togther with all their quoted uncles.
+<span class="lineNum">     237 </span>            :         h256Hash allKinFrom(h256 const&amp; _parent, unsigned _generations) const;
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            :         /// Run through database and verify all blocks by reevaluating.
+<span class="lineNum">     240 </span>            :         /// Will call _progress with the progress in this operation first param done, second total.
+<span class="lineNum">     241 </span>            :         void rebuild(std::string const&amp; _path, ProgressCallback const&amp; _progress = std::function&lt;void(unsigned, unsigned)&gt;());
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            :         /// Alter the head of the chain to some prior block along it.
+<span class="lineNum">     244 </span>            :         void rewind(unsigned _newHead);
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            :         /// Rescue the database.
+<span class="lineNum">     247 </span>            :         void rescue(OverlayDB const&amp; _db);
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            :         /** @returns a tuple of:
+<span class="lineNum">     250 </span>            :          * - an vector of hashes of all blocks between @a _from and @a _to, all blocks are ordered first by a number of
+<span class="lineNum">     251 </span>            :          * blocks that are parent-to-child, then two sibling blocks, then a number of blocks that are child-to-parent;
+<span class="lineNum">     252 </span>            :          * - the block hash of the latest common ancestor of both blocks;
+<span class="lineNum">     253 </span>            :          * - the index where the latest common ancestor of both blocks would either be found or inserted, depending
+<span class="lineNum">     254 </span>            :          * on whether it is included.
+<span class="lineNum">     255 </span>            :          *
+<span class="lineNum">     256 </span>            :          * @param _common if true, include the common ancestor in the returned vector.
+<span class="lineNum">     257 </span>            :          * @param _pre if true, include all block hashes running from @a _from until the common ancestor in the returned vector.
+<span class="lineNum">     258 </span>            :          * @param _post if true, include all block hashes running from the common ancestor until @a _to in the returned vector.
+<span class="lineNum">     259 </span>            :          *
+<span class="lineNum">     260 </span>            :          * e.g. if the block tree is 3a -&gt; 2a -&gt; 1a -&gt; g and 2b -&gt; 1b -&gt; g (g is genesis, *a, *b are competing chains),
+<span class="lineNum">     261 </span>            :          * then:
+<span class="lineNum">     262 </span>            :          * @code
+<span class="lineNum">     263 </span>            :          * treeRoute(3a, 2b, false) == make_tuple({ 3a, 2a, 1a, 1b, 2b }, g, 3);
+<span class="lineNum">     264 </span>            :          * treeRoute(2a, 1a, false) == make_tuple({ 2a, 1a }, 1a, 1)
+<span class="lineNum">     265 </span>            :          * treeRoute(1a, 2a, false) == make_tuple({ 1a, 2a }, 1a, 0)
+<span class="lineNum">     266 </span>            :          * treeRoute(1b, 2a, false) == make_tuple({ 1b, 1a, 2a }, g, 1)
+<span class="lineNum">     267 </span>            :          * treeRoute(3a, 2b, true) == make_tuple({ 3a, 2a, 1a, g, 1b, 2b }, g, 3);
+<span class="lineNum">     268 </span>            :          * treeRoute(2a, 1a, true) == make_tuple({ 2a, 1a }, 1a, 1)
+<span class="lineNum">     269 </span>            :          * treeRoute(1a, 2a, true) == make_tuple({ 1a, 2a }, 1a, 0)
+<span class="lineNum">     270 </span>            :          * treeRoute(1b, 2a, true) == make_tuple({ 1b, g, 1a, 2a }, g, 1)
+<span class="lineNum">     271 </span>            :          * @endcode
+<span class="lineNum">     272 </span>            :          */
+<span class="lineNum">     273 </span>            :         std::tuple&lt;h256s, h256, unsigned&gt; treeRoute(h256 const&amp; _from, h256 const&amp; _to, bool _common = true, bool _pre = true, bool _post = true) const;
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            :         struct Statistics
+<span class="lineNum">     276 </span>            :         {
+<span class="lineNum">     277 </span>            :                 unsigned memBlocks;
+<span class="lineNum">     278 </span>            :                 unsigned memDetails;
+<span class="lineNum">     279 </span>            :                 unsigned memLogBlooms;
+<span class="lineNum">     280 </span>            :                 unsigned memReceipts;
+<span class="lineNum">     281 </span>            :                 unsigned memTransactionAddresses;
+<span class="lineNum">     282 </span>            :                 unsigned memBlockHashes;
+<span class="lineNum">     283 </span><span class="lineCov">          4 :                 unsigned memTotal() const { return memBlocks + memDetails + memLogBlooms + memReceipts + memTransactionAddresses + memBlockHashes; }</span>
+<span class="lineNum">     284 </span>            :         };
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            :         /// @returns statistics about memory usage.
+<span class="lineNum">     287 </span><span class="lineCov">          2 :         Statistics usage(bool _freshen = false) const { if (_freshen) updateStats(); return m_lastStats; }</span>
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            :         /// Deallocate unused data.
+<span class="lineNum">     290 </span>            :         void garbageCollect(bool _force = false);
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span>            :         /// Change the function that is called with a bad block.
+<span class="lineNum">     293 </span><span class="lineCov">          2 :         template &lt;class T&gt; void setOnBad(T const&amp; _t) { m_onBad = _t; }</span>
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span>            :         /// Get a pre-made genesis State object.
+<span class="lineNum">     296 </span>            :         Block genesisBlock(OverlayDB const&amp; _db) const;
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            :         /// Verify block and prepare it for enactment
+<span class="lineNum">     299 </span>            :         VerifiedBlockRef verifyBlock(bytesConstRef _block, std::function&lt;void(Exception&amp;)&gt; const&amp; _onBad, ImportRequirements::value _ir = ImportRequirements::OutOfOrderChecks) const;
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span>            :         /// Gives a dump of the blockchain database. For debug/test use only.
+<span class="lineNum">     302 </span>            :         std::string dumpDatabase() const;
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 :         ChainParams const&amp; chainParams() const { return m_params; }</span>
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span><span class="lineCov">      23055 :         SealEngineFace* sealEngine() const { return m_sealEngine.get(); }</span>
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            :         BlockHeader const&amp; genesis() const;
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            : private:
+<span class="lineNum">     311 </span><span class="lineCov">      29300 :         static h256 chunkId(unsigned _level, unsigned _index) { return h256(_index * 0xff + _level); }</span>
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            :         /// Initialise everything and ready for openning the database.
+<span class="lineNum">     314 </span>            :         void init(ChainParams const&amp; _p);
+<span class="lineNum">     315 </span>            :         /// Open the database.
+<span class="lineNum">     316 </span>            :         unsigned open(std::string const&amp; _path, WithExisting _we);
+<span class="lineNum">     317 </span>            :         /// Open the database, rebuilding if necessary.
+<span class="lineNum">     318 </span>            :         void open(std::string const&amp; _path, WithExisting _we, ProgressCallback const&amp; _pc);
+<span class="lineNum">     319 </span>            :         /// Finalise everything and close the database.
+<a name="320"><span class="lineNum">     320 </span>            :         void close();</a>
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span><span class="lineCov">      75416 :         template&lt;class T, class K, unsigned N&gt; T queryExtras(K const&amp; _h, std::unordered_map&lt;K, T&gt;&amp; _m, boost::shared_mutex&amp; _x, T const&amp; _n, ldb::DB* _extrasDB = nullptr) const</span>
+<span class="lineNum">     323 </span>            :         {
+<span class="lineNum">     324 </span>            :                 {
+<span class="lineNum">     325 </span><span class="lineCov">      82292 :                         ReadGuard l(_x);</span>
+<span class="lineNum">     326 </span><span class="lineCov">      75416 :                         auto it = _m.find(_h);</span>
+<span class="lineNum">     327 </span><span class="lineCov">     150832 :                         if (it != _m.end())</span>
+<span class="lineNum">     328 </span><span class="lineCov">     137080 :                                 return it-&gt;second;</span>
+<span class="lineNum">     329 </span>            :                 }
+<span class="lineNum">     330 </span>            : 
+<span class="lineNum">     331 </span><span class="lineCov">       6876 :                 std::string s;</span>
+<span class="lineNum">     332 </span><span class="lineCov">      19356 :                 (_extrasDB ? _extrasDB : m_extrasDB)-&gt;Get(m_readOptions, toSlice(_h, N), &amp;s);</span>
+<span class="lineNum">     333 </span><span class="lineCov">       6876 :                 if (s.empty())</span>
+<span class="lineNum">     334 </span><span class="lineCov">       2581 :                         return _n;</span>
+<span class="lineNum">     335 </span>            : 
+<span class="lineNum">     336 </span><span class="lineCov">       4295 :                 noteUsed(_h, N);</span>
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span><span class="lineCov">       4295 :                 WriteGuard l(_x);</span>
+<span class="lineNum">     339 </span><span class="lineCov">      21475 :                 auto ret = _m.insert(std::make_pair(_h, T(RLP(s))));</span>
+<span class="lineNum">     340 </span><span class="lineCov">       4364 :                 return ret.first-&gt;second;</span>
+<span class="lineNum">     341 </span>            :         }
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span>            :         template&lt;class T, unsigned N&gt; T queryExtras(h256 const&amp; _h, std::unordered_map&lt;h256, T&gt;&amp; _m, boost::shared_mutex&amp; _x, T const&amp; _n, ldb::DB* _extrasDB = nullptr) const
+<span class="lineNum">     344 </span>            :         {
+<span class="lineNum">     345 </span><span class="lineCov">      75416 :                 return queryExtras&lt;T, h256, N&gt;(_h, _m, _x, _n, _extrasDB);</span>
+<span class="lineNum">     346 </span>            :         }
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            :         void checkConsistency();
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span>            :         /// Clears all caches from the tip of the chain up to (including) _firstInvalid.
+<span class="lineNum">     351 </span>            :         /// These include the blooms, the block hashes and the transaction lookup tables.
+<span class="lineNum">     352 </span>            :         void clearCachesDuringChainReversion(unsigned _firstInvalid);
+<span class="lineNum">     353 </span>            :         void clearBlockBlooms(unsigned _begin, unsigned _end);
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span>            :         /// The caches of the disk DB and their locks.
+<span class="lineNum">     356 </span>            :         mutable SharedMutex x_blocks;
+<span class="lineNum">     357 </span>            :         mutable BlocksHash m_blocks;
+<span class="lineNum">     358 </span>            :         mutable SharedMutex x_details;
+<span class="lineNum">     359 </span>            :         mutable BlockDetailsHash m_details;
+<span class="lineNum">     360 </span>            :         mutable SharedMutex x_logBlooms;
+<span class="lineNum">     361 </span>            :         mutable BlockLogBloomsHash m_logBlooms;
+<span class="lineNum">     362 </span>            :         mutable SharedMutex x_receipts;
+<span class="lineNum">     363 </span>            :         mutable BlockReceiptsHash m_receipts;
+<span class="lineNum">     364 </span>            :         mutable SharedMutex x_transactionAddresses;
+<span class="lineNum">     365 </span>            :         mutable TransactionAddressHash m_transactionAddresses;
+<span class="lineNum">     366 </span>            :         mutable SharedMutex x_blockHashes;
+<span class="lineNum">     367 </span>            :         mutable BlockHashHash m_blockHashes;
+<span class="lineNum">     368 </span>            :         mutable SharedMutex x_blocksBlooms;
+<span class="lineNum">     369 </span>            :         mutable BlocksBloomsHash m_blocksBlooms;
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span>            :         using CacheID = std::pair&lt;h256, unsigned&gt;;
+<span class="lineNum">     372 </span>            :         mutable Mutex x_cacheUsage;
+<span class="lineNum">     373 </span>            :         mutable std::deque&lt;std::unordered_set&lt;CacheID&gt;&gt; m_cacheUsage;
+<span class="lineNum">     374 </span>            :         mutable std::unordered_set&lt;CacheID&gt; m_inUse;
+<span class="lineNum">     375 </span>            :         void noteUsed(h256 const&amp; _h, unsigned _extra = (unsigned)-1) const;
+<span class="lineNum">     376 </span>            :         void noteUsed(uint64_t const&amp; _h, unsigned _extra = (unsigned)-1) const { (void)_h; (void)_extra; } // don't note non-hash types
+<span class="lineNum">     377 </span>            :         std::chrono::system_clock::time_point m_lastCollection;
+<span class="lineNum">     378 </span>            : 
+<span class="lineNum">     379 </span><span class="lineCov">       7917 :         void noteCanonChanged() const { Guard l(x_lastLastHashes); m_lastLastHashes.clear(); }</span>
+<span class="lineNum">     380 </span>            :         mutable Mutex x_lastLastHashes;
+<span class="lineNum">     381 </span>            :         mutable LastHashes m_lastLastHashes;
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span>            :         void updateStats() const;
+<span class="lineNum">     384 </span>            :         mutable Statistics m_lastStats;
+<span class="lineNum">     385 </span>            : 
+<span class="lineNum">     386 </span>            :         /// The disk DBs. Thread-safe, so no need for locks.
+<span class="lineNum">     387 </span>            :         ldb::DB* m_blocksDB;
+<span class="lineNum">     388 </span>            :         ldb::DB* m_extrasDB;
+<span class="lineNum">     389 </span>            : 
+<span class="lineNum">     390 </span>            :         /// Hash of the last (valid) block on the longest chain.
+<span class="lineNum">     391 </span>            :         mutable boost::shared_mutex x_lastBlockHash;
+<span class="lineNum">     392 </span>            :         h256 m_lastBlockHash;
+<span class="lineNum">     393 </span>            :         unsigned m_lastBlockNumber = 0;
+<span class="lineNum">     394 </span>            : 
+<span class="lineNum">     395 </span>            :         ldb::ReadOptions m_readOptions;
+<span class="lineNum">     396 </span>            :         ldb::WriteOptions m_writeOptions;
+<span class="lineNum">     397 </span>            : 
+<span class="lineNum">     398 </span>            :         ChainParams m_params;
+<span class="lineNum">     399 </span>            :         std::shared_ptr&lt;SealEngineFace&gt; m_sealEngine;     // consider shared_ptr.
+<span class="lineNum">     400 </span>            :         mutable SharedMutex x_genesis;
+<span class="lineNum">     401 </span>            :         mutable BlockHeader m_genesis;  // mutable because they're effectively memos.
+<span class="lineNum">     402 </span>            :         mutable bytes m_genesisHeaderBytes;     // mutable because they're effectively memos.
+<span class="lineNum">     403 </span>            :         mutable h256 m_genesisHash;             // mutable because they're effectively memos.
+<span class="lineNum">     404 </span>            : 
+<span class="lineNum">     405 </span>            :         std::function&lt;void(Exception&amp;)&gt; m_onBad;                                                                      ///&lt; Called if we have a block that doesn't verify.
+<span class="lineNum">     406 </span>            : 
+<span class="lineNum">     407 </span>            :         std::string m_dbPath;
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span>            :         friend std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, BlockChain const&amp; _bc);
+<span class="lineNum">     410 </span>            : };
+<span class="lineNum">     411 </span>            : 
+<span class="lineNum">     412 </span>            : std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, BlockChain const&amp; _bc);
+<span class="lineNum">     413 </span>            : 
+<span class="lineNum">     414 </span>            : }
+<span class="lineNum">     415 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

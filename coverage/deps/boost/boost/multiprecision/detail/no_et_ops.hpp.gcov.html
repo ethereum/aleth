@@ -1,0 +1,700 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/multiprecision/detail/no_et_ops.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/multiprecision/detail</a> - no_et_ops.hpp<span style="font-size: 80%;"> (source / <a href="no_et_ops.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">116</td>
+            <td class="headerCovTableEntry">118</td>
+            <td class="headerCovTableEntryHi">98.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">119</td>
+            <td class="headerCovTableEntry">127</td>
+            <td class="headerCovTableEntryHi">93.7 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : ///////////////////////////////////////////////////////////////////////////////</a>
+<span class="lineNum">       2 </span>            : //  Copyright 2012 John Maddock. Distributed under the Boost
+<span class="lineNum">       3 </span>            : //  Software License, Version 1.0. (See accompanying file
+<span class="lineNum">       4 </span>            : //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : #ifndef BOOST_MP_NO_ET_OPS_HPP
+<span class="lineNum">       7 </span>            : #define BOOST_MP_NO_ET_OPS_HPP
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">      10 </span>            : #pragma warning(push)
+<span class="lineNum">      11 </span>            : #pragma warning(disable: 4714)
+<span class="lineNum">      12 </span>            : #endif
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : namespace boost{
+<span class="lineNum">      15 </span>            : namespace multiprecision{
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : //
+<span class="lineNum">      18 </span>            : // Operators for non-expression template enabled number.
+<span class="lineNum">      19 </span>            : // NOTE: this is not a complete header - really just a suffix to default_ops.hpp.
+<span class="lineNum">      20 </span>            : // NOTE: these operators have to be defined after the methods in default_ops.hpp.
+<span class="lineNum">      21 </span>            : //
+<span class="lineNum">      22 </span>            : template &lt;class B&gt;
+<span class="lineNum">      23 </span>            : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator - (const number&lt;B, et_off&gt;&amp; v)
+<span class="lineNum">      24 </span>            : {
+<span class="lineNum">      25 </span>            :    BOOST_STATIC_ASSERT_MSG(is_signed_number&lt;B&gt;::value, &quot;Negating an unsigned type results in ill-defined behavior.&quot;);
+<span class="lineNum">      26 </span>            :    number&lt;B, et_off&gt; result(v);
+<span class="lineNum">      27 </span>            :    result.backend().negate();
+<span class="lineNum">      28 </span>            :    return BOOST_MP_MOVE(result);
+<a name="29"><span class="lineNum">      29 </span>            : }</a>
+<span class="lineNum">      30 </span>            : template &lt;class B&gt;
+<span class="lineNum">      31 </span><span class="lineCov">        236 : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator ~ (const number&lt;B, et_off&gt;&amp; v)</span>
+<span class="lineNum">      32 </span>            : {
+<span class="lineNum">      33 </span><span class="lineCov">        236 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">      34 </span><span class="lineCov">        236 :    eval_complement(result.backend(), v.backend());</span>
+<span class="lineNum">      35 </span><span class="lineCov">        472 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">      36 </span>            : }
+<span class="lineNum">      37 </span>            : //
+<span class="lineNum">      38 </span>            : // Addition:
+<a name="39"><span class="lineNum">      39 </span>            : //</a>
+<span class="lineNum">      40 </span>            : template &lt;class B&gt;
+<span class="lineNum">      41 </span><span class="lineCov">      18019 : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator + (const number&lt;B, et_off&gt;&amp; a, const number&lt;B, et_off&gt;&amp; b)</span>
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span><span class="lineCov">      18019 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">      44 </span>            :    using default_ops::eval_add;
+<span class="lineNum">      45 </span><span class="lineCov">      54057 :    eval_add(result.backend(), a.backend(), b.backend());</span>
+<span class="lineNum">      46 </span><span class="lineCov">      36038 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">      47 </span>            : }
+<a name="48"><span class="lineNum">      48 </span>            : template &lt;class B, class V&gt;</a>
+<span class="lineNum">      49 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;, number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">      50 </span><span class="lineCov">     106743 :    operator + (const number&lt;B, et_off&gt;&amp; a, const V&amp; b)</span>
+<span class="lineNum">      51 </span>            : {
+<span class="lineNum">      52 </span><span class="lineCov">     106743 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">      53 </span>            :    using default_ops::eval_add;
+<span class="lineNum">      54 </span><span class="lineCov">     315341 :    eval_add(result.backend(), a.backend(), number&lt;B, et_off&gt;::canonical_value(b));</span>
+<span class="lineNum">      55 </span><span class="lineCov">     213486 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">      56 </span>            : }
+<a name="57"><span class="lineNum">      57 </span>            : template &lt;class V, class B&gt;</a>
+<span class="lineNum">      58 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;, number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">      59 </span><span class="lineCov">      41468 :    operator + (const V&amp; a, const number&lt;B, et_off&gt;&amp; b)</span>
+<span class="lineNum">      60 </span>            : {
+<span class="lineNum">      61 </span><span class="lineCov">      41468 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">      62 </span>            :    using default_ops::eval_add;
+<span class="lineNum">      63 </span><span class="lineCov">     165706 :    eval_add(result.backend(), b.backend(), number&lt;B, et_off&gt;::canonical_value(a));</span>
+<span class="lineNum">      64 </span><span class="lineCov">      82936 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">      65 </span>            : }
+<span class="lineNum">      66 </span>            : //
+<span class="lineNum">      67 </span>            : // Subtraction:
+<a name="68"><span class="lineNum">      68 </span>            : //</a>
+<span class="lineNum">      69 </span>            : template &lt;class B&gt;
+<span class="lineNum">      70 </span><span class="lineCov">     183742 : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator - (const number&lt;B, et_off&gt;&amp; a, const number&lt;B, et_off&gt;&amp; b)</span>
+<span class="lineNum">      71 </span>            : {
+<span class="lineNum">      72 </span><span class="lineCov">     183750 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">      73 </span>            :    using default_ops::eval_subtract;
+<span class="lineNum">      74 </span><span class="lineCov">     551242 :    eval_subtract(result.backend(), a.backend(), b.backend());</span>
+<span class="lineNum">      75 </span><span class="lineCov">     367500 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">      76 </span>            : }
+<a name="77"><span class="lineNum">      77 </span>            : template &lt;class B, class V&gt;</a>
+<span class="lineNum">      78 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;, number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">      79 </span><span class="lineCov">        239 :    operator - (const number&lt;B, et_off&gt;&amp; a, const V&amp; b)</span>
+<span class="lineNum">      80 </span>            : {
+<span class="lineNum">      81 </span><span class="lineCov">        239 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">      82 </span>            :    using default_ops::eval_subtract;
+<span class="lineNum">      83 </span><span class="lineCov">        717 :    eval_subtract(result.backend(), a.backend(), number&lt;B, et_off&gt;::canonical_value(b));</span>
+<span class="lineNum">      84 </span><span class="lineCov">        478 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">      85 </span>            : }
+<a name="86"><span class="lineNum">      86 </span>            : template &lt;class V, class B&gt;</a>
+<span class="lineNum">      87 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;, number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">      88 </span><span class="lineCov">     589503 :    operator - (const V&amp; a, const number&lt;B, et_off&gt;&amp; b)</span>
+<span class="lineNum">      89 </span>            : {
+<span class="lineNum">      90 </span><span class="lineCov">     589503 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">      91 </span>            :    using default_ops::eval_subtract;
+<span class="lineNum">      92 </span><span class="lineCov">    1261899 :    eval_subtract(result.backend(), number&lt;B, et_off&gt;::canonical_value(a), b.backend());</span>
+<span class="lineNum">      93 </span><span class="lineCov">    1179006 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">      94 </span>            : }
+<span class="lineNum">      95 </span>            : //
+<span class="lineNum">      96 </span>            : // Multiply:
+<a name="97"><span class="lineNum">      97 </span>            : //</a>
+<span class="lineNum">      98 </span>            : template &lt;class B&gt;
+<span class="lineNum">      99 </span><span class="lineCov">     250335 : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator * (const number&lt;B, et_off&gt;&amp; a, const number&lt;B, et_off&gt;&amp; b)</span>
+<span class="lineNum">     100 </span>            : {
+<span class="lineNum">     101 </span><span class="lineCov">     250335 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">     102 </span>            :    using default_ops::eval_multiply;
+<span class="lineNum">     103 </span><span class="lineCov">     500670 :    eval_multiply(result.backend(), a.backend(), b.backend());</span>
+<span class="lineNum">     104 </span><span class="lineCov">     500670 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">     105 </span>            : }
+<a name="106"><span class="lineNum">     106 </span>            : template &lt;class B, class V&gt;</a>
+<span class="lineNum">     107 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;, number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     108 </span><span class="lineCov">      51538 :    operator * (const number&lt;B, et_off&gt;&amp; a, const V&amp; b)</span>
+<span class="lineNum">     109 </span>            : {
+<span class="lineNum">     110 </span><span class="lineCov">      51538 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">     111 </span>            :    using default_ops::eval_multiply;
+<span class="lineNum">     112 </span><span class="lineCov">     154614 :    eval_multiply(result.backend(), a.backend(), number&lt;B, et_off&gt;::canonical_value(b));</span>
+<span class="lineNum">     113 </span><span class="lineCov">     103076 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">     114 </span>            : }
+<a name="115"><span class="lineNum">     115 </span>            : template &lt;class V, class B&gt;</a>
+<span class="lineNum">     116 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;, number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     117 </span><span class="lineCov">        136 :    operator * (const V&amp; a, const number&lt;B, et_off&gt;&amp; b)</span>
+<span class="lineNum">     118 </span>            : {
+<span class="lineNum">     119 </span><span class="lineCov">        136 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">     120 </span>            :    using default_ops::eval_multiply;
+<span class="lineNum">     121 </span><span class="lineCov">        363 :    eval_multiply(result.backend(), b.backend(), number&lt;B, et_off&gt;::canonical_value(a));</span>
+<span class="lineNum">     122 </span><span class="lineCov">        272 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">     123 </span>            : }
+<span class="lineNum">     124 </span>            : //
+<span class="lineNum">     125 </span>            : // divide:
+<a name="126"><span class="lineNum">     126 </span>            : //</a>
+<span class="lineNum">     127 </span>            : template &lt;class B&gt;
+<span class="lineNum">     128 </span><span class="lineCov">      64443 : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator / (const number&lt;B, et_off&gt;&amp; a, const number&lt;B, et_off&gt;&amp; b)</span>
+<span class="lineNum">     129 </span>            : {
+<span class="lineNum">     130 </span><span class="lineCov">      64443 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">     131 </span>            :    using default_ops::eval_divide;
+<span class="lineNum">     132 </span><span class="lineCov">     193329 :    eval_divide(result.backend(), a.backend(), b.backend());</span>
+<span class="lineNum">     133 </span><span class="lineCov">     128886 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">     134 </span>            : }
+<a name="135"><span class="lineNum">     135 </span>            : template &lt;class B, class V&gt;</a>
+<span class="lineNum">     136 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;, number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     137 </span><span class="lineCov">     303993 :    operator / (const number&lt;B, et_off&gt;&amp; a, const V&amp; b)</span>
+<span class="lineNum">     138 </span>            : {
+<span class="lineNum">     139 </span><span class="lineCov">     304001 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">     140 </span>            :    using default_ops::eval_divide;
+<span class="lineNum">     141 </span><span class="lineCov">    1215988 :    eval_divide(result.backend(), a.backend(), number&lt;B, et_off&gt;::canonical_value(b));</span>
+<span class="lineNum">     142 </span><span class="lineCov">     608002 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">     143 </span>            : }
+<span class="lineNum">     144 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     145 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;, number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     146 </span>            :    operator / (const V&amp; a, const number&lt;B, et_off&gt;&amp; b)
+<span class="lineNum">     147 </span>            : {
+<span class="lineNum">     148 </span>            :    number&lt;B, et_off&gt; result;
+<span class="lineNum">     149 </span>            :    using default_ops::eval_divide;
+<span class="lineNum">     150 </span>            :    eval_divide(result.backend(), number&lt;B, et_off&gt;::canonical_value(a), b.backend());
+<span class="lineNum">     151 </span>            :    return BOOST_MP_MOVE(result);
+<span class="lineNum">     152 </span>            : }
+<span class="lineNum">     153 </span>            : //
+<span class="lineNum">     154 </span>            : // modulus:
+<span class="lineNum">     155 </span>            : //
+<span class="lineNum">     156 </span>            : template &lt;class B&gt;
+<span class="lineNum">     157 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator % (const number&lt;B, et_off&gt;&amp; a, const number&lt;B, et_off&gt;&amp; b)
+<span class="lineNum">     158 </span>            : {
+<span class="lineNum">     159 </span>            :    number&lt;B, et_off&gt; result;
+<span class="lineNum">     160 </span>            :    using default_ops::eval_modulus;
+<span class="lineNum">     161 </span>            :    eval_modulus(result.backend(), a.backend(), b.backend());
+<span class="lineNum">     162 </span>            :    return BOOST_MP_MOVE(result);
+<span class="lineNum">     163 </span>            : }
+<span class="lineNum">     164 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     165 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     166 </span>            :    operator % (const number&lt;B, et_off&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     167 </span>            : {
+<span class="lineNum">     168 </span>            :    number&lt;B, et_off&gt; result;
+<span class="lineNum">     169 </span>            :    using default_ops::eval_modulus;
+<span class="lineNum">     170 </span>            :    eval_modulus(result.backend(), a.backend(), number&lt;B, et_off&gt;::canonical_value(b));
+<span class="lineNum">     171 </span>            :    return BOOST_MP_MOVE(result);
+<span class="lineNum">     172 </span>            : }
+<span class="lineNum">     173 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     174 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     175 </span>            :    operator % (const V&amp; a, const number&lt;B, et_off&gt;&amp; b)
+<span class="lineNum">     176 </span>            : {
+<span class="lineNum">     177 </span>            :    number&lt;B, et_off&gt; result;
+<span class="lineNum">     178 </span>            :    using default_ops::eval_modulus;
+<span class="lineNum">     179 </span>            :    eval_modulus(result.backend(), number&lt;B, et_off&gt;::canonical_value(a), b.backend());
+<span class="lineNum">     180 </span>            :    return BOOST_MP_MOVE(result);
+<span class="lineNum">     181 </span>            : }
+<span class="lineNum">     182 </span>            : //
+<span class="lineNum">     183 </span>            : // Bitwise or:
+<a name="184"><span class="lineNum">     184 </span>            : //</a>
+<span class="lineNum">     185 </span>            : template &lt;class B&gt;
+<span class="lineNum">     186 </span><span class="lineCov">       1468 : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator | (const number&lt;B, et_off&gt;&amp; a, const number&lt;B, et_off&gt;&amp; b)</span>
+<span class="lineNum">     187 </span>            : {
+<span class="lineNum">     188 </span><span class="lineCov">       1468 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">     189 </span>            :    using default_ops::eval_bitwise_or;
+<span class="lineNum">     190 </span><span class="lineCov">       4404 :    eval_bitwise_or(result.backend(), a.backend(), b.backend());</span>
+<span class="lineNum">     191 </span><span class="lineCov">       2936 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">     192 </span>            : }
+<span class="lineNum">     193 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     194 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     195 </span>            :    operator | (const number&lt;B, et_off&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     196 </span>            : {
+<span class="lineNum">     197 </span>            :    number&lt;B, et_off&gt; result;
+<span class="lineNum">     198 </span>            :    using default_ops::eval_bitwise_or;
+<span class="lineNum">     199 </span>            :    eval_bitwise_or(result.backend(), a.backend(), number&lt;B, et_off&gt;::canonical_value(b));
+<span class="lineNum">     200 </span>            :    return BOOST_MP_MOVE(result);
+<span class="lineNum">     201 </span>            : }
+<span class="lineNum">     202 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     203 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     204 </span>            :    operator | (const V&amp; a, const number&lt;B, et_off&gt;&amp; b)
+<span class="lineNum">     205 </span>            : {
+<span class="lineNum">     206 </span>            :    number&lt;B, et_off&gt; result;
+<span class="lineNum">     207 </span>            :    using default_ops::eval_bitwise_or;
+<span class="lineNum">     208 </span>            :    eval_bitwise_or(result.backend(), b.backend(), number&lt;B, et_off&gt;::canonical_value(a));
+<span class="lineNum">     209 </span>            :    return BOOST_MP_MOVE(result);
+<span class="lineNum">     210 </span>            : }
+<span class="lineNum">     211 </span>            : //
+<span class="lineNum">     212 </span>            : // Bitwise xor:
+<a name="213"><span class="lineNum">     213 </span>            : //</a>
+<span class="lineNum">     214 </span>            : template &lt;class B&gt;
+<span class="lineNum">     215 </span><span class="lineCov">     102461 : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator ^ (const number&lt;B, et_off&gt;&amp; a, const number&lt;B, et_off&gt;&amp; b)</span>
+<span class="lineNum">     216 </span>            : {
+<span class="lineNum">     217 </span><span class="lineCov">     102461 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">     218 </span>            :    using default_ops::eval_bitwise_xor;
+<span class="lineNum">     219 </span><span class="lineCov">     307383 :    eval_bitwise_xor(result.backend(), a.backend(), b.backend());</span>
+<span class="lineNum">     220 </span><span class="lineCov">     204922 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">     221 </span>            : }
+<span class="lineNum">     222 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     223 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     224 </span>            :    operator ^ (const number&lt;B, et_off&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     225 </span>            : {
+<span class="lineNum">     226 </span>            :    number&lt;B, et_off&gt; result;
+<span class="lineNum">     227 </span>            :    using default_ops::eval_bitwise_xor;
+<span class="lineNum">     228 </span>            :    eval_bitwise_xor(result.backend(), a.backend(), number&lt;B, et_off&gt;::canonical_value(b));
+<span class="lineNum">     229 </span>            :    return BOOST_MP_MOVE(result);
+<span class="lineNum">     230 </span>            : }
+<span class="lineNum">     231 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     232 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     233 </span>            :    operator ^ (const V&amp; a, const number&lt;B, et_off&gt;&amp; b)
+<span class="lineNum">     234 </span>            : {
+<span class="lineNum">     235 </span>            :    number&lt;B, et_off&gt; result;
+<span class="lineNum">     236 </span>            :    using default_ops::eval_bitwise_xor;
+<span class="lineNum">     237 </span>            :    eval_bitwise_xor(result.backend(), b.backend(), number&lt;B, et_off&gt;::canonical_value(a));
+<span class="lineNum">     238 </span>            :    return BOOST_MP_MOVE(result);
+<span class="lineNum">     239 </span>            : }
+<span class="lineNum">     240 </span>            : //
+<span class="lineNum">     241 </span>            : // Bitwise and:
+<a name="242"><span class="lineNum">     242 </span>            : //</a>
+<span class="lineNum">     243 </span>            : template &lt;class B&gt;
+<span class="lineNum">     244 </span><span class="lineCov">       1711 : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator &amp; (const number&lt;B, et_off&gt;&amp; a, const number&lt;B, et_off&gt;&amp; b)</span>
+<span class="lineNum">     245 </span>            : {
+<span class="lineNum">     246 </span><span class="lineCov">       1711 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">     247 </span>            :    using default_ops::eval_bitwise_and;
+<span class="lineNum">     248 </span><span class="lineCov">       5133 :    eval_bitwise_and(result.backend(), a.backend(), b.backend());</span>
+<span class="lineNum">     249 </span><span class="lineCov">       3422 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">     250 </span>            : }
+<a name="251"><span class="lineNum">     251 </span>            : template &lt;class B, class V&gt;</a>
+<span class="lineNum">     252 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     253 </span><span class="lineCov">        871 :    operator &amp; (const number&lt;B, et_off&gt;&amp; a, const V&amp; b)</span>
+<span class="lineNum">     254 </span>            : {
+<span class="lineNum">     255 </span><span class="lineCov">        871 :    number&lt;B, et_off&gt; result;</span>
+<span class="lineNum">     256 </span>            :    using default_ops::eval_bitwise_and;
+<span class="lineNum">     257 </span><span class="lineCov">       3484 :    eval_bitwise_and(result.backend(), a.backend(), number&lt;B, et_off&gt;::canonical_value(b));</span>
+<span class="lineNum">     258 </span><span class="lineCov">       1742 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">     259 </span>            : }
+<span class="lineNum">     260 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     261 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     262 </span>            :    operator &amp; (const V&amp; a, const number&lt;B, et_off&gt;&amp; b)
+<span class="lineNum">     263 </span>            : {
+<span class="lineNum">     264 </span>            :    number&lt;B, et_off&gt; result;
+<span class="lineNum">     265 </span>            :    using default_ops::eval_bitwise_and;
+<span class="lineNum">     266 </span>            :    eval_bitwise_and(result.backend(), b.backend(), number&lt;B, et_off&gt;::canonical_value(a));
+<span class="lineNum">     267 </span>            :    return BOOST_MP_MOVE(result);
+<span class="lineNum">     268 </span>            : }
+<span class="lineNum">     269 </span>            : //
+<span class="lineNum">     270 </span>            : // shifts:
+<span class="lineNum">     271 </span>            : //
+<a name="272"><span class="lineNum">     272 </span>            : template &lt;class B, class I&gt;</a>
+<span class="lineNum">     273 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_integral&lt;I&gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     274 </span><span class="lineCov">  148471454 :    operator &lt;&lt; (const number&lt;B, et_off&gt;&amp; a, const I&amp; b)</span>
+<span class="lineNum">     275 </span>            : {
+<span class="lineNum">     276 </span><span class="lineCov">  148597648 :    number&lt;B, et_off&gt; result(a);</span>
+<span class="lineNum">     277 </span>            :    using default_ops::eval_left_shift;
+<span class="lineNum">     278 </span><span class="lineCov">  297069102 :    detail::check_shift_range(b, mpl::bool_&lt;(sizeof(I) &gt; sizeof(std::size_t))&gt;(), is_signed&lt;I&gt;());</span>
+<span class="lineNum">     279 </span><span class="lineCov">  148723846 :    eval_left_shift(result.backend(), b);</span>
+<span class="lineNum">     280 </span><span class="lineCov">  297195304 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">     281 </span>            : }
+<a name="282"><span class="lineNum">     282 </span>            : template &lt;class B, class I&gt;</a>
+<span class="lineNum">     283 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_integral&lt;I&gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     284 </span><span class="lineCov">         50 :    operator &gt;&gt; (const number&lt;B, et_off&gt;&amp; a, const I&amp; b)</span>
+<span class="lineNum">     285 </span>            : {
+<span class="lineNum">     286 </span><span class="lineCov">         50 :    number&lt;B, et_off&gt; result(a);</span>
+<span class="lineNum">     287 </span>            :    using default_ops::eval_right_shift;
+<span class="lineNum">     288 </span><span class="lineCov">        100 :    detail::check_shift_range(b, mpl::bool_&lt;(sizeof(I) &gt; sizeof(std::size_t))&gt;(), is_signed&lt;I&gt;());</span>
+<span class="lineNum">     289 </span><span class="lineCov">         50 :    eval_right_shift(result.backend(), b);</span>
+<span class="lineNum">     290 </span><span class="lineCov">        100 :    return BOOST_MP_MOVE(result);</span>
+<span class="lineNum">     291 </span>            : }
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            : #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) &amp;&amp; !(defined(__GNUC__) &amp;&amp; ((__GNUC__ == 4) &amp;&amp; (__GNUC_MINOR__ &lt; 5)))
+<span class="lineNum">     294 </span>            : //
+<span class="lineNum">     295 </span>            : // If we have rvalue references go all over again with rvalue ref overloads and move semantics.
+<span class="lineNum">     296 </span>            : // Note that while it would be tempting to implement these so they return an rvalue reference
+<span class="lineNum">     297 </span>            : // (and indeed this would be optimally efficient), this is unsafe due to users propensity to
+<span class="lineNum">     298 </span>            : // write:
+<span class="lineNum">     299 </span>            : //
+<span class="lineNum">     300 </span>            : // const T&amp; t = a * b;
+<span class="lineNum">     301 </span>            : //
+<span class="lineNum">     302 </span>            : // which would lead to a dangling reference if we didn't return by value.  Of course move
+<span class="lineNum">     303 </span>            : // semantics help a great deal in return by value, so performance is still pretty good...
+<span class="lineNum">     304 </span>            : //
+<span class="lineNum">     305 </span>            : template &lt;class B&gt;
+<span class="lineNum">     306 </span>            : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator - (number&lt;B, et_off&gt;&amp;&amp; v)
+<span class="lineNum">     307 </span>            : {
+<span class="lineNum">     308 </span>            :    BOOST_STATIC_ASSERT_MSG(is_signed_number&lt;B&gt;::value, &quot;Negating an unsigned type results in ill-defined behavior.&quot;);
+<span class="lineNum">     309 </span>            :    v.backend().negate();
+<span class="lineNum">     310 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(v);
+<span class="lineNum">     311 </span>            : }
+<span class="lineNum">     312 </span>            : template &lt;class B&gt;
+<span class="lineNum">     313 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator ~ (number&lt;B, et_off&gt;&amp;&amp; v)
+<span class="lineNum">     314 </span>            : {
+<span class="lineNum">     315 </span><span class="lineCov">          2 :    eval_complement(v.backend(), v.backend());</span>
+<span class="lineNum">     316 </span><span class="lineCov">          2 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(v);</span>
+<span class="lineNum">     317 </span>            : }
+<span class="lineNum">     318 </span>            : //
+<span class="lineNum">     319 </span>            : // Addition:
+<span class="lineNum">     320 </span>            : //
+<span class="lineNum">     321 </span>            : template &lt;class B&gt;
+<span class="lineNum">     322 </span>            : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator + (number&lt;B, et_off&gt;&amp;&amp; a, const number&lt;B, et_off&gt;&amp; b)
+<span class="lineNum">     323 </span>            : {
+<span class="lineNum">     324 </span>            :    using default_ops::eval_add;
+<span class="lineNum">     325 </span><span class="lineNoCov">          0 :    eval_add(a.backend(), b.backend());</span>
+<span class="lineNum">     326 </span><span class="lineNoCov">          0 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     327 </span>            : }
+<span class="lineNum">     328 </span>            : template &lt;class B&gt;
+<span class="lineNum">     329 </span>            : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator + (const number&lt;B, et_off&gt;&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     330 </span>            : {
+<span class="lineNum">     331 </span>            :    using default_ops::eval_add;
+<span class="lineNum">     332 </span><span class="lineCov">      45426 :    eval_add(b.backend(), a.backend());</span>
+<span class="lineNum">     333 </span><span class="lineCov">      22713 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(b);</span>
+<span class="lineNum">     334 </span>            : }
+<span class="lineNum">     335 </span>            : template &lt;class B&gt;
+<span class="lineNum">     336 </span>            : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator + (number&lt;B, et_off&gt;&amp;&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     337 </span>            : {
+<span class="lineNum">     338 </span>            :    using default_ops::eval_add;
+<span class="lineNum">     339 </span><span class="lineCov">     550302 :    eval_add(a.backend(), b.backend());</span>
+<span class="lineNum">     340 </span><span class="lineCov">     275151 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     341 </span>            : }
+<span class="lineNum">     342 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     343 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;, number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     344 </span>            :    operator + (number&lt;B, et_off&gt;&amp;&amp; a, const V&amp; b)
+<span class="lineNum">     345 </span>            : {
+<span class="lineNum">     346 </span>            :    using default_ops::eval_add;
+<span class="lineNum">     347 </span><span class="lineCov">     275153 :    eval_add(a.backend(), number&lt;B, et_off&gt;::canonical_value(b));</span>
+<span class="lineNum">     348 </span><span class="lineCov">     165103 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     349 </span>            : }
+<span class="lineNum">     350 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     351 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;, number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     352 </span>            :    operator + (const V&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     353 </span>            : {
+<span class="lineNum">     354 </span>            :    using default_ops::eval_add;
+<span class="lineNum">     355 </span><span class="lineCov">      67842 :    eval_add(b.backend(), number&lt;B, et_off&gt;::canonical_value(a));</span>
+<span class="lineNum">     356 </span><span class="lineCov">      22614 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(b);</span>
+<span class="lineNum">     357 </span>            : }
+<span class="lineNum">     358 </span>            : //
+<span class="lineNum">     359 </span>            : // Subtraction:
+<span class="lineNum">     360 </span>            : //
+<span class="lineNum">     361 </span>            : template &lt;class B&gt;
+<span class="lineNum">     362 </span>            : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator - (number&lt;B, et_off&gt;&amp;&amp; a, const number&lt;B, et_off&gt;&amp; b)
+<span class="lineNum">     363 </span>            : {
+<span class="lineNum">     364 </span>            :    using default_ops::eval_subtract;
+<span class="lineNum">     365 </span><span class="lineCov">     106668 :    eval_subtract(a.backend(), b.backend());</span>
+<span class="lineNum">     366 </span><span class="lineCov">      53334 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     367 </span>            : }
+<span class="lineNum">     368 </span>            : template &lt;class B&gt;
+<span class="lineNum">     369 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_signed_number&lt;B&gt;, number&lt;B, et_off&gt; &gt;::type operator - (const number&lt;B, et_off&gt;&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     370 </span>            : {
+<span class="lineNum">     371 </span>            :    using default_ops::eval_subtract;
+<span class="lineNum">     372 </span>            :    eval_subtract(b.backend(), a.backend());
+<span class="lineNum">     373 </span>            :    b.backend().negate();
+<span class="lineNum">     374 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(b);
+<span class="lineNum">     375 </span>            : }
+<span class="lineNum">     376 </span>            : template &lt;class B&gt;
+<span class="lineNum">     377 </span>            : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator - (number&lt;B, et_off&gt;&amp;&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     378 </span>            : {
+<span class="lineNum">     379 </span>            :    using default_ops::eval_subtract;
+<span class="lineNum">     380 </span><span class="lineCov">      26708 :    eval_subtract(a.backend(), b.backend());</span>
+<span class="lineNum">     381 </span><span class="lineCov">      13354 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     382 </span>            : }
+<span class="lineNum">     383 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     384 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;, number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     385 </span>            :    operator - (number&lt;B, et_off&gt;&amp;&amp; a, const V&amp; b)
+<span class="lineNum">     386 </span>            : {
+<span class="lineNum">     387 </span>            :    using default_ops::eval_subtract;
+<span class="lineNum">     388 </span><span class="lineCov">      12188 :    eval_subtract(a.backend(), number&lt;B, et_off&gt;::canonical_value(b));</span>
+<span class="lineNum">     389 </span><span class="lineCov">      12188 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     390 </span>            : }
+<span class="lineNum">     391 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     392 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;(is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; is_signed_number&lt;B&gt;::value), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     393 </span>            :    operator - (const V&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     394 </span>            : {
+<span class="lineNum">     395 </span>            :    using default_ops::eval_subtract;
+<span class="lineNum">     396 </span>            :    eval_subtract(b.backend(), number&lt;B, et_off&gt;::canonical_value(a));
+<span class="lineNum">     397 </span>            :    b.backend().negate();
+<span class="lineNum">     398 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(b);
+<span class="lineNum">     399 </span>            : }
+<span class="lineNum">     400 </span>            : //
+<span class="lineNum">     401 </span>            : // Multiply:
+<span class="lineNum">     402 </span>            : //
+<span class="lineNum">     403 </span>            : template &lt;class B&gt;
+<span class="lineNum">     404 </span>            : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator * (number&lt;B, et_off&gt;&amp;&amp; a, const number&lt;B, et_off&gt;&amp; b)
+<span class="lineNum">     405 </span>            : {
+<span class="lineNum">     406 </span>            :    using default_ops::eval_multiply;
+<span class="lineNum">     407 </span><span class="lineCov">     500494 :    eval_multiply(a.backend(), b.backend());</span>
+<span class="lineNum">     408 </span><span class="lineCov">     250247 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     409 </span>            : }
+<span class="lineNum">     410 </span>            : template &lt;class B&gt;
+<span class="lineNum">     411 </span>            : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator * (const number&lt;B, et_off&gt;&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     412 </span>            : {
+<span class="lineNum">     413 </span>            :    using default_ops::eval_multiply;
+<span class="lineNum">     414 </span><span class="lineCov">      27160 :    eval_multiply(b.backend(), a.backend());</span>
+<span class="lineNum">     415 </span><span class="lineCov">      13580 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(b);</span>
+<span class="lineNum">     416 </span>            : }
+<span class="lineNum">     417 </span>            : template &lt;class B&gt;
+<span class="lineNum">     418 </span>            : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator * (number&lt;B, et_off&gt;&amp;&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     419 </span>            : {
+<span class="lineNum">     420 </span>            :    using default_ops::eval_multiply;
+<span class="lineNum">     421 </span><span class="lineCov">      40030 :    eval_multiply(a.backend(), b.backend());</span>
+<span class="lineNum">     422 </span><span class="lineCov">      20015 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     423 </span>            : }
+<span class="lineNum">     424 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     425 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;, number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     426 </span>            :    operator * (number&lt;B, et_off&gt;&amp;&amp; a, const V&amp; b)
+<span class="lineNum">     427 </span>            : {
+<span class="lineNum">     428 </span>            :    using default_ops::eval_multiply;
+<span class="lineNum">     429 </span><span class="lineCov">      47414 :    eval_multiply(a.backend(), number&lt;B, et_off&gt;::canonical_value(b));</span>
+<span class="lineNum">     430 </span><span class="lineCov">      22745 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     431 </span>            : }
+<span class="lineNum">     432 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     433 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;, number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     434 </span>            :    operator * (const V&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     435 </span>            : {
+<span class="lineNum">     436 </span>            :    using default_ops::eval_multiply;
+<span class="lineNum">     437 </span><span class="lineCov">        100 :    eval_multiply(b.backend(), number&lt;B, et_off&gt;::canonical_value(a));</span>
+<span class="lineNum">     438 </span><span class="lineCov">         50 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(b);</span>
+<span class="lineNum">     439 </span>            : }
+<span class="lineNum">     440 </span>            : //
+<span class="lineNum">     441 </span>            : // divide:
+<span class="lineNum">     442 </span>            : //
+<span class="lineNum">     443 </span>            : template &lt;class B&gt;
+<span class="lineNum">     444 </span>            : BOOST_MP_FORCEINLINE number&lt;B, et_off&gt; operator / (number&lt;B, et_off&gt;&amp;&amp; a, const number&lt;B, et_off&gt;&amp; b)
+<span class="lineNum">     445 </span>            : {
+<span class="lineNum">     446 </span>            :    using default_ops::eval_divide;
+<span class="lineNum">     447 </span><span class="lineCov">     148025 :    eval_divide(a.backend(), b.backend());</span>
+<span class="lineNum">     448 </span><span class="lineCov">     148025 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     449 </span>            : }
+<span class="lineNum">     450 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     451 </span>            : BOOST_MP_FORCEINLINE typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;, number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     452 </span>            :    operator / (number&lt;B, et_off&gt;&amp;&amp; a, const V&amp; b)
+<span class="lineNum">     453 </span>            : {
+<span class="lineNum">     454 </span>            :    using default_ops::eval_divide;
+<span class="lineNum">     455 </span><span class="lineCov">     536293 :    eval_divide(a.backend(), number&lt;B, et_off&gt;::canonical_value(b));</span>
+<span class="lineNum">     456 </span><span class="lineCov">     286046 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     457 </span>            : }
+<span class="lineNum">     458 </span>            : //
+<span class="lineNum">     459 </span>            : // modulus:
+<span class="lineNum">     460 </span>            : //
+<span class="lineNum">     461 </span>            : template &lt;class B&gt;
+<span class="lineNum">     462 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator % (number&lt;B, et_off&gt;&amp;&amp; a, const number&lt;B, et_off&gt;&amp; b)
+<span class="lineNum">     463 </span>            : {
+<span class="lineNum">     464 </span>            :    using default_ops::eval_modulus;
+<span class="lineNum">     465 </span><span class="lineCov">       1654 :    eval_modulus(a.backend(), b.backend());</span>
+<span class="lineNum">     466 </span><span class="lineCov">       1654 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     467 </span>            : }
+<span class="lineNum">     468 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     469 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     470 </span>            :    operator % (number&lt;B, et_off&gt;&amp;&amp; a, const V&amp; b)
+<span class="lineNum">     471 </span>            : {
+<span class="lineNum">     472 </span>            :    using default_ops::eval_modulus;
+<span class="lineNum">     473 </span><span class="lineCov">        669 :    eval_modulus(a.backend(), number&lt;B, et_off&gt;::canonical_value(b));</span>
+<span class="lineNum">     474 </span><span class="lineCov">        669 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     475 </span>            : }
+<span class="lineNum">     476 </span>            : //
+<span class="lineNum">     477 </span>            : // Bitwise or:
+<span class="lineNum">     478 </span>            : //
+<span class="lineNum">     479 </span>            : template &lt;class B&gt;
+<span class="lineNum">     480 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator | (number&lt;B, et_off&gt;&amp;&amp; a, const number&lt;B, et_off&gt;&amp; b)
+<span class="lineNum">     481 </span>            : {
+<span class="lineNum">     482 </span>            :    using default_ops::eval_bitwise_or;
+<span class="lineNum">     483 </span>            :    eval_bitwise_or(a.backend(), b.backend());
+<span class="lineNum">     484 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);
+<span class="lineNum">     485 </span>            : }
+<span class="lineNum">     486 </span>            : template &lt;class B&gt;
+<span class="lineNum">     487 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator | (const number&lt;B, et_off&gt;&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     488 </span>            : {
+<span class="lineNum">     489 </span>            :    using default_ops::eval_bitwise_or;
+<span class="lineNum">     490 </span>            :    eval_bitwise_or(b.backend(), a.backend());
+<span class="lineNum">     491 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(b);
+<span class="lineNum">     492 </span>            : }
+<span class="lineNum">     493 </span>            : template &lt;class B&gt;
+<span class="lineNum">     494 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator | (number&lt;B, et_off&gt;&amp;&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     495 </span>            : {
+<span class="lineNum">     496 </span>            :    using default_ops::eval_bitwise_or;
+<span class="lineNum">     497 </span>            :    eval_bitwise_or(a.backend(), b.backend());
+<span class="lineNum">     498 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);
+<span class="lineNum">     499 </span>            : }
+<span class="lineNum">     500 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     501 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     502 </span>            :    operator | (number&lt;B, et_off&gt;&amp;&amp; a, const V&amp; b)
+<span class="lineNum">     503 </span>            : {
+<span class="lineNum">     504 </span>            :    using default_ops::eval_bitwise_or;
+<span class="lineNum">     505 </span><span class="lineCov">  445666765 :    eval_bitwise_or(a.backend(), number&lt;B, et_off&gt;::canonical_value(b));</span>
+<span class="lineNum">     506 </span><span class="lineCov">  148597653 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     507 </span>            : }
+<span class="lineNum">     508 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     509 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     510 </span>            :    operator | (const V&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     511 </span>            : {
+<span class="lineNum">     512 </span>            :    using default_ops::eval_bitwise_or;
+<span class="lineNum">     513 </span>            :    eval_bitwise_or(b.backend(), number&lt;B, et_off&gt;::canonical_value(a));
+<span class="lineNum">     514 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(b);
+<span class="lineNum">     515 </span>            : }
+<span class="lineNum">     516 </span>            : //
+<span class="lineNum">     517 </span>            : // Bitwise xor:
+<span class="lineNum">     518 </span>            : //
+<span class="lineNum">     519 </span>            : template &lt;class B&gt;
+<span class="lineNum">     520 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator ^ (number&lt;B, et_off&gt;&amp;&amp; a, const number&lt;B, et_off&gt;&amp; b)
+<span class="lineNum">     521 </span>            : {
+<span class="lineNum">     522 </span>            :    using default_ops::eval_bitwise_xor;
+<span class="lineNum">     523 </span>            :    eval_bitwise_xor(a.backend(), b.backend());
+<span class="lineNum">     524 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);
+<span class="lineNum">     525 </span>            : }
+<span class="lineNum">     526 </span>            : template &lt;class B&gt;
+<span class="lineNum">     527 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator ^ (const number&lt;B, et_off&gt;&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     528 </span>            : {
+<span class="lineNum">     529 </span>            :    using default_ops::eval_bitwise_xor;
+<span class="lineNum">     530 </span>            :    eval_bitwise_xor(b.backend(), a.backend());
+<span class="lineNum">     531 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(b);
+<span class="lineNum">     532 </span>            : }
+<span class="lineNum">     533 </span>            : template &lt;class B&gt;
+<span class="lineNum">     534 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator ^ (number&lt;B, et_off&gt;&amp;&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     535 </span>            : {
+<span class="lineNum">     536 </span>            :    using default_ops::eval_bitwise_xor;
+<span class="lineNum">     537 </span>            :    eval_bitwise_xor(a.backend(), b.backend());
+<span class="lineNum">     538 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);
+<span class="lineNum">     539 </span>            : }
+<span class="lineNum">     540 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     541 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     542 </span>            :    operator ^ (number&lt;B, et_off&gt;&amp;&amp; a, const V&amp; b)
+<span class="lineNum">     543 </span>            : {
+<span class="lineNum">     544 </span>            :    using default_ops::eval_bitwise_xor;
+<span class="lineNum">     545 </span>            :    eval_bitwise_xor(a.backend(), number&lt;B, et_off&gt;::canonical_value(b));
+<span class="lineNum">     546 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);
+<span class="lineNum">     547 </span>            : }
+<span class="lineNum">     548 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     549 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     550 </span>            :    operator ^ (const V&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     551 </span>            : {
+<span class="lineNum">     552 </span>            :    using default_ops::eval_bitwise_xor;
+<span class="lineNum">     553 </span>            :    eval_bitwise_xor(b.backend(), number&lt;B, et_off&gt;::canonical_value(a));
+<span class="lineNum">     554 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(b);
+<span class="lineNum">     555 </span>            : }
+<span class="lineNum">     556 </span>            : //
+<span class="lineNum">     557 </span>            : // Bitwise and:
+<span class="lineNum">     558 </span>            : //
+<span class="lineNum">     559 </span>            : template &lt;class B&gt;
+<span class="lineNum">     560 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator &amp; (number&lt;B, et_off&gt;&amp;&amp; a, const number&lt;B, et_off&gt;&amp; b)
+<span class="lineNum">     561 </span>            : {
+<span class="lineNum">     562 </span>            :    using default_ops::eval_bitwise_and;
+<span class="lineNum">     563 </span>            :    eval_bitwise_and(a.backend(), b.backend());
+<span class="lineNum">     564 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);
+<span class="lineNum">     565 </span>            : }
+<span class="lineNum">     566 </span>            : template &lt;class B&gt;
+<span class="lineNum">     567 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator &amp; (const number&lt;B, et_off&gt;&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     568 </span>            : {
+<span class="lineNum">     569 </span>            :    using default_ops::eval_bitwise_and;
+<span class="lineNum">     570 </span><span class="lineCov">   51693668 :    eval_bitwise_and(b.backend(), a.backend());</span>
+<span class="lineNum">     571 </span><span class="lineCov">   25846836 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(b);</span>
+<span class="lineNum">     572 </span>            : }
+<span class="lineNum">     573 </span>            : template &lt;class B&gt;
+<span class="lineNum">     574 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer, number&lt;B, et_off&gt; &gt;::type operator &amp; (number&lt;B, et_off&gt;&amp;&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     575 </span>            : {
+<span class="lineNum">     576 </span>            :    using default_ops::eval_bitwise_and;
+<span class="lineNum">     577 </span>            :    eval_bitwise_and(a.backend(), b.backend());
+<span class="lineNum">     578 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);
+<span class="lineNum">     579 </span>            : }
+<span class="lineNum">     580 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     581 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     582 </span>            :    operator &amp; (number&lt;B, et_off&gt;&amp;&amp; a, const V&amp; b)
+<span class="lineNum">     583 </span>            : {
+<span class="lineNum">     584 </span>            :    using default_ops::eval_bitwise_and;
+<span class="lineNum">     585 </span><span class="lineCov">         50 :    eval_bitwise_and(a.backend(), number&lt;B, et_off&gt;::canonical_value(b));</span>
+<span class="lineNum">     586 </span><span class="lineCov">         50 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     587 </span>            : }
+<span class="lineNum">     588 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     589 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_off&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     590 </span>            :    operator &amp; (const V&amp; a, number&lt;B, et_off&gt;&amp;&amp; b)
+<span class="lineNum">     591 </span>            : {
+<span class="lineNum">     592 </span>            :    using default_ops::eval_bitwise_and;
+<span class="lineNum">     593 </span>            :    eval_bitwise_and(b.backend(), number&lt;B, et_off&gt;::canonical_value(a));
+<span class="lineNum">     594 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(b);
+<span class="lineNum">     595 </span>            : }
+<span class="lineNum">     596 </span>            : //
+<span class="lineNum">     597 </span>            : // shifts:
+<span class="lineNum">     598 </span>            : //
+<span class="lineNum">     599 </span>            : template &lt;class B, class I&gt;
+<span class="lineNum">     600 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_integral&lt;I&gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     601 </span>            :    operator &lt;&lt; (number&lt;B, et_off&gt;&amp;&amp; a, const I&amp; b)
+<span class="lineNum">     602 </span>            : {
+<span class="lineNum">     603 </span>            :    using default_ops::eval_left_shift;
+<span class="lineNum">     604 </span><span class="lineCov">       5745 :    eval_left_shift(a.backend(), b);</span>
+<span class="lineNum">     605 </span><span class="lineCov">       5745 :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);</span>
+<span class="lineNum">     606 </span>            : }
+<span class="lineNum">     607 </span>            : template &lt;class B, class I&gt;
+<span class="lineNum">     608 </span>            : BOOST_MP_FORCEINLINE typename enable_if_c&lt;is_integral&lt;I&gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), number&lt;B, et_off&gt; &gt;::type
+<span class="lineNum">     609 </span>            :    operator &gt;&gt; (number&lt;B, et_off&gt;&amp;&amp; a, const I&amp; b)
+<span class="lineNum">     610 </span>            : {
+<span class="lineNum">     611 </span>            :    using default_ops::eval_right_shift;
+<span class="lineNum">     612 </span>            :    eval_right_shift(a.backend(), b);
+<span class="lineNum">     613 </span>            :    return static_cast&lt;number&lt;B, et_off&gt;&amp;&amp;&gt;(a);
+<span class="lineNum">     614 </span>            : }
+<span class="lineNum">     615 </span>            : 
+<span class="lineNum">     616 </span>            : #endif
+<span class="lineNum">     617 </span>            : 
+<span class="lineNum">     618 </span>            : }} // namespaces
+<span class="lineNum">     619 </span>            : 
+<span class="lineNum">     620 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">     621 </span>            : #pragma warning(pop)
+<span class="lineNum">     622 </span>            : #endif
+<span class="lineNum">     623 </span>            : 
+<span class="lineNum">     624 </span>            : #endif // BOOST_MP_NO_ET_OPS_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

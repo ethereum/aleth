@@ -1,0 +1,516 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/Hash.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - Hash.cpp<span style="font-size: 80%;"> (source / <a href="Hash.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">205</td>
+            <td class="headerCovTableEntry">213</td>
+            <td class="headerCovTableEntryHi">96.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Hash.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;Hash.h&quot;
+<span class="lineNum">      23 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      24 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      25 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      26 </span>            : #include &quot;picosha2.h&quot;
+<span class="lineNum">      27 </span>            : using namespace std;
+<span class="lineNum">      28 </span>            : using namespace dev;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace dev
+<span class="lineNum">      31 </span>            : {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span><span class="lineCov">         95 : h256 sha256(bytesConstRef _input)</span>
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span><span class="lineCov">         95 :         h256 ret;</span>
+<span class="lineNum">      36 </span><span class="lineCov">        285 :         picosha2::hash256(_input.begin(), _input.end(), ret.data(), ret.data() + 32);</span>
+<span class="lineNum">      37 </span><span class="lineCov">         95 :         return ret;</span>
+<span class="lineNum">      38 </span>            : }
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : namespace rmd160
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : /********************************************************************\
+<span class="lineNum">      44 </span>            :  *
+<span class="lineNum">      45 </span>            :  *      FILE:     rmd160.h
+<span class="lineNum">      46 </span>            :  *      FILE:     rmd160.c
+<span class="lineNum">      47 </span>            :  *
+<span class="lineNum">      48 </span>            :  *      CONTENTS: Header file for a sample C-implementation of the
+<span class="lineNum">      49 </span>            :  *                RIPEMD-160 hash-function.
+<span class="lineNum">      50 </span>            :  *      TARGET:   any computer with an ANSI C compiler
+<span class="lineNum">      51 </span>            :  *
+<span class="lineNum">      52 </span>            :  *      AUTHOR:   Antoon Bosselaers, ESAT-COSIC
+<span class="lineNum">      53 </span>            :  *      DATE:     1 March 1996
+<span class="lineNum">      54 </span>            :  *      VERSION:  1.0
+<span class="lineNum">      55 </span>            :  *
+<span class="lineNum">      56 </span>            :  *      Copyright (c) Katholieke Universiteit Leuven
+<span class="lineNum">      57 </span>            :  *      1996, All Rights Reserved
+<span class="lineNum">      58 </span>            :  *
+<span class="lineNum">      59 </span>            :  \********************************************************************/
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : // Adapted into &quot;header-only&quot; format by Gav Wood.
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : /* macro definitions */
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : #define RMDsize 160
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : /* collect four bytes into one word: */
+<span class="lineNum">      68 </span>            : #define BYTES_TO_DWORD(strptr)                    \
+<span class="lineNum">      69 </span>            : (((uint32_t) *((strptr)+3) &lt;&lt; 24) | \
+<span class="lineNum">      70 </span>            : ((uint32_t) *((strptr)+2) &lt;&lt; 16) | \
+<span class="lineNum">      71 </span>            : ((uint32_t) *((strptr)+1) &lt;&lt;  8) | \
+<span class="lineNum">      72 </span>            : ((uint32_t) *(strptr)))
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : /* ROL(x, n) cyclically rotates x over n bits to the left */
+<span class="lineNum">      75 </span>            : /* x must be of an unsigned 32 bits type and 0 &lt;= n &lt; 32. */
+<span class="lineNum">      76 </span>            : #define ROL(x, n)        (((x) &lt;&lt; (n)) | ((x) &gt;&gt; (32-(n))))
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : /* the five basic functions F(), G() and H() */
+<span class="lineNum">      79 </span>            : #define F(x, y, z)        ((x) ^ (y) ^ (z))
+<span class="lineNum">      80 </span>            : #define G(x, y, z)        (((x) &amp; (y)) | (~(x) &amp; (z)))
+<span class="lineNum">      81 </span>            : #define H(x, y, z)        (((x) | ~(y)) ^ (z))
+<span class="lineNum">      82 </span>            : #define I(x, y, z)        (((x) &amp; (z)) | ((y) &amp; ~(z)))
+<span class="lineNum">      83 </span>            : #define J(x, y, z)        ((x) ^ ((y) | ~(z)))
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : /* the ten basic operations FF() through III() */
+<span class="lineNum">      86 </span>            : #define FF(a, b, c, d, e, x, s)        {\
+<span class="lineNum">      87 </span>            : (a) += F((b), (c), (d)) + (x);\
+<span class="lineNum">      88 </span>            : (a) = ROL((a), (s)) + (e);\
+<span class="lineNum">      89 </span>            : (c) = ROL((c), 10);\
+<span class="lineNum">      90 </span>            : }
+<span class="lineNum">      91 </span>            : #define GG(a, b, c, d, e, x, s)        {\
+<span class="lineNum">      92 </span>            : (a) += G((b), (c), (d)) + (x) + 0x5a827999UL;\
+<span class="lineNum">      93 </span>            : (a) = ROL((a), (s)) + (e);\
+<span class="lineNum">      94 </span>            : (c) = ROL((c), 10);\
+<span class="lineNum">      95 </span>            : }
+<span class="lineNum">      96 </span>            : #define HH(a, b, c, d, e, x, s)        {\
+<span class="lineNum">      97 </span>            : (a) += H((b), (c), (d)) + (x) + 0x6ed9eba1UL;\
+<span class="lineNum">      98 </span>            : (a) = ROL((a), (s)) + (e);\
+<span class="lineNum">      99 </span>            : (c) = ROL((c), 10);\
+<span class="lineNum">     100 </span>            : }
+<span class="lineNum">     101 </span>            : #define II(a, b, c, d, e, x, s)        {\
+<span class="lineNum">     102 </span>            : (a) += I((b), (c), (d)) + (x) + 0x8f1bbcdcUL;\
+<span class="lineNum">     103 </span>            : (a) = ROL((a), (s)) + (e);\
+<span class="lineNum">     104 </span>            : (c) = ROL((c), 10);\
+<span class="lineNum">     105 </span>            : }
+<span class="lineNum">     106 </span>            : #define JJ(a, b, c, d, e, x, s)        {\
+<span class="lineNum">     107 </span>            : (a) += J((b), (c), (d)) + (x) + 0xa953fd4eUL;\
+<span class="lineNum">     108 </span>            : (a) = ROL((a), (s)) + (e);\
+<span class="lineNum">     109 </span>            : (c) = ROL((c), 10);\
+<span class="lineNum">     110 </span>            : }
+<span class="lineNum">     111 </span>            : #define FFF(a, b, c, d, e, x, s)        {\
+<span class="lineNum">     112 </span>            : (a) += F((b), (c), (d)) + (x);\
+<span class="lineNum">     113 </span>            : (a) = ROL((a), (s)) + (e);\
+<span class="lineNum">     114 </span>            : (c) = ROL((c), 10);\
+<span class="lineNum">     115 </span>            : }
+<span class="lineNum">     116 </span>            : #define GGG(a, b, c, d, e, x, s)        {\
+<span class="lineNum">     117 </span>            : (a) += G((b), (c), (d)) + (x) + 0x7a6d76e9UL;\
+<span class="lineNum">     118 </span>            : (a) = ROL((a), (s)) + (e);\
+<span class="lineNum">     119 </span>            : (c) = ROL((c), 10);\
+<span class="lineNum">     120 </span>            : }
+<span class="lineNum">     121 </span>            : #define HHH(a, b, c, d, e, x, s)        {\
+<span class="lineNum">     122 </span>            : (a) += H((b), (c), (d)) + (x) + 0x6d703ef3UL;\
+<span class="lineNum">     123 </span>            : (a) = ROL((a), (s)) + (e);\
+<span class="lineNum">     124 </span>            : (c) = ROL((c), 10);\
+<span class="lineNum">     125 </span>            : }
+<span class="lineNum">     126 </span>            : #define III(a, b, c, d, e, x, s)        {\
+<span class="lineNum">     127 </span>            : (a) += I((b), (c), (d)) + (x) + 0x5c4dd124UL;\
+<span class="lineNum">     128 </span>            : (a) = ROL((a), (s)) + (e);\
+<span class="lineNum">     129 </span>            : (c) = ROL((c), 10);\
+<span class="lineNum">     130 </span>            : }
+<span class="lineNum">     131 </span>            : #define JJJ(a, b, c, d, e, x, s)        {\
+<span class="lineNum">     132 </span>            : (a) += J((b), (c), (d)) + (x) + 0x50a28be6UL;\
+<span class="lineNum">     133 </span>            : (a) = ROL((a), (s)) + (e);\
+<span class="lineNum">     134 </span>            : (c) = ROL((c), 10);\
+<a name="135"><span class="lineNum">     135 </span>            : }</a>
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 : void MDinit(uint32_t *MDbuf)</span>
+<span class="lineNum">     138 </span>            : {
+<span class="lineNum">     139 </span><span class="lineCov">         65 :         MDbuf[0] = 0x67452301UL;</span>
+<span class="lineNum">     140 </span><span class="lineCov">         65 :         MDbuf[1] = 0xefcdab89UL;</span>
+<span class="lineNum">     141 </span><span class="lineCov">         65 :         MDbuf[2] = 0x98badcfeUL;</span>
+<span class="lineNum">     142 </span><span class="lineCov">         65 :         MDbuf[3] = 0x10325476UL;</span>
+<span class="lineNum">     143 </span><span class="lineCov">         65 :         MDbuf[4] = 0xc3d2e1f0UL;</span>
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :         return;</span>
+<span class="lineNum">     146 </span>            : }
+<span class="lineNum">     147 </span>            : 
+<a name="148"><span class="lineNum">     148 </span>            : /********************************************************************/</a>
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span><span class="lineCov">         65 : void MDcompress(uint32_t *MDbuf, uint32_t *X)</span>
+<span class="lineNum">     151 </span>            : {
+<span class="lineNum">     152 </span><span class="lineCov">         65 :         uint32_t aa = MDbuf[0],  bb = MDbuf[1],  cc = MDbuf[2],</span>
+<span class="lineNum">     153 </span><span class="lineCov">         65 :         dd = MDbuf[3],  ee = MDbuf[4];</span>
+<span class="lineNum">     154 </span><span class="lineCov">         65 :         uint32_t aaa = MDbuf[0], bbb = MDbuf[1], ccc = MDbuf[2],</span>
+<span class="lineNum">     155 </span><span class="lineCov">         65 :         ddd = MDbuf[3], eee = MDbuf[4];</span>
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            :         /* round 1 */
+<span class="lineNum">     158 </span><span class="lineCov">         65 :         FF(aa, bb, cc, dd, ee, X[ 0], 11);</span>
+<span class="lineNum">     159 </span><span class="lineCov">         65 :         FF(ee, aa, bb, cc, dd, X[ 1], 14);</span>
+<span class="lineNum">     160 </span><span class="lineCov">         65 :         FF(dd, ee, aa, bb, cc, X[ 2], 15);</span>
+<span class="lineNum">     161 </span><span class="lineCov">         65 :         FF(cc, dd, ee, aa, bb, X[ 3], 12);</span>
+<span class="lineNum">     162 </span><span class="lineCov">         65 :         FF(bb, cc, dd, ee, aa, X[ 4],  5);</span>
+<span class="lineNum">     163 </span><span class="lineCov">         65 :         FF(aa, bb, cc, dd, ee, X[ 5],  8);</span>
+<span class="lineNum">     164 </span><span class="lineCov">         65 :         FF(ee, aa, bb, cc, dd, X[ 6],  7);</span>
+<span class="lineNum">     165 </span><span class="lineCov">         65 :         FF(dd, ee, aa, bb, cc, X[ 7],  9);</span>
+<span class="lineNum">     166 </span><span class="lineCov">         65 :         FF(cc, dd, ee, aa, bb, X[ 8], 11);</span>
+<span class="lineNum">     167 </span><span class="lineCov">         65 :         FF(bb, cc, dd, ee, aa, X[ 9], 13);</span>
+<span class="lineNum">     168 </span><span class="lineCov">         65 :         FF(aa, bb, cc, dd, ee, X[10], 14);</span>
+<span class="lineNum">     169 </span><span class="lineCov">         65 :         FF(ee, aa, bb, cc, dd, X[11], 15);</span>
+<span class="lineNum">     170 </span><span class="lineCov">         65 :         FF(dd, ee, aa, bb, cc, X[12],  6);</span>
+<span class="lineNum">     171 </span><span class="lineCov">         65 :         FF(cc, dd, ee, aa, bb, X[13],  7);</span>
+<span class="lineNum">     172 </span><span class="lineCov">         65 :         FF(bb, cc, dd, ee, aa, X[14],  9);</span>
+<span class="lineNum">     173 </span><span class="lineCov">         65 :         FF(aa, bb, cc, dd, ee, X[15],  8);</span>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :         /* round 2 */
+<span class="lineNum">     176 </span><span class="lineCov">         65 :         GG(ee, aa, bb, cc, dd, X[ 7],  7);</span>
+<span class="lineNum">     177 </span><span class="lineCov">         65 :         GG(dd, ee, aa, bb, cc, X[ 4],  6);</span>
+<span class="lineNum">     178 </span><span class="lineCov">         65 :         GG(cc, dd, ee, aa, bb, X[13],  8);</span>
+<span class="lineNum">     179 </span><span class="lineCov">         65 :         GG(bb, cc, dd, ee, aa, X[ 1], 13);</span>
+<span class="lineNum">     180 </span><span class="lineCov">         65 :         GG(aa, bb, cc, dd, ee, X[10], 11);</span>
+<span class="lineNum">     181 </span><span class="lineCov">         65 :         GG(ee, aa, bb, cc, dd, X[ 6],  9);</span>
+<span class="lineNum">     182 </span><span class="lineCov">         65 :         GG(dd, ee, aa, bb, cc, X[15],  7);</span>
+<span class="lineNum">     183 </span><span class="lineCov">         65 :         GG(cc, dd, ee, aa, bb, X[ 3], 15);</span>
+<span class="lineNum">     184 </span><span class="lineCov">         65 :         GG(bb, cc, dd, ee, aa, X[12],  7);</span>
+<span class="lineNum">     185 </span><span class="lineCov">         65 :         GG(aa, bb, cc, dd, ee, X[ 0], 12);</span>
+<span class="lineNum">     186 </span><span class="lineCov">         65 :         GG(ee, aa, bb, cc, dd, X[ 9], 15);</span>
+<span class="lineNum">     187 </span><span class="lineCov">         65 :         GG(dd, ee, aa, bb, cc, X[ 5],  9);</span>
+<span class="lineNum">     188 </span><span class="lineCov">         65 :         GG(cc, dd, ee, aa, bb, X[ 2], 11);</span>
+<span class="lineNum">     189 </span><span class="lineCov">         65 :         GG(bb, cc, dd, ee, aa, X[14],  7);</span>
+<span class="lineNum">     190 </span><span class="lineCov">         65 :         GG(aa, bb, cc, dd, ee, X[11], 13);</span>
+<span class="lineNum">     191 </span><span class="lineCov">         65 :         GG(ee, aa, bb, cc, dd, X[ 8], 12);</span>
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            :         /* round 3 */
+<span class="lineNum">     194 </span><span class="lineCov">         65 :         HH(dd, ee, aa, bb, cc, X[ 3], 11);</span>
+<span class="lineNum">     195 </span><span class="lineCov">         65 :         HH(cc, dd, ee, aa, bb, X[10], 13);</span>
+<span class="lineNum">     196 </span><span class="lineCov">         65 :         HH(bb, cc, dd, ee, aa, X[14],  6);</span>
+<span class="lineNum">     197 </span><span class="lineCov">         65 :         HH(aa, bb, cc, dd, ee, X[ 4],  7);</span>
+<span class="lineNum">     198 </span><span class="lineCov">         65 :         HH(ee, aa, bb, cc, dd, X[ 9], 14);</span>
+<span class="lineNum">     199 </span><span class="lineCov">         65 :         HH(dd, ee, aa, bb, cc, X[15],  9);</span>
+<span class="lineNum">     200 </span><span class="lineCov">         65 :         HH(cc, dd, ee, aa, bb, X[ 8], 13);</span>
+<span class="lineNum">     201 </span><span class="lineCov">         65 :         HH(bb, cc, dd, ee, aa, X[ 1], 15);</span>
+<span class="lineNum">     202 </span><span class="lineCov">         65 :         HH(aa, bb, cc, dd, ee, X[ 2], 14);</span>
+<span class="lineNum">     203 </span><span class="lineCov">         65 :         HH(ee, aa, bb, cc, dd, X[ 7],  8);</span>
+<span class="lineNum">     204 </span><span class="lineCov">         65 :         HH(dd, ee, aa, bb, cc, X[ 0], 13);</span>
+<span class="lineNum">     205 </span><span class="lineCov">         65 :         HH(cc, dd, ee, aa, bb, X[ 6],  6);</span>
+<span class="lineNum">     206 </span><span class="lineCov">         65 :         HH(bb, cc, dd, ee, aa, X[13],  5);</span>
+<span class="lineNum">     207 </span><span class="lineCov">         65 :         HH(aa, bb, cc, dd, ee, X[11], 12);</span>
+<span class="lineNum">     208 </span><span class="lineCov">         65 :         HH(ee, aa, bb, cc, dd, X[ 5],  7);</span>
+<span class="lineNum">     209 </span><span class="lineCov">         65 :         HH(dd, ee, aa, bb, cc, X[12],  5);</span>
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :         /* round 4 */
+<span class="lineNum">     212 </span><span class="lineCov">         65 :         II(cc, dd, ee, aa, bb, X[ 1], 11);</span>
+<span class="lineNum">     213 </span><span class="lineCov">         65 :         II(bb, cc, dd, ee, aa, X[ 9], 12);</span>
+<span class="lineNum">     214 </span><span class="lineCov">         65 :         II(aa, bb, cc, dd, ee, X[11], 14);</span>
+<span class="lineNum">     215 </span><span class="lineCov">         65 :         II(ee, aa, bb, cc, dd, X[10], 15);</span>
+<span class="lineNum">     216 </span><span class="lineCov">         65 :         II(dd, ee, aa, bb, cc, X[ 0], 14);</span>
+<span class="lineNum">     217 </span><span class="lineCov">         65 :         II(cc, dd, ee, aa, bb, X[ 8], 15);</span>
+<span class="lineNum">     218 </span><span class="lineCov">         65 :         II(bb, cc, dd, ee, aa, X[12],  9);</span>
+<span class="lineNum">     219 </span><span class="lineCov">         65 :         II(aa, bb, cc, dd, ee, X[ 4],  8);</span>
+<span class="lineNum">     220 </span><span class="lineCov">         65 :         II(ee, aa, bb, cc, dd, X[13],  9);</span>
+<span class="lineNum">     221 </span><span class="lineCov">         65 :         II(dd, ee, aa, bb, cc, X[ 3], 14);</span>
+<span class="lineNum">     222 </span><span class="lineCov">         65 :         II(cc, dd, ee, aa, bb, X[ 7],  5);</span>
+<span class="lineNum">     223 </span><span class="lineCov">         65 :         II(bb, cc, dd, ee, aa, X[15],  6);</span>
+<span class="lineNum">     224 </span><span class="lineCov">         65 :         II(aa, bb, cc, dd, ee, X[14],  8);</span>
+<span class="lineNum">     225 </span><span class="lineCov">         65 :         II(ee, aa, bb, cc, dd, X[ 5],  6);</span>
+<span class="lineNum">     226 </span><span class="lineCov">         65 :         II(dd, ee, aa, bb, cc, X[ 6],  5);</span>
+<span class="lineNum">     227 </span><span class="lineCov">         65 :         II(cc, dd, ee, aa, bb, X[ 2], 12);</span>
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            :         /* round 5 */
+<span class="lineNum">     230 </span><span class="lineCov">         65 :         JJ(bb, cc, dd, ee, aa, X[ 4],  9);</span>
+<span class="lineNum">     231 </span><span class="lineCov">         65 :         JJ(aa, bb, cc, dd, ee, X[ 0], 15);</span>
+<span class="lineNum">     232 </span><span class="lineCov">         65 :         JJ(ee, aa, bb, cc, dd, X[ 5],  5);</span>
+<span class="lineNum">     233 </span><span class="lineCov">         65 :         JJ(dd, ee, aa, bb, cc, X[ 9], 11);</span>
+<span class="lineNum">     234 </span><span class="lineCov">         65 :         JJ(cc, dd, ee, aa, bb, X[ 7],  6);</span>
+<span class="lineNum">     235 </span><span class="lineCov">         65 :         JJ(bb, cc, dd, ee, aa, X[12],  8);</span>
+<span class="lineNum">     236 </span><span class="lineCov">         65 :         JJ(aa, bb, cc, dd, ee, X[ 2], 13);</span>
+<span class="lineNum">     237 </span><span class="lineCov">         65 :         JJ(ee, aa, bb, cc, dd, X[10], 12);</span>
+<span class="lineNum">     238 </span><span class="lineCov">         65 :         JJ(dd, ee, aa, bb, cc, X[14],  5);</span>
+<span class="lineNum">     239 </span><span class="lineCov">         65 :         JJ(cc, dd, ee, aa, bb, X[ 1], 12);</span>
+<span class="lineNum">     240 </span><span class="lineCov">         65 :         JJ(bb, cc, dd, ee, aa, X[ 3], 13);</span>
+<span class="lineNum">     241 </span><span class="lineCov">         65 :         JJ(aa, bb, cc, dd, ee, X[ 8], 14);</span>
+<span class="lineNum">     242 </span><span class="lineCov">         65 :         JJ(ee, aa, bb, cc, dd, X[11], 11);</span>
+<span class="lineNum">     243 </span><span class="lineCov">         65 :         JJ(dd, ee, aa, bb, cc, X[ 6],  8);</span>
+<span class="lineNum">     244 </span><span class="lineCov">         65 :         JJ(cc, dd, ee, aa, bb, X[15],  5);</span>
+<span class="lineNum">     245 </span><span class="lineCov">         65 :         JJ(bb, cc, dd, ee, aa, X[13],  6);</span>
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            :         /* parallel round 1 */
+<span class="lineNum">     248 </span><span class="lineCov">         65 :         JJJ(aaa, bbb, ccc, ddd, eee, X[ 5],  8);</span>
+<span class="lineNum">     249 </span><span class="lineCov">         65 :         JJJ(eee, aaa, bbb, ccc, ddd, X[14],  9);</span>
+<span class="lineNum">     250 </span><span class="lineCov">         65 :         JJJ(ddd, eee, aaa, bbb, ccc, X[ 7],  9);</span>
+<span class="lineNum">     251 </span><span class="lineCov">         65 :         JJJ(ccc, ddd, eee, aaa, bbb, X[ 0], 11);</span>
+<span class="lineNum">     252 </span><span class="lineCov">         65 :         JJJ(bbb, ccc, ddd, eee, aaa, X[ 9], 13);</span>
+<span class="lineNum">     253 </span><span class="lineCov">         65 :         JJJ(aaa, bbb, ccc, ddd, eee, X[ 2], 15);</span>
+<span class="lineNum">     254 </span><span class="lineCov">         65 :         JJJ(eee, aaa, bbb, ccc, ddd, X[11], 15);</span>
+<span class="lineNum">     255 </span><span class="lineCov">         65 :         JJJ(ddd, eee, aaa, bbb, ccc, X[ 4],  5);</span>
+<span class="lineNum">     256 </span><span class="lineCov">         65 :         JJJ(ccc, ddd, eee, aaa, bbb, X[13],  7);</span>
+<span class="lineNum">     257 </span><span class="lineCov">         65 :         JJJ(bbb, ccc, ddd, eee, aaa, X[ 6],  7);</span>
+<span class="lineNum">     258 </span><span class="lineCov">         65 :         JJJ(aaa, bbb, ccc, ddd, eee, X[15],  8);</span>
+<span class="lineNum">     259 </span><span class="lineCov">         65 :         JJJ(eee, aaa, bbb, ccc, ddd, X[ 8], 11);</span>
+<span class="lineNum">     260 </span><span class="lineCov">         65 :         JJJ(ddd, eee, aaa, bbb, ccc, X[ 1], 14);</span>
+<span class="lineNum">     261 </span><span class="lineCov">         65 :         JJJ(ccc, ddd, eee, aaa, bbb, X[10], 14);</span>
+<span class="lineNum">     262 </span><span class="lineCov">         65 :         JJJ(bbb, ccc, ddd, eee, aaa, X[ 3], 12);</span>
+<span class="lineNum">     263 </span><span class="lineCov">         65 :         JJJ(aaa, bbb, ccc, ddd, eee, X[12],  6);</span>
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :         /* parallel round 2 */
+<span class="lineNum">     266 </span><span class="lineCov">         65 :         III(eee, aaa, bbb, ccc, ddd, X[ 6],  9);</span>
+<span class="lineNum">     267 </span><span class="lineCov">         65 :         III(ddd, eee, aaa, bbb, ccc, X[11], 13);</span>
+<span class="lineNum">     268 </span><span class="lineCov">         65 :         III(ccc, ddd, eee, aaa, bbb, X[ 3], 15);</span>
+<span class="lineNum">     269 </span><span class="lineCov">         65 :         III(bbb, ccc, ddd, eee, aaa, X[ 7],  7);</span>
+<span class="lineNum">     270 </span><span class="lineCov">         65 :         III(aaa, bbb, ccc, ddd, eee, X[ 0], 12);</span>
+<span class="lineNum">     271 </span><span class="lineCov">         65 :         III(eee, aaa, bbb, ccc, ddd, X[13],  8);</span>
+<span class="lineNum">     272 </span><span class="lineCov">         65 :         III(ddd, eee, aaa, bbb, ccc, X[ 5],  9);</span>
+<span class="lineNum">     273 </span><span class="lineCov">         65 :         III(ccc, ddd, eee, aaa, bbb, X[10], 11);</span>
+<span class="lineNum">     274 </span><span class="lineCov">         65 :         III(bbb, ccc, ddd, eee, aaa, X[14],  7);</span>
+<span class="lineNum">     275 </span><span class="lineCov">         65 :         III(aaa, bbb, ccc, ddd, eee, X[15],  7);</span>
+<span class="lineNum">     276 </span><span class="lineCov">         65 :         III(eee, aaa, bbb, ccc, ddd, X[ 8], 12);</span>
+<span class="lineNum">     277 </span><span class="lineCov">         65 :         III(ddd, eee, aaa, bbb, ccc, X[12],  7);</span>
+<span class="lineNum">     278 </span><span class="lineCov">         65 :         III(ccc, ddd, eee, aaa, bbb, X[ 4],  6);</span>
+<span class="lineNum">     279 </span><span class="lineCov">         65 :         III(bbb, ccc, ddd, eee, aaa, X[ 9], 15);</span>
+<span class="lineNum">     280 </span><span class="lineCov">         65 :         III(aaa, bbb, ccc, ddd, eee, X[ 1], 13);</span>
+<span class="lineNum">     281 </span><span class="lineCov">         65 :         III(eee, aaa, bbb, ccc, ddd, X[ 2], 11);</span>
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span>            :         /* parallel round 3 */
+<span class="lineNum">     284 </span><span class="lineCov">         65 :         HHH(ddd, eee, aaa, bbb, ccc, X[15],  9);</span>
+<span class="lineNum">     285 </span><span class="lineCov">         65 :         HHH(ccc, ddd, eee, aaa, bbb, X[ 5],  7);</span>
+<span class="lineNum">     286 </span><span class="lineCov">         65 :         HHH(bbb, ccc, ddd, eee, aaa, X[ 1], 15);</span>
+<span class="lineNum">     287 </span><span class="lineCov">         65 :         HHH(aaa, bbb, ccc, ddd, eee, X[ 3], 11);</span>
+<span class="lineNum">     288 </span><span class="lineCov">         65 :         HHH(eee, aaa, bbb, ccc, ddd, X[ 7],  8);</span>
+<span class="lineNum">     289 </span><span class="lineCov">         65 :         HHH(ddd, eee, aaa, bbb, ccc, X[14],  6);</span>
+<span class="lineNum">     290 </span><span class="lineCov">         65 :         HHH(ccc, ddd, eee, aaa, bbb, X[ 6],  6);</span>
+<span class="lineNum">     291 </span><span class="lineCov">         65 :         HHH(bbb, ccc, ddd, eee, aaa, X[ 9], 14);</span>
+<span class="lineNum">     292 </span><span class="lineCov">         65 :         HHH(aaa, bbb, ccc, ddd, eee, X[11], 12);</span>
+<span class="lineNum">     293 </span><span class="lineCov">         65 :         HHH(eee, aaa, bbb, ccc, ddd, X[ 8], 13);</span>
+<span class="lineNum">     294 </span><span class="lineCov">         65 :         HHH(ddd, eee, aaa, bbb, ccc, X[12],  5);</span>
+<span class="lineNum">     295 </span><span class="lineCov">         65 :         HHH(ccc, ddd, eee, aaa, bbb, X[ 2], 14);</span>
+<span class="lineNum">     296 </span><span class="lineCov">         65 :         HHH(bbb, ccc, ddd, eee, aaa, X[10], 13);</span>
+<span class="lineNum">     297 </span><span class="lineCov">         65 :         HHH(aaa, bbb, ccc, ddd, eee, X[ 0], 13);</span>
+<span class="lineNum">     298 </span><span class="lineCov">         65 :         HHH(eee, aaa, bbb, ccc, ddd, X[ 4],  7);</span>
+<span class="lineNum">     299 </span><span class="lineCov">         65 :         HHH(ddd, eee, aaa, bbb, ccc, X[13],  5);</span>
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span>            :         /* parallel round 4 */
+<span class="lineNum">     302 </span><span class="lineCov">         65 :         GGG(ccc, ddd, eee, aaa, bbb, X[ 8], 15);</span>
+<span class="lineNum">     303 </span><span class="lineCov">         65 :         GGG(bbb, ccc, ddd, eee, aaa, X[ 6],  5);</span>
+<span class="lineNum">     304 </span><span class="lineCov">         65 :         GGG(aaa, bbb, ccc, ddd, eee, X[ 4],  8);</span>
+<span class="lineNum">     305 </span><span class="lineCov">         65 :         GGG(eee, aaa, bbb, ccc, ddd, X[ 1], 11);</span>
+<span class="lineNum">     306 </span><span class="lineCov">         65 :         GGG(ddd, eee, aaa, bbb, ccc, X[ 3], 14);</span>
+<span class="lineNum">     307 </span><span class="lineCov">         65 :         GGG(ccc, ddd, eee, aaa, bbb, X[11], 14);</span>
+<span class="lineNum">     308 </span><span class="lineCov">         65 :         GGG(bbb, ccc, ddd, eee, aaa, X[15],  6);</span>
+<span class="lineNum">     309 </span><span class="lineCov">         65 :         GGG(aaa, bbb, ccc, ddd, eee, X[ 0], 14);</span>
+<span class="lineNum">     310 </span><span class="lineCov">         65 :         GGG(eee, aaa, bbb, ccc, ddd, X[ 5],  6);</span>
+<span class="lineNum">     311 </span><span class="lineCov">         65 :         GGG(ddd, eee, aaa, bbb, ccc, X[12],  9);</span>
+<span class="lineNum">     312 </span><span class="lineCov">         65 :         GGG(ccc, ddd, eee, aaa, bbb, X[ 2], 12);</span>
+<span class="lineNum">     313 </span><span class="lineCov">         65 :         GGG(bbb, ccc, ddd, eee, aaa, X[13],  9);</span>
+<span class="lineNum">     314 </span><span class="lineCov">         65 :         GGG(aaa, bbb, ccc, ddd, eee, X[ 9], 12);</span>
+<span class="lineNum">     315 </span><span class="lineCov">         65 :         GGG(eee, aaa, bbb, ccc, ddd, X[ 7],  5);</span>
+<span class="lineNum">     316 </span><span class="lineCov">         65 :         GGG(ddd, eee, aaa, bbb, ccc, X[10], 15);</span>
+<span class="lineNum">     317 </span><span class="lineCov">         65 :         GGG(ccc, ddd, eee, aaa, bbb, X[14],  8);</span>
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            :         /* parallel round 5 */
+<span class="lineNum">     320 </span><span class="lineCov">         65 :         FFF(bbb, ccc, ddd, eee, aaa, X[12] ,  8);</span>
+<span class="lineNum">     321 </span><span class="lineCov">         65 :         FFF(aaa, bbb, ccc, ddd, eee, X[15] ,  5);</span>
+<span class="lineNum">     322 </span><span class="lineCov">         65 :         FFF(eee, aaa, bbb, ccc, ddd, X[10] , 12);</span>
+<span class="lineNum">     323 </span><span class="lineCov">         65 :         FFF(ddd, eee, aaa, bbb, ccc, X[ 4] ,  9);</span>
+<span class="lineNum">     324 </span><span class="lineCov">         65 :         FFF(ccc, ddd, eee, aaa, bbb, X[ 1] , 12);</span>
+<span class="lineNum">     325 </span><span class="lineCov">         65 :         FFF(bbb, ccc, ddd, eee, aaa, X[ 5] ,  5);</span>
+<span class="lineNum">     326 </span><span class="lineCov">         65 :         FFF(aaa, bbb, ccc, ddd, eee, X[ 8] , 14);</span>
+<span class="lineNum">     327 </span><span class="lineCov">         65 :         FFF(eee, aaa, bbb, ccc, ddd, X[ 7] ,  6);</span>
+<span class="lineNum">     328 </span><span class="lineCov">         65 :         FFF(ddd, eee, aaa, bbb, ccc, X[ 6] ,  8);</span>
+<span class="lineNum">     329 </span><span class="lineCov">         65 :         FFF(ccc, ddd, eee, aaa, bbb, X[ 2] , 13);</span>
+<span class="lineNum">     330 </span><span class="lineCov">         65 :         FFF(bbb, ccc, ddd, eee, aaa, X[13] ,  6);</span>
+<span class="lineNum">     331 </span><span class="lineCov">         65 :         FFF(aaa, bbb, ccc, ddd, eee, X[14] ,  5);</span>
+<span class="lineNum">     332 </span><span class="lineCov">         65 :         FFF(eee, aaa, bbb, ccc, ddd, X[ 0] , 15);</span>
+<span class="lineNum">     333 </span><span class="lineCov">         65 :         FFF(ddd, eee, aaa, bbb, ccc, X[ 3] , 13);</span>
+<span class="lineNum">     334 </span><span class="lineCov">         65 :         FFF(ccc, ddd, eee, aaa, bbb, X[ 9] , 11);</span>
+<span class="lineNum">     335 </span><span class="lineCov">         65 :         FFF(bbb, ccc, ddd, eee, aaa, X[11] , 11);</span>
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span>            :         /* combine results */
+<span class="lineNum">     338 </span><span class="lineCov">         65 :         ddd += cc + MDbuf[1];               /* final result for MDbuf[0] */</span>
+<span class="lineNum">     339 </span><span class="lineCov">         65 :         MDbuf[1] = MDbuf[2] + dd + eee;</span>
+<span class="lineNum">     340 </span><span class="lineCov">         65 :         MDbuf[2] = MDbuf[3] + ee + aaa;</span>
+<span class="lineNum">     341 </span><span class="lineCov">         65 :         MDbuf[3] = MDbuf[4] + aa + bbb;</span>
+<span class="lineNum">     342 </span><span class="lineCov">         65 :         MDbuf[4] = MDbuf[0] + bb + ccc;</span>
+<span class="lineNum">     343 </span><span class="lineCov">         65 :         MDbuf[0] = ddd;</span>
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span><span class="lineCov">         65 :         return;</span>
+<a name="346"><span class="lineNum">     346 </span>            : }</a>
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span><span class="lineCov">         65 : void MDfinish(uint32_t *MDbuf, byte const *strptr, uint32_t lswlen, uint32_t mswlen)</span>
+<span class="lineNum">     349 </span>            : {
+<span class="lineNum">     350 </span>            :         unsigned int i;                                 /* counter       */
+<span class="lineNum">     351 </span>            :         uint32_t        X[16];                             /* message words */
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span><span class="lineCov">        130 :         memset(X, 0, 16*sizeof(uint32_t));</span>
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span>            :         /* put bytes from strptr into X */
+<span class="lineNum">     356 </span><span class="lineCov">       1915 :         for (i=0; i&lt;(lswlen&amp;63); i++) {</span>
+<span class="lineNum">     357 </span>            :                 /* byte i goes into word X[i div 4] at pos.  8*(i mod 4)  */
+<span class="lineNum">     358 </span><span class="lineCov">       1850 :                 X[i&gt;&gt;2] ^= (uint32_t) *strptr++ &lt;&lt; (8 * (i&amp;3));</span>
+<span class="lineNum">     359 </span>            :         }
+<span class="lineNum">     360 </span>            : 
+<span class="lineNum">     361 </span>            :         /* append the bit m_n == 1 */
+<span class="lineNum">     362 </span><span class="lineCov">         65 :         X[(lswlen&gt;&gt;2)&amp;15] ^= (uint32_t)1 &lt;&lt; (8*(lswlen&amp;3) + 7);</span>
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span><span class="lineCov">         65 :         if ((lswlen &amp; 63) &gt; 55) {</span>
+<span class="lineNum">     365 </span>            :                 /* length goes to next block */
+<span class="lineNum">     366 </span><span class="lineNoCov">          0 :                 MDcompress(MDbuf, X);</span>
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 :                 memset(X, 0, 16*sizeof(uint32_t));</span>
+<span class="lineNum">     368 </span>            :         }
+<span class="lineNum">     369 </span>            : 
+<span class="lineNum">     370 </span>            :         /* append length in bits*/
+<span class="lineNum">     371 </span><span class="lineCov">         65 :         X[14] = lswlen &lt;&lt; 3;</span>
+<span class="lineNum">     372 </span><span class="lineCov">         65 :         X[15] = (lswlen &gt;&gt; 29) | (mswlen &lt;&lt; 3);</span>
+<span class="lineNum">     373 </span><span class="lineCov">         65 :         MDcompress(MDbuf, X);</span>
+<span class="lineNum">     374 </span>            : 
+<span class="lineNum">     375 </span><span class="lineCov">         65 :         return;</span>
+<span class="lineNum">     376 </span>            : }
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span>            : #undef ROL
+<span class="lineNum">     379 </span>            : #undef F
+<span class="lineNum">     380 </span>            : #undef G
+<span class="lineNum">     381 </span>            : #undef H
+<span class="lineNum">     382 </span>            : #undef I
+<span class="lineNum">     383 </span>            : #undef J
+<span class="lineNum">     384 </span>            : #undef FF
+<span class="lineNum">     385 </span>            : #undef GG
+<span class="lineNum">     386 </span>            : #undef HH
+<span class="lineNum">     387 </span>            : #undef II
+<span class="lineNum">     388 </span>            : #undef JJ
+<span class="lineNum">     389 </span>            : #undef FFF
+<span class="lineNum">     390 </span>            : #undef GGG
+<span class="lineNum">     391 </span>            : #undef HHH
+<span class="lineNum">     392 </span>            : #undef III
+<span class="lineNum">     393 </span>            : #undef JJJ
+<span class="lineNum">     394 </span>            : 
+<span class="lineNum">     395 </span>            : }
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span>            : /*
+<span class="lineNum">     398 </span>            :  * @returns RMD(_input)
+<span class="lineNum">     399 </span>            :  */
+<span class="lineNum">     400 </span><span class="lineCov">         65 : h160 ripemd160(bytesConstRef _input)</span>
+<span class="lineNum">     401 </span>            : {
+<span class="lineNum">     402 </span><span class="lineCov">         65 :         h160 hashcode;</span>
+<span class="lineNum">     403 </span>            :         uint32_t buffer[RMDsize / 32];          // contains (A, B, C, D(, E))
+<span class="lineNum">     404 </span>            :         uint32_t current[16];                           // current 16-word chunk
+<span class="lineNum">     405 </span>            : 
+<span class="lineNum">     406 </span>            :         // initialize
+<span class="lineNum">     407 </span><span class="lineCov">         65 :         rmd160::MDinit(buffer);</span>
+<span class="lineNum">     408 </span><span class="lineCov">         65 :         byte const* message = _input.data();</span>
+<span class="lineNum">     409 </span><span class="lineCov">         65 :         uint32_t remaining = _input.size();     // # of bytes not yet processed</span>
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span>            :         // process message in 16x 4-byte chunks
+<span class="lineNum">     412 </span><span class="lineCov">         65 :         for (; remaining &gt;= 64; remaining -= 64)</span>
+<span class="lineNum">     413 </span>            :         {
+<span class="lineNum">     414 </span><span class="lineNoCov">          0 :                 for (unsigned i = 0; i &lt; 16; i++)</span>
+<span class="lineNum">     415 </span>            :                 {
+<span class="lineNum">     416 </span><span class="lineNoCov">          0 :                         current[i] = BYTES_TO_DWORD(message);</span>
+<span class="lineNum">     417 </span><span class="lineNoCov">          0 :                         message += 4;</span>
+<span class="lineNum">     418 </span>            :                 }
+<span class="lineNum">     419 </span><span class="lineNoCov">          0 :                 rmd160::MDcompress(buffer, current);</span>
+<span class="lineNum">     420 </span>            :         }
+<span class="lineNum">     421 </span>            :         // length mod 64 bytes left
+<span class="lineNum">     422 </span>            : 
+<span class="lineNum">     423 </span>            :         // finish:
+<span class="lineNum">     424 </span><span class="lineCov">         65 :         rmd160::MDfinish(buffer, message, _input.size(), 0);</span>
+<span class="lineNum">     425 </span>            : 
+<span class="lineNum">     426 </span><span class="lineCov">        390 :         for (unsigned i = 0; i &lt; RMDsize / 8; i += 4)</span>
+<span class="lineNum">     427 </span>            :         {
+<span class="lineNum">     428 </span><span class="lineCov">        325 :                 hashcode[i] = buffer[i &gt;&gt; 2];                             //  implicit cast to byte</span>
+<span class="lineNum">     429 </span><span class="lineCov">        650 :                 hashcode[i + 1] = (buffer[i &gt;&gt; 2] &gt;&gt; 8);    //extracts the 8 least</span>
+<span class="lineNum">     430 </span><span class="lineCov">        650 :                 hashcode[i + 2] = (buffer[i &gt;&gt; 2] &gt;&gt; 16);   // significant bits.</span>
+<span class="lineNum">     431 </span><span class="lineCov">        650 :                 hashcode[i + 3] = (buffer[i &gt;&gt; 2] &gt;&gt; 24);</span>
+<span class="lineNum">     432 </span>            :         }
+<span class="lineNum">     433 </span>            : 
+<span class="lineNum">     434 </span><span class="lineCov">         65 :         return hashcode;</span>
+<span class="lineNum">     435 </span>            : }
+<span class="lineNum">     436 </span>            : 
+<span class="lineNum">     437 </span>            : #undef BYTES_TO_DWORD
+<a name="438"><span class="lineNum">     438 </span>            : #undef RMDsize</a>
+<span class="lineNum">     439 </span>            : 
+<span class="lineNum">     440 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

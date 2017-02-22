@@ -1,0 +1,556 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libdevcrypto/MemTrie.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libdevcrypto</a> - MemTrie.cpp<span style="font-size: 80%;"> (source / <a href="MemTrie.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">171</td>
+            <td class="headerCovTableEntry">180</td>
+            <td class="headerCovTableEntryHi">95.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">36</td>
+            <td class="headerCovTableEntry">38</td>
+            <td class="headerCovTableEntryHi">94.7 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file MemTrie.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;MemTrie.h&quot;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;libdevcore/TrieCommon.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libdevcore/SHA3.h&gt;
+<span class="lineNum">      26 </span>            : using namespace std;
+<span class="lineNum">      27 </span>            : using namespace dev;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace dev
+<span class="lineNum">      30 </span>            : {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #define ENABLE_DEBUG_PRINT 0
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : /*/
+<span class="lineNum">      35 </span>            : #define APPEND_CHILD appendData
+<span class="lineNum">      36 </span>            : /*/
+<span class="lineNum">      37 </span>            : #define APPEND_CHILD appendRaw
+<span class="lineNum">      38 </span>            : /**/
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : class MemTrieNode
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span>            : public:
+<span class="lineNum">      43 </span><span class="lineCov">       4166 :         MemTrieNode() {}</span>
+<span class="lineNum">      44 </span><span class="lineCov">       2083 :         virtual ~MemTrieNode() {}</span>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :         virtual std::string const&amp; at(bytesConstRef _key) const = 0;
+<span class="lineNum">      47 </span>            :         virtual MemTrieNode* insert(bytesConstRef _key, std::string const&amp; _value) = 0;
+<span class="lineNum">      48 </span>            :         virtual MemTrieNode* remove(bytesConstRef _key) = 0;
+<span class="lineNum">      49 </span>            :         void putRLP(RLPStream&amp; _parentStream) const;
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : #if ENABLE_DEBUG_PRINT
+<span class="lineNum">      52 </span>            :         void debugPrint(std::string const&amp; _indent = &quot;&quot;) const { std::cerr &lt;&lt; std::hex &lt;&lt; hash256() &lt;&lt; &quot;:&quot; &lt;&lt; std::dec &lt;&lt; std::endl; debugPrintBody(_indent); }
+<span class="lineNum">      53 </span>            : #endif
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :         /// 256-bit hash of the node - this is a SHA-3/256 hash of the RLP of the node.
+<a name="56"><span class="lineNum">      56 </span><span class="lineCov">       3794 :         h256 hash256() const { RLPStream s; makeRLP(s); return dev::sha3(s.out()); }</span></a>
+<span class="lineNum">      57 </span><span class="lineCov">          8 :         bytes rlp() const { RLPStream s; makeRLP(s); return s.out(); }</span>
+<span class="lineNum">      58 </span><span class="lineCov">      12946 :         void mark() { m_hash256 = h256(); }</span>
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : protected:
+<span class="lineNum">      61 </span>            :         virtual void makeRLP(RLPStream&amp; _intoStream) const = 0;
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : #if ENABLE_DEBUG_PRINT
+<span class="lineNum">      64 </span>            :         virtual void debugPrintBody(std::string const&amp; _indent = &quot;&quot;) const = 0;
+<span class="lineNum">      65 </span>            : #endif
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :         static MemTrieNode* newBranch(bytesConstRef _k1, std::string const&amp; _v1, bytesConstRef _k2, std::string const&amp; _v2);
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : private:
+<span class="lineNum">      70 </span>            :         mutable h256 m_hash256;
+<span class="lineNum">      71 </span>            : };
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span><span class="lineCov">          1 : static const std::string c_nullString;</span>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">       4626 : class TrieExtNode: public MemTrieNode</span>
+<span class="lineNum">      76 </span>            : {
+<span class="lineNum">      77 </span>            : public:
+<span class="lineNum">      78 </span><span class="lineCov">       7710 :         TrieExtNode(bytesConstRef _bytes): m_ext(_bytes.begin(), _bytes.end()) {}</span>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            :         bytes m_ext;
+<span class="lineNum">      81 </span>            : };
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : class TrieBranchNode: public MemTrieNode
+<span class="lineNum">      84 </span>            : {
+<span class="lineNum">      85 </span>            : public:
+<span class="lineNum">      86 </span>            :         TrieBranchNode(std::string const&amp; _value): m_value(_value)
+<span class="lineNum">      87 </span>            :         {
+<span class="lineNum">      88 </span>            :                 memset(m_nodes.data(), 0, sizeof(MemTrieNode*) * 16);
+<span class="lineNum">      89 </span>            :         }
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span><span class="lineCov">        636 :         TrieBranchNode(byte _i1, MemTrieNode* _n1, std::string const&amp; _value = std::string()): m_value(_value)</span>
+<span class="lineNum">      92 </span>            :         {
+<span class="lineNum">      93 </span><span class="lineCov">        636 :                 memset(m_nodes.data(), 0, sizeof(MemTrieNode*) * 16);</span>
+<span class="lineNum">      94 </span><span class="lineCov">        424 :                 m_nodes[_i1] = _n1;</span>
+<span class="lineNum">      95 </span><span class="lineCov">        212 :         }</span>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span><span class="lineCov">        329 :         TrieBranchNode(byte _i1, MemTrieNode* _n1, byte _i2, MemTrieNode* _n2)</span>
+<span class="lineNum">      98 </span><span class="lineCov">        987 :         {</span>
+<span class="lineNum">      99 </span><span class="lineCov">        987 :                 memset(m_nodes.data(), 0, sizeof(MemTrieNode*) * 16);</span>
+<span class="lineNum">     100 </span><span class="lineCov">        658 :                 m_nodes[_i1] = _n1;</span>
+<span class="lineNum">     101 </span><span class="lineCov">        658 :                 m_nodes[_i2] = _n2;</span>
+<a name="102"><span class="lineNum">     102 </span><span class="lineCov">        329 :         }</span></a>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineCov">       1082 :         virtual ~TrieBranchNode()</span>
+<span class="lineNum">     105 </span><span class="lineCov">       2164 :         {</span>
+<span class="lineNum">     106 </span><span class="lineCov">      10279 :                 for (auto i: m_nodes)</span>
+<span class="lineNum">     107 </span><span class="lineCov">       8656 :                         delete i;</span>
+<span class="lineNum">     108 </span><span class="lineCov">       1082 :         }</span>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            : #if ENABLE_DEBUG_PRINT
+<span class="lineNum">     111 </span>            :         virtual void debugPrintBody(std::string const&amp; _indent) const
+<span class="lineNum">     112 </span>            :         {
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :                 if (m_value.size())
+<span class="lineNum">     115 </span>            :                         std::cerr &lt;&lt; _indent &lt;&lt; &quot;@: &quot; &lt;&lt; m_value &lt;&lt; std::endl;
+<span class="lineNum">     116 </span>            :                 for (auto i = 0; i &lt; 16; ++i)
+<span class="lineNum">     117 </span>            :                         if (m_nodes[i])
+<span class="lineNum">     118 </span>            :                         {
+<span class="lineNum">     119 </span>            :                                 std::cerr &lt;&lt; _indent &lt;&lt; std::hex &lt;&lt; i &lt;&lt; &quot;: &quot; &lt;&lt; std::dec;
+<span class="lineNum">     120 </span>            :                                 m_nodes[i]-&gt;debugPrint(_indent + &quot;  &quot;);
+<span class="lineNum">     121 </span>            :                         }
+<span class="lineNum">     122 </span>            :         }
+<span class="lineNum">     123 </span>            : #endif
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :         virtual std::string const&amp; at(bytesConstRef _key) const override;
+<span class="lineNum">     126 </span>            :         virtual MemTrieNode* insert(bytesConstRef _key, std::string const&amp; _value) override;
+<span class="lineNum">     127 </span>            :         virtual MemTrieNode* remove(bytesConstRef _key) override;
+<span class="lineNum">     128 </span>            :         virtual void makeRLP(RLPStream&amp; _parentStream) const override;
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : private:
+<span class="lineNum">     131 </span>            :         /// @returns (byte)-1 when no active branches, 16 when multiple active and the index of the active branch otherwise.
+<span class="lineNum">     132 </span>            :         byte activeBranch() const;
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            :         MemTrieNode* rejig();
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :         std::array&lt;MemTrieNode*, 16&gt; m_nodes;
+<span class="lineNum">     137 </span>            :         std::string m_value;
+<a name="138"><span class="lineNum">     138 </span>            : };</a>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span><span class="lineCov">       4764 : class TrieLeafNode: public TrieExtNode</span>
+<span class="lineNum">     141 </span>            : {
+<span class="lineNum">     142 </span>            : public:
+<span class="lineNum">     143 </span><span class="lineCov">       2382 :         TrieLeafNode(bytesConstRef _key, std::string const&amp; _value): TrieExtNode(_key), m_value(_value) {}</span>
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : #if ENABLE_DEBUG_PRINT
+<span class="lineNum">     146 </span>            :         virtual void debugPrintBody(std::string const&amp; _indent) const
+<span class="lineNum">     147 </span>            :         {
+<span class="lineNum">     148 </span>            :                 assert(m_value.size());
+<span class="lineNum">     149 </span>            :                 std::cerr &lt;&lt; _indent;
+<span class="lineNum">     150 </span>            :                 if (m_ext.size())
+<span class="lineNum">     151 </span>            :                         std::cerr &lt;&lt; toHex(m_ext, 1) &lt;&lt; &quot;: &quot;;
+<span class="lineNum">     152 </span>            :                 else
+<span class="lineNum">     153 </span>            :                         std::cerr &lt;&lt; &quot;@: &quot;;
+<span class="lineNum">     154 </span>            :                 std::cerr &lt;&lt; m_value &lt;&lt; std::endl;
+<span class="lineNum">     155 </span>            :         }
+<a name="156"><span class="lineNum">     156 </span>            : #endif</a>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineCov">         36 :         virtual std::string const&amp; at(bytesConstRef _key) const override { return contains(_key) ? m_value : c_nullString; }</span>
+<span class="lineNum">     159 </span>            :         virtual MemTrieNode* insert(bytesConstRef _key, std::string const&amp; _value) override;
+<span class="lineNum">     160 </span>            :         virtual MemTrieNode* remove(bytesConstRef _key) override;
+<span class="lineNum">     161 </span>            :         virtual void makeRLP(RLPStream&amp; _parentStream) const override;
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            : private:
+<span class="lineNum">     164 </span><span class="lineCov">       3297 :         bool contains(bytesConstRef _key) const { return _key.size() == m_ext.size() &amp;&amp; !memcmp(_key.data(), m_ext.data(), _key.size()); }</span>
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :         std::string m_value;
+<span class="lineNum">     167 </span>            : };
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            : class TrieInfixNode: public TrieExtNode
+<span class="lineNum">     170 </span>            : {
+<a name="171"><span class="lineNum">     171 </span>            : public:</a>
+<span class="lineNum">     172 </span><span class="lineCov">        351 :         TrieInfixNode(bytesConstRef _key, MemTrieNode* _next): TrieExtNode(_key), m_next(_next) {}</span>
+<span class="lineNum">     173 </span><span class="lineCov">       1053 :         virtual ~TrieInfixNode() { delete m_next; }</span>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            : #if ENABLE_DEBUG_PRINT
+<span class="lineNum">     176 </span>            :         virtual void debugPrintBody(std::string const&amp; _indent) const
+<span class="lineNum">     177 </span>            :         {
+<span class="lineNum">     178 </span>            :                 std::cerr &lt;&lt; _indent &lt;&lt; toHex(m_ext, 1) &lt;&lt; &quot;: &quot;;
+<span class="lineNum">     179 </span>            :                 m_next-&gt;debugPrint(_indent + &quot;  &quot;);
+<span class="lineNum">     180 </span>            :         }
+<a name="181"><span class="lineNum">     181 </span>            : #endif</a>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineCov">         67 :         virtual std::string const&amp; at(bytesConstRef _key) const override { assert(m_next); return contains(_key) ? m_next-&gt;at(_key.cropped(m_ext.size())) : c_nullString; }</span>
+<span class="lineNum">     184 </span>            :         virtual MemTrieNode* insert(bytesConstRef _key, std::string const&amp; _value) override;
+<span class="lineNum">     185 </span>            :         virtual MemTrieNode* remove(bytesConstRef _key) override;
+<span class="lineNum">     186 </span>            :         virtual void makeRLP(RLPStream&amp; _parentStream) const override;
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            : private:
+<span class="lineNum">     189 </span><span class="lineCov">       3604 :         bool contains(bytesConstRef _key) const { return _key.size() &gt;= m_ext.size() &amp;&amp; !memcmp(_key.data(), m_ext.data(), m_ext.size()); }</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            :         MemTrieNode* m_next;
+<span class="lineNum">     192 </span>            : };
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineCov">      65025 : void MemTrieNode::putRLP(RLPStream&amp; _parentStream) const</span>
+<span class="lineNum">     195 </span>            : {
+<span class="lineNum">     196 </span><span class="lineCov">     130050 :         RLPStream s;</span>
+<span class="lineNum">     197 </span><span class="lineCov">      65025 :         makeRLP(s);</span>
+<span class="lineNum">     198 </span><span class="lineCov">     130050 :         if (s.out().size() &lt; 32)</span>
+<span class="lineNum">     199 </span><span class="lineCov">      47526 :                 _parentStream.APPEND_CHILD(s.out());</span>
+<span class="lineNum">     200 </span>            :         else
+<span class="lineNum">     201 </span><span class="lineCov">      17499 :                 _parentStream &lt;&lt; dev::sha3(s.out());</span>
+<span class="lineNum">     202 </span><span class="lineCov">      65025 : }</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineCov">      26055 : void TrieBranchNode::makeRLP(RLPStream&amp; _intoStream) const</span>
+<span class="lineNum">     205 </span>            : {
+<span class="lineNum">     206 </span><span class="lineCov">      26055 :         _intoStream.appendList(17);</span>
+<span class="lineNum">     207 </span><span class="lineCov">     495045 :         for (auto i: m_nodes)</span>
+<span class="lineNum">     208 </span><span class="lineCov">     416880 :                 if (i)</span>
+<span class="lineNum">     209 </span><span class="lineCov">      60122 :                         i-&gt;putRLP(_intoStream);</span>
+<span class="lineNum">     210 </span>            :                 else
+<span class="lineNum">     211 </span>            :                         _intoStream &lt;&lt; &quot;&quot;;
+<span class="lineNum">     212 </span><span class="lineCov">     104220 :         _intoStream &lt;&lt; m_value;</span>
+<span class="lineNum">     213 </span><span class="lineCov">      26055 : }</span>
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span><span class="lineCov">      35968 : void TrieLeafNode::makeRLP(RLPStream&amp; _intoStream) const</span>
+<span class="lineNum">     216 </span>            : {
+<span class="lineNum">     217 </span><span class="lineCov">     215808 :         _intoStream.appendList(2) &lt;&lt; hexPrefixEncode(m_ext, true) &lt;&lt; m_value;</span>
+<span class="lineNum">     218 </span><span class="lineCov">      35968 : }</span>
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span><span class="lineCov">       4903 : void TrieInfixNode::makeRLP(RLPStream&amp; _intoStream) const</span>
+<span class="lineNum">     221 </span>            : {
+<span class="lineNum">     222 </span><span class="lineCov">       4903 :         assert(m_next);</span>
+<span class="lineNum">     223 </span><span class="lineCov">       4903 :         _intoStream.appendList(2);</span>
+<span class="lineNum">     224 </span><span class="lineCov">      14709 :         _intoStream &lt;&lt; hexPrefixEncode(m_ext, false);</span>
+<span class="lineNum">     225 </span><span class="lineCov">       4903 :         m_next-&gt;putRLP(_intoStream);</span>
+<a name="226"><span class="lineNum">     226 </span><span class="lineCov">       4903 : }</span></a>
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span><span class="lineCov">        452 : MemTrieNode* MemTrieNode::newBranch(bytesConstRef _k1, std::string const&amp; _v1, bytesConstRef _k2, std::string const&amp; _v2)</span>
+<span class="lineNum">     229 </span>            : {
+<span class="lineNum">     230 </span><span class="lineCov">        452 :         unsigned prefix = commonPrefix(_k1, _k2);</span>
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            :         MemTrieNode* ret;
+<span class="lineNum">     233 </span><span class="lineCov">        452 :         if (_k1.size() == prefix)</span>
+<span class="lineNum">     234 </span><span class="lineCov">        104 :                 ret = new TrieBranchNode(_k2[prefix], new TrieLeafNode(_k2.cropped(prefix + 1), _v2), _v1);</span>
+<span class="lineNum">     235 </span><span class="lineCov">        400 :         else if (_k2.size() == prefix)</span>
+<span class="lineNum">     236 </span><span class="lineCov">        142 :                 ret = new TrieBranchNode(_k1[prefix], new TrieLeafNode(_k1.cropped(prefix + 1), _v1), _v2);</span>
+<span class="lineNum">     237 </span>            :         else // both continue after split
+<span class="lineNum">     238 </span><span class="lineCov">        987 :                 ret = new TrieBranchNode(_k1[prefix], new TrieLeafNode(_k1.cropped(prefix + 1), _v1), _k2[prefix], new TrieLeafNode(_k2.cropped(prefix + 1), _v2));</span>
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span><span class="lineCov">        452 :         if (prefix)</span>
+<span class="lineNum">     241 </span>            :                 // have shared prefix - split.
+<span class="lineNum">     242 </span><span class="lineCov">        426 :                 ret = new TrieInfixNode(_k1.cropped(0, prefix), ret);</span>
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span><span class="lineCov">        452 :         return ret;</span>
+<a name="245"><span class="lineNum">     245 </span>            : }</a>
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span><span class="lineCov">         25 : std::string const&amp; TrieBranchNode::at(bytesConstRef _key) const</span>
+<span class="lineNum">     248 </span>            : {
+<span class="lineNum">     249 </span><span class="lineCov">         25 :         if (_key.empty())</span>
+<span class="lineNum">     250 </span><span class="lineCov">          3 :                 return m_value;</span>
+<span class="lineNum">     251 </span><span class="lineCov">         44 :         else if (m_nodes[_key[0]] != nullptr)</span>
+<span class="lineNum">     252 </span><span class="lineCov">         66 :                 return m_nodes[_key[0]]-&gt;at(_key.cropped(1));</span>
+<span class="lineNum">     253 </span>            :         return c_nullString;
+<a name="254"><span class="lineNum">     254 </span>            : }</a>
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span><span class="lineCov">       2659 : MemTrieNode* TrieBranchNode::insert(bytesConstRef _key, std::string const&amp; _value)</span>
+<span class="lineNum">     257 </span>            : {
+<span class="lineNum">     258 </span><span class="lineCov">       2659 :         assert(_value.size());</span>
+<span class="lineNum">     259 </span><span class="lineCov">       2659 :         mark();</span>
+<span class="lineNum">     260 </span><span class="lineCov">       2659 :         if (_key.empty())</span>
+<span class="lineNum">     261 </span><span class="lineCov">        130 :                 m_value = _value;</span>
+<span class="lineNum">     262 </span>            :         else
+<span class="lineNum">     263 </span><span class="lineCov">       5058 :                 if (!m_nodes[_key[0]])</span>
+<span class="lineNum">     264 </span><span class="lineCov">        772 :                         m_nodes[_key[0]] = new TrieLeafNode(_key.cropped(1), _value);</span>
+<span class="lineNum">     265 </span>            :                 else
+<span class="lineNum">     266 </span><span class="lineCov">       8572 :                         m_nodes[_key[0]] = m_nodes[_key[0]]-&gt;insert(_key.cropped(1), _value);</span>
+<span class="lineNum">     267 </span><span class="lineCov">       2659 :         return this;</span>
+<a name="268"><span class="lineNum">     268 </span>            : }</a>
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span><span class="lineCov">       1877 : MemTrieNode* TrieBranchNode::remove(bytesConstRef _key)</span>
+<span class="lineNum">     271 </span>            : {
+<span class="lineNum">     272 </span><span class="lineCov">       1877 :         if (_key.empty())</span>
+<span class="lineNum">     273 </span><span class="lineCov">        175 :                 if (m_value.size())</span>
+<span class="lineNum">     274 </span>            :                 {
+<span class="lineNum">     275 </span><span class="lineCov">        350 :                         m_value.clear();</span>
+<span class="lineNum">     276 </span><span class="lineCov">        175 :                         return rejig();</span>
+<span class="lineNum">     277 </span>            :                 }
+<span class="lineNum">     278 </span>            :                 else {}
+<span class="lineNum">     279 </span><span class="lineCov">       3404 :         else if (m_nodes[_key[0]] != nullptr)</span>
+<span class="lineNum">     280 </span>            :         {
+<span class="lineNum">     281 </span><span class="lineCov">       6808 :                 m_nodes[_key[0]] = m_nodes[_key[0]]-&gt;remove(_key.cropped(1));</span>
+<span class="lineNum">     282 </span><span class="lineCov">       1702 :                 return rejig();</span>
+<span class="lineNum">     283 </span>            :         }
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :         return this;</span>
+<a name="285"><span class="lineNum">     285 </span>            : }</a>
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span><span class="lineCov">       1877 : MemTrieNode* TrieBranchNode::rejig()</span>
+<span class="lineNum">     288 </span>            : {
+<span class="lineNum">     289 </span><span class="lineCov">       1877 :         mark();</span>
+<span class="lineNum">     290 </span><span class="lineCov">       1877 :         byte n = activeBranch();</span>
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span><span class="lineCov">       1877 :         if (n == (byte)-1 &amp;&amp; m_value.size())</span>
+<span class="lineNum">     293 </span>            :         {
+<span class="lineNum">     294 </span>            :                 // switch to leaf
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :                 auto r = new TrieLeafNode(bytesConstRef(), m_value);</span>
+<span class="lineNum">     296 </span><span class="lineNoCov">          0 :                 delete this;</span>
+<span class="lineNum">     297 </span>            :                 return r;
+<span class="lineNum">     298 </span>            :         }
+<span class="lineNum">     299 </span><span class="lineCov">       2416 :         else if (n &lt; 16 &amp;&amp; m_value.empty())</span>
+<span class="lineNum">     300 </span>            :         {
+<span class="lineNum">     301 </span>            :                 // only branching to n...
+<span class="lineNum">     302 </span><span class="lineCov">       1078 :                 if (auto b = dynamic_cast&lt;TrieBranchNode*&gt;(m_nodes[n]))</span>
+<span class="lineNum">     303 </span>            :                 {
+<span class="lineNum">     304 </span>            :                         // switch to infix
+<span class="lineNum">     305 </span><span class="lineCov">        408 :                         m_nodes[n] = nullptr;</span>
+<span class="lineNum">     306 </span><span class="lineCov">        204 :                         delete this;</span>
+<span class="lineNum">     307 </span><span class="lineCov">        408 :                         return new TrieInfixNode(bytesConstRef(&amp;n, 1), b);</span>
+<span class="lineNum">     308 </span>            :                 }
+<span class="lineNum">     309 </span>            :                 else
+<span class="lineNum">     310 </span>            :                 {
+<span class="lineNum">     311 </span><span class="lineCov">        670 :                         auto x = dynamic_cast&lt;TrieExtNode*&gt;(m_nodes[n]);</span>
+<span class="lineNum">     312 </span><span class="lineCov">        335 :                         assert(x);</span>
+<span class="lineNum">     313 </span>            :                         // include in child
+<span class="lineNum">     314 </span><span class="lineCov">        335 :                         pushFront(x-&gt;m_ext, n);</span>
+<span class="lineNum">     315 </span><span class="lineCov">        670 :                         m_nodes[n] = nullptr;</span>
+<span class="lineNum">     316 </span><span class="lineCov">        335 :                         delete this;</span>
+<span class="lineNum">     317 </span>            :                         return x;
+<span class="lineNum">     318 </span>            :                 }
+<span class="lineNum">     319 </span>            :         }
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span>            :         return this;
+<a name="322"><span class="lineNum">     322 </span>            : }</a>
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 : byte TrieBranchNode::activeBranch() const</span>
+<span class="lineNum">     325 </span>            : {
+<span class="lineNum">     326 </span><span class="lineCov">       1877 :         byte n = (byte)-1;</span>
+<span class="lineNum">     327 </span><span class="lineCov">      19722 :         for (int i = 0; i &lt; 16; ++i)</span>
+<span class="lineNum">     328 </span><span class="lineCov">      38366 :                 if (m_nodes[i] != nullptr)</span>
+<span class="lineNum">     329 </span>            :                 {
+<span class="lineNum">     330 </span><span class="lineCov">       3215 :                         if (n == (byte)-1)</span>
+<span class="lineNum">     331 </span><span class="lineCov">       1877 :                                 n = (byte)i;</span>
+<span class="lineNum">     332 </span>            :                         else
+<span class="lineNum">     333 </span>            :                                 return 16;
+<span class="lineNum">     334 </span>            :                 }
+<span class="lineNum">     335 </span>            :         return n;
+<span class="lineNum">     336 </span>            : }
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span><span class="lineCov">        175 : MemTrieNode* TrieInfixNode::insert(bytesConstRef _key, std::string const&amp; _value)</span>
+<span class="lineNum">     339 </span>            : {
+<span class="lineNum">     340 </span><span class="lineCov">        175 :         assert(_value.size());</span>
+<span class="lineNum">     341 </span><span class="lineCov">        175 :         mark();</span>
+<span class="lineNum">     342 </span><span class="lineCov">        175 :         if (contains(_key))</span>
+<span class="lineNum">     343 </span>            :         {
+<span class="lineNum">     344 </span><span class="lineCov">        162 :                 m_next = m_next-&gt;insert(_key.cropped(m_ext.size()), _value);</span>
+<span class="lineNum">     345 </span><span class="lineCov">         81 :                 return this;</span>
+<span class="lineNum">     346 </span>            :         }
+<span class="lineNum">     347 </span>            :         else
+<span class="lineNum">     348 </span>            :         {
+<span class="lineNum">     349 </span><span class="lineCov">         94 :                 unsigned prefix = commonPrefix(_key, m_ext);</span>
+<span class="lineNum">     350 </span><span class="lineCov">         94 :                 if (prefix)</span>
+<span class="lineNum">     351 </span>            :                 {
+<span class="lineNum">     352 </span>            :                         // one infix becomes two infixes, then insert into the second
+<span class="lineNum">     353 </span>            :                         // instead of pop_front()...
+<span class="lineNum">     354 </span><span class="lineCov">          5 :                         trimFront(m_ext, prefix);</span>
+<span class="lineNum">     355 </span>            : 
+<span class="lineNum">     356 </span><span class="lineCov">         20 :                         return new TrieInfixNode(_key.cropped(0, prefix), insert(_key.cropped(prefix), _value));</span>
+<span class="lineNum">     357 </span>            :                 }
+<span class="lineNum">     358 </span>            :                 else
+<span class="lineNum">     359 </span>            :                 {
+<span class="lineNum">     360 </span>            :                         // split here.
+<span class="lineNum">     361 </span><span class="lineCov">         89 :                         auto f = m_ext[0];</span>
+<span class="lineNum">     362 </span><span class="lineCov">         89 :                         trimFront(m_ext, 1);</span>
+<span class="lineNum">     363 </span><span class="lineCov">        178 :                         MemTrieNode* n = m_ext.empty() ? m_next : this;</span>
+<span class="lineNum">     364 </span><span class="lineCov">         89 :                         if (n != this)</span>
+<span class="lineNum">     365 </span>            :                         {
+<span class="lineNum">     366 </span><span class="lineCov">         70 :                                 m_next = nullptr;</span>
+<span class="lineNum">     367 </span><span class="lineCov">         70 :                                 delete this;</span>
+<span class="lineNum">     368 </span>            :                         }
+<span class="lineNum">     369 </span><span class="lineCov">        178 :                         TrieBranchNode* ret = new TrieBranchNode(f, n);</span>
+<span class="lineNum">     370 </span><span class="lineCov">         89 :                         ret-&gt;insert(_key, _value);</span>
+<span class="lineNum">     371 </span><span class="lineCov">         89 :                         return ret;</span>
+<span class="lineNum">     372 </span>            :                 }
+<span class="lineNum">     373 </span>            :         }
+<a name="374"><span class="lineNum">     374 </span>            : }</a>
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span><span class="lineCov">       1013 : MemTrieNode* TrieInfixNode::remove(bytesConstRef _key)</span>
+<span class="lineNum">     377 </span>            : {
+<span class="lineNum">     378 </span><span class="lineCov">       1013 :         if (contains(_key))</span>
+<span class="lineNum">     379 </span>            :         {
+<span class="lineNum">     380 </span><span class="lineCov">       1013 :                 mark();</span>
+<span class="lineNum">     381 </span><span class="lineCov">       3039 :                 m_next = m_next-&gt;remove(_key.cropped(m_ext.size()));</span>
+<span class="lineNum">     382 </span><span class="lineCov">       1013 :                 if (auto p = dynamic_cast&lt;TrieExtNode*&gt;(m_next))</span>
+<span class="lineNum">     383 </span>            :                 {
+<span class="lineNum">     384 </span>            :                         // merge with child...
+<span class="lineNum">     385 </span><span class="lineCov">        837 :                         m_ext.reserve(m_ext.size() + p-&gt;m_ext.size());</span>
+<span class="lineNum">     386 </span><span class="lineCov">       1928 :                         for (auto i: p-&gt;m_ext)</span>
+<span class="lineNum">     387 </span><span class="lineCov">        812 :                                 m_ext.push_back(i);</span>
+<span class="lineNum">     388 </span><span class="lineCov">        279 :                         p-&gt;m_ext = m_ext;</span>
+<span class="lineNum">     389 </span><span class="lineCov">        279 :                         p-&gt;mark();</span>
+<span class="lineNum">     390 </span><span class="lineCov">        279 :                         m_next = nullptr;</span>
+<span class="lineNum">     391 </span><span class="lineCov">        279 :                         delete this;</span>
+<span class="lineNum">     392 </span>            :                         return p;
+<span class="lineNum">     393 </span>            :                 }
+<span class="lineNum">     394 </span><span class="lineCov">        734 :                 if (!m_next)</span>
+<span class="lineNum">     395 </span>            :                 {
+<span class="lineNum">     396 </span><span class="lineNoCov">          0 :                         delete this;</span>
+<span class="lineNum">     397 </span>            :                         return nullptr;
+<span class="lineNum">     398 </span>            :                 }
+<span class="lineNum">     399 </span>            :         }
+<span class="lineNum">     400 </span><span class="lineCov">        734 :         return this;</span>
+<a name="401"><span class="lineNum">     401 </span>            : }</a>
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span><span class="lineCov">        470 : MemTrieNode* TrieLeafNode::insert(bytesConstRef _key, std::string const&amp; _value)</span>
+<span class="lineNum">     404 </span>            : {
+<span class="lineNum">     405 </span><span class="lineCov">        470 :         assert(_value.size());</span>
+<span class="lineNum">     406 </span><span class="lineCov">        470 :         mark();</span>
+<span class="lineNum">     407 </span><span class="lineCov">        470 :         if (contains(_key))</span>
+<span class="lineNum">     408 </span>            :         {
+<span class="lineNum">     409 </span><span class="lineCov">         36 :                 m_value = _value;</span>
+<span class="lineNum">     410 </span><span class="lineCov">         18 :                 return this;</span>
+<span class="lineNum">     411 </span>            :         }
+<span class="lineNum">     412 </span>            :         else
+<span class="lineNum">     413 </span>            :         {
+<span class="lineNum">     414 </span>            :                 // create new trie.
+<span class="lineNum">     415 </span><span class="lineCov">        904 :                 auto n = MemTrieNode::newBranch(_key, _value, bytesConstRef(&amp;m_ext), m_value);</span>
+<span class="lineNum">     416 </span><span class="lineCov">        452 :                 delete this;</span>
+<span class="lineNum">     417 </span>            :                 return n;
+<span class="lineNum">     418 </span>            :         }
+<a name="419"><span class="lineNum">     419 </span>            : }</a>
+<span class="lineNum">     420 </span>            : 
+<span class="lineNum">     421 </span><span class="lineCov">        735 : MemTrieNode* TrieLeafNode::remove(bytesConstRef _key)</span>
+<span class="lineNum">     422 </span>            : {
+<span class="lineNum">     423 </span><span class="lineCov">        735 :         if (contains(_key))</span>
+<span class="lineNum">     424 </span>            :         {
+<span class="lineNum">     425 </span><span class="lineCov">        735 :                 delete this;</span>
+<span class="lineNum">     426 </span>            :                 return nullptr;
+<span class="lineNum">     427 </span>            :         }
+<span class="lineNum">     428 </span><span class="lineNoCov">          0 :         return this;</span>
+<a name="429"><span class="lineNum">     429 </span>            : }</a>
+<span class="lineNum">     430 </span>            : 
+<span class="lineNum">     431 </span><span class="lineCov">         10 : MemTrie::~MemTrie()</span>
+<span class="lineNum">     432 </span>            : {
+<span class="lineNum">     433 </span><span class="lineCov">          5 :         delete m_root;</span>
+<span class="lineNum">     434 </span><span class="lineCov">          5 : }</span>
+<span class="lineNum">     435 </span>            : 
+<span class="lineNum">     436 </span><span class="lineCov">       1918 : h256 MemTrie::hash256() const</span>
+<span class="lineNum">     437 </span>            : {
+<span class="lineNum">     438 </span><span class="lineCov">       1960 :         return m_root ? m_root-&gt;hash256() : sha3(dev::rlp(bytesConstRef()));</span>
+<a name="439"><span class="lineNum">     439 </span>            : }</a>
+<span class="lineNum">     440 </span>            : 
+<span class="lineNum">     441 </span><span class="lineCov">          4 : bytes MemTrie::rlp() const</span>
+<span class="lineNum">     442 </span>            : {
+<span class="lineNum">     443 </span><span class="lineCov">          4 :         return m_root ? m_root-&gt;rlp() : dev::rlp(bytesConstRef());</span>
+<a name="444"><span class="lineNum">     444 </span>            : }</a>
+<span class="lineNum">     445 </span>            : 
+<span class="lineNum">     446 </span><span class="lineNoCov">          0 : void MemTrie::debugPrint()</span>
+<span class="lineNum">     447 </span>            : {
+<span class="lineNum">     448 </span>            : #if ENABLE_DEBUG_PRINT
+<span class="lineNum">     449 </span>            :         if (m_root)
+<span class="lineNum">     450 </span>            :                 m_root-&gt;debugPrint();
+<span class="lineNum">     451 </span>            : #endif
+<span class="lineNum">     452 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     453 </span>            : 
+<span class="lineNum">     454 </span><span class="lineCov">         24 : std::string const&amp; MemTrie::at(std::string const&amp; _key) const</span>
+<span class="lineNum">     455 </span>            : {
+<span class="lineNum">     456 </span><span class="lineCov">         24 :         if (!m_root)</span>
+<span class="lineNum">     457 </span>            :                 return c_nullString;
+<span class="lineNum">     458 </span><span class="lineCov">         23 :         auto h = asNibbles(_key);</span>
+<span class="lineNum">     459 </span><span class="lineCov">         46 :         return m_root-&gt;at(bytesConstRef(&amp;h));</span>
+<span class="lineNum">     460 </span>            : }
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span><span class="lineCov">       1010 : void MemTrie::insert(std::string const&amp; _key, std::string const&amp; _value)</span>
+<span class="lineNum">     463 </span>            : {
+<span class="lineNum">     464 </span><span class="lineCov">       1010 :         if (_value.empty())</span>
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :                 remove(_key);</span>
+<span class="lineNum">     466 </span><span class="lineCov">       2020 :         auto h = asNibbles(_key);</span>
+<span class="lineNum">     467 </span><span class="lineCov">       2020 :         m_root = m_root ? m_root-&gt;insert(&amp;h, _value) : new TrieLeafNode(bytesConstRef(&amp;h), _value);</span>
+<span class="lineNum">     468 </span><span class="lineCov">       1010 : }</span>
+<span class="lineNum">     469 </span>            : 
+<span class="lineNum">     470 </span><span class="lineCov">        910 : void MemTrie::remove(std::string const&amp; _key)</span>
+<span class="lineNum">     471 </span>            : {
+<span class="lineNum">     472 </span><span class="lineCov">        910 :         if (m_root)</span>
+<span class="lineNum">     473 </span>            :         {
+<span class="lineNum">     474 </span><span class="lineCov">       1820 :                 auto h = asNibbles(_key);</span>
+<span class="lineNum">     475 </span><span class="lineCov">       1820 :                 m_root = m_root-&gt;remove(&amp;h);</span>
+<span class="lineNum">     476 </span>            :         }
+<a name="477"><span class="lineNum">     477 </span><span class="lineCov">        910 : }</span></a>
+<span class="lineNum">     478 </span>            : 
+<span class="lineNum">     479 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     480 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,458 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/x86_64-linux-gnu/bits/stdio2.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/x86_64-linux-gnu/bits</a> - stdio2.h<span style="font-size: 80%;"> (source / <a href="stdio2.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryLo">33.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* Checking macros for stdio functions.</a>
+<span class="lineNum">       2 </span>            :    Copyright (C) 2004-2016 Free Software Foundation, Inc.
+<span class="lineNum">       3 </span>            :    This file is part of the GNU C Library.
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    The GNU C Library is free software; you can redistribute it and/or
+<span class="lineNum">       6 </span>            :    modify it under the terms of the GNU Lesser General Public
+<span class="lineNum">       7 </span>            :    License as published by the Free Software Foundation; either
+<span class="lineNum">       8 </span>            :    version 2.1 of the License, or (at your option) any later version.
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            :    The GNU C Library is distributed in the hope that it will be useful,
+<span class="lineNum">      11 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      12 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+<span class="lineNum">      13 </span>            :    Lesser General Public License for more details.
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            :    You should have received a copy of the GNU Lesser General Public
+<span class="lineNum">      16 </span>            :    License along with the GNU C Library; if not, see
+<span class="lineNum">      17 </span>            :    &lt;http://www.gnu.org/licenses/&gt;.  */
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #ifndef _STDIO_H
+<span class="lineNum">      20 </span>            : # error &quot;Never include &lt;bits/stdio2.h&gt; directly; use &lt;stdio.h&gt; instead.&quot;
+<span class="lineNum">      21 </span>            : #endif
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : extern int __sprintf_chk (char *__restrict __s, int __flag, size_t __slen,
+<span class="lineNum">      24 </span>            :                           const char *__restrict __format, ...) __THROW;
+<span class="lineNum">      25 </span>            : extern int __vsprintf_chk (char *__restrict __s, int __flag, size_t __slen,
+<span class="lineNum">      26 </span>            :                            const char *__restrict __format,
+<span class="lineNum">      27 </span>            :                            _G_va_list __ap) __THROW;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #ifdef __va_arg_pack
+<span class="lineNum">      30 </span>            : __fortify_function int
+<span class="lineNum">      31 </span>            : __NTH (sprintf (char *__restrict __s, const char *__restrict __fmt, ...))
+<span class="lineNum">      32 </span>            : {
+<span class="lineNum">      33 </span><span class="lineNoCov">          0 :   return __builtin___sprintf_chk (__s, __USE_FORTIFY_LEVEL - 1,</span>
+<span class="lineNum">      34 </span><span class="lineNoCov">          0 :                                   __bos (__s), __fmt, __va_arg_pack ());</span>
+<span class="lineNum">      35 </span>            : }
+<span class="lineNum">      36 </span>            : #elif !defined __cplusplus
+<span class="lineNum">      37 </span>            : # define sprintf(str, ...) \
+<span class="lineNum">      38 </span>            :   __builtin___sprintf_chk (str, __USE_FORTIFY_LEVEL - 1, __bos (str), \
+<span class="lineNum">      39 </span>            :                            __VA_ARGS__)
+<span class="lineNum">      40 </span>            : #endif
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : __fortify_function int
+<span class="lineNum">      43 </span>            : __NTH (vsprintf (char *__restrict __s, const char *__restrict __fmt,
+<span class="lineNum">      44 </span>            :                  _G_va_list __ap))
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span>            :   return __builtin___vsprintf_chk (__s, __USE_FORTIFY_LEVEL - 1,
+<span class="lineNum">      47 </span>            :                                    __bos (__s), __fmt, __ap);
+<span class="lineNum">      48 </span>            : }
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : #if defined __USE_ISOC99 || defined __USE_UNIX98
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : extern int __snprintf_chk (char *__restrict __s, size_t __n, int __flag,
+<span class="lineNum">      53 </span>            :                            size_t __slen, const char *__restrict __format,
+<span class="lineNum">      54 </span>            :                            ...) __THROW;
+<span class="lineNum">      55 </span>            : extern int __vsnprintf_chk (char *__restrict __s, size_t __n, int __flag,
+<span class="lineNum">      56 </span>            :                             size_t __slen, const char *__restrict __format,
+<span class="lineNum">      57 </span>            :                             _G_va_list __ap) __THROW;
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : # ifdef __va_arg_pack
+<span class="lineNum">      60 </span>            : __fortify_function int
+<span class="lineNum">      61 </span>            : __NTH (snprintf (char *__restrict __s, size_t __n,
+<span class="lineNum">      62 </span>            :                  const char *__restrict __fmt, ...))
+<span class="lineNum">      63 </span>            : {
+<span class="lineNum">      64 </span><span class="lineCov">          1 :   return __builtin___snprintf_chk (__s, __n, __USE_FORTIFY_LEVEL - 1,</span>
+<span class="lineNum">      65 </span><span class="lineCov">       4410 :                                    __bos (__s), __fmt, __va_arg_pack ());</span>
+<span class="lineNum">      66 </span>            : }
+<span class="lineNum">      67 </span>            : # elif !defined __cplusplus
+<span class="lineNum">      68 </span>            : #  define snprintf(str, len, ...) \
+<span class="lineNum">      69 </span>            :   __builtin___snprintf_chk (str, len, __USE_FORTIFY_LEVEL - 1, __bos (str), \
+<span class="lineNum">      70 </span>            :                             __VA_ARGS__)
+<span class="lineNum">      71 </span>            : # endif
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : __fortify_function int
+<span class="lineNum">      74 </span>            : __NTH (vsnprintf (char *__restrict __s, size_t __n,
+<span class="lineNum">      75 </span>            :                   const char *__restrict __fmt, _G_va_list __ap))
+<span class="lineNum">      76 </span>            : {
+<span class="lineNum">      77 </span>            :   return __builtin___vsnprintf_chk (__s, __n, __USE_FORTIFY_LEVEL - 1,
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :                                     __bos (__s), __fmt, __ap);</span>
+<span class="lineNum">      79 </span>            : }
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : #endif
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : #if __USE_FORTIFY_LEVEL &gt; 1
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : extern int __fprintf_chk (FILE *__restrict __stream, int __flag,
+<span class="lineNum">      86 </span>            :                           const char *__restrict __format, ...);
+<span class="lineNum">      87 </span>            : extern int __printf_chk (int __flag, const char *__restrict __format, ...);
+<span class="lineNum">      88 </span>            : extern int __vfprintf_chk (FILE *__restrict __stream, int __flag,
+<span class="lineNum">      89 </span>            :                            const char *__restrict __format, _G_va_list __ap);
+<span class="lineNum">      90 </span>            : extern int __vprintf_chk (int __flag, const char *__restrict __format,
+<span class="lineNum">      91 </span>            :                           _G_va_list __ap);
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : # ifdef __va_arg_pack
+<span class="lineNum">      94 </span>            : __fortify_function int
+<span class="lineNum">      95 </span>            : fprintf (FILE *__restrict __stream, const char *__restrict __fmt, ...)
+<span class="lineNum">      96 </span>            : {
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :   return __fprintf_chk (__stream, __USE_FORTIFY_LEVEL - 1, __fmt,</span>
+<span class="lineNum">      98 </span>            :                         __va_arg_pack ());
+<span class="lineNum">      99 </span>            : }
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : __fortify_function int
+<span class="lineNum">     102 </span>            : printf (const char *__restrict __fmt, ...)
+<span class="lineNum">     103 </span>            : {
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :   return __printf_chk (__USE_FORTIFY_LEVEL - 1, __fmt, __va_arg_pack ());</span>
+<span class="lineNum">     105 </span>            : }
+<span class="lineNum">     106 </span>            : # elif !defined __cplusplus
+<span class="lineNum">     107 </span>            : #  define printf(...) \
+<span class="lineNum">     108 </span>            :   __printf_chk (__USE_FORTIFY_LEVEL - 1, __VA_ARGS__)
+<span class="lineNum">     109 </span>            : #  define fprintf(stream, ...) \
+<span class="lineNum">     110 </span>            :   __fprintf_chk (stream, __USE_FORTIFY_LEVEL - 1, __VA_ARGS__)
+<span class="lineNum">     111 </span>            : # endif
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            : __fortify_function int
+<span class="lineNum">     114 </span>            : vprintf (const char *__restrict __fmt, _G_va_list __ap)
+<span class="lineNum">     115 </span>            : {
+<span class="lineNum">     116 </span>            : #ifdef __USE_EXTERN_INLINES
+<span class="lineNum">     117 </span>            :   return __vfprintf_chk (stdout, __USE_FORTIFY_LEVEL - 1, __fmt, __ap);
+<span class="lineNum">     118 </span>            : #else
+<span class="lineNum">     119 </span>            :   return __vprintf_chk (__USE_FORTIFY_LEVEL - 1, __fmt, __ap);
+<span class="lineNum">     120 </span>            : #endif
+<span class="lineNum">     121 </span>            : }
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : __fortify_function int
+<span class="lineNum">     124 </span>            : vfprintf (FILE *__restrict __stream,
+<span class="lineNum">     125 </span>            :           const char *__restrict __fmt, _G_va_list __ap)
+<span class="lineNum">     126 </span>            : {
+<span class="lineNum">     127 </span>            :   return __vfprintf_chk (__stream, __USE_FORTIFY_LEVEL - 1, __fmt, __ap);
+<span class="lineNum">     128 </span>            : }
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : # ifdef __USE_XOPEN2K8
+<span class="lineNum">     131 </span>            : extern int __dprintf_chk (int __fd, int __flag, const char *__restrict __fmt,
+<span class="lineNum">     132 </span>            :                           ...) __attribute__ ((__format__ (__printf__, 3, 4)));
+<span class="lineNum">     133 </span>            : extern int __vdprintf_chk (int __fd, int __flag,
+<span class="lineNum">     134 </span>            :                            const char *__restrict __fmt, _G_va_list __arg)
+<span class="lineNum">     135 </span>            :      __attribute__ ((__format__ (__printf__, 3, 0)));
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : #  ifdef __va_arg_pack
+<span class="lineNum">     138 </span>            : __fortify_function int
+<span class="lineNum">     139 </span>            : dprintf (int __fd, const char *__restrict __fmt, ...)
+<span class="lineNum">     140 </span>            : {
+<span class="lineNum">     141 </span>            :   return __dprintf_chk (__fd, __USE_FORTIFY_LEVEL - 1, __fmt,
+<span class="lineNum">     142 </span>            :                         __va_arg_pack ());
+<span class="lineNum">     143 </span>            : }
+<span class="lineNum">     144 </span>            : #  elif !defined __cplusplus
+<span class="lineNum">     145 </span>            : #   define dprintf(fd, ...) \
+<span class="lineNum">     146 </span>            :   __dprintf_chk (fd, __USE_FORTIFY_LEVEL - 1, __VA_ARGS__)
+<span class="lineNum">     147 </span>            : #  endif
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            : __fortify_function int
+<span class="lineNum">     150 </span>            : vdprintf (int __fd, const char *__restrict __fmt, _G_va_list __ap)
+<span class="lineNum">     151 </span>            : {
+<span class="lineNum">     152 </span>            :   return __vdprintf_chk (__fd, __USE_FORTIFY_LEVEL - 1, __fmt, __ap);
+<span class="lineNum">     153 </span>            : }
+<span class="lineNum">     154 </span>            : # endif
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            : # ifdef __USE_GNU
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            : extern int __asprintf_chk (char **__restrict __ptr, int __flag,
+<span class="lineNum">     159 </span>            :                            const char *__restrict __fmt, ...)
+<span class="lineNum">     160 </span>            :      __THROW __attribute__ ((__format__ (__printf__, 3, 4))) __wur;
+<span class="lineNum">     161 </span>            : extern int __vasprintf_chk (char **__restrict __ptr, int __flag,
+<span class="lineNum">     162 </span>            :                             const char *__restrict __fmt, _G_va_list __arg)
+<span class="lineNum">     163 </span>            :      __THROW __attribute__ ((__format__ (__printf__, 3, 0))) __wur;
+<span class="lineNum">     164 </span>            : extern int __obstack_printf_chk (struct obstack *__restrict __obstack,
+<span class="lineNum">     165 </span>            :                                  int __flag, const char *__restrict __format,
+<span class="lineNum">     166 </span>            :                                  ...)
+<span class="lineNum">     167 </span>            :      __THROW __attribute__ ((__format__ (__printf__, 3, 4)));
+<span class="lineNum">     168 </span>            : extern int __obstack_vprintf_chk (struct obstack *__restrict __obstack,
+<span class="lineNum">     169 </span>            :                                   int __flag,
+<span class="lineNum">     170 </span>            :                                   const char *__restrict __format,
+<span class="lineNum">     171 </span>            :                                   _G_va_list __args)
+<span class="lineNum">     172 </span>            :      __THROW __attribute__ ((__format__ (__printf__, 3, 0)));
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : #  ifdef __va_arg_pack
+<span class="lineNum">     175 </span>            : __fortify_function int
+<span class="lineNum">     176 </span>            : __NTH (asprintf (char **__restrict __ptr, const char *__restrict __fmt, ...))
+<span class="lineNum">     177 </span>            : {
+<span class="lineNum">     178 </span>            :   return __asprintf_chk (__ptr, __USE_FORTIFY_LEVEL - 1, __fmt,
+<span class="lineNum">     179 </span>            :                          __va_arg_pack ());
+<span class="lineNum">     180 </span>            : }
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            : __fortify_function int
+<span class="lineNum">     183 </span>            : __NTH (__asprintf (char **__restrict __ptr, const char *__restrict __fmt,
+<span class="lineNum">     184 </span>            :                    ...))
+<span class="lineNum">     185 </span>            : {
+<span class="lineNum">     186 </span>            :   return __asprintf_chk (__ptr, __USE_FORTIFY_LEVEL - 1, __fmt,
+<span class="lineNum">     187 </span>            :                          __va_arg_pack ());
+<span class="lineNum">     188 </span>            : }
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            : __fortify_function int
+<span class="lineNum">     191 </span>            : __NTH (obstack_printf (struct obstack *__restrict __obstack,
+<span class="lineNum">     192 </span>            :                        const char *__restrict __fmt, ...))
+<span class="lineNum">     193 </span>            : {
+<span class="lineNum">     194 </span>            :   return __obstack_printf_chk (__obstack, __USE_FORTIFY_LEVEL - 1, __fmt,
+<span class="lineNum">     195 </span>            :                                __va_arg_pack ());
+<span class="lineNum">     196 </span>            : }
+<span class="lineNum">     197 </span>            : #  elif !defined __cplusplus
+<span class="lineNum">     198 </span>            : #   define asprintf(ptr, ...) \
+<span class="lineNum">     199 </span>            :   __asprintf_chk (ptr, __USE_FORTIFY_LEVEL - 1, __VA_ARGS__)
+<span class="lineNum">     200 </span>            : #   define __asprintf(ptr, ...) \
+<span class="lineNum">     201 </span>            :   __asprintf_chk (ptr, __USE_FORTIFY_LEVEL - 1, __VA_ARGS__)
+<span class="lineNum">     202 </span>            : #   define obstack_printf(obstack, ...) \
+<span class="lineNum">     203 </span>            :   __obstack_printf_chk (obstack, __USE_FORTIFY_LEVEL - 1, __VA_ARGS__)
+<span class="lineNum">     204 </span>            : #  endif
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            : __fortify_function int
+<span class="lineNum">     207 </span>            : __NTH (vasprintf (char **__restrict __ptr, const char *__restrict __fmt,
+<span class="lineNum">     208 </span>            :                   _G_va_list __ap))
+<span class="lineNum">     209 </span>            : {
+<span class="lineNum">     210 </span>            :   return __vasprintf_chk (__ptr, __USE_FORTIFY_LEVEL - 1, __fmt, __ap);
+<span class="lineNum">     211 </span>            : }
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            : __fortify_function int
+<span class="lineNum">     214 </span>            : __NTH (obstack_vprintf (struct obstack *__restrict __obstack,
+<span class="lineNum">     215 </span>            :                         const char *__restrict __fmt, _G_va_list __ap))
+<span class="lineNum">     216 </span>            : {
+<span class="lineNum">     217 </span>            :   return __obstack_vprintf_chk (__obstack, __USE_FORTIFY_LEVEL - 1, __fmt,
+<span class="lineNum">     218 </span>            :                                 __ap);
+<span class="lineNum">     219 </span>            : }
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            : # endif
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            : #endif
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span>            : #if !defined __USE_ISOC11 \
+<span class="lineNum">     226 </span>            :     || (defined __cplusplus &amp;&amp; __cplusplus &lt;= 201103L &amp;&amp; !defined __USE_GNU)
+<span class="lineNum">     227 </span>            : extern char *__gets_chk (char *__str, size_t) __wur;
+<span class="lineNum">     228 </span>            : extern char *__REDIRECT (__gets_warn, (char *__str), gets)
+<span class="lineNum">     229 </span>            :      __wur __warnattr (&quot;please use fgets or getline instead, gets can't &quot;
+<span class="lineNum">     230 </span>            :                        &quot;specify buffer size&quot;);
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            : __fortify_function __wur char *
+<span class="lineNum">     233 </span>            : gets (char *__str)
+<span class="lineNum">     234 </span>            : {
+<span class="lineNum">     235 </span>            :   if (__bos (__str) != (size_t) -1)
+<span class="lineNum">     236 </span>            :     return __gets_chk (__str, __bos (__str));
+<span class="lineNum">     237 </span>            :   return __gets_warn (__str);
+<span class="lineNum">     238 </span>            : }
+<span class="lineNum">     239 </span>            : #endif
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            : extern char *__fgets_chk (char *__restrict __s, size_t __size, int __n,
+<span class="lineNum">     242 </span>            :                           FILE *__restrict __stream) __wur;
+<span class="lineNum">     243 </span>            : extern char *__REDIRECT (__fgets_alias,
+<span class="lineNum">     244 </span>            :                          (char *__restrict __s, int __n,
+<span class="lineNum">     245 </span>            :                           FILE *__restrict __stream), fgets) __wur;
+<span class="lineNum">     246 </span>            : extern char *__REDIRECT (__fgets_chk_warn,
+<span class="lineNum">     247 </span>            :                          (char *__restrict __s, size_t __size, int __n,
+<span class="lineNum">     248 </span>            :                           FILE *__restrict __stream), __fgets_chk)
+<span class="lineNum">     249 </span>            :      __wur __warnattr (&quot;fgets called with bigger size than length &quot;
+<span class="lineNum">     250 </span>            :                        &quot;of destination buffer&quot;);
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            : __fortify_function __wur char *
+<span class="lineNum">     253 </span>            : fgets (char *__restrict __s, int __n, FILE *__restrict __stream)
+<span class="lineNum">     254 </span>            : {
+<span class="lineNum">     255 </span>            :   if (__bos (__s) != (size_t) -1)
+<span class="lineNum">     256 </span>            :     {
+<span class="lineNum">     257 </span>            :       if (!__builtin_constant_p (__n) || __n &lt;= 0)
+<span class="lineNum">     258 </span>            :         return __fgets_chk (__s, __bos (__s), __n, __stream);
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span>            :       if ((size_t) __n &gt; __bos (__s))
+<span class="lineNum">     261 </span>            :         return __fgets_chk_warn (__s, __bos (__s), __n, __stream);
+<span class="lineNum">     262 </span>            :     }
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :   return __fgets_alias (__s, __n, __stream);</span>
+<span class="lineNum">     264 </span>            : }
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            : extern size_t __fread_chk (void *__restrict __ptr, size_t __ptrlen,
+<span class="lineNum">     267 </span>            :                            size_t __size, size_t __n,
+<span class="lineNum">     268 </span>            :                            FILE *__restrict __stream) __wur;
+<span class="lineNum">     269 </span>            : extern size_t __REDIRECT (__fread_alias,
+<span class="lineNum">     270 </span>            :                           (void *__restrict __ptr, size_t __size,
+<span class="lineNum">     271 </span>            :                            size_t __n, FILE *__restrict __stream),
+<span class="lineNum">     272 </span>            :                           fread) __wur;
+<span class="lineNum">     273 </span>            : extern size_t __REDIRECT (__fread_chk_warn,
+<span class="lineNum">     274 </span>            :                           (void *__restrict __ptr, size_t __ptrlen,
+<span class="lineNum">     275 </span>            :                            size_t __size, size_t __n,
+<span class="lineNum">     276 </span>            :                            FILE *__restrict __stream),
+<span class="lineNum">     277 </span>            :                           __fread_chk)
+<span class="lineNum">     278 </span>            :      __wur __warnattr (&quot;fread called with bigger size * nmemb than length &quot;
+<span class="lineNum">     279 </span>            :                        &quot;of destination buffer&quot;);
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span>            : __fortify_function __wur size_t
+<span class="lineNum">     282 </span>            : fread (void *__restrict __ptr, size_t __size, size_t __n,
+<span class="lineNum">     283 </span>            :        FILE *__restrict __stream)
+<span class="lineNum">     284 </span>            : {
+<span class="lineNum">     285 </span>            :   if (__bos0 (__ptr) != (size_t) -1)
+<span class="lineNum">     286 </span>            :     {
+<span class="lineNum">     287 </span>            :       if (!__builtin_constant_p (__size)
+<span class="lineNum">     288 </span>            :           || !__builtin_constant_p (__n)
+<span class="lineNum">     289 </span>            :           || (__size | __n) &gt;= (((size_t) 1) &lt;&lt; (8 * sizeof (size_t) / 2)))
+<span class="lineNum">     290 </span>            :         return __fread_chk (__ptr, __bos0 (__ptr), __size, __n, __stream);
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span>            :       if (__size * __n &gt; __bos0 (__ptr))
+<span class="lineNum">     293 </span>            :         return __fread_chk_warn (__ptr, __bos0 (__ptr), __size, __n, __stream);
+<span class="lineNum">     294 </span>            :     }
+<span class="lineNum">     295 </span><span class="lineCov">          1 :   return __fread_alias (__ptr, __size, __n, __stream);</span>
+<span class="lineNum">     296 </span>            : }
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            : #ifdef __USE_GNU
+<span class="lineNum">     299 </span>            : extern char *__fgets_unlocked_chk (char *__restrict __s, size_t __size,
+<span class="lineNum">     300 </span>            :                                    int __n, FILE *__restrict __stream) __wur;
+<span class="lineNum">     301 </span>            : extern char *__REDIRECT (__fgets_unlocked_alias,
+<span class="lineNum">     302 </span>            :                          (char *__restrict __s, int __n,
+<span class="lineNum">     303 </span>            :                           FILE *__restrict __stream), fgets_unlocked) __wur;
+<span class="lineNum">     304 </span>            : extern char *__REDIRECT (__fgets_unlocked_chk_warn,
+<span class="lineNum">     305 </span>            :                          (char *__restrict __s, size_t __size, int __n,
+<span class="lineNum">     306 </span>            :                           FILE *__restrict __stream), __fgets_unlocked_chk)
+<span class="lineNum">     307 </span>            :      __wur __warnattr (&quot;fgets_unlocked called with bigger size than length &quot;
+<span class="lineNum">     308 </span>            :                        &quot;of destination buffer&quot;);
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            : __fortify_function __wur char *
+<span class="lineNum">     311 </span>            : fgets_unlocked (char *__restrict __s, int __n, FILE *__restrict __stream)
+<span class="lineNum">     312 </span>            : {
+<span class="lineNum">     313 </span>            :   if (__bos (__s) != (size_t) -1)
+<span class="lineNum">     314 </span>            :     {
+<span class="lineNum">     315 </span>            :       if (!__builtin_constant_p (__n) || __n &lt;= 0)
+<span class="lineNum">     316 </span>            :         return __fgets_unlocked_chk (__s, __bos (__s), __n, __stream);
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            :       if ((size_t) __n &gt; __bos (__s))
+<span class="lineNum">     319 </span>            :         return __fgets_unlocked_chk_warn (__s, __bos (__s), __n, __stream);
+<span class="lineNum">     320 </span>            :     }
+<span class="lineNum">     321 </span>            :   return __fgets_unlocked_alias (__s, __n, __stream);
+<span class="lineNum">     322 </span>            : }
+<span class="lineNum">     323 </span>            : #endif
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span>            : #ifdef __USE_MISC
+<span class="lineNum">     326 </span>            : # undef fread_unlocked
+<span class="lineNum">     327 </span>            : extern size_t __fread_unlocked_chk (void *__restrict __ptr, size_t __ptrlen,
+<span class="lineNum">     328 </span>            :                                     size_t __size, size_t __n,
+<span class="lineNum">     329 </span>            :                                     FILE *__restrict __stream) __wur;
+<span class="lineNum">     330 </span>            : extern size_t __REDIRECT (__fread_unlocked_alias,
+<span class="lineNum">     331 </span>            :                           (void *__restrict __ptr, size_t __size,
+<span class="lineNum">     332 </span>            :                            size_t __n, FILE *__restrict __stream),
+<span class="lineNum">     333 </span>            :                           fread_unlocked) __wur;
+<span class="lineNum">     334 </span>            : extern size_t __REDIRECT (__fread_unlocked_chk_warn,
+<span class="lineNum">     335 </span>            :                           (void *__restrict __ptr, size_t __ptrlen,
+<span class="lineNum">     336 </span>            :                            size_t __size, size_t __n,
+<span class="lineNum">     337 </span>            :                            FILE *__restrict __stream),
+<span class="lineNum">     338 </span>            :                           __fread_unlocked_chk)
+<span class="lineNum">     339 </span>            :      __wur __warnattr (&quot;fread_unlocked called with bigger size * nmemb than &quot;
+<span class="lineNum">     340 </span>            :                        &quot;length of destination buffer&quot;);
+<span class="lineNum">     341 </span>            : 
+<span class="lineNum">     342 </span>            : __fortify_function __wur size_t
+<span class="lineNum">     343 </span>            : fread_unlocked (void *__restrict __ptr, size_t __size, size_t __n,
+<span class="lineNum">     344 </span>            :                 FILE *__restrict __stream)
+<span class="lineNum">     345 </span>            : {
+<span class="lineNum">     346 </span>            :   if (__bos0 (__ptr) != (size_t) -1)
+<span class="lineNum">     347 </span>            :     {
+<span class="lineNum">     348 </span>            :       if (!__builtin_constant_p (__size)
+<span class="lineNum">     349 </span>            :           || !__builtin_constant_p (__n)
+<span class="lineNum">     350 </span>            :           || (__size | __n) &gt;= (((size_t) 1) &lt;&lt; (8 * sizeof (size_t) / 2)))
+<span class="lineNum">     351 </span>            :         return __fread_unlocked_chk (__ptr, __bos0 (__ptr), __size, __n,
+<span class="lineNum">     352 </span>            :                                      __stream);
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span>            :       if (__size * __n &gt; __bos0 (__ptr))
+<span class="lineNum">     355 </span>            :         return __fread_unlocked_chk_warn (__ptr, __bos0 (__ptr), __size, __n,
+<span class="lineNum">     356 </span>            :                                           __stream);
+<span class="lineNum">     357 </span>            :     }
+<span class="lineNum">     358 </span>            : 
+<span class="lineNum">     359 </span>            : # ifdef __USE_EXTERN_INLINES
+<span class="lineNum">     360 </span>            :   if (__builtin_constant_p (__size)
+<span class="lineNum">     361 </span>            :       &amp;&amp; __builtin_constant_p (__n)
+<span class="lineNum">     362 </span>            :       &amp;&amp; (__size | __n) &lt; (((size_t) 1) &lt;&lt; (8 * sizeof (size_t) / 2))
+<span class="lineNum">     363 </span>            :       &amp;&amp; __size * __n &lt;= 8)
+<span class="lineNum">     364 </span>            :     {
+<span class="lineNum">     365 </span>            :       size_t __cnt = __size * __n;
+<span class="lineNum">     366 </span>            :       char *__cptr = (char *) __ptr;
+<span class="lineNum">     367 </span>            :       if (__cnt == 0)
+<span class="lineNum">     368 </span>            :         return 0;
+<span class="lineNum">     369 </span>            : 
+<span class="lineNum">     370 </span>            :       for (; __cnt &gt; 0; --__cnt)
+<span class="lineNum">     371 </span>            :         {
+<span class="lineNum">     372 </span>            :           int __c = _IO_getc_unlocked (__stream);
+<span class="lineNum">     373 </span>            :           if (__c == EOF)
+<span class="lineNum">     374 </span>            :             break;
+<span class="lineNum">     375 </span>            :           *__cptr++ = __c;
+<span class="lineNum">     376 </span>            :         }
+<span class="lineNum">     377 </span>            :       return (__cptr - (char *) __ptr) / __size;
+<span class="lineNum">     378 </span>            :     }
+<span class="lineNum">     379 </span>            : # endif
+<span class="lineNum">     380 </span>            :   return __fread_unlocked_alias (__ptr, __size, __n, __stream);
+<span class="lineNum">     381 </span>            : }
+<span class="lineNum">     382 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

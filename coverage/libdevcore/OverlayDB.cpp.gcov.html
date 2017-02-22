@@ -1,0 +1,249 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/OverlayDB.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - OverlayDB.cpp<span style="font-size: 80%;"> (source / <a href="OverlayDB.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">57</td>
+            <td class="headerCovTableEntry">71</td>
+            <td class="headerCovTableEntryMed">80.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryLo">71.4 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file OverlayDB.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : #if !defined(ETH_EMSCRIPTEN)
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;thread&gt;
+<span class="lineNum">      24 </span>            : #include &lt;libdevcore/db.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      26 </span>            : #include &quot;OverlayDB.h&quot;
+<span class="lineNum">      27 </span>            : using namespace std;
+<span class="lineNum">      28 </span>            : using namespace dev;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace dev
+<span class="lineNum">      31 </span>            : {
+<span class="lineNum">      32 </span>            : 
+<a name="33"><span class="lineNum">      33 </span><span class="lineCov">          2 : h256 const EmptyTrie = sha3(rlp(&quot;&quot;));</span></a>
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span><span class="lineCov">    2156752 : OverlayDB::~OverlayDB()</span>
+<span class="lineNum">      36 </span>            : {
+<span class="lineNum">      37 </span><span class="lineCov">    1078376 :         if (m_db.use_count() == 1 &amp;&amp; m_db.get())</span>
+<span class="lineNum">      38 </span><span class="lineCov">       9555 :                 ctrace &lt;&lt; &quot;Closing state DB&quot;;</span>
+<a name="39"><span class="lineNum">      39 </span><span class="lineCov">     539188 : }</span></a>
+<span class="lineNum">      40 </span>            : 
+<a name="41"><span class="lineNum">      41 </span><span class="lineNoCov">          0 : class WriteBatchNoter: public ldb::WriteBatch::Handler</span></a>
+<a name="42"><span class="lineNum">      42 </span>            : {</a>
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 :         virtual void Put(ldb::Slice const&amp; _key, ldb::Slice const&amp; _value) { cnote &lt;&lt; &quot;Put&quot; &lt;&lt; toHex(bytesConstRef(_key)) &lt;&lt; &quot;=&gt;&quot; &lt;&lt; toHex(bytesConstRef(_value)); }</span>
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :         virtual void Delete(ldb::Slice const&amp; _key) { cnote &lt;&lt; &quot;Delete&quot; &lt;&lt; toHex(bytesConstRef(_key)); }</span>
+<a name="45"><span class="lineNum">      45 </span>            : };</a>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineCov">       4945 : void OverlayDB::commit()</span>
+<span class="lineNum">      48 </span>            : {
+<span class="lineNum">      49 </span><span class="lineCov">       4945 :         if (m_db)</span>
+<span class="lineNum">      50 </span>            :         {
+<span class="lineNum">      51 </span><span class="lineCov">       9890 :                 ldb::WriteBatch batch;</span>
+<span class="lineNum">      52 </span>            : //              cnote &lt;&lt; &quot;Committing nodes to disk DB:&quot;;
+<span class="lineNum">      53 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">      54 </span>            :                 DEV_READ_GUARDED(x_this)
+<span class="lineNum">      55 </span>            : #endif
+<span class="lineNum">      56 </span>            :                 {
+<span class="lineNum">      57 </span><span class="lineCov">     136747 :                         for (auto const&amp; i: m_main)</span>
+<span class="lineNum">      58 </span>            :                         {
+<span class="lineNum">      59 </span><span class="lineCov">     121912 :                                 if (i.second.second)</span>
+<span class="lineNum">      60 </span><span class="lineCov">     272140 :                                         batch.Put(ldb::Slice((char const*)i.first.data(), i.first.size), ldb::Slice(i.second.first.data(), i.second.first.size()));</span>
+<span class="lineNum">      61 </span>            : //                              cnote &lt;&lt; i.first &lt;&lt; &quot;#&quot; &lt;&lt; m_main[i.first].second;
+<span class="lineNum">      62 </span>            :                         }
+<span class="lineNum">      63 </span><span class="lineCov">      44977 :                         for (auto const&amp; i: m_aux)</span>
+<span class="lineNum">      64 </span><span class="lineCov">      30142 :                                 if (i.second.second)</span>
+<span class="lineNum">      65 </span>            :                                 {
+<span class="lineNum">      66 </span><span class="lineCov">      90426 :                                         bytes b = i.first.asBytes();</span>
+<span class="lineNum">      67 </span><span class="lineCov">      60284 :                                         b.push_back(255);       // for aux</span>
+<span class="lineNum">      68 </span><span class="lineCov">     150710 :                                         batch.Put(bytesConstRef(&amp;b), bytesConstRef(&amp;i.second.first));</span>
+<span class="lineNum">      69 </span>            :                                 }
+<span class="lineNum">      70 </span>            :                 }
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span><span class="lineCov">       4945 :                 for (unsigned i = 0; i &lt; 10; ++i)</span>
+<span class="lineNum">      73 </span>            :                 {
+<span class="lineNum">      74 </span><span class="lineCov">       4945 :                         ldb::Status o = m_db-&gt;Write(m_writeOptions, &amp;batch);</span>
+<span class="lineNum">      75 </span><span class="lineCov">       4945 :                         if (o.ok())</span>
+<span class="lineNum">      76 </span>            :                                 break;
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :                         if (i == 9)</span>
+<span class="lineNum">      78 </span>            :                         {
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :                                 cwarn &lt;&lt; &quot;Fail writing to state database. Bombing out.&quot;;</span>
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :                                 exit(-1);</span>
+<span class="lineNum">      81 </span>            :                         }
+<span class="lineNum">      82 </span><span class="lineNoCov">          0 :                         cwarn &lt;&lt; &quot;Error writing to state database: &quot; &lt;&lt; o.ToString();</span>
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :                         WriteBatchNoter n;</span>
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :                         batch.Iterate(&amp;n);</span>
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :                         cwarn &lt;&lt; &quot;Sleeping for&quot; &lt;&lt; (i + 1) &lt;&lt; &quot;seconds, then retrying.&quot;;</span>
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :                         this_thread::sleep_for(chrono::seconds(i + 1));</span>
+<span class="lineNum">      87 </span>            :                 }
+<span class="lineNum">      88 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">      89 </span>            :                 DEV_WRITE_GUARDED(x_this)
+<span class="lineNum">      90 </span>            : #endif
+<span class="lineNum">      91 </span>            :                 {
+<span class="lineNum">      92 </span><span class="lineCov">       9890 :                         m_aux.clear();</span>
+<span class="lineNum">      93 </span><span class="lineCov">       9890 :                         m_main.clear();</span>
+<span class="lineNum">      94 </span>            :                 }
+<span class="lineNum">      95 </span>            :         }
+<a name="96"><span class="lineNum">      96 </span><span class="lineCov">       4945 : }</span></a>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineCov">      38292 : bytes OverlayDB::lookupAux(h256 const&amp; _h) const</span>
+<span class="lineNum">      99 </span>            : {
+<span class="lineNum">     100 </span><span class="lineCov">      76584 :         bytes ret = MemoryDB::lookupAux(_h);</span>
+<span class="lineNum">     101 </span><span class="lineCov">      38292 :         if (!ret.empty() || !m_db)</span>
+<span class="lineNum">     102 </span>            :                 return ret;
+<span class="lineNum">     103 </span><span class="lineCov">       5702 :         std::string v;</span>
+<span class="lineNum">     104 </span><span class="lineCov">      11404 :         bytes b = _h.asBytes();</span>
+<span class="lineNum">     105 </span><span class="lineCov">      11404 :         b.push_back(255);       // for aux</span>
+<span class="lineNum">     106 </span><span class="lineCov">      22808 :         m_db-&gt;Get(m_readOptions, bytesConstRef(&amp;b), &amp;v);</span>
+<span class="lineNum">     107 </span><span class="lineCov">       5702 :         if (v.empty())</span>
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Aux not found: &quot; &lt;&lt; _h;</span>
+<span class="lineNum">     109 </span><span class="lineCov">       5702 :         return asBytes(v);</span>
+<a name="110"><span class="lineNum">     110 </span>            : }</a>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span><span class="lineCov">         11 : void OverlayDB::rollback()</span>
+<span class="lineNum">     113 </span>            : {
+<span class="lineNum">     114 </span>            : #if DEV_GUARDED_DB
+<span class="lineNum">     115 </span>            :         WriteGuard l(x_this);
+<span class="lineNum">     116 </span>            : #endif
+<span class="lineNum">     117 </span><span class="lineCov">         22 :         m_main.clear();</span>
+<a name="118"><span class="lineNum">     118 </span><span class="lineCov">         11 : }</span></a>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span><span class="lineCov">    2154714 : std::string OverlayDB::lookup(h256 const&amp; _h) const</span>
+<span class="lineNum">     121 </span>            : {
+<span class="lineNum">     122 </span><span class="lineCov">    2154714 :         std::string ret = MemoryDB::lookup(_h);</span>
+<span class="lineNum">     123 </span><span class="lineCov">    2154714 :         if (ret.empty() &amp;&amp; m_db)</span>
+<span class="lineNum">     124 </span><span class="lineCov">     793348 :                 m_db-&gt;Get(m_readOptions, ldb::Slice((char const*)_h.data(), 32), &amp;ret);</span>
+<span class="lineNum">     125 </span><span class="lineCov">    2154714 :         return ret;</span>
+<a name="126"><span class="lineNum">     126 </span>            : }</a>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span><span class="lineCov">     103209 : bool OverlayDB::exists(h256 const&amp; _h) const</span>
+<span class="lineNum">     129 </span>            : {
+<span class="lineNum">     130 </span><span class="lineCov">     103209 :         if (MemoryDB::exists(_h))</span>
+<span class="lineNum">     131 </span>            :                 return true;
+<span class="lineNum">     132 </span><span class="lineCov">         22 :         std::string ret;</span>
+<span class="lineNum">     133 </span><span class="lineCov">         22 :         if (m_db)</span>
+<span class="lineNum">     134 </span><span class="lineCov">         88 :                 m_db-&gt;Get(m_readOptions, ldb::Slice((char const*)_h.data(), 32), &amp;ret);</span>
+<span class="lineNum">     135 </span><span class="lineCov">         22 :         return !ret.empty();</span>
+<a name="136"><span class="lineNum">     136 </span>            : }</a>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span><span class="lineCov">     273646 : void OverlayDB::kill(h256 const&amp; _h)</span>
+<span class="lineNum">     139 </span>            : {
+<span class="lineNum">     140 </span>            : #if ETH_PARANOIA || 1
+<span class="lineNum">     141 </span><span class="lineCov">     273646 :         if (!MemoryDB::kill(_h))</span>
+<span class="lineNum">     142 </span>            :         {
+<span class="lineNum">     143 </span><span class="lineCov">      63500 :                 std::string ret;</span>
+<span class="lineNum">     144 </span><span class="lineCov">      31750 :                 if (m_db)</span>
+<span class="lineNum">     145 </span><span class="lineCov">      89988 :                         m_db-&gt;Get(m_readOptions, ldb::Slice((char const*)_h.data(), 32), &amp;ret);</span>
+<span class="lineNum">     146 </span>            :                 // No point node ref decreasing for EmptyTrie since we never bother incrementing it in the first place for
+<span class="lineNum">     147 </span>            :                 // empty storage tries.
+<span class="lineNum">     148 </span><span class="lineCov">      41346 :                 if (ret.empty() &amp;&amp; _h != EmptyTrie)</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :                         cnote &lt;&lt; &quot;Decreasing DB node ref count below zero with no DB node. Probably have a corrupt Trie.&quot; &lt;&lt; _h;</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            :                 // TODO: for 1.1: ref-counted triedb.
+<span class="lineNum">     152 </span>            :         }
+<span class="lineNum">     153 </span>            : #else
+<span class="lineNum">     154 </span>            :         MemoryDB::kill(_h);
+<span class="lineNum">     155 </span>            : #endif
+<a name="156"><span class="lineNum">     156 </span><span class="lineCov">     273646 : }</span></a>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineCov">          1 : bool OverlayDB::deepkill(h256 const&amp; _h)</span>
+<span class="lineNum">     159 </span>            : {
+<span class="lineNum">     160 </span>            :         // kill in memoryDB
+<span class="lineNum">     161 </span><span class="lineCov">          1 :         kill(_h);</span>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            :         //kill in overlayDB
+<span class="lineNum">     164 </span><span class="lineCov">          4 :         ldb::Status s = m_db-&gt;Delete(m_writeOptions, ldb::Slice((char const*)_h.data(), 32));</span>
+<span class="lineNum">     165 </span><span class="lineCov">          1 :         if (s.ok())</span>
+<span class="lineNum">     166 </span>            :                 return true;
+<span class="lineNum">     167 </span>            :         else
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :                 return false;</span>
+<a name="169"><span class="lineNum">     169 </span>            : }</a>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            : #endif // ETH_EMSCRIPTEN
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

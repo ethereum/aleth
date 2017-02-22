@@ -1,0 +1,287 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/Executive.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - Executive.h<span style="font-size: 80%;"> (source / <a href="Executive.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryLo">60.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       4 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       5 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       6 </span>            :         (at your option) any later version.
+<span class="lineNum">       7 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">       8 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">       9 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      10 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      11 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      12 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      13 </span>            : */
+<span class="lineNum">      14 </span>            : /** @file Executive.h
+<span class="lineNum">      15 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      16 </span>            :  * @date 2014
+<span class="lineNum">      17 </span>            :  */
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #pragma once
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : #include &lt;functional&gt;
+<span class="lineNum">      22 </span>            : #include &lt;json/json.h&gt;
+<span class="lineNum">      23 </span>            : #include &lt;libdevcore/Log.h&gt;
+<span class="lineNum">      24 </span>            : #include &lt;libevmcore/Instruction.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libethcore/Common.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libevm/VMFace.h&gt;
+<span class="lineNum">      27 </span>            : #include &quot;Transaction.h&quot;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace Json
+<span class="lineNum">      30 </span>            : {
+<span class="lineNum">      31 </span>            :         class Value;
+<span class="lineNum">      32 </span>            : }
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace dev
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : class OverlayDB;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : namespace eth
+<span class="lineNum">      40 </span>            : {
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : class State;
+<span class="lineNum">      43 </span>            : class Block;
+<span class="lineNum">      44 </span>            : class BlockChain;
+<span class="lineNum">      45 </span>            : class ExtVM;
+<span class="lineNum">      46 </span>            : class SealEngineFace;
+<span class="lineNum">      47 </span>            : struct Manifest;
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : struct VMTraceChannel: public LogChannel { static const char* name(); static const int verbosity = 11; };
+<a name="50"><span class="lineNum">      50 </span>            : struct ExecutiveWarnChannel: public LogChannel { static const char* name(); static const int verbosity = 1; };</a>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 : class StandardTrace</span>
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span>            : public:
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :         struct DebugOptions</span>
+<span class="lineNum">      56 </span>            :         {
+<span class="lineNum">      57 </span>            :                 bool disableStorage = false;
+<span class="lineNum">      58 </span>            :                 bool disableMemory = false;
+<span class="lineNum">      59 </span>            :                 bool disableStack = false;
+<span class="lineNum">      60 </span>            :                 bool fullStorage = false;
+<span class="lineNum">      61 </span>            :         };
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            :         StandardTrace();
+<span class="lineNum">      64 </span>            :         void operator()(uint64_t _steps, uint64_t _PC, Instruction _inst, bigint _newMemSize, bigint _gasCost, bigint _gas, VM* _vm, ExtVMFace const* _extVM);
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :         void setShowMnemonics() { m_showMnemonics = true; }</span>
+<span class="lineNum">      67 </span>            :         void setOptions(DebugOptions _options) { m_options = _options; }
+<span class="lineNum">      68 </span>            : 
+<a name="69"><span class="lineNum">      69 </span>            :         std::string json(bool _styled = false) const;</a>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :         OnOpFunc onOp() { return [=](uint64_t _steps, uint64_t _PC, Instruction _inst, bigint _newMemSize, bigint _gasCost, bigint _gas, VM* _vm, ExtVMFace const* _extVM) { (*this)(_steps, _PC, _inst, _newMemSize, _gasCost, _gas, _vm, _extVM); }; }</span>
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : private:
+<span class="lineNum">      74 </span>            :         bool m_showMnemonics = false;
+<span class="lineNum">      75 </span>            :         std::vector&lt;Instruction&gt; m_lastInst;
+<span class="lineNum">      76 </span>            :         bytes m_lastCallData;
+<span class="lineNum">      77 </span>            :         Json::Value m_trace;
+<span class="lineNum">      78 </span>            :         DebugOptions m_options;
+<span class="lineNum">      79 </span>            : };
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : /**
+<span class="lineNum">      83 </span>            :  * @brief Message-call/contract-creation executor; useful for executing transactions.
+<span class="lineNum">      84 </span>            :  *
+<span class="lineNum">      85 </span>            :  * Two ways of using this class - either as a transaction executive or a CALL/CREATE executive.
+<span class="lineNum">      86 </span>            :  *
+<span class="lineNum">      87 </span>            :  * In the first use, after construction, begin with initialize(), then execute() and end with finalize(). Call go()
+<span class="lineNum">      88 </span>            :  * after execute() only if it returns false.
+<span class="lineNum">      89 </span>            :  *
+<span class="lineNum">      90 </span>            :  * In the second use, after construction, begin with call() or create() and end with
+<span class="lineNum">      91 </span>            :  * accrueSubState(). Call go() after call()/create() only if it returns false.
+<span class="lineNum">      92 </span>            :  *
+<span class="lineNum">      93 </span>            :  * Example:
+<span class="lineNum">      94 </span>            :  * @code
+<span class="lineNum">      95 </span>            :  * Executive e(state, blockchain, 0);
+<span class="lineNum">      96 </span>            :  * e.initialize(transaction);
+<span class="lineNum">      97 </span>            :  * if (!e.execute())
+<span class="lineNum">      98 </span>            :  *    e.go();
+<span class="lineNum">      99 </span>            :  * e.finalize();
+<a name="100"><span class="lineNum">     100 </span>            :  * @endcode</a>
+<span class="lineNum">     101 </span>            :  */
+<span class="lineNum">     102 </span><span class="lineCov">    3225594 : class Executive</span>
+<span class="lineNum">     103 </span>            : {
+<a name="104"><span class="lineNum">     104 </span>            : public:</a>
+<span class="lineNum">     105 </span>            :         /// Simple constructor; executive will operate on given state, with the given environment info.
+<span class="lineNum">     106 </span><span class="lineCov">    5375990 :         Executive(State&amp; _s, EnvInfo const&amp; _envInfo, SealEngineFace const&amp; _sealEngine, unsigned _level = 0): m_s(_s), m_envInfo(_envInfo), m_depth(_level), m_sealEngine(_sealEngine) {}</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :         /** Easiest constructor.
+<span class="lineNum">     109 </span>            :          * Creates executive to operate on the state of end of the given block, populating environment
+<span class="lineNum">     110 </span>            :          * info from given Block and the LastHashes portion from the BlockChain.
+<span class="lineNum">     111 </span>            :          */
+<span class="lineNum">     112 </span>            :         Executive(Block&amp; _s, BlockChain const&amp; _bc, unsigned _level = 0);
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :         /** LastHashes-split constructor.
+<span class="lineNum">     115 </span>            :          * Creates executive to operate on the state of end of the given block, populating environment
+<span class="lineNum">     116 </span>            :          * info accordingly, with last hashes given explicitly.
+<span class="lineNum">     117 </span>            :          */
+<span class="lineNum">     118 </span>            :         Executive(Block&amp; _s, LastHashes const&amp; _lh = LastHashes(), unsigned _level = 0);
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            :         /** Previous-state constructor.
+<span class="lineNum">     121 </span>            :          * Creates executive to operate on the state of a particular transaction in the given block,
+<span class="lineNum">     122 </span>            :          * populating environment info from the given Block and the LastHashes portion from the BlockChain.
+<span class="lineNum">     123 </span>            :          * State is assigned the resultant value, but otherwise unused.
+<span class="lineNum">     124 </span>            :          */
+<span class="lineNum">     125 </span>            :         Executive(State&amp; _s, Block const&amp; _block, unsigned _txIndex, BlockChain const&amp; _bc, unsigned _level = 0);
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :         Executive(Executive const&amp;) = delete;
+<span class="lineNum">     128 </span>            :         void operator=(Executive) = delete;
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :         /// Initializes the executive for evaluating a transaction. You must call finalize() at some point following this.
+<span class="lineNum">     131 </span>            :         void initialize(bytesConstRef _transaction) { initialize(Transaction(_transaction, CheckTransaction::None)); }
+<span class="lineNum">     132 </span>            :         void initialize(Transaction const&amp; _transaction);
+<span class="lineNum">     133 </span>            :         /// Finalise a transaction previously set up with initialize().
+<span class="lineNum">     134 </span>            :         /// @warning Only valid after initialize() and execute(), and possibly go().
+<span class="lineNum">     135 </span>            :         void finalize();
+<span class="lineNum">     136 </span>            :         /// Begins execution of a transaction. You must call finalize() following this.
+<span class="lineNum">     137 </span>            :         /// @returns true if the transaction is done, false if go() must be called.
+<span class="lineNum">     138 </span>            :         bool execute();
+<span class="lineNum">     139 </span>            :         /// @returns the transaction from initialize().
+<span class="lineNum">     140 </span>            :         /// @warning Only valid after initialize().
+<span class="lineNum">     141 </span>            :         Transaction const&amp; t() const { return m_t; }
+<span class="lineNum">     142 </span>            :         /// @returns the log entries created by this operation.
+<span class="lineNum">     143 </span>            :         /// @warning Only valid after finalise().
+<span class="lineNum">     144 </span>            :         LogEntries const&amp; logs() const { return m_logs; }
+<span class="lineNum">     145 </span>            :         /// @returns total gas used in the transaction/operation.
+<span class="lineNum">     146 </span>            :         /// @warning Only valid after finalise().
+<span class="lineNum">     147 </span>            :         u256 gasUsed() const;
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">     295472 :         owning_bytes_ref takeOutput() { return std::move(m_output); }</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            :         /// Set up the executive for evaluating a bare CREATE (contract-creation) operation.
+<span class="lineNum">     152 </span>            :         /// @returns false iff go() must be called (and thus a VM execution in required).
+<span class="lineNum">     153 </span>            :         bool create(Address _txSender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _code, Address _originAddress);
+<span class="lineNum">     154 </span>            :         /// Set up the executive for evaluating a bare CALL (message call) operation.
+<span class="lineNum">     155 </span>            :         /// @returns false iff go() must be called (and thus a VM execution in required).
+<span class="lineNum">     156 </span>            :         bool call(Address _receiveAddress, Address _txSender, u256 _txValue, u256 _gasPrice, bytesConstRef _txData, u256 _gas);
+<span class="lineNum">     157 </span>            :         bool call(CallParameters const&amp; _cp, u256 const&amp; _gasPrice, Address const&amp; _origin);
+<span class="lineNum">     158 </span>            :         /// Finalise an operation through accruing the substate into the parent context.
+<span class="lineNum">     159 </span>            :         void accrueSubState(SubState&amp; _parentContext);
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :         /// Executes (or continues execution of) the VM.
+<span class="lineNum">     162 </span>            :         /// @returns false iff go() must be called again to finish the transaction.
+<span class="lineNum">     163 </span>            :         bool go(OnOpFunc const&amp; _onOp = OnOpFunc());
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :         /// Operation function for providing a simple trace of the VM execution.
+<span class="lineNum">     166 </span>            :         static OnOpFunc simpleTrace();
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :         /// Operation function for providing a simple trace of the VM execution.
+<span class="lineNum">     169 </span>            :         static OnOpFunc standardTrace(std::ostream&amp; o_output);
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            :         /// @returns gas remaining after the transaction/operation. Valid after the transaction has been executed.
+<span class="lineNum">     172 </span><span class="lineCov">     495402 :         u256 gas() const { return m_gas; }</span>
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            :         /// @returns the new address for the created contract in the CREATE operation.
+<span class="lineNum">     175 </span><span class="lineCov">       3890 :         Address newAddress() const { return m_newAddress; }</span>
+<span class="lineNum">     176 </span>            :         /// @returns true iff the operation ended with a VM exception.
+<span class="lineNum">     177 </span>            :         bool excepted() const { return m_excepted != TransactionException::None; }
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :         /// Collect execution results in the result storage provided.
+<span class="lineNum">     180 </span><span class="lineCov">     289898 :         void setResultRecipient(ExecutionResult&amp; _res) { m_res = &amp;_res; }</span>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            :         /// Revert all changes made to the state by this execution.
+<span class="lineNum">     183 </span>            :         void revert();
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            : private:
+<span class="lineNum">     186 </span>            :         State&amp; m_s;                                                 ///&lt; The state to which this operation/transaction is applied.
+<span class="lineNum">     187 </span>            :         // TODO: consider changign to EnvInfo const&amp; to avoid LastHashes copy at every CALL/CREATE
+<span class="lineNum">     188 </span>            :         EnvInfo m_envInfo;                                      ///&lt; Information on the runtime environment.
+<span class="lineNum">     189 </span>            :         std::shared_ptr&lt;ExtVM&gt; m_ext;             ///&lt; The VM externality object for the VM execution or null if no VM is required. shared_ptr used only to allow ExtVM forward reference. This field does *NOT* survive this object.
+<span class="lineNum">     190 </span>            :         owning_bytes_ref m_output;                      ///&lt; Execution output.
+<span class="lineNum">     191 </span>            :         ExecutionResult* m_res = nullptr;       ///&lt; Optional storage for execution results.
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            :         unsigned m_depth = 0;                           ///&lt; The context's call-depth.
+<span class="lineNum">     194 </span>            :         TransactionException m_excepted = TransactionException::None;   ///&lt; Details if the VM's execution resulted in an exception.
+<span class="lineNum">     195 </span>            :         bigint m_baseGasRequired;                               ///&lt; The base amount of gas requried for executing this transactions.
+<span class="lineNum">     196 </span>            :         u256 m_gas = 0;                                         ///&lt; The gas for EVM code execution. Initial amount before go() execution, final amount after go() execution.
+<span class="lineNum">     197 </span>            :         u256 m_refunded = 0;                            ///&lt; The amount of gas refunded.
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            :         Transaction m_t;                                        ///&lt; The original transaction. Set by setup().
+<span class="lineNum">     200 </span>            :         LogEntries m_logs;                                      ///&lt; The log entries created by this transaction. Set by finalize().
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            :         u256 m_gasCost;
+<span class="lineNum">     203 </span>            :         SealEngineFace const&amp; m_sealEngine;
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            :         bool m_isCreation = false;
+<span class="lineNum">     206 </span>            :         Address m_newAddress;
+<span class="lineNum">     207 </span>            :         size_t m_savepoint = 0;
+<span class="lineNum">     208 </span>            : };
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            : }
+<span class="lineNum">     211 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

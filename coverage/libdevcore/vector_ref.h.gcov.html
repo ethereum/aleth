@@ -1,0 +1,196 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/vector_ref.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - vector_ref.h<span style="font-size: 80%;"> (source / <a href="vector_ref.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">40</td>
+            <td class="headerCovTableEntry">42</td>
+            <td class="headerCovTableEntryHi">95.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryHi">90.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #pragma once</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">       4 </span>            : #include &lt;cassert&gt;
+<span class="lineNum">       5 </span>            : #include &lt;type_traits&gt;
+<span class="lineNum">       6 </span>            : #include &lt;vector&gt;
+<span class="lineNum">       7 </span>            : #include &lt;string&gt;
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : #ifdef __INTEL_COMPILER
+<span class="lineNum">      10 </span>            : #pragma warning(disable:597) //will not be called for implicit or explicit conversions
+<span class="lineNum">      11 </span>            : #endif
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : namespace dev
+<span class="lineNum">      14 </span>            : {
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : /**
+<span class="lineNum">      17 </span>            :  * A modifiable reference to an existing object or vector in memory.
+<span class="lineNum">      18 </span>            :  */
+<span class="lineNum">      19 </span>            : template &lt;class _T&gt;
+<span class="lineNum">      20 </span>            : class vector_ref
+<span class="lineNum">      21 </span>            : {
+<span class="lineNum">      22 </span>            : public:
+<span class="lineNum">      23 </span>            :         using value_type = _T;
+<span class="lineNum">      24 </span>            :         using element_type = _T;
+<span class="lineNum">      25 </span>            :         using mutable_value_type = typename std::conditional&lt;std::is_const&lt;_T&gt;::value, typename std::remove_const&lt;_T&gt;::type, _T&gt;::type;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            :         static_assert(std::is_pod&lt;value_type&gt;::value, &quot;vector_ref can only be used with PODs due to its low-level treatment of data.&quot;);
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span><span class="lineCov">   50112071 :         vector_ref(): m_data(nullptr), m_count(0) {}</span>
+<span class="lineNum">      30 </span>            :         /// Creates a new vector_ref to point to @a _count elements starting at @a _data.
+<span class="lineNum">      31 </span><span class="lineCov">    6097675 :         vector_ref(_T* _data, size_t _count): m_data(_data), m_count(_count) {}</span>
+<span class="lineNum">      32 </span>            :         /// Creates a new vector_ref pointing to the data part of a string (given as pointer).
+<span class="lineNum">      33 </span><span class="lineNoCov">          0 :         vector_ref(typename std::conditional&lt;std::is_const&lt;_T&gt;::value, std::string const*, std::string*&gt;::type _data): m_data(reinterpret_cast&lt;_T*&gt;(_data-&gt;data())), m_count(_data-&gt;size() / sizeof(_T)) {}</span>
+<span class="lineNum">      34 </span>            :         /// Creates a new vector_ref pointing to the data part of a vector (given as pointer).
+<span class="lineNum">      35 </span><span class="lineCov">    6360575 :         vector_ref(typename std::conditional&lt;std::is_const&lt;_T&gt;::value, std::vector&lt;typename std::remove_const&lt;_T&gt;::type&gt; const*, std::vector&lt;_T&gt;*&gt;::type _data): m_data(_data-&gt;data()), m_count(_data-&gt;size()) {}</span>
+<span class="lineNum">      36 </span>            :         /// Creates a new vector_ref pointing to the data part of a string (given as reference).
+<span class="lineNum">      37 </span><span class="lineCov">    2464608 :         vector_ref(typename std::conditional&lt;std::is_const&lt;_T&gt;::value, std::string const&amp;, std::string&amp;&gt;::type _data): m_data(reinterpret_cast&lt;_T*&gt;(_data.data())), m_count(_data.size() / sizeof(_T)) {}</span>
+<span class="lineNum">      38 </span>            : #if DEV_LDB
+<span class="lineNum">      39 </span><span class="lineCov">        105 :         vector_ref(ldb::Slice const&amp; _s): m_data(reinterpret_cast&lt;_T*&gt;(_s.data())), m_count(_s.size() / sizeof(_T)) {}</span>
+<span class="lineNum">      40 </span>            : #endif
+<a name="41"><span class="lineNum">      41 </span><span class="lineCov">      20633 :         explicit operator bool() const { return m_data &amp;&amp; m_count; }</span></a>
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span><span class="lineCov">       1264 :         bool contentsEqual(std::vector&lt;mutable_value_type&gt; const&amp; _c) const { if (!m_data || m_count == 0) return _c.empty(); else return _c.size() == m_count &amp;&amp; !memcmp(_c.data(), m_data, m_count * sizeof(_T)); }</span>
+<span class="lineNum">      44 </span><span class="lineCov">      22530 :         std::vector&lt;mutable_value_type&gt; toVector() const { return std::vector&lt;mutable_value_type&gt;(m_data, m_data + m_count); }</span>
+<span class="lineNum">      45 </span><span class="lineCov">    1445936 :         std::vector&lt;unsigned char&gt; toBytes() const { return std::vector&lt;unsigned char&gt;(reinterpret_cast&lt;unsigned char const*&gt;(m_data), reinterpret_cast&lt;unsigned char const*&gt;(m_data) + m_count * sizeof(_T)); }</span>
+<span class="lineNum">      46 </span><span class="lineCov">    1618247 :         std::string toString() const { return std::string((char const*)m_data, ((char const*)m_data) + m_count * sizeof(_T)); }</span>
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            :         template &lt;class _T2&gt; explicit operator vector_ref&lt;_T2&gt;() const { assert(m_count * sizeof(_T) / sizeof(_T2) * sizeof(_T2) / sizeof(_T) == m_count); return vector_ref&lt;_T2&gt;(reinterpret_cast&lt;_T2*&gt;(m_data), m_count * sizeof(_T) / sizeof(_T2)); }
+<span class="lineNum">      49 </span><span class="lineCov">    1308446 :         operator vector_ref&lt;_T const&gt;() const { return vector_ref&lt;_T const&gt;(m_data, m_count); }</span>
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            :         _T* data() const { return m_data; }
+<span class="lineNum">      52 </span>            :         /// @returns the number of elements referenced (not necessarily number of bytes).
+<span class="lineNum">      53 </span>            :         size_t count() const { return m_count; }
+<span class="lineNum">      54 </span>            :         /// @returns the number of elements referenced (not necessarily number of bytes).
+<span class="lineNum">      55 </span>            :         size_t size() const { return m_count; }
+<span class="lineNum">      56 </span>            :         bool empty() const { return !m_count; }
+<span class="lineNum">      57 </span>            :         /// @returns a new vector_ref pointing at the next chunk of @a size() elements.
+<span class="lineNum">      58 </span><span class="lineCov">      12512 :         vector_ref&lt;_T&gt; next() const { if (!m_data) return *this; else return vector_ref&lt;_T&gt;(m_data + m_count, m_count); }</span>
+<span class="lineNum">      59 </span>            :         /// @returns a new vector_ref which is a shifted and shortened view of the original data.
+<span class="lineNum">      60 </span>            :         /// If this goes out of bounds in any way, returns an empty vector_ref.
+<span class="lineNum">      61 </span>            :         /// If @a _count is ~size_t(0), extends the view to the end of the data.
+<span class="lineNum">      62 </span><span class="lineCov">   35441162 :         vector_ref&lt;_T&gt; cropped(size_t _begin, size_t _count) const { if (m_data &amp;&amp; _begin &lt;= m_count &amp;&amp; _count &lt;= m_count &amp;&amp; _begin + _count &lt;= m_count) return vector_ref&lt;_T&gt;(m_data + _begin, _count == ~size_t(0) ? m_count - _begin : _count); else return vector_ref&lt;_T&gt;(); }</span>
+<span class="lineNum">      63 </span>            :         /// @returns a new vector_ref which is a shifted view of the original data (not going beyond it).
+<span class="lineNum">      64 </span><span class="lineCov">   34555391 :         vector_ref&lt;_T&gt; cropped(size_t _begin) const { if (m_data &amp;&amp; _begin &lt;= m_count) return vector_ref&lt;_T&gt;(m_data + _begin, m_count - _begin); else return vector_ref&lt;_T&gt;(); }</span>
+<span class="lineNum">      65 </span><span class="lineCov">      14334 :         void retarget(_T* _d, size_t _s) { m_data = _d; m_count = _s; }</span>
+<span class="lineNum">      66 </span>            :         void retarget(std::vector&lt;_T&gt; const&amp; _t) { m_data = _t.data(); m_count = _t.size(); }
+<a name="67"><span class="lineNum">      67 </span><span class="lineCov">     160394 :         template &lt;class T&gt; bool overlapsWith(vector_ref&lt;T&gt; _t) const { void const* f1 = data(); void const* t1 = data() + size(); void const* f2 = _t.data(); void const* t2 = _t.data() + _t.size(); return f1 &lt; t2 &amp;&amp; t1 &gt; f2; }</span></a>
+<span class="lineNum">      68 </span>            :         /// Copies the contents of this vector_ref to the contents of @a _t, up to the max size of @a _t.
+<a name="69"><span class="lineNum">      69 </span><span class="lineCov">     641576 :         void copyTo(vector_ref&lt;typename std::remove_const&lt;_T&gt;::type&gt; _t) const { if (overlapsWith(_t)) memmove(_t.data(), m_data, std::min(_t.size(), m_count) * sizeof(_T)); else memcpy(_t.data(), m_data, std::min(_t.size(), m_count) * sizeof(_T)); }</span></a>
+<span class="lineNum">      70 </span>            :         /// Copies the contents of this vector_ref to the contents of @a _t, and zeros further trailing elements in @a _t.
+<span class="lineNum">      71 </span><span class="lineCov">         15 :         void populate(vector_ref&lt;typename std::remove_const&lt;_T&gt;::type&gt; _t) const { copyTo(_t); memset(_t.data() + m_count, 0, std::max(_t.size(), m_count) - m_count); }</span>
+<a name="72"><span class="lineNum">      72 </span>            :         /// Securely overwrite the memory.</a>
+<span class="lineNum">      73 </span>            :         /// @note adapted from OpenSSL's implementation.
+<span class="lineNum">      74 </span><span class="lineCov">       4687 :         void cleanse()</span>
+<span class="lineNum">      75 </span>            :         {
+<span class="lineNum">      76 </span>            :                 static unsigned char s_cleanseCounter = 0;
+<span class="lineNum">      77 </span><span class="lineCov">       4687 :                 uint8_t* p = (uint8_t*)begin();</span>
+<span class="lineNum">      78 </span><span class="lineCov">       4687 :                 size_t const len = (uint8_t*)end() - p;</span>
+<span class="lineNum">      79 </span><span class="lineCov">       4687 :                 size_t loop = len;</span>
+<span class="lineNum">      80 </span><span class="lineCov">       4687 :                 size_t count = s_cleanseCounter;</span>
+<span class="lineNum">      81 </span><span class="lineCov">     330969 :                 while (loop--)</span>
+<span class="lineNum">      82 </span>            :                 {
+<span class="lineNum">      83 </span><span class="lineCov">     163141 :                         *(p++) = (uint8_t)count;</span>
+<span class="lineNum">      84 </span><span class="lineCov">     163141 :                         count += (17 + ((size_t)p &amp; 0xf));</span>
+<span class="lineNum">      85 </span>            :                 }
+<span class="lineNum">      86 </span><span class="lineCov">       9374 :                 p = (uint8_t*)memchr((uint8_t*)begin(), (uint8_t)count, len);</span>
+<span class="lineNum">      87 </span><span class="lineCov">       4687 :                 if (p)</span>
+<span class="lineNum">      88 </span><span class="lineCov">         78 :                         count += (63 + (size_t)p);</span>
+<span class="lineNum">      89 </span><span class="lineCov">       4687 :                 s_cleanseCounter = (uint8_t)count;</span>
+<span class="lineNum">      90 </span><span class="lineCov">       4687 :                 memset((uint8_t*)begin(), 0, len);</span>
+<span class="lineNum">      91 </span><span class="lineCov">       4687 :         }</span>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            :         _T* begin() { return m_data; }
+<span class="lineNum">      94 </span><span class="lineCov">    9748081 :         _T* end() { return m_data + m_count; }</span>
+<span class="lineNum">      95 </span>            :         _T const* begin() const { return m_data; }
+<a name="96"><span class="lineNum">      96 </span><span class="lineCov">     957930 :         _T const* end() const { return m_data + m_count; }</span></a>
+<a name="97"><span class="lineNum">      97 </span>            : </a>
+<span class="lineNum">      98 </span><span class="lineCov">   32426729 :         _T&amp; operator[](size_t _i) { assert(m_data); assert(_i &lt; m_count); return m_data[_i]; }</span>
+<span class="lineNum">      99 </span><span class="lineCov">  928566004 :         _T const&amp; operator[](size_t _i) const { assert(m_data); assert(_i &lt; m_count); return m_data[_i]; }</span>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span><span class="lineCov">      65778 :         bool operator==(vector_ref&lt;_T&gt; const&amp; _cmp) const { return m_data == _cmp.m_data &amp;&amp; m_count == _cmp.m_count; }</span>
+<span class="lineNum">     102 </span>            :         bool operator!=(vector_ref&lt;_T&gt; const&amp; _cmp) const { return !operator==(_cmp); }
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            : #if DEV_LDB
+<span class="lineNum">     105 </span><span class="lineCov">     166152 :         operator ldb::Slice() const { return ldb::Slice((char const*)m_data, m_count * sizeof(_T)); }</span>
+<span class="lineNum">     106 </span>            : #endif
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :         void reset() { m_data = nullptr; m_count = 0; }</span>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            : private:
+<span class="lineNum">     111 </span>            :         _T* m_data;
+<span class="lineNum">     112 </span>            :         size_t m_count;
+<span class="lineNum">     113 </span>            : };
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : template&lt;class _T&gt; vector_ref&lt;_T const&gt; ref(_T const&amp; _t) { return vector_ref&lt;_T const&gt;(&amp;_t, 1); }
+<span class="lineNum">     116 </span>            : template&lt;class _T&gt; vector_ref&lt;_T&gt; ref(_T&amp; _t) { return vector_ref&lt;_T&gt;(&amp;_t, 1); }
+<span class="lineNum">     117 </span><span class="lineCov">      32845 : template&lt;class _T&gt; vector_ref&lt;_T const&gt; ref(std::vector&lt;_T&gt; const&amp; _t) { return vector_ref&lt;_T const&gt;(&amp;_t); }</span>
+<span class="lineNum">     118 </span><span class="lineCov">       1309 : template&lt;class _T&gt; vector_ref&lt;_T&gt; ref(std::vector&lt;_T&gt;&amp; _t) { return vector_ref&lt;_T&gt;(&amp;_t); }</span>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

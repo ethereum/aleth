@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/TrieCommon.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - TrieCommon.h<span style="font-size: 80%;"> (source / <a href="TrieCommon.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">27</td>
+            <td class="headerCovTableEntry">27</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file TrieCommon.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;RLP.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : namespace dev
+<a name="28"><span class="lineNum">      28 </span>            : {</a>
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span><span class="lineCov">   31657844 : inline byte nibble(bytesConstRef _data, unsigned _i)</span>
+<span class="lineNum">      31 </span>            : {
+<span class="lineNum">      32 </span><span class="lineCov">   31657844 :         return (_i &amp; 1) ? (_data[_i / 2] &amp; 15) : (_data[_i / 2] &gt;&gt; 4);</span>
+<span class="lineNum">      33 </span>            : }
+<span class="lineNum">      34 </span>            : 
+<a name="35"><span class="lineNum">      35 </span>            : /// Interprets @a _first and @a _second as vectors of nibbles and returns the length of the longest common</a>
+<span class="lineNum">      36 </span>            : /// prefix of _first[_beginFirst..._endFirst] and _second[_beginSecond..._endSecond].
+<span class="lineNum">      37 </span><span class="lineCov">     374000 : inline unsigned sharedNibbles(bytesConstRef _first, unsigned _beginFirst, unsigned _endFirst, bytesConstRef _second, unsigned _beginSecond, unsigned _endSecond)</span>
+<span class="lineNum">      38 </span>            : {
+<span class="lineNum">      39 </span><span class="lineCov">     374000 :         unsigned ret = 0;</span>
+<span class="lineNum">      40 </span><span class="lineCov">   16097218 :         while (_beginFirst &lt; _endFirst &amp;&amp; _beginSecond &lt; _endSecond &amp;&amp; nibble(_first, _beginFirst) == nibble(_second, _beginSecond))</span>
+<span class="lineNum">      41 </span>            :         {
+<span class="lineNum">      42 </span><span class="lineCov">    7861609 :                 ++_beginFirst;</span>
+<span class="lineNum">      43 </span><span class="lineCov">    7861609 :                 ++_beginSecond;</span>
+<span class="lineNum">      44 </span><span class="lineCov">    7861609 :                 ++ret;</span>
+<span class="lineNum">      45 </span>            :         }
+<span class="lineNum">      46 </span><span class="lineCov">     374000 :         return ret;</span>
+<span class="lineNum">      47 </span>            : }
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : /**
+<span class="lineNum">      50 </span>            :  * Nibble-based view on a bytesConstRef.
+<span class="lineNum">      51 </span>            :  */
+<span class="lineNum">      52 </span>            : struct NibbleSlice
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span>            :         bytesConstRef data;
+<span class="lineNum">      55 </span>            :         unsigned offset;
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineCov">    1243874 :         NibbleSlice(bytesConstRef _data = bytesConstRef(), unsigned _offset = 0): data(_data), offset(_offset) {}</span>
+<span class="lineNum">      58 </span><span class="lineCov">     756441 :         byte operator[](unsigned _index) const { return nibble(data, offset + _index); }</span>
+<span class="lineNum">      59 </span><span class="lineCov">    2306459 :         unsigned size() const { return data.size() * 2 - offset; }</span>
+<span class="lineNum">      60 </span>            :         bool empty() const { return !size(); }
+<span class="lineNum">      61 </span><span class="lineCov">    1298015 :         NibbleSlice mid(unsigned _index) const { return NibbleSlice(data, offset + _index); }</span>
+<span class="lineNum">      62 </span>            :         void clear() { data.reset(); offset = 0; }
+<a name="63"><span class="lineNum">      63 </span>            : </a>
+<span class="lineNum">      64 </span>            :         /// @returns true iff _k is a prefix of this.
+<span class="lineNum">      65 </span><span class="lineCov">     318342 :         bool contains(NibbleSlice _k) const { return shared(_k) == _k.size(); }</span>
+<span class="lineNum">      66 </span>            :         /// @returns the number of shared nibbles at the beginning of this and _k.
+<span class="lineNum">      67 </span><span class="lineCov">    1122000 :         unsigned shared(NibbleSlice _k) const { return sharedNibbles(data, offset, offset + size(), _k.data, _k.offset, _k.offset + _k.size()); }</span>
+<span class="lineNum">      68 </span>            :         /**
+<span class="lineNum">      69 </span>            :          * @brief Determine if we, a full key, are situated prior to a particular key-prefix.
+<span class="lineNum">      70 </span>            :          * @param _k The prefix.
+<span class="lineNum">      71 </span>            :          * @return true if we are strictly prior to the prefix.
+<span class="lineNum">      72 </span>            :          */
+<span class="lineNum">      73 </span>            :         bool isEarlierThan(NibbleSlice _k) const
+<span class="lineNum">      74 </span>            :         {
+<span class="lineNum">      75 </span>            :                 unsigned i = 0;
+<span class="lineNum">      76 </span>            :                 for (; i &lt; _k.size() &amp;&amp; i &lt; size(); ++i)
+<span class="lineNum">      77 </span>            :                         if (operator[](i) &lt; _k[i])           // Byte is lower - we're earlier..
+<span class="lineNum">      78 </span>            :                                 return true;
+<span class="lineNum">      79 </span>            :                         else if (operator[](i) &gt; _k[i])      // Byte is higher - we're not earlier.
+<span class="lineNum">      80 </span>            :                                 return false;
+<span class="lineNum">      81 </span>            :                 if (i &gt;= _k.size())                                  // Ran past the end of the prefix - we're == for the entire prefix - we're not earlier.
+<span class="lineNum">      82 </span>            :                         return false;
+<a name="83"><span class="lineNum">      83 </span>            :                 return true;                                            // Ran out before the prefix had finished - we're earlier.</a>
+<span class="lineNum">      84 </span>            :         }
+<span class="lineNum">      85 </span><span class="lineCov">    1130290 :         bool operator==(NibbleSlice _k) const { return _k.size() == size() &amp;&amp; shared(_k) == _k.size(); }</span>
+<span class="lineNum">      86 </span>            :         bool operator!=(NibbleSlice _s) const { return !operator==(_s); }
+<span class="lineNum">      87 </span>            : };
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : inline std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, NibbleSlice const&amp; _m)
+<span class="lineNum">      90 </span>            : {
+<span class="lineNum">      91 </span>            :         for (unsigned i = 0; i &lt; _m.size(); ++i)
+<span class="lineNum">      92 </span>            :                 _out &lt;&lt; std::hex &lt;&lt; (int)_m[i] &lt;&lt; std::dec;
+<span class="lineNum">      93 </span>            :         return _out;
+<a name="94"><span class="lineNum">      94 </span>            : }</a>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">     341876 : inline bool isLeaf(RLP const&amp; _twoItem)</span>
+<span class="lineNum">      97 </span>            : {
+<span class="lineNum">      98 </span><span class="lineCov">     341876 :         assert(_twoItem.isList() &amp;&amp; _twoItem.itemCount() == 2);</span>
+<span class="lineNum">      99 </span><span class="lineCov">     341876 :         auto pl = _twoItem[0].payload();</span>
+<span class="lineNum">     100 </span><span class="lineCov">     341876 :         return (pl[0] &amp; 0x20) != 0;</span>
+<a name="101"><span class="lineNum">     101 </span>            : }</a>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">     409708 : inline NibbleSlice keyOf(bytesConstRef _hpe)</span>
+<span class="lineNum">     104 </span>            : {
+<span class="lineNum">     105 </span><span class="lineCov">     409708 :         if (!_hpe.size())</span>
+<span class="lineNum">     106 </span>            :                 return NibbleSlice(_hpe, 0);
+<span class="lineNum">     107 </span><span class="lineCov">     409708 :         if (_hpe[0] &amp; 0x10)</span>
+<span class="lineNum">     108 </span>            :                 return NibbleSlice(_hpe, 1);
+<span class="lineNum">     109 </span>            :         else
+<span class="lineNum">     110 </span>            :                 return NibbleSlice(_hpe, 2);
+<a name="111"><span class="lineNum">     111 </span>            : }</a>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineCov">     326175 : inline NibbleSlice keyOf(RLP const&amp; _twoItem)</span>
+<span class="lineNum">     114 </span>            : {
+<span class="lineNum">     115 </span><span class="lineCov">     326175 :         return keyOf(_twoItem[0].payload());</span>
+<span class="lineNum">     116 </span>            : }
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : byte uniqueInUse(RLP const&amp; _orig, byte except);
+<span class="lineNum">     119 </span>            : std::string hexPrefixEncode(bytes const&amp; _hexVector, bool _leaf = false, int _begin = 0, int _end = -1);
+<span class="lineNum">     120 </span>            : std::string hexPrefixEncode(bytesConstRef _data, bool _leaf, int _beginNibble, int _endNibble, unsigned _offset);
+<span class="lineNum">     121 </span>            : std::string hexPrefixEncode(bytesConstRef _d1, unsigned _o1, bytesConstRef _d2, unsigned _o2, bool _leaf);
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : inline std::string hexPrefixEncode(NibbleSlice _s, bool _leaf, int _begin = 0, int _end = -1)
+<span class="lineNum">     124 </span>            : {
+<span class="lineNum">     125 </span><span class="lineCov">     200290 :         return hexPrefixEncode(_s.data, _leaf, _begin, _end, _s.offset);</span>
+<span class="lineNum">     126 </span>            : }
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : inline std::string hexPrefixEncode(NibbleSlice _s1, NibbleSlice _s2, bool _leaf)
+<span class="lineNum">     129 </span>            : {
+<span class="lineNum">     130 </span><span class="lineCov">      84596 :         return hexPrefixEncode(_s1.data, _s1.offset, _s2.data, _s2.offset, _leaf);</span>
+<span class="lineNum">     131 </span>            : }
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libweb3jsonrpc/Eth.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libweb3jsonrpc</a> - Eth.h<span style="font-size: 80%;"> (source / <a href="Eth.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryLo">25.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Eth.h
+<span class="lineNum">      18 </span>            :  * @authors:
+<span class="lineNum">      19 </span>            :  *   Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      20 </span>            :  *   Marek Kotewicz &lt;marek@ethdev.com&gt;
+<span class="lineNum">      21 </span>            :  * @date 2014
+<span class="lineNum">      22 </span>            :  */
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #pragma once
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;memory&gt;
+<span class="lineNum">      27 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      28 </span>            : #include &lt;jsonrpccpp/server.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;jsonrpccpp/common/exception.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libdevcrypto/Common.h&gt;
+<span class="lineNum">      31 </span>            : #include &quot;SessionManager.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;EthFace.h&quot;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : namespace dev
+<span class="lineNum">      36 </span>            : {
+<span class="lineNum">      37 </span>            : class NetworkFace;
+<span class="lineNum">      38 </span>            : class KeyPair;
+<span class="lineNum">      39 </span>            : namespace eth
+<span class="lineNum">      40 </span>            : {
+<span class="lineNum">      41 </span>            : class AccountHolder;
+<span class="lineNum">      42 </span>            : struct TransactionSkeleton;
+<span class="lineNum">      43 </span>            : class Interface;
+<span class="lineNum">      44 </span>            : }
+<span class="lineNum">      45 </span>            : namespace shh
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span>            : class Interface;
+<span class="lineNum">      48 </span>            : }
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : extern const unsigned SensibleHttpThreads;
+<span class="lineNum">      51 </span>            : extern const unsigned SensibleHttpPort;
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : }
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : namespace dev
+<span class="lineNum">      56 </span>            : {
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : namespace rpc
+<span class="lineNum">      59 </span>            : {
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : /**
+<a name="62"><span class="lineNum">      62 </span>            :  * @brief JSON-RPC api implementation</a>
+<span class="lineNum">      63 </span>            :  */
+<span class="lineNum">      64 </span><span class="lineCov">          2 : class Eth: public dev::rpc::EthFace</span>
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span>            : public:
+<a name="67"><span class="lineNum">      67 </span>            :         Eth(eth::Interface&amp; _eth, eth::AccountHolder&amp; _ethAccounts);</a>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :         virtual RPCModules implementedModules() const override</span>
+<span class="lineNum">      70 </span>            :         {
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :                 return RPCModules{RPCModule{&quot;eth&quot;, &quot;1.0&quot;}};</span>
+<span class="lineNum">      72 </span>            :         }
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :         eth::AccountHolder const&amp; ethAccounts() const { return m_ethAccounts; }
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            :         virtual std::string eth_protocolVersion() override;
+<span class="lineNum">      77 </span>            :         virtual std::string eth_hashrate() override;
+<span class="lineNum">      78 </span>            :         virtual std::string eth_coinbase() override;
+<span class="lineNum">      79 </span>            :         virtual bool eth_mining() override;
+<span class="lineNum">      80 </span>            :         virtual std::string eth_gasPrice() override;
+<span class="lineNum">      81 </span>            :         virtual Json::Value eth_accounts() override;
+<span class="lineNum">      82 </span>            :         virtual std::string eth_blockNumber()override;
+<span class="lineNum">      83 </span>            :         virtual std::string eth_getBalance(std::string const&amp; _address, std::string const&amp; _blockNumber) override;
+<span class="lineNum">      84 </span>            :         virtual std::string eth_getStorageAt(std::string const&amp; _address, std::string const&amp; _position, std::string const&amp; _blockNumber) override;
+<span class="lineNum">      85 </span>            :         virtual std::string eth_getStorageRoot(std::string const&amp; _address, std::string const&amp; _blockNumber) override;
+<span class="lineNum">      86 </span>            :         virtual std::string eth_getTransactionCount(std::string const&amp; _address, std::string const&amp; _blockNumber) override;
+<span class="lineNum">      87 </span>            :         virtual std::string eth_pendingTransactions() override;
+<span class="lineNum">      88 </span>            :         virtual Json::Value eth_getBlockTransactionCountByHash(std::string const&amp; _blockHash) override;
+<span class="lineNum">      89 </span>            :         virtual Json::Value eth_getBlockTransactionCountByNumber(std::string const&amp; _blockNumber) override;
+<span class="lineNum">      90 </span>            :         virtual Json::Value eth_getUncleCountByBlockHash(std::string const&amp; _blockHash) override;
+<span class="lineNum">      91 </span>            :         virtual Json::Value eth_getUncleCountByBlockNumber(std::string const&amp; _blockNumber) override;
+<span class="lineNum">      92 </span>            :         virtual std::string eth_getCode(std::string const&amp; _address, std::string const&amp; _blockNumber) override;
+<span class="lineNum">      93 </span>            :         virtual std::string eth_sendTransaction(Json::Value const&amp; _json) override;
+<span class="lineNum">      94 </span>            :         virtual std::string eth_call(Json::Value const&amp; _json, std::string const&amp; _blockNumber) override;
+<span class="lineNum">      95 </span>            :         virtual std::string eth_estimateGas(Json::Value const&amp; _json) override;
+<span class="lineNum">      96 </span>            :         virtual bool eth_flush() override;
+<span class="lineNum">      97 </span>            :         virtual Json::Value eth_getBlockByHash(std::string const&amp; _blockHash, bool _includeTransactions) override;
+<span class="lineNum">      98 </span>            :         virtual Json::Value eth_getBlockByNumber(std::string const&amp; _blockNumber, bool _includeTransactions) override;
+<span class="lineNum">      99 </span>            :         virtual Json::Value eth_getTransactionByHash(std::string const&amp; _transactionHash) override;
+<span class="lineNum">     100 </span>            :         virtual Json::Value eth_getTransactionByBlockHashAndIndex(std::string const&amp; _blockHash, std::string const&amp; _transactionIndex) override;
+<span class="lineNum">     101 </span>            :         virtual Json::Value eth_getTransactionByBlockNumberAndIndex(std::string const&amp; _blockNumber, std::string const&amp; _transactionIndex) override;
+<span class="lineNum">     102 </span>            :         virtual Json::Value eth_getTransactionReceipt(std::string const&amp; _transactionHash) override;
+<span class="lineNum">     103 </span>            :         virtual Json::Value eth_getUncleByBlockHashAndIndex(std::string const&amp; _blockHash, std::string const&amp; _uncleIndex) override;
+<span class="lineNum">     104 </span>            :         virtual Json::Value eth_getUncleByBlockNumberAndIndex(std::string const&amp; _blockNumber, std::string const&amp; _uncleIndex) override;
+<span class="lineNum">     105 </span>            :         virtual std::string eth_newFilter(Json::Value const&amp; _json) override;
+<span class="lineNum">     106 </span>            :         virtual std::string eth_newFilterEx(Json::Value const&amp; _json) override;
+<span class="lineNum">     107 </span>            :         virtual std::string eth_newBlockFilter() override;
+<span class="lineNum">     108 </span>            :         virtual std::string eth_newPendingTransactionFilter() override;
+<span class="lineNum">     109 </span>            :         virtual bool eth_uninstallFilter(std::string const&amp; _filterId) override;
+<span class="lineNum">     110 </span>            :         virtual Json::Value eth_getFilterChanges(std::string const&amp; _filterId) override;
+<span class="lineNum">     111 </span>            :         virtual Json::Value eth_getFilterChangesEx(std::string const&amp; _filterId) override;
+<span class="lineNum">     112 </span>            :         virtual Json::Value eth_getFilterLogs(std::string const&amp; _filterId) override;
+<span class="lineNum">     113 </span>            :         virtual Json::Value eth_getFilterLogsEx(std::string const&amp; _filterId) override;
+<span class="lineNum">     114 </span>            :         virtual Json::Value eth_getLogs(Json::Value const&amp; _json) override;
+<span class="lineNum">     115 </span>            :         virtual Json::Value eth_getLogsEx(Json::Value const&amp; _json) override;
+<span class="lineNum">     116 </span>            :         virtual Json::Value eth_getWork() override;
+<span class="lineNum">     117 </span>            :         virtual bool eth_submitWork(std::string const&amp; _nonce, std::string const&amp;, std::string const&amp; _mixHash) override;
+<span class="lineNum">     118 </span>            :         virtual bool eth_submitHashrate(std::string const&amp; _hashes, std::string const&amp; _id) override;
+<span class="lineNum">     119 </span>            :         virtual std::string eth_register(std::string const&amp; _address) override;
+<span class="lineNum">     120 </span>            :         virtual bool eth_unregister(std::string const&amp; _accountId) override;
+<span class="lineNum">     121 </span>            :         virtual Json::Value eth_fetchQueuedTransactions(std::string const&amp; _accountId) override;
+<span class="lineNum">     122 </span>            :         virtual std::string eth_signTransaction(Json::Value const&amp; _transaction) override;
+<a name="123"><span class="lineNum">     123 </span>            :         virtual Json::Value eth_inspectTransaction(std::string const&amp; _rlp) override;</a>
+<span class="lineNum">     124 </span>            :         virtual std::string eth_sendRawTransaction(std::string const&amp; _rlp) override;
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :         virtual bool eth_notePassword(std::string const&amp;) override { return false; }</span>
+<span class="lineNum">     126 </span>            :         virtual Json::Value eth_syncing() override;
+<span class="lineNum">     127 </span>            :         
+<span class="lineNum">     128 </span>            :         void setTransactionDefaults(eth::TransactionSkeleton&amp; _t);
+<span class="lineNum">     129 </span>            : protected:
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            :         eth::Interface* client() { return &amp;m_eth; }
+<span class="lineNum">     132 </span>            :         
+<span class="lineNum">     133 </span>            :         eth::Interface&amp; m_eth;
+<span class="lineNum">     134 </span>            :         eth::AccountHolder&amp; m_ethAccounts;
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            : };
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            : }
+<span class="lineNum">     139 </span>            : } //namespace dev
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

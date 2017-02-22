@@ -1,0 +1,395 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/thread</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5</a> - thread<span style="font-size: 80%;"> (source / <a href="thread.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntryLo">71.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntryLo">51.6 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // &lt;thread&gt; -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2008-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file include/thread
+<span class="lineNum">      26 </span>            :  *  This is a Standard C++ Library header.
+<span class="lineNum">      27 </span>            :  */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #ifndef _GLIBCXX_THREAD
+<span class="lineNum">      30 </span>            : #define _GLIBCXX_THREAD 1
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #pragma GCC system_header
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #if __cplusplus &lt; 201103L
+<span class="lineNum">      35 </span>            : # include &lt;bits/c++0x_warning.h&gt;
+<span class="lineNum">      36 </span>            : #else
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #include &lt;chrono&gt;
+<span class="lineNum">      39 </span>            : #include &lt;functional&gt;
+<span class="lineNum">      40 </span>            : #include &lt;memory&gt;
+<span class="lineNum">      41 </span>            : #include &lt;bits/functexcept.h&gt;
+<span class="lineNum">      42 </span>            : #include &lt;bits/functional_hash.h&gt;
+<span class="lineNum">      43 </span>            : #include &lt;bits/gthr.h&gt;
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : #if defined(_GLIBCXX_HAS_GTHREADS) &amp;&amp; defined(_GLIBCXX_USE_C99_STDINT_TR1)
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      48 </span>            : {
+<span class="lineNum">      49 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            :   /**
+<span class="lineNum">      52 </span>            :    * @defgroup threads Threads
+<span class="lineNum">      53 </span>            :    * @ingroup concurrency
+<span class="lineNum">      54 </span>            :    *
+<span class="lineNum">      55 </span>            :    * Classes for thread support.
+<span class="lineNum">      56 </span>            :    * @{
+<span class="lineNum">      57 </span>            :    */
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            :   /// thread
+<span class="lineNum">      60 </span>            :   class thread
+<span class="lineNum">      61 </span>            :   {
+<span class="lineNum">      62 </span>            :   public:
+<span class="lineNum">      63 </span>            :     typedef __gthread_t                 native_handle_type;
+<span class="lineNum">      64 </span>            :     struct _Impl_base;
+<span class="lineNum">      65 </span>            :     typedef shared_ptr&lt;_Impl_base&gt;        __shared_base_type;
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :     /// thread::id
+<span class="lineNum">      68 </span>            :     class id
+<span class="lineNum">      69 </span>            :     {
+<span class="lineNum">      70 </span>            :       native_handle_type        _M_thread;
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :     public:
+<span class="lineNum">      73 </span><span class="lineCov">     392569 :       id() noexcept : _M_thread() { }</span>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            :       explicit
+<span class="lineNum">      76 </span>            :       id(native_handle_type __id) : _M_thread(__id) { }
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :     private:
+<span class="lineNum">      79 </span>            :       friend class thread;
+<span class="lineNum">      80 </span>            :       friend class hash&lt;thread::id&gt;;
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :       friend bool
+<span class="lineNum">      83 </span>            :       operator==(thread::id __x, thread::id __y) noexcept
+<span class="lineNum">      84 </span><span class="lineCov">     785138 :       { return __gthread_equal(__x._M_thread, __y._M_thread); }</span>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            :       friend bool
+<span class="lineNum">      87 </span>            :       operator&lt;(thread::id __x, thread::id __y) noexcept
+<span class="lineNum">      88 </span>            :       { return __x._M_thread &lt; __y._M_thread; }
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            :       template&lt;class _CharT, class _Traits&gt;
+<span class="lineNum">      91 </span>            :         friend basic_ostream&lt;_CharT, _Traits&gt;&amp;
+<span class="lineNum">      92 </span>            :         operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __out, thread::id __id);
+<span class="lineNum">      93 </span>            :     };
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            :     // Simple base type that the templatized, derived class containing
+<span class="lineNum">      96 </span>            :     // an arbitrary functor can be converted to and called.
+<span class="lineNum">      97 </span><span class="lineCov">     724982 :     struct _Impl_base</span>
+<span class="lineNum">      98 </span>            :     {
+<span class="lineNum">      99 </span>            :       __shared_base_type        _M_this_ptr;
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :       inline virtual ~_Impl_base();
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            :       virtual void _M_run() = 0;
+<span class="lineNum">     104 </span>            :     };
+<a name="105"><span class="lineNum">     105 </span>            : </a>
+<span class="lineNum">     106 </span>            :     template&lt;typename _Callable&gt;
+<span class="lineNum">     107 </span><span class="lineCov">     362497 :       struct _Impl : public _Impl_base</span>
+<span class="lineNum">     108 </span>            :       {
+<span class="lineNum">     109 </span>            :         _Callable               _M_func;
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">     543738 :         _Impl(_Callable&amp;&amp; __f) : _M_func(std::forward&lt;_Callable&gt;(__f))</span>
+<span class="lineNum">     112 </span>            :         { }
+<a name="113"><span class="lineNum">     113 </span>            : </a>
+<span class="lineNum">     114 </span>            :         void
+<span class="lineNum">     115 </span><span class="lineCov">     361709 :         _M_run() { _M_func(); }</span>
+<span class="lineNum">     116 </span>            :       };
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :   private:
+<span class="lineNum">     119 </span>            :     id                          _M_id;
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            :   public:
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :     thread() noexcept = default;</span>
+<span class="lineNum">     123 </span>            :     // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     124 </span>            :     // 2097.  packaged_task constructors should be constrained
+<span class="lineNum">     125 </span>            :     thread(thread&amp;) = delete;
+<span class="lineNum">     126 </span>            :     thread(const thread&amp;) = delete;
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            :     thread(thread&amp;&amp; __t) noexcept
+<span class="lineNum">     129 </span><span class="lineCov">     633969 :     { swap(__t); }</span>
+<span class="lineNum">     130 </span>            : 
+<a name="131"><span class="lineNum">     131 </span>            :     template&lt;typename _Callable, typename... _Args&gt;</a>
+<span class="lineNum">     132 </span>            :       explicit 
+<span class="lineNum">     133 </span><span class="lineCov">     181246 :       thread(_Callable&amp;&amp; __f, _Args&amp;&amp;... __args)</span>
+<span class="lineNum">     134 </span><span class="lineCov">     362492 :       {</span>
+<span class="lineNum">     135 </span>            : #ifdef GTHR_ACTIVE_PROXY
+<span class="lineNum">     136 </span>            :         // Create a reference to pthread_create, not just the gthr weak symbol
+<span class="lineNum">     137 </span><span class="lineCov">     906237 :         _M_start_thread(_M_make_routine(std::__bind_simple(</span>
+<span class="lineNum">     138 </span><span class="lineCov">     181246 :                 std::forward&lt;_Callable&gt;(__f),</span>
+<span class="lineNum">     139 </span>            :                 std::forward&lt;_Args&gt;(__args)...)),
+<span class="lineNum">     140 </span>            :             reinterpret_cast&lt;void(*)()&gt;(&amp;pthread_create));
+<span class="lineNum">     141 </span>            : #else
+<span class="lineNum">     142 </span>            :         _M_start_thread(_M_make_routine(std::__bind_simple(
+<span class="lineNum">     143 </span>            :                 std::forward&lt;_Callable&gt;(__f),
+<span class="lineNum">     144 </span>            :                 std::forward&lt;_Args&gt;(__args)...)));
+<span class="lineNum">     145 </span>            : #endif
+<span class="lineNum">     146 </span><span class="lineCov">     181246 :       }</span>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            :     ~thread()
+<span class="lineNum">     149 </span><span class="lineCov">     392568 :     {</span>
+<span class="lineNum">     150 </span><span class="lineCov">     392568 :       if (joinable())</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :         std::terminate();</span>
+<span class="lineNum">     152 </span>            :     }
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            :     thread&amp; operator=(const thread&amp;) = delete;
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :     thread&amp; operator=(thread&amp;&amp; __t) noexcept
+<span class="lineNum">     157 </span>            :     {
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :       if (joinable())</span>
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :         std::terminate();</span>
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :       swap(__t);</span>
+<span class="lineNum">     161 </span>            :       return *this;
+<span class="lineNum">     162 </span>            :     }
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :     void
+<span class="lineNum">     165 </span>            :     swap(thread&amp; __t) noexcept
+<span class="lineNum">     166 </span><span class="lineCov">     422646 :     { std::swap(_M_id, __t._M_id); }</span>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :     bool
+<span class="lineNum">     169 </span>            :     joinable() const noexcept
+<span class="lineNum">     170 </span><span class="lineCov">     392569 :     { return !(_M_id == id()); }</span>
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :     void
+<span class="lineNum">     173 </span>            :     join();
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :     void
+<span class="lineNum">     176 </span>            :     detach();
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :     thread::id
+<span class="lineNum">     179 </span>            :     get_id() const noexcept
+<span class="lineNum">     180 </span>            :     { return _M_id; }
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            :     /** @pre thread is joinable
+<span class="lineNum">     183 </span>            :      */
+<span class="lineNum">     184 </span>            :     native_handle_type
+<span class="lineNum">     185 </span>            :     native_handle()
+<span class="lineNum">     186 </span>            :     { return _M_id._M_thread; }
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :     // Returns a value that hints at the number of hardware thread contexts.
+<span class="lineNum">     189 </span>            :     static unsigned int
+<span class="lineNum">     190 </span>            :     hardware_concurrency() noexcept;
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :   private:
+<span class="lineNum">     193 </span>            :     void
+<span class="lineNum">     194 </span>            :     _M_start_thread(__shared_base_type, void (*)());
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            :     void
+<span class="lineNum">     197 </span>            :     _M_start_thread(__shared_base_type);
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            :     template&lt;typename _Callable&gt;
+<span class="lineNum">     200 </span>            :       shared_ptr&lt;_Impl&lt;_Callable&gt;&gt;
+<span class="lineNum">     201 </span>            :       _M_make_routine(_Callable&amp;&amp; __f)
+<span class="lineNum">     202 </span>            :       {
+<span class="lineNum">     203 </span>            :         // Create and allocate full data structure, not base.
+<span class="lineNum">     204 </span><span class="lineCov">     362492 :         return std::make_shared&lt;_Impl&lt;_Callable&gt;&gt;(std::forward&lt;_Callable&gt;(__f));</span>
+<span class="lineNum">     205 </span>            :       }
+<span class="lineNum">     206 </span>            :   };
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            :   inline thread::_Impl_base::~_Impl_base() = default;
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :   inline void
+<span class="lineNum">     211 </span>            :   swap(thread&amp; __x, thread&amp; __y) noexcept
+<span class="lineNum">     212 </span>            :   { __x.swap(__y); }
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            :   inline bool
+<span class="lineNum">     215 </span>            :   operator!=(thread::id __x, thread::id __y) noexcept
+<span class="lineNum">     216 </span>            :   { return !(__x == __y); }
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            :   inline bool
+<span class="lineNum">     219 </span>            :   operator&lt;=(thread::id __x, thread::id __y) noexcept
+<span class="lineNum">     220 </span>            :   { return !(__y &lt; __x); }
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            :   inline bool
+<span class="lineNum">     223 </span>            :   operator&gt;(thread::id __x, thread::id __y) noexcept
+<span class="lineNum">     224 </span>            :   { return __y &lt; __x; }
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            :   inline bool
+<span class="lineNum">     227 </span>            :   operator&gt;=(thread::id __x, thread::id __y) noexcept
+<span class="lineNum">     228 </span>            :   { return !(__x &lt; __y); }
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            :   // DR 889.
+<span class="lineNum">     231 </span>            :   /// std::hash specialization for thread::id.
+<span class="lineNum">     232 </span>            :   template&lt;&gt;
+<span class="lineNum">     233 </span>            :     struct hash&lt;thread::id&gt;
+<span class="lineNum">     234 </span>            :     : public __hash_base&lt;size_t, thread::id&gt;
+<span class="lineNum">     235 </span>            :     {
+<span class="lineNum">     236 </span>            :       size_t
+<span class="lineNum">     237 </span>            :       operator()(const thread::id&amp; __id) const noexcept
+<span class="lineNum">     238 </span><span class="lineCov">          2 :       { return std::_Hash_impl::hash(__id._M_thread); }</span>
+<span class="lineNum">     239 </span>            :     };
+<span class="lineNum">     240 </span>            : 
+<a name="241"><span class="lineNum">     241 </span>            :   template&lt;class _CharT, class _Traits&gt;</a>
+<span class="lineNum">     242 </span>            :     inline basic_ostream&lt;_CharT, _Traits&gt;&amp;
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :     operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __out, thread::id __id)</span>
+<span class="lineNum">     244 </span>            :     {
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :       if (__id == thread::id())</span>
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :         return __out &lt;&lt; &quot;thread::id of a non-executing thread&quot;;</span>
+<span class="lineNum">     247 </span>            :       else
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :         return __out &lt;&lt; __id._M_thread;</span>
+<span class="lineNum">     249 </span>            :     }
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span>            :   /** @namespace std::this_thread
+<span class="lineNum">     254 </span>            :    *  @brief ISO C++ 2011 entities sub-namespace for thread.
+<span class="lineNum">     255 </span>            :    *  30.3.2 Namespace this_thread.
+<span class="lineNum">     256 </span>            :    */
+<span class="lineNum">     257 </span>            :   namespace this_thread
+<span class="lineNum">     258 </span>            :   {
+<span class="lineNum">     259 </span>            :   _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            :     /// get_id
+<span class="lineNum">     262 </span>            :     inline thread::id
+<span class="lineNum">     263 </span><span class="lineCov">        137 :     get_id() noexcept { return thread::id(__gthread_self()); }</span>
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :     /// yield
+<span class="lineNum">     266 </span>            :     inline void
+<span class="lineNum">     267 </span>            :     yield() noexcept
+<span class="lineNum">     268 </span>            :     {
+<span class="lineNum">     269 </span>            : #ifdef _GLIBCXX_USE_SCHED_YIELD
+<span class="lineNum">     270 </span>            :       __gthread_yield();
+<span class="lineNum">     271 </span>            : #endif
+<span class="lineNum">     272 </span>            :     }
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            :     void
+<span class="lineNum">     275 </span>            :     __sleep_for(chrono::seconds, chrono::nanoseconds);
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            :     /// sleep_for
+<a name="278"><span class="lineNum">     278 </span>            :     template&lt;typename _Rep, typename _Period&gt;</a>
+<span class="lineNum">     279 </span>            :       inline void
+<span class="lineNum">     280 </span><span class="lineCov">      11463 :       sleep_for(const chrono::duration&lt;_Rep, _Period&gt;&amp; __rtime)</span>
+<span class="lineNum">     281 </span>            :       {
+<span class="lineNum">     282 </span><span class="lineCov">      23200 :         if (__rtime &lt;= __rtime.zero())</span>
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :           return;</span>
+<span class="lineNum">     284 </span><span class="lineCov">      11600 :         auto __s = chrono::duration_cast&lt;chrono::seconds&gt;(__rtime);</span>
+<span class="lineNum">     285 </span><span class="lineCov">      23200 :         auto __ns = chrono::duration_cast&lt;chrono::nanoseconds&gt;(__rtime - __s);</span>
+<span class="lineNum">     286 </span>            : #ifdef _GLIBCXX_USE_NANOSLEEP
+<span class="lineNum">     287 </span>            :         __gthread_time_t __ts =
+<span class="lineNum">     288 </span>            :           {
+<span class="lineNum">     289 </span>            :             static_cast&lt;std::time_t&gt;(__s.count()),
+<span class="lineNum">     290 </span>            :             static_cast&lt;long&gt;(__ns.count())
+<span class="lineNum">     291 </span><span class="lineCov">      11600 :           };</span>
+<span class="lineNum">     292 </span><span class="lineCov">      11600 :         ::nanosleep(&amp;__ts, 0);</span>
+<span class="lineNum">     293 </span>            : #else
+<span class="lineNum">     294 </span>            :         __sleep_for(__s, __ns);
+<span class="lineNum">     295 </span>            : #endif
+<span class="lineNum">     296 </span>            :       }
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            :     /// sleep_until
+<span class="lineNum">     299 </span>            :     template&lt;typename _Clock, typename _Duration&gt;
+<span class="lineNum">     300 </span>            :       inline void
+<span class="lineNum">     301 </span>            :       sleep_until(const chrono::time_point&lt;_Clock, _Duration&gt;&amp; __atime)
+<span class="lineNum">     302 </span>            :       {
+<span class="lineNum">     303 </span>            :         auto __now = _Clock::now();
+<span class="lineNum">     304 </span>            :         if (__now &lt; __atime)
+<span class="lineNum">     305 </span>            :           sleep_for(__atime - __now);
+<span class="lineNum">     306 </span>            :       }
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            :   _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     309 </span>            :   }
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            :   // @} group threads
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            : } // namespace
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span>            : #endif // _GLIBCXX_HAS_GTHREADS &amp;&amp; _GLIBCXX_USE_C99_STDINT_TR1
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            : #endif // C++11
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            : #endif // _GLIBCXX_THREAD
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,608 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - utils/json_spirit/json_spirit_value.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">utils/json_spirit</a> - json_spirit_value.h<span style="font-size: 80%;"> (source / <a href="json_spirit_value.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">50</td>
+            <td class="headerCovTableEntry">72</td>
+            <td class="headerCovTableEntryLo">69.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntryLo">43.5 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef JSON_SPIRIT_VALUE</a>
+<span class="lineNum">       2 </span>            : #define JSON_SPIRIT_VALUE
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : //          Copyright John W. Wilkinson 2007 - 2009.
+<span class="lineNum">       5 </span>            : // Distributed under the MIT License, see accompanying file LICENSE.txt
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : // json spirit version 4.03
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1020)
+<span class="lineNum">      10 </span>            : # pragma once
+<span class="lineNum">      11 </span>            : #endif
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      14 </span>            : #include &lt;map&gt;
+<span class="lineNum">      15 </span>            : #include &lt;string&gt;
+<span class="lineNum">      16 </span>            : #include &lt;cassert&gt;
+<span class="lineNum">      17 </span>            : #include &lt;sstream&gt;
+<span class="lineNum">      18 </span>            : #include &lt;stdexcept&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/config.hpp&gt; 
+<span class="lineNum">      20 </span>            : #include &lt;boost/cstdint.hpp&gt; 
+<span class="lineNum">      21 </span>            : #include &lt;boost/shared_ptr.hpp&gt; 
+<span class="lineNum">      22 </span>            : #include &lt;boost/variant.hpp&gt; 
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : namespace json_spirit
+<span class="lineNum">      25 </span>            : {
+<span class="lineNum">      26 </span>            :     enum Value_type{ obj_type, array_type, str_type, bool_type, int_type, real_type, null_type };
+<span class="lineNum">      27 </span>            : 
+<a name="28"><span class="lineNum">      28 </span>            :     template&lt; class Config &gt;    // Config determines whether the value uses std::string or std::wstring and</a>
+<span class="lineNum">      29 </span>            :                                 // whether JSON Objects are represented as vectors or maps
+<span class="lineNum">      30 </span><span class="lineCov">   21616674 :     class Value_impl</span>
+<span class="lineNum">      31 </span>            :     {
+<span class="lineNum">      32 </span>            :     public:
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            :         typedef Config Config_type;
+<span class="lineNum">      35 </span>            :         typedef typename Config::String_type String_type;
+<span class="lineNum">      36 </span>            :         typedef typename Config::Object_type Object;
+<span class="lineNum">      37 </span>            :         typedef typename Config::Array_type Array;
+<span class="lineNum">      38 </span>            :         typedef typename String_type::const_pointer Const_str_ptr;  // eg const char*
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            :         Value_impl();  // creates null value
+<span class="lineNum">      41 </span>            :         Value_impl( Const_str_ptr      value ); 
+<span class="lineNum">      42 </span>            :         Value_impl( const String_type&amp; value );
+<span class="lineNum">      43 </span>            :         Value_impl( const Object&amp;      value );
+<span class="lineNum">      44 </span>            :         Value_impl( const Array&amp;       value );
+<span class="lineNum">      45 </span>            :         Value_impl( bool               value );
+<span class="lineNum">      46 </span>            :         Value_impl( int                value );
+<span class="lineNum">      47 </span>            :         Value_impl( boost::int64_t     value );
+<span class="lineNum">      48 </span>            :         Value_impl( boost::uint64_t    value );
+<span class="lineNum">      49 </span>            :         Value_impl( double             value );
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            :         Value_impl( const Value_impl&amp; other );
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            :         bool operator==( const Value_impl&amp; lhs ) const;
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :         Value_impl&amp; operator=( const Value_impl&amp; lhs );
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :         Value_type type() const;
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            :         bool is_uint64() const;
+<span class="lineNum">      60 </span>            :         bool is_null() const;
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            :         const String_type&amp; get_str()    const;
+<span class="lineNum">      63 </span>            :         const Object&amp;      get_obj()    const;
+<span class="lineNum">      64 </span>            :         const Array&amp;       get_array()  const;
+<span class="lineNum">      65 </span>            :         bool               get_bool()   const;
+<span class="lineNum">      66 </span>            :         int                get_int()    const;
+<span class="lineNum">      67 </span>            :         boost::int64_t     get_int64()  const;
+<span class="lineNum">      68 </span>            :         boost::uint64_t    get_uint64() const;
+<span class="lineNum">      69 </span>            :         double             get_real()   const;
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            :         Object&amp; get_obj();
+<span class="lineNum">      72 </span>            :         Array&amp;  get_array();
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :         template&lt; typename T &gt; T get_value() const;  // example usage: int    i = value.get_value&lt; int &gt;();
+<span class="lineNum">      75 </span>            :                                                      // or             double d = value.get_value&lt; double &gt;();
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :         static const Value_impl null;
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :     private:
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            :         void check_type( const Value_type vtype ) const;
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :         typedef boost::variant&lt; String_type, 
+<span class="lineNum">      84 </span>            :                                 boost::recursive_wrapper&lt; Object &gt;, boost::recursive_wrapper&lt; Array &gt;, 
+<span class="lineNum">      85 </span>            :                                 bool, boost::int64_t, double &gt; Variant;
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :         Value_type type_;
+<span class="lineNum">      88 </span>            :         Variant v_;
+<span class="lineNum">      89 </span>            :         bool is_uint64_;
+<span class="lineNum">      90 </span>            :     };
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :     // vector objects
+<a name="93"><span class="lineNum">      93 </span>            : </a>
+<span class="lineNum">      94 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :     struct Pair_impl</span>
+<span class="lineNum">      96 </span>            :     {
+<span class="lineNum">      97 </span>            :         typedef typename Config::String_type String_type;
+<span class="lineNum">      98 </span>            :         typedef typename Config::Value_type Value_type;
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :         Pair_impl( const String_type&amp; name, const Value_type&amp; value );
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :         bool operator==( const Pair_impl&amp; lhs ) const;
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :         String_type name_;
+<span class="lineNum">     105 </span>            :         Value_type value_;
+<span class="lineNum">     106 </span>            :     };
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :     template&lt; class String &gt;
+<span class="lineNum">     109 </span>            :     struct Config_vector
+<span class="lineNum">     110 </span>            :     {
+<span class="lineNum">     111 </span>            :         typedef String String_type;
+<span class="lineNum">     112 </span>            :         typedef Value_impl&lt; Config_vector &gt; Value_type;
+<span class="lineNum">     113 </span>            :         typedef Pair_impl &lt; Config_vector &gt; Pair_type;
+<span class="lineNum">     114 </span>            :         typedef std::vector&lt; Value_type &gt; Array_type;
+<span class="lineNum">     115 </span>            :         typedef std::vector&lt; Pair_type &gt; Object_type;
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :         static Value_type&amp; add( Object_type&amp; obj, const String_type&amp; name, const Value_type&amp; value )
+<span class="lineNum">     118 </span>            :         {
+<span class="lineNum">     119 </span>            :             obj.push_back( Pair_type( name , value ) );
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            :             return obj.back().value_;
+<span class="lineNum">     122 </span>            :         }
+<span class="lineNum">     123 </span>            :                 
+<span class="lineNum">     124 </span>            :         static String_type get_name( const Pair_type&amp; pair )
+<span class="lineNum">     125 </span>            :         {
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :             return pair.name_;</span>
+<span class="lineNum">     127 </span>            :         }
+<span class="lineNum">     128 </span>            :                 
+<span class="lineNum">     129 </span>            :         static Value_type get_value( const Pair_type&amp; pair )
+<span class="lineNum">     130 </span>            :         {
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :             return pair.value_;</span>
+<span class="lineNum">     132 </span>            :         }
+<span class="lineNum">     133 </span>            :     };
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            :     // typedefs for ASCII
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :     typedef Config_vector&lt; std::string &gt; Config;
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :     typedef Config::Value_type  Value;
+<span class="lineNum">     140 </span>            :     typedef Config::Pair_type   Pair;
+<span class="lineNum">     141 </span>            :     typedef Config::Object_type Object;
+<span class="lineNum">     142 </span>            :     typedef Config::Array_type  Array;
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            :     // typedefs for Unicode
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            : #ifndef BOOST_NO_STD_WSTRING
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            :     typedef Config_vector&lt; std::wstring &gt; wConfig;
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            :     typedef wConfig::Value_type  wValue;
+<span class="lineNum">     151 </span>            :     typedef wConfig::Pair_type   wPair;
+<span class="lineNum">     152 </span>            :     typedef wConfig::Object_type wObject;
+<span class="lineNum">     153 </span>            :     typedef wConfig::Array_type  wArray;
+<span class="lineNum">     154 </span>            : #endif
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :     // map objects
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            :     template&lt; class String &gt;
+<span class="lineNum">     159 </span>            :     struct Config_map
+<span class="lineNum">     160 </span>            :     {
+<span class="lineNum">     161 </span>            :         typedef String String_type;
+<span class="lineNum">     162 </span>            :         typedef Value_impl&lt; Config_map &gt; Value_type;
+<span class="lineNum">     163 </span>            :         typedef std::vector&lt; Value_type &gt; Array_type;
+<span class="lineNum">     164 </span>            :         typedef std::map&lt; String_type, Value_type &gt; Object_type;
+<span class="lineNum">     165 </span>            :         typedef typename Object_type::value_type Pair_type;
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            :         static Value_type&amp; add( Object_type&amp; obj, const String_type&amp; name, const Value_type&amp; value )
+<span class="lineNum">     168 </span>            :         {
+<span class="lineNum">     169 </span><span class="lineCov">    1575975 :             return obj[ name ] = value;</span>
+<span class="lineNum">     170 </span>            :         }
+<span class="lineNum">     171 </span>            :                 
+<span class="lineNum">     172 </span>            :         static String_type get_name( const Pair_type&amp; pair )
+<span class="lineNum">     173 </span>            :         {
+<span class="lineNum">     174 </span><span class="lineCov">    1283578 :             return pair.first;</span>
+<span class="lineNum">     175 </span>            :         }
+<span class="lineNum">     176 </span>            :                 
+<span class="lineNum">     177 </span>            :         static Value_type get_value( const Pair_type&amp; pair )
+<span class="lineNum">     178 </span>            :         {
+<span class="lineNum">     179 </span><span class="lineCov">    1283578 :             return pair.second;</span>
+<span class="lineNum">     180 </span>            :         }
+<span class="lineNum">     181 </span>            :     };
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            :     // typedefs for ASCII
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :     typedef Config_map&lt; std::string &gt; mConfig;
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :     typedef mConfig::Value_type  mValue;
+<span class="lineNum">     188 </span>            :     typedef mConfig::Object_type mObject;
+<span class="lineNum">     189 </span>            :     typedef mConfig::Array_type  mArray;
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            :     // typedefs for Unicode
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : #ifndef BOOST_NO_STD_WSTRING
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            :     typedef Config_map&lt; std::wstring &gt; wmConfig;
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :     typedef wmConfig::Value_type  wmValue;
+<span class="lineNum">     198 </span>            :     typedef wmConfig::Object_type wmObject;
+<span class="lineNum">     199 </span>            :     typedef wmConfig::Array_type  wmArray;
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            : #endif
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            :     ///////////////////////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     204 </span>            :     //
+<span class="lineNum">     205 </span>            :     // implementation
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     208 </span>            :     const Value_impl&lt; Config &gt; Value_impl&lt; Config &gt;::null;
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     211 </span>            :     Value_impl&lt; Config &gt;::Value_impl()
+<span class="lineNum">     212 </span>            :     :   type_( null_type )
+<span class="lineNum">     213 </span><span class="lineCov">    3556366 :     ,   is_uint64_( false )</span>
+<span class="lineNum">     214 </span>            :     {
+<span class="lineNum">     215 </span>            :     }
+<a name="216"><span class="lineNum">     216 </span>            : </a>
+<span class="lineNum">     217 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     218 </span><span class="lineCov">        348 :     Value_impl&lt; Config &gt;::Value_impl( const Const_str_ptr value )</span>
+<span class="lineNum">     219 </span>            :     :   type_( str_type )
+<span class="lineNum">     220 </span>            :     ,   v_( String_type( value ) )
+<span class="lineNum">     221 </span><span class="lineCov">       1740 :     ,   is_uint64_( false )</span>
+<span class="lineNum">     222 </span>            :     {
+<span class="lineNum">     223 </span><span class="lineCov">        348 :     }</span>
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     226 </span>            :     Value_impl&lt; Config &gt;::Value_impl( const String_type&amp; value )
+<span class="lineNum">     227 </span>            :     :   type_( str_type )
+<span class="lineNum">     228 </span>            :     ,   v_( value )
+<span class="lineNum">     229 </span><span class="lineCov">    2016516 :     ,   is_uint64_( false )</span>
+<span class="lineNum">     230 </span>            :     {
+<span class="lineNum">     231 </span>            :     }
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     234 </span>            :     Value_impl&lt; Config &gt;::Value_impl( const Object&amp; value )
+<span class="lineNum">     235 </span>            :     :   type_( obj_type )
+<span class="lineNum">     236 </span>            :     ,   v_( value )
+<span class="lineNum">     237 </span><span class="lineCov">    1332226 :     ,   is_uint64_( false )</span>
+<span class="lineNum">     238 </span>            :     {
+<span class="lineNum">     239 </span>            :     }
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     242 </span>            :     Value_impl&lt; Config &gt;::Value_impl( const Array&amp; value )
+<span class="lineNum">     243 </span>            :     :   type_( array_type )
+<span class="lineNum">     244 </span>            :     ,   v_( value )
+<span class="lineNum">     245 </span><span class="lineCov">      39604 :     ,   is_uint64_( false )</span>
+<span class="lineNum">     246 </span>            :     {
+<span class="lineNum">     247 </span>            :     }
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     250 </span>            :     Value_impl&lt; Config &gt;::Value_impl( bool value )
+<span class="lineNum">     251 </span>            :     :   type_( bool_type )
+<span class="lineNum">     252 </span>            :     ,   v_( value )
+<span class="lineNum">     253 </span><span class="lineCov">      20784 :     ,   is_uint64_( false )</span>
+<span class="lineNum">     254 </span>            :     {
+<span class="lineNum">     255 </span>            :     }
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     258 </span>            :     Value_impl&lt; Config &gt;::Value_impl( int value )
+<span class="lineNum">     259 </span>            :     :   type_( int_type )
+<span class="lineNum">     260 </span>            :     ,   v_( static_cast&lt; boost::int64_t &gt;( value ) )
+<span class="lineNum">     261 </span><span class="lineCov">         74 :     ,   is_uint64_( false )</span>
+<span class="lineNum">     262 </span>            :     {
+<span class="lineNum">     263 </span>            :     }
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     266 </span>            :     Value_impl&lt; Config &gt;::Value_impl( boost::int64_t value )
+<span class="lineNum">     267 </span>            :     :   type_( int_type )
+<span class="lineNum">     268 </span>            :     ,   v_( value )
+<span class="lineNum">     269 </span><span class="lineCov">     386756 :     ,   is_uint64_( false )</span>
+<span class="lineNum">     270 </span>            :     {
+<span class="lineNum">     271 </span>            :     }
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     274 </span>            :     Value_impl&lt; Config &gt;::Value_impl( boost::uint64_t value )
+<span class="lineNum">     275 </span>            :     :   type_( int_type )
+<span class="lineNum">     276 </span>            :     ,   v_( static_cast&lt; boost::int64_t &gt;( value ) )
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :     ,   is_uint64_( true )</span>
+<span class="lineNum">     278 </span>            :     {
+<span class="lineNum">     279 </span>            :     }
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     282 </span>            :     Value_impl&lt; Config &gt;::Value_impl( double value )
+<span class="lineNum">     283 </span>            :     :   type_( real_type )
+<span class="lineNum">     284 </span>            :     ,   v_( value )
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :     ,   is_uint64_( false )</span>
+<span class="lineNum">     286 </span>            :     {
+<span class="lineNum">     287 </span>            :     }
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     290 </span>            :     Value_impl&lt; Config &gt;::Value_impl( const Value_impl&lt; Config &gt;&amp; other )
+<span class="lineNum">     291 </span>            :     :   type_( other.type() )
+<span class="lineNum">     292 </span>            :     ,   v_( other.v_ )
+<span class="lineNum">     293 </span><span class="lineCov">   14263652 :     ,   is_uint64_( other.is_uint64_ )</span>
+<span class="lineNum">     294 </span>            :     {
+<span class="lineNum">     295 </span>            :     }
+<a name="296"><span class="lineNum">     296 </span>            : </a>
+<span class="lineNum">     297 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     298 </span><span class="lineCov">    1864969 :     Value_impl&lt; Config &gt;&amp; Value_impl&lt; Config &gt;::operator=( const Value_impl&amp; lhs )</span>
+<span class="lineNum">     299 </span>            :     {
+<span class="lineNum">     300 </span><span class="lineCov">    3729938 :         Value_impl tmp( lhs );</span>
+<span class="lineNum">     301 </span>            : 
+<span class="lineNum">     302 </span><span class="lineCov">    3729938 :         std::swap( type_, tmp.type_ );</span>
+<span class="lineNum">     303 </span><span class="lineCov">    1864969 :         std::swap( v_, tmp.v_ );</span>
+<span class="lineNum">     304 </span><span class="lineCov">    3729938 :         std::swap( is_uint64_, tmp.is_uint64_ );</span>
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span><span class="lineCov">    3729938 :         return *this;</span>
+<span class="lineNum">     307 </span>            :     }
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     310 </span>            :     bool Value_impl&lt; Config &gt;::operator==( const Value_impl&amp; lhs ) const
+<span class="lineNum">     311 </span>            :     {
+<span class="lineNum">     312 </span>            :         if( this == &amp;lhs ) return true;
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span>            :         if( type() != lhs.type() ) return false;
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span>            :         return v_ == lhs.v_; 
+<span class="lineNum">     317 </span>            :     }
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     320 </span>            :     Value_type Value_impl&lt; Config &gt;::type() const
+<span class="lineNum">     321 </span>            :     {
+<span class="lineNum">     322 </span>            :         return type_;
+<span class="lineNum">     323 </span>            :     }
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     326 </span>            :     bool Value_impl&lt; Config &gt;::is_uint64() const
+<span class="lineNum">     327 </span>            :     {
+<span class="lineNum">     328 </span>            :         return is_uint64_;
+<span class="lineNum">     329 </span>            :     }
+<span class="lineNum">     330 </span>            : 
+<span class="lineNum">     331 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     332 </span>            :     bool Value_impl&lt; Config &gt;::is_null() const
+<span class="lineNum">     333 </span>            :     {
+<span class="lineNum">     334 </span><span class="lineCov">        247 :         return type() == null_type;</span>
+<span class="lineNum">     335 </span>            :     }
+<a name="336"><span class="lineNum">     336 </span>            : </a>
+<span class="lineNum">     337 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     338 </span><span class="lineCov">    3701379 :     void Value_impl&lt; Config &gt;::check_type( const Value_type vtype ) const</span>
+<span class="lineNum">     339 </span>            :     {
+<span class="lineNum">     340 </span><span class="lineCov">    3701379 :         if( type() != vtype ) </span>
+<span class="lineNum">     341 </span>            :         {
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 :             std::ostringstream os;</span>
+<span class="lineNum">     343 </span>            : 
+<span class="lineNum">     344 </span><span class="lineNoCov">          0 :             os &lt;&lt; &quot;value type is &quot; &lt;&lt; type() &lt;&lt; &quot; not &quot; &lt;&lt; vtype;</span>
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :             throw std::runtime_error( os.str() );</span>
+<span class="lineNum">     347 </span>            :         }
+<span class="lineNum">     348 </span><span class="lineCov">    3701379 :     }</span>
+<a name="349"><span class="lineNum">     349 </span>            : </a>
+<span class="lineNum">     350 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     351 </span><span class="lineCov">    1070374 :     const typename Config::String_type&amp; Value_impl&lt; Config &gt;::get_str() const</span>
+<span class="lineNum">     352 </span>            :     {
+<span class="lineNum">     353 </span><span class="lineCov">    1070374 :         check_type(  str_type );</span>
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span><span class="lineCov">    2140748 :         return *boost::get&lt; String_type &gt;( &amp;v_ );</span>
+<span class="lineNum">     356 </span>            :     }
+<a name="357"><span class="lineNum">     357 </span>            : </a>
+<span class="lineNum">     358 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     359 </span><span class="lineCov">     420903 :     const typename Value_impl&lt; Config &gt;::Object&amp; Value_impl&lt; Config &gt;::get_obj() const</span>
+<span class="lineNum">     360 </span>            :     {
+<span class="lineNum">     361 </span><span class="lineCov">     420903 :         check_type( obj_type );</span>
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span><span class="lineCov">     841806 :         return *boost::get&lt; Object &gt;( &amp;v_ );</span>
+<span class="lineNum">     364 </span>            :     }
+<a name="365"><span class="lineNum">     365 </span>            :      </a>
+<span class="lineNum">     366 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     367 </span><span class="lineCov">      17933 :     const typename Value_impl&lt; Config &gt;::Array&amp; Value_impl&lt; Config &gt;::get_array() const</span>
+<span class="lineNum">     368 </span>            :     {
+<span class="lineNum">     369 </span><span class="lineCov">      17933 :         check_type(  array_type );</span>
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span><span class="lineCov">      35866 :         return *boost::get&lt; Array &gt;( &amp;v_ );</span>
+<span class="lineNum">     372 </span>            :     }
+<span class="lineNum">     373 </span>            :      
+<span class="lineNum">     374 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     375 </span>            :     bool Value_impl&lt; Config &gt;::get_bool() const
+<span class="lineNum">     376 </span>            :     {
+<span class="lineNum">     377 </span><span class="lineCov">      10383 :         check_type(  bool_type );</span>
+<span class="lineNum">     378 </span>            : 
+<span class="lineNum">     379 </span><span class="lineCov">      20766 :         return boost::get&lt; bool &gt;( v_ );</span>
+<span class="lineNum">     380 </span>            :     }
+<a name="381"><span class="lineNum">     381 </span>            :      </a>
+<span class="lineNum">     382 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     383 </span><span class="lineCov">      27290 :     int Value_impl&lt; Config &gt;::get_int() const</span>
+<span class="lineNum">     384 </span>            :     {
+<span class="lineNum">     385 </span><span class="lineCov">      27290 :         check_type(  int_type );</span>
+<span class="lineNum">     386 </span>            : 
+<span class="lineNum">     387 </span><span class="lineCov">      27290 :         return static_cast&lt; int &gt;( get_int64() );</span>
+<span class="lineNum">     388 </span>            :     }
+<span class="lineNum">     389 </span>            :     
+<span class="lineNum">     390 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     391 </span>            :     boost::int64_t Value_impl&lt; Config &gt;::get_int64() const
+<span class="lineNum">     392 </span>            :     {
+<span class="lineNum">     393 </span><span class="lineCov">     193419 :         check_type(  int_type );</span>
+<span class="lineNum">     394 </span>            : 
+<span class="lineNum">     395 </span><span class="lineCov">     386838 :         return boost::get&lt; boost::int64_t &gt;( v_ );</span>
+<span class="lineNum">     396 </span>            :     }
+<a name="397"><span class="lineNum">     397 </span>            :     </a>
+<span class="lineNum">     398 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     399 </span><span class="lineCov">      82994 :     boost::uint64_t Value_impl&lt; Config &gt;::get_uint64() const</span>
+<span class="lineNum">     400 </span>            :     {
+<span class="lineNum">     401 </span><span class="lineCov">      82994 :         check_type(  int_type );</span>
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span><span class="lineCov">      82994 :         return static_cast&lt; boost::uint64_t &gt;( get_int64() );</span>
+<span class="lineNum">     404 </span>            :     }
+<a name="405"><span class="lineNum">     405 </span>            : </a>
+<span class="lineNum">     406 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     407 </span><span class="lineNoCov">          0 :     double Value_impl&lt; Config &gt;::get_real() const</span>
+<span class="lineNum">     408 </span>            :     {
+<span class="lineNum">     409 </span><span class="lineNoCov">          0 :         if( type() == int_type )</span>
+<span class="lineNum">     410 </span>            :         {
+<span class="lineNum">     411 </span><span class="lineNoCov">          0 :             return is_uint64() ? static_cast&lt; double &gt;( get_uint64() )</span>
+<span class="lineNum">     412 </span><span class="lineNoCov">          0 :                                : static_cast&lt; double &gt;( get_int64() );</span>
+<span class="lineNum">     413 </span>            :         }
+<span class="lineNum">     414 </span>            : 
+<span class="lineNum">     415 </span><span class="lineNoCov">          0 :         check_type(  real_type );</span>
+<span class="lineNum">     416 </span>            : 
+<span class="lineNum">     417 </span><span class="lineNoCov">          0 :         return boost::get&lt; double &gt;( v_ );</span>
+<span class="lineNum">     418 </span>            :     }
+<a name="419"><span class="lineNum">     419 </span>            : </a>
+<span class="lineNum">     420 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     421 </span><span class="lineCov">    1827724 :     typename Value_impl&lt; Config &gt;::Object&amp; Value_impl&lt; Config &gt;::get_obj()</span>
+<span class="lineNum">     422 </span>            :     {
+<span class="lineNum">     423 </span><span class="lineCov">    1827724 :         check_type(  obj_type );</span>
+<span class="lineNum">     424 </span>            : 
+<span class="lineNum">     425 </span><span class="lineCov">    3655448 :         return *boost::get&lt; Object &gt;( &amp;v_ );</span>
+<span class="lineNum">     426 </span>            :     }
+<a name="427"><span class="lineNum">     427 </span>            : </a>
+<span class="lineNum">     428 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     429 </span><span class="lineCov">      50359 :     typename Value_impl&lt; Config &gt;::Array&amp; Value_impl&lt; Config &gt;::get_array()</span>
+<span class="lineNum">     430 </span>            :     {
+<span class="lineNum">     431 </span><span class="lineCov">      50359 :         check_type(  array_type );</span>
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span><span class="lineCov">     100718 :         return *boost::get&lt; Array &gt;( &amp;v_ );</span>
+<span class="lineNum">     434 </span>            :     }
+<a name="435"><span class="lineNum">     435 </span>            : </a>
+<span class="lineNum">     436 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     437 </span><span class="lineNoCov">          0 :     Pair_impl&lt; Config &gt;::Pair_impl( const String_type&amp; name, const Value_type&amp; value )</span>
+<span class="lineNum">     438 </span>            :     :   name_( name )
+<span class="lineNum">     439 </span><span class="lineNoCov">          0 :     ,   value_( value )</span>
+<span class="lineNum">     440 </span>            :     {
+<span class="lineNum">     441 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     442 </span>            : 
+<span class="lineNum">     443 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     444 </span>            :     bool Pair_impl&lt; Config &gt;::operator==( const Pair_impl&lt; Config &gt;&amp; lhs ) const
+<span class="lineNum">     445 </span>            :     {
+<span class="lineNum">     446 </span>            :         if( this == &amp;lhs ) return true;
+<span class="lineNum">     447 </span>            : 
+<span class="lineNum">     448 </span>            :         return ( name_ == lhs.name_ ) &amp;&amp; ( value_ == lhs.value_ );
+<span class="lineNum">     449 </span>            :     }
+<span class="lineNum">     450 </span>            : 
+<span class="lineNum">     451 </span>            :     // converts a C string, ie. 8 bit char array, to a string object
+<a name="452"><span class="lineNum">     452 </span>            :     //</a>
+<span class="lineNum">     453 </span>            :     template &lt; class String_type &gt;
+<span class="lineNum">     454 </span><span class="lineNoCov">          0 :     String_type to_str( const char* c_str )</span>
+<span class="lineNum">     455 </span>            :     {
+<span class="lineNum">     456 </span><span class="lineNoCov">          0 :         String_type result;</span>
+<span class="lineNum">     457 </span>            : 
+<span class="lineNum">     458 </span><span class="lineNoCov">          0 :         for( const char* p = c_str; *p != 0; ++p )</span>
+<span class="lineNum">     459 </span>            :         {
+<span class="lineNum">     460 </span><span class="lineNoCov">          0 :             result += *p;</span>
+<span class="lineNum">     461 </span>            :         }
+<span class="lineNum">     462 </span>            : 
+<span class="lineNum">     463 </span><span class="lineNoCov">          0 :         return result;</span>
+<span class="lineNum">     464 </span>            :     }
+<span class="lineNum">     465 </span>            : 
+<span class="lineNum">     466 </span>            :     //
+<span class="lineNum">     467 </span>            : 
+<span class="lineNum">     468 </span>            :     namespace internal_
+<span class="lineNum">     469 </span>            :     {
+<span class="lineNum">     470 </span>            :         template&lt; typename T &gt;
+<span class="lineNum">     471 </span>            :         struct Type_to_type
+<span class="lineNum">     472 </span>            :         {
+<span class="lineNum">     473 </span>            :         };
+<span class="lineNum">     474 </span>            : 
+<span class="lineNum">     475 </span>            :         template&lt; class Value &gt; 
+<span class="lineNum">     476 </span>            :         int get_value( const Value&amp; value, Type_to_type&lt; int &gt; )
+<span class="lineNum">     477 </span>            :         {
+<span class="lineNum">     478 </span>            :             return value.get_int();
+<span class="lineNum">     479 </span>            :         }
+<span class="lineNum">     480 </span>            :        
+<span class="lineNum">     481 </span>            :         template&lt; class Value &gt; 
+<span class="lineNum">     482 </span>            :         boost::int64_t get_value( const Value&amp; value, Type_to_type&lt; boost::int64_t &gt; )
+<span class="lineNum">     483 </span>            :         {
+<span class="lineNum">     484 </span>            :             return value.get_int64();
+<span class="lineNum">     485 </span>            :         }
+<span class="lineNum">     486 </span>            :        
+<span class="lineNum">     487 </span>            :         template&lt; class Value &gt; 
+<span class="lineNum">     488 </span>            :         boost::uint64_t get_value( const Value&amp; value, Type_to_type&lt; boost::uint64_t &gt; )
+<span class="lineNum">     489 </span>            :         {
+<span class="lineNum">     490 </span>            :             return value.get_uint64();
+<span class="lineNum">     491 </span>            :         }
+<span class="lineNum">     492 </span>            :        
+<span class="lineNum">     493 </span>            :         template&lt; class Value &gt; 
+<span class="lineNum">     494 </span>            :         double get_value( const Value&amp; value, Type_to_type&lt; double &gt; )
+<span class="lineNum">     495 </span>            :         {
+<span class="lineNum">     496 </span>            :             return value.get_real();
+<span class="lineNum">     497 </span>            :         }
+<span class="lineNum">     498 </span>            :        
+<span class="lineNum">     499 </span>            :         template&lt; class Value &gt; 
+<span class="lineNum">     500 </span>            :         typename Value::String_type get_value( const Value&amp; value, Type_to_type&lt; typename Value::String_type &gt; )
+<span class="lineNum">     501 </span>            :         {
+<span class="lineNum">     502 </span>            :             return value.get_str();
+<span class="lineNum">     503 </span>            :         }
+<span class="lineNum">     504 </span>            :        
+<span class="lineNum">     505 </span>            :         template&lt; class Value &gt; 
+<span class="lineNum">     506 </span>            :         typename Value::Array get_value( const Value&amp; value, Type_to_type&lt; typename Value::Array &gt; )
+<span class="lineNum">     507 </span>            :         {
+<span class="lineNum">     508 </span>            :             return value.get_array();
+<span class="lineNum">     509 </span>            :         }
+<span class="lineNum">     510 </span>            :        
+<span class="lineNum">     511 </span>            :         template&lt; class Value &gt; 
+<span class="lineNum">     512 </span>            :         typename Value::Object get_value( const Value&amp; value, Type_to_type&lt; typename Value::Object &gt; )
+<span class="lineNum">     513 </span>            :         {
+<span class="lineNum">     514 </span>            :             return value.get_obj();
+<span class="lineNum">     515 </span>            :         }
+<span class="lineNum">     516 </span>            :        
+<span class="lineNum">     517 </span>            :         template&lt; class Value &gt; 
+<span class="lineNum">     518 </span>            :         bool get_value( const Value&amp; value, Type_to_type&lt; bool &gt; )
+<span class="lineNum">     519 </span>            :         {
+<span class="lineNum">     520 </span>            :             return value.get_bool();
+<span class="lineNum">     521 </span>            :         }
+<span class="lineNum">     522 </span>            :     }
+<span class="lineNum">     523 </span>            : 
+<span class="lineNum">     524 </span>            :     template&lt; class Config &gt;
+<span class="lineNum">     525 </span>            :     template&lt; typename T &gt; 
+<span class="lineNum">     526 </span>            :     T Value_impl&lt; Config &gt;::get_value() const
+<span class="lineNum">     527 </span>            :     {
+<span class="lineNum">     528 </span>            :         return internal_::get_value( *this, internal_::Type_to_type&lt; T &gt;() );
+<span class="lineNum">     529 </span>            :     }
+<span class="lineNum">     530 </span>            : }
+<span class="lineNum">     531 </span>            : 
+<span class="lineNum">     532 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

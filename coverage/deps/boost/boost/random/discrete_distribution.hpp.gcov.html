@@ -1,0 +1,712 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/random/discrete_distribution.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/random</a> - discrete_distribution.hpp<span style="font-size: 80%;"> (source / <a href="discrete_distribution.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">63</td>
+            <td class="headerCovTableEntry">73</td>
+            <td class="headerCovTableEntryMed">86.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* boost random/discrete_distribution.hpp header file</a>
+<span class="lineNum">       2 </span>            :  *
+<span class="lineNum">       3 </span>            :  * Copyright Steven Watanabe 2009-2011
+<span class="lineNum">       4 </span>            :  * Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">       5 </span>            :  * accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       6 </span>            :  * http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       7 </span>            :  *
+<span class="lineNum">       8 </span>            :  * See http://www.boost.org for most recent version including documentation.
+<span class="lineNum">       9 </span>            :  *
+<span class="lineNum">      10 </span>            :  * $Id$
+<span class="lineNum">      11 </span>            :  */
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #ifndef BOOST_RANDOM_DISCRETE_DISTRIBUTION_HPP_INCLUDED
+<span class="lineNum">      14 </span>            : #define BOOST_RANDOM_DISCRETE_DISTRIBUTION_HPP_INCLUDED
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      17 </span>            : #include &lt;limits&gt;
+<span class="lineNum">      18 </span>            : #include &lt;numeric&gt;
+<span class="lineNum">      19 </span>            : #include &lt;utility&gt;
+<span class="lineNum">      20 </span>            : #include &lt;iterator&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/assert.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/random/uniform_01.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/random/uniform_int_distribution.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/random/detail/config.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/random/detail/operators.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/random/detail/vector_io.hpp&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #ifndef BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+<span class="lineNum">      29 </span>            : #include &lt;initializer_list&gt;
+<span class="lineNum">      30 </span>            : #endif
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &lt;boost/range/begin.hpp&gt;
+<span class="lineNum">      33 </span>            : #include &lt;boost/range/end.hpp&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #include &lt;boost/random/detail/disable_warnings.hpp&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : namespace boost {
+<span class="lineNum">      38 </span>            : namespace random {
+<span class="lineNum">      39 </span>            : namespace detail {
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : template&lt;class IntType, class WeightType&gt;
+<span class="lineNum">      42 </span>            : struct integer_alias_table {
+<span class="lineNum">      43 </span>            :     WeightType get_weight(IntType bin) const {
+<span class="lineNum">      44 </span>            :         WeightType result = _average;
+<span class="lineNum">      45 </span>            :         if(bin &lt; _excess) ++result;
+<span class="lineNum">      46 </span>            :         return result;
+<span class="lineNum">      47 </span>            :     }
+<span class="lineNum">      48 </span>            :     template&lt;class Iter&gt;
+<span class="lineNum">      49 </span>            :     WeightType init_average(Iter begin, Iter end) {
+<span class="lineNum">      50 </span>            :         WeightType weight_average = 0;
+<span class="lineNum">      51 </span>            :         IntType excess = 0;
+<span class="lineNum">      52 </span>            :         IntType n = 0;
+<span class="lineNum">      53 </span>            :         // weight_average * n + excess == current partial sum
+<span class="lineNum">      54 </span>            :         // This is a bit messy, but it's guaranteed not to overflow
+<span class="lineNum">      55 </span>            :         for(Iter iter = begin; iter != end; ++iter) {
+<span class="lineNum">      56 </span>            :             ++n;
+<span class="lineNum">      57 </span>            :             if(*iter &lt; weight_average) {
+<span class="lineNum">      58 </span>            :                 WeightType diff = weight_average - *iter;
+<span class="lineNum">      59 </span>            :                 weight_average -= diff / n;
+<span class="lineNum">      60 </span>            :                 if(diff % n &gt; excess) {
+<span class="lineNum">      61 </span>            :                     --weight_average;
+<span class="lineNum">      62 </span>            :                     excess += n - diff % n;
+<span class="lineNum">      63 </span>            :                 } else {
+<span class="lineNum">      64 </span>            :                     excess -= diff % n;
+<span class="lineNum">      65 </span>            :                 }
+<span class="lineNum">      66 </span>            :             } else {
+<span class="lineNum">      67 </span>            :                 WeightType diff = *iter - weight_average;
+<span class="lineNum">      68 </span>            :                 weight_average += diff / n;
+<span class="lineNum">      69 </span>            :                 if(diff % n &lt; n - excess) {
+<span class="lineNum">      70 </span>            :                     excess += diff % n;
+<span class="lineNum">      71 </span>            :                 } else {
+<span class="lineNum">      72 </span>            :                     ++weight_average;
+<span class="lineNum">      73 </span>            :                     excess -= n - diff % n;
+<span class="lineNum">      74 </span>            :                 }
+<span class="lineNum">      75 </span>            :             }
+<span class="lineNum">      76 </span>            :         }
+<span class="lineNum">      77 </span>            :         _alias_table.resize(static_cast&lt;std::size_t&gt;(n));
+<span class="lineNum">      78 </span>            :         _average = weight_average;
+<span class="lineNum">      79 </span>            :         _excess = excess;
+<span class="lineNum">      80 </span>            :         return weight_average;
+<span class="lineNum">      81 </span>            :     }
+<span class="lineNum">      82 </span>            :     void init_empty()
+<span class="lineNum">      83 </span>            :     {
+<span class="lineNum">      84 </span>            :         _alias_table.clear();
+<span class="lineNum">      85 </span>            :         _alias_table.push_back(std::make_pair(static_cast&lt;WeightType&gt;(1),
+<span class="lineNum">      86 </span>            :                                               static_cast&lt;IntType&gt;(0)));
+<span class="lineNum">      87 </span>            :         _average = static_cast&lt;WeightType&gt;(1);
+<span class="lineNum">      88 </span>            :         _excess = static_cast&lt;IntType&gt;(0);
+<span class="lineNum">      89 </span>            :     }
+<span class="lineNum">      90 </span>            :     bool operator==(const integer_alias_table&amp; other) const
+<span class="lineNum">      91 </span>            :     {
+<span class="lineNum">      92 </span>            :         return _alias_table == other._alias_table &amp;&amp;
+<span class="lineNum">      93 </span>            :             _average == other._average &amp;&amp; _excess == other._excess;
+<span class="lineNum">      94 </span>            :     }
+<span class="lineNum">      95 </span>            :     static WeightType normalize(WeightType val, WeightType average)
+<span class="lineNum">      96 </span>            :     {
+<span class="lineNum">      97 </span>            :         return val;
+<span class="lineNum">      98 </span>            :     }
+<span class="lineNum">      99 </span>            :     static void normalize(std::vector&lt;WeightType&gt;&amp;) {}
+<span class="lineNum">     100 </span>            :     template&lt;class URNG&gt;
+<span class="lineNum">     101 </span>            :     WeightType test(URNG &amp;urng) const
+<span class="lineNum">     102 </span>            :     {
+<span class="lineNum">     103 </span>            :         return uniform_int_distribution&lt;WeightType&gt;(0, _average)(urng);
+<span class="lineNum">     104 </span>            :     }
+<span class="lineNum">     105 </span>            :     bool accept(IntType result, WeightType val) const
+<span class="lineNum">     106 </span>            :     {
+<span class="lineNum">     107 </span>            :         return result &lt; _excess || val &lt; _average;
+<span class="lineNum">     108 </span>            :     }
+<span class="lineNum">     109 </span>            :     static WeightType try_get_sum(const std::vector&lt;WeightType&gt;&amp; weights)
+<span class="lineNum">     110 </span>            :     {
+<span class="lineNum">     111 </span>            :         WeightType result = static_cast&lt;WeightType&gt;(0);
+<span class="lineNum">     112 </span>            :         for(typename std::vector&lt;WeightType&gt;::const_iterator
+<span class="lineNum">     113 </span>            :                 iter = weights.begin(), end = weights.end();
+<span class="lineNum">     114 </span>            :             iter != end; ++iter)
+<span class="lineNum">     115 </span>            :         {
+<span class="lineNum">     116 </span>            :             if((std::numeric_limits&lt;WeightType&gt;::max)() - result &gt; *iter) {
+<span class="lineNum">     117 </span>            :                 return static_cast&lt;WeightType&gt;(0);
+<span class="lineNum">     118 </span>            :             }
+<span class="lineNum">     119 </span>            :             result += *iter;
+<span class="lineNum">     120 </span>            :         }
+<span class="lineNum">     121 </span>            :         return result;
+<span class="lineNum">     122 </span>            :     }
+<span class="lineNum">     123 </span>            :     template&lt;class URNG&gt;
+<span class="lineNum">     124 </span>            :     static WeightType generate_in_range(URNG &amp;urng, WeightType max)
+<span class="lineNum">     125 </span>            :     {
+<span class="lineNum">     126 </span>            :         return uniform_int_distribution&lt;WeightType&gt;(
+<span class="lineNum">     127 </span>            :             static_cast&lt;WeightType&gt;(0), max-1)(urng);
+<span class="lineNum">     128 </span>            :     }
+<span class="lineNum">     129 </span>            :     typedef std::vector&lt;std::pair&lt;WeightType, IntType&gt; &gt; alias_table_t;
+<span class="lineNum">     130 </span>            :     alias_table_t _alias_table;
+<span class="lineNum">     131 </span>            :     WeightType _average;
+<span class="lineNum">     132 </span>            :     IntType _excess;
+<span class="lineNum">     133 </span>            : };
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : template&lt;class IntType, class WeightType&gt;
+<span class="lineNum">     136 </span><span class="lineCov">         16 : struct real_alias_table {</span>
+<span class="lineNum">     137 </span>            :     WeightType get_weight(IntType) const
+<span class="lineNum">     138 </span>            :     {
+<span class="lineNum">     139 </span>            :         return WeightType(1.0);
+<a name="140"><span class="lineNum">     140 </span>            :     }</a>
+<span class="lineNum">     141 </span>            :     template&lt;class Iter&gt;
+<span class="lineNum">     142 </span><span class="lineCov">          1 :     WeightType init_average(Iter first, Iter last)</span>
+<span class="lineNum">     143 </span>            :     {
+<span class="lineNum">     144 </span><span class="lineCov">          1 :         std::size_t size = std::distance(first, last);</span>
+<span class="lineNum">     145 </span>            :         WeightType weight_sum =
+<span class="lineNum">     146 </span><span class="lineCov">          1 :             std::accumulate(first, last, static_cast&lt;WeightType&gt;(0));</span>
+<span class="lineNum">     147 </span><span class="lineCov">          1 :         _alias_table.resize(size);</span>
+<span class="lineNum">     148 </span><span class="lineCov">          1 :         return weight_sum / size;</span>
+<span class="lineNum">     149 </span>            :     }
+<span class="lineNum">     150 </span>            :     void init_empty()
+<span class="lineNum">     151 </span>            :     {
+<span class="lineNum">     152 </span><span class="lineCov">          2 :         _alias_table.clear();</span>
+<span class="lineNum">     153 </span><span class="lineCov">          2 :         _alias_table.push_back(std::make_pair(static_cast&lt;WeightType&gt;(1),</span>
+<span class="lineNum">     154 </span>            :                                               static_cast&lt;IntType&gt;(0)));
+<span class="lineNum">     155 </span>            :     }
+<span class="lineNum">     156 </span>            :     bool operator==(const real_alias_table&amp; other) const
+<span class="lineNum">     157 </span>            :     {
+<span class="lineNum">     158 </span>            :         return _alias_table == other._alias_table;
+<span class="lineNum">     159 </span>            :     }
+<span class="lineNum">     160 </span>            :     static WeightType normalize(WeightType val, WeightType average)
+<span class="lineNum">     161 </span>            :     {
+<span class="lineNum">     162 </span><span class="lineCov">        255 :         return val / average;</span>
+<span class="lineNum">     163 </span>            :     }
+<span class="lineNum">     164 </span>            :     static void normalize(std::vector&lt;WeightType&gt;&amp; weights)
+<span class="lineNum">     165 </span>            :     {
+<span class="lineNum">     166 </span>            :         WeightType sum =
+<span class="lineNum">     167 </span><span class="lineCov">          2 :             std::accumulate(weights.begin(), weights.end(),</span>
+<span class="lineNum">     168 </span>            :                             static_cast&lt;WeightType&gt;(0));
+<span class="lineNum">     169 </span><span class="lineCov">        256 :         for(typename std::vector&lt;WeightType&gt;::iterator</span>
+<span class="lineNum">     170 </span>            :                 iter = weights.begin(),
+<span class="lineNum">     171 </span>            :                 end = weights.end();
+<span class="lineNum">     172 </span>            :             iter != end; ++iter)
+<span class="lineNum">     173 </span>            :         {
+<span class="lineNum">     174 </span><span class="lineCov">        255 :             *iter /= sum;</span>
+<span class="lineNum">     175 </span>            :         }
+<span class="lineNum">     176 </span>            :     }
+<span class="lineNum">     177 </span>            :     template&lt;class URNG&gt;
+<span class="lineNum">     178 </span>            :     WeightType test(URNG &amp;urng) const
+<span class="lineNum">     179 </span>            :     {
+<span class="lineNum">     180 </span><span class="lineCov">          8 :         return uniform_01&lt;WeightType&gt;()(urng);</span>
+<span class="lineNum">     181 </span>            :     }
+<span class="lineNum">     182 </span>            :     bool accept(IntType, WeightType) const
+<span class="lineNum">     183 </span>            :     {
+<span class="lineNum">     184 </span>            :         return true;
+<span class="lineNum">     185 </span>            :     }
+<span class="lineNum">     186 </span>            :     static WeightType try_get_sum(const std::vector&lt;WeightType&gt;&amp; weights)
+<span class="lineNum">     187 </span>            :     {
+<span class="lineNum">     188 </span>            :         return static_cast&lt;WeightType&gt;(1);
+<span class="lineNum">     189 </span>            :     }
+<span class="lineNum">     190 </span>            :     template&lt;class URNG&gt;
+<span class="lineNum">     191 </span>            :     static WeightType generate_in_range(URNG &amp;urng, WeightType)
+<span class="lineNum">     192 </span>            :     {
+<span class="lineNum">     193 </span>            :         return uniform_01&lt;WeightType&gt;()(urng);
+<span class="lineNum">     194 </span>            :     }
+<span class="lineNum">     195 </span>            :     typedef std::vector&lt;std::pair&lt;WeightType, IntType&gt; &gt; alias_table_t;
+<span class="lineNum">     196 </span>            :     alias_table_t _alias_table;
+<span class="lineNum">     197 </span>            : };
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            : template&lt;bool IsIntegral&gt;
+<span class="lineNum">     200 </span>            : struct select_alias_table;
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            : template&lt;&gt;
+<span class="lineNum">     203 </span>            : struct select_alias_table&lt;true&gt; {
+<span class="lineNum">     204 </span>            :     template&lt;class IntType, class WeightType&gt;
+<span class="lineNum">     205 </span>            :     struct apply {
+<span class="lineNum">     206 </span>            :         typedef integer_alias_table&lt;IntType, WeightType&gt; type;
+<span class="lineNum">     207 </span>            :     };
+<span class="lineNum">     208 </span>            : };
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            : template&lt;&gt;
+<span class="lineNum">     211 </span>            : struct select_alias_table&lt;false&gt; {
+<span class="lineNum">     212 </span>            :     template&lt;class IntType, class WeightType&gt;
+<span class="lineNum">     213 </span>            :     struct apply {
+<span class="lineNum">     214 </span>            :         typedef real_alias_table&lt;IntType, WeightType&gt; type;
+<span class="lineNum">     215 </span>            :     };
+<span class="lineNum">     216 </span>            : };
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            : }
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            : /**
+<span class="lineNum">     221 </span>            :  * The class @c discrete_distribution models a \random_distribution.
+<span class="lineNum">     222 </span>            :  * It produces integers in the range [0, n) with the probability
+<span class="lineNum">     223 </span>            :  * of producing each value is specified by the parameters of the
+<span class="lineNum">     224 </span>            :  * distribution.
+<span class="lineNum">     225 </span>            :  */
+<span class="lineNum">     226 </span>            : template&lt;class IntType = int, class WeightType = double&gt;
+<span class="lineNum">     227 </span><span class="lineCov">         14 : class discrete_distribution {</span>
+<span class="lineNum">     228 </span>            : public:
+<span class="lineNum">     229 </span>            :     typedef WeightType input_type;
+<span class="lineNum">     230 </span>            :     typedef IntType result_type;
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            :     class param_type {
+<span class="lineNum">     233 </span>            :     public:
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            :         typedef discrete_distribution distribution_type;
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            :         /**
+<span class="lineNum">     238 </span>            :          * Constructs a @c param_type object, representing a distribution
+<span class="lineNum">     239 </span>            :          * with \f$p(0) = 1\f$ and \f$p(k|k&gt;0) = 0\f$.
+<span class="lineNum">     240 </span>            :          */
+<span class="lineNum">     241 </span>            :         param_type() : _probabilities(1, static_cast&lt;WeightType&gt;(1)) {}
+<span class="lineNum">     242 </span>            :         /**
+<span class="lineNum">     243 </span>            :          * If @c first == @c last, equivalent to the default constructor.
+<span class="lineNum">     244 </span>            :          * Otherwise, the values of the range represent weights for the
+<span class="lineNum">     245 </span>            :          * possible values of the distribution.
+<span class="lineNum">     246 </span>            :          */
+<span class="lineNum">     247 </span>            :         template&lt;class Iter&gt;
+<span class="lineNum">     248 </span>            :         param_type(Iter first, Iter last) : _probabilities(first, last)
+<span class="lineNum">     249 </span>            :         {
+<span class="lineNum">     250 </span>            :             normalize();
+<span class="lineNum">     251 </span>            :         }
+<span class="lineNum">     252 </span>            : #ifndef BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+<span class="lineNum">     253 </span>            :         /**
+<span class="lineNum">     254 </span>            :          * If wl.size() == 0, equivalent to the default constructor.
+<span class="lineNum">     255 </span>            :          * Otherwise, the values of the @c initializer_list represent
+<span class="lineNum">     256 </span>            :          * weights for the possible values of the distribution.
+<span class="lineNum">     257 </span>            :          */
+<span class="lineNum">     258 </span>            :         param_type(const std::initializer_list&lt;WeightType&gt;&amp; wl)
+<span class="lineNum">     259 </span>            :           : _probabilities(wl)
+<span class="lineNum">     260 </span>            :         {
+<span class="lineNum">     261 </span>            :             normalize();
+<span class="lineNum">     262 </span>            :         }
+<span class="lineNum">     263 </span>            : #endif
+<span class="lineNum">     264 </span>            :         /**
+<span class="lineNum">     265 </span>            :          * If the range is empty, equivalent to the default constructor.
+<span class="lineNum">     266 </span>            :          * Otherwise, the elements of the range represent
+<span class="lineNum">     267 </span>            :          * weights for the possible values of the distribution.
+<span class="lineNum">     268 </span>            :          */
+<span class="lineNum">     269 </span>            :         template&lt;class Range&gt;
+<span class="lineNum">     270 </span>            :         explicit param_type(const Range&amp; range)
+<span class="lineNum">     271 </span>            :           : _probabilities(boost::begin(range), boost::end(range))
+<span class="lineNum">     272 </span>            :         {
+<span class="lineNum">     273 </span>            :             normalize();
+<span class="lineNum">     274 </span>            :         }
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span>            :         /**
+<span class="lineNum">     277 </span>            :          * If nw is zero, equivalent to the default constructor.
+<span class="lineNum">     278 </span>            :          * Otherwise, the range of the distribution is [0, nw),
+<span class="lineNum">     279 </span>            :          * and the weights are found by  calling fw with values
+<span class="lineNum">     280 </span>            :          * evenly distributed between \f$\mbox{xmin} + \delta/2\f$ and
+<span class="lineNum">     281 </span>            :          * \f$\mbox{xmax} - \delta/2\f$, where
+<span class="lineNum">     282 </span>            :          * \f$\delta = (\mbox{xmax} - \mbox{xmin})/\mbox{nw}\f$.
+<span class="lineNum">     283 </span>            :          */
+<span class="lineNum">     284 </span>            :         template&lt;class Func&gt;
+<span class="lineNum">     285 </span>            :         param_type(std::size_t nw, double xmin, double xmax, Func fw)
+<span class="lineNum">     286 </span>            :         {
+<span class="lineNum">     287 </span>            :             std::size_t n = (nw == 0) ? 1 : nw;
+<span class="lineNum">     288 </span>            :             double delta = (xmax - xmin) / n;
+<span class="lineNum">     289 </span>            :             BOOST_ASSERT(delta &gt; 0);
+<span class="lineNum">     290 </span>            :             for(std::size_t k = 0; k &lt; n; ++k) {
+<span class="lineNum">     291 </span>            :                 _probabilities.push_back(fw(xmin + k*delta + delta/2));
+<span class="lineNum">     292 </span>            :             }
+<span class="lineNum">     293 </span>            :             normalize();
+<span class="lineNum">     294 </span>            :         }
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            :         /**
+<span class="lineNum">     297 </span>            :          * Returns a vector containing the probabilities of each possible
+<span class="lineNum">     298 </span>            :          * value of the distribution.
+<span class="lineNum">     299 </span>            :          */
+<span class="lineNum">     300 </span>            :         std::vector&lt;WeightType&gt; probabilities() const
+<span class="lineNum">     301 </span>            :         {
+<span class="lineNum">     302 </span>            :             return _probabilities;
+<span class="lineNum">     303 </span>            :         }
+<span class="lineNum">     304 </span>            : 
+<span class="lineNum">     305 </span>            :         /** Writes the parameters to a @c std::ostream. */
+<span class="lineNum">     306 </span>            :         BOOST_RANDOM_DETAIL_OSTREAM_OPERATOR(os, param_type, parm)
+<span class="lineNum">     307 </span>            :         {
+<span class="lineNum">     308 </span>            :             detail::print_vector(os, parm._probabilities);
+<span class="lineNum">     309 </span>            :             return os;
+<span class="lineNum">     310 </span>            :         }
+<span class="lineNum">     311 </span>            :         
+<span class="lineNum">     312 </span>            :         /** Reads the parameters from a @c std::istream. */
+<span class="lineNum">     313 </span>            :         BOOST_RANDOM_DETAIL_ISTREAM_OPERATOR(is, param_type, parm)
+<span class="lineNum">     314 </span>            :         {
+<span class="lineNum">     315 </span>            :             std::vector&lt;WeightType&gt; temp;
+<span class="lineNum">     316 </span>            :             detail::read_vector(is, temp);
+<span class="lineNum">     317 </span>            :             if(is) {
+<span class="lineNum">     318 </span>            :                 parm._probabilities.swap(temp);
+<span class="lineNum">     319 </span>            :             }
+<span class="lineNum">     320 </span>            :             return is;
+<span class="lineNum">     321 </span>            :         }
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span>            :         /** Returns true if the two sets of parameters are the same. */
+<span class="lineNum">     324 </span>            :         BOOST_RANDOM_DETAIL_EQUALITY_OPERATOR(param_type, lhs, rhs)
+<span class="lineNum">     325 </span>            :         {
+<span class="lineNum">     326 </span>            :             return lhs._probabilities == rhs._probabilities;
+<span class="lineNum">     327 </span>            :         }
+<span class="lineNum">     328 </span>            :         /** Returns true if the two sets of parameters are different. */
+<span class="lineNum">     329 </span>            :         BOOST_RANDOM_DETAIL_INEQUALITY_OPERATOR(param_type)
+<span class="lineNum">     330 </span>            :     private:
+<span class="lineNum">     331 </span>            :         /// @cond show_private
+<span class="lineNum">     332 </span>            :         friend class discrete_distribution;
+<span class="lineNum">     333 </span>            :         explicit param_type(const discrete_distribution&amp; dist)
+<span class="lineNum">     334 </span>            :           : _probabilities(dist.probabilities())
+<span class="lineNum">     335 </span>            :         {}
+<span class="lineNum">     336 </span>            :         void normalize()
+<span class="lineNum">     337 </span>            :         {
+<span class="lineNum">     338 </span>            :             impl_type::normalize(_probabilities);
+<span class="lineNum">     339 </span>            :         }
+<span class="lineNum">     340 </span>            :         std::vector&lt;WeightType&gt; _probabilities;
+<span class="lineNum">     341 </span>            :         /// @endcond
+<span class="lineNum">     342 </span>            :     };
+<span class="lineNum">     343 </span>            : 
+<span class="lineNum">     344 </span>            :     /**
+<span class="lineNum">     345 </span>            :      * Creates a new @c discrete_distribution object that has
+<a name="346"><span class="lineNum">     346 </span>            :      * \f$p(0) = 1\f$ and \f$p(i|i&gt;0) = 0\f$.</a>
+<span class="lineNum">     347 </span>            :      */
+<span class="lineNum">     348 </span><span class="lineCov">          1 :     discrete_distribution()</span>
+<span class="lineNum">     349 </span><span class="lineCov">          2 :     {</span>
+<span class="lineNum">     350 </span><span class="lineCov">          2 :         _impl.init_empty();</span>
+<span class="lineNum">     351 </span><span class="lineCov">          1 :     }</span>
+<span class="lineNum">     352 </span>            :     /**
+<span class="lineNum">     353 </span>            :      * Constructs a discrete_distribution from an iterator range.
+<span class="lineNum">     354 </span>            :      * If @c first == @c last, equivalent to the default constructor.
+<span class="lineNum">     355 </span>            :      * Otherwise, the values of the range represent weights for the
+<span class="lineNum">     356 </span>            :      * possible values of the distribution.
+<span class="lineNum">     357 </span>            :      */
+<span class="lineNum">     358 </span>            :     template&lt;class Iter&gt;
+<span class="lineNum">     359 </span>            :     discrete_distribution(Iter first, Iter last)
+<span class="lineNum">     360 </span>            :     {
+<span class="lineNum">     361 </span>            :         init(first, last);
+<span class="lineNum">     362 </span>            :     }
+<span class="lineNum">     363 </span>            : #ifndef BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+<span class="lineNum">     364 </span>            :     /**
+<span class="lineNum">     365 </span>            :      * Constructs a @c discrete_distribution from a @c std::initializer_list.
+<span class="lineNum">     366 </span>            :      * If the @c initializer_list is empty, equivalent to the default
+<span class="lineNum">     367 </span>            :      * constructor.  Otherwise, the values of the @c initializer_list
+<span class="lineNum">     368 </span>            :      * represent weights for the possible values of the distribution.
+<span class="lineNum">     369 </span>            :      * For example, given the distribution
+<span class="lineNum">     370 </span>            :      *
+<span class="lineNum">     371 </span>            :      * @code
+<span class="lineNum">     372 </span>            :      * discrete_distribution&lt;&gt; dist{1, 4, 5};
+<span class="lineNum">     373 </span>            :      * @endcode
+<span class="lineNum">     374 </span>            :      *
+<span class="lineNum">     375 </span>            :      * The probability of a 0 is 1/10, the probability of a 1 is 2/5,
+<span class="lineNum">     376 </span>            :      * the probability of a 2 is 1/2, and no other values are possible.
+<span class="lineNum">     377 </span>            :      */
+<span class="lineNum">     378 </span>            :     discrete_distribution(std::initializer_list&lt;WeightType&gt; wl)
+<span class="lineNum">     379 </span>            :     {
+<span class="lineNum">     380 </span>            :         init(wl.begin(), wl.end());
+<span class="lineNum">     381 </span>            :     }
+<span class="lineNum">     382 </span>            : #endif
+<span class="lineNum">     383 </span>            :     /**
+<span class="lineNum">     384 </span>            :      * Constructs a discrete_distribution from a Boost.Range range.
+<span class="lineNum">     385 </span>            :      * If the range is empty, equivalent to the default constructor.
+<span class="lineNum">     386 </span>            :      * Otherwise, the values of the range represent weights for the
+<span class="lineNum">     387 </span>            :      * possible values of the distribution.
+<a name="388"><span class="lineNum">     388 </span>            :      */</a>
+<span class="lineNum">     389 </span>            :     template&lt;class Range&gt;
+<span class="lineNum">     390 </span><span class="lineCov">          1 :     explicit discrete_distribution(const Range&amp; range)</span>
+<span class="lineNum">     391 </span><span class="lineCov">          2 :     {</span>
+<span class="lineNum">     392 </span><span class="lineCov">          2 :         init(boost::begin(range), boost::end(range));</span>
+<span class="lineNum">     393 </span><span class="lineCov">          1 :     }</span>
+<span class="lineNum">     394 </span>            :     /**
+<span class="lineNum">     395 </span>            :      * Constructs a discrete_distribution that approximates a function.
+<span class="lineNum">     396 </span>            :      * If nw is zero, equivalent to the default constructor.
+<span class="lineNum">     397 </span>            :      * Otherwise, the range of the distribution is [0, nw),
+<span class="lineNum">     398 </span>            :      * and the weights are found by  calling fw with values
+<span class="lineNum">     399 </span>            :      * evenly distributed between \f$\mbox{xmin} + \delta/2\f$ and
+<span class="lineNum">     400 </span>            :      * \f$\mbox{xmax} - \delta/2\f$, where
+<span class="lineNum">     401 </span>            :      * \f$\delta = (\mbox{xmax} - \mbox{xmin})/\mbox{nw}\f$.
+<span class="lineNum">     402 </span>            :      */
+<span class="lineNum">     403 </span>            :     template&lt;class Func&gt;
+<span class="lineNum">     404 </span>            :     discrete_distribution(std::size_t nw, double xmin, double xmax, Func fw)
+<span class="lineNum">     405 </span>            :     {
+<span class="lineNum">     406 </span>            :         std::size_t n = (nw == 0) ? 1 : nw;
+<span class="lineNum">     407 </span>            :         double delta = (xmax - xmin) / n;
+<span class="lineNum">     408 </span>            :         BOOST_ASSERT(delta &gt; 0);
+<span class="lineNum">     409 </span>            :         std::vector&lt;WeightType&gt; weights;
+<span class="lineNum">     410 </span>            :         for(std::size_t k = 0; k &lt; n; ++k) {
+<span class="lineNum">     411 </span>            :             weights.push_back(fw(xmin + k*delta + delta/2));
+<span class="lineNum">     412 </span>            :         }
+<span class="lineNum">     413 </span>            :         init(weights.begin(), weights.end());
+<span class="lineNum">     414 </span>            :     }
+<span class="lineNum">     415 </span>            :     /**
+<span class="lineNum">     416 </span>            :      * Constructs a discrete_distribution from its parameters.
+<span class="lineNum">     417 </span>            :      */
+<span class="lineNum">     418 </span>            :     explicit discrete_distribution(const param_type&amp; parm)
+<span class="lineNum">     419 </span>            :     {
+<span class="lineNum">     420 </span>            :         param(parm);
+<span class="lineNum">     421 </span>            :     }
+<span class="lineNum">     422 </span>            : 
+<span class="lineNum">     423 </span>            :     /**
+<span class="lineNum">     424 </span>            :      * Returns a value distributed according to the parameters of the
+<span class="lineNum">     425 </span>            :      * discrete_distribution.
+<a name="426"><span class="lineNum">     426 </span>            :      */</a>
+<span class="lineNum">     427 </span>            :     template&lt;class URNG&gt;
+<span class="lineNum">     428 </span><span class="lineCov">          8 :     IntType operator()(URNG&amp; urng) const</span>
+<span class="lineNum">     429 </span>            :     {
+<span class="lineNum">     430 </span><span class="lineCov">         16 :         BOOST_ASSERT(!_impl._alias_table.empty());</span>
+<span class="lineNum">     431 </span>            :         IntType result;
+<span class="lineNum">     432 </span>            :         WeightType test;
+<span class="lineNum">     433 </span>            :         do {
+<span class="lineNum">     434 </span><span class="lineCov">         24 :             result = uniform_int_distribution&lt;IntType&gt;((min)(), (max)())(urng);</span>
+<span class="lineNum">     435 </span><span class="lineCov">         16 :             test = _impl.test(urng);</span>
+<span class="lineNum">     436 </span><span class="lineCov">          8 :         } while(!_impl.accept(result, test));</span>
+<span class="lineNum">     437 </span><span class="lineCov">         16 :         if(test &lt; _impl._alias_table[static_cast&lt;std::size_t&gt;(result)].first) {</span>
+<span class="lineNum">     438 </span>            :             return result;
+<span class="lineNum">     439 </span>            :         } else {
+<span class="lineNum">     440 </span><span class="lineNoCov">          0 :             return(_impl._alias_table[static_cast&lt;std::size_t&gt;(result)].second);</span>
+<span class="lineNum">     441 </span>            :         }
+<span class="lineNum">     442 </span>            :     }
+<span class="lineNum">     443 </span>            :     
+<span class="lineNum">     444 </span>            :     /**
+<span class="lineNum">     445 </span>            :      * Returns a value distributed according to the parameters
+<span class="lineNum">     446 </span>            :      * specified by param.
+<span class="lineNum">     447 </span>            :      */
+<span class="lineNum">     448 </span>            :     template&lt;class URNG&gt;
+<span class="lineNum">     449 </span>            :     IntType operator()(URNG&amp; urng, const param_type&amp; parm) const
+<span class="lineNum">     450 </span>            :     {
+<span class="lineNum">     451 </span>            :         if(WeightType limit = impl_type::try_get_sum(parm._probabilities)) {
+<span class="lineNum">     452 </span>            :             WeightType val = impl_type::generate_in_range(urng, limit);
+<span class="lineNum">     453 </span>            :             WeightType sum = 0;
+<span class="lineNum">     454 </span>            :             std::size_t result = 0;
+<span class="lineNum">     455 </span>            :             for(typename std::vector&lt;WeightType&gt;::const_iterator
+<span class="lineNum">     456 </span>            :                     iter = parm._probabilities.begin(),
+<span class="lineNum">     457 </span>            :                     end = parm._probabilities.end();
+<span class="lineNum">     458 </span>            :                 iter != end; ++iter, ++result)
+<span class="lineNum">     459 </span>            :             {
+<span class="lineNum">     460 </span>            :                 sum += *iter;
+<span class="lineNum">     461 </span>            :                 if(sum &gt; val) {
+<span class="lineNum">     462 </span>            :                     return result;
+<span class="lineNum">     463 </span>            :                 }
+<span class="lineNum">     464 </span>            :             }
+<span class="lineNum">     465 </span>            :             // This shouldn't be reachable, but round-off error
+<span class="lineNum">     466 </span>            :             // can prevent any match from being found when val is
+<span class="lineNum">     467 </span>            :             // very close to 1.
+<span class="lineNum">     468 </span>            :             return static_cast&lt;IntType&gt;(parm._probabilities.size() - 1);
+<span class="lineNum">     469 </span>            :         } else {
+<span class="lineNum">     470 </span>            :             // WeightType is integral and sum(parm._probabilities)
+<span class="lineNum">     471 </span>            :             // would overflow.  Just use the easy solution.
+<span class="lineNum">     472 </span>            :             return discrete_distribution(parm)(urng);
+<span class="lineNum">     473 </span>            :         }
+<span class="lineNum">     474 </span>            :     }
+<span class="lineNum">     475 </span>            :     
+<span class="lineNum">     476 </span>            :     /** Returns the smallest value that the distribution can produce. */
+<span class="lineNum">     477 </span>            :     result_type min BOOST_PREVENT_MACRO_SUBSTITUTION () const { return 0; }
+<span class="lineNum">     478 </span>            :     /** Returns the largest value that the distribution can produce. */
+<span class="lineNum">     479 </span>            :     result_type max BOOST_PREVENT_MACRO_SUBSTITUTION () const
+<span class="lineNum">     480 </span><span class="lineCov">         16 :     { return static_cast&lt;result_type&gt;(_impl._alias_table.size() - 1); }</span>
+<span class="lineNum">     481 </span>            : 
+<span class="lineNum">     482 </span>            :     /**
+<span class="lineNum">     483 </span>            :      * Returns a vector containing the probabilities of each
+<span class="lineNum">     484 </span>            :      * value of the distribution.  For example, given
+<span class="lineNum">     485 </span>            :      *
+<span class="lineNum">     486 </span>            :      * @code
+<span class="lineNum">     487 </span>            :      * discrete_distribution&lt;&gt; dist = { 1, 4, 5 };
+<span class="lineNum">     488 </span>            :      * std::vector&lt;double&gt; p = dist.param();
+<span class="lineNum">     489 </span>            :      * @endcode
+<span class="lineNum">     490 </span>            :      *
+<span class="lineNum">     491 </span>            :      * the vector, p will contain {0.1, 0.4, 0.5}.
+<span class="lineNum">     492 </span>            :      *
+<span class="lineNum">     493 </span>            :      * If @c WeightType is integral, then the weights
+<a name="494"><span class="lineNum">     494 </span>            :      * will be returned unchanged.</a>
+<span class="lineNum">     495 </span>            :      */
+<span class="lineNum">     496 </span><span class="lineCov">          1 :     std::vector&lt;WeightType&gt; probabilities() const</span>
+<span class="lineNum">     497 </span>            :     {
+<span class="lineNum">     498 </span><span class="lineCov">          3 :         std::vector&lt;WeightType&gt; result(_impl._alias_table.size(), static_cast&lt;WeightType&gt;(0));</span>
+<span class="lineNum">     499 </span><span class="lineCov">          1 :         std::size_t i = 0;</span>
+<span class="lineNum">     500 </span><span class="lineCov">        511 :         for(typename impl_type::alias_table_t::const_iterator</span>
+<span class="lineNum">     501 </span><span class="lineCov">          2 :                 iter = _impl._alias_table.begin(),</span>
+<span class="lineNum">     502 </span><span class="lineCov">          2 :                 end = _impl._alias_table.end();</span>
+<span class="lineNum">     503 </span>            :                 iter != end; ++iter, ++i)
+<span class="lineNum">     504 </span>            :         {
+<span class="lineNum">     505 </span><span class="lineCov">        255 :             WeightType val = iter-&gt;first;</span>
+<span class="lineNum">     506 </span><span class="lineCov">        510 :             result[i] += val;</span>
+<span class="lineNum">     507 </span><span class="lineCov">        510 :             result[static_cast&lt;std::size_t&gt;(iter-&gt;second)] += _impl.get_weight(i) - val;</span>
+<span class="lineNum">     508 </span>            :         }
+<span class="lineNum">     509 </span><span class="lineCov">          1 :         impl_type::normalize(result);</span>
+<span class="lineNum">     510 </span><span class="lineCov">          1 :         return(result);</span>
+<span class="lineNum">     511 </span>            :     }
+<span class="lineNum">     512 </span>            : 
+<span class="lineNum">     513 </span>            :     /** Returns the parameters of the distribution. */
+<span class="lineNum">     514 </span>            :     param_type param() const
+<span class="lineNum">     515 </span>            :     {
+<span class="lineNum">     516 </span>            :         return param_type(*this);
+<span class="lineNum">     517 </span>            :     }
+<span class="lineNum">     518 </span>            :     /** Sets the parameters of the distribution. */
+<span class="lineNum">     519 </span>            :     void param(const param_type&amp; parm)
+<span class="lineNum">     520 </span>            :     {
+<span class="lineNum">     521 </span>            :         init(parm._probabilities.begin(), parm._probabilities.end());
+<span class="lineNum">     522 </span>            :     }
+<span class="lineNum">     523 </span>            :     
+<span class="lineNum">     524 </span>            :     /**
+<span class="lineNum">     525 </span>            :      * Effects: Subsequent uses of the distribution do not depend
+<span class="lineNum">     526 </span>            :      * on values produced by any engine prior to invoking reset.
+<span class="lineNum">     527 </span>            :      */
+<span class="lineNum">     528 </span>            :     void reset() {}
+<span class="lineNum">     529 </span>            : 
+<span class="lineNum">     530 </span>            :     /** Writes a distribution to a @c std::ostream. */
+<span class="lineNum">     531 </span>            :     BOOST_RANDOM_DETAIL_OSTREAM_OPERATOR(os, discrete_distribution, dd)
+<span class="lineNum">     532 </span>            :     {
+<span class="lineNum">     533 </span>            :         os &lt;&lt; dd.param();
+<span class="lineNum">     534 </span>            :         return os;
+<span class="lineNum">     535 </span>            :     }
+<span class="lineNum">     536 </span>            : 
+<span class="lineNum">     537 </span>            :     /** Reads a distribution from a @c std::istream */
+<span class="lineNum">     538 </span>            :     BOOST_RANDOM_DETAIL_ISTREAM_OPERATOR(is, discrete_distribution, dd)
+<span class="lineNum">     539 </span>            :     {
+<span class="lineNum">     540 </span>            :         param_type parm;
+<span class="lineNum">     541 </span>            :         if(is &gt;&gt; parm) {
+<span class="lineNum">     542 </span>            :             dd.param(parm);
+<span class="lineNum">     543 </span>            :         }
+<span class="lineNum">     544 </span>            :         return is;
+<span class="lineNum">     545 </span>            :     }
+<span class="lineNum">     546 </span>            : 
+<span class="lineNum">     547 </span>            :     /**
+<span class="lineNum">     548 </span>            :      * Returns true if the two distributions will return the
+<span class="lineNum">     549 </span>            :      * same sequence of values, when passed equal generators.
+<span class="lineNum">     550 </span>            :      */
+<span class="lineNum">     551 </span>            :     BOOST_RANDOM_DETAIL_EQUALITY_OPERATOR(discrete_distribution, lhs, rhs)
+<span class="lineNum">     552 </span>            :     {
+<span class="lineNum">     553 </span>            :         return lhs._impl == rhs._impl;
+<span class="lineNum">     554 </span>            :     }
+<span class="lineNum">     555 </span>            :     /**
+<span class="lineNum">     556 </span>            :      * Returns true if the two distributions may return different
+<span class="lineNum">     557 </span>            :      * sequences of values, when passed equal generators.
+<span class="lineNum">     558 </span>            :      */
+<span class="lineNum">     559 </span>            :     BOOST_RANDOM_DETAIL_INEQUALITY_OPERATOR(discrete_distribution)
+<span class="lineNum">     560 </span>            : 
+<span class="lineNum">     561 </span>            : private:
+<span class="lineNum">     562 </span>            : 
+<span class="lineNum">     563 </span>            :     /// @cond show_private
+<span class="lineNum">     564 </span>            : 
+<span class="lineNum">     565 </span>            :     template&lt;class Iter&gt;
+<span class="lineNum">     566 </span>            :     void init(Iter first, Iter last, std::input_iterator_tag)
+<span class="lineNum">     567 </span>            :     {
+<span class="lineNum">     568 </span>            :         std::vector&lt;WeightType&gt; temp(first, last);
+<span class="lineNum">     569 </span>            :         init(temp.begin(), temp.end());
+<a name="570"><span class="lineNum">     570 </span>            :     }</a>
+<span class="lineNum">     571 </span>            :     template&lt;class Iter&gt;
+<span class="lineNum">     572 </span><span class="lineCov">          1 :     void init(Iter first, Iter last, std::forward_iterator_tag)</span>
+<span class="lineNum">     573 </span>            :     {
+<span class="lineNum">     574 </span><span class="lineCov">          2 :         std::vector&lt;std::pair&lt;WeightType, IntType&gt; &gt; below_average;</span>
+<span class="lineNum">     575 </span><span class="lineCov">          2 :         std::vector&lt;std::pair&lt;WeightType, IntType&gt; &gt; above_average;</span>
+<span class="lineNum">     576 </span><span class="lineCov">          1 :         WeightType weight_average = _impl.init_average(first, last);</span>
+<span class="lineNum">     577 </span>            :         WeightType normalized_average = _impl.get_weight(0);
+<span class="lineNum">     578 </span>            :         std::size_t i = 0;
+<span class="lineNum">     579 </span><span class="lineCov">        511 :         for(; first != last; ++first, ++i) {</span>
+<span class="lineNum">     580 </span><span class="lineCov">        510 :             WeightType val = impl_type::normalize(*first, weight_average);</span>
+<span class="lineNum">     581 </span><span class="lineCov">        510 :             std::pair&lt;WeightType, IntType&gt; elem(val, static_cast&lt;IntType&gt;(i));</span>
+<span class="lineNum">     582 </span><span class="lineCov">        255 :             if(val &lt; normalized_average) {</span>
+<span class="lineNum">     583 </span><span class="lineNoCov">          0 :                 below_average.push_back(elem);</span>
+<span class="lineNum">     584 </span>            :             } else {
+<span class="lineNum">     585 </span><span class="lineCov">        255 :                 above_average.push_back(elem);</span>
+<span class="lineNum">     586 </span>            :             }
+<span class="lineNum">     587 </span>            :         }
+<span class="lineNum">     588 </span>            : 
+<span class="lineNum">     589 </span>            :         typename impl_type::alias_table_t::iterator
+<span class="lineNum">     590 </span><span class="lineCov">          1 :             b_iter = below_average.begin(),</span>
+<span class="lineNum">     591 </span><span class="lineCov">          1 :             b_end = below_average.end(),</span>
+<span class="lineNum">     592 </span><span class="lineCov">          1 :             a_iter = above_average.begin(),</span>
+<span class="lineNum">     593 </span><span class="lineCov">          1 :             a_end = above_average.end()</span>
+<span class="lineNum">     594 </span>            :             ;
+<span class="lineNum">     595 </span><span class="lineCov">          1 :         while(b_iter != b_end &amp;&amp; a_iter != a_end) {</span>
+<span class="lineNum">     596 </span><span class="lineNoCov">          0 :             _impl._alias_table[static_cast&lt;std::size_t&gt;(b_iter-&gt;second)] =</span>
+<span class="lineNum">     597 </span><span class="lineNoCov">          0 :                 std::make_pair(b_iter-&gt;first, a_iter-&gt;second);</span>
+<span class="lineNum">     598 </span><span class="lineNoCov">          0 :             a_iter-&gt;first -= (_impl.get_weight(b_iter-&gt;second) - b_iter-&gt;first);</span>
+<span class="lineNum">     599 </span><span class="lineNoCov">          0 :             if(a_iter-&gt;first &lt; normalized_average) {</span>
+<span class="lineNum">     600 </span><span class="lineNoCov">          0 :                 *b_iter = *a_iter++;</span>
+<span class="lineNum">     601 </span>            :             } else {
+<span class="lineNum">     602 </span>            :                 ++b_iter;
+<span class="lineNum">     603 </span>            :             }
+<span class="lineNum">     604 </span>            :         }
+<span class="lineNum">     605 </span><span class="lineCov">          1 :         for(; b_iter != b_end; ++b_iter) {</span>
+<span class="lineNum">     606 </span><span class="lineNoCov">          0 :             _impl._alias_table[static_cast&lt;std::size_t&gt;(b_iter-&gt;second)].first =</span>
+<span class="lineNum">     607 </span><span class="lineNoCov">          0 :                 _impl.get_weight(b_iter-&gt;second);</span>
+<span class="lineNum">     608 </span>            :         }
+<span class="lineNum">     609 </span><span class="lineCov">        256 :         for(; a_iter != a_end; ++a_iter) {</span>
+<span class="lineNum">     610 </span><span class="lineCov">        765 :             _impl._alias_table[static_cast&lt;std::size_t&gt;(a_iter-&gt;second)].first =</span>
+<span class="lineNum">     611 </span><span class="lineCov">        255 :                 _impl.get_weight(a_iter-&gt;second);</span>
+<span class="lineNum">     612 </span>            :         }
+<a name="613"><span class="lineNum">     613 </span><span class="lineCov">          1 :     }</span></a>
+<span class="lineNum">     614 </span>            :     template&lt;class Iter&gt;
+<span class="lineNum">     615 </span><span class="lineCov">          1 :     void init(Iter first, Iter last)</span>
+<span class="lineNum">     616 </span>            :     {
+<span class="lineNum">     617 </span><span class="lineCov">          1 :         if(first == last) {</span>
+<span class="lineNum">     618 </span><span class="lineNoCov">          0 :             _impl.init_empty();</span>
+<span class="lineNum">     619 </span>            :         } else {
+<span class="lineNum">     620 </span>            :             typename std::iterator_traits&lt;Iter&gt;::iterator_category category;
+<span class="lineNum">     621 </span><span class="lineCov">          1 :             init(first, last, category);</span>
+<span class="lineNum">     622 </span>            :         }
+<span class="lineNum">     623 </span><span class="lineCov">          1 :     }</span>
+<span class="lineNum">     624 </span>            :     typedef typename detail::select_alias_table&lt;
+<span class="lineNum">     625 </span>            :         (::boost::is_integral&lt;WeightType&gt;::value)
+<span class="lineNum">     626 </span>            :     &gt;::template apply&lt;IntType, WeightType&gt;::type impl_type;
+<span class="lineNum">     627 </span>            :     impl_type _impl;
+<span class="lineNum">     628 </span>            :     /// @endcond
+<span class="lineNum">     629 </span>            : };
+<span class="lineNum">     630 </span>            : 
+<span class="lineNum">     631 </span>            : }
+<span class="lineNum">     632 </span>            : }
+<span class="lineNum">     633 </span>            : 
+<span class="lineNum">     634 </span>            : #include &lt;boost/random/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     635 </span>            : 
+<span class="lineNum">     636 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/ClientBase.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - ClientBase.h<span style="font-size: 80%;"> (source / <a href="ClientBase.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntryLo">33.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryLo">18.2 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            :  */
+<span class="lineNum">      17 </span>            : /** @file ClientBase.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @author Marek Kotewicz &lt;marek@ethdev.com&gt;
+<span class="lineNum">      20 </span>            :  * @date 2015
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #pragma once
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;chrono&gt;
+<span class="lineNum">      26 </span>            : #include &quot;Interface.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;LogFilter.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;TransactionQueue.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;Block.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;CommonNet.h&quot;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace dev
+<span class="lineNum">      33 </span>            : {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : namespace eth
+<span class="lineNum">      36 </span>            : {
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span><span class="lineNoCov">          0 : struct InstalledFilter</span>
+<span class="lineNum">      39 </span>            : {
+<span class="lineNum">      40 </span><span class="lineNoCov">          0 :         InstalledFilter(LogFilter const&amp; _f): filter(_f) {}</span>
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            :         LogFilter filter;
+<span class="lineNum">      43 </span>            :         unsigned refCount = 1;
+<span class="lineNum">      44 </span>            :         LocalisedLogEntries changes;
+<span class="lineNum">      45 </span>            : };
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineCov">         30 : static const h256 PendingChangedFilter = u256(0);</span>
+<span class="lineNum">      48 </span><span class="lineCov">         30 : static const h256 ChainChangedFilter = u256(1);</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">         75 : static const LogEntry SpecialLogEntry = LogEntry(Address(), h256s(), bytes());</span>
+<span class="lineNum">      51 </span><span class="lineCov">         15 : static const LocalisedLogEntry InitialChange(SpecialLogEntry);</span>
+<span class="lineNum">      52 </span>            : 
+<a name="53"><span class="lineNum">      53 </span><span class="lineNoCov">          0 : struct ClientWatch</span></a>
+<span class="lineNum">      54 </span>            : {
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :         ClientWatch(): lastPoll(std::chrono::system_clock::now()) {}</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :         explicit ClientWatch(h256 _id, Reaping _r): id(_id), lastPoll(_r == Reaping::Automatic ? std::chrono::system_clock::now() : std::chrono::system_clock::time_point::max()) {}</span>
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            :         h256 id;
+<span class="lineNum">      59 </span>            : #if INITIAL_STATE_AS_CHANGES
+<span class="lineNum">      60 </span>            :         LocalisedLogEntries changes = LocalisedLogEntries{ InitialChange };
+<span class="lineNum">      61 </span>            : #else
+<span class="lineNum">      62 </span>            :         LocalisedLogEntries changes;
+<span class="lineNum">      63 </span>            : #endif
+<span class="lineNum">      64 </span>            :         mutable std::chrono::system_clock::time_point lastPoll = std::chrono::system_clock::now();
+<span class="lineNum">      65 </span>            : };
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : struct WatchChannel: public LogChannel { static const char* name(); static const int verbosity = 7; };
+<span class="lineNum">      68 </span>            : #define cwatch LogOutputStream&lt;WatchChannel, true&gt;()
+<span class="lineNum">      69 </span>            : struct WorkInChannel: public LogChannel { static const char* name(); static const int verbosity = 16; };
+<span class="lineNum">      70 </span>            : struct WorkOutChannel: public LogChannel { static const char* name(); static const int verbosity = 16; };
+<span class="lineNum">      71 </span>            : struct WorkChannel: public LogChannel { static const char* name(); static const int verbosity = 21; };
+<span class="lineNum">      72 </span>            : #define cwork LogOutputStream&lt;WorkChannel, true&gt;()
+<span class="lineNum">      73 </span>            : #define cworkin LogOutputStream&lt;WorkInChannel, true&gt;()
+<span class="lineNum">      74 </span>            : #define cworkout LogOutputStream&lt;WorkOutChannel, true&gt;()
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : class ClientBase: public Interface
+<a name="77"><span class="lineNum">      77 </span>            : {</a>
+<a name="78"><span class="lineNum">      78 </span>            : public:</a>
+<span class="lineNum">      79 </span><span class="lineCov">         16 :         ClientBase(TransactionQueue::Limits const&amp; _l = TransactionQueue::Limits{1024, 1024}): m_tq(_l) {}</span>
+<span class="lineNum">      80 </span><span class="lineCov">          5 :         virtual ~ClientBase() {}</span>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :         /// Submits the given transaction.
+<span class="lineNum">      83 </span>            :         /// @returns the new transaction's hash.
+<span class="lineNum">      84 </span>            :         virtual std::pair&lt;h256, Address&gt; submitTransaction(TransactionSkeleton const&amp; _t, Secret const&amp; _secret) override;
+<span class="lineNum">      85 </span>            :         using Interface::submitTransaction;
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :         /// Makes the given call. Nothing is recorded into the state.
+<span class="lineNum">      88 </span>            :         virtual ExecutionResult call(Address const&amp; _secret, u256 _value, Address _dest, bytes const&amp; _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff = FudgeFactor::Strict) override;
+<span class="lineNum">      89 </span>            :         using Interface::call;
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            :         /// Makes the given create. Nothing is recorded into the state.
+<span class="lineNum">      92 </span>            :         virtual ExecutionResult create(Address const&amp; _secret, u256 _value, bytes const&amp; _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff = FudgeFactor::Strict) override;
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :         /// Estimate gas usage for call/create.
+<span class="lineNum">      95 </span>            :         /// @param _maxGas An upper bound value for estimation, if not provided default value of c_maxGasEstimate will be used.
+<span class="lineNum">      96 </span>            :         /// @param _callback Optional callback function for progress reporting
+<span class="lineNum">      97 </span>            :         virtual std::pair&lt;u256, ExecutionResult&gt; estimateGas(Address const&amp; _from, u256 _value, Address _dest, bytes const&amp; _data, u256 _maxGas, u256 _gasPrice, BlockNumber _blockNumber, GasEstimationCallback const&amp; _callback) override;
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :         using Interface::create;
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :         using Interface::balanceAt;
+<span class="lineNum">     102 </span>            :         using Interface::countAt;
+<span class="lineNum">     103 </span>            :         using Interface::stateAt;
+<span class="lineNum">     104 </span>            :         using Interface::codeAt;
+<span class="lineNum">     105 </span>            :         using Interface::codeHashAt;
+<span class="lineNum">     106 </span>            :         using Interface::storageAt;
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :         virtual u256 balanceAt(Address _a, BlockNumber _block) const override;
+<span class="lineNum">     109 </span>            :         virtual u256 countAt(Address _a, BlockNumber _block) const override;
+<span class="lineNum">     110 </span>            :         virtual u256 stateAt(Address _a, u256 _l, BlockNumber _block) const override;
+<span class="lineNum">     111 </span>            :         virtual h256 stateRootAt(Address _a, BlockNumber _block) const override;
+<span class="lineNum">     112 </span>            :         virtual bytes codeAt(Address _a, BlockNumber _block) const override;
+<span class="lineNum">     113 </span>            :         virtual h256 codeHashAt(Address _a, BlockNumber _block) const override;
+<span class="lineNum">     114 </span>            :         virtual std::map&lt;h256, std::pair&lt;u256, u256&gt;&gt; storageAt(Address _a, BlockNumber _block) const override;
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            :         virtual LocalisedLogEntries logs(unsigned _watchId) const override;
+<span class="lineNum">     117 </span>            :         virtual LocalisedLogEntries logs(LogFilter const&amp; _filter) const override;
+<span class="lineNum">     118 </span>            :         virtual void prependLogsFromBlock(LogFilter const&amp; _filter, h256 const&amp; _blockHash, BlockPolarity _polarity, LocalisedLogEntries&amp; io_logs) const;
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            :         /// Install, uninstall and query watches.
+<span class="lineNum">     121 </span>            :         virtual unsigned installWatch(LogFilter const&amp; _filter, Reaping _r = Reaping::Automatic) override;
+<span class="lineNum">     122 </span>            :         virtual unsigned installWatch(h256 _filterId, Reaping _r = Reaping::Automatic) override;
+<span class="lineNum">     123 </span>            :         virtual bool uninstallWatch(unsigned _watchId) override;
+<span class="lineNum">     124 </span>            :         virtual LocalisedLogEntries peekWatch(unsigned _watchId) const override;
+<span class="lineNum">     125 </span>            :         virtual LocalisedLogEntries checkWatch(unsigned _watchId) override;
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :         virtual h256 hashFromNumber(BlockNumber _number) const override;
+<span class="lineNum">     128 </span>            :         virtual BlockNumber numberFromHash(h256 _blockHash) const override;
+<span class="lineNum">     129 </span>            :         virtual int compareBlockHashes(h256 _h1, h256 _h2) const override;
+<span class="lineNum">     130 </span>            :         virtual BlockHeader blockInfo(h256 _hash) const override;
+<span class="lineNum">     131 </span>            :         virtual BlockDetails blockDetails(h256 _hash) const override;
+<span class="lineNum">     132 </span>            :         virtual Transaction transaction(h256 _transactionHash) const override;
+<span class="lineNum">     133 </span>            :         virtual LocalisedTransaction localisedTransaction(h256 const&amp; _transactionHash) const override;
+<span class="lineNum">     134 </span>            :         virtual Transaction transaction(h256 _blockHash, unsigned _i) const override;
+<span class="lineNum">     135 </span>            :         virtual LocalisedTransaction localisedTransaction(h256 const&amp; _blockHash, unsigned _i) const override;
+<span class="lineNum">     136 </span>            :         virtual TransactionReceipt transactionReceipt(h256 const&amp; _transactionHash) const override;
+<span class="lineNum">     137 </span>            :         virtual LocalisedTransactionReceipt localisedTransactionReceipt(h256 const&amp; _transactionHash) const override;
+<span class="lineNum">     138 </span>            :         virtual std::pair&lt;h256, unsigned&gt; transactionLocation(h256 const&amp; _transactionHash) const override;
+<span class="lineNum">     139 </span>            :         virtual Transactions transactions(h256 _blockHash) const override;
+<span class="lineNum">     140 </span>            :         virtual TransactionHashes transactionHashes(h256 _blockHash) const override;
+<span class="lineNum">     141 </span>            :         virtual BlockHeader uncle(h256 _blockHash, unsigned _i) const override;
+<span class="lineNum">     142 </span>            :         virtual UncleHashes uncleHashes(h256 _blockHash) const override;
+<span class="lineNum">     143 </span>            :         virtual unsigned transactionCount(h256 _blockHash) const override;
+<span class="lineNum">     144 </span>            :         virtual unsigned uncleCount(h256 _blockHash) const override;
+<span class="lineNum">     145 </span>            :         virtual unsigned number() const override;
+<span class="lineNum">     146 </span>            :         virtual Transactions pending() const override;
+<span class="lineNum">     147 </span>            :         virtual h256s pendingHashes() const override;
+<span class="lineNum">     148 </span>            :         virtual BlockHeader pendingInfo() const override;
+<a name="149"><span class="lineNum">     149 </span>            :         virtual BlockDetails pendingDetails() const override;</a>
+<span class="lineNum">     150 </span>            : 
+<a name="151"><span class="lineNum">     151 </span><span class="lineNoCov">          0 :         virtual EVMSchedule evmSchedule() const override { return sealEngine()-&gt;evmSchedule(EnvInfo(pendingInfo())); }</span></a>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :         virtual ImportResult injectTransaction(bytes const&amp; _rlp, IfDropped _id = IfDropped::Ignore) override { prepareForTransaction(); return m_tq.import(_rlp, _id); }</span>
+<span class="lineNum">     154 </span>            :         virtual ImportResult injectBlock(bytes const&amp; _block) override;
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :         using Interface::addresses;
+<a name="157"><span class="lineNum">     157 </span>            :         virtual Addresses addresses(BlockNumber _block) const override;</a>
+<span class="lineNum">     158 </span>            :         virtual u256 gasLimitRemaining() const override;
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :         virtual u256 gasBidPrice() const override { return DefaultGasPrice; }</span>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :         /// Get the block author
+<span class="lineNum">     162 </span>            :         virtual Address author() const override;
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :         virtual bool isKnown(h256 const&amp; _hash) const override;
+<span class="lineNum">     165 </span>            :         virtual bool isKnown(BlockNumber _block) const override;
+<span class="lineNum">     166 </span>            :         virtual bool isKnownTransaction(h256 const&amp; _transactionHash) const override;
+<a name="167"><span class="lineNum">     167 </span>            :         virtual bool isKnownTransaction(h256 const&amp; _blockHash, unsigned _i) const override;</a>
+<a name="168"><span class="lineNum">     168 </span>            : </a>
+<a name="169"><span class="lineNum">     169 </span><span class="lineNoCov">          0 :         virtual void startSealing() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported(&quot;ClientBase::startSealing&quot;)); }</span></a>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :         virtual void stopSealing() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported(&quot;ClientBase::stopSealing&quot;)); }</span>
+<a name="171"><span class="lineNum">     171 </span><span class="lineNoCov">          0 :         virtual bool wouldSeal() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported(&quot;ClientBase::wouldSeal&quot;)); }</span></a>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :         virtual SyncStatus syncStatus() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported(&quot;ClientBase::syncStatus&quot;)); }</span>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :         Block block(BlockNumber _h) const;
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            : protected:
+<span class="lineNum">     178 </span>            :         /// The interface that must be implemented in any class deriving this.
+<span class="lineNum">     179 </span>            :         /// {
+<span class="lineNum">     180 </span>            :         virtual BlockChain&amp; bc() = 0;
+<span class="lineNum">     181 </span>            :         virtual BlockChain const&amp; bc() const = 0;
+<span class="lineNum">     182 </span>            :         virtual Block block(h256 const&amp; _h) const = 0;
+<span class="lineNum">     183 </span>            :         virtual Block preSeal() const = 0;
+<span class="lineNum">     184 </span>            :         virtual Block postSeal() const = 0;
+<span class="lineNum">     185 </span>            :         virtual void prepareForTransaction() = 0;
+<span class="lineNum">     186 </span>            :         /// }
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :         TransactionQueue m_tq;                                                  ///&lt; Maintains a list of incoming transactions not yet in a block on the blockchain.
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            :         // filters
+<span class="lineNum">     191 </span>            :         mutable Mutex x_filtersWatches;                                                 ///&lt; Our lock.
+<span class="lineNum">     192 </span>            :         std::unordered_map&lt;h256, InstalledFilter&gt; m_filters;      ///&lt; The dictionary of filters that are active.
+<span class="lineNum">     193 </span>            :         std::unordered_map&lt;h256, h256s&gt; m_specialFilters = std::unordered_map&lt;h256, std::vector&lt;h256&gt;&gt;{{PendingChangedFilter, {}}, {ChainChangedFilter, {}}};
+<span class="lineNum">     194 </span>            :                                                                                                                         ///&lt; The dictionary of special filters and their additional data
+<span class="lineNum">     195 </span>            :         std::map&lt;unsigned, ClientWatch&gt; m_watches;                                ///&lt; Each and every watch - these reference a filter.
+<span class="lineNum">     196 </span>            : };
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            : }}
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

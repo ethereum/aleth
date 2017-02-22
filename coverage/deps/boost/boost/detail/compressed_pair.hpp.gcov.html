@@ -1,0 +1,519 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/detail/compressed_pair.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/detail</a> - compressed_pair.hpp<span style="font-size: 80%;"> (source / <a href="compressed_pair.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Steve Cleary, Beman Dawes, Howard Hinnant &amp; John Maddock 2000.</a>
+<span class="lineNum">       2 </span>            : //  Use, modification and distribution are subject to the Boost Software License,
+<span class="lineNum">       3 </span>            : //  Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt).
+<span class="lineNum">       5 </span>            : //
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/utility for most recent version including documentation.
+<span class="lineNum">       7 </span>            : 
+<span class="lineNum">       8 </span>            : // compressed_pair: pair that &quot;compresses&quot; empty members
+<span class="lineNum">       9 </span>            : // (see libs/utility/doc/html/compressed_pair.html)
+<span class="lineNum">      10 </span>            : //
+<span class="lineNum">      11 </span>            : // JM changes 25 Jan 2004:
+<span class="lineNum">      12 </span>            : // For the case where T1 == T2 and both are empty, then first() and second()
+<span class="lineNum">      13 </span>            : // should return different objects.
+<span class="lineNum">      14 </span>            : // JM changes 25 Jan 2000:
+<span class="lineNum">      15 </span>            : // Removed default arguments from compressed_pair_switch to get
+<span class="lineNum">      16 </span>            : // C++ Builder 4 to accept them
+<span class="lineNum">      17 </span>            : // rewriten swap to get gcc and C++ builder to compile.
+<span class="lineNum">      18 </span>            : // added partial specialisations for case T1 == T2 to avoid duplicate constructor defs.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #ifndef BOOST_DETAIL_COMPRESSED_PAIR_HPP
+<span class="lineNum">      21 </span>            : #define BOOST_DETAIL_COMPRESSED_PAIR_HPP
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;boost/type_traits/remove_cv.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/type_traits/is_empty.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/type_traits/is_same.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/call_traits.hpp&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">      31 </span>            : # pragma warning(push)
+<span class="lineNum">      32 </span>            : # pragma warning(disable:4512)
+<span class="lineNum">      33 </span>            : #endif 
+<span class="lineNum">      34 </span>            : namespace boost
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : template &lt;class T1, class T2&gt;
+<span class="lineNum">      38 </span>            : class compressed_pair;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : // compressed_pair
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : namespace details
+<span class="lineNum">      44 </span>            : {
+<span class="lineNum">      45 </span>            :    // JM altered 26 Jan 2000:
+<span class="lineNum">      46 </span>            :    template &lt;class T1, class T2, bool IsSame, bool FirstEmpty, bool SecondEmpty&gt;
+<span class="lineNum">      47 </span>            :    struct compressed_pair_switch;
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :    template &lt;class T1, class T2&gt;
+<span class="lineNum">      50 </span>            :    struct compressed_pair_switch&lt;T1, T2, false, false, false&gt;
+<span class="lineNum">      51 </span>            :       {static const int value = 0;};
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            :    template &lt;class T1, class T2&gt;
+<span class="lineNum">      54 </span>            :    struct compressed_pair_switch&lt;T1, T2, false, true, true&gt;
+<span class="lineNum">      55 </span>            :       {static const int value = 3;};
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :    template &lt;class T1, class T2&gt;
+<span class="lineNum">      58 </span>            :    struct compressed_pair_switch&lt;T1, T2, false, true, false&gt;
+<span class="lineNum">      59 </span>            :       {static const int value = 1;};
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            :    template &lt;class T1, class T2&gt;
+<span class="lineNum">      62 </span>            :    struct compressed_pair_switch&lt;T1, T2, false, false, true&gt;
+<span class="lineNum">      63 </span>            :       {static const int value = 2;};
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            :    template &lt;class T1, class T2&gt;
+<span class="lineNum">      66 </span>            :    struct compressed_pair_switch&lt;T1, T2, true, true, true&gt;
+<span class="lineNum">      67 </span>            :       {static const int value = 4;};
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :    template &lt;class T1, class T2&gt;
+<span class="lineNum">      70 </span>            :    struct compressed_pair_switch&lt;T1, T2, true, false, false&gt;
+<span class="lineNum">      71 </span>            :       {static const int value = 5;};
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :    template &lt;class T1, class T2, int Version&gt; class compressed_pair_imp;
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : #ifdef __GNUC__
+<span class="lineNum">      76 </span>            :    // workaround for GCC (JM):
+<span class="lineNum">      77 </span>            :    using std::swap;
+<span class="lineNum">      78 </span>            : #endif
+<span class="lineNum">      79 </span>            :    //
+<span class="lineNum">      80 </span>            :    // can't call unqualified swap from within classname::swap
+<span class="lineNum">      81 </span>            :    // as Koenig lookup rules will find only the classname::swap
+<span class="lineNum">      82 </span>            :    // member function not the global declaration, so use cp_swap
+<span class="lineNum">      83 </span>            :    // as a forwarding function (JM):
+<span class="lineNum">      84 </span>            :    template &lt;typename T&gt;
+<span class="lineNum">      85 </span>            :    inline void cp_swap(T&amp; t1, T&amp; t2)
+<span class="lineNum">      86 </span>            :    {
+<span class="lineNum">      87 </span>            : #ifndef __GNUC__
+<span class="lineNum">      88 </span>            :       using std::swap;
+<span class="lineNum">      89 </span>            : #endif
+<span class="lineNum">      90 </span>            :       swap(t1, t2);
+<span class="lineNum">      91 </span>            :    }
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            :    // 0    derive from neither
+<a name="94"><span class="lineNum">      94 </span>            : </a>
+<span class="lineNum">      95 </span>            :    template &lt;class T1, class T2&gt;
+<span class="lineNum">      96 </span><span class="lineCov">   10189586 :    class compressed_pair_imp&lt;T1, T2, 0&gt;</span>
+<span class="lineNum">      97 </span>            :    {
+<span class="lineNum">      98 </span>            :    public:
+<span class="lineNum">      99 </span>            :       typedef T1                                                 first_type;
+<span class="lineNum">     100 </span>            :       typedef T2                                                 second_type;
+<span class="lineNum">     101 </span>            :       typedef typename call_traits&lt;first_type&gt;::param_type       first_param_type;
+<span class="lineNum">     102 </span>            :       typedef typename call_traits&lt;second_type&gt;::param_type      second_param_type;
+<span class="lineNum">     103 </span>            :       typedef typename call_traits&lt;first_type&gt;::reference        first_reference;
+<span class="lineNum">     104 </span>            :       typedef typename call_traits&lt;second_type&gt;::reference       second_reference;
+<span class="lineNum">     105 </span>            :       typedef typename call_traits&lt;first_type&gt;::const_reference  first_const_reference;
+<span class="lineNum">     106 </span>            :       typedef typename call_traits&lt;second_type&gt;::const_reference second_const_reference;
+<span class="lineNum">     107 </span>            : 
+<a name="108"><span class="lineNum">     108 </span>            :       compressed_pair_imp() {} </a>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineCov">     341278 :       compressed_pair_imp(first_param_type x, second_param_type y)</span>
+<span class="lineNum">     111 </span><span class="lineCov">    8611086 :          : first_(x), second_(y) {}</span>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :       compressed_pair_imp(first_param_type x)
+<span class="lineNum">     114 </span>            :          : first_(x) {}
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            :       compressed_pair_imp(second_param_type y)
+<span class="lineNum">     117 </span>            :          : second_(y) {}
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :       first_reference       first()       {return first_;}
+<span class="lineNum">     120 </span><span class="lineCov">  228752416 :       first_const_reference first() const {return first_;}</span>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :       second_reference       second()       {return second_;}
+<span class="lineNum">     123 </span><span class="lineCov">   13542480 :       second_const_reference second() const {return second_;}</span>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :       void swap(::boost::compressed_pair&lt;T1, T2&gt;&amp; y)
+<span class="lineNum">     126 </span>            :       {
+<span class="lineNum">     127 </span>            :          cp_swap(first_, y.first());
+<span class="lineNum">     128 </span>            :          cp_swap(second_, y.second());
+<span class="lineNum">     129 </span>            :       }
+<span class="lineNum">     130 </span>            :    private:
+<span class="lineNum">     131 </span>            :       first_type first_;
+<span class="lineNum">     132 </span>            :       second_type second_;
+<span class="lineNum">     133 </span>            :    };
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            :    // 1    derive from T1
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :    template &lt;class T1, class T2&gt;
+<span class="lineNum">     138 </span>            :    class compressed_pair_imp&lt;T1, T2, 1&gt;
+<span class="lineNum">     139 </span>            :       : protected ::boost::remove_cv&lt;T1&gt;::type
+<span class="lineNum">     140 </span>            :    {
+<span class="lineNum">     141 </span>            :    public:
+<span class="lineNum">     142 </span>            :       typedef T1                                                 first_type;
+<span class="lineNum">     143 </span>            :       typedef T2                                                 second_type;
+<span class="lineNum">     144 </span>            :       typedef typename call_traits&lt;first_type&gt;::param_type       first_param_type;
+<span class="lineNum">     145 </span>            :       typedef typename call_traits&lt;second_type&gt;::param_type      second_param_type;
+<span class="lineNum">     146 </span>            :       typedef typename call_traits&lt;first_type&gt;::reference        first_reference;
+<span class="lineNum">     147 </span>            :       typedef typename call_traits&lt;second_type&gt;::reference       second_reference;
+<span class="lineNum">     148 </span>            :       typedef typename call_traits&lt;first_type&gt;::const_reference  first_const_reference;
+<span class="lineNum">     149 </span>            :       typedef typename call_traits&lt;second_type&gt;::const_reference second_const_reference;
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            :       compressed_pair_imp() {}
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :       compressed_pair_imp(first_param_type x, second_param_type y)
+<span class="lineNum">     154 </span>            :          : first_type(x), second_(y) {}
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :       compressed_pair_imp(first_param_type x)
+<span class="lineNum">     157 </span>            :          : first_type(x) {}
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :       compressed_pair_imp(second_param_type y)
+<span class="lineNum">     160 </span>            :          : second_(y) {}
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :       first_reference       first()       {return *this;}
+<span class="lineNum">     163 </span>            :       first_const_reference first() const {return *this;}
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :       second_reference       second()       {return second_;}
+<span class="lineNum">     166 </span><span class="lineCov">  404982758 :       second_const_reference second() const {return second_;}</span>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :       void swap(::boost::compressed_pair&lt;T1,T2&gt;&amp; y)
+<span class="lineNum">     169 </span>            :       {
+<span class="lineNum">     170 </span>            :          // no need to swap empty base class:
+<span class="lineNum">     171 </span>            :          cp_swap(second_, y.second());
+<span class="lineNum">     172 </span>            :       }
+<span class="lineNum">     173 </span>            :    private:
+<span class="lineNum">     174 </span>            :       second_type second_;
+<span class="lineNum">     175 </span>            :    };
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :    // 2    derive from T2
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :    template &lt;class T1, class T2&gt;
+<span class="lineNum">     180 </span>            :    class compressed_pair_imp&lt;T1, T2, 2&gt;
+<span class="lineNum">     181 </span>            :       : protected ::boost::remove_cv&lt;T2&gt;::type
+<span class="lineNum">     182 </span>            :    {
+<span class="lineNum">     183 </span>            :    public:
+<span class="lineNum">     184 </span>            :       typedef T1                                                 first_type;
+<span class="lineNum">     185 </span>            :       typedef T2                                                 second_type;
+<span class="lineNum">     186 </span>            :       typedef typename call_traits&lt;first_type&gt;::param_type       first_param_type;
+<span class="lineNum">     187 </span>            :       typedef typename call_traits&lt;second_type&gt;::param_type      second_param_type;
+<span class="lineNum">     188 </span>            :       typedef typename call_traits&lt;first_type&gt;::reference        first_reference;
+<span class="lineNum">     189 </span>            :       typedef typename call_traits&lt;second_type&gt;::reference       second_reference;
+<span class="lineNum">     190 </span>            :       typedef typename call_traits&lt;first_type&gt;::const_reference  first_const_reference;
+<span class="lineNum">     191 </span>            :       typedef typename call_traits&lt;second_type&gt;::const_reference second_const_reference;
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            :       compressed_pair_imp() {}
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            :       compressed_pair_imp(first_param_type x, second_param_type y)
+<span class="lineNum">     196 </span>            :          : second_type(y), first_(x) {}
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :       compressed_pair_imp(first_param_type x)
+<span class="lineNum">     199 </span>            :          : first_(x) {}
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            :       compressed_pair_imp(second_param_type y)
+<span class="lineNum">     202 </span>            :          : second_type(y) {}
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            :       first_reference       first()       {return first_;}
+<span class="lineNum">     205 </span><span class="lineCov">          6 :       first_const_reference first() const {return first_;}</span>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :       second_reference       second()       {return *this;}
+<span class="lineNum">     208 </span>            :       second_const_reference second() const {return *this;}
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :       void swap(::boost::compressed_pair&lt;T1,T2&gt;&amp; y)
+<span class="lineNum">     211 </span>            :       {
+<span class="lineNum">     212 </span>            :          // no need to swap empty base class:
+<span class="lineNum">     213 </span>            :          cp_swap(first_, y.first());
+<span class="lineNum">     214 </span>            :       }
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            :    private:
+<span class="lineNum">     217 </span>            :       first_type first_;
+<span class="lineNum">     218 </span>            :    };
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            :    // 3    derive from T1 and T2
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            :    template &lt;class T1, class T2&gt;
+<span class="lineNum">     223 </span>            :    class compressed_pair_imp&lt;T1, T2, 3&gt;
+<span class="lineNum">     224 </span>            :       : protected ::boost::remove_cv&lt;T1&gt;::type,
+<span class="lineNum">     225 </span>            :         protected ::boost::remove_cv&lt;T2&gt;::type
+<span class="lineNum">     226 </span>            :    {
+<span class="lineNum">     227 </span>            :    public:
+<span class="lineNum">     228 </span>            :       typedef T1                                                 first_type;
+<span class="lineNum">     229 </span>            :       typedef T2                                                 second_type;
+<span class="lineNum">     230 </span>            :       typedef typename call_traits&lt;first_type&gt;::param_type       first_param_type;
+<span class="lineNum">     231 </span>            :       typedef typename call_traits&lt;second_type&gt;::param_type      second_param_type;
+<span class="lineNum">     232 </span>            :       typedef typename call_traits&lt;first_type&gt;::reference        first_reference;
+<span class="lineNum">     233 </span>            :       typedef typename call_traits&lt;second_type&gt;::reference       second_reference;
+<span class="lineNum">     234 </span>            :       typedef typename call_traits&lt;first_type&gt;::const_reference  first_const_reference;
+<span class="lineNum">     235 </span>            :       typedef typename call_traits&lt;second_type&gt;::const_reference second_const_reference;
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            :       compressed_pair_imp() {}
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            :       compressed_pair_imp(first_param_type x, second_param_type y)
+<span class="lineNum">     240 </span>            :          : first_type(x), second_type(y) {}
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            :       compressed_pair_imp(first_param_type x)
+<span class="lineNum">     243 </span>            :          : first_type(x) {}
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span>            :       compressed_pair_imp(second_param_type y)
+<span class="lineNum">     246 </span>            :          : second_type(y) {}
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :       first_reference       first()       {return *this;}
+<span class="lineNum">     249 </span>            :       first_const_reference first() const {return *this;}
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            :       second_reference       second()       {return *this;}
+<span class="lineNum">     252 </span>            :       second_const_reference second() const {return *this;}
+<span class="lineNum">     253 </span>            :       //
+<span class="lineNum">     254 </span>            :       // no need to swap empty bases:
+<span class="lineNum">     255 </span>            :       void swap(::boost::compressed_pair&lt;T1,T2&gt;&amp;) {}
+<span class="lineNum">     256 </span>            :    };
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            :    // JM
+<span class="lineNum">     259 </span>            :    // 4    T1 == T2, T1 and T2 both empty
+<span class="lineNum">     260 </span>            :    //      Originally this did not store an instance of T2 at all
+<span class="lineNum">     261 </span>            :    //      but that led to problems beause it meant &amp;x.first() == &amp;x.second()
+<span class="lineNum">     262 </span>            :    //      which is not true for any other kind of pair, so now we store an instance
+<span class="lineNum">     263 </span>            :    //      of T2 just in case the user is relying on first() and second() returning
+<span class="lineNum">     264 </span>            :    //      different objects (albeit both empty).
+<span class="lineNum">     265 </span>            :    template &lt;class T1, class T2&gt;
+<span class="lineNum">     266 </span>            :    class compressed_pair_imp&lt;T1, T2, 4&gt;
+<span class="lineNum">     267 </span>            :       : protected ::boost::remove_cv&lt;T1&gt;::type
+<span class="lineNum">     268 </span>            :    {
+<span class="lineNum">     269 </span>            :    public:
+<span class="lineNum">     270 </span>            :       typedef T1                                                 first_type;
+<span class="lineNum">     271 </span>            :       typedef T2                                                 second_type;
+<span class="lineNum">     272 </span>            :       typedef typename call_traits&lt;first_type&gt;::param_type       first_param_type;
+<span class="lineNum">     273 </span>            :       typedef typename call_traits&lt;second_type&gt;::param_type      second_param_type;
+<span class="lineNum">     274 </span>            :       typedef typename call_traits&lt;first_type&gt;::reference        first_reference;
+<span class="lineNum">     275 </span>            :       typedef typename call_traits&lt;second_type&gt;::reference       second_reference;
+<span class="lineNum">     276 </span>            :       typedef typename call_traits&lt;first_type&gt;::const_reference  first_const_reference;
+<span class="lineNum">     277 </span>            :       typedef typename call_traits&lt;second_type&gt;::const_reference second_const_reference;
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            :       compressed_pair_imp() {}
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span>            :       compressed_pair_imp(first_param_type x, second_param_type y)
+<span class="lineNum">     282 </span>            :          : first_type(x), m_second(y) {}
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            :       compressed_pair_imp(first_param_type x)
+<span class="lineNum">     285 </span>            :          : first_type(x), m_second(x) {}
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            :       first_reference       first()       {return *this;}
+<span class="lineNum">     288 </span>            :       first_const_reference first() const {return *this;}
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            :       second_reference       second()       {return m_second;}
+<span class="lineNum">     291 </span>            :       second_const_reference second() const {return m_second;}
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            :       void swap(::boost::compressed_pair&lt;T1,T2&gt;&amp;) {}
+<span class="lineNum">     294 </span>            :    private:
+<span class="lineNum">     295 </span>            :       T2 m_second;
+<span class="lineNum">     296 </span>            :    };
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            :    // 5    T1 == T2 and are not empty:   //JM
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            :    template &lt;class T1, class T2&gt;
+<span class="lineNum">     301 </span>            :    class compressed_pair_imp&lt;T1, T2, 5&gt;
+<span class="lineNum">     302 </span>            :    {
+<span class="lineNum">     303 </span>            :    public:
+<span class="lineNum">     304 </span>            :       typedef T1                                                 first_type;
+<span class="lineNum">     305 </span>            :       typedef T2                                                 second_type;
+<span class="lineNum">     306 </span>            :       typedef typename call_traits&lt;first_type&gt;::param_type       first_param_type;
+<span class="lineNum">     307 </span>            :       typedef typename call_traits&lt;second_type&gt;::param_type      second_param_type;
+<span class="lineNum">     308 </span>            :       typedef typename call_traits&lt;first_type&gt;::reference        first_reference;
+<span class="lineNum">     309 </span>            :       typedef typename call_traits&lt;second_type&gt;::reference       second_reference;
+<span class="lineNum">     310 </span>            :       typedef typename call_traits&lt;first_type&gt;::const_reference  first_const_reference;
+<span class="lineNum">     311 </span>            :       typedef typename call_traits&lt;second_type&gt;::const_reference second_const_reference;
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            :       compressed_pair_imp() {}
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span>            :       compressed_pair_imp(first_param_type x, second_param_type y)
+<span class="lineNum">     316 </span>            :          : first_(x), second_(y) {}
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            :       compressed_pair_imp(first_param_type x)
+<span class="lineNum">     319 </span>            :          : first_(x), second_(x) {}
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span>            :       first_reference       first()       {return first_;}
+<span class="lineNum">     322 </span>            :       first_const_reference first() const {return first_;}
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span>            :       second_reference       second()       {return second_;}
+<span class="lineNum">     325 </span>            :       second_const_reference second() const {return second_;}
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span>            :       void swap(::boost::compressed_pair&lt;T1, T2&gt;&amp; y)
+<span class="lineNum">     328 </span>            :       {
+<span class="lineNum">     329 </span>            :          cp_swap(first_, y.first());
+<span class="lineNum">     330 </span>            :          cp_swap(second_, y.second());
+<span class="lineNum">     331 </span>            :       }
+<span class="lineNum">     332 </span>            :    private:
+<span class="lineNum">     333 </span>            :       first_type first_;
+<span class="lineNum">     334 </span>            :       second_type second_;
+<span class="lineNum">     335 </span>            :    };
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span>            : }  // details
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span>            : template &lt;class T1, class T2&gt;
+<span class="lineNum">     340 </span><span class="lineCov">    7361854 : class compressed_pair</span>
+<span class="lineNum">     341 </span>            :    : private ::boost::details::compressed_pair_imp&lt;T1, T2,
+<span class="lineNum">     342 </span>            :              ::boost::details::compressed_pair_switch&lt;
+<span class="lineNum">     343 </span>            :                     T1,
+<span class="lineNum">     344 </span>            :                     T2,
+<span class="lineNum">     345 </span>            :                     ::boost::is_same&lt;typename remove_cv&lt;T1&gt;::type, typename remove_cv&lt;T2&gt;::type&gt;::value,
+<span class="lineNum">     346 </span>            :                     ::boost::is_empty&lt;T1&gt;::value,
+<span class="lineNum">     347 </span>            :                     ::boost::is_empty&lt;T2&gt;::value&gt;::value&gt;
+<span class="lineNum">     348 </span>            : {
+<span class="lineNum">     349 </span>            : private:
+<span class="lineNum">     350 </span>            :    typedef details::compressed_pair_imp&lt;T1, T2,
+<span class="lineNum">     351 </span>            :              ::boost::details::compressed_pair_switch&lt;
+<span class="lineNum">     352 </span>            :                     T1,
+<span class="lineNum">     353 </span>            :                     T2,
+<span class="lineNum">     354 </span>            :                     ::boost::is_same&lt;typename remove_cv&lt;T1&gt;::type, typename remove_cv&lt;T2&gt;::type&gt;::value,
+<span class="lineNum">     355 </span>            :                     ::boost::is_empty&lt;T1&gt;::value,
+<span class="lineNum">     356 </span>            :                     ::boost::is_empty&lt;T2&gt;::value&gt;::value&gt; base;
+<span class="lineNum">     357 </span>            : public:
+<span class="lineNum">     358 </span>            :    typedef T1                                                 first_type;
+<span class="lineNum">     359 </span>            :    typedef T2                                                 second_type;
+<span class="lineNum">     360 </span>            :    typedef typename call_traits&lt;first_type&gt;::param_type       first_param_type;
+<span class="lineNum">     361 </span>            :    typedef typename call_traits&lt;second_type&gt;::param_type      second_param_type;
+<span class="lineNum">     362 </span>            :    typedef typename call_traits&lt;first_type&gt;::reference        first_reference;
+<span class="lineNum">     363 </span>            :    typedef typename call_traits&lt;second_type&gt;::reference       second_reference;
+<span class="lineNum">     364 </span>            :    typedef typename call_traits&lt;first_type&gt;::const_reference  first_const_reference;
+<span class="lineNum">     365 </span>            :    typedef typename call_traits&lt;second_type&gt;::const_reference second_const_reference;
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span>            :             compressed_pair() : base() {}
+<span class="lineNum">     368 </span><span class="lineCov">   20565144 :             compressed_pair(first_param_type x, second_param_type y) : base(x, y) {}</span>
+<span class="lineNum">     369 </span>            :    explicit compressed_pair(first_param_type x) : base(x) {}
+<span class="lineNum">     370 </span>            :    explicit compressed_pair(second_param_type y) : base(y) {}
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span>            :    first_reference       first()       {return base::first();}
+<span class="lineNum">     373 </span><span class="lineCov">  867131087 :    first_const_reference first() const {return base::first();}</span>
+<span class="lineNum">     374 </span>            : 
+<span class="lineNum">     375 </span>            :    second_reference       second()       {return base::second();}
+<span class="lineNum">     376 </span><span class="lineCov">  839533192 :    second_const_reference second() const {return base::second();}</span>
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span>            :    void swap(compressed_pair&amp; y) { base::swap(y); }
+<span class="lineNum">     379 </span>            : };
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span>            : // JM
+<span class="lineNum">     382 </span>            : // Partial specialisation for case where T1 == T2:
+<span class="lineNum">     383 </span>            : //
+<span class="lineNum">     384 </span>            : template &lt;class T&gt;
+<span class="lineNum">     385 </span>            : class compressed_pair&lt;T, T&gt;
+<span class="lineNum">     386 </span>            :    : private details::compressed_pair_imp&lt;T, T,
+<span class="lineNum">     387 </span>            :              ::boost::details::compressed_pair_switch&lt;
+<span class="lineNum">     388 </span>            :                     T,
+<span class="lineNum">     389 </span>            :                     T,
+<span class="lineNum">     390 </span>            :                     ::boost::is_same&lt;typename remove_cv&lt;T&gt;::type, typename remove_cv&lt;T&gt;::type&gt;::value,
+<span class="lineNum">     391 </span>            :                     ::boost::is_empty&lt;T&gt;::value,
+<span class="lineNum">     392 </span>            :                     ::boost::is_empty&lt;T&gt;::value&gt;::value&gt;
+<span class="lineNum">     393 </span>            : {
+<span class="lineNum">     394 </span>            : private:
+<span class="lineNum">     395 </span>            :    typedef details::compressed_pair_imp&lt;T, T,
+<span class="lineNum">     396 </span>            :              ::boost::details::compressed_pair_switch&lt;
+<span class="lineNum">     397 </span>            :                     T,
+<span class="lineNum">     398 </span>            :                     T,
+<span class="lineNum">     399 </span>            :                     ::boost::is_same&lt;typename remove_cv&lt;T&gt;::type, typename remove_cv&lt;T&gt;::type&gt;::value,
+<span class="lineNum">     400 </span>            :                     ::boost::is_empty&lt;T&gt;::value,
+<span class="lineNum">     401 </span>            :                     ::boost::is_empty&lt;T&gt;::value&gt;::value&gt; base;
+<span class="lineNum">     402 </span>            : public:
+<span class="lineNum">     403 </span>            :    typedef T                                                  first_type;
+<span class="lineNum">     404 </span>            :    typedef T                                                  second_type;
+<span class="lineNum">     405 </span>            :    typedef typename call_traits&lt;first_type&gt;::param_type       first_param_type;
+<span class="lineNum">     406 </span>            :    typedef typename call_traits&lt;second_type&gt;::param_type      second_param_type;
+<span class="lineNum">     407 </span>            :    typedef typename call_traits&lt;first_type&gt;::reference        first_reference;
+<span class="lineNum">     408 </span>            :    typedef typename call_traits&lt;second_type&gt;::reference       second_reference;
+<span class="lineNum">     409 </span>            :    typedef typename call_traits&lt;first_type&gt;::const_reference  first_const_reference;
+<span class="lineNum">     410 </span>            :    typedef typename call_traits&lt;second_type&gt;::const_reference second_const_reference;
+<span class="lineNum">     411 </span>            : 
+<span class="lineNum">     412 </span>            :             compressed_pair() : base() {}
+<span class="lineNum">     413 </span>            :             compressed_pair(first_param_type x, second_param_type y) : base(x, y) {}
+<span class="lineNum">     414 </span>            : #if !(defined(__SUNPRO_CC) &amp;&amp; (__SUNPRO_CC &lt;= 0x530))
+<span class="lineNum">     415 </span>            :    explicit 
+<span class="lineNum">     416 </span>            : #endif
+<span class="lineNum">     417 </span>            :       compressed_pair(first_param_type x) : base(x) {}
+<span class="lineNum">     418 </span>            : 
+<span class="lineNum">     419 </span>            :    first_reference       first()       {return base::first();}
+<span class="lineNum">     420 </span>            :    first_const_reference first() const {return base::first();}
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span>            :    second_reference       second()       {return base::second();}
+<span class="lineNum">     423 </span>            :    second_const_reference second() const {return base::second();}
+<span class="lineNum">     424 </span>            : 
+<span class="lineNum">     425 </span>            :    void swap(::boost::compressed_pair&lt;T,T&gt;&amp; y) { base::swap(y); }
+<span class="lineNum">     426 </span>            : };
+<span class="lineNum">     427 </span>            : 
+<span class="lineNum">     428 </span>            : template &lt;class T1, class T2&gt;
+<span class="lineNum">     429 </span>            : inline
+<span class="lineNum">     430 </span>            : void
+<span class="lineNum">     431 </span>            : swap(compressed_pair&lt;T1, T2&gt;&amp; x, compressed_pair&lt;T1, T2&gt;&amp; y)
+<span class="lineNum">     432 </span>            : {
+<span class="lineNum">     433 </span>            :    x.swap(y);
+<span class="lineNum">     434 </span>            : }
+<span class="lineNum">     435 </span>            : 
+<span class="lineNum">     436 </span>            : } // boost
+<span class="lineNum">     437 </span>            : 
+<span class="lineNum">     438 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">     439 </span>            : # pragma warning(pop)
+<span class="lineNum">     440 </span>            : #endif 
+<span class="lineNum">     441 </span>            : 
+<span class="lineNum">     442 </span>            : #endif // BOOST_DETAIL_COMPRESSED_PAIR_HPP
+<span class="lineNum">     443 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

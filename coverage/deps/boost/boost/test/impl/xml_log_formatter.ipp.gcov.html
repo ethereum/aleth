@@ -1,0 +1,299 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/impl/xml_log_formatter.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/impl</a> - xml_log_formatter.ipp<span style="font-size: 80%;"> (source / <a href="xml_log_formatter.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">84</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : implements OF_XML Log formatter
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_XML_LOG_FORMATTER_IPP_020105GER
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_XML_LOG_FORMATTER_IPP_020105GER
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/output/xml_log_formatter.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/execution_monitor.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/test/framework.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/tree/test_unit.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/test/utils/basic_cstring/io.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/utils/xml_printer.hpp&gt;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : // Boost
+<span class="lineNum">      27 </span>            : #include &lt;boost/version.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : // STL
+<span class="lineNum">      30 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : namespace boost {
+<span class="lineNum">      37 </span>            : namespace unit_test {
+<span class="lineNum">      38 </span>            : namespace output {
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : static const_string tu_type_name( test_unit const&amp; tu )
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span><span class="lineNoCov">          0 :     return tu.p_type == TUT_CASE ? &quot;TestCase&quot; : &quot;TestSuite&quot;;</span>
+<span class="lineNum">      43 </span>            : }
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : // ************************************************************************** //
+<span class="lineNum">      46 </span>            : // **************               xml_log_formatter              ************** //
+<span class="lineNum">      47 </span>            : // ************************************************************************** //
+<a name="48"><span class="lineNum">      48 </span>            : </a>
+<span class="lineNum">      49 </span>            : void
+<span class="lineNum">      50 </span><span class="lineNoCov">          0 : xml_log_formatter::log_start( std::ostream&amp; ostr, counter_t )</span>
+<span class="lineNum">      51 </span>            : {
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :     ostr  &lt;&lt; &quot;&lt;TestLog&gt;&quot;;</span>
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : //____________________________________________________________________________//
+<a name="56"><span class="lineNum">      56 </span>            : </a>
+<span class="lineNum">      57 </span>            : void
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 : xml_log_formatter::log_finish( std::ostream&amp; ostr )</span>
+<span class="lineNum">      59 </span>            : {
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :     ostr  &lt;&lt; &quot;&lt;/TestLog&gt;&quot;;</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : //____________________________________________________________________________//
+<a name="64"><span class="lineNum">      64 </span>            : </a>
+<span class="lineNum">      65 </span>            : void
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 : xml_log_formatter::log_build_info( std::ostream&amp; ostr )</span>
+<span class="lineNum">      67 </span>            : {
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :     ostr  &lt;&lt; &quot;&lt;BuildInfo&quot;</span>
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot; platform&quot;  &lt;&lt; utils::attr_value() &lt;&lt; BOOST_PLATFORM</span>
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot; compiler&quot;  &lt;&lt; utils::attr_value() &lt;&lt; BOOST_COMPILER</span>
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot; stl&quot;       &lt;&lt; utils::attr_value() &lt;&lt; BOOST_STDLIB</span>
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot; boost=\&quot;&quot;  &lt;&lt; BOOST_VERSION/100000     &lt;&lt; &quot;.&quot;</span>
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :                             &lt;&lt; BOOST_VERSION/100 % 1000 &lt;&lt; &quot;.&quot;</span>
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :                             &lt;&lt; BOOST_VERSION % 100      &lt;&lt; '\&quot;'</span>
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot;/&gt;&quot;;</span>
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : //____________________________________________________________________________//
+<a name="79"><span class="lineNum">      79 </span>            : </a>
+<span class="lineNum">      80 </span>            : void
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 : xml_log_formatter::test_unit_start( std::ostream&amp; ostr, test_unit const&amp; tu )</span>
+<span class="lineNum">      82 </span>            : {
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; &quot;&lt;&quot; &lt;&lt; tu_type_name( tu ) &lt;&lt; &quot; name&quot; &lt;&lt; utils::attr_value() &lt;&lt; tu.p_name.get();</span>
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :     if( !tu.p_file_name.empty() )</span>
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; BOOST_TEST_L( &quot; file&quot; ) &lt;&lt; utils::attr_value() &lt;&lt; tu.p_file_name</span>
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :              &lt;&lt; BOOST_TEST_L( &quot; line&quot; ) &lt;&lt; utils::attr_value() &lt;&lt; tu.p_line_num;</span>
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; &quot;&gt;&quot;;</span>
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : //____________________________________________________________________________//
+<a name="93"><span class="lineNum">      93 </span>            : </a>
+<span class="lineNum">      94 </span>            : void
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 : xml_log_formatter::test_unit_finish( std::ostream&amp; ostr, test_unit const&amp; tu, unsigned long elapsed )</span>
+<span class="lineNum">      96 </span>            : {
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :     if( tu.p_type == TUT_CASE )</span>
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; &quot;&lt;TestingTime&gt;&quot; &lt;&lt; elapsed &lt;&lt; &quot;&lt;/TestingTime&gt;&quot;;</span>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; &quot;&lt;/&quot; &lt;&lt; tu_type_name( tu ) &lt;&lt; &quot;&gt;&quot;;</span>
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : //____________________________________________________________________________//
+<a name="104"><span class="lineNum">     104 </span>            : </a>
+<span class="lineNum">     105 </span>            : void
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 : xml_log_formatter::test_unit_skipped( std::ostream&amp; ostr, test_unit const&amp; tu, const_string reason )</span>
+<span class="lineNum">     107 </span>            : {
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; &quot;&lt;&quot; &lt;&lt; tu_type_name( tu )</span>
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :          &lt;&lt; &quot; name&quot;    &lt;&lt; utils::attr_value() &lt;&lt; tu.p_name</span>
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :          &lt;&lt; &quot; skipped&quot; &lt;&lt; utils::attr_value() &lt;&lt; &quot;yes&quot;</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :          &lt;&lt; &quot; reason&quot;  &lt;&lt; utils::attr_value() &lt;&lt; reason</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :          &lt;&lt; &quot;/&gt;&quot;;</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : //____________________________________________________________________________//
+<a name="116"><span class="lineNum">     116 </span>            : </a>
+<span class="lineNum">     117 </span>            : void
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 : xml_log_formatter::log_exception_start( std::ostream&amp; ostr, log_checkpoint_data const&amp; checkpoint_data, execution_exception const&amp; ex )</span>
+<span class="lineNum">     119 </span>            : {
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :     execution_exception::location const&amp; loc = ex.where();</span>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; &quot;&lt;Exception file&quot; &lt;&lt; utils::attr_value() &lt;&lt; loc.m_file_name</span>
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :          &lt;&lt; &quot; line&quot;           &lt;&lt; utils::attr_value() &lt;&lt; loc.m_line_num;</span>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :     if( !loc.m_function.is_empty() )</span>
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; &quot; function&quot;   &lt;&lt; utils::attr_value() &lt;&lt; loc.m_function;</span>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; &quot;&gt;&quot; &lt;&lt; utils::cdata() &lt;&lt; ex.what();</span>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :     if( !checkpoint_data.m_file_name.is_empty() ) {</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; &quot;&lt;LastCheckpoint file&quot; &lt;&lt; utils::attr_value() &lt;&lt; checkpoint_data.m_file_name</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :              &lt;&lt; &quot; line&quot;                &lt;&lt; utils::attr_value() &lt;&lt; checkpoint_data.m_line_num</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :              &lt;&lt; &quot;&gt;&quot;</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :              &lt;&lt; utils::cdata() &lt;&lt; checkpoint_data.m_message</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :              &lt;&lt; &quot;&lt;/LastCheckpoint&gt;&quot;;</span>
+<span class="lineNum">     136 </span>            :     }
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : //____________________________________________________________________________//
+<a name="140"><span class="lineNum">     140 </span>            : </a>
+<span class="lineNum">     141 </span>            : void
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 : xml_log_formatter::log_exception_finish( std::ostream&amp; ostr )</span>
+<span class="lineNum">     143 </span>            : {
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; &quot;&lt;/Exception&gt;&quot;;</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : //____________________________________________________________________________//
+<a name="148"><span class="lineNum">     148 </span>            : </a>
+<span class="lineNum">     149 </span>            : void
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 : xml_log_formatter::log_entry_start( std::ostream&amp; ostr, log_entry_data const&amp; entry_data, log_entry_types let )</span>
+<span class="lineNum">     151 </span>            : {
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :     static literal_string xml_tags[] = { &quot;Info&quot;, &quot;Message&quot;, &quot;Warning&quot;, &quot;Error&quot;, &quot;FatalError&quot; };</span>
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :     m_curr_tag = xml_tags[let];</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; '&lt;' &lt;&lt; m_curr_tag</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :          &lt;&lt; BOOST_TEST_L( &quot; file&quot; ) &lt;&lt; utils::attr_value() &lt;&lt; entry_data.m_file_name</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :          &lt;&lt; BOOST_TEST_L( &quot; line&quot; ) &lt;&lt; utils::attr_value() &lt;&lt; entry_data.m_line_num</span>
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :          &lt;&lt; BOOST_TEST_L( &quot;&gt;&lt;![CDATA[&quot; );</span>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :     m_value_closed = false;</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            : //____________________________________________________________________________//
+<a name="164"><span class="lineNum">     164 </span>            : </a>
+<span class="lineNum">     165 </span>            : void
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 : xml_log_formatter::log_entry_value( std::ostream&amp; ostr, const_string value )</span>
+<span class="lineNum">     167 </span>            : {
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :     utils::print_escaped_cdata( ostr, value );</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            : //____________________________________________________________________________//
+<a name="172"><span class="lineNum">     172 </span>            : </a>
+<span class="lineNum">     173 </span>            : void
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 : xml_log_formatter::log_entry_finish( std::ostream&amp; ostr )</span>
+<span class="lineNum">     175 </span>            : {
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :     if( !m_value_closed ) {</span>
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; BOOST_TEST_L( &quot;]]&gt;&quot; );</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :         m_value_closed = true;</span>
+<span class="lineNum">     179 </span>            :     }
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; BOOST_TEST_L( &quot;&lt;/&quot; ) &lt;&lt; m_curr_tag &lt;&lt; BOOST_TEST_L( &quot;&gt;&quot; );</span>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :     m_curr_tag.clear();</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            : //____________________________________________________________________________//
+<a name="187"><span class="lineNum">     187 </span>            : </a>
+<span class="lineNum">     188 </span>            : void
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 : xml_log_formatter::entry_context_start( std::ostream&amp; ostr, log_level )</span>
+<span class="lineNum">     190 </span>            : {
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :     if( !m_value_closed ) {</span>
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :         ostr &lt;&lt; BOOST_TEST_L( &quot;]]&gt;&quot; );</span>
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :         m_value_closed = true;</span>
+<span class="lineNum">     194 </span>            :     }
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; BOOST_TEST_L( &quot;&lt;Context&gt;&quot; );</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            : //____________________________________________________________________________//
+<a name="200"><span class="lineNum">     200 </span>            : </a>
+<span class="lineNum">     201 </span>            : void
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 : xml_log_formatter::entry_context_finish( std::ostream&amp; ostr )</span>
+<span class="lineNum">     203 </span>            : {
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; BOOST_TEST_L( &quot;&lt;/Context&gt;&quot; );</span>
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            : //____________________________________________________________________________//
+<a name="208"><span class="lineNum">     208 </span>            : </a>
+<span class="lineNum">     209 </span>            : void
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 : xml_log_formatter::log_entry_context( std::ostream&amp; ostr, const_string context_descr )</span>
+<span class="lineNum">     211 </span>            : {
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :     ostr &lt;&lt; BOOST_TEST_L( &quot;&lt;Frame&gt;&quot; ) &lt;&lt; utils::cdata() &lt;&lt; context_descr &lt;&lt; BOOST_TEST_L( &quot;&lt;/Frame&gt;&quot; );</span>
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            : } // namespace output
+<span class="lineNum">     218 </span>            : } // namespace unit_test
+<span class="lineNum">     219 </span>            : } // namespace boost
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            : #endif // BOOST_TEST_XML_LOG_FORMATTER_IPP_020105GER
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

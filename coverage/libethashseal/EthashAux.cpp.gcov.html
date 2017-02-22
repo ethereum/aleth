@@ -1,0 +1,335 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethashseal/EthashAux.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethashseal</a> - EthashAux.cpp<span style="font-size: 80%;"> (source / <a href="EthashAux.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">84</td>
+            <td class="headerCovTableEntry">118</td>
+            <td class="headerCovTableEntryLo">71.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntryLo">64.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file EthashAux.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;EthashAux.h&quot;
+<span class="lineNum">      23 </span>            : #include &lt;boost/detail/endian.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/filesystem.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;chrono&gt;
+<span class="lineNum">      26 </span>            : #include &lt;array&gt;
+<span class="lineNum">      27 </span>            : #include &lt;thread&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libethash/internal.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libdevcore/Guards.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libdevcore/Log.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libdevcrypto/CryptoPP.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;libdevcore/SHA3.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;libdevcore/FileSystem.h&gt;
+<span class="lineNum">      35 </span>            : #include &lt;libethcore/Exceptions.h&gt;
+<span class="lineNum">      36 </span>            : #include &lt;libethcore/BlockHeader.h&gt;
+<span class="lineNum">      37 </span>            : #include &quot;Ethash.h&quot;
+<span class="lineNum">      38 </span>            : using namespace std;
+<span class="lineNum">      39 </span>            : using namespace chrono;
+<span class="lineNum">      40 </span>            : using namespace dev;
+<a name="41"><span class="lineNum">      41 </span>            : using namespace eth;</a>
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 : const char* DAGChannel::name() { return EthGreen &quot;DAG&quot;; }</span>
+<span class="lineNum">      44 </span>            : 
+<a name="45"><span class="lineNum">      45 </span>            : EthashAux* dev::eth::EthashAux::s_this = nullptr;</a>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineNoCov">          0 : EthashAux::~EthashAux()</span>
+<span class="lineNum">      48 </span>            : {
+<a name="49"><span class="lineNum">      49 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineCov">          4 : EthashAux* EthashAux::get()</span>
+<a name="52"><span class="lineNum">      52 </span>            : {</a>
+<span class="lineNum">      53 </span>            :         static std::once_flag flag;
+<span class="lineNum">      54 </span><span class="lineCov">      28618 :         std::call_once(flag, []{s_this = new EthashAux();});</span>
+<span class="lineNum">      55 </span><span class="lineCov">      28614 :         return s_this;</span>
+<a name="56"><span class="lineNum">      56 </span>            : }</a>
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 : uint64_t EthashAux::cacheSize(BlockHeader const&amp; _header)</span>
+<span class="lineNum">      59 </span>            : {
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :         return ethash_get_cachesize((uint64_t)_header.number());</span>
+<a name="61"><span class="lineNum">      61 </span>            : }</a>
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 : uint64_t EthashAux::dataSize(uint64_t _blockNumber)</span>
+<span class="lineNum">      64 </span>            : {
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :         return ethash_get_datasize(_blockNumber);</span>
+<a name="66"><span class="lineNum">      66 </span>            : }</a>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">       5406 : h256 EthashAux::seedHash(unsigned _number)</span>
+<span class="lineNum">      69 </span>            : {
+<span class="lineNum">      70 </span><span class="lineCov">       5406 :         unsigned epoch = _number / ETHASH_EPOCH_LENGTH;</span>
+<span class="lineNum">      71 </span><span class="lineCov">      16218 :         Guard l(get()-&gt;x_epochs);</span>
+<span class="lineNum">      72 </span><span class="lineCov">      16218 :         if (epoch &gt;= get()-&gt;m_seedHashes.size())</span>
+<span class="lineNum">      73 </span>            :         {
+<span class="lineNum">      74 </span><span class="lineCov">          1 :                 h256 ret;</span>
+<span class="lineNum">      75 </span><span class="lineCov">          1 :                 unsigned n = 0;</span>
+<span class="lineNum">      76 </span><span class="lineCov">          2 :                 if (!get()-&gt;m_seedHashes.empty())</span>
+<span class="lineNum">      77 </span>            :                 {
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :                         ret = get()-&gt;m_seedHashes.back();</span>
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :                         n = get()-&gt;m_seedHashes.size() - 1;</span>
+<span class="lineNum">      80 </span>            :                 }
+<span class="lineNum">      81 </span><span class="lineCov">          2 :                 get()-&gt;m_seedHashes.resize(epoch + 1);</span>
+<span class="lineNum">      82 </span>            : //              cdebug &lt;&lt; &quot;Searching for seedHash of epoch &quot; &lt;&lt; epoch;
+<span class="lineNum">      83 </span><span class="lineCov">          3 :                 for (; n &lt;= epoch; ++n, ret = sha3(ret))</span>
+<span class="lineNum">      84 </span>            :                 {
+<span class="lineNum">      85 </span><span class="lineCov">          3 :                         get()-&gt;m_seedHashes[n] = ret;</span>
+<span class="lineNum">      86 </span>            : //                      cdebug &lt;&lt; &quot;Epoch&quot; &lt;&lt; n &lt;&lt; &quot;is&quot; &lt;&lt; ret;
+<span class="lineNum">      87 </span>            :                 }
+<span class="lineNum">      88 </span>            :         }
+<span class="lineNum">      89 </span><span class="lineCov">      16218 :         return get()-&gt;m_seedHashes[epoch];</span>
+<a name="90"><span class="lineNum">      90 </span>            : }</a>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineCov">        138 : uint64_t EthashAux::number(h256 const&amp; _seedHash)</span>
+<span class="lineNum">      93 </span>            : {
+<span class="lineNum">      94 </span><span class="lineCov">        414 :         Guard l(get()-&gt;x_epochs);</span>
+<span class="lineNum">      95 </span><span class="lineCov">        138 :         unsigned epoch = 0;</span>
+<span class="lineNum">      96 </span><span class="lineCov">        276 :         auto epochIter = get()-&gt;m_epochs.find(_seedHash);</span>
+<span class="lineNum">      97 </span><span class="lineCov">        276 :         if (epochIter == get()-&gt;m_epochs.end())</span>
+<span class="lineNum">      98 </span>            :         {
+<span class="lineNum">      99 </span>            :                 //              cdebug &lt;&lt; &quot;Searching for seedHash &quot; &lt;&lt; _seedHash;
+<span class="lineNum">     100 </span><span class="lineCov">        138 :                 for (h256 h; h != _seedHash &amp;&amp; epoch &lt; 2048; ++epoch, h = sha3(h), get()-&gt;m_epochs[h] = epoch) {}</span>
+<span class="lineNum">     101 </span><span class="lineCov">        138 :                 if (epoch == 2048)</span>
+<span class="lineNum">     102 </span>            :                 {
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :                         std::ostringstream error;</span>
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :                         error &lt;&lt; &quot;apparent block number for &quot; &lt;&lt; _seedHash &lt;&lt; &quot; is too high; max is &quot; &lt;&lt; (ETHASH_EPOCH_LENGTH * 2048);</span>
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :                         throw std::invalid_argument(error.str());</span>
+<span class="lineNum">     106 </span>            :                 }
+<span class="lineNum">     107 </span>            :         }
+<span class="lineNum">     108 </span>            :         else
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :                 epoch = epochIter-&gt;second;</span>
+<span class="lineNum">     110 </span><span class="lineCov">        276 :         return epoch * ETHASH_EPOCH_LENGTH;</span>
+<a name="111"><span class="lineNum">     111 </span>            : }</a>
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 : void EthashAux::killCache(h256 const&amp; _s)</span>
+<span class="lineNum">     114 </span>            : {
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :         WriteGuard l(x_lights);</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :         m_lights.erase(_s);</span>
+<a name="117"><span class="lineNum">     117 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineCov">        143 : EthashAux::LightType EthashAux::light(h256 const&amp; _seedHash)</span>
+<span class="lineNum">     120 </span>            : {
+<span class="lineNum">     121 </span><span class="lineCov">        429 :         UpgradableGuard l(get()-&gt;x_lights);</span>
+<span class="lineNum">     122 </span><span class="lineCov">        286 :         if (get()-&gt;m_lights.count(_seedHash))</span>
+<span class="lineNum">     123 </span><span class="lineCov">        284 :                 return get()-&gt;m_lights.at(_seedHash);</span>
+<span class="lineNum">     124 </span><span class="lineCov">          2 :         UpgradeGuard l2(l);</span>
+<span class="lineNum">     125 </span><span class="lineCov">          6 :         return (get()-&gt;m_lights[_seedHash] = make_shared&lt;LightAllocation&gt;(_seedHash));</span>
+<a name="126"><span class="lineNum">     126 </span>            : }</a>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span><span class="lineCov">          1 : EthashAux::LightAllocation::LightAllocation(h256 const&amp; _seedHash)</span>
+<span class="lineNum">     129 </span>            : {
+<span class="lineNum">     130 </span><span class="lineCov">          1 :         uint64_t blockNumber = EthashAux::number(_seedHash);</span>
+<span class="lineNum">     131 </span><span class="lineCov">          1 :         light = ethash_light_new(blockNumber);</span>
+<span class="lineNum">     132 </span><span class="lineCov">          1 :         if (!light)</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(ExternalFunctionFailure(&quot;ethash_light_new()&quot;));</span>
+<span class="lineNum">     134 </span><span class="lineCov">          1 :         size = ethash_get_cachesize(blockNumber);</span>
+<a name="135"><span class="lineNum">     135 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 : EthashAux::LightAllocation::~LightAllocation()</span>
+<span class="lineNum">     138 </span>            : {
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :         ethash_light_delete(light);</span>
+<a name="140"><span class="lineNum">     140 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span><span class="lineCov">          2 : bytesConstRef EthashAux::LightAllocation::data() const</span>
+<span class="lineNum">     143 </span>            : {
+<span class="lineNum">     144 </span><span class="lineCov">          2 :         return bytesConstRef((byte const*)light-&gt;cache, size);</span>
+<a name="145"><span class="lineNum">     145 </span>            : }</a>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">          1 : EthashAux::FullAllocation::FullAllocation(ethash_light_t _light, ethash_callback_t _cb)</span>
+<span class="lineNum">     148 </span>            : {
+<span class="lineNum">     149 </span>            : //      cdebug &lt;&lt; &quot;About to call ethash_full_new...&quot;;
+<span class="lineNum">     150 </span><span class="lineCov">          1 :         full = ethash_full_new(_light, _cb);</span>
+<span class="lineNum">     151 </span>            : //      cdebug &lt;&lt; &quot;Called OK.&quot;;
+<span class="lineNum">     152 </span><span class="lineCov">          1 :         if (!full)</span>
+<span class="lineNum">     153 </span>            :         {
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :                 clog(DAGChannel) &lt;&lt; &quot;DAG Generation Failure. Reason: &quot;  &lt;&lt; strerror(errno);</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(ExternalFunctionFailure(&quot;ethash_full_new&quot;));</span>
+<span class="lineNum">     156 </span>            :         }
+<a name="157"><span class="lineNum">     157 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 : EthashAux::FullAllocation::~FullAllocation()</span>
+<span class="lineNum">     160 </span>            : {
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :         ethash_full_delete(full);</span>
+<a name="162"><span class="lineNum">     162 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 : bytesConstRef EthashAux::FullAllocation::data() const</span>
+<span class="lineNum">     165 </span>            : {
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :         return bytesConstRef((byte const*)ethash_full_dag(full), size());</span>
+<span class="lineNum">     167 </span>            : }
+<a name="168"><span class="lineNum">     168 </span>            : </a>
+<span class="lineNum">     169 </span><span class="lineCov">          1 : static std::function&lt;int(unsigned)&gt; s_dagCallback;</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 : static int dagCallbackShim(unsigned _p)</span>
+<span class="lineNum">     171 </span>            : {
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :         clog(DAGChannel) &lt;&lt; &quot;Generating DAG file. Progress: &quot; &lt;&lt; toString(_p) &lt;&lt; &quot;%&quot;;</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :         return s_dagCallback ? s_dagCallback(_p) : 0;</span>
+<a name="174"><span class="lineNum">     174 </span>            : }</a>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span><span class="lineCov">        137 : EthashAux::FullType EthashAux::full(h256 const&amp; _seedHash, bool _createIfMissing, function&lt;int(unsigned)&gt; const&amp; _f)</span>
+<span class="lineNum">     177 </span>            : {
+<span class="lineNum">     178 </span><span class="lineCov">        137 :         FullType ret;</span>
+<span class="lineNum">     179 </span><span class="lineCov">        274 :         auto l = light(_seedHash);</span>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineCov">        276 :         DEV_GUARDED(get()-&gt;x_fulls)</span>
+<span class="lineNum">     182 </span><span class="lineCov">        685 :                 if ((ret = get()-&gt;m_fulls[_seedHash].lock()))</span>
+<span class="lineNum">     183 </span>            :                 {
+<span class="lineNum">     184 </span><span class="lineCov">        272 :                         get()-&gt;m_lastUsedFull = ret;</span>
+<span class="lineNum">     185 </span><span class="lineCov">        136 :                         return ret;</span>
+<span class="lineNum">     186 </span>            :                 }
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span><span class="lineCov">          1 :         if (_createIfMissing || computeFull(_seedHash, false) == 100)</span>
+<span class="lineNum">     189 </span>            :         {
+<span class="lineNum">     190 </span><span class="lineCov">          1 :                 s_dagCallback = _f;</span>
+<span class="lineNum">     191 </span>            : //              cnote &lt;&lt; &quot;Loading from libethash...&quot;;
+<span class="lineNum">     192 </span><span class="lineCov">          4 :                 ret = make_shared&lt;FullAllocation&gt;(l-&gt;light, dagCallbackShim);</span>
+<span class="lineNum">     193 </span>            : //              cnote &lt;&lt; &quot;Done loading.&quot;;
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span><span class="lineCov">          5 :                 DEV_GUARDED(get()-&gt;x_fulls)</span>
+<span class="lineNum">     196 </span><span class="lineCov">          5 :                         get()-&gt;m_fulls[_seedHash] = get()-&gt;m_lastUsedFull = ret;</span>
+<span class="lineNum">     197 </span>            :         }
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            :         return ret;
+<a name="200"><span class="lineNum">     200 </span>            : }</a>
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span><span class="lineCov">        137 : unsigned EthashAux::computeFull(h256 const&amp; _seedHash, bool _createIfMissing)</span>
+<span class="lineNum">     203 </span>            : {
+<span class="lineNum">     204 </span><span class="lineCov">        411 :         Guard l(get()-&gt;x_fulls);</span>
+<span class="lineNum">     205 </span>            :         uint64_t blockNumber;
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span><span class="lineCov">        137 :         DEV_IF_THROWS(blockNumber = EthashAux::number(_seedHash))</span>
+<span class="lineNum">     208 </span>            :         {
+<span class="lineNum">     209 </span>            :                 return 0;
+<span class="lineNum">     210 </span>            :         }
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span><span class="lineCov">        413 :         if (FullType ret = get()-&gt;m_fulls[_seedHash].lock())</span>
+<span class="lineNum">     213 </span>            :         {
+<span class="lineNum">     214 </span><span class="lineCov">        270 :                 get()-&gt;m_lastUsedFull = ret;</span>
+<span class="lineNum">     215 </span><span class="lineCov">        270 :                 return 100;</span>
+<span class="lineNum">     216 </span>            :         }
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span><span class="lineCov">          9 :         if (_createIfMissing &amp;&amp; (!get()-&gt;m_fullGenerator || !get()-&gt;m_fullGenerator-&gt;joinable()))</span>
+<span class="lineNum">     219 </span>            :         {
+<a name="220"><span class="lineNum">     220 </span><span class="lineCov">          1 :                 get()-&gt;m_fullProgress = 0;</span></a>
+<span class="lineNum">     221 </span><span class="lineCov">          1 :                 get()-&gt;m_generatingFullNumber = blockNumber / ETHASH_EPOCH_LENGTH * ETHASH_EPOCH_LENGTH;</span>
+<span class="lineNum">     222 </span><span class="lineCov">          5 :                 get()-&gt;m_fullGenerator = unique_ptr&lt;thread&gt;(new thread([=](){</span>
+<span class="lineNum">     223 </span><span class="lineCov">          1 :                         cnote &lt;&lt; &quot;Loading full DAG of seedhash: &quot; &lt;&lt; _seedHash;</span>
+<span class="lineNum">     224 </span><span class="lineCov">          4 :                         get()-&gt;full(_seedHash, true, [](unsigned p){ get()-&gt;m_fullProgress = p; return 0; });</span>
+<span class="lineNum">     225 </span><span class="lineCov">          1 :                         cnote &lt;&lt; &quot;Full DAG loaded&quot;;</span>
+<span class="lineNum">     226 </span><span class="lineCov">          1 :                         get()-&gt;m_fullProgress = 0;</span>
+<span class="lineNum">     227 </span><span class="lineCov">          1 :                         get()-&gt;m_generatingFullNumber = NotGenerating;</span>
+<span class="lineNum">     228 </span><span class="lineCov">          3 :                 }));</span>
+<span class="lineNum">     229 </span>            :         }
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span><span class="lineCov">          4 :         return (get()-&gt;m_generatingFullNumber == blockNumber) ? get()-&gt;m_fullProgress : 0;</span>
+<span class="lineNum">     232 </span>            : }
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span><span class="lineCov">       5354 : EthashProofOfWork::Result EthashAux::FullAllocation::compute(h256 const&amp; _headerHash, Nonce const&amp; _nonce) const</span>
+<span class="lineNum">     235 </span>            : {
+<span class="lineNum">     236 </span><span class="lineCov">      16062 :         ethash_return_value_t r = ethash_full_compute(full, *(ethash_h256_t*)_headerHash.data(), (uint64_t)(u64)_nonce);</span>
+<span class="lineNum">     237 </span><span class="lineCov">       5354 :         if (!r.success)</span>
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(DAGCreationFailure());</span>
+<span class="lineNum">     239 </span><span class="lineCov">      10708 :         return EthashProofOfWork::Result{h256((uint8_t*)&amp;r.result, h256::ConstructFromPointer), h256((uint8_t*)&amp;r.mix_hash, h256::ConstructFromPointer)};</span>
+<span class="lineNum">     240 </span>            : }
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span><span class="lineCov">          2 : EthashProofOfWork::Result EthashAux::LightAllocation::compute(h256 const&amp; _headerHash, Nonce const&amp; _nonce) const</span>
+<span class="lineNum">     243 </span>            : {
+<span class="lineNum">     244 </span><span class="lineCov">          6 :         ethash_return_value r = ethash_light_compute(light, *(ethash_h256_t*)_headerHash.data(), (uint64_t)(u64)_nonce);</span>
+<span class="lineNum">     245 </span><span class="lineCov">          2 :         if (!r.success)</span>
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(DAGCreationFailure());</span>
+<span class="lineNum">     247 </span><span class="lineCov">          4 :         return EthashProofOfWork::Result{h256((uint8_t*)&amp;r.result, h256::ConstructFromPointer), h256((uint8_t*)&amp;r.mix_hash, h256::ConstructFromPointer)};</span>
+<a name="248"><span class="lineNum">     248 </span>            : }</a>
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span><span class="lineCov">       5356 : EthashProofOfWork::Result EthashAux::eval(h256 const&amp; _seedHash, h256 const&amp; _headerHash, Nonce const&amp; _nonce)</span>
+<span class="lineNum">     251 </span>            : {
+<span class="lineNum">     252 </span><span class="lineCov">      10718 :         DEV_GUARDED(get()-&gt;x_fulls)</span>
+<span class="lineNum">     253 </span><span class="lineCov">      16070 :                 if (FullType dag = get()-&gt;m_fulls[_seedHash].lock())</span>
+<span class="lineNum">     254 </span><span class="lineCov">      10708 :                         return dag-&gt;compute(_headerHash, _nonce);</span>
+<span class="lineNum">     255 </span><span class="lineCov">          4 :         DEV_IF_THROWS(return EthashAux::get()-&gt;light(_seedHash)-&gt;compute(_headerHash, _nonce))</span>
+<span class="lineNum">     256 </span>            :         {
+<a name="257"><span class="lineNum">     257 </span><span class="lineNoCov">          0 :                 return EthashProofOfWork::Result{ ~h256(), h256() };</span></a>
+<span class="lineNum">     258 </span>            :         }
+<span class="lineNum">     259 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

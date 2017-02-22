@@ -1,0 +1,223 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/spirit/home/classic/core/composite/alternative.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/spirit/home/classic/core/composite</a> - alternative.hpp<span style="font-size: 80%;"> (source / <a href="alternative.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*=============================================================================</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 1998-2003 Joel de Guzman
+<span class="lineNum">       3 </span>            :     Copyright (c) 2001 Daniel Nuffer
+<span class="lineNum">       4 </span>            :     Copyright (c) 2002 Hartmut Kaiser
+<span class="lineNum">       5 </span>            :     http://spirit.sourceforge.net/
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            :   Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            :   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : =============================================================================*/
+<span class="lineNum">      10 </span>            : #if !defined(BOOST_SPIRIT_ALTERNATIVE_HPP)
+<span class="lineNum">      11 </span>            : #define BOOST_SPIRIT_ALTERNATIVE_HPP
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #include &lt;boost/spirit/home/classic/namespace.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/spirit/home/classic/core/parser.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/spirit/home/classic/core/primitives/primitives.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/spirit/home/classic/core/composite/composite.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/spirit/home/classic/meta/as_parser.hpp&gt;
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : namespace boost { namespace spirit {
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      24 </span>            :     //
+<span class="lineNum">      25 </span>            :     //  alternative class
+<span class="lineNum">      26 </span>            :     //
+<span class="lineNum">      27 </span>            :     //      Handles expressions of the form:
+<span class="lineNum">      28 </span>            :     //
+<span class="lineNum">      29 </span>            :     //          a | b
+<span class="lineNum">      30 </span>            :     //
+<span class="lineNum">      31 </span>            :     //      where a and b are parsers. The expression returns a composite
+<span class="lineNum">      32 </span>            :     //      parser that matches a or b. One (not both) of the operands may
+<span class="lineNum">      33 </span>            :     //      be a literal char, wchar_t or a primitive string char const*,
+<span class="lineNum">      34 </span>            :     //      wchar_t const*.
+<span class="lineNum">      35 </span>            :     //
+<span class="lineNum">      36 </span>            :     //      The expression is short circuit evaluated. b is never touched
+<span class="lineNum">      37 </span>            :     //      when a is returns a successful match.
+<span class="lineNum">      38 </span>            :     //
+<span class="lineNum">      39 </span>            :     ///////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      40 </span>            :     struct alternative_parser_gen;
+<span class="lineNum">      41 </span>            :     
+<span class="lineNum">      42 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &gt;= 1400)
+<span class="lineNum">      43 </span>            : #pragma warning(push)
+<span class="lineNum">      44 </span>            : #pragma warning(disable:4512) //assignment operator could not be generated
+<span class="lineNum">      45 </span>            : #endif
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            :     template &lt;typename A, typename B&gt;
+<span class="lineNum">      48 </span><span class="lineCov">    6435528 :     struct alternative</span>
+<span class="lineNum">      49 </span>            :     :   public binary&lt;A, B, parser&lt;alternative&lt;A, B&gt; &gt; &gt;
+<span class="lineNum">      50 </span>            :     {
+<span class="lineNum">      51 </span>            :         typedef alternative&lt;A, B&gt;               self_t;
+<span class="lineNum">      52 </span>            :         typedef binary_parser_category          parser_category_t;
+<span class="lineNum">      53 </span>            :         typedef alternative_parser_gen          parser_generator_t;
+<span class="lineNum">      54 </span>            :         typedef binary&lt;A, B, parser&lt;self_t&gt; &gt;   base_t;
+<span class="lineNum">      55 </span>            :     
+<span class="lineNum">      56 </span>            :         alternative(A const&amp; a, B const&amp; b)
+<span class="lineNum">      57 </span><span class="lineCov">    1267610 :         : base_t(a, b) {}</span>
+<span class="lineNum">      58 </span>            :     
+<a name="59"><span class="lineNum">      59 </span>            :         template &lt;typename ScannerT&gt;</a>
+<span class="lineNum">      60 </span>            :         typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">      61 </span><span class="lineCov">  217718741 :         parse(ScannerT const&amp; scan) const</span>
+<span class="lineNum">      62 </span>            :         {
+<span class="lineNum">      63 </span>            :             typedef typename parser_result&lt;self_t, ScannerT&gt;::type result_t;
+<span class="lineNum">      64 </span>            :             typedef typename ScannerT::iterator_t iterator_t;
+<span class="lineNum">      65 </span>            :             { // scope for save
+<span class="lineNum">      66 </span><span class="lineCov">  217718741 :                 iterator_t save = scan.first;</span>
+<span class="lineNum">      67 </span><span class="lineCov">  660623207 :                 if (result_t hit = this-&gt;left().parse(scan))</span>
+<span class="lineNum">      68 </span><span class="lineCov">  214931027 :                     return hit;</span>
+<span class="lineNum">      69 </span><span class="lineCov">    2787714 :                 scan.first = save;</span>
+<span class="lineNum">      70 </span>            :             }
+<span class="lineNum">      71 </span><span class="lineCov">    8295062 :             return this-&gt;right().parse(scan);</span>
+<span class="lineNum">      72 </span>            :         }
+<span class="lineNum">      73 </span>            :     };
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &gt;= 1400)
+<span class="lineNum">      76 </span>            : #pragma warning(pop)
+<span class="lineNum">      77 </span>            : #endif
+<span class="lineNum">      78 </span>            :     
+<span class="lineNum">      79 </span>            :     struct alternative_parser_gen
+<span class="lineNum">      80 </span>            :     {
+<span class="lineNum">      81 </span>            :         template &lt;typename A, typename B&gt;
+<span class="lineNum">      82 </span>            :         struct result 
+<span class="lineNum">      83 </span>            :         {
+<span class="lineNum">      84 </span>            :             typedef 
+<span class="lineNum">      85 </span>            :                 alternative&lt;
+<span class="lineNum">      86 </span>            :                     typename as_parser&lt;A&gt;::type
+<span class="lineNum">      87 </span>            :                   , typename as_parser&lt;B&gt;::type
+<span class="lineNum">      88 </span>            :                 &gt; 
+<span class="lineNum">      89 </span>            :             type;
+<span class="lineNum">      90 </span>            :         };
+<span class="lineNum">      91 </span>            :     
+<span class="lineNum">      92 </span>            :         template &lt;typename A, typename B&gt;
+<span class="lineNum">      93 </span>            :         static alternative&lt;
+<span class="lineNum">      94 </span>            :             typename as_parser&lt;A&gt;::type
+<span class="lineNum">      95 </span>            :           , typename as_parser&lt;B&gt;::type
+<span class="lineNum">      96 </span>            :         &gt;
+<span class="lineNum">      97 </span>            :         generate(A const&amp; a, B const&amp; b)
+<span class="lineNum">      98 </span>            :         {
+<span class="lineNum">      99 </span>            :             return alternative&lt;BOOST_DEDUCED_TYPENAME as_parser&lt;A&gt;::type,
+<span class="lineNum">     100 </span>            :                 BOOST_DEDUCED_TYPENAME as_parser&lt;B&gt;::type&gt;
+<span class="lineNum">     101 </span>            :                     (as_parser&lt;A&gt;::convert(a), as_parser&lt;B&gt;::convert(b));
+<span class="lineNum">     102 </span>            :         }
+<span class="lineNum">     103 </span>            :     };
+<span class="lineNum">     104 </span>            :     
+<span class="lineNum">     105 </span>            :     template &lt;typename A, typename B&gt;
+<span class="lineNum">     106 </span>            :     alternative&lt;A, B&gt;
+<span class="lineNum">     107 </span>            :     operator|(parser&lt;A&gt; const&amp; a, parser&lt;B&gt; const&amp; b);
+<span class="lineNum">     108 </span>            :     
+<span class="lineNum">     109 </span>            :     template &lt;typename A&gt;
+<span class="lineNum">     110 </span>            :     alternative&lt;A, chlit&lt;char&gt; &gt;
+<span class="lineNum">     111 </span>            :     operator|(parser&lt;A&gt; const&amp; a, char b);
+<span class="lineNum">     112 </span>            :     
+<span class="lineNum">     113 </span>            :     template &lt;typename B&gt;
+<span class="lineNum">     114 </span>            :     alternative&lt;chlit&lt;char&gt;, B&gt;
+<span class="lineNum">     115 </span>            :     operator|(char a, parser&lt;B&gt; const&amp; b);
+<span class="lineNum">     116 </span>            :     
+<span class="lineNum">     117 </span>            :     template &lt;typename A&gt;
+<span class="lineNum">     118 </span>            :     alternative&lt;A, strlit&lt;char const*&gt; &gt;
+<span class="lineNum">     119 </span>            :     operator|(parser&lt;A&gt; const&amp; a, char const* b);
+<span class="lineNum">     120 </span>            :     
+<span class="lineNum">     121 </span>            :     template &lt;typename B&gt;
+<span class="lineNum">     122 </span>            :     alternative&lt;strlit&lt;char const*&gt;, B&gt;
+<span class="lineNum">     123 </span>            :     operator|(char const* a, parser&lt;B&gt; const&amp; b);
+<span class="lineNum">     124 </span>            :     
+<span class="lineNum">     125 </span>            :     template &lt;typename A&gt;
+<span class="lineNum">     126 </span>            :     alternative&lt;A, chlit&lt;wchar_t&gt; &gt;
+<span class="lineNum">     127 </span>            :     operator|(parser&lt;A&gt; const&amp; a, wchar_t b);
+<span class="lineNum">     128 </span>            :     
+<span class="lineNum">     129 </span>            :     template &lt;typename B&gt;
+<span class="lineNum">     130 </span>            :     alternative&lt;chlit&lt;wchar_t&gt;, B&gt;
+<span class="lineNum">     131 </span>            :     operator|(wchar_t a, parser&lt;B&gt; const&amp; b);
+<span class="lineNum">     132 </span>            :     
+<span class="lineNum">     133 </span>            :     template &lt;typename A&gt;
+<span class="lineNum">     134 </span>            :     alternative&lt;A, strlit&lt;wchar_t const*&gt; &gt;
+<span class="lineNum">     135 </span>            :     operator|(parser&lt;A&gt; const&amp; a, wchar_t const* b);
+<span class="lineNum">     136 </span>            :     
+<span class="lineNum">     137 </span>            :     template &lt;typename B&gt;
+<span class="lineNum">     138 </span>            :     alternative&lt;strlit&lt;wchar_t const*&gt;, B&gt;
+<span class="lineNum">     139 </span>            :     operator|(wchar_t const* a, parser&lt;B&gt; const&amp; b);
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_END
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            : }} // namespace BOOST_SPIRIT_CLASSIC_NS
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : #endif
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : #include &lt;boost/spirit/home/classic/core/composite/impl/alternative.ipp&gt;
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

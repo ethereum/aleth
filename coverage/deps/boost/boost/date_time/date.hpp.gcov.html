@@ -1,0 +1,284 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/date_time/date.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/date_time</a> - date.hpp<span style="font-size: 80%;"> (source / <a href="date.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef DATE_TIME_DATE_HPP___</a>
+<span class="lineNum">       2 </span>            : #define DATE_TIME_DATE_HPP___
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
+<span class="lineNum">       5 </span>            :  * Use, modification and distribution is subject to the
+<span class="lineNum">       6 </span>            :  * Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       7 </span>            :  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            :  * Author: Jeff Garland, Bart Garst
+<span class="lineNum">       9 </span>            :  * $Date$
+<span class="lineNum">      10 </span>            :  */
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #include &lt;boost/operators.hpp&gt;
+<span class="lineNum">      13 </span>            : #include &lt;boost/date_time/year_month_day.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/date_time/special_defs.hpp&gt;
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : namespace boost {
+<span class="lineNum">      17 </span>            : namespace date_time {
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :   //!Representation of timepoint at the one day level resolution.
+<span class="lineNum">      20 </span>            :   /*!
+<span class="lineNum">      21 </span>            :     The date template represents an interface shell for a date class
+<span class="lineNum">      22 </span>            :     that is based on a year-month-day system such as the gregorian
+<span class="lineNum">      23 </span>            :     or iso systems.  It provides basic operations to enable calculation
+<span class="lineNum">      24 </span>            :     and comparisons.
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            :     &lt;b&gt;Theory&lt;/b&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            :     This date representation fundamentally departs from the C tm struct
+<span class="lineNum">      29 </span>            :     approach.  The goal for this type is to provide efficient date
+<span class="lineNum">      30 </span>            :     operations (add, subtract) and storage (minimize space to represent)
+<span class="lineNum">      31 </span>            :     in a concrete class.  Thus, the date uses a count internally to
+<span class="lineNum">      32 </span>            :     represent a particular date.  The calendar parameter defines
+<span class="lineNum">      33 </span>            :     the policies for converting the the year-month-day and internal
+<span class="lineNum">      34 </span>            :     counted form here.  Applications that need to perform heavy
+<span class="lineNum">      35 </span>            :     formatting of the same date repeatedly will perform better
+<span class="lineNum">      36 </span>            :     by using the year-month-day representation.
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            :     Internally the date uses a day number to represent the date.
+<span class="lineNum">      39 </span>            :     This is a monotonic time representation. This representation
+<span class="lineNum">      40 </span>            :     allows for fast comparison as well as simplifying
+<span class="lineNum">      41 </span>            :     the creation of writing numeric operations.  Essentially, the
+<span class="lineNum">      42 </span>            :     internal day number is like adjusted julian day.  The adjustment
+<span class="lineNum">      43 </span>            :     is determined by the Epoch date which is represented as day 1 of
+<span class="lineNum">      44 </span>            :     the calendar.  Day 0 is reserved for negative infinity so that
+<span class="lineNum">      45 </span>            :     any actual date is automatically greater than negative infinity.
+<span class="lineNum">      46 </span>            :     When a date is constructed from a date or formatted for output,
+<span class="lineNum">      47 </span>            :     the appropriate conversions are applied to create the year, month,
+<span class="lineNum">      48 </span>            :     day representations.
+<span class="lineNum">      49 </span>            :   */
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            :   template&lt;class T, class calendar, class duration_type_&gt;
+<span class="lineNum">      53 </span>            :   class date : private
+<span class="lineNum">      54 </span>            :        boost::less_than_comparable&lt;T
+<span class="lineNum">      55 </span>            :      , boost::equality_comparable&lt;T
+<span class="lineNum">      56 </span>            :     &gt; &gt;
+<span class="lineNum">      57 </span>            :   {
+<span class="lineNum">      58 </span>            :   public:
+<span class="lineNum">      59 </span>            :     typedef T date_type;
+<span class="lineNum">      60 </span>            :     typedef calendar calendar_type;
+<span class="lineNum">      61 </span>            :     typedef typename calendar::date_traits_type traits_type;
+<span class="lineNum">      62 </span>            :     typedef duration_type_ duration_type;
+<span class="lineNum">      63 </span>            :     typedef typename calendar::year_type year_type;
+<span class="lineNum">      64 </span>            :     typedef typename calendar::month_type month_type;
+<span class="lineNum">      65 </span>            :     typedef typename calendar::day_type day_type;
+<span class="lineNum">      66 </span>            :     typedef typename calendar::ymd_type ymd_type;
+<span class="lineNum">      67 </span>            :     typedef typename calendar::date_rep_type date_rep_type;
+<span class="lineNum">      68 </span>            :     typedef typename calendar::date_int_type date_int_type;
+<span class="lineNum">      69 </span>            :     typedef typename calendar::day_of_week_type day_of_week_type;
+<span class="lineNum">      70 </span>            :     date(year_type y, month_type m, day_type d)
+<span class="lineNum">      71 </span><span class="lineCov">       5456 :       : days_(calendar::day_number(ymd_type(y, m, d)))</span>
+<span class="lineNum">      72 </span>            :     {}
+<span class="lineNum">      73 </span>            :     date(const ymd_type&amp; ymd)
+<span class="lineNum">      74 </span>            :       : days_(calendar::day_number(ymd))
+<span class="lineNum">      75 </span>            :     {}
+<span class="lineNum">      76 </span>            :     //let the compiler write copy, assignment, and destructor
+<span class="lineNum">      77 </span>            :     year_type        year() const
+<span class="lineNum">      78 </span>            :     {
+<span class="lineNum">      79 </span>            :       ymd_type ymd = calendar::from_day_number(days_);
+<span class="lineNum">      80 </span>            :       return ymd.year;
+<span class="lineNum">      81 </span>            :     }
+<span class="lineNum">      82 </span>            :     month_type       month() const
+<span class="lineNum">      83 </span>            :     {
+<span class="lineNum">      84 </span>            :       ymd_type ymd = calendar::from_day_number(days_);
+<span class="lineNum">      85 </span>            :       return ymd.month;
+<span class="lineNum">      86 </span>            :     }
+<span class="lineNum">      87 </span>            :     day_type         day() const
+<span class="lineNum">      88 </span>            :     {
+<span class="lineNum">      89 </span>            :       ymd_type ymd = calendar::from_day_number(days_);
+<span class="lineNum">      90 </span>            :       return ymd.day;
+<span class="lineNum">      91 </span>            :     }
+<span class="lineNum">      92 </span>            :     day_of_week_type day_of_week() const
+<span class="lineNum">      93 </span>            :     {
+<span class="lineNum">      94 </span>            :       ymd_type ymd = calendar::from_day_number(days_);
+<span class="lineNum">      95 </span>            :       return calendar::day_of_week(ymd);
+<span class="lineNum">      96 </span>            :     }
+<span class="lineNum">      97 </span>            :     ymd_type         year_month_day() const
+<span class="lineNum">      98 </span>            :     {
+<span class="lineNum">      99 </span>            :       return calendar::from_day_number(days_);
+<span class="lineNum">     100 </span>            :     }
+<span class="lineNum">     101 </span>            :     bool operator&lt;(const date_type&amp; rhs)  const
+<span class="lineNum">     102 </span>            :     {
+<span class="lineNum">     103 </span>            :       return days_ &lt; rhs.days_;
+<span class="lineNum">     104 </span>            :     }
+<span class="lineNum">     105 </span>            :     bool operator==(const date_type&amp; rhs) const
+<span class="lineNum">     106 </span>            :     {
+<span class="lineNum">     107 </span>            :       return days_ == rhs.days_;
+<span class="lineNum">     108 </span>            :     }
+<span class="lineNum">     109 </span>            :     //! check to see if date is a special value
+<span class="lineNum">     110 </span>            :     bool is_special()const
+<span class="lineNum">     111 </span>            :     {
+<span class="lineNum">     112 </span>            :       return(is_not_a_date() || is_infinity());
+<span class="lineNum">     113 </span>            :     }
+<span class="lineNum">     114 </span>            :     //! check to see if date is not a value
+<span class="lineNum">     115 </span>            :     bool is_not_a_date()  const
+<span class="lineNum">     116 </span>            :     {
+<span class="lineNum">     117 </span><span class="lineCov">       7376 :       return traits_type::is_not_a_number(days_);</span>
+<span class="lineNum">     118 </span>            :     }
+<span class="lineNum">     119 </span>            :     //! check to see if date is one of the infinity values
+<span class="lineNum">     120 </span>            :     bool is_infinity()  const
+<span class="lineNum">     121 </span>            :     {
+<span class="lineNum">     122 </span><span class="lineCov">       7376 :       return traits_type::is_inf(days_);</span>
+<span class="lineNum">     123 </span>            :     }
+<span class="lineNum">     124 </span>            :     //! check to see if date is greater than all possible dates
+<span class="lineNum">     125 </span>            :     bool is_pos_infinity()  const
+<span class="lineNum">     126 </span>            :     {
+<span class="lineNum">     127 </span>            :       return traits_type::is_pos_inf(days_);
+<span class="lineNum">     128 </span>            :     }
+<span class="lineNum">     129 </span>            :     //! check to see if date is greater than all possible dates
+<span class="lineNum">     130 </span>            :     bool is_neg_infinity()  const
+<span class="lineNum">     131 </span>            :     {
+<span class="lineNum">     132 </span>            :       return traits_type::is_neg_inf(days_);
+<span class="lineNum">     133 </span>            :     }
+<span class="lineNum">     134 </span>            :     //! return as a special value or a not_special if a normal date
+<span class="lineNum">     135 </span>            :     special_values as_special()  const
+<span class="lineNum">     136 </span>            :     {
+<span class="lineNum">     137 </span>            :       return traits_type::to_special(days_);
+<span class="lineNum">     138 </span>            :     }
+<span class="lineNum">     139 </span>            :     duration_type operator-(const date_type&amp; d) const
+<span class="lineNum">     140 </span>            :     {
+<span class="lineNum">     141 </span>            :       if (!this-&gt;is_special() &amp;&amp; !d.is_special())
+<span class="lineNum">     142 </span>            :       {
+<span class="lineNum">     143 </span>            :         // The duration underlying type may be wider than the date underlying type.
+<span class="lineNum">     144 </span>            :         // Thus we calculate the difference in terms of two durations from some common fixed base date.
+<span class="lineNum">     145 </span>            :         typedef typename duration_type::duration_rep_type duration_rep_type;
+<span class="lineNum">     146 </span>            :         return duration_type(static_cast&lt; duration_rep_type &gt;(days_) - static_cast&lt; duration_rep_type &gt;(d.days_));
+<span class="lineNum">     147 </span>            :       }
+<span class="lineNum">     148 </span>            :       else
+<span class="lineNum">     149 </span>            :       {
+<span class="lineNum">     150 </span>            :         // In this case the difference will be a special value, too
+<span class="lineNum">     151 </span>            :         date_rep_type val = date_rep_type(days_) - date_rep_type(d.days_);
+<span class="lineNum">     152 </span>            :         return duration_type(val.as_special());
+<span class="lineNum">     153 </span>            :       }
+<span class="lineNum">     154 </span>            :     }
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :     date_type operator-(const duration_type&amp; dd) const
+<span class="lineNum">     157 </span>            :     {
+<span class="lineNum">     158 </span>            :       if(dd.is_special())
+<span class="lineNum">     159 </span>            :       {
+<span class="lineNum">     160 </span>            :         return date_type(date_rep_type(days_) - dd.get_rep());
+<span class="lineNum">     161 </span>            :       }
+<span class="lineNum">     162 </span>            :       return date_type(date_rep_type(days_) - static_cast&lt;date_int_type&gt;(dd.days()));
+<span class="lineNum">     163 </span>            :     }
+<span class="lineNum">     164 </span>            :     date_type operator-=(const duration_type&amp; dd)
+<span class="lineNum">     165 </span>            :     {
+<span class="lineNum">     166 </span>            :       *this = *this - dd;
+<span class="lineNum">     167 </span>            :       return date_type(days_);
+<span class="lineNum">     168 </span>            :     }
+<span class="lineNum">     169 </span>            :     date_rep_type day_count() const
+<span class="lineNum">     170 </span>            :     {
+<span class="lineNum">     171 </span><span class="lineCov">        960 :       return days_;</span>
+<span class="lineNum">     172 </span>            :     }
+<span class="lineNum">     173 </span>            :     //allow internal access from operators
+<span class="lineNum">     174 </span>            :     date_type operator+(const duration_type&amp; dd) const
+<span class="lineNum">     175 </span>            :     {
+<span class="lineNum">     176 </span>            :       if(dd.is_special())
+<span class="lineNum">     177 </span>            :       {
+<span class="lineNum">     178 </span>            :         return date_type(date_rep_type(days_) + dd.get_rep());
+<span class="lineNum">     179 </span>            :       }
+<span class="lineNum">     180 </span>            :       return date_type(date_rep_type(days_) + static_cast&lt;date_int_type&gt;(dd.days()));
+<span class="lineNum">     181 </span>            :     }
+<span class="lineNum">     182 </span>            :     date_type operator+=(const duration_type&amp; dd)
+<span class="lineNum">     183 </span>            :     {
+<span class="lineNum">     184 </span>            :       *this = *this + dd;
+<span class="lineNum">     185 </span>            :       return date_type(days_);
+<span class="lineNum">     186 </span>            :     }
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :     //see reference
+<span class="lineNum">     189 </span>            :   protected:
+<span class="lineNum">     190 </span>            :     /*! This is a private constructor which allows for the creation of new
+<span class="lineNum">     191 </span>            :       dates.  It is not exposed to users since that would require class
+<span class="lineNum">     192 </span>            :       users to understand the inner workings of the date class.
+<span class="lineNum">     193 </span>            :     */
+<span class="lineNum">     194 </span>            :     explicit date(date_int_type days) : days_(days) {}
+<span class="lineNum">     195 </span><span class="lineCov">        960 :     explicit date(date_rep_type days) : days_(days.as_number()) {}</span>
+<span class="lineNum">     196 </span>            :     date_int_type days_;
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :   };
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            : } } // namespace date_time
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

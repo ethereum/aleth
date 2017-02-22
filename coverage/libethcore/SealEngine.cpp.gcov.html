@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethcore/SealEngine.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethcore</a> - SealEngine.cpp<span style="font-size: 80%;"> (source / <a href="SealEngine.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntryMed">80.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryMed">87.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file SealEngine.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;SealEngine.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;Transaction.h&quot;
+<span class="lineNum">      24 </span>            : #include &lt;libevm/ExtVMFace.h&gt;
+<span class="lineNum">      25 </span>            : using namespace std;
+<span class="lineNum">      26 </span>            : using namespace dev;
+<span class="lineNum">      27 </span>            : using namespace eth;
+<span class="lineNum">      28 </span>            : 
+<a name="29"><span class="lineNum">      29 </span>            : SealEngineRegistrar* SealEngineRegistrar::s_this = nullptr;</a>
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span><span class="lineCov">        294 : void NoProof::init()</span>
+<span class="lineNum">      32 </span>            : {
+<span class="lineNum">      33 </span><span class="lineCov">        296 :         ETH_REGISTER_SEAL_ENGINE(NoProof);</span>
+<a name="34"><span class="lineNum">      34 </span><span class="lineCov">        294 : }</span></a>
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span><span class="lineCov">      15500 : void SealEngineFace::verify(Strictness _s, BlockHeader const&amp; _bi, BlockHeader const&amp; _parent, bytesConstRef _block) const</span>
+<span class="lineNum">      37 </span>            : {
+<span class="lineNum">      38 </span><span class="lineCov">      15500 :         _bi.verify(_s, _parent, _block);</span>
+<a name="39"><span class="lineNum">      39 </span><span class="lineCov">      15446 : }</span></a>
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span><span class="lineCov">      24830 : void SealEngineFace::populateFromParent(BlockHeader&amp; _bi, BlockHeader const&amp; _parent) const</span>
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span><span class="lineCov">      24830 :         _bi.populateFromParent(_parent);</span>
+<a name="44"><span class="lineNum">      44 </span><span class="lineCov">      24830 : }</span></a>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span><span class="lineCov">          2 : void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, TransactionBase const&amp; _t, BlockHeader const&amp;) const</span>
+<span class="lineNum">      47 </span>            : {
+<span class="lineNum">      48 </span><span class="lineCov">          2 :         if (_ir &amp; ImportRequirements::TransactionSignatures)</span>
+<span class="lineNum">      49 </span><span class="lineCov">          2 :                 _t.checkLowS();</span>
+<a name="50"><span class="lineNum">      50 </span><span class="lineCov">          2 : }</span></a>
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 : SealEngineFace* SealEngineRegistrar::create(ChainOperationParams const&amp; _params)</span>
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span><span class="lineNoCov">          0 :         SealEngineFace* ret = create(_params.sealEngineName);</span>
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :         assert(ret &amp;&amp; &quot;Seal engine not found.&quot;);</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :         if (ret)</span>
+<span class="lineNum">      57 </span>            :                 ret-&gt;setChainParams(_params);
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="59"><span class="lineNum">      59 </span>            : }</a>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineCov">     431852 : EVMSchedule const&amp; SealEngineBase::evmSchedule(EnvInfo const&amp; _envInfo) const</span>
+<span class="lineNum">      62 </span>            : {
+<span class="lineNum">      63 </span><span class="lineCov">    2591112 :         if (_envInfo.number() &gt;= chainParams().u256Param(&quot;MetropolistForkBlock&quot;))</span>
+<span class="lineNum">      64 </span>            :                 return MetropolisSchedule;
+<span class="lineNum">      65 </span><span class="lineCov">    1833700 :         if (_envInfo.number() &gt;= chainParams().u256Param(&quot;EIP158ForkBlock&quot;))</span>
+<span class="lineNum">      66 </span>            :                 return EIP158Schedule;
+<span class="lineNum">      67 </span><span class="lineCov">    1507695 :         else if (_envInfo.number() &gt;= chainParams().u256Param(&quot;EIP150ForkBlock&quot;))</span>
+<span class="lineNum">      68 </span>            :                 return EIP150Schedule;
+<span class="lineNum">      69 </span><span class="lineCov">    1160400 :         else if (_envInfo.number() &gt;= chainParams().u256Param(&quot;homsteadForkBlock&quot;))</span>
+<span class="lineNum">      70 </span>            :                 return HomesteadSchedule;
+<a name="71"><span class="lineNum">      71 </span>            :         else</a>
+<span class="lineNum">      72 </span><span class="lineCov">      84346 :                 return FrontierSchedule;</span>
+<span class="lineNum">      73 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

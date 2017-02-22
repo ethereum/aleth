@@ -1,0 +1,625 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/BlockQueue.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - BlockQueue.cpp<span style="font-size: 80%;"> (source / <a href="BlockQueue.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">83</td>
+            <td class="headerCovTableEntry">292</td>
+            <td class="headerCovTableEntryLo">28.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">36</td>
+            <td class="headerCovTableEntryLo">44.4 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file BlockQueue.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;BlockQueue.h&quot;
+<span class="lineNum">      23 </span>            : #include &lt;thread&gt;
+<span class="lineNum">      24 </span>            : #include &lt;sstream&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libdevcore/Log.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libethcore/Exceptions.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libethcore/BlockHeader.h&gt;
+<span class="lineNum">      28 </span>            : #include &quot;BlockChain.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;VerifiedBlock.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;State.h&quot;
+<span class="lineNum">      31 </span>            : using namespace std;
+<span class="lineNum">      32 </span>            : using namespace dev;
+<span class="lineNum">      33 </span>            : using namespace dev::eth;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #if defined(_WIN32)
+<a name="36"><span class="lineNum">      36 </span>            : const char* BlockQueueChannel::name() { return EthOrange &quot;[]&gt;&quot;; }</a>
+<span class="lineNum">      37 </span>            : #else
+<a name="38"><span class="lineNum">      38 </span><span class="lineNoCov">          0 : const char* BlockQueueChannel::name() { return EthOrange &quot;▣┅▶&quot;; }</span></a>
+<span class="lineNum">      39 </span>            : #endif
+<span class="lineNum">      40 </span><span class="lineNoCov">          0 : const char* BlockQueueTraceChannel::name() { return EthOrange &quot;▣ ▶&quot;; }</span>
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : size_t const c_maxKnownCount = 100000;
+<span class="lineNum">      43 </span>            : size_t const c_maxKnownSize = 128 * 1024 * 1024;
+<span class="lineNum">      44 </span>            : size_t const c_maxUnknownCount = 100000;
+<a name="45"><span class="lineNum">      45 </span>            : size_t const c_maxUnknownSize = 512 * 1024 * 1024; // Block size can be ~50kb</a>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineCov">     286729 : BlockQueue::BlockQueue()</span>
+<span class="lineNum">      48 </span>            : {
+<span class="lineNum">      49 </span>            :         // Allow some room for other activity
+<a name="50"><span class="lineNum">      50 </span><span class="lineCov">      30182 :         unsigned verifierThreads = std::max(thread::hardware_concurrency(), 3U) - 2U;</span></a>
+<span class="lineNum">      51 </span><span class="lineCov">     105637 :         for (unsigned i = 0; i &lt; verifierThreads; ++i)</span>
+<span class="lineNum">      52 </span><span class="lineCov">     271322 :                 m_verifiers.emplace_back([=](){</span>
+<span class="lineNum">      53 </span><span class="lineCov">     270598 :                         setThreadName(&quot;verifier&quot; + toString(i));</span>
+<span class="lineNum">      54 </span><span class="lineCov">      90184 :                         this-&gt;verifierBody();</span>
+<span class="lineNum">      55 </span><span class="lineCov">     181092 :                 });</span>
+<a name="56"><span class="lineNum">      56 </span><span class="lineCov">      15091 : }</span></a>
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span><span class="lineCov">     181092 : BlockQueue::~BlockQueue()</span>
+<span class="lineNum">      59 </span>            : {
+<span class="lineNum">      60 </span><span class="lineCov">      15091 :         stop();</span>
+<a name="61"><span class="lineNum">      61 </span><span class="lineCov">      15091 : }</span></a>
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineCov">      15091 : void BlockQueue::stop()</span>
+<span class="lineNum">      64 </span>            : {
+<span class="lineNum">      65 </span><span class="lineCov">      75455 :         DEV_GUARDED(m_verification)</span>
+<span class="lineNum">      66 </span><span class="lineCov">      30182 :                 m_deleting = true;</span>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">      15091 :         m_moreToVerify.notify_all();</span>
+<span class="lineNum">      69 </span><span class="lineCov">     150910 :         for (auto&amp; i: m_verifiers)</span>
+<span class="lineNum">      70 </span><span class="lineCov">      90546 :                 i.join();</span>
+<span class="lineNum">      71 </span><span class="lineCov">      30182 :         m_verifiers.clear();</span>
+<a name="72"><span class="lineNum">      72 </span><span class="lineCov">      15091 : }</span></a>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 : void BlockQueue::clear()</span>
+<span class="lineNum">      75 </span>            : {
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :         WriteGuard l(m_lock);</span>
+<span class="lineNum">      77 </span>            :         DEV_INVARIANT_CHECK;
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :         Guard l2(m_verification);</span>
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :         m_readySet.clear();</span>
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :         m_drainingSet.clear();</span>
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :         m_verified.clear();</span>
+<span class="lineNum">      82 </span><span class="lineNoCov">          0 :         m_unverified.clear();</span>
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :         m_verifying.clear();</span>
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :         m_unknownSet.clear();</span>
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :         m_unknown.clear();</span>
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :         m_future.clear();</span>
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :         m_difficulty = 0;</span>
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 :         m_drainingDifficulty = 0;</span>
+<a name="89"><span class="lineNum">      89 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span><span class="lineCov">      90008 : void BlockQueue::verifierBody()</span>
+<span class="lineNum">      92 </span>            : {
+<span class="lineNum">      93 </span><span class="lineCov">     180016 :         while (!m_deleting)</span>
+<span class="lineNum">      94 </span>            :         {
+<span class="lineNum">      95 </span><span class="lineCov">      90360 :                 UnverifiedBlock work;</span>
+<span class="lineNum">      96 </span>            : 
+<a name="97"><span class="lineNum">      97 </span>            :                 {</a>
+<span class="lineNum">      98 </span><span class="lineCov">     180897 :                         unique_lock&lt;Mutex&gt; l(m_verification);</span>
+<span class="lineNum">      99 </span><span class="lineCov">     723784 :                         m_moreToVerify.wait(l, [&amp;](){ return !m_unverified.isEmpty() || m_deleting; });</span>
+<span class="lineNum">     100 </span><span class="lineCov">     180946 :                         if (m_deleting)</span>
+<span class="lineNum">     101 </span><span class="lineCov">      90473 :                                 return;</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :                         work = m_unverified.dequeue();</span>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :                         BlockHeader bi;</span>
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :                         bi.setSha3Uncles(work.hash);</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :                         bi.setParentHash(work.parentHash);</span>
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :                         m_verifying.enqueue(move(bi));</span>
+<span class="lineNum">     108 </span>            :                 }
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :                 VerifiedBlock res;</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :                 swap(work.blockData, res.blockData);</span>
+<span class="lineNum">     112 </span>            :                 try
+<span class="lineNum">     113 </span>            :                 {
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :                         res.verified = m_bc-&gt;verifyBlock(&amp;res.blockData, m_onBad, ImportRequirements::OutOfOrderChecks);</span>
+<span class="lineNum">     115 </span>            :                 }
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :                 catch (std::exception const&amp; _ex)</span>
+<span class="lineNum">     117 </span>            :                 {
+<span class="lineNum">     118 </span>            :                         // bad block.
+<span class="lineNum">     119 </span>            :                         // has to be this order as that's how invariants() assumes.
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :                         WriteGuard l2(m_lock);</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :                         unique_lock&lt;Mutex&gt; l(m_verification);</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :                         m_readySet.erase(work.hash);</span>
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :                         m_knownBad.insert(work.hash);</span>
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :                         if (!m_verifying.remove(work.hash))</span>
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :                                 cwarn &lt;&lt; &quot;Unexpected exception when verifying block: &quot; &lt;&lt; _ex.what();</span>
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :                         drainVerified_WITH_BOTH_LOCKS();</span>
+<span class="lineNum">     127 </span>            :                         continue;
+<span class="lineNum">     128 </span>            :                 }
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :                 bool ready = false;</span>
+<span class="lineNum">     131 </span>            :                 {
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :                         WriteGuard l2(m_lock);</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :                         unique_lock&lt;Mutex&gt; l(m_verification);</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :                         if (!m_verifying.isEmpty() &amp;&amp; m_verifying.nextHash() == work.hash)</span>
+<span class="lineNum">     135 </span>            :                         {
+<span class="lineNum">     136 </span>            :                                 // we're next!
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :                                 m_verifying.dequeue();</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :                                 if (m_knownBad.count(res.verified.info.parentHash()))</span>
+<span class="lineNum">     139 </span>            :                                 {
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :                                         m_readySet.erase(res.verified.info.hash());</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :                                         m_knownBad.insert(res.verified.info.hash());</span>
+<span class="lineNum">     142 </span>            :                                 }
+<span class="lineNum">     143 </span>            :                                 else
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :                                         m_verified.enqueue(move(res));</span>
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :                                 drainVerified_WITH_BOTH_LOCKS();</span>
+<span class="lineNum">     147 </span>            :                                 ready = true;
+<span class="lineNum">     148 </span>            :                         }
+<span class="lineNum">     149 </span>            :                         else
+<span class="lineNum">     150 </span>            :                         {
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :                                 if (!m_verifying.replace(work.hash, move(res)))</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :                                         cwarn &lt;&lt; &quot;BlockQueue missing our job: was there a GM?&quot;;</span>
+<span class="lineNum">     153 </span>            :                         }
+<span class="lineNum">     154 </span>            :                 }
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :                 if (ready)</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :                         m_onReady();</span>
+<span class="lineNum">     157 </span>            :         }
+<a name="158"><span class="lineNum">     158 </span>            : }</a>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 : void BlockQueue::drainVerified_WITH_BOTH_LOCKS()</span>
+<span class="lineNum">     161 </span>            : {
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :         while (!m_verifying.isEmpty() &amp;&amp; !m_verifying.next().blockData.empty())</span>
+<span class="lineNum">     163 </span>            :         {
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :                 VerifiedBlock block = m_verifying.dequeue();</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :                 if (m_knownBad.count(block.verified.info.parentHash()))</span>
+<span class="lineNum">     166 </span>            :                 {
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :                         m_readySet.erase(block.verified.info.hash());</span>
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :                         m_knownBad.insert(block.verified.info.hash());</span>
+<span class="lineNum">     169 </span>            :                 }
+<span class="lineNum">     170 </span>            :                 else
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :                         m_verified.enqueue(move(block));</span>
+<span class="lineNum">     172 </span>            :         }
+<a name="173"><span class="lineNum">     173 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span><span class="lineCov">          1 : ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)</span>
+<span class="lineNum">     176 </span>            : {
+<span class="lineNum">     177 </span><span class="lineCov">          2 :         clog(BlockQueueTraceChannel) &lt;&lt; std::this_thread::get_id();</span>
+<span class="lineNum">     178 </span>            :         // Check if we already know this block.
+<span class="lineNum">     179 </span><span class="lineCov">          1 :         h256 h = BlockHeader::headerHashFromBlock(_block);</span>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineCov">          1 :         clog(BlockQueueTraceChannel) &lt;&lt; &quot;Queuing block&quot; &lt;&lt; h &lt;&lt; &quot;for import...&quot;;</span>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineCov">          3 :         UpgradableGuard l(m_lock);</span>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span><span class="lineCov">          5 :         if (m_readySet.count(h) || m_drainingSet.count(h) || m_unknownSet.count(h) || m_knownBad.count(h))</span>
+<span class="lineNum">     186 </span>            :         {
+<span class="lineNum">     187 </span>            :                 // Already know about this one.
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :                 clog(BlockQueueTraceChannel) &lt;&lt; &quot;Already known.&quot;;</span>
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :                 return ImportResult::AlreadyKnown;</span>
+<span class="lineNum">     190 </span>            :         }
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span><span class="lineCov">          2 :         BlockHeader bi;</span>
+<span class="lineNum">     193 </span>            :         try
+<span class="lineNum">     194 </span>            :         {
+<span class="lineNum">     195 </span>            :                 // TODO: quick verification of seal - will require BlockQueue to be templated on SealEngine
+<span class="lineNum">     196 </span>            :                 // VERIFY: populates from the block and checks the block is internally coherent.
+<span class="lineNum">     197 </span><span class="lineCov">          2 :                 bi = m_bc-&gt;verifyBlock(_block, m_onBad, ImportRequirements::PostGenesis).info;</span>
+<span class="lineNum">     198 </span>            :         }
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     200 </span>            :         {
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Ignoring malformed block: &quot; &lt;&lt; diagnostic_information(_e);</span>
+<span class="lineNum">     202 </span>            :                 return ImportResult::Malformed;
+<span class="lineNum">     203 </span>            :         }
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span><span class="lineCov">          2 :         clog(BlockQueueTraceChannel) &lt;&lt; &quot;Block&quot; &lt;&lt; h &lt;&lt; &quot;is&quot; &lt;&lt; bi.number() &lt;&lt; &quot;parent is&quot; &lt;&lt; bi.parentHash();</span>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :         // Check block doesn't already exist first!
+<span class="lineNum">     208 </span><span class="lineCov">          1 :         if (m_bc-&gt;isKnown(h))</span>
+<span class="lineNum">     209 </span>            :         {
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :                 cblockq &lt;&lt; &quot;Already known in chain.&quot;;</span>
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :                 return ImportResult::AlreadyInChain;</span>
+<span class="lineNum">     212 </span>            :         }
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span><span class="lineCov">          2 :         UpgradeGuard ul(l);</span>
+<span class="lineNum">     215 </span>            :         DEV_INVARIANT_CHECK;
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :         // Check it's not in the future
+<span class="lineNum">     218 </span><span class="lineCov">          2 :         if (bi.timestamp() &gt; utcTime() &amp;&amp; !_isOurs)</span>
+<span class="lineNum">     219 </span>            :         {
+<span class="lineNum">     220 </span><span class="lineCov">          3 :                 m_future.insert(static_cast&lt;time_t&gt;(bi.timestamp()), h, _block.toBytes());</span>
+<span class="lineNum">     221 </span>            :                 char buf[24];
+<span class="lineNum">     222 </span><span class="lineCov">          2 :                 time_t bit = static_cast&lt;time_t&gt;(bi.timestamp());</span>
+<span class="lineNum">     223 </span><span class="lineCov">          1 :                 if (strftime(buf, 24, &quot;%X&quot;, localtime(&amp;bit)) == 0)</span>
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :                         buf[0] = '\0'; // empty if case strftime fails</span>
+<span class="lineNum">     225 </span><span class="lineCov">          2 :                 clog(BlockQueueTraceChannel) &lt;&lt; &quot;OK - queued for future [&quot; &lt;&lt; bi.timestamp() &lt;&lt; &quot;vs&quot; &lt;&lt; utcTime() &lt;&lt; &quot;] - will wait until&quot; &lt;&lt; buf;</span>
+<span class="lineNum">     226 </span><span class="lineCov">          2 :                 m_difficulty += bi.difficulty();</span>
+<span class="lineNum">     227 </span><span class="lineCov">          3 :                 bool unknown =  !m_readySet.count(bi.parentHash()) &amp;&amp; !m_drainingSet.count(bi.parentHash()) &amp;&amp; !m_bc-&gt;isKnown(bi.parentHash());</span>
+<span class="lineNum">     228 </span><span class="lineCov">          1 :                 return unknown ? ImportResult::FutureTimeUnknown : ImportResult::FutureTimeKnown;</span>
+<span class="lineNum">     229 </span>            :         }
+<span class="lineNum">     230 </span>            :         else
+<span class="lineNum">     231 </span>            :         {
+<span class="lineNum">     232 </span>            :                 // We now know it.
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :                 if (m_knownBad.count(bi.parentHash()))</span>
+<span class="lineNum">     234 </span>            :                 {
+<span class="lineNum">     235 </span><span class="lineNoCov">          0 :                         m_knownBad.insert(bi.hash());</span>
+<span class="lineNum">     236 </span><span class="lineNoCov">          0 :                         updateBad_WITH_LOCK(bi.hash());</span>
+<span class="lineNum">     237 </span>            :                         // bad parent; this is bad too, note it as such
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :                         return ImportResult::BadChain;</span>
+<span class="lineNum">     239 </span>            :                 }
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :                 else if (!m_readySet.count(bi.parentHash()) &amp;&amp; !m_drainingSet.count(bi.parentHash()) &amp;&amp; !m_bc-&gt;isKnown(bi.parentHash()))</span>
+<span class="lineNum">     241 </span>            :                 {
+<span class="lineNum">     242 </span>            :                         // We don't know the parent (yet) - queue it up for later. It'll get resent to us if we find out about its ancestry later on.
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :                         clog(BlockQueueTraceChannel) &lt;&lt; &quot;OK - queued as unknown parent:&quot; &lt;&lt; bi.parentHash();</span>
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :                         m_unknown.insert(bi.parentHash(), h, _block.toBytes());</span>
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :                         m_unknownSet.insert(h);</span>
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :                         m_difficulty += bi.difficulty();</span>
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :                         return ImportResult::UnknownParent;</span>
+<span class="lineNum">     249 </span>            :                 }
+<span class="lineNum">     250 </span>            :                 else
+<span class="lineNum">     251 </span>            :                 {
+<span class="lineNum">     252 </span>            :                         // If valid, append to blocks.
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :                         clog(BlockQueueTraceChannel) &lt;&lt; &quot;OK - ready for chain insertion.&quot;;</span>
+<span class="lineNum">     254 </span><span class="lineNoCov">          0 :                         DEV_GUARDED(m_verification)</span>
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :                                 m_unverified.enqueue(UnverifiedBlock { h, bi.parentHash(), _block.toBytes() });</span>
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :                         m_moreToVerify.notify_one();</span>
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :                         m_readySet.insert(h);</span>
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :                         m_difficulty += bi.difficulty();</span>
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :                         noteReady_WITH_LOCK(h);</span>
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span>            :                         return ImportResult::Success;
+<span class="lineNum">     263 </span>            :                 }
+<span class="lineNum">     264 </span>            :         }
+<a name="265"><span class="lineNum">     265 </span>            : }</a>
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 : void BlockQueue::updateBad_WITH_LOCK(h256 const&amp; _bad)</span>
+<span class="lineNum">     268 </span>            : {
+<span class="lineNum">     269 </span>            :         DEV_INVARIANT_CHECK;
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :         DEV_GUARDED(m_verification)</span>
+<span class="lineNum">     271 </span>            :         {
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :                 collectUnknownBad_WITH_BOTH_LOCKS(_bad);</span>
+<span class="lineNum">     273 </span>            :                 bool moreBad = true;
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :                 while (moreBad)</span>
+<a name="275"><span class="lineNum">     275 </span>            :                 {</a>
+<span class="lineNum">     276 </span><span class="lineNoCov">          0 :                         moreBad = false;</span>
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :                         std::vector&lt;VerifiedBlock&gt; badVerified = m_verified.removeIf([this](VerifiedBlock const&amp; _b)</span>
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :                         {</span>
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :                                 return m_knownBad.count(_b.verified.info.parentHash()) || m_knownBad.count(_b.verified.info.hash());</span>
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 :                         });</span>
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :                         for (auto&amp; b: badVerified)</span>
+<span class="lineNum">     282 </span>            :                         {
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :                                 m_knownBad.insert(b.verified.info.hash());</span>
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :                                 m_readySet.erase(b.verified.info.hash());</span>
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :                                 collectUnknownBad_WITH_BOTH_LOCKS(b.verified.info.hash());</span>
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :                                 moreBad = true;</span>
+<a name="287"><span class="lineNum">     287 </span>            :                         }</a>
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 :                         std::vector&lt;UnverifiedBlock&gt; badUnverified = m_unverified.removeIf([this](UnverifiedBlock const&amp; _b)</span>
+<span class="lineNum">     290 </span><span class="lineNoCov">          0 :                         {</span>
+<span class="lineNum">     291 </span><span class="lineNoCov">          0 :                                 return m_knownBad.count(_b.parentHash) || m_knownBad.count(_b.hash);</span>
+<span class="lineNum">     292 </span><span class="lineNoCov">          0 :                         });</span>
+<span class="lineNum">     293 </span><span class="lineNoCov">          0 :                         for (auto&amp; b: badUnverified)</span>
+<span class="lineNum">     294 </span>            :                         {
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :                                 m_knownBad.insert(b.hash);</span>
+<span class="lineNum">     296 </span><span class="lineNoCov">          0 :                                 m_readySet.erase(b.hash);</span>
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :                                 collectUnknownBad_WITH_BOTH_LOCKS(b.hash);</span>
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :                                 moreBad = true;</span>
+<a name="299"><span class="lineNum">     299 </span>            :                         }</a>
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :                         std::vector&lt;VerifiedBlock&gt; badVerifying = m_verifying.removeIf([this](VerifiedBlock const&amp; _b)</span>
+<span class="lineNum">     302 </span><span class="lineNoCov">          0 :                         {</span>
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :                                 return m_knownBad.count(_b.verified.info.parentHash()) || m_knownBad.count(_b.verified.info.sha3Uncles());</span>
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 :                         });</span>
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 :                         for (auto&amp; b: badVerifying)</span>
+<span class="lineNum">     306 </span>            :                         {
+<span class="lineNum">     307 </span><span class="lineNoCov">          0 :                                 h256 const&amp; h = b.blockData.size() != 0 ? b.verified.info.hash() : b.verified.info.sha3Uncles();</span>
+<span class="lineNum">     308 </span><span class="lineNoCov">          0 :                                 m_knownBad.insert(h);</span>
+<span class="lineNum">     309 </span><span class="lineNoCov">          0 :                                 m_readySet.erase(h);</span>
+<span class="lineNum">     310 </span><span class="lineNoCov">          0 :                                 collectUnknownBad_WITH_BOTH_LOCKS(h);</span>
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :                                 moreBad = true;</span>
+<span class="lineNum">     312 </span>            :                         }
+<span class="lineNum">     313 </span>            :                 }
+<span class="lineNum">     314 </span>            :         }
+<a name="315"><span class="lineNum">     315 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span><span class="lineNoCov">          0 : void BlockQueue::collectUnknownBad_WITH_BOTH_LOCKS(h256 const&amp; _bad)</span>
+<span class="lineNum">     318 </span>            : {
+<span class="lineNum">     319 </span><span class="lineNoCov">          0 :         list&lt;h256&gt; badQueue(1, _bad);</span>
+<span class="lineNum">     320 </span><span class="lineNoCov">          0 :         while (!badQueue.empty())</span>
+<span class="lineNum">     321 </span>            :         {
+<span class="lineNum">     322 </span><span class="lineNoCov">          0 :                 vector&lt;pair&lt;h256, bytes&gt;&gt; const removed = m_unknown.removeByKeyEqual(badQueue.front());</span>
+<span class="lineNum">     323 </span><span class="lineNoCov">          0 :                 badQueue.pop_front();</span>
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 :                 for (auto&amp; newBad: removed)</span>
+<span class="lineNum">     325 </span>            :                 {
+<span class="lineNum">     326 </span><span class="lineNoCov">          0 :                         m_unknownSet.erase(newBad.first);</span>
+<span class="lineNum">     327 </span><span class="lineNoCov">          0 :                         m_knownBad.insert(newBad.first);</span>
+<span class="lineNum">     328 </span><span class="lineNoCov">          0 :                         badQueue.push_back(newBad.first);</span>
+<span class="lineNum">     329 </span>            :                 }
+<span class="lineNum">     330 </span>            :         }
+<a name="331"><span class="lineNum">     331 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     332 </span>            : 
+<span class="lineNum">     333 </span><span class="lineCov">          1 : bool BlockQueue::doneDrain(h256s const&amp; _bad)</span>
+<span class="lineNum">     334 </span>            : {
+<span class="lineNum">     335 </span><span class="lineCov">          3 :         WriteGuard l(m_lock);</span>
+<span class="lineNum">     336 </span>            :         DEV_INVARIANT_CHECK;
+<span class="lineNum">     337 </span><span class="lineCov">          2 :         m_drainingSet.clear();</span>
+<span class="lineNum">     338 </span><span class="lineCov">          2 :         m_difficulty -= m_drainingDifficulty;</span>
+<span class="lineNum">     339 </span><span class="lineCov">          2 :         m_drainingDifficulty = 0;</span>
+<span class="lineNum">     340 </span><span class="lineCov">          2 :         if (_bad.size())</span>
+<span class="lineNum">     341 </span>            :         {
+<span class="lineNum">     342 </span>            :                 // at least one of them was bad.
+<span class="lineNum">     343 </span><span class="lineNoCov">          0 :                 m_knownBad += _bad;</span>
+<span class="lineNum">     344 </span><span class="lineNoCov">          0 :                 for (h256 const&amp; b: _bad)</span>
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :                         updateBad_WITH_LOCK(b);</span>
+<span class="lineNum">     346 </span>            :         }
+<span class="lineNum">     347 </span><span class="lineCov">          3 :         return !m_readySet.empty();</span>
+<a name="348"><span class="lineNum">     348 </span>            : }</a>
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span><span class="lineCov">          6 : void BlockQueue::tick()</span>
+<span class="lineNum">     351 </span>            : {
+<span class="lineNum">     352 </span><span class="lineCov">          6 :         vector&lt;pair&lt;h256, bytes&gt;&gt; todo;</span>
+<span class="lineNum">     353 </span>            :         {
+<span class="lineNum">     354 </span><span class="lineCov">         12 :                 UpgradableGuard l(m_lock);</span>
+<span class="lineNum">     355 </span><span class="lineCov">         12 :                 if (m_future.isEmpty())</span>
+<span class="lineNum">     356 </span><span class="lineCov">          6 :                         return;</span>
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :                 cblockq &lt;&lt; &quot;Checking past-future blocks...&quot;;</span>
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :                 time_t t = utcTime();</span>
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :                 if (t &lt; m_future.firstKey())</span>
+<span class="lineNum">     362 </span>            :                         return;
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :                 cblockq &lt;&lt; &quot;Past-future blocks ready.&quot;;</span>
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span>            :                 {
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 :                         UpgradeGuard l2(l);</span>
+<span class="lineNum">     368 </span>            :                         DEV_INVARIANT_CHECK;
+<span class="lineNum">     369 </span><span class="lineNoCov">          0 :                         todo = m_future.removeByKeyNotGreater(t);</span>
+<span class="lineNum">     370 </span>            :                 }
+<span class="lineNum">     371 </span>            :         }
+<span class="lineNum">     372 </span><span class="lineNoCov">          0 :         cblockq &lt;&lt; &quot;Importing&quot; &lt;&lt; todo.size() &lt;&lt; &quot;past-future blocks.&quot;;</span>
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 :         for (auto const&amp; b: todo)</span>
+<span class="lineNum">     375 </span><span class="lineNoCov">          0 :                 import(&amp;b.second);</span>
+<a name="376"><span class="lineNum">     376 </span>            : }</a>
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span><span class="lineNoCov">          0 : BlockQueueStatus BlockQueue::status() const</span>
+<span class="lineNum">     379 </span>            : { 
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 :         ReadGuard l(m_lock); </span>
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 :         Guard l2(m_verification); </span>
+<span class="lineNum">     382 </span><span class="lineNoCov">          0 :         return BlockQueueStatus{ m_drainingSet.size(), m_verified.count(), m_verifying.count(), m_unverified.count(), </span>
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 :                 m_future.count(), m_unknown.count(), m_knownBad.size() };</span>
+<a name="384"><span class="lineNum">     384 </span>            : }</a>
+<span class="lineNum">     385 </span>            : 
+<span class="lineNum">     386 </span><span class="lineCov">          1 : QueueStatus BlockQueue::blockStatus(h256 const&amp; _h) const</span>
+<span class="lineNum">     387 </span>            : {
+<span class="lineNum">     388 </span><span class="lineCov">          3 :         ReadGuard l(m_lock);</span>
+<span class="lineNum">     389 </span>            :         return
+<span class="lineNum">     390 </span><span class="lineCov">          2 :                 m_readySet.count(_h) ?</span>
+<span class="lineNum">     391 </span>            :                         QueueStatus::Ready :
+<span class="lineNum">     392 </span><span class="lineCov">          2 :                 m_drainingSet.count(_h) ?</span>
+<span class="lineNum">     393 </span>            :                         QueueStatus::Importing :
+<span class="lineNum">     394 </span><span class="lineCov">          2 :                 m_unknownSet.count(_h) ?</span>
+<span class="lineNum">     395 </span>            :                         QueueStatus::UnknownParent :
+<span class="lineNum">     396 </span><span class="lineCov">          2 :                 m_knownBad.count(_h) ?</span>
+<span class="lineNum">     397 </span>            :                         QueueStatus::Bad :
+<span class="lineNum">     398 </span><span class="lineCov">          5 :                         QueueStatus::Unknown;</span>
+<a name="399"><span class="lineNum">     399 </span>            : }</a>
+<span class="lineNum">     400 </span>            : 
+<span class="lineNum">     401 </span><span class="lineCov">          1 : bool BlockQueue::knownFull() const</span>
+<span class="lineNum">     402 </span>            : {
+<span class="lineNum">     403 </span><span class="lineCov">          3 :         Guard l(m_verification);</span>
+<span class="lineNum">     404 </span><span class="lineCov">          2 :         return knownSize() &gt; c_maxKnownSize || knownCount() &gt; c_maxKnownCount;</span>
+<a name="405"><span class="lineNum">     405 </span>            : }</a>
+<span class="lineNum">     406 </span>            : 
+<span class="lineNum">     407 </span><span class="lineCov">          1 : std::size_t BlockQueue::knownSize() const</span>
+<span class="lineNum">     408 </span>            : {
+<span class="lineNum">     409 </span><span class="lineCov">          4 :         return m_verified.size() + m_unverified.size() + m_verifying.size();</span>
+<a name="410"><span class="lineNum">     410 </span>            : }</a>
+<span class="lineNum">     411 </span>            : 
+<span class="lineNum">     412 </span><span class="lineCov">          1 : std::size_t BlockQueue::knownCount() const</span>
+<span class="lineNum">     413 </span>            : {
+<span class="lineNum">     414 </span><span class="lineCov">          4 :         return m_verified.count() + m_unverified.count() + m_verifying.count();</span>
+<a name="415"><span class="lineNum">     415 </span>            : }</a>
+<span class="lineNum">     416 </span>            : 
+<span class="lineNum">     417 </span><span class="lineNoCov">          0 : bool BlockQueue::unknownFull() const</span>
+<span class="lineNum">     418 </span>            : {
+<span class="lineNum">     419 </span><span class="lineNoCov">          0 :         ReadGuard l(m_lock);</span>
+<span class="lineNum">     420 </span><span class="lineNoCov">          0 :         return unknownSize() &gt; c_maxUnknownSize || unknownCount() &gt; c_maxUnknownCount;</span>
+<a name="421"><span class="lineNum">     421 </span>            : }</a>
+<span class="lineNum">     422 </span>            : 
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 : std::size_t BlockQueue::unknownSize() const</span>
+<span class="lineNum">     424 </span>            : {
+<span class="lineNum">     425 </span><span class="lineNoCov">          0 :         return m_future.size() + m_unknown.size();</span>
+<a name="426"><span class="lineNum">     426 </span>            : }</a>
+<span class="lineNum">     427 </span>            : 
+<span class="lineNum">     428 </span><span class="lineNoCov">          0 : std::size_t BlockQueue::unknownCount() const</span>
+<span class="lineNum">     429 </span>            : {
+<span class="lineNum">     430 </span><span class="lineNoCov">          0 :         return m_future.count() + m_unknown.count();</span>
+<a name="431"><span class="lineNum">     431 </span>            : }</a>
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span><span class="lineCov">          1 : void BlockQueue::drain(VerifiedBlocks&amp; o_out, unsigned _max)</span>
+<span class="lineNum">     434 </span>            : {
+<span class="lineNum">     435 </span><span class="lineCov">          1 :         bool wasFull = false;</span>
+<span class="lineNum">     436 </span><span class="lineCov">          5 :         DEV_WRITE_GUARDED(m_lock)</span>
+<span class="lineNum">     437 </span>            :         {
+<span class="lineNum">     438 </span>            :                 DEV_INVARIANT_CHECK;
+<span class="lineNum">     439 </span><span class="lineCov">          1 :                 wasFull = knownFull();</span>
+<span class="lineNum">     440 </span><span class="lineCov">          2 :                 if (m_drainingSet.empty())</span>
+<span class="lineNum">     441 </span>            :                 {
+<span class="lineNum">     442 </span><span class="lineCov">          2 :                         m_drainingDifficulty = 0;</span>
+<span class="lineNum">     443 </span><span class="lineCov">          5 :                         DEV_GUARDED(m_verification)</span>
+<span class="lineNum">     444 </span><span class="lineCov">          4 :                                 o_out = m_verified.dequeueMultiple(min&lt;unsigned&gt;(_max, m_verified.count()));</span>
+<span class="lineNum">     445 </span>            : 
+<span class="lineNum">     446 </span><span class="lineCov">          4 :                         for (auto const&amp; bs: o_out)</span>
+<span class="lineNum">     447 </span>            :                         {
+<span class="lineNum">     448 </span>            :                                 // TODO: @optimise use map&lt;h256, bytes&gt; rather than vector&lt;bytes&gt; &amp; set&lt;h256&gt;.
+<span class="lineNum">     449 </span><span class="lineNoCov">          0 :                                 auto h = bs.verified.info.hash();</span>
+<span class="lineNum">     450 </span><span class="lineNoCov">          0 :                                 m_drainingSet.insert(h);</span>
+<span class="lineNum">     451 </span><span class="lineNoCov">          0 :                                 m_drainingDifficulty += bs.verified.info.difficulty();</span>
+<span class="lineNum">     452 </span><span class="lineNoCov">          0 :                                 m_readySet.erase(h);</span>
+<span class="lineNum">     453 </span>            :                         }
+<span class="lineNum">     454 </span>            :                 }
+<span class="lineNum">     455 </span>            :         }
+<span class="lineNum">     456 </span><span class="lineCov">          1 :         if (wasFull &amp;&amp; !knownFull())</span>
+<span class="lineNum">     457 </span><span class="lineNoCov">          0 :                 m_onRoomAvailable();</span>
+<span class="lineNum">     458 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     459 </span>            : 
+<span class="lineNum">     460 </span><span class="lineNoCov">          0 : bool BlockQueue::invariants() const</span>
+<span class="lineNum">     461 </span>            : {
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 :         Guard l(m_verification);</span>
+<span class="lineNum">     463 </span><span class="lineNoCov">          0 :         if (m_readySet.size() != knownCount())</span>
+<span class="lineNum">     464 </span>            :         {
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :                 std::stringstream s;</span>
+<span class="lineNum">     466 </span><span class="lineNoCov">          0 :                 s &lt;&lt; &quot;Failed BlockQueue invariant: m_readySet: &quot; &lt;&lt; m_readySet.size() &lt;&lt; &quot; m_verified: &quot; &lt;&lt; m_verified.count() &lt;&lt; &quot; m_unverified: &quot; &lt;&lt; m_unverified.count() &lt;&lt; &quot; m_verifying&quot; &lt;&lt; m_verifying.count();</span>
+<span class="lineNum">     467 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(FailedInvariant() &lt;&lt; errinfo_comment(s.str()));</span>
+<span class="lineNum">     468 </span>            :         }
+<span class="lineNum">     469 </span><span class="lineNoCov">          0 :         return true;</span>
+<a name="470"><span class="lineNum">     470 </span>            : }</a>
+<span class="lineNum">     471 </span>            : 
+<span class="lineNum">     472 </span><span class="lineNoCov">          0 : void BlockQueue::noteReady_WITH_LOCK(h256 const&amp; _good)</span>
+<span class="lineNum">     473 </span>            : {
+<span class="lineNum">     474 </span>            :         DEV_INVARIANT_CHECK;
+<span class="lineNum">     475 </span><span class="lineNoCov">          0 :         list&lt;h256&gt; goodQueue(1, _good);</span>
+<span class="lineNum">     476 </span><span class="lineNoCov">          0 :         bool notify = false;</span>
+<span class="lineNum">     477 </span><span class="lineNoCov">          0 :         while (!goodQueue.empty())</span>
+<span class="lineNum">     478 </span>            :         {
+<span class="lineNum">     479 </span><span class="lineNoCov">          0 :                 h256 const parent = goodQueue.front();</span>
+<span class="lineNum">     480 </span><span class="lineNoCov">          0 :                 vector&lt;pair&lt;h256, bytes&gt;&gt; const removed = m_unknown.removeByKeyEqual(parent);</span>
+<span class="lineNum">     481 </span><span class="lineNoCov">          0 :                 goodQueue.pop_front();</span>
+<span class="lineNum">     482 </span><span class="lineNoCov">          0 :                 for (auto&amp; newReady: removed)</span>
+<span class="lineNum">     483 </span>            :                 {
+<span class="lineNum">     484 </span><span class="lineNoCov">          0 :                         DEV_GUARDED(m_verification)</span>
+<span class="lineNum">     485 </span><span class="lineNoCov">          0 :                                 m_unverified.enqueue(UnverifiedBlock { newReady.first, parent, move(newReady.second) });</span>
+<span class="lineNum">     486 </span><span class="lineNoCov">          0 :                         m_unknownSet.erase(newReady.first);</span>
+<span class="lineNum">     487 </span><span class="lineNoCov">          0 :                         m_readySet.insert(newReady.first);</span>
+<span class="lineNum">     488 </span><span class="lineNoCov">          0 :                         goodQueue.push_back(newReady.first);</span>
+<span class="lineNum">     489 </span><span class="lineNoCov">          0 :                         notify = true;</span>
+<span class="lineNum">     490 </span>            :                 }
+<span class="lineNum">     491 </span>            :         }
+<span class="lineNum">     492 </span><span class="lineNoCov">          0 :         if (notify)</span>
+<span class="lineNum">     493 </span><span class="lineNoCov">          0 :                 m_moreToVerify.notify_all();</span>
+<a name="494"><span class="lineNum">     494 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     495 </span>            : 
+<span class="lineNum">     496 </span><span class="lineNoCov">          0 : void BlockQueue::retryAllUnknown()</span>
+<span class="lineNum">     497 </span>            : {
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 :         WriteGuard l(m_lock);</span>
+<span class="lineNum">     499 </span>            :         DEV_INVARIANT_CHECK;
+<span class="lineNum">     500 </span><span class="lineNoCov">          0 :         while (!m_unknown.isEmpty())</span>
+<span class="lineNum">     501 </span>            :         {
+<span class="lineNum">     502 </span><span class="lineNoCov">          0 :                 h256 parent = m_unknown.firstKey();</span>
+<span class="lineNum">     503 </span><span class="lineNoCov">          0 :                 vector&lt;pair&lt;h256, bytes&gt;&gt; removed = m_unknown.removeByKeyEqual(parent);</span>
+<span class="lineNum">     504 </span><span class="lineNoCov">          0 :                 for (auto&amp; newReady: removed)</span>
+<span class="lineNum">     505 </span>            :                 {
+<span class="lineNum">     506 </span><span class="lineNoCov">          0 :                         DEV_GUARDED(m_verification)</span>
+<span class="lineNum">     507 </span><span class="lineNoCov">          0 :                                 m_unverified.enqueue(UnverifiedBlock{ newReady.first, parent, move(newReady.second) });</span>
+<span class="lineNum">     508 </span><span class="lineNoCov">          0 :                         m_unknownSet.erase(newReady.first);</span>
+<span class="lineNum">     509 </span><span class="lineNoCov">          0 :                         m_readySet.insert(newReady.first);</span>
+<span class="lineNum">     510 </span><span class="lineNoCov">          0 :                         m_moreToVerify.notify_one();</span>
+<span class="lineNum">     511 </span>            :                 }
+<span class="lineNum">     512 </span>            :         }
+<span class="lineNum">     513 </span><span class="lineNoCov">          0 :         m_moreToVerify.notify_all();</span>
+<a name="514"><span class="lineNum">     514 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     515 </span>            : 
+<span class="lineNum">     516 </span><span class="lineNoCov">          0 : std::ostream&amp; dev::eth::operator&lt;&lt;(std::ostream&amp; _out, BlockQueueStatus const&amp; _bqs)</span>
+<span class="lineNum">     517 </span>            : {
+<span class="lineNum">     518 </span><span class="lineNoCov">          0 :         _out &lt;&lt; &quot;importing: &quot; &lt;&lt; _bqs.importing &lt;&lt; endl;</span>
+<span class="lineNum">     519 </span><span class="lineNoCov">          0 :         _out &lt;&lt; &quot;verified: &quot; &lt;&lt; _bqs.verified &lt;&lt; endl;</span>
+<span class="lineNum">     520 </span><span class="lineNoCov">          0 :         _out &lt;&lt; &quot;verifying: &quot; &lt;&lt; _bqs.verifying &lt;&lt; endl;</span>
+<span class="lineNum">     521 </span><span class="lineNoCov">          0 :         _out &lt;&lt; &quot;unverified: &quot; &lt;&lt; _bqs.unverified &lt;&lt; endl;</span>
+<span class="lineNum">     522 </span><span class="lineNoCov">          0 :         _out &lt;&lt; &quot;future: &quot; &lt;&lt; _bqs.future &lt;&lt; endl;</span>
+<span class="lineNum">     523 </span><span class="lineNoCov">          0 :         _out &lt;&lt; &quot;unknown: &quot; &lt;&lt; _bqs.unknown &lt;&lt; endl;</span>
+<span class="lineNum">     524 </span><span class="lineNoCov">          0 :         _out &lt;&lt; &quot;bad: &quot; &lt;&lt; _bqs.bad &lt;&lt; endl;</span>
+<span class="lineNum">     525 </span>            : 
+<span class="lineNum">     526 </span><span class="lineNoCov">          0 :         return _out;</span>
+<a name="527"><span class="lineNum">     527 </span>            : }</a>
+<span class="lineNum">     528 </span>            : 
+<span class="lineNum">     529 </span><span class="lineNoCov">          0 : u256 BlockQueue::difficulty() const</span>
+<span class="lineNum">     530 </span>            : {
+<span class="lineNum">     531 </span><span class="lineNoCov">          0 :         UpgradableGuard l(m_lock);</span>
+<span class="lineNum">     532 </span><span class="lineNoCov">          0 :         return m_difficulty;</span>
+<a name="533"><span class="lineNum">     533 </span>            : }</a>
+<span class="lineNum">     534 </span>            : 
+<span class="lineNum">     535 </span><span class="lineNoCov">          0 : bool BlockQueue::isActive() const</span>
+<span class="lineNum">     536 </span>            : {
+<span class="lineNum">     537 </span><span class="lineNoCov">          0 :         UpgradableGuard l(m_lock);</span>
+<span class="lineNum">     538 </span><span class="lineNoCov">          0 :         if (m_readySet.empty() &amp;&amp; m_drainingSet.empty())</span>
+<span class="lineNum">     539 </span><span class="lineNoCov">          0 :                 DEV_GUARDED(m_verification)</span>
+<span class="lineNum">     540 </span><span class="lineNoCov">          0 :                         if (m_verified.isEmpty() &amp;&amp; m_verifying.isEmpty() &amp;&amp; m_unverified.isEmpty())</span>
+<span class="lineNum">     541 </span><span class="lineNoCov">          0 :                                 return false;</span>
+<span class="lineNum">     542 </span>            :         return true;
+<a name="543"><span class="lineNum">     543 </span>            : }</a>
+<span class="lineNum">     544 </span>            : 
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 : std::ostream&amp; dev::eth::operator&lt;&lt; (std::ostream&amp; os, QueueStatus const&amp; obj)</span>
+<span class="lineNum">     546 </span>            : {
+<a name="547"><span class="lineNum">     547 </span><span class="lineNoCov">          0 :    os &lt;&lt; static_cast&lt;std::underlying_type&lt;QueueStatus&gt;::type&gt;(obj);</span></a>
+<span class="lineNum">     548 </span><span class="lineNoCov">          0 :    return os;</span>
+<span class="lineNum">     549 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

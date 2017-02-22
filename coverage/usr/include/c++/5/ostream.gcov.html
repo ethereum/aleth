@@ -1,0 +1,716 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/ostream</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5</a> - ostream<span style="font-size: 80%;"> (source / <a href="ostream.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryLo">73.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Output streams -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 1997-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file include/ostream
+<span class="lineNum">      26 </span>            :  *  This is a Standard C++ Library header.
+<span class="lineNum">      27 </span>            :  */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : //
+<span class="lineNum">      30 </span>            : // ISO C++ 14882: 27.6.2  Output streams
+<span class="lineNum">      31 </span>            : //
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #ifndef _GLIBCXX_OSTREAM
+<span class="lineNum">      34 </span>            : #define _GLIBCXX_OSTREAM 1
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #pragma GCC system_header
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #include &lt;ios&gt;
+<span class="lineNum">      39 </span>            : #include &lt;bits/ostream_insert.h&gt;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            :   /**
+<span class="lineNum">      46 </span>            :    *  @brief  Template class basic_ostream.
+<span class="lineNum">      47 </span>            :    *  @ingroup io
+<span class="lineNum">      48 </span>            :    *
+<span class="lineNum">      49 </span>            :    *  @tparam _CharT  Type of character stream.
+<span class="lineNum">      50 </span>            :    *  @tparam _Traits  Traits for character type, defaults to
+<span class="lineNum">      51 </span>            :    *                   char_traits&lt;_CharT&gt;.
+<span class="lineNum">      52 </span>            :    *
+<span class="lineNum">      53 </span>            :    *  This is the base class for all output streams.  It provides text
+<span class="lineNum">      54 </span>            :    *  formatting of all builtin types, and communicates with any class
+<span class="lineNum">      55 </span>            :    *  derived from basic_streambuf to do the actual output.
+<span class="lineNum">      56 </span>            :   */
+<span class="lineNum">      57 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">      58 </span>            :     class basic_ostream : virtual public basic_ios&lt;_CharT, _Traits&gt;
+<span class="lineNum">      59 </span>            :     {
+<span class="lineNum">      60 </span>            :     public:
+<span class="lineNum">      61 </span>            :       // Types (inherited from basic_ios):
+<span class="lineNum">      62 </span>            :       typedef _CharT                                    char_type;
+<span class="lineNum">      63 </span>            :       typedef typename _Traits::int_type                int_type;
+<span class="lineNum">      64 </span>            :       typedef typename _Traits::pos_type                pos_type;
+<span class="lineNum">      65 </span>            :       typedef typename _Traits::off_type                off_type;
+<span class="lineNum">      66 </span>            :       typedef _Traits                                   traits_type;
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            :       // Non-standard Types:
+<span class="lineNum">      69 </span>            :       typedef basic_streambuf&lt;_CharT, _Traits&gt;            __streambuf_type;
+<span class="lineNum">      70 </span>            :       typedef basic_ios&lt;_CharT, _Traits&gt;          __ios_type;
+<span class="lineNum">      71 </span>            :       typedef basic_ostream&lt;_CharT, _Traits&gt;              __ostream_type;
+<span class="lineNum">      72 </span>            :       typedef num_put&lt;_CharT, ostreambuf_iterator&lt;_CharT, _Traits&gt; &gt;
+<span class="lineNum">      73 </span>            :                                                         __num_put_type;
+<span class="lineNum">      74 </span>            :       typedef ctype&lt;_CharT&gt;                               __ctype_type;
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            :       /**
+<span class="lineNum">      77 </span>            :        *  @brief  Base constructor.
+<span class="lineNum">      78 </span>            :        *
+<span class="lineNum">      79 </span>            :        *  This ctor is almost never called by the user directly, rather from
+<span class="lineNum">      80 </span>            :        *  derived classes' initialization lists, which pass a pointer to
+<span class="lineNum">      81 </span>            :        *  their own stream buffer.
+<span class="lineNum">      82 </span>            :       */
+<span class="lineNum">      83 </span>            :       explicit
+<span class="lineNum">      84 </span>            :       basic_ostream(__streambuf_type* __sb)
+<span class="lineNum">      85 </span>            :       { this-&gt;init(__sb); }
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :       /**
+<span class="lineNum">      88 </span>            :        *  @brief  Base destructor.
+<span class="lineNum">      89 </span>            :        *
+<span class="lineNum">      90 </span>            :        *  This does very little apart from providing a virtual base dtor.
+<span class="lineNum">      91 </span>            :       */
+<span class="lineNum">      92 </span>            :       virtual
+<span class="lineNum">      93 </span>            :       ~basic_ostream() { }
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            :       /// Safe prefix/suffix operations.
+<span class="lineNum">      96 </span>            :       class sentry;
+<span class="lineNum">      97 </span>            :       friend class sentry;
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :       //@{
+<span class="lineNum">     100 </span>            :       /**
+<span class="lineNum">     101 </span>            :        *  @brief  Interface for manipulators.
+<span class="lineNum">     102 </span>            :        *
+<span class="lineNum">     103 </span>            :        *  Manipulators such as @c std::endl and @c std::hex use these
+<span class="lineNum">     104 </span>            :        *  functions in constructs like &quot;std::cout &lt;&lt; std::endl&quot;.  For more
+<span class="lineNum">     105 </span>            :        *  information, see the iomanip header.
+<span class="lineNum">     106 </span>            :       */
+<span class="lineNum">     107 </span>            :       __ostream_type&amp;
+<span class="lineNum">     108 </span>            :       operator&lt;&lt;(__ostream_type&amp; (*__pf)(__ostream_type&amp;))
+<span class="lineNum">     109 </span>            :       {
+<span class="lineNum">     110 </span>            :         // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     111 </span>            :         // DR 60. What is a formatted input function?
+<span class="lineNum">     112 </span>            :         // The inserters for manipulators are *not* formatted output functions.
+<span class="lineNum">     113 </span><span class="lineCov">        837 :         return __pf(*this);</span>
+<span class="lineNum">     114 </span>            :       }
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            :       __ostream_type&amp;
+<span class="lineNum">     117 </span>            :       operator&lt;&lt;(__ios_type&amp; (*__pf)(__ios_type&amp;))
+<span class="lineNum">     118 </span>            :       {
+<span class="lineNum">     119 </span>            :         // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     120 </span>            :         // DR 60. What is a formatted input function?
+<span class="lineNum">     121 </span>            :         // The inserters for manipulators are *not* formatted output functions.
+<span class="lineNum">     122 </span>            :         __pf(*this);
+<span class="lineNum">     123 </span>            :         return *this;
+<span class="lineNum">     124 </span>            :       }
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            :       __ostream_type&amp;
+<span class="lineNum">     127 </span>            :       operator&lt;&lt;(ios_base&amp; (*__pf) (ios_base&amp;))
+<span class="lineNum">     128 </span>            :       {
+<span class="lineNum">     129 </span>            :         // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     130 </span>            :         // DR 60. What is a formatted input function?
+<span class="lineNum">     131 </span>            :         // The inserters for manipulators are *not* formatted output functions.
+<span class="lineNum">     132 </span><span class="lineCov">   13073796 :         __pf(*this);</span>
+<span class="lineNum">     133 </span>            :         return *this;
+<span class="lineNum">     134 </span>            :       }
+<span class="lineNum">     135 </span>            :       //@}
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :       //@{
+<span class="lineNum">     138 </span>            :       /**
+<span class="lineNum">     139 </span>            :        *  @name Inserters
+<span class="lineNum">     140 </span>            :        *
+<span class="lineNum">     141 </span>            :        *  All the @c operator&lt;&lt; functions (aka &lt;em&gt;formatted output
+<span class="lineNum">     142 </span>            :        *  functions&lt;/em&gt;) have some common behavior.  Each starts by
+<span class="lineNum">     143 </span>            :        *  constructing a temporary object of type std::basic_ostream::sentry.
+<span class="lineNum">     144 </span>            :        *  This can have several effects, concluding with the setting of a
+<span class="lineNum">     145 </span>            :        *  status flag; see the sentry documentation for more.
+<span class="lineNum">     146 </span>            :        *
+<span class="lineNum">     147 </span>            :        *  If the sentry status is good, the function tries to generate
+<span class="lineNum">     148 </span>            :        *  whatever data is appropriate for the type of the argument.
+<span class="lineNum">     149 </span>            :        *
+<span class="lineNum">     150 </span>            :        *  If an exception is thrown during insertion, ios_base::badbit
+<span class="lineNum">     151 </span>            :        *  will be turned on in the stream's error state without causing an
+<span class="lineNum">     152 </span>            :        *  ios_base::failure to be thrown.  The original exception will then
+<span class="lineNum">     153 </span>            :        *  be rethrown.
+<span class="lineNum">     154 </span>            :       */
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :       //@{
+<span class="lineNum">     157 </span>            :       /**
+<span class="lineNum">     158 </span>            :        *  @brief Integer arithmetic inserters
+<span class="lineNum">     159 </span>            :        *  @param  __n A variable of builtin integral type.
+<span class="lineNum">     160 </span>            :        *  @return  @c *this if successful
+<span class="lineNum">     161 </span>            :        *
+<span class="lineNum">     162 </span>            :        *  These functions use the stream's current locale (specifically, the
+<span class="lineNum">     163 </span>            :        *  @c num_get facet) to perform numeric formatting.
+<span class="lineNum">     164 </span>            :       */
+<span class="lineNum">     165 </span>            :       __ostream_type&amp;
+<span class="lineNum">     166 </span>            :       operator&lt;&lt;(long __n)
+<span class="lineNum">     167 </span><span class="lineCov">      83137 :       { return _M_insert(__n); }</span>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            :       __ostream_type&amp;
+<span class="lineNum">     170 </span>            :       operator&lt;&lt;(unsigned long __n)
+<span class="lineNum">     171 </span><span class="lineCov">        255 :       { return _M_insert(__n); }</span>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :       __ostream_type&amp;
+<span class="lineNum">     174 </span>            :       operator&lt;&lt;(bool __n)
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :       { return _M_insert(__n); }</span>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :       __ostream_type&amp;
+<span class="lineNum">     178 </span>            :       operator&lt;&lt;(short __n);
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            :       __ostream_type&amp;
+<span class="lineNum">     181 </span>            :       operator&lt;&lt;(unsigned short __n)
+<span class="lineNum">     182 </span>            :       {
+<span class="lineNum">     183 </span>            :         // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     184 </span>            :         // 117. basic_ostream uses nonexistent num_put member functions.
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :         return _M_insert(static_cast&lt;unsigned long&gt;(__n));</span>
+<span class="lineNum">     186 </span>            :       }
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :       __ostream_type&amp;
+<span class="lineNum">     189 </span>            :       operator&lt;&lt;(int __n);
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            :       __ostream_type&amp;
+<span class="lineNum">     192 </span>            :       operator&lt;&lt;(unsigned int __n)
+<span class="lineNum">     193 </span>            :       {
+<span class="lineNum">     194 </span>            :         // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     195 </span>            :         // 117. basic_ostream uses nonexistent num_put member functions.
+<span class="lineNum">     196 </span><span class="lineCov">     198803 :         return _M_insert(static_cast&lt;unsigned long&gt;(__n));</span>
+<span class="lineNum">     197 </span>            :       }
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            : #ifdef _GLIBCXX_USE_LONG_LONG
+<span class="lineNum">     200 </span>            :       __ostream_type&amp;
+<span class="lineNum">     201 </span>            :       operator&lt;&lt;(long long __n)
+<span class="lineNum">     202 </span>            :       { return _M_insert(__n); }
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            :       __ostream_type&amp;
+<span class="lineNum">     205 </span>            :       operator&lt;&lt;(unsigned long long __n)
+<span class="lineNum">     206 </span>            :       { return _M_insert(__n); }
+<span class="lineNum">     207 </span>            : #endif
+<span class="lineNum">     208 </span>            :       //@}
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :       //@{
+<span class="lineNum">     211 </span>            :       /**
+<span class="lineNum">     212 </span>            :        *  @brief  Floating point arithmetic inserters
+<span class="lineNum">     213 </span>            :        *  @param  __f A variable of builtin floating point type.
+<span class="lineNum">     214 </span>            :        *  @return  @c *this if successful
+<span class="lineNum">     215 </span>            :        *
+<span class="lineNum">     216 </span>            :        *  These functions use the stream's current locale (specifically, the
+<span class="lineNum">     217 </span>            :        *  @c num_get facet) to perform numeric formatting.
+<span class="lineNum">     218 </span>            :       */
+<span class="lineNum">     219 </span>            :       __ostream_type&amp;
+<span class="lineNum">     220 </span>            :       operator&lt;&lt;(double __f)
+<span class="lineNum">     221 </span><span class="lineCov">      13407 :       { return _M_insert(__f); }</span>
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            :       __ostream_type&amp;
+<span class="lineNum">     224 </span>            :       operator&lt;&lt;(float __f)
+<span class="lineNum">     225 </span>            :       {
+<span class="lineNum">     226 </span>            :         // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     227 </span>            :         // 117. basic_ostream uses nonexistent num_put member functions.
+<span class="lineNum">     228 </span>            :         return _M_insert(static_cast&lt;double&gt;(__f));
+<span class="lineNum">     229 </span>            :       }
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :       __ostream_type&amp;
+<span class="lineNum">     232 </span>            :       operator&lt;&lt;(long double __f)
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :       { return _M_insert(__f); }</span>
+<span class="lineNum">     234 </span>            :       //@}
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            :       /**
+<span class="lineNum">     237 </span>            :        *  @brief  Pointer arithmetic inserters
+<span class="lineNum">     238 </span>            :        *  @param  __p A variable of pointer type.
+<span class="lineNum">     239 </span>            :        *  @return  @c *this if successful
+<span class="lineNum">     240 </span>            :        *
+<span class="lineNum">     241 </span>            :        *  These functions use the stream's current locale (specifically, the
+<span class="lineNum">     242 </span>            :        *  @c num_get facet) to perform numeric formatting.
+<span class="lineNum">     243 </span>            :       */
+<span class="lineNum">     244 </span>            :       __ostream_type&amp;
+<span class="lineNum">     245 </span>            :       operator&lt;&lt;(const void* __p)
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :       { return _M_insert(__p); }</span>
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :       /**
+<span class="lineNum">     249 </span>            :        *  @brief  Extracting from another streambuf.
+<span class="lineNum">     250 </span>            :        *  @param  __sb  A pointer to a streambuf
+<span class="lineNum">     251 </span>            :        *
+<span class="lineNum">     252 </span>            :        *  This function behaves like one of the basic arithmetic extractors,
+<span class="lineNum">     253 </span>            :        *  in that it also constructs a sentry object and has the same error
+<span class="lineNum">     254 </span>            :        *  handling behavior.
+<span class="lineNum">     255 </span>            :        *
+<span class="lineNum">     256 </span>            :        *  If @p __sb is NULL, the stream will set failbit in its error state.
+<span class="lineNum">     257 </span>            :        *
+<span class="lineNum">     258 </span>            :        *  Characters are extracted from @p __sb and inserted into @c *this
+<span class="lineNum">     259 </span>            :        *  until one of the following occurs:
+<span class="lineNum">     260 </span>            :        *
+<span class="lineNum">     261 </span>            :        *  - the input stream reaches end-of-file,
+<span class="lineNum">     262 </span>            :        *  - insertion into the output sequence fails (in this case, the
+<span class="lineNum">     263 </span>            :        *    character that would have been inserted is not extracted), or
+<span class="lineNum">     264 </span>            :        *  - an exception occurs while getting a character from @p __sb, which
+<span class="lineNum">     265 </span>            :        *    sets failbit in the error state
+<span class="lineNum">     266 </span>            :        *
+<span class="lineNum">     267 </span>            :        *  If the function inserts no characters, failbit is set.
+<span class="lineNum">     268 </span>            :       */
+<span class="lineNum">     269 </span>            :       __ostream_type&amp;
+<span class="lineNum">     270 </span>            :       operator&lt;&lt;(__streambuf_type* __sb);
+<span class="lineNum">     271 </span>            :       //@}
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span>            :       //@{
+<span class="lineNum">     274 </span>            :       /**
+<span class="lineNum">     275 </span>            :        *  @name Unformatted Output Functions
+<span class="lineNum">     276 </span>            :        *
+<span class="lineNum">     277 </span>            :        *  All the unformatted output functions have some common behavior.
+<span class="lineNum">     278 </span>            :        *  Each starts by constructing a temporary object of type
+<span class="lineNum">     279 </span>            :        *  std::basic_ostream::sentry.  This has several effects, concluding
+<span class="lineNum">     280 </span>            :        *  with the setting of a status flag; see the sentry documentation
+<span class="lineNum">     281 </span>            :        *  for more.
+<span class="lineNum">     282 </span>            :        *
+<span class="lineNum">     283 </span>            :        *  If the sentry status is good, the function tries to generate
+<span class="lineNum">     284 </span>            :        *  whatever data is appropriate for the type of the argument.
+<span class="lineNum">     285 </span>            :        *
+<span class="lineNum">     286 </span>            :        *  If an exception is thrown during insertion, ios_base::badbit
+<span class="lineNum">     287 </span>            :        *  will be turned on in the stream's error state.  If badbit is on in
+<span class="lineNum">     288 </span>            :        *  the stream's exceptions mask, the exception will be rethrown
+<span class="lineNum">     289 </span>            :        *  without completing its actions.
+<span class="lineNum">     290 </span>            :       */
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span>            :       /**
+<span class="lineNum">     293 </span>            :        *  @brief  Simple insertion.
+<span class="lineNum">     294 </span>            :        *  @param  __c  The character to insert.
+<span class="lineNum">     295 </span>            :        *  @return  *this
+<span class="lineNum">     296 </span>            :        *
+<span class="lineNum">     297 </span>            :        *  Tries to insert @p __c.
+<span class="lineNum">     298 </span>            :        *
+<span class="lineNum">     299 </span>            :        *  @note  This function is not overloaded on signed char and
+<span class="lineNum">     300 </span>            :        *         unsigned char.
+<span class="lineNum">     301 </span>            :       */
+<span class="lineNum">     302 </span>            :       __ostream_type&amp;
+<span class="lineNum">     303 </span>            :       put(char_type __c);
+<span class="lineNum">     304 </span>            : 
+<span class="lineNum">     305 </span>            :       /**
+<span class="lineNum">     306 </span>            :        *  @brief  Core write functionality, without sentry.
+<span class="lineNum">     307 </span>            :        *  @param  __s  The array to insert.
+<span class="lineNum">     308 </span>            :        *  @param  __n  Maximum number of characters to insert.
+<span class="lineNum">     309 </span>            :       */
+<span class="lineNum">     310 </span>            :       void
+<span class="lineNum">     311 </span>            :       _M_write(const char_type* __s, streamsize __n)
+<span class="lineNum">     312 </span>            :       {
+<span class="lineNum">     313 </span>            :         const streamsize __put = this-&gt;rdbuf()-&gt;sputn(__s, __n);
+<span class="lineNum">     314 </span>            :         if (__put != __n)
+<span class="lineNum">     315 </span>            :           this-&gt;setstate(ios_base::badbit);
+<span class="lineNum">     316 </span>            :       }
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            :       /**
+<span class="lineNum">     319 </span>            :        *  @brief  Character string insertion.
+<span class="lineNum">     320 </span>            :        *  @param  __s  The array to insert.
+<span class="lineNum">     321 </span>            :        *  @param  __n  Maximum number of characters to insert.
+<span class="lineNum">     322 </span>            :        *  @return  *this
+<span class="lineNum">     323 </span>            :        *
+<span class="lineNum">     324 </span>            :        *  Characters are copied from @p __s and inserted into the stream until
+<span class="lineNum">     325 </span>            :        *  one of the following happens:
+<span class="lineNum">     326 </span>            :        *
+<span class="lineNum">     327 </span>            :        *  - @p __n characters are inserted
+<span class="lineNum">     328 </span>            :        *  - inserting into the output sequence fails (in this case, badbit
+<span class="lineNum">     329 </span>            :        *    will be set in the stream's error state)
+<span class="lineNum">     330 </span>            :        *
+<span class="lineNum">     331 </span>            :        *  @note  This function is not overloaded on signed char and
+<span class="lineNum">     332 </span>            :        *         unsigned char.
+<span class="lineNum">     333 </span>            :       */
+<span class="lineNum">     334 </span>            :       __ostream_type&amp;
+<span class="lineNum">     335 </span>            :       write(const char_type* __s, streamsize __n);
+<span class="lineNum">     336 </span>            :       //@}
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            :       /**
+<span class="lineNum">     339 </span>            :        *  @brief  Synchronizing the stream buffer.
+<span class="lineNum">     340 </span>            :        *  @return  *this
+<span class="lineNum">     341 </span>            :        *
+<span class="lineNum">     342 </span>            :        *  If @c rdbuf() is a null pointer, changes nothing.
+<span class="lineNum">     343 </span>            :        *
+<span class="lineNum">     344 </span>            :        *  Otherwise, calls @c rdbuf()-&gt;pubsync(), and if that returns -1,
+<span class="lineNum">     345 </span>            :        *  sets badbit.
+<span class="lineNum">     346 </span>            :       */
+<span class="lineNum">     347 </span>            :       __ostream_type&amp;
+<span class="lineNum">     348 </span>            :       flush();
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span>            :       /**
+<span class="lineNum">     351 </span>            :        *  @brief  Getting the current write position.
+<span class="lineNum">     352 </span>            :        *  @return  A file position object.
+<span class="lineNum">     353 </span>            :        *
+<span class="lineNum">     354 </span>            :        *  If @c fail() is not false, returns @c pos_type(-1) to indicate
+<span class="lineNum">     355 </span>            :        *  failure.  Otherwise returns @c rdbuf()-&gt;pubseekoff(0,cur,out).
+<span class="lineNum">     356 </span>            :       */
+<span class="lineNum">     357 </span>            :       pos_type
+<span class="lineNum">     358 </span>            :       tellp();
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span>            :       /**
+<span class="lineNum">     361 </span>            :        *  @brief  Changing the current write position.
+<span class="lineNum">     362 </span>            :        *  @param  __pos  A file position object.
+<span class="lineNum">     363 </span>            :        *  @return  *this
+<span class="lineNum">     364 </span>            :        *
+<span class="lineNum">     365 </span>            :        *  If @c fail() is not true, calls @c rdbuf()-&gt;pubseekpos(pos).  If
+<span class="lineNum">     366 </span>            :        *  that function fails, sets failbit.
+<span class="lineNum">     367 </span>            :       */
+<span class="lineNum">     368 </span>            :       __ostream_type&amp;
+<span class="lineNum">     369 </span>            :       seekp(pos_type);
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span>            :       /**
+<span class="lineNum">     372 </span>            :        *  @brief  Changing the current write position.
+<span class="lineNum">     373 </span>            :        *  @param  __off  A file offset object.
+<span class="lineNum">     374 </span>            :        *  @param  __dir  The direction in which to seek.
+<span class="lineNum">     375 </span>            :        *  @return  *this
+<span class="lineNum">     376 </span>            :        *
+<span class="lineNum">     377 </span>            :        *  If @c fail() is not true, calls @c rdbuf()-&gt;pubseekoff(off,dir).
+<span class="lineNum">     378 </span>            :        *  If that function fails, sets failbit.
+<span class="lineNum">     379 </span>            :       */
+<span class="lineNum">     380 </span>            :        __ostream_type&amp;
+<span class="lineNum">     381 </span>            :       seekp(off_type, ios_base::seekdir);
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span>            :     protected:
+<span class="lineNum">     384 </span>            :       basic_ostream()
+<span class="lineNum">     385 </span>            :       { this-&gt;init(0); }
+<span class="lineNum">     386 </span>            : 
+<span class="lineNum">     387 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     388 </span>            :       // Non-standard constructor that does not call init()
+<span class="lineNum">     389 </span>            :       basic_ostream(basic_iostream&lt;_CharT, _Traits&gt;&amp;) { }
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span>            :       basic_ostream(const basic_ostream&amp;) = delete;
+<span class="lineNum">     392 </span>            : 
+<span class="lineNum">     393 </span>            :       basic_ostream(basic_ostream&amp;&amp; __rhs)
+<span class="lineNum">     394 </span>            :       : __ios_type()
+<span class="lineNum">     395 </span>            :       { __ios_type::move(__rhs); }
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span>            :       // 27.7.3.3 Assign/swap
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span>            :       basic_ostream&amp; operator=(const basic_ostream&amp;) = delete;
+<span class="lineNum">     400 </span>            : 
+<span class="lineNum">     401 </span>            :       basic_ostream&amp;
+<span class="lineNum">     402 </span>            :       operator=(basic_ostream&amp;&amp; __rhs)
+<span class="lineNum">     403 </span>            :       {
+<span class="lineNum">     404 </span>            :         swap(__rhs);
+<span class="lineNum">     405 </span>            :         return *this;
+<span class="lineNum">     406 </span>            :       }
+<span class="lineNum">     407 </span>            : 
+<span class="lineNum">     408 </span>            :       void
+<span class="lineNum">     409 </span>            :       swap(basic_ostream&amp; __rhs)
+<span class="lineNum">     410 </span>            :       { __ios_type::swap(__rhs); }
+<span class="lineNum">     411 </span>            : #endif
+<span class="lineNum">     412 </span>            : 
+<span class="lineNum">     413 </span>            :       template&lt;typename _ValueT&gt;
+<span class="lineNum">     414 </span>            :         __ostream_type&amp;
+<span class="lineNum">     415 </span>            :         _M_insert(_ValueT __v);
+<span class="lineNum">     416 </span>            :     };
+<span class="lineNum">     417 </span>            : 
+<span class="lineNum">     418 </span>            :   /**
+<span class="lineNum">     419 </span>            :    *  @brief  Performs setup work for output streams.
+<span class="lineNum">     420 </span>            :    *
+<span class="lineNum">     421 </span>            :    *  Objects of this class are created before all of the standard
+<span class="lineNum">     422 </span>            :    *  inserters are run.  It is responsible for &lt;em&gt;exception-safe prefix and
+<span class="lineNum">     423 </span>            :    *  suffix operations&lt;/em&gt;.
+<span class="lineNum">     424 </span>            :   */
+<span class="lineNum">     425 </span>            :   template &lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     426 </span>            :     class basic_ostream&lt;_CharT, _Traits&gt;::sentry
+<span class="lineNum">     427 </span>            :     {
+<span class="lineNum">     428 </span>            :       // Data Members.
+<span class="lineNum">     429 </span>            :       bool                              _M_ok;
+<span class="lineNum">     430 </span>            :       basic_ostream&lt;_CharT, _Traits&gt;&amp;         _M_os;
+<span class="lineNum">     431 </span>            : 
+<span class="lineNum">     432 </span>            :     public:
+<span class="lineNum">     433 </span>            :       /**
+<span class="lineNum">     434 </span>            :        *  @brief  The constructor performs preparatory work.
+<span class="lineNum">     435 </span>            :        *  @param  __os  The output stream to guard.
+<span class="lineNum">     436 </span>            :        *
+<span class="lineNum">     437 </span>            :        *  If the stream state is good (@a __os.good() is true), then if the
+<span class="lineNum">     438 </span>            :        *  stream is tied to another output stream, @c is.tie()-&gt;flush()
+<span class="lineNum">     439 </span>            :        *  is called to synchronize the output sequences.
+<span class="lineNum">     440 </span>            :        *
+<span class="lineNum">     441 </span>            :        *  If the stream state is still good, then the sentry state becomes
+<span class="lineNum">     442 </span>            :        *  true (@a okay).
+<span class="lineNum">     443 </span>            :       */
+<span class="lineNum">     444 </span>            :       explicit
+<span class="lineNum">     445 </span>            :       sentry(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os);
+<span class="lineNum">     446 </span>            : 
+<span class="lineNum">     447 </span>            :       /**
+<span class="lineNum">     448 </span>            :        *  @brief  Possibly flushes the stream.
+<span class="lineNum">     449 </span>            :        *
+<span class="lineNum">     450 </span>            :        *  If @c ios_base::unitbuf is set in @c os.flags(), and
+<span class="lineNum">     451 </span>            :        *  @c std::uncaught_exception() is true, the sentry destructor calls
+<span class="lineNum">     452 </span>            :        *  @c flush() on the output stream.
+<span class="lineNum">     453 </span>            :       */
+<span class="lineNum">     454 </span>            :       ~sentry()
+<span class="lineNum">     455 </span>            :       {
+<span class="lineNum">     456 </span>            :         // XXX MT
+<span class="lineNum">     457 </span>            :         if (bool(_M_os.flags() &amp; ios_base::unitbuf) &amp;&amp; !uncaught_exception())
+<span class="lineNum">     458 </span>            :           {
+<span class="lineNum">     459 </span>            :             // Can't call flush directly or else will get into recursive lock.
+<span class="lineNum">     460 </span>            :             if (_M_os.rdbuf() &amp;&amp; _M_os.rdbuf()-&gt;pubsync() == -1)
+<span class="lineNum">     461 </span>            :               _M_os.setstate(ios_base::badbit);
+<span class="lineNum">     462 </span>            :           }
+<span class="lineNum">     463 </span>            :       }
+<span class="lineNum">     464 </span>            : 
+<span class="lineNum">     465 </span>            :       /**
+<span class="lineNum">     466 </span>            :        *  @brief  Quick status checking.
+<span class="lineNum">     467 </span>            :        *  @return  The sentry state.
+<span class="lineNum">     468 </span>            :        *
+<span class="lineNum">     469 </span>            :        *  For ease of use, sentries may be converted to booleans.  The
+<span class="lineNum">     470 </span>            :        *  return value is that of the sentry state (true == okay).
+<span class="lineNum">     471 </span>            :       */
+<span class="lineNum">     472 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     473 </span>            :       explicit
+<span class="lineNum">     474 </span>            : #endif
+<span class="lineNum">     475 </span>            :       operator bool() const
+<span class="lineNum">     476 </span>            :       { return _M_ok; }
+<span class="lineNum">     477 </span>            :     };
+<span class="lineNum">     478 </span>            : 
+<span class="lineNum">     479 </span>            :   //@{
+<span class="lineNum">     480 </span>            :   /**
+<span class="lineNum">     481 </span>            :    *  @brief  Character inserters
+<span class="lineNum">     482 </span>            :    *  @param  __out  An output stream.
+<span class="lineNum">     483 </span>            :    *  @param  __c  A character.
+<span class="lineNum">     484 </span>            :    *  @return  out
+<span class="lineNum">     485 </span>            :    *
+<span class="lineNum">     486 </span>            :    *  Behaves like one of the formatted arithmetic inserters described in
+<span class="lineNum">     487 </span>            :    *  std::basic_ostream.  After constructing a sentry object with good
+<span class="lineNum">     488 </span>            :    *  status, this function inserts a single character and any required
+<span class="lineNum">     489 </span>            :    *  padding (as determined by [22.2.2.2.2]).  @c __out.width(0) is then
+<span class="lineNum">     490 </span>            :    *  called.
+<span class="lineNum">     491 </span>            :    *
+<span class="lineNum">     492 </span>            :    *  If @p __c is of type @c char and the character type of the stream is not
+<span class="lineNum">     493 </span>            :    *  @c char, the character is widened before insertion.
+<span class="lineNum">     494 </span>            :   */
+<span class="lineNum">     495 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     496 </span>            :     inline basic_ostream&lt;_CharT, _Traits&gt;&amp;
+<span class="lineNum">     497 </span>            :     operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __out, _CharT __c)
+<span class="lineNum">     498 </span>            :     { return __ostream_insert(__out, &amp;__c, 1); }
+<span class="lineNum">     499 </span>            : 
+<span class="lineNum">     500 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     501 </span>            :     inline basic_ostream&lt;_CharT, _Traits&gt;&amp;
+<span class="lineNum">     502 </span>            :     operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __out, char __c)
+<span class="lineNum">     503 </span>            :     { return (__out &lt;&lt; __out.widen(__c)); }
+<span class="lineNum">     504 </span>            : 
+<span class="lineNum">     505 </span>            :   // Specialization
+<span class="lineNum">     506 </span>            :   template &lt;class _Traits&gt;
+<span class="lineNum">     507 </span>            :     inline basic_ostream&lt;char, _Traits&gt;&amp;
+<span class="lineNum">     508 </span>            :     operator&lt;&lt;(basic_ostream&lt;char, _Traits&gt;&amp; __out, char __c)
+<span class="lineNum">     509 </span><span class="lineCov">    3922893 :     { return __ostream_insert(__out, &amp;__c, 1); }</span>
+<span class="lineNum">     510 </span>            : 
+<span class="lineNum">     511 </span>            :   // Signed and unsigned
+<span class="lineNum">     512 </span>            :   template&lt;class _Traits&gt;
+<span class="lineNum">     513 </span>            :     inline basic_ostream&lt;char, _Traits&gt;&amp;
+<span class="lineNum">     514 </span>            :     operator&lt;&lt;(basic_ostream&lt;char, _Traits&gt;&amp; __out, signed char __c)
+<span class="lineNum">     515 </span>            :     { return (__out &lt;&lt; static_cast&lt;char&gt;(__c)); }
+<span class="lineNum">     516 </span>            : 
+<span class="lineNum">     517 </span>            :   template&lt;class _Traits&gt;
+<span class="lineNum">     518 </span>            :     inline basic_ostream&lt;char, _Traits&gt;&amp;
+<span class="lineNum">     519 </span>            :     operator&lt;&lt;(basic_ostream&lt;char, _Traits&gt;&amp; __out, unsigned char __c)
+<span class="lineNum">     520 </span><span class="lineCov">         28 :     { return (__out &lt;&lt; static_cast&lt;char&gt;(__c)); }</span>
+<span class="lineNum">     521 </span>            :   //@}
+<span class="lineNum">     522 </span>            : 
+<span class="lineNum">     523 </span>            :   //@{
+<span class="lineNum">     524 </span>            :   /**
+<span class="lineNum">     525 </span>            :    *  @brief  String inserters
+<span class="lineNum">     526 </span>            :    *  @param  __out  An output stream.
+<span class="lineNum">     527 </span>            :    *  @param  __s  A character string.
+<span class="lineNum">     528 </span>            :    *  @return  out
+<span class="lineNum">     529 </span>            :    *  @pre  @p __s must be a non-NULL pointer
+<span class="lineNum">     530 </span>            :    *
+<span class="lineNum">     531 </span>            :    *  Behaves like one of the formatted arithmetic inserters described in
+<span class="lineNum">     532 </span>            :    *  std::basic_ostream.  After constructing a sentry object with good
+<span class="lineNum">     533 </span>            :    *  status, this function inserts @c traits::length(__s) characters starting
+<span class="lineNum">     534 </span>            :    *  at @p __s, widened if necessary, followed by any required padding (as
+<span class="lineNum">     535 </span>            :    *  determined by [22.2.2.2.2]).  @c __out.width(0) is then called.
+<span class="lineNum">     536 </span>            :   */
+<span class="lineNum">     537 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     538 </span>            :     inline basic_ostream&lt;_CharT, _Traits&gt;&amp;
+<span class="lineNum">     539 </span>            :     operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __out, const _CharT* __s)
+<span class="lineNum">     540 </span>            :     {
+<span class="lineNum">     541 </span>            :       if (!__s)
+<span class="lineNum">     542 </span>            :         __out.setstate(ios_base::badbit);
+<span class="lineNum">     543 </span>            :       else
+<span class="lineNum">     544 </span>            :         __ostream_insert(__out, __s,
+<span class="lineNum">     545 </span>            :                          static_cast&lt;streamsize&gt;(_Traits::length(__s)));
+<span class="lineNum">     546 </span>            :       return __out;
+<span class="lineNum">     547 </span>            :     }
+<span class="lineNum">     548 </span>            : 
+<span class="lineNum">     549 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     550 </span>            :     basic_ostream&lt;_CharT, _Traits&gt; &amp;
+<span class="lineNum">     551 </span>            :     operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __out, const char* __s);
+<span class="lineNum">     552 </span>            : 
+<span class="lineNum">     553 </span>            :   // Partial specializations
+<span class="lineNum">     554 </span>            :   template&lt;class _Traits&gt;
+<span class="lineNum">     555 </span>            :     inline basic_ostream&lt;char, _Traits&gt;&amp;
+<span class="lineNum">     556 </span>            :     operator&lt;&lt;(basic_ostream&lt;char, _Traits&gt;&amp; __out, const char* __s)
+<span class="lineNum">     557 </span>            :     {
+<span class="lineNum">     558 </span>            :       if (!__s)
+<span class="lineNum">     559 </span>            :         __out.setstate(ios_base::badbit);
+<span class="lineNum">     560 </span>            :       else
+<span class="lineNum">     561 </span><span class="lineCov">     116905 :         __ostream_insert(__out, __s,</span>
+<span class="lineNum">     562 </span><span class="lineCov">     116905 :                          static_cast&lt;streamsize&gt;(_Traits::length(__s)));</span>
+<span class="lineNum">     563 </span>            :       return __out;
+<span class="lineNum">     564 </span>            :     }
+<span class="lineNum">     565 </span>            : 
+<span class="lineNum">     566 </span>            :   // Signed and unsigned
+<span class="lineNum">     567 </span>            :   template&lt;class _Traits&gt;
+<span class="lineNum">     568 </span>            :     inline basic_ostream&lt;char, _Traits&gt;&amp;
+<span class="lineNum">     569 </span>            :     operator&lt;&lt;(basic_ostream&lt;char, _Traits&gt;&amp; __out, const signed char* __s)
+<span class="lineNum">     570 </span>            :     { return (__out &lt;&lt; reinterpret_cast&lt;const char*&gt;(__s)); }
+<span class="lineNum">     571 </span>            : 
+<span class="lineNum">     572 </span>            :   template&lt;class _Traits&gt;
+<span class="lineNum">     573 </span>            :     inline basic_ostream&lt;char, _Traits&gt; &amp;
+<span class="lineNum">     574 </span>            :     operator&lt;&lt;(basic_ostream&lt;char, _Traits&gt;&amp; __out, const unsigned char* __s)
+<span class="lineNum">     575 </span>            :     { return (__out &lt;&lt; reinterpret_cast&lt;const char*&gt;(__s)); }
+<span class="lineNum">     576 </span>            :   //@}
+<span class="lineNum">     577 </span>            : 
+<span class="lineNum">     578 </span>            :   // Standard basic_ostream manipulators
+<span class="lineNum">     579 </span>            : 
+<span class="lineNum">     580 </span>            :   /**
+<span class="lineNum">     581 </span>            :    *  @brief  Write a newline and flush the stream.
+<span class="lineNum">     582 </span>            :    *
+<span class="lineNum">     583 </span>            :    *  This manipulator is often mistakenly used when a simple newline is
+<span class="lineNum">     584 </span>            :    *  desired, leading to poor buffering performance.  See
+<span class="lineNum">     585 </span>            :    *  https://gcc.gnu.org/onlinedocs/libstdc++/manual/streambufs.html#io.streambuf.buffering
+<span class="lineNum">     586 </span>            :    *  for more on this subject.
+<span class="lineNum">     587 </span>            :   */
+<span class="lineNum">     588 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     589 </span>            :     inline basic_ostream&lt;_CharT, _Traits&gt;&amp;
+<span class="lineNum">     590 </span>            :     endl(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os)
+<span class="lineNum">     591 </span>            :     { return flush(__os.put(__os.widen('\n'))); }
+<span class="lineNum">     592 </span>            : 
+<span class="lineNum">     593 </span>            :   /**
+<span class="lineNum">     594 </span>            :    *  @brief  Write a null character into the output sequence.
+<span class="lineNum">     595 </span>            :    *
+<span class="lineNum">     596 </span>            :    *  &lt;em&gt;Null character&lt;/em&gt; is @c CharT() by definition.  For CharT
+<span class="lineNum">     597 </span>            :    *  of @c char, this correctly writes the ASCII @c NUL character
+<span class="lineNum">     598 </span>            :    *  string terminator.
+<span class="lineNum">     599 </span>            :   */
+<span class="lineNum">     600 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     601 </span>            :     inline basic_ostream&lt;_CharT, _Traits&gt;&amp;
+<span class="lineNum">     602 </span>            :     ends(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os)
+<span class="lineNum">     603 </span>            :     { return __os.put(_CharT()); }
+<span class="lineNum">     604 </span>            : 
+<span class="lineNum">     605 </span>            :   /**
+<span class="lineNum">     606 </span>            :    *  @brief  Flushes the output stream.
+<span class="lineNum">     607 </span>            :    *
+<span class="lineNum">     608 </span>            :    *  This manipulator simply calls the stream's @c flush() member function.
+<span class="lineNum">     609 </span>            :   */
+<span class="lineNum">     610 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     611 </span>            :     inline basic_ostream&lt;_CharT, _Traits&gt;&amp;
+<span class="lineNum">     612 </span>            :     flush(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os)
+<span class="lineNum">     613 </span>            :     { return __os.flush(); }
+<span class="lineNum">     614 </span>            : 
+<span class="lineNum">     615 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     616 </span>            :   /**
+<span class="lineNum">     617 </span>            :    *  @brief  Generic inserter for rvalue stream
+<span class="lineNum">     618 </span>            :    *  @param  __os  An input stream.
+<span class="lineNum">     619 </span>            :    *  @param  __x  A reference to the object being inserted.
+<span class="lineNum">     620 </span>            :    *  @return  os
+<span class="lineNum">     621 </span>            :    *
+<span class="lineNum">     622 </span>            :    *  This is just a forwarding function to allow insertion to
+<span class="lineNum">     623 </span>            :    *  rvalue streams since they won't bind to the inserter functions
+<span class="lineNum">     624 </span>            :    *  that take an lvalue reference.
+<span class="lineNum">     625 </span>            :   */
+<span class="lineNum">     626 </span>            :   template&lt;typename _CharT, typename _Traits, typename _Tp&gt;
+<span class="lineNum">     627 </span>            :     inline basic_ostream&lt;_CharT, _Traits&gt;&amp;
+<span class="lineNum">     628 </span>            :     operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp;&amp; __os, const _Tp&amp; __x)
+<span class="lineNum">     629 </span>            :     {
+<span class="lineNum">     630 </span><span class="lineCov">         32 :       __os &lt;&lt; __x;</span>
+<span class="lineNum">     631 </span>            :       return __os;
+<span class="lineNum">     632 </span>            :     }
+<span class="lineNum">     633 </span>            : #endif // C++11
+<span class="lineNum">     634 </span>            : 
+<span class="lineNum">     635 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     636 </span>            : } // namespace std
+<span class="lineNum">     637 </span>            : 
+<span class="lineNum">     638 </span>            : #include &lt;bits/ostream.tcc&gt;
+<span class="lineNum">     639 </span>            : 
+<span class="lineNum">     640 </span>            : #endif  /* _GLIBCXX_OSTREAM */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

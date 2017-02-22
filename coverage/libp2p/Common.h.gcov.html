@@ -1,0 +1,415 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libp2p/Common.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libp2p</a> - Common.h<span style="font-size: 80%;"> (source / <a href="Common.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntry">40</td>
+            <td class="headerCovTableEntryLo">65.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntryLo">68.4 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Common.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      20 </span>            :  * @date 2014
+<span class="lineNum">      21 </span>            :  *
+<span class="lineNum">      22 </span>            :  * Miscellanea required for the Host/Session/NodeTable classes.
+<span class="lineNum">      23 </span>            :  */
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #pragma once
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;string&gt;
+<span class="lineNum">      28 </span>            : #include &lt;set&gt;
+<span class="lineNum">      29 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : // Make sure boost/asio.hpp is included before windows.h.
+<span class="lineNum">      32 </span>            : #include &lt;boost/asio.hpp&gt;
+<span class="lineNum">      33 </span>            : #include &lt;boost/asio/ip/tcp.hpp&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #include &lt;chrono&gt;
+<span class="lineNum">      36 </span>            : #include &lt;libdevcrypto/Common.h&gt;
+<span class="lineNum">      37 </span>            : #include &lt;libdevcore/Log.h&gt;
+<span class="lineNum">      38 </span>            : #include &lt;libdevcore/Exceptions.h&gt;
+<span class="lineNum">      39 </span>            : #include &lt;libdevcore/RLP.h&gt;
+<span class="lineNum">      40 </span>            : #include &lt;libdevcore/Guards.h&gt;
+<span class="lineNum">      41 </span>            : namespace ba = boost::asio;
+<span class="lineNum">      42 </span>            : namespace bi = boost::asio::ip;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : namespace dev
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : class RLP;
+<span class="lineNum">      48 </span>            : class RLPStream;
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : namespace p2p
+<span class="lineNum">      51 </span>            : {
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : /// Peer network protocol version.
+<span class="lineNum">      54 </span>            : extern const unsigned c_protocolVersion;
+<span class="lineNum">      55 </span>            : extern const unsigned c_defaultIPPort;
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : class NodeIPEndpoint;
+<span class="lineNum">      58 </span>            : class Node;
+<span class="lineNum">      59 </span>            : extern const NodeIPEndpoint UnspecifiedNodeIPEndpoint;
+<span class="lineNum">      60 </span>            : extern const Node UnspecifiedNode;
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : using NodeID = h512;
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : bool isPrivateAddress(bi::address const&amp; _addressToCheck);
+<span class="lineNum">      65 </span>            : bool isPrivateAddress(std::string const&amp; _addressToCheck);
+<span class="lineNum">      66 </span>            : bool isLocalHostAddress(bi::address const&amp; _addressToCheck);
+<span class="lineNum">      67 </span>            : bool isLocalHostAddress(std::string const&amp; _addressToCheck);
+<span class="lineNum">      68 </span>            : bool isPublicAddress(bi::address const&amp; _addressToCheck);
+<span class="lineNum">      69 </span>            : bool isPublicAddress(std::string const&amp; _addressToCheck);
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : class UPnP;
+<span class="lineNum">      72 </span>            : class Capability;
+<span class="lineNum">      73 </span>            : class Host;
+<a name="74"><span class="lineNum">      74 </span>            : class Session;</a>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 : struct NetworkStartRequired: virtual dev::Exception {};</span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 : struct InvalidPublicIPAddress: virtual dev::Exception {};</span>
+<span class="lineNum">      78 </span>            : struct InvalidHostIPAddress: virtual dev::Exception {};
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : struct NetWarn: public LogChannel { static const char* name(); static const int verbosity = 0; };
+<span class="lineNum">      81 </span>            : struct NetNote: public LogChannel { static const char* name(); static const int verbosity = 2; };
+<span class="lineNum">      82 </span>            : struct NetImpolite: public LogChannel { static const char* name(); static const int verbosity = 3; };
+<span class="lineNum">      83 </span>            : struct NetMessageSummary: public LogChannel { static const char* name(); static const int verbosity = 4; };
+<span class="lineNum">      84 </span>            : struct NetConnect: public LogChannel { static const char* name(); static const int verbosity = 10; };
+<span class="lineNum">      85 </span>            : struct NetMessageDetail: public LogChannel { static const char* name(); static const int verbosity = 5; };
+<span class="lineNum">      86 </span>            : struct NetTriviaSummary: public LogChannel { static const char* name(); static const int verbosity = 10; };
+<span class="lineNum">      87 </span>            : struct NetTriviaDetail: public LogChannel { static const char* name(); static const int verbosity = 11; };
+<span class="lineNum">      88 </span>            : struct NetAllDetail: public LogChannel { static const char* name(); static const int verbosity = 13; };
+<span class="lineNum">      89 </span>            : struct NetRight: public LogChannel { static const char* name(); static const int verbosity = 14; };
+<span class="lineNum">      90 </span>            : struct NetLeft: public LogChannel { static const char* name(); static const int verbosity = 15; };
+<span class="lineNum">      91 </span>            : struct NetP2PWarn: public LogChannel { static const char* name(); static const int verbosity = 2; };
+<span class="lineNum">      92 </span>            : struct NetP2PNote: public LogChannel { static const char* name(); static const int verbosity = 6; };
+<span class="lineNum">      93 </span>            : struct NetP2PConnect: public LogChannel { static const char* name(); static const int verbosity = 10; };
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : enum PacketType
+<span class="lineNum">      96 </span>            : {
+<span class="lineNum">      97 </span>            :         HelloPacket = 0,
+<span class="lineNum">      98 </span>            :         DisconnectPacket,
+<span class="lineNum">      99 </span>            :         PingPacket,
+<span class="lineNum">     100 </span>            :         PongPacket,
+<span class="lineNum">     101 </span>            :         GetPeersPacket,
+<span class="lineNum">     102 </span>            :         PeersPacket,
+<span class="lineNum">     103 </span>            :         UserPacket = 0x10
+<span class="lineNum">     104 </span>            : };
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : enum DisconnectReason
+<span class="lineNum">     107 </span>            : {
+<span class="lineNum">     108 </span>            :         DisconnectRequested = 0,
+<span class="lineNum">     109 </span>            :         TCPError,
+<span class="lineNum">     110 </span>            :         BadProtocol,
+<span class="lineNum">     111 </span>            :         UselessPeer,
+<span class="lineNum">     112 </span>            :         TooManyPeers,
+<span class="lineNum">     113 </span>            :         DuplicatePeer,
+<span class="lineNum">     114 </span>            :         IncompatibleProtocol,
+<span class="lineNum">     115 </span>            :         NullIdentity,
+<span class="lineNum">     116 </span>            :         ClientQuit,
+<span class="lineNum">     117 </span>            :         UnexpectedIdentity,
+<span class="lineNum">     118 </span>            :         LocalIdentity,
+<span class="lineNum">     119 </span>            :         PingTimeout,
+<span class="lineNum">     120 </span>            :         UserReason = 0x10,
+<span class="lineNum">     121 </span>            :         NoDisconnect = 0xffff
+<span class="lineNum">     122 </span>            : };
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : inline bool isPermanentProblem(DisconnectReason _r)
+<span class="lineNum">     125 </span>            : {
+<span class="lineNum">     126 </span>            :         switch (_r)
+<span class="lineNum">     127 </span>            :         {
+<span class="lineNum">     128 </span>            :         case DuplicatePeer:
+<span class="lineNum">     129 </span>            :         case IncompatibleProtocol:
+<span class="lineNum">     130 </span>            :         case NullIdentity:
+<span class="lineNum">     131 </span>            :         case UnexpectedIdentity:
+<span class="lineNum">     132 </span>            :         case LocalIdentity:
+<span class="lineNum">     133 </span>            :                 return true;
+<span class="lineNum">     134 </span>            :         default:
+<span class="lineNum">     135 </span>            :                 return false;
+<span class="lineNum">     136 </span>            :         }
+<span class="lineNum">     137 </span>            : }
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : /// @returns the string form of the given disconnection reason.
+<span class="lineNum">     140 </span>            : std::string reasonOf(DisconnectReason _r);
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            : using CapDesc = std::pair&lt;std::string, u256&gt;;
+<span class="lineNum">     143 </span>            : using CapDescSet = std::set&lt;CapDesc&gt;;
+<span class="lineNum">     144 </span>            : using CapDescs = std::vector&lt;CapDesc&gt;;
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            : /*
+<span class="lineNum">     147 </span>            :  * Used by Host to pass negotiated information about a connection to a
+<span class="lineNum">     148 </span>            :  * new Peer Session; PeerSessionInfo is then maintained by Session and can
+<a name="149"><span class="lineNum">     149 </span>            :  * be queried for point-in-time status information via Host.</a>
+<span class="lineNum">     150 </span>            :  */
+<span class="lineNum">     151 </span><span class="lineCov">       9935 : struct PeerSessionInfo</span>
+<span class="lineNum">     152 </span>            : {
+<span class="lineNum">     153 </span>            :         NodeID const id;
+<span class="lineNum">     154 </span>            :         std::string const clientVersion;
+<span class="lineNum">     155 </span>            :         std::string const host;
+<span class="lineNum">     156 </span>            :         unsigned short const port;
+<span class="lineNum">     157 </span>            :         std::chrono::steady_clock::duration lastPing;
+<span class="lineNum">     158 </span>            :         std::set&lt;CapDesc&gt; const caps;
+<span class="lineNum">     159 </span>            :         unsigned socketId;
+<span class="lineNum">     160 </span>            :         std::map&lt;std::string, std::string&gt; notes;
+<span class="lineNum">     161 </span>            :         unsigned const protocolVersion;
+<span class="lineNum">     162 </span>            : };
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            : using PeerSessionInfos = std::vector&lt;PeerSessionInfo&gt;;
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            : enum class PeerType
+<span class="lineNum">     167 </span>            : {
+<span class="lineNum">     168 </span>            :         Optional,
+<span class="lineNum">     169 </span>            :         Required
+<span class="lineNum">     170 </span>            : };
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            : /**
+<span class="lineNum">     173 </span>            :  * @brief IPv4,UDP/TCP endpoints.
+<span class="lineNum">     174 </span>            :  */
+<span class="lineNum">     175 </span><span class="lineCov">       1264 : class NodeIPEndpoint</span>
+<span class="lineNum">     176 </span>            : {
+<span class="lineNum">     177 </span>            : public:
+<span class="lineNum">     178 </span>            :         enum RLPAppend
+<span class="lineNum">     179 </span>            :         {
+<span class="lineNum">     180 </span>            :                 StreamList,
+<span class="lineNum">     181 </span>            :                 StreamInline
+<span class="lineNum">     182 </span>            :         };
+<span class="lineNum">     183 </span>            :         
+<span class="lineNum">     184 </span>            :         /// Setting true causes isAllowed to return true for all addresses. (Used by test fixtures)
+<span class="lineNum">     185 </span>            :         static bool test_allowLocal;
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">        218 :         NodeIPEndpoint() = default;</span>
+<span class="lineNum">     188 </span><span class="lineCov">        534 :         NodeIPEndpoint(bi::address _addr, uint16_t _udp, uint16_t _tcp): address(_addr), udpPort(_udp), tcpPort(_tcp) {}</span>
+<span class="lineNum">     189 </span><span class="lineCov">         40 :         NodeIPEndpoint(RLP const&amp; _r) { interpretRLP(_r); }</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">        148 :         operator bi::udp::endpoint() const { return bi::udp::endpoint(address, udpPort); }</span>
+<span class="lineNum">     192 </span><span class="lineCov">         46 :         operator bi::tcp::endpoint() const { return bi::tcp::endpoint(address, tcpPort); }</span>
+<span class="lineNum">     193 </span>            :         
+<a name="194"><span class="lineNum">     194 </span><span class="lineCov">        236 :         operator bool() const { return !address.is_unspecified() &amp;&amp; udpPort &gt; 0 &amp;&amp; tcpPort &gt; 0; }</span></a>
+<span class="lineNum">     195 </span>            :         
+<span class="lineNum">     196 </span><span class="lineCov">        246 :         bool isAllowed() const { return NodeIPEndpoint::test_allowLocal ? !address.is_unspecified() : isPublicAddress(address); }</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :         bool operator==(NodeIPEndpoint const&amp; _cmp) const {
+<span class="lineNum">     199 </span><span class="lineCov">          9 :                 return address == _cmp.address &amp;&amp; udpPort == _cmp.udpPort &amp;&amp; tcpPort == _cmp.tcpPort;</span>
+<span class="lineNum">     200 </span>            :         }
+<span class="lineNum">     201 </span>            :         bool operator!=(NodeIPEndpoint const&amp; _cmp) const {
+<span class="lineNum">     202 </span>            :                 return !operator==(_cmp);
+<span class="lineNum">     203 </span>            :         }
+<span class="lineNum">     204 </span>            :         
+<span class="lineNum">     205 </span>            :         void streamRLP(RLPStream&amp; _s, RLPAppend _append = StreamList) const;
+<span class="lineNum">     206 </span>            :         void interpretRLP(RLP const&amp; _r);
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            :         // TODO: make private, give accessors and rename m_...
+<span class="lineNum">     209 </span>            :         bi::address address;
+<span class="lineNum">     210 </span>            :         uint16_t udpPort = 0;
+<span class="lineNum">     211 </span>            :         uint16_t tcpPort = 0;
+<span class="lineNum">     212 </span>            : };
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : struct NodeSpec
+<span class="lineNum">     215 </span>            : {
+<span class="lineNum">     216 </span>            :         NodeSpec() {}
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            :         /// Accepts user-readable strings of the form (enode://pubkey@)host({:port,:tcpport.udpport})
+<span class="lineNum">     219 </span>            :         NodeSpec(std::string const&amp; _user);
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            :         NodeSpec(std::string const&amp; _addr, uint16_t _port, int _udpPort = -1):
+<span class="lineNum">     222 </span>            :                 m_address(_addr),
+<span class="lineNum">     223 </span>            :                 m_tcpPort(_port),
+<span class="lineNum">     224 </span>            :                 m_udpPort(_udpPort == -1 ? _port : (uint16_t)_udpPort)
+<span class="lineNum">     225 </span>            :         {}
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :         NodeID id() const { return m_id; }</span>
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            :         NodeIPEndpoint nodeIPEndpoint() const;
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :         std::string enode() const;
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            : private:
+<span class="lineNum">     234 </span>            :         std::string m_address;
+<span class="lineNum">     235 </span>            :         uint16_t m_tcpPort = 0;
+<span class="lineNum">     236 </span>            :         uint16_t m_udpPort = 0;
+<span class="lineNum">     237 </span>            :         NodeID m_id;
+<span class="lineNum">     238 </span>            : };
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            : class Node
+<span class="lineNum">     241 </span>            : {
+<span class="lineNum">     242 </span>            : public:
+<span class="lineNum">     243 </span>            :         Node() = default;
+<span class="lineNum">     244 </span><span class="lineCov">        100 :         Node(Node const&amp;) = default;</span>
+<span class="lineNum">     245 </span><span class="lineCov">        438 :         Node(Public _publicKey, NodeIPEndpoint const&amp; _ip, PeerType _peerType = PeerType::Optional): id(_publicKey), endpoint(_ip), peerType(_peerType) {}</span>
+<a name="246"><span class="lineNum">     246 </span>            :         Node(NodeSpec const&amp; _s, PeerType _peerType = PeerType::Optional);</a>
+<a name="247"><span class="lineNum">     247 </span>            : </a>
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :         virtual NodeID const&amp; address() const { return id; }</span>
+<a name="249"><span class="lineNum">     249 </span><span class="lineNoCov">          0 :         virtual Public const&amp; publicKey() const { return id; }</span></a>
+<span class="lineNum">     250 </span>            :         
+<span class="lineNum">     251 </span><span class="lineCov">        146 :         virtual operator bool() const { return (bool)id; }</span>
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span>            :         // TODO: make private, give accessors and rename m_...
+<span class="lineNum">     254 </span>            :         NodeID id;
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            :         /// Endpoints by which we expect to reach node.
+<span class="lineNum">     257 </span>            :         // TODO: make private, give accessors and rename m_...
+<span class="lineNum">     258 </span>            :         NodeIPEndpoint endpoint;
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span>            :         // TODO: p2p implement
+<span class="lineNum">     261 </span>            :         PeerType peerType = PeerType::Optional;
+<span class="lineNum">     262 </span>            : };
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            : class DeadlineOps
+<span class="lineNum">     265 </span>            : {
+<span class="lineNum">     266 </span>            :         class DeadlineOp
+<a name="267"><span class="lineNum">     267 </span>            :         {</a>
+<a name="268"><span class="lineNum">     268 </span>            :         public:</a>
+<span class="lineNum">     269 </span><span class="lineCov">       3392 :                 DeadlineOp(ba::io_service&amp; _io, unsigned _msInFuture, std::function&lt;void(boost::system::error_code const&amp;)&gt; const&amp; _f): m_timer(new ba::deadline_timer(_io)) { m_timer-&gt;expires_from_now(boost::posix_time::milliseconds(_msInFuture)); m_timer-&gt;async_wait(_f); }</span>
+<span class="lineNum">     270 </span><span class="lineCov">       1741 :                 ~DeadlineOp() { if (m_timer) m_timer-&gt;cancel(); }</span>
+<a name="271"><span class="lineNum">     271 </span>            :                 </a>
+<span class="lineNum">     272 </span><span class="lineCov">         88 :                 DeadlineOp(DeadlineOp&amp;&amp; _s): m_timer(_s.m_timer.release()) {}</span>
+<span class="lineNum">     273 </span><span class="lineCov">         21 :                 DeadlineOp&amp; operator=(DeadlineOp&amp;&amp; _s)</span>
+<span class="lineNum">     274 </span>            :                 {
+<span class="lineNum">     275 </span><span class="lineCov">         21 :                         assert(&amp;_s != this);</span>
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span><span class="lineCov">         63 :                         m_timer.reset(_s.m_timer.release());</span>
+<span class="lineNum">     278 </span><span class="lineCov">         21 :                         return *this;</span>
+<a name="279"><span class="lineNum">     279 </span>            :                 }</a>
+<a name="280"><span class="lineNum">     280 </span>            :                 </a>
+<span class="lineNum">     281 </span><span class="lineCov">       4560 :                 bool expired() { Guard l(x_timer); return m_timer-&gt;expires_from_now().total_nanoseconds() &lt;= 0; }</span>
+<span class="lineNum">     282 </span><span class="lineCov">       1520 :                 void wait() { Guard l(x_timer); m_timer-&gt;wait(); }</span>
+<span class="lineNum">     283 </span>            :                 
+<span class="lineNum">     284 </span>            :         private:
+<span class="lineNum">     285 </span>            :                 std::unique_ptr&lt;ba::deadline_timer&gt; m_timer;
+<span class="lineNum">     286 </span>            :                 Mutex x_timer;
+<span class="lineNum">     287 </span>            :         };
+<a name="288"><span class="lineNum">     288 </span>            :         </a>
+<span class="lineNum">     289 </span>            : public:
+<span class="lineNum">     290 </span><span class="lineCov">         88 :         DeadlineOps(ba::io_service&amp; _io, unsigned _reapIntervalMs = 100): m_io(_io), m_reapIntervalMs(_reapIntervalMs), m_stopped(false) { reap(); }</span>
+<a name="291"><span class="lineNum">     291 </span><span class="lineCov">         22 :         ~DeadlineOps() { stop(); }</span></a>
+<span class="lineNum">     292 </span>            : 
+<a name="293"><span class="lineNum">     293 </span><span class="lineCov">        110 :         void schedule(unsigned _msInFuture, std::function&lt;void(boost::system::error_code const&amp;)&gt; const&amp; _f) { if (m_stopped) return; DEV_GUARDED(x_timers) m_timers.emplace_back(m_io, _msInFuture, _f); }       </span></a>
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span><span class="lineCov">        264 :         void stop() { m_stopped = true; DEV_GUARDED(x_timers) m_timers.clear(); }</span>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :         bool isStopped() const { return m_stopped; }</span>
+<span class="lineNum">     298 </span>            :         
+<span class="lineNum">     299 </span>            : protected:
+<span class="lineNum">     300 </span>            :         void reap();
+<span class="lineNum">     301 </span>            :         
+<span class="lineNum">     302 </span>            : private:
+<span class="lineNum">     303 </span>            :         ba::io_service&amp; m_io;
+<span class="lineNum">     304 </span>            :         unsigned m_reapIntervalMs;
+<span class="lineNum">     305 </span>            :         
+<span class="lineNum">     306 </span>            :         std::vector&lt;DeadlineOp&gt; m_timers;
+<span class="lineNum">     307 </span>            :         Mutex x_timers;
+<span class="lineNum">     308 </span>            :         
+<span class="lineNum">     309 </span>            :         std::atomic&lt;bool&gt; m_stopped;
+<span class="lineNum">     310 </span>            : };
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span>            : }
+<span class="lineNum">     313 </span>            :         
+<span class="lineNum">     314 </span>            : /// Simple stream output for a NodeIPEndpoint.
+<span class="lineNum">     315 </span>            : std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, dev::p2p::NodeIPEndpoint const&amp; _ep);
+<span class="lineNum">     316 </span>            : }
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            : /// std::hash for asio::adress
+<span class="lineNum">     319 </span>            : namespace std
+<span class="lineNum">     320 </span>            : {
+<span class="lineNum">     321 </span>            : 
+<a name="322"><span class="lineNum">     322 </span>            : template &lt;&gt; struct hash&lt;bi::address&gt;</a>
+<span class="lineNum">     323 </span>            : {
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 :         size_t operator()(bi::address const&amp; _a) const</span>
+<span class="lineNum">     325 </span>            :         {
+<span class="lineNum">     326 </span><span class="lineNoCov">          0 :                 if (_a.is_v4())</span>
+<span class="lineNum">     327 </span><span class="lineNoCov">          0 :                         return std::hash&lt;unsigned long&gt;()(_a.to_v4().to_ulong());</span>
+<span class="lineNum">     328 </span><span class="lineNoCov">          0 :                 if (_a.is_v6())</span>
+<span class="lineNum">     329 </span>            :                 {
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 :                         auto const&amp; range = _a.to_v6().to_bytes();</span>
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 :                         return boost::hash_range(range.begin(), range.end());</span>
+<span class="lineNum">     332 </span>            :                 }
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :                 if (_a.is_unspecified())</span>
+<span class="lineNum">     334 </span>            :                         return static_cast&lt;size_t&gt;(0x3487194039229152ull);  // Chosen by fair dice roll, guaranteed to be random
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :                 return std::hash&lt;std::string&gt;()(_a.to_string());</span>
+<span class="lineNum">     336 </span>            :         }
+<span class="lineNum">     337 </span>            : };
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

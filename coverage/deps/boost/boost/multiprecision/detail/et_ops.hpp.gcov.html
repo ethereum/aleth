@@ -1,0 +1,895 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/multiprecision/detail/et_ops.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/multiprecision/detail</a> - et_ops.hpp<span style="font-size: 80%;"> (source / <a href="et_ops.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntryHi">95.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : ///////////////////////////////////////////////////////////////////////////////</a>
+<span class="lineNum">       2 </span>            : //  Copyright 2011 John Maddock. Distributed under the Boost
+<span class="lineNum">       3 </span>            : //  Software License, Version 1.0. (See accompanying file
+<span class="lineNum">       4 </span>            : //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : #ifndef BOOST_MP_ET_OPS_HPP
+<span class="lineNum">       7 </span>            : #define BOOST_MP_ET_OPS_HPP
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : namespace boost{ namespace multiprecision{
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : // Non-member operators for number:
+<span class="lineNum">      13 </span>            : //
+<span class="lineNum">      14 </span>            : // Unary operators first.
+<span class="lineNum">      15 </span>            : // Note that these *must* return by value, even though that's somewhat against
+<span class="lineNum">      16 </span>            : // existing practice.  The issue is that in C++11 land one could easily and legitimately
+<span class="lineNum">      17 </span>            : // write:
+<span class="lineNum">      18 </span>            : //    auto x = +1234_my_user_defined_suffix;
+<span class="lineNum">      19 </span>            : // which would result in a dangling-reference-to-temporary if unary + returned a reference
+<span class="lineNum">      20 </span>            : // to it's argument.  While return-by-value is obviously inefficient in other situations
+<span class="lineNum">      21 </span>            : // the reality is that no one ever uses unary operator+ anyway...!
+<span class="lineNum">      22 </span>            : //
+<span class="lineNum">      23 </span>            : template &lt;class B, expression_template_option ExpressionTemplates&gt;
+<span class="lineNum">      24 </span>            : inline BOOST_CONSTEXPR const number&lt;B, ExpressionTemplates&gt; operator + (const number&lt;B, ExpressionTemplates&gt;&amp; v) { return v; }
+<span class="lineNum">      25 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">      26 </span>            : inline BOOST_CONSTEXPR const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; operator + (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; v) { return v; }
+<span class="lineNum">      27 </span>            : template &lt;class B&gt;
+<span class="lineNum">      28 </span>            : inline detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt; operator - (const number&lt;B, et_on&gt;&amp; v)
+<span class="lineNum">      29 </span>            : {
+<span class="lineNum">      30 </span>            :    BOOST_STATIC_ASSERT_MSG(is_signed_number&lt;B&gt;::value, &quot;Negating an unsigned type results in ill-defined behavior.&quot;);
+<span class="lineNum">      31 </span><span class="lineNoCov">          0 :    return detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;(v);</span>
+<span class="lineNum">      32 </span>            : }
+<span class="lineNum">      33 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">      34 </span>            : inline detail::expression&lt;detail::negate, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; operator - (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; v)
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            :    BOOST_STATIC_ASSERT_MSG((is_signed_number&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value), &quot;Negating an unsigned type results in ill-defined behavior.&quot;);
+<span class="lineNum">      37 </span><span class="lineCov">        130 :    return detail::expression&lt;detail::negate, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(v);</span>
+<span class="lineNum">      38 </span>            : }
+<span class="lineNum">      39 </span>            : template &lt;class B&gt;
+<span class="lineNum">      40 </span>            : inline typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer,
+<span class="lineNum">      41 </span>            :    detail::expression&lt;detail::complement_immediates, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">      42 </span>            :       operator ~ (const number&lt;B, et_on&gt;&amp; v) { return detail::expression&lt;detail::complement_immediates, number&lt;B, et_on&gt; &gt;(v); }
+<span class="lineNum">      43 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">      44 </span>            : inline typename enable_if_c&lt;number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer,
+<span class="lineNum">      45 </span>            :    detail::expression&lt;detail::bitwise_complement, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; &gt;::type
+<span class="lineNum">      46 </span>            :       operator ~ (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; v) { return detail::expression&lt;detail::bitwise_complement, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(v); }
+<span class="lineNum">      47 </span>            : //
+<span class="lineNum">      48 </span>            : // Then addition:
+<span class="lineNum">      49 </span>            : //
+<span class="lineNum">      50 </span>            : template &lt;class B&gt;
+<span class="lineNum">      51 </span>            : inline detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;
+<span class="lineNum">      52 </span>            :    operator + (const number&lt;B, et_on&gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span>            :    return detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">      55 </span>            : }
+<span class="lineNum">      56 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">      57 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, V &gt; &gt;::type
+<span class="lineNum">      58 </span>            :    operator + (const number&lt;B, et_on&gt;&amp; a, const V&amp; b)
+<span class="lineNum">      59 </span>            : {
+<span class="lineNum">      60 </span><span class="lineCov">       8163 :    return detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, V &gt;(a, b);</span>
+<span class="lineNum">      61 </span>            : }
+<span class="lineNum">      62 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">      63 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::add_immediates, V, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">      64 </span>            :    operator + (const V&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span><span class="lineCov">     303282 :    return detail::expression&lt;detail::add_immediates, V, number&lt;B, et_on&gt; &gt;(a, b);</span>
+<span class="lineNum">      67 </span>            : }
+<span class="lineNum">      68 </span>            : template &lt;class B, expression_template_option ET, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">      69 </span>            : inline detail::expression&lt;detail::plus, number&lt;B, ET&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;
+<span class="lineNum">      70 </span>            :    operator + (const number&lt;B, ET&gt;&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">      71 </span>            : {
+<span class="lineNum">      72 </span><span class="lineCov">        495 :    return detail::expression&lt;detail::plus, number&lt;B, ET&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);</span>
+<span class="lineNum">      73 </span>            : }
+<span class="lineNum">      74 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class B, expression_template_option ET&gt;
+<span class="lineNum">      75 </span>            : inline detail::expression&lt;detail::plus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, ET&gt; &gt;
+<span class="lineNum">      76 </span>            :    operator + (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const number&lt;B, ET&gt;&amp; b)
+<span class="lineNum">      77 </span>            : {
+<span class="lineNum">      78 </span>            :    return detail::expression&lt;detail::plus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, ET&gt; &gt;(a, b);
+<span class="lineNum">      79 </span>            : }
+<span class="lineNum">      80 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class tag2, class Arg1b, class Arg2b, class Arg3b, class Arg4b&gt;
+<span class="lineNum">      81 </span>            : inline detail::expression&lt;detail::plus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt;
+<span class="lineNum">      82 </span>            :    operator + (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt;&amp; b)
+<span class="lineNum">      83 </span>            : {
+<span class="lineNum">      84 </span>            :    return detail::expression&lt;detail::plus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt;(a, b);
+<span class="lineNum">      85 </span>            : }
+<span class="lineNum">      86 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class V&gt;
+<span class="lineNum">      87 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;, detail::expression&lt;detail::plus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt; &gt;::type
+<span class="lineNum">      88 </span>            :    operator + (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const V&amp; b)
+<span class="lineNum">      89 </span>            : {
+<span class="lineNum">      90 </span><span class="lineCov">        296 :    return detail::expression&lt;detail::plus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt;(a, b);</span>
+<span class="lineNum">      91 </span>            : }
+<span class="lineNum">      92 </span>            : template &lt;class V, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">      93 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;, detail::expression&lt;detail::plus, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; &gt;::type
+<span class="lineNum">      94 </span>            :    operator + (const V&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">      95 </span>            : {
+<span class="lineNum">      96 </span>            :    return detail::expression&lt;detail::plus, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);
+<span class="lineNum">      97 </span>            : }
+<span class="lineNum">      98 </span>            : //
+<span class="lineNum">      99 </span>            : // Fused multiply add:
+<span class="lineNum">     100 </span>            : //
+<span class="lineNum">     101 </span>            : template &lt;class V, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     102 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;,
+<span class="lineNum">     103 </span>            :    detail::expression&lt;detail::multiply_add, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, V&gt; &gt;::type
+<span class="lineNum">     104 </span>            :    operator + (const V&amp; a, const detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     105 </span>            : {
+<span class="lineNum">     106 </span>            :    return detail::expression&lt;detail::multiply_add, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, V&gt;(b.left(), b.right(), a);
+<span class="lineNum">     107 </span>            : }
+<span class="lineNum">     108 </span>            : template &lt;class Arg1, class Arg2, class Arg3, class Arg4, class V&gt;
+<span class="lineNum">     109 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;,
+<span class="lineNum">     110 </span>            :    detail::expression&lt;detail::multiply_add, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, V&gt; &gt;::type
+<span class="lineNum">     111 </span>            :    operator + (const detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     112 </span>            : {
+<span class="lineNum">     113 </span><span class="lineCov">       2724 :    return detail::expression&lt;detail::multiply_add, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, V&gt;(a.left(), a.right(), b);</span>
+<span class="lineNum">     114 </span>            : }
+<span class="lineNum">     115 </span>            : template &lt;class B, expression_template_option ET, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     116 </span>            : inline detail::expression&lt;detail::multiply_add, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, number&lt;B, ET&gt; &gt;
+<span class="lineNum">     117 </span>            :    operator + (const number&lt;B, ET&gt;&amp; a, const detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     118 </span>            : {
+<span class="lineNum">     119 </span><span class="lineCov">      67962 :    return detail::expression&lt;detail::multiply_add, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, number&lt;B, ET&gt; &gt;(b.left(), b.right(), a);</span>
+<span class="lineNum">     120 </span>            : }
+<span class="lineNum">     121 </span>            : template &lt;class Arg1, class Arg2, class Arg3, class Arg4, class B, expression_template_option ET&gt;
+<span class="lineNum">     122 </span>            : inline detail::expression&lt;detail::multiply_add, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, number&lt;B, ET&gt; &gt;
+<span class="lineNum">     123 </span>            :    operator + (const detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const number&lt;B, ET&gt;&amp; b)
+<span class="lineNum">     124 </span>            : {
+<span class="lineNum">     125 </span>            :    return detail::expression&lt;detail::multiply_add, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, number&lt;B, ET&gt; &gt;(a.left(), a.right(), b);
+<span class="lineNum">     126 </span>            : }
+<span class="lineNum">     127 </span>            : //
+<span class="lineNum">     128 </span>            : // Fused multiply subtract:
+<span class="lineNum">     129 </span>            : //
+<span class="lineNum">     130 </span>            : template &lt;class V, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     131 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;,
+<span class="lineNum">     132 </span>            :    detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_subtract, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, V&gt; &gt; &gt;::type
+<span class="lineNum">     133 </span>            :    operator - (const V&amp; a, const detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     134 </span>            : {
+<span class="lineNum">     135 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_subtract, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, V&gt; &gt;
+<span class="lineNum">     136 </span>            :       (detail::expression&lt;detail::multiply_subtract, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, V&gt;(b.left(), b.right(), a));
+<span class="lineNum">     137 </span>            : }
+<span class="lineNum">     138 </span>            : template &lt;class Arg1, class Arg2, class Arg3, class Arg4, class V&gt;
+<span class="lineNum">     139 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;,
+<span class="lineNum">     140 </span>            :    detail::expression&lt;detail::multiply_subtract, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, V&gt; &gt;::type
+<span class="lineNum">     141 </span>            :    operator - (const detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     142 </span>            : {
+<span class="lineNum">     143 </span>            :    return detail::expression&lt;detail::multiply_subtract, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, V&gt;(a.left(), a.right(), b);
+<span class="lineNum">     144 </span>            : }
+<span class="lineNum">     145 </span>            : template &lt;class B, expression_template_option ET, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     146 </span>            : inline detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_subtract, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, number&lt;B, ET&gt; &gt; &gt;
+<span class="lineNum">     147 </span>            :    operator - (const number&lt;B, ET&gt;&amp; a, const detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     148 </span>            : {
+<span class="lineNum">     149 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_subtract, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, number&lt;B, ET&gt; &gt; &gt;
+<span class="lineNum">     150 </span>            :       (detail::expression&lt;detail::multiply_subtract, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, number&lt;B, ET&gt; &gt;(b.left(), b.right(), a));
+<span class="lineNum">     151 </span>            : }
+<span class="lineNum">     152 </span>            : template &lt;class Arg1, class Arg2, class Arg3, class Arg4, class B, expression_template_option ET&gt;
+<span class="lineNum">     153 </span>            : inline detail::expression&lt;detail::multiply_subtract, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, number&lt;B, ET&gt; &gt;
+<span class="lineNum">     154 </span>            :    operator - (const detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const number&lt;B, ET&gt;&amp; b)
+<span class="lineNum">     155 </span>            : {
+<span class="lineNum">     156 </span>            :    return detail::expression&lt;detail::multiply_subtract, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::left_type, typename detail::expression&lt;detail::multiply_immediates, Arg1, Arg2, Arg3, Arg4&gt;::right_type, number&lt;B, ET&gt; &gt;(a.left(), a.right(), b);
+<span class="lineNum">     157 </span>            : }
+<span class="lineNum">     158 </span>            : //
+<span class="lineNum">     159 </span>            : // Repeat operator for negated arguments: propagate the negation to the top level to avoid temporaries:
+<span class="lineNum">     160 </span>            : //
+<span class="lineNum">     161 </span>            : template &lt;class B, expression_template_option ET, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     162 </span>            : inline detail::expression&lt;detail::minus, number&lt;B, ET&gt;, Arg1&gt;
+<span class="lineNum">     163 </span>            :    operator + (const number&lt;B, ET&gt;&amp; a, const detail::expression&lt;detail::negate, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     164 </span>            : {
+<span class="lineNum">     165 </span>            :    return detail::expression&lt;detail::minus, number&lt;B, ET&gt;, Arg1&gt;(a, b.left_ref());
+<span class="lineNum">     166 </span>            : }
+<span class="lineNum">     167 </span>            : template &lt;class Arg1, class Arg2, class Arg3, class Arg4, class B, expression_template_option ET&gt;
+<span class="lineNum">     168 </span>            : inline detail::expression&lt;detail::minus, number&lt;B, ET&gt;, Arg1&gt;
+<span class="lineNum">     169 </span>            :    operator + (const detail::expression&lt;detail::negate, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const number&lt;B, ET&gt;&amp; b)
+<span class="lineNum">     170 </span>            : {
+<span class="lineNum">     171 </span>            :    return detail::expression&lt;detail::minus, number&lt;B, ET&gt;, Arg1&gt;(b, a.left_ref());
+<span class="lineNum">     172 </span>            : }
+<span class="lineNum">     173 </span>            : template &lt;class B&gt;
+<span class="lineNum">     174 </span>            : inline detail::expression&lt;detail::subtract_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;
+<span class="lineNum">     175 </span>            :    operator + (const number&lt;B, et_on&gt;&amp; a, const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; b)
+<span class="lineNum">     176 </span>            : {
+<span class="lineNum">     177 </span>            :    return detail::expression&lt;detail::subtract_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(a, b.left_ref());
+<span class="lineNum">     178 </span>            : }
+<span class="lineNum">     179 </span>            : template &lt;class B&gt;
+<span class="lineNum">     180 </span>            : inline detail::expression&lt;detail::subtract_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;
+<span class="lineNum">     181 </span>            :    operator + (const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     182 </span>            : {
+<span class="lineNum">     183 </span>            :    return detail::expression&lt;detail::subtract_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(b, a.left_ref());
+<span class="lineNum">     184 </span>            : }
+<span class="lineNum">     185 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     186 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::subtract_immediates, V, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     187 </span>            :    operator + (const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; a, const V&amp; b)
+<span class="lineNum">     188 </span>            : {
+<span class="lineNum">     189 </span>            :    return detail::expression&lt;detail::subtract_immediates, V, number&lt;B, et_on&gt; &gt;(b, a.left_ref());
+<span class="lineNum">     190 </span>            : }
+<span class="lineNum">     191 </span>            : template &lt;class B, class B2, expression_template_option ET&gt;
+<span class="lineNum">     192 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::subtract_immediates, number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     193 </span>            :    operator + (const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; a, const number&lt;B2, ET&gt;&amp; b)
+<span class="lineNum">     194 </span>            : {
+<span class="lineNum">     195 </span>            :    return detail::expression&lt;detail::subtract_immediates, number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt;(b, a.left_ref());
+<span class="lineNum">     196 </span>            : }
+<span class="lineNum">     197 </span>            : template &lt;class B2, expression_template_option ET, class B&gt;
+<span class="lineNum">     198 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::subtract_immediates, number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     199 </span>            :    operator + (const number&lt;B2, ET&gt;&amp; a, const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; b)
+<span class="lineNum">     200 </span>            : {
+<span class="lineNum">     201 </span>            :    return detail::expression&lt;detail::subtract_immediates, number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt;(a, b.left_ref());
+<span class="lineNum">     202 </span>            : }
+<span class="lineNum">     203 </span>            : template &lt;class B&gt;
+<span class="lineNum">     204 </span>            : inline detail::expression&lt;detail::negate, detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;
+<span class="lineNum">     205 </span>            :    operator + (const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; a, const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; b)
+<span class="lineNum">     206 </span>            : {
+<span class="lineNum">     207 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;(detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(a.left_ref(), b.left_ref()));
+<span class="lineNum">     208 </span>            : }
+<span class="lineNum">     209 </span>            : //
+<span class="lineNum">     210 </span>            : // Subtraction:
+<span class="lineNum">     211 </span>            : //
+<span class="lineNum">     212 </span>            : template &lt;class B&gt;
+<span class="lineNum">     213 </span>            : inline detail::expression&lt;detail::subtract_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;
+<span class="lineNum">     214 </span>            :    operator - (const number&lt;B, et_on&gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     215 </span>            : {
+<span class="lineNum">     216 </span><span class="lineCov">        198 :    return detail::expression&lt;detail::subtract_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(a, b);</span>
+<span class="lineNum">     217 </span>            : }
+<span class="lineNum">     218 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     219 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::subtract_immediates, number&lt;B, et_on&gt;, V &gt; &gt;::type
+<span class="lineNum">     220 </span>            :    operator - (const number&lt;B, et_on&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     221 </span>            : {
+<span class="lineNum">     222 </span><span class="lineCov">      22784 :    return detail::expression&lt;detail::subtract_immediates, number&lt;B, et_on&gt;, V &gt;(a, b);</span>
+<span class="lineNum">     223 </span>            : }
+<span class="lineNum">     224 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     225 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::subtract_immediates, V, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     226 </span>            :    operator - (const V&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     227 </span>            : {
+<span class="lineNum">     228 </span><span class="lineCov">        410 :    return detail::expression&lt;detail::subtract_immediates, V, number&lt;B, et_on&gt; &gt;(a, b);</span>
+<span class="lineNum">     229 </span>            : }
+<span class="lineNum">     230 </span>            : template &lt;class B, expression_template_option ET, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     231 </span>            : inline detail::expression&lt;detail::minus, number&lt;B, ET&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;
+<span class="lineNum">     232 </span>            :    operator - (const number&lt;B, ET&gt;&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     233 </span>            : {
+<span class="lineNum">     234 </span>            :    return detail::expression&lt;detail::minus, number&lt;B, ET&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);
+<span class="lineNum">     235 </span>            : }
+<span class="lineNum">     236 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class B, expression_template_option ET&gt;
+<span class="lineNum">     237 </span>            : inline detail::expression&lt;detail::minus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, ET&gt; &gt;
+<span class="lineNum">     238 </span>            :    operator - (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const number&lt;B, ET&gt;&amp; b)
+<span class="lineNum">     239 </span>            : {
+<span class="lineNum">     240 </span>            :    return detail::expression&lt;detail::minus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, ET&gt; &gt;(a, b);
+<span class="lineNum">     241 </span>            : }
+<span class="lineNum">     242 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class tag2, class Arg1b, class Arg2b, class Arg3b, class Arg4b&gt;
+<span class="lineNum">     243 </span>            : inline detail::expression&lt;detail::minus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt;
+<span class="lineNum">     244 </span>            :    operator - (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt;&amp; b)
+<span class="lineNum">     245 </span>            : {
+<span class="lineNum">     246 </span>            :    return detail::expression&lt;detail::minus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt;(a, b);
+<span class="lineNum">     247 </span>            : }
+<span class="lineNum">     248 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class V&gt;
+<span class="lineNum">     249 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;, detail::expression&lt;detail::minus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt; &gt;::type
+<span class="lineNum">     250 </span>            :    operator - (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     251 </span>            : {
+<span class="lineNum">     252 </span><span class="lineCov">        908 :    return detail::expression&lt;detail::minus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt;(a, b);</span>
+<span class="lineNum">     253 </span>            : }
+<span class="lineNum">     254 </span>            : template &lt;class V, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     255 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;, detail::expression&lt;detail::minus, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; &gt;::type
+<span class="lineNum">     256 </span>            :    operator - (const V&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     257 </span>            : {
+<span class="lineNum">     258 </span><span class="lineCov">      22677 :    return detail::expression&lt;detail::minus, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);</span>
+<span class="lineNum">     259 </span>            : }
+<span class="lineNum">     260 </span>            : //
+<span class="lineNum">     261 </span>            : // Repeat operator for negated arguments: propagate the negation to the top level to avoid temporaries:
+<span class="lineNum">     262 </span>            : //
+<span class="lineNum">     263 </span>            : template &lt;class B, expression_template_option ET, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     264 </span>            : inline detail::expression&lt;detail::plus, number&lt;B, ET&gt;, Arg1&gt;
+<span class="lineNum">     265 </span>            :    operator - (const number&lt;B, ET&gt;&amp; a, const detail::expression&lt;detail::negate, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     266 </span>            : {
+<span class="lineNum">     267 </span>            :    return detail::expression&lt;detail::plus, number&lt;B, ET&gt;, Arg1&gt;(a, b.left_ref());
+<span class="lineNum">     268 </span>            : }
+<span class="lineNum">     269 </span>            : template &lt;class Arg1, class Arg2, class Arg3, class Arg4, class B, expression_template_option ET&gt;
+<span class="lineNum">     270 </span>            : inline detail::expression&lt;detail::negate, detail::expression&lt;detail::plus, number&lt;B, ET&gt;, Arg1&gt; &gt;
+<span class="lineNum">     271 </span>            :    operator - (const detail::expression&lt;detail::negate, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const number&lt;B, ET&gt;&amp; b)
+<span class="lineNum">     272 </span>            : {
+<span class="lineNum">     273 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::plus, number&lt;B, ET&gt;, Arg1&gt; &gt;(
+<span class="lineNum">     274 </span>            :       detail::expression&lt;detail::plus, number&lt;B, ET&gt;, Arg1&gt;(b, a.left_ref()));
+<span class="lineNum">     275 </span>            : }
+<span class="lineNum">     276 </span>            : template &lt;class B&gt;
+<span class="lineNum">     277 </span>            : inline detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;
+<span class="lineNum">     278 </span>            :    operator - (const number&lt;B, et_on&gt;&amp; a, const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; b)
+<span class="lineNum">     279 </span>            : {
+<span class="lineNum">     280 </span>            :    return detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(a, b.left_ref());
+<span class="lineNum">     281 </span>            : }
+<span class="lineNum">     282 </span>            : template &lt;class B&gt;
+<span class="lineNum">     283 </span>            : inline detail::expression&lt;detail::negate, detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;
+<span class="lineNum">     284 </span>            :    operator - (const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     285 </span>            : {
+<span class="lineNum">     286 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;(
+<span class="lineNum">     287 </span>            :       detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(b, a.left_ref()));
+<span class="lineNum">     288 </span>            : }
+<span class="lineNum">     289 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     290 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::negate, detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, V &gt; &gt; &gt;::type
+<span class="lineNum">     291 </span>            :    operator - (const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; a, const V&amp; b)
+<span class="lineNum">     292 </span>            : {
+<span class="lineNum">     293 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, V &gt; &gt;(detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, V &gt;(a.left_ref(), b));
+<span class="lineNum">     294 </span>            : }
+<span class="lineNum">     295 </span>            : template &lt;class B, class B2, expression_template_option ET&gt;
+<span class="lineNum">     296 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::negate, detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, number&lt;B2, ET&gt; &gt; &gt; &gt;::type
+<span class="lineNum">     297 </span>            :    operator - (const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; a, const number&lt;B2, ET&gt;&amp; b)
+<span class="lineNum">     298 </span>            : {
+<span class="lineNum">     299 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, number&lt;B2, ET&gt; &gt; &gt;(detail::expression&lt;detail::add_immediates, number&lt;B, et_on&gt;, number&lt;B2, ET&gt; &gt;(a.left_ref(), b));
+<span class="lineNum">     300 </span>            : }
+<span class="lineNum">     301 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     302 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::add_immediates, V, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     303 </span>            :    operator - (const V&amp; a, const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; b)
+<span class="lineNum">     304 </span>            : {
+<span class="lineNum">     305 </span>            :    return detail::expression&lt;detail::add_immediates, V, number&lt;B, et_on&gt; &gt;(a, b.left_ref());
+<span class="lineNum">     306 </span>            : }
+<span class="lineNum">     307 </span>            : template &lt;class B2, expression_template_option ET, class B&gt;
+<span class="lineNum">     308 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::add_immediates, number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     309 </span>            :    operator - (const number&lt;B2, ET&gt;&amp; a, const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; b)
+<span class="lineNum">     310 </span>            : {
+<span class="lineNum">     311 </span>            :    return detail::expression&lt;detail::add_immediates, number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt;(a, b.left_ref());
+<span class="lineNum">     312 </span>            : }
+<span class="lineNum">     313 </span>            : //
+<span class="lineNum">     314 </span>            : // Multiplication:
+<span class="lineNum">     315 </span>            : //
+<span class="lineNum">     316 </span>            : template &lt;class B&gt;
+<span class="lineNum">     317 </span>            : inline detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;
+<span class="lineNum">     318 </span>            :    operator * (const number&lt;B, et_on&gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     319 </span>            : {
+<span class="lineNum">     320 </span><span class="lineCov">       2570 :    return detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(a, b);</span>
+<span class="lineNum">     321 </span>            : }
+<span class="lineNum">     322 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     323 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, V &gt; &gt;::type
+<span class="lineNum">     324 </span>            :    operator * (const number&lt;B, et_on&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     325 </span>            : {
+<span class="lineNum">     326 </span><span class="lineCov">      17384 :    return detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, V &gt;(a, b);</span>
+<span class="lineNum">     327 </span>            : }
+<span class="lineNum">     328 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     329 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::multiply_immediates, V, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     330 </span>            :    operator * (const V&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     331 </span>            : {
+<span class="lineNum">     332 </span><span class="lineCov">      22654 :    return detail::expression&lt;detail::multiply_immediates, V, number&lt;B, et_on&gt; &gt;(a, b);</span>
+<span class="lineNum">     333 </span>            : }
+<span class="lineNum">     334 </span>            : template &lt;class B, expression_template_option ET, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     335 </span>            : inline detail::expression&lt;detail::multiplies, number&lt;B, ET&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;
+<span class="lineNum">     336 </span>            :    operator * (const number&lt;B, ET&gt;&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     337 </span>            : {
+<span class="lineNum">     338 </span>            :    return detail::expression&lt;detail::multiplies, number&lt;B, ET&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);
+<span class="lineNum">     339 </span>            : }
+<span class="lineNum">     340 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class B, expression_template_option ET&gt;
+<span class="lineNum">     341 </span>            : inline detail::expression&lt;detail::multiplies, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, ET&gt; &gt;
+<span class="lineNum">     342 </span>            :    operator * (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const number&lt;B, ET&gt;&amp; b)
+<span class="lineNum">     343 </span>            : {
+<span class="lineNum">     344 </span><span class="lineCov">        495 :    return detail::expression&lt;detail::multiplies, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, ET&gt; &gt;(a, b);</span>
+<span class="lineNum">     345 </span>            : }
+<span class="lineNum">     346 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class tag2, class Arg1b, class Arg2b, class Arg3b, class Arg4b&gt;
+<span class="lineNum">     347 </span>            : inline detail::expression&lt;detail::multiplies, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt;
+<span class="lineNum">     348 </span>            :    operator * (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt;&amp; b)
+<span class="lineNum">     349 </span>            : {
+<span class="lineNum">     350 </span>            :    return detail::expression&lt;detail::multiplies, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt;(a, b);
+<span class="lineNum">     351 </span>            : }
+<span class="lineNum">     352 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class V&gt;
+<span class="lineNum">     353 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;, detail::expression&lt;detail::multiplies, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt; &gt;::type
+<span class="lineNum">     354 </span>            :    operator * (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     355 </span>            : {
+<span class="lineNum">     356 </span>            :    return detail::expression&lt;detail::multiplies, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt;(a, b);
+<span class="lineNum">     357 </span>            : }
+<span class="lineNum">     358 </span>            : template &lt;class V, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     359 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;, detail::expression&lt;detail::multiplies, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; &gt;::type
+<span class="lineNum">     360 </span>            :    operator * (const V&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     361 </span>            : {
+<span class="lineNum">     362 </span>            :    return detail::expression&lt;detail::multiplies, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);
+<span class="lineNum">     363 </span>            : }
+<span class="lineNum">     364 </span>            : //
+<span class="lineNum">     365 </span>            : // Repeat operator for negated arguments: propagate the negation to the top level to avoid temporaries:
+<span class="lineNum">     366 </span>            : //
+<span class="lineNum">     367 </span>            : template &lt;class B, expression_template_option ET, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     368 </span>            : inline detail::expression&lt;detail::negate, detail::expression&lt;detail::multiplies, number&lt;B, ET&gt;, Arg1&gt; &gt;
+<span class="lineNum">     369 </span>            :    operator * (const number&lt;B, ET&gt;&amp; a, const detail::expression&lt;detail::negate, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     370 </span>            : {
+<span class="lineNum">     371 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::multiplies, number&lt;B, ET&gt;, Arg1&gt; &gt;(
+<span class="lineNum">     372 </span>            :       detail::expression&lt;detail::multiplies, number&lt;B, ET&gt;, Arg1&gt; (a, b.left_ref()));
+<span class="lineNum">     373 </span>            : }
+<span class="lineNum">     374 </span>            : template &lt;class Arg1, class Arg2, class Arg3, class Arg4, class B, expression_template_option ET&gt;
+<span class="lineNum">     375 </span>            : inline detail::expression&lt;detail::negate, detail::expression&lt;detail::multiplies, number&lt;B, ET&gt;, Arg1&gt; &gt;
+<span class="lineNum">     376 </span>            :    operator * (const detail::expression&lt;detail::negate, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const number&lt;B, ET&gt;&amp; b)
+<span class="lineNum">     377 </span>            : {
+<span class="lineNum">     378 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::multiplies, number&lt;B, ET&gt;, Arg1&gt; &gt;(
+<span class="lineNum">     379 </span>            :       detail::expression&lt;detail::multiplies, number&lt;B, ET&gt;, Arg1&gt;(b, a.left_ref()));
+<span class="lineNum">     380 </span>            : }
+<span class="lineNum">     381 </span>            : template &lt;class B&gt;
+<span class="lineNum">     382 </span>            : inline detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;
+<span class="lineNum">     383 </span>            :    operator * (const number&lt;B, et_on&gt;&amp; a, const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; b)
+<span class="lineNum">     384 </span>            : {
+<span class="lineNum">     385 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;(
+<span class="lineNum">     386 </span>            :       detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(a, b.left_ref()));
+<span class="lineNum">     387 </span>            : }
+<span class="lineNum">     388 </span>            : template &lt;class B&gt;
+<span class="lineNum">     389 </span>            : inline detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;
+<span class="lineNum">     390 </span>            :    operator * (const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     391 </span>            : {
+<span class="lineNum">     392 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;(
+<span class="lineNum">     393 </span>            :       detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(b, a.left_ref()));
+<span class="lineNum">     394 </span>            : }
+<span class="lineNum">     395 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     396 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, V &gt; &gt; &gt;::type
+<span class="lineNum">     397 </span>            :    operator * (const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; a, const V&amp; b)
+<span class="lineNum">     398 </span>            : {
+<span class="lineNum">     399 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, V &gt; &gt; (
+<span class="lineNum">     400 </span>            :       detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, V &gt;(a.left_ref(), b));
+<span class="lineNum">     401 </span>            : }
+<span class="lineNum">     402 </span>            : template &lt;class B, class B2, expression_template_option ET&gt;
+<span class="lineNum">     403 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, number&lt;B2, ET&gt; &gt; &gt; &gt;::type
+<span class="lineNum">     404 </span>            :    operator * (const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; a, const number&lt;B2, ET&gt;&amp; b)
+<span class="lineNum">     405 </span>            : {
+<span class="lineNum">     406 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, number&lt;B2, ET&gt; &gt; &gt; (
+<span class="lineNum">     407 </span>            :       detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, number&lt;B2, ET&gt; &gt;(a.left_ref(), b));
+<span class="lineNum">     408 </span>            : }
+<span class="lineNum">     409 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     410 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, V &gt; &gt; &gt;::type
+<span class="lineNum">     411 </span>            :    operator * (const V&amp; a, const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; b)
+<span class="lineNum">     412 </span>            : {
+<span class="lineNum">     413 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, V &gt; &gt;(
+<span class="lineNum">     414 </span>            :       detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, V &gt;(b.left_ref(), a));
+<span class="lineNum">     415 </span>            : }
+<span class="lineNum">     416 </span>            : template &lt;class B2, expression_template_option ET, class B&gt;
+<span class="lineNum">     417 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, number&lt;B2, ET&gt; &gt; &gt; &gt;::type
+<span class="lineNum">     418 </span>            :    operator * (const number&lt;B2, ET&gt;&amp; a, const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; b)
+<span class="lineNum">     419 </span>            : {
+<span class="lineNum">     420 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, number&lt;B2, ET&gt; &gt; &gt;(
+<span class="lineNum">     421 </span>            :       detail::expression&lt;detail::multiply_immediates, number&lt;B, et_on&gt;, number&lt;B2, ET&gt; &gt;(b.left_ref(), a));
+<span class="lineNum">     422 </span>            : }
+<span class="lineNum">     423 </span>            : //
+<span class="lineNum">     424 </span>            : // Division:
+<span class="lineNum">     425 </span>            : //
+<span class="lineNum">     426 </span>            : template &lt;class B&gt;
+<span class="lineNum">     427 </span>            : inline detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;
+<span class="lineNum">     428 </span>            :    operator / (const number&lt;B, et_on&gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     429 </span>            : {
+<span class="lineNum">     430 </span>            :    return detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">     431 </span>            : }
+<span class="lineNum">     432 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     433 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, V &gt; &gt;::type
+<span class="lineNum">     434 </span>            :    operator / (const number&lt;B, et_on&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     435 </span>            : {
+<span class="lineNum">     436 </span>            :    return detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, V &gt;(a, b);
+<span class="lineNum">     437 </span>            : }
+<span class="lineNum">     438 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     439 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::divide_immediates, V, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     440 </span>            :    operator / (const V&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     441 </span>            : {
+<span class="lineNum">     442 </span>            :    return detail::expression&lt;detail::divide_immediates, V, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">     443 </span>            : }
+<span class="lineNum">     444 </span>            : template &lt;class B, expression_template_option ET, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     445 </span>            : inline detail::expression&lt;detail::divides, number&lt;B, ET&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;
+<span class="lineNum">     446 </span>            :    operator / (const number&lt;B, ET&gt;&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     447 </span>            : {
+<span class="lineNum">     448 </span>            :    return detail::expression&lt;detail::divides, number&lt;B, ET&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);
+<span class="lineNum">     449 </span>            : }
+<span class="lineNum">     450 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class B, expression_template_option ET&gt;
+<span class="lineNum">     451 </span>            : inline detail::expression&lt;detail::divides, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, ET&gt; &gt;
+<span class="lineNum">     452 </span>            :    operator / (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const number&lt;B, ET&gt;&amp; b)
+<span class="lineNum">     453 </span>            : {
+<span class="lineNum">     454 </span><span class="lineCov">      15798 :    return detail::expression&lt;detail::divides, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, ET&gt; &gt;(a, b);</span>
+<span class="lineNum">     455 </span>            : }
+<span class="lineNum">     456 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class tag2, class Arg1b, class Arg2b, class Arg3b, class Arg4b&gt;
+<span class="lineNum">     457 </span>            : inline detail::expression&lt;detail::divides, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt;
+<span class="lineNum">     458 </span>            :    operator / (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt;&amp; b)
+<span class="lineNum">     459 </span>            : {
+<span class="lineNum">     460 </span>            :    return detail::expression&lt;detail::divides, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt;(a, b);
+<span class="lineNum">     461 </span>            : }
+<span class="lineNum">     462 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class V&gt;
+<span class="lineNum">     463 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;, detail::expression&lt;detail::divides, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt; &gt;::type
+<span class="lineNum">     464 </span>            :    operator / (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     465 </span>            : {
+<span class="lineNum">     466 </span><span class="lineCov">      23149 :    return detail::expression&lt;detail::divides, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt;(a, b);</span>
+<span class="lineNum">     467 </span>            : }
+<span class="lineNum">     468 </span>            : template &lt;class V, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     469 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;, detail::expression&lt;detail::divides, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; &gt;::type
+<span class="lineNum">     470 </span>            :    operator / (const V&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     471 </span>            : {
+<span class="lineNum">     472 </span>            :    return detail::expression&lt;detail::divides, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);
+<span class="lineNum">     473 </span>            : }
+<span class="lineNum">     474 </span>            : //
+<span class="lineNum">     475 </span>            : // Repeat operator for negated arguments: propagate the negation to the top level to avoid temporaries:
+<span class="lineNum">     476 </span>            : //
+<span class="lineNum">     477 </span>            : template &lt;class B, expression_template_option ET, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     478 </span>            : inline detail::expression&lt;detail::negate, detail::expression&lt;detail::divides, number&lt;B, ET&gt;, Arg1&gt; &gt;
+<span class="lineNum">     479 </span>            :    operator / (const number&lt;B, ET&gt;&amp; a, const detail::expression&lt;detail::negate, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     480 </span>            : {
+<span class="lineNum">     481 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::divides, number&lt;B, ET&gt;, Arg1&gt; &gt;(
+<span class="lineNum">     482 </span>            :       detail::expression&lt;detail::divides, number&lt;B, ET&gt;, Arg1&gt;(a, b.left_ref()));
+<span class="lineNum">     483 </span>            : }
+<span class="lineNum">     484 </span>            : template &lt;class Arg1, class Arg2, class Arg3, class Arg4, class B, expression_template_option ET&gt;
+<span class="lineNum">     485 </span>            : inline detail::expression&lt;detail::negate, detail::expression&lt;detail::divides, Arg1, number&lt;B, ET&gt; &gt; &gt;
+<span class="lineNum">     486 </span>            :    operator / (const detail::expression&lt;detail::negate, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const number&lt;B, ET&gt;&amp; b)
+<span class="lineNum">     487 </span>            : {
+<span class="lineNum">     488 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::divides, Arg1, number&lt;B, ET&gt; &gt; &gt;(
+<span class="lineNum">     489 </span>            :       detail::expression&lt;detail::divides, Arg1, number&lt;B, ET&gt; &gt;(a.left_ref(), b));
+<span class="lineNum">     490 </span>            : }
+<span class="lineNum">     491 </span>            : template &lt;class B&gt;
+<span class="lineNum">     492 </span>            : inline detail::expression&lt;detail::negate, detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;
+<span class="lineNum">     493 </span>            :    operator / (const number&lt;B, et_on&gt;&amp; a, const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; b)
+<span class="lineNum">     494 </span>            : {
+<span class="lineNum">     495 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;(
+<span class="lineNum">     496 </span>            :       detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(a, b.left_ref()));
+<span class="lineNum">     497 </span>            : }
+<span class="lineNum">     498 </span>            : template &lt;class B&gt;
+<span class="lineNum">     499 </span>            : inline detail::expression&lt;detail::negate, detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;
+<span class="lineNum">     500 </span>            :    operator / (const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     501 </span>            : {
+<span class="lineNum">     502 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;(
+<span class="lineNum">     503 </span>            :       detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(a.left_ref(), b));
+<span class="lineNum">     504 </span>            : }
+<span class="lineNum">     505 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     506 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::negate, detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, V &gt; &gt; &gt;::type
+<span class="lineNum">     507 </span>            :    operator / (const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; a, const V&amp; b)
+<span class="lineNum">     508 </span>            : {
+<span class="lineNum">     509 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, V &gt; &gt;(
+<span class="lineNum">     510 </span>            :       detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, V&gt;(a.left_ref(), b));
+<span class="lineNum">     511 </span>            : }
+<span class="lineNum">     512 </span>            : template &lt;class B, class B2, expression_template_option ET&gt;
+<span class="lineNum">     513 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::negate, detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, number&lt;B2, ET&gt; &gt; &gt; &gt;::type
+<span class="lineNum">     514 </span>            :    operator / (const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; a, const number&lt;B2, ET&gt;&amp; b)
+<span class="lineNum">     515 </span>            : {
+<span class="lineNum">     516 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, number&lt;B2, ET&gt; &gt; &gt;(
+<span class="lineNum">     517 </span>            :       detail::expression&lt;detail::divide_immediates, number&lt;B, et_on&gt;, number&lt;B2, ET&gt; &gt;(a.left_ref(), b));
+<span class="lineNum">     518 </span>            : }
+<span class="lineNum">     519 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     520 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::negate, detail::expression&lt;detail::divide_immediates, V, number&lt;B, et_on&gt; &gt; &gt; &gt;::type
+<span class="lineNum">     521 </span>            :    operator / (const V&amp; a, const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; b)
+<span class="lineNum">     522 </span>            : {
+<span class="lineNum">     523 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::divide_immediates, V, number&lt;B, et_on&gt; &gt; &gt;(
+<span class="lineNum">     524 </span>            :       detail::expression&lt;detail::divide_immediates, V, number&lt;B, et_on&gt; &gt;(a, b.left_ref()));
+<span class="lineNum">     525 </span>            : }
+<span class="lineNum">     526 </span>            : template &lt;class B2, expression_template_option ET, class B&gt;
+<span class="lineNum">     527 </span>            : inline typename enable_if&lt;is_compatible_arithmetic_type&lt;number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt;, detail::expression&lt;detail::negate, detail::expression&lt;detail::divide_immediates, number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt; &gt; &gt;::type
+<span class="lineNum">     528 </span>            :    operator / (const number&lt;B2, ET&gt;&amp; a, const detail::expression&lt;detail::negate, number&lt;B, et_on&gt; &gt;&amp; b)
+<span class="lineNum">     529 </span>            : {
+<span class="lineNum">     530 </span>            :    return detail::expression&lt;detail::negate, detail::expression&lt;detail::divide_immediates, number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt; &gt;(
+<span class="lineNum">     531 </span>            :       detail::expression&lt;detail::divide_immediates, number&lt;B2, ET&gt;, number&lt;B, et_on&gt; &gt;(a, b.left_ref()));
+<span class="lineNum">     532 </span>            : }
+<span class="lineNum">     533 </span>            : //
+<span class="lineNum">     534 </span>            : // Modulus:
+<span class="lineNum">     535 </span>            : //
+<span class="lineNum">     536 </span>            : template &lt;class B&gt;
+<span class="lineNum">     537 </span>            : inline typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer,
+<span class="lineNum">     538 </span>            :    detail::expression&lt;detail::modulus_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     539 </span>            :       operator % (const number&lt;B, et_on&gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     540 </span>            : {
+<span class="lineNum">     541 </span>            :    return detail::expression&lt;detail::modulus_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">     542 </span>            : }
+<span class="lineNum">     543 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     544 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer),
+<span class="lineNum">     545 </span>            :    detail::expression&lt;detail::modulus_immediates, number&lt;B, et_on&gt;, V &gt; &gt;::type
+<span class="lineNum">     546 </span>            :    operator % (const number&lt;B, et_on&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     547 </span>            : {
+<span class="lineNum">     548 </span><span class="lineCov">         23 :    return detail::expression&lt;detail::modulus_immediates, number&lt;B, et_on&gt;, V &gt;(a, b);</span>
+<span class="lineNum">     549 </span>            : }
+<span class="lineNum">     550 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     551 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer),
+<span class="lineNum">     552 </span>            :    detail::expression&lt;detail::modulus_immediates, V, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     553 </span>            :       operator % (const V&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     554 </span>            : {
+<span class="lineNum">     555 </span>            :    return detail::expression&lt;detail::modulus_immediates, V, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">     556 </span>            : }
+<span class="lineNum">     557 </span>            : template &lt;class B, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     558 </span>            : inline typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer,
+<span class="lineNum">     559 </span>            :    detail::expression&lt;detail::modulus, number&lt;B, et_on&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; &gt;::type
+<span class="lineNum">     560 </span>            :       operator % (const number&lt;B, et_on&gt;&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     561 </span>            : {
+<span class="lineNum">     562 </span>            :    return detail::expression&lt;detail::modulus, number&lt;B, et_on&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);
+<span class="lineNum">     563 </span>            : }
+<span class="lineNum">     564 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class B&gt;
+<span class="lineNum">     565 </span>            : inline typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer,
+<span class="lineNum">     566 </span>            :    detail::expression&lt;detail::modulus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     567 </span>            :       operator % (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     568 </span>            : {
+<span class="lineNum">     569 </span>            :    return detail::expression&lt;detail::modulus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">     570 </span>            : }
+<span class="lineNum">     571 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class tag2, class Arg1b, class Arg2b, class Arg3b, class Arg4b&gt;
+<span class="lineNum">     572 </span>            : inline typename enable_if_c&lt;number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer,
+<span class="lineNum">     573 </span>            :    detail::expression&lt;detail::modulus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt; &gt;::type
+<span class="lineNum">     574 </span>            :       operator % (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt;&amp; b)
+<span class="lineNum">     575 </span>            : {
+<span class="lineNum">     576 </span>            :    return detail::expression&lt;detail::modulus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt;(a, b);
+<span class="lineNum">     577 </span>            : }
+<span class="lineNum">     578 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class V&gt;
+<span class="lineNum">     579 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value
+<span class="lineNum">     580 </span>            :    &amp;&amp; (number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer),
+<span class="lineNum">     581 </span>            :    detail::expression&lt;detail::modulus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt; &gt;::type
+<span class="lineNum">     582 </span>            :       operator % (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     583 </span>            : {
+<span class="lineNum">     584 </span>            :    return detail::expression&lt;detail::modulus, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt;(a, b);
+<span class="lineNum">     585 </span>            : }
+<span class="lineNum">     586 </span>            : template &lt;class V, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     587 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value
+<span class="lineNum">     588 </span>            :    &amp;&amp; (number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer),
+<span class="lineNum">     589 </span>            :    detail::expression&lt;detail::modulus, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; &gt;::type
+<span class="lineNum">     590 </span>            :       operator % (const V&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     591 </span>            : {
+<span class="lineNum">     592 </span>            :    return detail::expression&lt;detail::modulus, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);
+<span class="lineNum">     593 </span>            : }
+<span class="lineNum">     594 </span>            : //
+<span class="lineNum">     595 </span>            : // Left shift:
+<span class="lineNum">     596 </span>            : //
+<span class="lineNum">     597 </span>            : template &lt;class B, class I&gt;
+<span class="lineNum">     598 </span>            : inline typename enable_if_c&lt;is_integral&lt;I&gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer), detail::expression&lt;detail::shift_left, number&lt;B, et_on&gt;, I &gt; &gt;::type
+<span class="lineNum">     599 </span>            :    operator &lt;&lt; (const number&lt;B, et_on&gt;&amp; a, const I&amp; b)
+<span class="lineNum">     600 </span>            : {
+<span class="lineNum">     601 </span><span class="lineCov">     188253 :    return detail::expression&lt;detail::shift_left, number&lt;B, et_on&gt;, I&gt;(a, b);</span>
+<span class="lineNum">     602 </span>            : }
+<span class="lineNum">     603 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class I&gt;
+<span class="lineNum">     604 </span>            : inline typename enable_if_c&lt;is_integral&lt;I&gt;::value &amp;&amp; (number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer),
+<span class="lineNum">     605 </span>            :    detail::expression&lt;detail::shift_left, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, I&gt; &gt;::type
+<span class="lineNum">     606 </span>            :       operator &lt;&lt; (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const I&amp; b)
+<span class="lineNum">     607 </span>            : {
+<span class="lineNum">     608 </span>            :    return detail::expression&lt;detail::shift_left, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, I&gt;(a, b);
+<span class="lineNum">     609 </span>            : }
+<span class="lineNum">     610 </span>            : //
+<span class="lineNum">     611 </span>            : // Right shift:
+<span class="lineNum">     612 </span>            : //
+<span class="lineNum">     613 </span>            : template &lt;class B, class I&gt;
+<span class="lineNum">     614 </span>            : inline typename enable_if_c&lt;is_integral&lt;I&gt;::value &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer),
+<span class="lineNum">     615 </span>            :    detail::expression&lt;detail::shift_right, number&lt;B, et_on&gt;, I &gt; &gt;::type
+<span class="lineNum">     616 </span>            :       operator &gt;&gt; (const number&lt;B, et_on&gt;&amp; a, const I&amp; b)
+<span class="lineNum">     617 </span>            : {
+<span class="lineNum">     618 </span>            :    return detail::expression&lt;detail::shift_right, number&lt;B, et_on&gt;, I&gt;(a, b);
+<span class="lineNum">     619 </span>            : }
+<span class="lineNum">     620 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class I&gt;
+<span class="lineNum">     621 </span>            : inline typename enable_if_c&lt;is_integral&lt;I&gt;::value
+<span class="lineNum">     622 </span>            :    &amp;&amp; (number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer),
+<span class="lineNum">     623 </span>            :    detail::expression&lt;detail::shift_right, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, I&gt; &gt;::type
+<span class="lineNum">     624 </span>            :       operator &gt;&gt; (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const I&amp; b)
+<span class="lineNum">     625 </span>            : {
+<span class="lineNum">     626 </span>            :    return detail::expression&lt;detail::shift_right, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, I&gt;(a, b);
+<span class="lineNum">     627 </span>            : }
+<span class="lineNum">     628 </span>            : //
+<span class="lineNum">     629 </span>            : // Bitwise AND:
+<span class="lineNum">     630 </span>            : //
+<span class="lineNum">     631 </span>            : template &lt;class B&gt;
+<span class="lineNum">     632 </span>            : inline typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer,
+<span class="lineNum">     633 </span>            :    detail::expression&lt;detail::bitwise_and_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     634 </span>            :       operator &amp; (const number&lt;B, et_on&gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     635 </span>            : {
+<span class="lineNum">     636 </span>            :    return detail::expression&lt;detail::bitwise_and_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">     637 </span>            : }
+<span class="lineNum">     638 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     639 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;::value
+<span class="lineNum">     640 </span>            :    &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer),
+<span class="lineNum">     641 </span>            :    detail::expression&lt;detail::bitwise_and_immediates, number&lt;B, et_on&gt;, V &gt; &gt;::type
+<span class="lineNum">     642 </span>            :       operator &amp; (const number&lt;B, et_on&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     643 </span>            : {
+<span class="lineNum">     644 </span>            :    return detail::expression&lt;detail::bitwise_and_immediates, number&lt;B, et_on&gt;, V &gt;(a, b);
+<span class="lineNum">     645 </span>            : }
+<span class="lineNum">     646 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     647 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;::value
+<span class="lineNum">     648 </span>            :    &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer),
+<span class="lineNum">     649 </span>            :    detail::expression&lt;detail::bitwise_and_immediates, V, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     650 </span>            :       operator &amp; (const V&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     651 </span>            : {
+<span class="lineNum">     652 </span>            :    return detail::expression&lt;detail::bitwise_and_immediates, V, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">     653 </span>            : }
+<span class="lineNum">     654 </span>            : template &lt;class B, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     655 </span>            : inline typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer,
+<span class="lineNum">     656 </span>            :    detail::expression&lt;detail::bitwise_and, number&lt;B, et_on&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; &gt;::type
+<span class="lineNum">     657 </span>            :       operator &amp; (const number&lt;B, et_on&gt;&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     658 </span>            : {
+<span class="lineNum">     659 </span>            :    return detail::expression&lt;detail::bitwise_and, number&lt;B, et_on&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);
+<span class="lineNum">     660 </span>            : }
+<span class="lineNum">     661 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class B&gt;
+<span class="lineNum">     662 </span>            : inline typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer,
+<span class="lineNum">     663 </span>            :    detail::expression&lt;detail::bitwise_and, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     664 </span>            :       operator &amp; (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     665 </span>            : {
+<span class="lineNum">     666 </span>            :    return detail::expression&lt;detail::bitwise_and, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">     667 </span>            : }
+<span class="lineNum">     668 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class tag2, class Arg1b, class Arg2b, class Arg3b, class Arg4b&gt;
+<span class="lineNum">     669 </span>            : inline typename enable_if_c&lt;number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer,
+<span class="lineNum">     670 </span>            :    detail::expression&lt;detail::bitwise_and, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt; &gt;::type
+<span class="lineNum">     671 </span>            :       operator &amp; (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt;&amp; b)
+<span class="lineNum">     672 </span>            : {
+<span class="lineNum">     673 </span>            :    return detail::expression&lt;detail::bitwise_and, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt;(a, b);
+<span class="lineNum">     674 </span>            : }
+<span class="lineNum">     675 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class V&gt;
+<span class="lineNum">     676 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value
+<span class="lineNum">     677 </span>            :    &amp;&amp; (number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer),
+<span class="lineNum">     678 </span>            :    detail::expression&lt;detail::bitwise_and, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt; &gt;::type
+<span class="lineNum">     679 </span>            :       operator &amp; (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     680 </span>            : {
+<span class="lineNum">     681 </span>            :    return detail::expression&lt;detail::bitwise_and, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt;(a, b);
+<span class="lineNum">     682 </span>            : }
+<span class="lineNum">     683 </span>            : template &lt;class V, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     684 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value
+<span class="lineNum">     685 </span>            :    &amp;&amp; (number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer),
+<span class="lineNum">     686 </span>            :    detail::expression&lt;detail::bitwise_and, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; &gt;::type
+<span class="lineNum">     687 </span>            :       operator &amp; (const V&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     688 </span>            : {
+<span class="lineNum">     689 </span>            :    return detail::expression&lt;detail::bitwise_and, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);
+<span class="lineNum">     690 </span>            : }
+<span class="lineNum">     691 </span>            : //
+<span class="lineNum">     692 </span>            : // Bitwise OR:
+<span class="lineNum">     693 </span>            : //
+<span class="lineNum">     694 </span>            : template &lt;class B&gt;
+<span class="lineNum">     695 </span>            : inline typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer,
+<span class="lineNum">     696 </span>            :    detail::expression&lt;detail::bitwise_or_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     697 </span>            :    operator| (const number&lt;B, et_on&gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     698 </span>            : {
+<span class="lineNum">     699 </span>            :    return detail::expression&lt;detail::bitwise_or_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">     700 </span>            : }
+<span class="lineNum">     701 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     702 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;::value
+<span class="lineNum">     703 </span>            :    &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer),
+<span class="lineNum">     704 </span>            :    detail::expression&lt;detail::bitwise_or_immediates, number&lt;B, et_on&gt;, V &gt; &gt;::type
+<span class="lineNum">     705 </span>            :       operator| (const number&lt;B, et_on&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     706 </span>            : {
+<span class="lineNum">     707 </span>            :    return detail::expression&lt;detail::bitwise_or_immediates, number&lt;B, et_on&gt;, V &gt;(a, b);
+<span class="lineNum">     708 </span>            : }
+<span class="lineNum">     709 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     710 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;::value
+<span class="lineNum">     711 </span>            :    &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer),
+<span class="lineNum">     712 </span>            :    detail::expression&lt;detail::bitwise_or_immediates, V, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     713 </span>            :       operator| (const V&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     714 </span>            : {
+<span class="lineNum">     715 </span>            :    return detail::expression&lt;detail::bitwise_or_immediates, V, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">     716 </span>            : }
+<span class="lineNum">     717 </span>            : template &lt;class B, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     718 </span>            : inline typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer,
+<span class="lineNum">     719 </span>            :    detail::expression&lt;detail::bitwise_or, number&lt;B, et_on&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; &gt;::type
+<span class="lineNum">     720 </span>            :       operator| (const number&lt;B, et_on&gt;&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     721 </span>            : {
+<span class="lineNum">     722 </span>            :    return detail::expression&lt;detail::bitwise_or, number&lt;B, et_on&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);
+<span class="lineNum">     723 </span>            : }
+<span class="lineNum">     724 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class B&gt;
+<span class="lineNum">     725 </span>            : inline typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer,
+<span class="lineNum">     726 </span>            :    detail::expression&lt;detail::bitwise_or, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     727 </span>            :       operator| (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     728 </span>            : {
+<span class="lineNum">     729 </span>            :    return detail::expression&lt;detail::bitwise_or, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">     730 </span>            : }
+<span class="lineNum">     731 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class tag2, class Arg1b, class Arg2b, class Arg3b, class Arg4b&gt;
+<span class="lineNum">     732 </span>            : inline typename enable_if_c&lt;number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer,
+<span class="lineNum">     733 </span>            :    detail::expression&lt;detail::bitwise_or, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt; &gt;::type
+<span class="lineNum">     734 </span>            :       operator| (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt;&amp; b)
+<span class="lineNum">     735 </span>            : {
+<span class="lineNum">     736 </span>            :    return detail::expression&lt;detail::bitwise_or, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt;(a, b);
+<span class="lineNum">     737 </span>            : }
+<span class="lineNum">     738 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class V&gt;
+<span class="lineNum">     739 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value
+<span class="lineNum">     740 </span>            :    &amp;&amp; (number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer),
+<span class="lineNum">     741 </span>            :    detail::expression&lt;detail::bitwise_or, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt; &gt;::type
+<span class="lineNum">     742 </span>            :       operator| (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     743 </span>            : {
+<span class="lineNum">     744 </span><span class="lineCov">      18217 :    return detail::expression&lt;detail::bitwise_or, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt;(a, b);</span>
+<span class="lineNum">     745 </span>            : }
+<span class="lineNum">     746 </span>            : template &lt;class V, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     747 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value
+<span class="lineNum">     748 </span>            :    &amp;&amp; (number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer),
+<span class="lineNum">     749 </span>            :    detail::expression&lt;detail::bitwise_or, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; &gt;::type
+<span class="lineNum">     750 </span>            :       operator| (const V&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     751 </span>            : {
+<span class="lineNum">     752 </span>            :    return detail::expression&lt;detail::bitwise_or, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);
+<span class="lineNum">     753 </span>            : }
+<span class="lineNum">     754 </span>            : //
+<span class="lineNum">     755 </span>            : // Bitwise XOR:
+<span class="lineNum">     756 </span>            : //
+<span class="lineNum">     757 </span>            : template &lt;class B&gt;
+<span class="lineNum">     758 </span>            : inline typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer,
+<span class="lineNum">     759 </span>            :    detail::expression&lt;detail::bitwise_xor_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     760 </span>            :       operator^ (const number&lt;B, et_on&gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     761 </span>            : {
+<span class="lineNum">     762 </span>            :    return detail::expression&lt;detail::bitwise_xor_immediates, number&lt;B, et_on&gt;, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">     763 </span>            : }
+<span class="lineNum">     764 </span>            : template &lt;class B, class V&gt;
+<span class="lineNum">     765 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;::value
+<span class="lineNum">     766 </span>            :    &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer),
+<span class="lineNum">     767 </span>            :    detail::expression&lt;detail::bitwise_xor_immediates, number&lt;B, et_on&gt;, V &gt; &gt;::type
+<span class="lineNum">     768 </span>            :       operator^ (const number&lt;B, et_on&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     769 </span>            : {
+<span class="lineNum">     770 </span>            :    return detail::expression&lt;detail::bitwise_xor_immediates, number&lt;B, et_on&gt;, V &gt;(a, b);
+<span class="lineNum">     771 </span>            : }
+<span class="lineNum">     772 </span>            : template &lt;class V, class B&gt;
+<span class="lineNum">     773 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, number&lt;B, et_on&gt; &gt;::value
+<span class="lineNum">     774 </span>            :    &amp;&amp; (number_category&lt;B&gt;::value == number_kind_integer),
+<span class="lineNum">     775 </span>            :    detail::expression&lt;detail::bitwise_xor_immediates, V, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     776 </span>            :       operator^ (const V&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     777 </span>            : {
+<span class="lineNum">     778 </span>            :    return detail::expression&lt;detail::bitwise_xor_immediates, V, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">     779 </span>            : }
+<span class="lineNum">     780 </span>            : template &lt;class B, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     781 </span>            : inline typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer,
+<span class="lineNum">     782 </span>            :    detail::expression&lt;detail::bitwise_xor, number&lt;B, et_on&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; &gt;::type
+<span class="lineNum">     783 </span>            :       operator^ (const number&lt;B, et_on&gt;&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     784 </span>            : {
+<span class="lineNum">     785 </span>            :    return detail::expression&lt;detail::bitwise_xor, number&lt;B, et_on&gt;, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);
+<span class="lineNum">     786 </span>            : }
+<span class="lineNum">     787 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class B&gt;
+<span class="lineNum">     788 </span>            : inline typename enable_if_c&lt;number_category&lt;B&gt;::value == number_kind_integer,
+<span class="lineNum">     789 </span>            :    detail::expression&lt;detail::bitwise_xor, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, et_on&gt; &gt; &gt;::type
+<span class="lineNum">     790 </span>            :       operator^ (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const number&lt;B, et_on&gt;&amp; b)
+<span class="lineNum">     791 </span>            : {
+<span class="lineNum">     792 </span>            :    return detail::expression&lt;detail::bitwise_xor, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, number&lt;B, et_on&gt; &gt;(a, b);
+<span class="lineNum">     793 </span>            : }
+<span class="lineNum">     794 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class tag2, class Arg1b, class Arg2b, class Arg3b, class Arg4b&gt;
+<span class="lineNum">     795 </span>            : inline typename enable_if_c&lt;number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer,
+<span class="lineNum">     796 </span>            :    detail::expression&lt;detail::bitwise_xor, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt; &gt;::type
+<span class="lineNum">     797 </span>            :       operator^ (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt;&amp; b)
+<span class="lineNum">     798 </span>            : {
+<span class="lineNum">     799 </span>            :    return detail::expression&lt;detail::bitwise_xor, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, detail::expression&lt;tag2, Arg1b, Arg2b, Arg3b, Arg4b&gt; &gt;(a, b);
+<span class="lineNum">     800 </span>            : }
+<span class="lineNum">     801 </span>            : template &lt;class tag, class Arg1, class Arg2, class Arg3, class Arg4, class V&gt;
+<span class="lineNum">     802 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value
+<span class="lineNum">     803 </span>            :    &amp;&amp; (number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer),
+<span class="lineNum">     804 </span>            :    detail::expression&lt;detail::bitwise_xor, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt; &gt;::type
+<span class="lineNum">     805 </span>            :       operator^ (const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; a, const V&amp; b)
+<span class="lineNum">     806 </span>            : {
+<span class="lineNum">     807 </span>            :    return detail::expression&lt;detail::bitwise_xor, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;, V &gt;(a, b);
+<span class="lineNum">     808 </span>            : }
+<span class="lineNum">     809 </span>            : template &lt;class V, class tag, class Arg1, class Arg2, class Arg3, class Arg4&gt;
+<span class="lineNum">     810 </span>            : inline typename enable_if_c&lt;is_compatible_arithmetic_type&lt;V, typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value
+<span class="lineNum">     811 </span>            :    &amp;&amp; (number_category&lt;typename detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;::result_type&gt;::value == number_kind_integer), detail::expression&lt;detail::bitwise_xor, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt; &gt;::type
+<span class="lineNum">     812 </span>            :    operator^ (const V&amp; a, const detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt;&amp; b)
+<span class="lineNum">     813 </span>            : {
+<span class="lineNum">     814 </span>            :    return detail::expression&lt;detail::bitwise_xor, V, detail::expression&lt;tag, Arg1, Arg2, Arg3, Arg4&gt; &gt;(a, b);
+<span class="lineNum">     815 </span>            : }
+<span class="lineNum">     816 </span>            : 
+<span class="lineNum">     817 </span>            : }} // namespaces
+<span class="lineNum">     818 </span>            : 
+<span class="lineNum">     819 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

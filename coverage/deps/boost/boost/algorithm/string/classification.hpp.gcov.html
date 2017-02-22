@@ -1,0 +1,388 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/algorithm/string/classification.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/algorithm/string</a> - classification.hpp<span style="font-size: 80%;"> (source / <a href="classification.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">66.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  Boost string_algo library classification.hpp header file  ---------------------------//</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : //  Copyright Pavol Droba 2002-2003.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       6 </span>            : //    (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       7 </span>            : //          http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : //  See http://www.boost.org/ for updates, documentation, and revision history.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_STRING_CLASSIFICATION_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_STRING_CLASSIFICATION_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      15 </span>            : #include &lt;locale&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/range/value_type.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/range/as_literal.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/algorithm/string/detail/classification.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/algorithm/string/predicate_facade.hpp&gt;
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : /*! \file
+<span class="lineNum">      23 </span>            :     Classification predicates are included in the library to give 
+<span class="lineNum">      24 </span>            :     some more convenience when using algorithms like \c trim() and \c all(). 
+<span class="lineNum">      25 </span>            :     They wrap functionality of STL classification functions ( e.g. \c std::isspace() )
+<span class="lineNum">      26 </span>            :     into generic functors. 
+<span class="lineNum">      27 </span>            : */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace boost {
+<span class="lineNum">      30 </span>            :     namespace algorithm {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : //  classification functor generator -------------------------------------//
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            :         //! is_classified predicate
+<span class="lineNum">      35 </span>            :         /*!
+<span class="lineNum">      36 </span>            :             Construct the \c is_classified predicate. This predicate holds if the input is
+<span class="lineNum">      37 </span>            :             of specified \c std::ctype category.
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            :             \param Type A \c std::ctype category
+<span class="lineNum">      40 </span>            :             \param Loc A locale used for classification
+<span class="lineNum">      41 </span>            :             \return An instance of the \c is_classified predicate 
+<span class="lineNum">      42 </span>            :         */
+<span class="lineNum">      43 </span>            :         inline detail::is_classifiedF
+<span class="lineNum">      44 </span>            :         is_classified(std::ctype_base::mask Type, const std::locale&amp; Loc=std::locale())
+<span class="lineNum">      45 </span>            :         {
+<span class="lineNum">      46 </span>            :             return detail::is_classifiedF(Type, Loc);
+<span class="lineNum">      47 </span>            :         }
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :         //! is_space predicate
+<span class="lineNum">      50 </span>            :         /*!
+<span class="lineNum">      51 </span>            :             Construct the \c is_classified predicate for the \c ctype_base::space category.   
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            :             \param Loc A locale used for classification
+<span class="lineNum">      54 </span>            :             \return An instance of the \c is_classified predicate
+<span class="lineNum">      55 </span>            :         */
+<span class="lineNum">      56 </span>            :         inline detail::is_classifiedF 
+<span class="lineNum">      57 </span>            :         is_space(const std::locale&amp; Loc=std::locale())
+<span class="lineNum">      58 </span>            :         {
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :             return detail::is_classifiedF(std::ctype_base::space, Loc);</span>
+<span class="lineNum">      60 </span>            :         }
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            :         //! is_alnum predicate
+<span class="lineNum">      63 </span>            :         /*!
+<span class="lineNum">      64 </span>            :             Construct the \c is_classified predicate for the \c ctype_base::alnum category.   
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :             \param Loc A locale used for classification
+<span class="lineNum">      67 </span>            :             \return An instance of the \c is_classified predicate 
+<span class="lineNum">      68 </span>            :         */
+<span class="lineNum">      69 </span>            :         inline detail::is_classifiedF 
+<span class="lineNum">      70 </span>            :         is_alnum(const std::locale&amp; Loc=std::locale())
+<span class="lineNum">      71 </span>            :         {
+<span class="lineNum">      72 </span>            :             return detail::is_classifiedF(std::ctype_base::alnum, Loc);
+<span class="lineNum">      73 </span>            :         }
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            :         //! is_alpha predicate
+<span class="lineNum">      76 </span>            :         /*!
+<span class="lineNum">      77 </span>            :             Construct the \c is_classified predicate for the \c ctype_base::alpha category.   
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :             \param Loc A locale used for classification
+<span class="lineNum">      80 </span>            :             \return An instance of the \c is_classified predicate 
+<span class="lineNum">      81 </span>            :         */
+<span class="lineNum">      82 </span>            :         inline detail::is_classifiedF 
+<span class="lineNum">      83 </span>            :         is_alpha(const std::locale&amp; Loc=std::locale())
+<span class="lineNum">      84 </span>            :         {
+<span class="lineNum">      85 </span>            :             return detail::is_classifiedF(std::ctype_base::alpha, Loc);
+<span class="lineNum">      86 </span>            :         }
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            :         //! is_cntrl predicate
+<span class="lineNum">      89 </span>            :         /*!
+<span class="lineNum">      90 </span>            :             Construct the \c is_classified predicate for the \c ctype_base::cntrl category.   
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :             \param Loc A locale used for classification
+<span class="lineNum">      93 </span>            :             \return An instance of the \c is_classified predicate 
+<span class="lineNum">      94 </span>            :         */
+<span class="lineNum">      95 </span>            :         inline detail::is_classifiedF 
+<span class="lineNum">      96 </span>            :         is_cntrl(const std::locale&amp; Loc=std::locale())
+<span class="lineNum">      97 </span>            :         {
+<span class="lineNum">      98 </span>            :             return detail::is_classifiedF(std::ctype_base::cntrl, Loc);
+<span class="lineNum">      99 </span>            :         }
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :         //! is_digit predicate
+<span class="lineNum">     102 </span>            :         /*!
+<span class="lineNum">     103 </span>            :             Construct the \c is_classified predicate for the \c ctype_base::digit category.   
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            :             \param Loc A locale used for classification
+<span class="lineNum">     106 </span>            :             \return An instance of the \c is_classified predicate 
+<span class="lineNum">     107 </span>            :         */
+<span class="lineNum">     108 </span>            :         inline detail::is_classifiedF 
+<span class="lineNum">     109 </span>            :         is_digit(const std::locale&amp; Loc=std::locale())
+<span class="lineNum">     110 </span>            :         {
+<span class="lineNum">     111 </span>            :             return detail::is_classifiedF(std::ctype_base::digit, Loc);
+<span class="lineNum">     112 </span>            :         }
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :         //! is_graph predicate
+<span class="lineNum">     115 </span>            :         /*!
+<span class="lineNum">     116 </span>            :             Construct the \c is_classified predicate for the \c ctype_base::graph category.   
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :             \param Loc A locale used for classification
+<span class="lineNum">     119 </span>            :             \return An instance of the \c is_classified predicate 
+<span class="lineNum">     120 </span>            :         */
+<span class="lineNum">     121 </span>            :         inline detail::is_classifiedF
+<span class="lineNum">     122 </span>            :         is_graph(const std::locale&amp; Loc=std::locale())
+<span class="lineNum">     123 </span>            :         {
+<span class="lineNum">     124 </span>            :             return detail::is_classifiedF(std::ctype_base::graph, Loc);
+<span class="lineNum">     125 </span>            :         }
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :         //! is_lower predicate
+<span class="lineNum">     128 </span>            :         /*!
+<span class="lineNum">     129 </span>            :             Construct the \c is_classified predicate for the \c ctype_base::lower category.   
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            :             \param Loc A locale used for classification
+<span class="lineNum">     132 </span>            :             \return An instance of \c is_classified predicate 
+<span class="lineNum">     133 </span>            :         */
+<span class="lineNum">     134 </span>            :         inline detail::is_classifiedF 
+<span class="lineNum">     135 </span>            :         is_lower(const std::locale&amp; Loc=std::locale())
+<span class="lineNum">     136 </span>            :         {
+<span class="lineNum">     137 </span>            :             return detail::is_classifiedF(std::ctype_base::lower, Loc);
+<span class="lineNum">     138 </span>            :         }
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :         //! is_print predicate
+<span class="lineNum">     141 </span>            :         /*!
+<span class="lineNum">     142 </span>            :             Construct the \c is_classified predicate for the \c ctype_base::print category.   
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            :             \param Loc A locale used for classification
+<span class="lineNum">     145 </span>            :             \return An instance of the \c is_classified predicate 
+<span class="lineNum">     146 </span>            :         */
+<span class="lineNum">     147 </span>            :         inline detail::is_classifiedF 
+<span class="lineNum">     148 </span>            :         is_print(const std::locale&amp; Loc=std::locale())
+<span class="lineNum">     149 </span>            :         {
+<span class="lineNum">     150 </span>            :             return detail::is_classifiedF(std::ctype_base::print, Loc);
+<span class="lineNum">     151 </span>            :         }
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :         //! is_punct predicate
+<span class="lineNum">     154 </span>            :         /*!
+<span class="lineNum">     155 </span>            :             Construct the \c is_classified predicate for the \c ctype_base::punct category.   
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            :             \param Loc A locale used for classification
+<span class="lineNum">     158 </span>            :             \return An instance of the \c is_classified predicate 
+<span class="lineNum">     159 </span>            :         */
+<span class="lineNum">     160 </span>            :         inline detail::is_classifiedF 
+<span class="lineNum">     161 </span>            :         is_punct(const std::locale&amp; Loc=std::locale())
+<span class="lineNum">     162 </span>            :         {
+<span class="lineNum">     163 </span>            :             return detail::is_classifiedF(std::ctype_base::punct, Loc);
+<span class="lineNum">     164 </span>            :         }
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :         //! is_upper predicate
+<span class="lineNum">     167 </span>            :         /*!
+<span class="lineNum">     168 </span>            :             Construct the \c is_classified predicate for the \c ctype_base::upper category.   
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :             \param Loc A locale used for classification
+<span class="lineNum">     171 </span>            :             \return An instance of the \c is_classified predicate 
+<span class="lineNum">     172 </span>            :         */
+<span class="lineNum">     173 </span>            :         inline detail::is_classifiedF 
+<span class="lineNum">     174 </span>            :         is_upper(const std::locale&amp; Loc=std::locale())
+<span class="lineNum">     175 </span>            :         {
+<span class="lineNum">     176 </span>            :             return detail::is_classifiedF(std::ctype_base::upper, Loc);
+<span class="lineNum">     177 </span>            :         }
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :         //! is_xdigit predicate
+<span class="lineNum">     180 </span>            :         /*!
+<span class="lineNum">     181 </span>            :             Construct the \c is_classified predicate for the \c ctype_base::xdigit category.  
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            :             \param Loc A locale used for classification
+<span class="lineNum">     184 </span>            :             \return An instance of the \c is_classified predicate 
+<span class="lineNum">     185 </span>            :         */
+<span class="lineNum">     186 </span>            :         inline detail::is_classifiedF 
+<span class="lineNum">     187 </span>            :         is_xdigit(const std::locale&amp; Loc=std::locale())
+<span class="lineNum">     188 </span>            :         {
+<span class="lineNum">     189 </span>            :             return detail::is_classifiedF(std::ctype_base::xdigit, Loc);
+<span class="lineNum">     190 </span>            :         }
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :         //! is_any_of predicate
+<span class="lineNum">     193 </span>            :         /*!
+<span class="lineNum">     194 </span>            :             Construct the \c is_any_of predicate. The predicate holds if the input
+<span class="lineNum">     195 </span>            :             is included in the specified set of characters.
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :             \param Set A set of characters to be recognized
+<span class="lineNum">     198 </span>            :             \return An instance of the \c is_any_of predicate 
+<span class="lineNum">     199 </span>            :         */
+<span class="lineNum">     200 </span>            :         template&lt;typename RangeT&gt;
+<span class="lineNum">     201 </span>            :         inline detail::is_any_ofF&lt;
+<span class="lineNum">     202 </span>            :             BOOST_STRING_TYPENAME range_value&lt;RangeT&gt;::type&gt; 
+<span class="lineNum">     203 </span>            :         is_any_of( const RangeT&amp; Set )
+<span class="lineNum">     204 </span>            :         {
+<span class="lineNum">     205 </span><span class="lineCov">          1 :             iterator_range&lt;BOOST_STRING_TYPENAME range_const_iterator&lt;RangeT&gt;::type&gt; lit_set(boost::as_literal(Set));</span>
+<span class="lineNum">     206 </span><span class="lineCov">          1 :             return detail::is_any_ofF&lt;BOOST_STRING_TYPENAME range_value&lt;RangeT&gt;::type&gt;(lit_set); </span>
+<span class="lineNum">     207 </span>            :         }
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            :         //! is_from_range predicate
+<span class="lineNum">     210 </span>            :         /*!
+<span class="lineNum">     211 </span>            :             Construct the \c is_from_range predicate. The predicate holds if the input
+<span class="lineNum">     212 </span>            :             is included in the specified range. (i.e. From &lt;= Ch &lt;= To )
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            :             \param From The start of the range
+<span class="lineNum">     215 </span>            :             \param To The end of the range
+<span class="lineNum">     216 </span>            :             \return An instance of the \c is_from_range predicate 
+<span class="lineNum">     217 </span>            :         */
+<span class="lineNum">     218 </span>            :         template&lt;typename CharT&gt;
+<span class="lineNum">     219 </span>            :         inline detail::is_from_rangeF&lt;CharT&gt; is_from_range(CharT From, CharT To)
+<span class="lineNum">     220 </span>            :         {
+<span class="lineNum">     221 </span>            :             return detail::is_from_rangeF&lt;CharT&gt;(From,To); 
+<span class="lineNum">     222 </span>            :         }
+<span class="lineNum">     223 </span>            :         
+<span class="lineNum">     224 </span>            :         // predicate combinators ---------------------------------------------------//
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            :         //! predicate 'and' composition predicate
+<span class="lineNum">     227 </span>            :         /*!
+<span class="lineNum">     228 </span>            :             Construct the \c class_and predicate. This predicate can be used
+<span class="lineNum">     229 </span>            :             to logically combine two classification predicates. \c class_and holds,
+<span class="lineNum">     230 </span>            :             if both predicates return true.
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            :             \param Pred1 The first predicate
+<span class="lineNum">     233 </span>            :             \param Pred2 The second predicate
+<span class="lineNum">     234 </span>            :             \return An instance of the \c class_and predicate     
+<span class="lineNum">     235 </span>            :         */
+<span class="lineNum">     236 </span>            :         template&lt;typename Pred1T, typename Pred2T&gt;
+<span class="lineNum">     237 </span>            :         inline detail::pred_andF&lt;Pred1T, Pred2T&gt;
+<span class="lineNum">     238 </span>            :         operator&amp;&amp;( 
+<span class="lineNum">     239 </span>            :             const predicate_facade&lt;Pred1T&gt;&amp; Pred1, 
+<span class="lineNum">     240 </span>            :             const predicate_facade&lt;Pred2T&gt;&amp; Pred2 )
+<span class="lineNum">     241 </span>            :         {    
+<span class="lineNum">     242 </span>            :             // Doing the static_cast with the pointer instead of the reference
+<span class="lineNum">     243 </span>            :             // is a workaround for some compilers which have problems with
+<span class="lineNum">     244 </span>            :             // static_cast's of template references, i.e. CW8. /grafik/
+<span class="lineNum">     245 </span>            :             return detail::pred_andF&lt;Pred1T,Pred2T&gt;(
+<span class="lineNum">     246 </span>            :                 *static_cast&lt;const Pred1T*&gt;(&amp;Pred1), 
+<span class="lineNum">     247 </span>            :                 *static_cast&lt;const Pred2T*&gt;(&amp;Pred2) );
+<span class="lineNum">     248 </span>            :         }
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            :         //! predicate 'or' composition predicate
+<span class="lineNum">     251 </span>            :         /*!
+<span class="lineNum">     252 </span>            :             Construct the \c class_or predicate. This predicate can be used
+<span class="lineNum">     253 </span>            :             to logically combine two classification predicates. \c class_or holds,
+<span class="lineNum">     254 </span>            :             if one of the predicates return true.
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            :             \param Pred1 The first predicate
+<span class="lineNum">     257 </span>            :             \param Pred2 The second predicate
+<span class="lineNum">     258 </span>            :             \return An instance of the \c class_or predicate     
+<span class="lineNum">     259 </span>            :         */
+<span class="lineNum">     260 </span>            :         template&lt;typename Pred1T, typename Pred2T&gt;
+<span class="lineNum">     261 </span>            :         inline detail::pred_orF&lt;Pred1T, Pred2T&gt;
+<span class="lineNum">     262 </span>            :         operator||( 
+<span class="lineNum">     263 </span>            :             const predicate_facade&lt;Pred1T&gt;&amp; Pred1, 
+<span class="lineNum">     264 </span>            :             const predicate_facade&lt;Pred2T&gt;&amp; Pred2 )
+<span class="lineNum">     265 </span>            :         {    
+<span class="lineNum">     266 </span>            :             // Doing the static_cast with the pointer instead of the reference
+<span class="lineNum">     267 </span>            :             // is a workaround for some compilers which have problems with
+<span class="lineNum">     268 </span>            :             // static_cast's of template references, i.e. CW8. /grafik/
+<span class="lineNum">     269 </span>            :             return detail::pred_orF&lt;Pred1T,Pred2T&gt;(
+<span class="lineNum">     270 </span>            :                 *static_cast&lt;const Pred1T*&gt;(&amp;Pred1), 
+<span class="lineNum">     271 </span>            :                 *static_cast&lt;const Pred2T*&gt;(&amp;Pred2));
+<span class="lineNum">     272 </span>            :         }
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            :         //! predicate negation operator
+<span class="lineNum">     275 </span>            :         /*!
+<span class="lineNum">     276 </span>            :             Construct the \c class_not predicate. This predicate represents a negation. 
+<span class="lineNum">     277 </span>            :             \c class_or holds if of the predicates return false.
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            :             \param Pred The predicate to be negated
+<span class="lineNum">     280 </span>            :             \return An instance of the \c class_not predicate     
+<span class="lineNum">     281 </span>            :         */
+<span class="lineNum">     282 </span>            :         template&lt;typename PredT&gt;
+<span class="lineNum">     283 </span>            :         inline detail::pred_notF&lt;PredT&gt;
+<span class="lineNum">     284 </span>            :         operator!( const predicate_facade&lt;PredT&gt;&amp; Pred )
+<span class="lineNum">     285 </span>            :         {
+<span class="lineNum">     286 </span>            :             // Doing the static_cast with the pointer instead of the reference
+<span class="lineNum">     287 </span>            :             // is a workaround for some compilers which have problems with
+<span class="lineNum">     288 </span>            :             // static_cast's of template references, i.e. CW8. /grafik/
+<span class="lineNum">     289 </span>            :             return detail::pred_notF&lt;PredT&gt;(*static_cast&lt;const PredT*&gt;(&amp;Pred)); 
+<span class="lineNum">     290 </span>            :         }
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span>            :     } // namespace algorithm
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            :     // pull names to the boost namespace
+<span class="lineNum">     295 </span>            :     using algorithm::is_classified;
+<span class="lineNum">     296 </span>            :     using algorithm::is_space;
+<span class="lineNum">     297 </span>            :     using algorithm::is_alnum;
+<span class="lineNum">     298 </span>            :     using algorithm::is_alpha;
+<span class="lineNum">     299 </span>            :     using algorithm::is_cntrl;
+<span class="lineNum">     300 </span>            :     using algorithm::is_digit;
+<span class="lineNum">     301 </span>            :     using algorithm::is_graph;
+<span class="lineNum">     302 </span>            :     using algorithm::is_lower;
+<span class="lineNum">     303 </span>            :     using algorithm::is_upper;
+<span class="lineNum">     304 </span>            :     using algorithm::is_print;
+<span class="lineNum">     305 </span>            :     using algorithm::is_punct;
+<span class="lineNum">     306 </span>            :     using algorithm::is_xdigit;
+<span class="lineNum">     307 </span>            :     using algorithm::is_any_of;
+<span class="lineNum">     308 </span>            :     using algorithm::is_from_range;
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            : } // namespace boost
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span>            : #endif  // BOOST_STRING_PREDICATE_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/Common.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - Common.h<span style="font-size: 80%;"> (source / <a href="Common.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">41</td>
+            <td class="headerCovTableEntry">42</td>
+            <td class="headerCovTableEntryHi">97.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">59</td>
+            <td class="headerCovTableEntry">59</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Common.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  *
+<span class="lineNum">      21 </span>            :  * Very common stuff (i.e. that every other header needs except vector_ref.h).
+<span class="lineNum">      22 </span>            :  */
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #pragma once
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : // way to many unsigned to size_t warnings in 32 bit build
+<span class="lineNum">      27 </span>            : #ifdef _M_IX86
+<span class="lineNum">      28 </span>            : #pragma warning(disable:4244)
+<span class="lineNum">      29 </span>            : #endif
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : #if _MSC_VER &amp;&amp; _MSC_VER &lt; 1900
+<span class="lineNum">      32 </span>            : #define _ALLOW_KEYWORD_MACROS
+<span class="lineNum">      33 </span>            : #define noexcept throw()
+<span class="lineNum">      34 </span>            : #endif
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #ifdef __INTEL_COMPILER
+<span class="lineNum">      37 </span>            : #pragma warning(disable:3682) //call through incomplete class
+<span class="lineNum">      38 </span>            : #endif
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : #include &lt;map&gt;
+<span class="lineNum">      41 </span>            : #include &lt;unordered_map&gt;
+<span class="lineNum">      42 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      43 </span>            : #include &lt;set&gt;
+<span class="lineNum">      44 </span>            : #include &lt;unordered_set&gt;
+<span class="lineNum">      45 </span>            : #include &lt;functional&gt;
+<span class="lineNum">      46 </span>            : #include &lt;string&gt;
+<span class="lineNum">      47 </span>            : #include &lt;chrono&gt;
+<span class="lineNum">      48 </span>            : #pragma warning(push)
+<span class="lineNum">      49 </span>            : #pragma GCC diagnostic push
+<span class="lineNum">      50 </span>            : #pragma GCC diagnostic ignored &quot;-Wunused-parameter&quot;
+<span class="lineNum">      51 </span>            : #include &lt;boost/multiprecision/cpp_int.hpp&gt;
+<span class="lineNum">      52 </span>            : #pragma warning(pop)
+<span class="lineNum">      53 </span>            : #pragma GCC diagnostic pop
+<span class="lineNum">      54 </span>            : #include &quot;vector_ref.h&quot;
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : // CryptoPP defines byte in the global namespace, so must we.
+<span class="lineNum">      57 </span>            : using byte = uint8_t;
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : // Quote a given token stream to turn it into a string.
+<span class="lineNum">      60 </span>            : #define DEV_QUOTED_HELPER(s) #s
+<span class="lineNum">      61 </span>            : #define DEV_QUOTED(s) DEV_QUOTED_HELPER(s)
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : #define DEV_IGNORE_EXCEPTIONS(X) try { X; } catch (...) {}
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : #define DEV_IF_THROWS(X) try{X;}catch(...)
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : namespace dev
+<span class="lineNum">      68 </span>            : {
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : extern char const* Version;
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span><span class="lineCov">        153 : static const std::string EmptyString;</span>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : // Binary data types.
+<span class="lineNum">      75 </span>            : using bytes = std::vector&lt;byte&gt;;
+<span class="lineNum">      76 </span>            : using bytesRef = vector_ref&lt;byte&gt;;
+<span class="lineNum">      77 </span>            : using bytesConstRef = vector_ref&lt;byte const&gt;;
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : template &lt;class T&gt;
+<span class="lineNum">      80 </span>            : class secure_vector
+<span class="lineNum">      81 </span>            : {
+<span class="lineNum">      82 </span>            : public:
+<span class="lineNum">      83 </span><span class="lineCov">        146 :         secure_vector() {}</span>
+<span class="lineNum">      84 </span><span class="lineCov">        106 :         secure_vector(secure_vector&lt;T&gt; const&amp; /*_c*/) = default;  // See https://github.com/ethereum/libweb3core/pull/44</span>
+<span class="lineNum">      85 </span><span class="lineCov">        352 :         explicit secure_vector(unsigned _size): m_data(_size) {}</span>
+<span class="lineNum">      86 </span>            :         explicit secure_vector(unsigned _size, T _item): m_data(_size, _item) {}
+<span class="lineNum">      87 </span><span class="lineCov">          4 :         explicit secure_vector(std::vector&lt;T&gt; const&amp; _c): m_data(_c) {}</span>
+<a name="88"><span class="lineNum">      88 </span>            :         explicit secure_vector(vector_ref&lt;T&gt; _c): m_data(_c.data(), _c.data() + _c.size()) {}</a>
+<span class="lineNum">      89 </span><span class="lineCov">          8 :         explicit secure_vector(vector_ref&lt;const T&gt; _c): m_data(_c.data(), _c.data() + _c.size()) {}</span>
+<a name="90"><span class="lineNum">      90 </span><span class="lineCov">       1089 :         ~secure_vector() { ref().cleanse(); }</span></a>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineCov">         67 :         secure_vector&lt;T&gt;&amp; operator=(secure_vector&lt;T&gt; const&amp; _c)</span>
+<span class="lineNum">      93 </span>            :         {
+<span class="lineNum">      94 </span><span class="lineCov">         67 :                 if (&amp;_c == this)</span>
+<span class="lineNum">      95 </span>            :                         return *this;
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span><span class="lineCov">         67 :                 ref().cleanse();</span>
+<span class="lineNum">      98 </span><span class="lineCov">         67 :                 m_data = _c.m_data;</span>
+<span class="lineNum">      99 </span><span class="lineCov">         67 :                 return *this;</span>
+<span class="lineNum">     100 </span>            :         }
+<span class="lineNum">     101 </span><span class="lineCov">        176 :         std::vector&lt;T&gt;&amp; writable() { clear(); return m_data; }</span>
+<span class="lineNum">     102 </span>            :         std::vector&lt;T&gt; const&amp; makeInsecure() const { return m_data; }
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineCov">        176 :         void clear() { ref().cleanse(); }</span>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">       1288 :         vector_ref&lt;T&gt; ref() { return vector_ref&lt;T&gt;(&amp;m_data); }</span>
+<span class="lineNum">     107 </span><span class="lineCov">        112 :         vector_ref&lt;T const&gt; ref() const { return vector_ref&lt;T const&gt;(&amp;m_data); }</span>
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span><span class="lineCov">         22 :         size_t size() const { return m_data.size(); }</span>
+<span class="lineNum">     110 </span><span class="lineCov">         72 :         bool empty() const { return m_data.empty(); }</span>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            :         void swap(secure_vector&lt;T&gt;&amp; io_other) { m_data.swap(io_other.m_data); }
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            : private:
+<span class="lineNum">     115 </span>            :         std::vector&lt;T&gt; m_data;
+<span class="lineNum">     116 </span>            : };
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : using bytesSec = secure_vector&lt;byte&gt;;
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : // Numeric types.
+<span class="lineNum">     121 </span>            : using bigint = boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;&gt;&gt;;
+<span class="lineNum">     122 </span>            : using u64 =  boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;64, 64, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void&gt;&gt;;
+<span class="lineNum">     123 </span>            : using u128 =  boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;128, 128, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void&gt;&gt;;
+<span class="lineNum">     124 </span>            : using u256 =  boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;256, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void&gt;&gt;;
+<span class="lineNum">     125 </span>            : using s256 =  boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;256, 256, boost::multiprecision::signed_magnitude, boost::multiprecision::unchecked, void&gt;&gt;;
+<span class="lineNum">     126 </span>            : using u160 =  boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;160, 160, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void&gt;&gt;;
+<span class="lineNum">     127 </span>            : using s160 =  boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;160, 160, boost::multiprecision::signed_magnitude, boost::multiprecision::unchecked, void&gt;&gt;;
+<span class="lineNum">     128 </span>            : using u512 =  boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;512, 512, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void&gt;&gt;;
+<span class="lineNum">     129 </span>            : using s512 =  boost::multiprecision::number&lt;boost::multiprecision::cpp_int_backend&lt;512, 512, boost::multiprecision::signed_magnitude, boost::multiprecision::unchecked, void&gt;&gt;;
+<span class="lineNum">     130 </span>            : using u256s = std::vector&lt;u256&gt;;
+<span class="lineNum">     131 </span>            : using u160s = std::vector&lt;u160&gt;;
+<span class="lineNum">     132 </span>            : using u256Set = std::set&lt;u256&gt;;
+<span class="lineNum">     133 </span>            : using u160Set = std::set&lt;u160&gt;;
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : // Map types.
+<span class="lineNum">     136 </span>            : using StringMap = std::map&lt;std::string, std::string&gt;;
+<span class="lineNum">     137 </span>            : using BytesMap = std::map&lt;bytes, bytes&gt;;
+<span class="lineNum">     138 </span>            : using u256Map = std::map&lt;u256, u256&gt;;
+<span class="lineNum">     139 </span>            : using HexMap = std::map&lt;bytes, bytes&gt;;
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            : // Hash types.
+<span class="lineNum">     142 </span>            : using StringHashMap = std::unordered_map&lt;std::string, std::string&gt;;
+<span class="lineNum">     143 </span>            : using u256HashMap = std::unordered_map&lt;u256, u256&gt;;
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : // String types.
+<span class="lineNum">     146 </span>            : using strings = std::vector&lt;std::string&gt;;
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            : // Fixed-length string types.
+<span class="lineNum">     149 </span>            : using string32 = std::array&lt;char, 32&gt;;
+<span class="lineNum">     150 </span>            : static const string32 ZeroString32 = {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }};
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            : // Null/Invalid values for convenience.
+<span class="lineNum">     153 </span><span class="lineCov">        153 : static const bytes NullBytes;</span>
+<span class="lineNum">     154 </span><span class="lineCov">        153 : static const std::map&lt;u256, u256&gt; EmptyMapU256U256;</span>
+<span class="lineNum">     155 </span>            : extern const u256 Invalid256;
+<a name="156"><span class="lineNum">     156 </span>            : </a>
+<span class="lineNum">     157 </span>            : /// Interprets @a _u as a two's complement signed number and returns the resulting s256.
+<span class="lineNum">     158 </span><span class="lineCov">      15246 : inline s256 u2s(u256 _u)</span>
+<span class="lineNum">     159 </span>            : {
+<span class="lineNum">     160 </span><span class="lineCov">      15249 :         static const bigint c_end = bigint(1) &lt;&lt; 256;</span>
+<span class="lineNum">     161 </span><span class="lineCov">      15246 :         if (boost::multiprecision::bit_test(_u, 255))</span>
+<span class="lineNum">     162 </span><span class="lineCov">        390 :                 return s256(-(c_end - _u));</span>
+<span class="lineNum">     163 </span>            :         else
+<span class="lineNum">     164 </span>            :                 return s256(_u);
+<span class="lineNum">     165 </span>            : }
+<a name="166"><span class="lineNum">     166 </span>            : </a>
+<span class="lineNum">     167 </span>            : /// @returns the two's complement signed representation of the signed number _u.
+<span class="lineNum">     168 </span><span class="lineCov">       3525 : inline u256 s2u(s256 _u)</span>
+<span class="lineNum">     169 </span>            : {
+<span class="lineNum">     170 </span><span class="lineCov">       3528 :         static const bigint c_end = bigint(1) &lt;&lt; 256;</span>
+<span class="lineNum">     171 </span><span class="lineCov">       7050 :     if (_u &gt;= 0)</span>
+<span class="lineNum">     172 </span>            :                 return u256(_u);
+<span class="lineNum">     173 </span>            :     else
+<span class="lineNum">     174 </span><span class="lineCov">         78 :                 return u256(c_end + _u);</span>
+<span class="lineNum">     175 </span>            : }
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            : /// Converts given int to a string and appends one of a series of units according to its size.
+<span class="lineNum">     178 </span>            : std::string inUnits(bigint const&amp; _b, strings const&amp; _units);
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            : /// @returns the smallest n &gt;= 0 such that (1 &lt;&lt; n) &gt;= _x
+<span class="lineNum">     181 </span>            : inline unsigned int toLog2(u256 _x)
+<span class="lineNum">     182 </span>            : {
+<span class="lineNum">     183 </span>            :         unsigned ret;
+<span class="lineNum">     184 </span>            :         for (ret = 0; _x &gt;&gt;= 1; ++ret) {}
+<span class="lineNum">     185 </span>            :         return ret;
+<a name="186"><span class="lineNum">     186 </span>            : }</a>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span><span class="lineCov">       6129 : template &lt;size_t n&gt; inline u256 exp10()</span>
+<span class="lineNum">     189 </span>            : {
+<span class="lineNum">     190 </span><span class="lineCov">      18821 :         return exp10&lt;n - 1&gt;() * u256(10);</span>
+<span class="lineNum">     191 </span>            : }
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : template &lt;&gt; inline u256 exp10&lt;0&gt;()
+<span class="lineNum">     194 </span>            : {
+<span class="lineNum">     195 </span><span class="lineCov">       1078 :         return u256(1);</span>
+<span class="lineNum">     196 </span>            : }
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            : /// @returns the absolute distance between _a and _b.
+<span class="lineNum">     199 </span>            : template &lt;class N&gt;
+<span class="lineNum">     200 </span>            : inline N diff(N const&amp; _a, N const&amp; _b)
+<span class="lineNum">     201 </span>            : {
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :         return std::max(_a, _b) - std::min(_a, _b);</span>
+<span class="lineNum">     203 </span>            : }
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            : /// RAII utility class whose destructor calls a given function.
+<span class="lineNum">     206 </span>            : class ScopeGuard
+<span class="lineNum">     207 </span>            : {
+<span class="lineNum">     208 </span>            : public:
+<span class="lineNum">     209 </span>            :         ScopeGuard(std::function&lt;void(void)&gt; _f): m_f(_f) {}
+<span class="lineNum">     210 </span>            :         ~ScopeGuard() { m_f(); }
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            : private:
+<span class="lineNum">     213 </span>            :         std::function&lt;void(void)&gt; m_f;
+<span class="lineNum">     214 </span>            : };
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            : /// Inheritable for classes that have invariants.
+<span class="lineNum">     217 </span><span class="lineCov">      15092 : class HasInvariants</span>
+<span class="lineNum">     218 </span>            : {
+<span class="lineNum">     219 </span>            : public:
+<span class="lineNum">     220 </span>            :         /// Reimplement to specify the invariants.
+<span class="lineNum">     221 </span>            :         virtual bool invariants() const = 0;
+<span class="lineNum">     222 </span>            : };
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            : /// RAII checker for invariant assertions.
+<span class="lineNum">     225 </span>            : class InvariantChecker
+<span class="lineNum">     226 </span>            : {
+<span class="lineNum">     227 </span>            : public:
+<span class="lineNum">     228 </span>            :         InvariantChecker(HasInvariants* _this, char const* _fn, char const* _file, int _line): m_this(_this), m_function(_fn), m_file(_file), m_line(_line) { checkInvariants(_this, _fn , _file, _line, true); }
+<span class="lineNum">     229 </span>            :         ~InvariantChecker() { checkInvariants(m_this, m_function, m_file, m_line, false); }
+<span class="lineNum">     230 </span>            :         /// Check invariants are met, throw if not.
+<span class="lineNum">     231 </span>            :         static void checkInvariants(HasInvariants const* _this, char const* _fn, char const* _file, int line, bool _pre);
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            : private:
+<span class="lineNum">     234 </span>            :         HasInvariants const* m_this;
+<span class="lineNum">     235 </span>            :         char const* m_function;
+<span class="lineNum">     236 </span>            :         char const* m_file;
+<span class="lineNum">     237 </span>            :         int m_line;
+<span class="lineNum">     238 </span>            : };
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            : /// Scope guard for invariant check in a class derived from HasInvariants.
+<span class="lineNum">     241 </span>            : #if ETH_DEBUG
+<span class="lineNum">     242 </span>            : #define DEV_INVARIANT_CHECK ::dev::InvariantChecker __dev_invariantCheck(this, BOOST_CURRENT_FUNCTION, __FILE__, __LINE__)
+<span class="lineNum">     243 </span>            : #define DEV_INVARIANT_CHECK_HERE ::dev::InvariantChecker::checkInvariants(this, BOOST_CURRENT_FUNCTION, __FILE__, __LINE__, true)
+<span class="lineNum">     244 </span>            : #else
+<span class="lineNum">     245 </span>            : #define DEV_INVARIANT_CHECK (void)0;
+<span class="lineNum">     246 </span>            : #define DEV_INVARIANT_CHECK_HERE (void)0;
+<span class="lineNum">     247 </span>            : #endif
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            : /// Simple scope-based timer helper.
+<span class="lineNum">     250 </span><span class="lineCov">      71484 : class TimerHelper</span>
+<a name="251"><span class="lineNum">     251 </span>            : {</a>
+<span class="lineNum">     252 </span>            : public:
+<span class="lineNum">     253 </span><span class="lineCov">      81502 :         TimerHelper(std::string const&amp; _id, unsigned _msReportWhenGreater = 0): m_t(std::chrono::high_resolution_clock::now()), m_id(_id), m_ms(_msReportWhenGreater) {}</span>
+<span class="lineNum">     254 </span>            :         ~TimerHelper();
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            : private:
+<span class="lineNum">     257 </span>            :         std::chrono::high_resolution_clock::time_point m_t;
+<span class="lineNum">     258 </span>            :         std::string m_id;
+<span class="lineNum">     259 </span>            :         unsigned m_ms;
+<span class="lineNum">     260 </span>            : };
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span>            : class Timer
+<span class="lineNum">     263 </span>            : {
+<span class="lineNum">     264 </span>            : public:
+<span class="lineNum">     265 </span><span class="lineCov">      30474 :         Timer() { restart(); }</span>
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span><span class="lineCov">      59252 :         std::chrono::high_resolution_clock::duration duration() const { return std::chrono::high_resolution_clock::now() - m_t; }</span>
+<span class="lineNum">     268 </span><span class="lineCov">      59252 :         double elapsed() const { return std::chrono::duration_cast&lt;std::chrono::microseconds&gt;(duration()).count() / 1000000.0; }</span>
+<span class="lineNum">     269 </span><span class="lineCov">      30222 :         void restart() { m_t = std::chrono::high_resolution_clock::now(); }</span>
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            : private:
+<span class="lineNum">     272 </span>            :         std::chrono::high_resolution_clock::time_point m_t;
+<span class="lineNum">     273 </span>            : };
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            : #define DEV_TIMED(S) for (::std::pair&lt;::dev::TimerHelper, bool&gt; __eth_t(S, true); __eth_t.second; __eth_t.second = false)
+<span class="lineNum">     276 </span>            : #define DEV_TIMED_SCOPE(S) ::dev::TimerHelper __eth_t(S)
+<span class="lineNum">     277 </span>            : #if defined(_WIN32)
+<span class="lineNum">     278 </span>            : #define DEV_TIMED_FUNCTION DEV_TIMED_SCOPE(__FUNCSIG__)
+<span class="lineNum">     279 </span>            : #else
+<span class="lineNum">     280 </span>            : #define DEV_TIMED_FUNCTION DEV_TIMED_SCOPE(__PRETTY_FUNCTION__)
+<span class="lineNum">     281 </span>            : #endif
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span>            : #define DEV_TIMED_ABOVE(S, MS) for (::std::pair&lt;::dev::TimerHelper, bool&gt; __eth_t(::dev::TimerHelper(S, MS), true); __eth_t.second; __eth_t.second = false)
+<span class="lineNum">     284 </span>            : #define DEV_TIMED_SCOPE_ABOVE(S, MS) ::dev::TimerHelper __eth_t(S, MS)
+<span class="lineNum">     285 </span>            : #if defined(_WIN32)
+<span class="lineNum">     286 </span>            : #define DEV_TIMED_FUNCTION_ABOVE(MS) DEV_TIMED_SCOPE_ABOVE(__FUNCSIG__, MS)
+<span class="lineNum">     287 </span>            : #else
+<span class="lineNum">     288 </span>            : #define DEV_TIMED_FUNCTION_ABOVE(MS) DEV_TIMED_SCOPE_ABOVE(__PRETTY_FUNCTION__, MS)
+<span class="lineNum">     289 </span>            : #endif
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            : #ifdef _MSC_VER
+<span class="lineNum">     292 </span>            : // TODO.
+<span class="lineNum">     293 </span>            : #define DEV_UNUSED
+<span class="lineNum">     294 </span>            : #else
+<span class="lineNum">     295 </span>            : #define DEV_UNUSED __attribute__((unused))
+<span class="lineNum">     296 </span>            : #endif
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            : enum class WithExisting: int
+<span class="lineNum">     299 </span>            : {
+<span class="lineNum">     300 </span>            :         Trust = 0,
+<span class="lineNum">     301 </span>            :         Verify,
+<span class="lineNum">     302 </span>            :         Rescue,
+<span class="lineNum">     303 </span>            :         Kill
+<span class="lineNum">     304 </span>            : };
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span>            : /// Get the current time in seconds since the epoch in UTC
+<span class="lineNum">     307 </span>            : uint64_t utcTime();
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span>            : }
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            : namespace std
+<span class="lineNum">     312 </span>            : {
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span>            : inline dev::WithExisting max(dev::WithExisting _a, dev::WithExisting _b)
+<span class="lineNum">     315 </span>            : {
+<span class="lineNum">     316 </span>            :         return static_cast&lt;dev::WithExisting&gt;(max(static_cast&lt;int&gt;(_a), static_cast&lt;int&gt;(_b)));
+<span class="lineNum">     317 </span>            : }
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            : template &lt;&gt; struct hash&lt;dev::u256&gt;
+<span class="lineNum">     320 </span>            : {
+<span class="lineNum">     321 </span>            :         size_t operator()(dev::u256 const&amp; _a) const
+<span class="lineNum">     322 </span>            :         {
+<span class="lineNum">     323 </span><span class="lineCov">    1120245 :                 unsigned size = _a.backend().size();</span>
+<span class="lineNum">     324 </span><span class="lineCov">    2240490 :                 auto limbs = _a.backend().limbs();</span>
+<span class="lineNum">     325 </span><span class="lineCov">    2240490 :                 return boost::hash_range(limbs, limbs + size);</span>
+<span class="lineNum">     326 </span>            :         }
+<span class="lineNum">     327 </span>            : };
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/unit_test_log_formatter.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test</a> - unit_test_log_formatter.hpp<span style="font-size: 80%;"> (source / <a href="unit_test_log_formatter.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntryLo">69.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryLo">33.3 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : /// @file
+<span class="lineNum">       9 </span>            : /// @brief Defines unit test log formatter interface
+<span class="lineNum">      10 </span>            : ///
+<span class="lineNum">      11 </span>            : /// You can define a class with implements this interface and use an instance of it
+<span class="lineNum">      12 </span>            : /// as a Unit Test Framework log formatter
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_UNIT_TEST_LOG_FORMATTER_HPP_071894GER
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_UNIT_TEST_LOG_FORMATTER_HPP_071894GER
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/detail/global_typedef.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/detail/log_level.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/test/detail/fwd_decl.hpp&gt;
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : // STL
+<span class="lineNum">      24 </span>            : #include &lt;iosfwd&gt;
+<span class="lineNum">      25 </span>            : #include &lt;string&gt; // for std::string
+<span class="lineNum">      26 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace boost {
+<span class="lineNum">      33 </span>            : namespace unit_test {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : // ************************************************************************** //
+<span class="lineNum">      36 </span>            : /// Collection of log entry attributes
+<span class="lineNum">      37 </span>            : // ************************************************************************** //
+<a name="38"><span class="lineNum">      38 </span>            : </a>
+<span class="lineNum">      39 </span><span class="lineCov">          2 : struct BOOST_TEST_DECL log_entry_data {</span>
+<span class="lineNum">      40 </span><span class="lineCov">          1 :     log_entry_data()</span>
+<span class="lineNum">      41 </span><span class="lineCov">          2 :     {</span>
+<span class="lineNum">      42 </span><span class="lineCov">          1 :         m_file_name.reserve( 200 );</span>
+<span class="lineNum">      43 </span><span class="lineCov">          1 :     }</span>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            :     std::string     m_file_name; ///&lt; log entry file name
+<span class="lineNum">      46 </span>            :     std::size_t     m_line_num;  ///&lt; log entry line number
+<span class="lineNum">      47 </span>            :     log_level       m_level;     ///&lt; log entry level
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :     void clear()
+<span class="lineNum">      50 </span>            :     {
+<span class="lineNum">      51 </span><span class="lineCov">     302937 :         m_file_name.erase();</span>
+<span class="lineNum">      52 </span><span class="lineCov">     302937 :         m_line_num      = 0;</span>
+<span class="lineNum">      53 </span><span class="lineCov">     302937 :         m_level     = log_nothing;</span>
+<span class="lineNum">      54 </span>            :     }
+<span class="lineNum">      55 </span>            : };
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : // ************************************************************************** //
+<span class="lineNum">      58 </span>            : /// Collection of log checkpoint attributes
+<span class="lineNum">      59 </span>            : // ************************************************************************** //
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineCov">          5 : struct BOOST_TEST_DECL log_checkpoint_data</span>
+<span class="lineNum">      62 </span>            : {
+<span class="lineNum">      63 </span>            :     const_string    m_file_name; ///&lt; log checkpoint file name
+<span class="lineNum">      64 </span>            :     std::size_t     m_line_num;  ///&lt; log checkpoint file name
+<a name="65"><span class="lineNum">      65 </span>            :     std::string     m_message;   ///&lt; log checkpoint message</a>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineCov">        363 :     void clear()</span>
+<span class="lineNum">      68 </span>            :     {
+<span class="lineNum">      69 </span><span class="lineCov">        726 :         m_file_name.clear();</span>
+<span class="lineNum">      70 </span><span class="lineCov">        363 :         m_line_num  = 0;</span>
+<span class="lineNum">      71 </span><span class="lineCov">       1089 :         m_message   = std::string();</span>
+<span class="lineNum">      72 </span><span class="lineCov">        363 :     }</span>
+<span class="lineNum">      73 </span>            : };
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : // ************************************************************************** //
+<span class="lineNum">      76 </span>            : /// @brief Abstract Unit Test Framework log formatter interface
+<span class="lineNum">      77 </span>            : ///
+<span class="lineNum">      78 </span>            : /// During the test module execution Unit Test Framework can report messages about success
+<span class="lineNum">      79 </span>            : /// or failure of assertions, which test suites are being run and more (specifically which
+<span class="lineNum">      80 </span>            : /// messages are reported depends on log level threshold selected by the user).
+<span class="lineNum">      81 </span>            : ///
+<span class="lineNum">      82 </span>            : /// All these messages constitute Unit Test Framework log. There are many ways (formats) to present
+<span class="lineNum">      83 </span>            : /// these messages to the user.
+<span class="lineNum">      84 </span>            : ///
+<span class="lineNum">      85 </span>            : /// Boost.Test comes with three formats:
+<span class="lineNum">      86 </span>            : /// - Compiler-like log format: intended for human consumption/diagnostic
+<span class="lineNum">      87 </span>            : /// - XML based log format:  intended for processing by automated regression test systems.
+<span class="lineNum">      88 </span>            : /// - JUNIT based log format:  intended for processing by automated regression test systems.
+<span class="lineNum">      89 </span>            : ///
+<span class="lineNum">      90 </span>            : /// If you want to produce some other format you need to implement class with specific interface and use
+<span class="lineNum">      91 </span>            : /// method @c unit_test_log_t::set_formatter during a test module initialization to set an active formatter.
+<span class="lineNum">      92 </span>            : /// The class unit_test_log_formatter defines this interface.
+<span class="lineNum">      93 </span>            : ///
+<span class="lineNum">      94 </span>            : /// This interface requires you to format all possible messages being produced in the log.
+<span class="lineNum">      95 </span>            : /// These includes error messages about failed assertions, messages about caught exceptions and
+<span class="lineNum">      96 </span>            : /// information messages about test units being started/ended. All the methods in this interface takes
+<span class="lineNum">      97 </span>            : /// a reference to standard stream as a first argument. This is where final messages needs to be directed
+<span class="lineNum">      98 </span>            : /// to. Also you are given all the information necessary to produce a message.
+<span class="lineNum">      99 </span>            : ///
+<span class="lineNum">     100 </span>            : /// @par Since Boost 1.62:
+<span class="lineNum">     101 </span>            : /// - Each formatter may indicate the default output stream. This is convenient for instance for streams intended
+<span class="lineNum">     102 </span>            : ///   for automated processing that indicate a file. See @c get_default_stream_description for more details.
+<span class="lineNum">     103 </span>            : /// - Each formatter may manage its own log level through the getter/setter @c get_log_level and @c set_log_level .
+<span class="lineNum">     104 </span>            : ///
+<span class="lineNum">     105 </span>            : /// @see
+<span class="lineNum">     106 </span>            : /// - boost::unit_test::test_observer for an indication of the calls of the test observer interface
+<span class="lineNum">     107 </span>            : class BOOST_TEST_DECL unit_test_log_formatter {
+<span class="lineNum">     108 </span>            : public:
+<span class="lineNum">     109 </span>            :     /// Types of log entries (messages written into a log)
+<span class="lineNum">     110 </span>            :     enum log_entry_types { BOOST_UTL_ET_INFO,       ///&lt; Information message from the framework
+<span class="lineNum">     111 </span>            :                            BOOST_UTL_ET_MESSAGE,    ///&lt; Information message from the user
+<span class="lineNum">     112 </span>            :                            BOOST_UTL_ET_WARNING,    ///&lt; Warning (non error) condition notification message
+<span class="lineNum">     113 </span>            :                            BOOST_UTL_ET_ERROR,      ///&lt; Non fatal error notification message
+<span class="lineNum">     114 </span>            :                            BOOST_UTL_ET_FATAL_ERROR ///&lt; Fatal error notification message
+<span class="lineNum">     115 </span>            :     };
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :     //! Constructor
+<span class="lineNum">     118 </span>            :     unit_test_log_formatter()
+<span class="lineNum">     119 </span><span class="lineCov">          3 :         : m_log_level(log_all_errors)</span>
+<span class="lineNum">     120 </span>            :     {}
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :     // Destructor
+<span class="lineNum">     123 </span><span class="lineCov">          3 :     virtual             ~unit_test_log_formatter() {}</span>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :     // @name Test start/finish
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :     /// Invoked at the beginning of test module execution
+<span class="lineNum">     128 </span>            :     ///
+<span class="lineNum">     129 </span>            :     /// @param[in] os   output stream to write a messages to
+<span class="lineNum">     130 </span>            :     /// @param[in] test_cases_amount total test case amount to be run
+<span class="lineNum">     131 </span>            :     /// @see log_finish
+<span class="lineNum">     132 </span>            :     virtual void        log_start( std::ostream&amp; os, counter_t test_cases_amount ) = 0;
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            :     /// Invoked at the end of test module execution
+<span class="lineNum">     135 </span>            :     ///
+<span class="lineNum">     136 </span>            :     /// @param[in] os   output stream to write a messages into
+<span class="lineNum">     137 </span>            :     /// @see log_start
+<span class="lineNum">     138 </span>            :     virtual void        log_finish( std::ostream&amp; os ) = 0;
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :     /// Invoked when Unit Test Framework build information is requested
+<span class="lineNum">     141 </span>            :     ///
+<span class="lineNum">     142 </span>            :     /// @param[in] os   output stream to write a messages into
+<span class="lineNum">     143 </span>            :     virtual void        log_build_info( std::ostream&amp; os ) = 0;
+<span class="lineNum">     144 </span>            :     // @}
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :     // @name Test unit start/finish
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            :     /// Invoked when test unit starts (either test suite or test case)
+<span class="lineNum">     149 </span>            :     ///
+<span class="lineNum">     150 </span>            :     /// @param[in] os   output stream to write a messages into
+<span class="lineNum">     151 </span>            :     /// @param[in] tu   test unit being started
+<span class="lineNum">     152 </span>            :     /// @see test_unit_finish
+<span class="lineNum">     153 </span>            :     virtual void        test_unit_start( std::ostream&amp; os, test_unit const&amp; tu ) = 0;
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            :     /// Invoked when test unit finishes
+<span class="lineNum">     156 </span>            :     ///
+<span class="lineNum">     157 </span>            :     /// @param[in] os   output stream to write a messages into
+<span class="lineNum">     158 </span>            :     /// @param[in] tu   test unit being finished
+<span class="lineNum">     159 </span>            :     /// @param[in] elapsed time in microseconds spend executing this test unit
+<span class="lineNum">     160 </span>            :     /// @see test_unit_start
+<span class="lineNum">     161 </span>            :     virtual void        test_unit_finish( std::ostream&amp; os, test_unit const&amp; tu, unsigned long elapsed ) = 0;
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            :     /// Invoked if test unit skipped for any reason
+<span class="lineNum">     164 </span>            :     ///
+<span class="lineNum">     165 </span>            :     /// @param[in] os   output stream to write a messages into
+<a name="166"><span class="lineNum">     166 </span>            :     /// @param[in] tu   skipped test unit</a>
+<span class="lineNum">     167 </span>            :     /// @param[in] reason explanation why was it skipped
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :     virtual void        test_unit_skipped( std::ostream&amp; os, test_unit const&amp; tu, const_string /* reason */)</span>
+<span class="lineNum">     169 </span>            :     {
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :         test_unit_skipped( os, tu );</span>
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :     }</span>
+<a name="172"><span class="lineNum">     172 </span>            : </a>
+<span class="lineNum">     173 </span>            :     /// Deprecated version of this interface
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :     virtual void        test_unit_skipped( std::ostream&amp; /* os */, test_unit const&amp; /* tu */) {}</span>
+<a name="175"><span class="lineNum">     175 </span>            : </a>
+<span class="lineNum">     176 </span>            :     /// Invoked when a test unit is aborted
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :     virtual void        test_unit_aborted( std::ostream&amp; /* os */, test_unit const&amp; /* tu */) {}</span>
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :     // @}
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            :     // @name Uncaught exception report
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            :     /// Invoked when Unit Test Framework detects uncaught exception
+<span class="lineNum">     184 </span>            :     ///
+<span class="lineNum">     185 </span>            :     /// The framwork calls this function when an uncaught exception it detected.
+<span class="lineNum">     186 </span>            :     /// This call is followed by context information:
+<span class="lineNum">     187 </span>            :     /// - one call to @c entry_context_start,
+<span class="lineNum">     188 </span>            :     /// - as many calls to @c log_entry_context as there are context entries
+<span class="lineNum">     189 </span>            :     /// - one call to @c entry_context_finish
+<span class="lineNum">     190 </span>            :     ///
+<span class="lineNum">     191 </span>            :     /// The logging of the exception information is finilized by a call to @c log_exception_finish.
+<span class="lineNum">     192 </span>            :     ///
+<span class="lineNum">     193 </span>            :     /// @param[in] os   output stream to write a messages into
+<span class="lineNum">     194 </span>            :     /// @param[in] lcd  information about the last checkpoint before the exception was triggered
+<span class="lineNum">     195 </span>            :     /// @param[in] ex   information about the caught exception
+<span class="lineNum">     196 </span>            :     /// @see log_exception_finish
+<span class="lineNum">     197 </span>            :     virtual void        log_exception_start( std::ostream&amp; os, log_checkpoint_data const&amp; lcd, execution_exception const&amp; ex ) = 0;
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            :     /// Invoked when Unit Test Framework detects uncaught exception
+<span class="lineNum">     200 </span>            :     ///
+<span class="lineNum">     201 </span>            :     /// Call to this function finishes uncaught exception report.
+<span class="lineNum">     202 </span>            :     /// @param[in] os   output stream to write a messages into
+<span class="lineNum">     203 </span>            :     /// @see log_exception_start
+<span class="lineNum">     204 </span>            :     virtual void        log_exception_finish( std::ostream&amp; os ) = 0;
+<span class="lineNum">     205 </span>            :     // @}
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :     // @name Regular log entry
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            :     /// Invoked by Unit Test Framework to start new log entry
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :     /// Call to this function starts new log entry. It is followed by series of log_entry_value calls and finally call to log_entry_finish.
+<span class="lineNum">     212 </span>            :     /// A log entry may consist of one or more values being reported. Some of these values will be plain strings, while others can be complicated
+<span class="lineNum">     213 </span>            :     /// expressions in a form of &quot;lazy&quot; expression template lazy_ostream.
+<span class="lineNum">     214 </span>            :     /// @param[in] os   output stream to write a messages into
+<span class="lineNum">     215 </span>            :     /// @param[in] led  log entry attributes
+<span class="lineNum">     216 </span>            :     /// @param[in] let  log entry type log_entry_finish
+<span class="lineNum">     217 </span>            :     /// @see log_entry_value, log_entry_finish
+<span class="lineNum">     218 </span>            :     ///
+<span class="lineNum">     219 </span>            :     /// @note call to this function may happen before any call to test_unit_start or all calls to test_unit_finish as the
+<span class="lineNum">     220 </span>            :     /// framework might log errors raised during global initialization/shutdown.
+<span class="lineNum">     221 </span>            :     virtual void        log_entry_start( std::ostream&amp; os, log_entry_data const&amp; led, log_entry_types let ) = 0;
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            :     /// Invoked by Unit Test Framework to report a log entry content
+<span class="lineNum">     224 </span>            :     ///
+<span class="lineNum">     225 </span>            :     /// This is one of two overloaded methods to report log entry content. This one is used to report plain string value.
+<span class="lineNum">     226 </span>            :     /// @param[in] os   output stream to write a messages into.
+<span class="lineNum">     227 </span>            :     /// @param[in] value log entry string value
+<span class="lineNum">     228 </span>            :     /// @see log_entry_start, log_entry_finish
+<span class="lineNum">     229 </span>            :     virtual void        log_entry_value( std::ostream&amp; os, const_string value ) = 0;
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :     /// Invoked by Unit Test Framework to report a log entry content
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            :     /// This is one of two overloaded methods to report log entry content. This one is used to report some complicated expression passed as
+<span class="lineNum">     234 </span>            :     /// an expression template lazy_ostream. In most cases default implementation provided by the framework should work as is (it just converts
+<span class="lineNum">     235 </span>            :     /// the lazy expression into a string.
+<span class="lineNum">     236 </span>            :     /// @param[in] os   output stream to write a messages into
+<span class="lineNum">     237 </span>            :     /// @param[in] value log entry &quot;lazy&quot; value
+<span class="lineNum">     238 </span>            :     /// @see log_entry_start, log_entry_finish
+<span class="lineNum">     239 </span>            :     virtual void        log_entry_value( std::ostream&amp; os, lazy_ostream const&amp; value ); // there is a default impl
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            :     /// Invoked by Unit Test Framework to finish a log entry report
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            :     /// @param[in] os   output stream to write a messages into
+<span class="lineNum">     244 </span>            :     /// @see log_entry_start, log_entry_start
+<span class="lineNum">     245 </span>            :     virtual void        log_entry_finish( std::ostream&amp; os ) = 0;
+<span class="lineNum">     246 </span>            :     // @}
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :     // @name Log entry context report
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            :     /// Invoked by Unit Test Framework to start log entry context report
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            :     /// Unit Test Framework logs for failed assertions and uncaught exceptions context if one was defined by a test module.
+<span class="lineNum">     253 </span>            :     /// Context consists of multiple &quot;scopes&quot; identified by description messages assigned by the test module using
+<span class="lineNum">     254 </span>            :     /// BOOST_TEST_INFO/BOOST_TEST_CONTEXT statements.
+<span class="lineNum">     255 </span>            :     /// @param[in] os   output stream to write a messages into
+<span class="lineNum">     256 </span>            :     /// @param[in] l    entry log_level, to be used to fine tune the message
+<span class="lineNum">     257 </span>            :     /// @see log_entry_context, entry_context_finish
+<span class="lineNum">     258 </span>            :     virtual void        entry_context_start( std::ostream&amp; os, log_level l ) = 0;
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span>            :     /// Invoked by Unit Test Framework to report log entry context &quot;scope&quot; description
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span>            :     /// Each &quot;scope&quot; description is reported by separate call to log_entry_context.
+<span class="lineNum">     263 </span>            :     /// @param[in] os   output stream to write a messages into
+<span class="lineNum">     264 </span>            :     /// @param[in] value  context &quot;scope&quot; description
+<span class="lineNum">     265 </span>            :     /// @see log_entry_start, entry_context_finish
+<span class="lineNum">     266 </span>            :     virtual void        log_entry_context( std::ostream&amp; os, const_string value ) = 0;
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            :     /// Invoked by Unit Test Framework to finish log entry context report
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span>            :     /// @param[in] os   output stream to write a messages into
+<span class="lineNum">     271 </span>            :     /// @see log_entry_start, entry_context_context
+<span class="lineNum">     272 </span>            :     virtual void        entry_context_finish( std::ostream&amp; os ) = 0;
+<span class="lineNum">     273 </span>            :     // @}
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            :     // @name Log level management
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            :     /// Sets the log level of the logger/formatter
+<span class="lineNum">     278 </span>            :     ///
+<span class="lineNum">     279 </span>            :     /// Some loggers need to manage the log level by their own. This
+<span class="lineNum">     280 </span>            :     /// member function let the implementation decide of that.
+<span class="lineNum">     281 </span>            :     /// @par Since Boost 1.62
+<span class="lineNum">     282 </span>            :     virtual void        set_log_level(log_level new_log_level);
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            :     /// Returns the log level of the logger/formatter
+<span class="lineNum">     285 </span>            :     /// @par Since Boost 1.62
+<span class="lineNum">     286 </span>            :     virtual log_level   get_log_level() const;
+<span class="lineNum">     287 </span>            :     // @}
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            :     // @name Stream management
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span>            :     /// Returns a default stream for this logger.
+<span class="lineNum">     293 </span>            :     ///
+<span class="lineNum">     294 </span>            :     /// The returned string describes the stream as if it was passed from
+<span class="lineNum">     295 </span>            :     /// the command line @c &quot;--log_sink&quot; parameter. With that regards, @b stdout and @b stderr
+<span class="lineNum">     296 </span>            :     /// have special meaning indicating the standard output or error stream respectively.
+<a name="297"><span class="lineNum">     297 </span>            :     ///</a>
+<span class="lineNum">     298 </span>            :     /// @par Since Boost 1.62
+<span class="lineNum">     299 </span><span class="lineNoCov">          0 :     virtual std::string  get_default_stream_description() const</span>
+<span class="lineNum">     300 </span>            :     {
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :         return &quot;stdout&quot;;</span>
+<span class="lineNum">     302 </span>            :     }
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span>            :     // @}
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            : protected:
+<span class="lineNum">     308 </span>            :     log_level           m_log_level;
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            : };
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span>            : } // namespace unit_test
+<span class="lineNum">     313 </span>            : } // namespace boost
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            : #endif // BOOST_TEST_UNIT_TEST_LOG_FORMATTER_HPP_071894GER
+<span class="lineNum">     320 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

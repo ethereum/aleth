@@ -1,0 +1,215 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/ExtVM.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - ExtVM.cpp<span style="font-size: 80%;"> (source / <a href="ExtVM.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">40</td>
+            <td class="headerCovTableEntry">43</td>
+            <td class="headerCovTableEntryHi">93.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file ExtVM.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;ExtVM.h&quot;
+<span class="lineNum">      23 </span>            : #include &lt;exception&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/thread.hpp&gt;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : using namespace dev;
+<span class="lineNum">      27 </span>            : using namespace dev::eth;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace // anonymous
+<span class="lineNum">      30 </span>            : {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : static unsigned const c_depthLimit = 1024;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : /// Upper bound of stack space needed by single CALL/CREATE execution. Set experimentally.
+<span class="lineNum">      35 </span>            : static size_t const c_singleExecutionStackSize = 14 * 1024;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : /// Standard thread stack size.
+<span class="lineNum">      38 </span>            : static size_t const c_defaultStackSize =
+<span class="lineNum">      39 </span>            : #if defined(__linux)
+<span class="lineNum">      40 </span>            :          8 * 1024 * 1024;
+<span class="lineNum">      41 </span>            : #elif defined(_WIN32)
+<span class="lineNum">      42 </span>            :         16 * 1024 * 1024;
+<span class="lineNum">      43 </span>            : #else
+<span class="lineNum">      44 </span>            :         512 * 1024; // OSX and other OSs
+<span class="lineNum">      45 </span>            : #endif
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : /// Stack overhead prior to allocation.
+<span class="lineNum">      48 </span>            : static size_t const c_entryOverhead = 128 * 1024;
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : /// On what depth execution should be offloaded to additional separated stack space.
+<a name="51"><span class="lineNum">      51 </span>            : static unsigned const c_offloadPoint = (c_defaultStackSize - c_entryOverhead) / c_singleExecutionStackSize;</a>
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineCov">         75 : void goOnOffloadedStack(Executive&amp; _e, OnOpFunc const&amp; _onOp)</span>
+<span class="lineNum">      54 </span>            : {
+<span class="lineNum">      55 </span>            :         // Set new stack size enouth to handle the rest of the calls up to the limit.
+<span class="lineNum">      56 </span><span class="lineCov">        150 :         boost::thread::attributes attrs;</span>
+<span class="lineNum">      57 </span><span class="lineCov">         75 :         attrs.set_stack_size((c_depthLimit - c_offloadPoint) * c_singleExecutionStackSize);</span>
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            :         // Create new thread with big stack and join immediately.
+<a name="60"><span class="lineNum">      60 </span>            :         // TODO: It is possible to switch the implementation to Boost.Context or similar when the API is stable.</a>
+<span class="lineNum">      61 </span><span class="lineCov">        150 :         boost::exception_ptr exception;</span>
+<span class="lineNum">      62 </span><span class="lineCov">         75 :         boost::thread{attrs, [&amp;]{</span>
+<span class="lineNum">      63 </span>            :                 try
+<span class="lineNum">      64 </span>            :                 {
+<span class="lineNum">      65 </span><span class="lineCov">         75 :                         _e.go(_onOp);</span>
+<span class="lineNum">      66 </span>            :                 }
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :                 catch (...)</span>
+<span class="lineNum">      68 </span>            :                 {
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :                         exception = boost::current_exception(); // Catch all exceptions to be rethrown in parent thread.</span>
+<span class="lineNum">      70 </span>            :                 }
+<span class="lineNum">      71 </span><span class="lineCov">        150 :         }}.join();</span>
+<span class="lineNum">      72 </span><span class="lineCov">         75 :         if (exception)</span>
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :                 boost::rethrow_exception(exception);</span>
+<a name="74"><span class="lineNum">      74 </span><span class="lineCov">         75 : }</span></a>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">     228341 : void go(unsigned _depth, Executive&amp; _e, OnOpFunc const&amp; _onOp)</span>
+<span class="lineNum">      77 </span>            : {
+<span class="lineNum">      78 </span>            :         // If in the offloading point we need to switch to additional separated stack space.
+<span class="lineNum">      79 </span>            :         // Current stack is too small to handle more CALL/CREATE executions.
+<span class="lineNum">      80 </span>            :         // It needs to be done only once as newly allocated stack space it enough to handle
+<span class="lineNum">      81 </span>            :         // the rest of the calls up to the depth limit (c_depthLimit).
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span><span class="lineCov">     228341 :         if (_depth == c_offloadPoint)</span>
+<span class="lineNum">      84 </span>            :         {
+<span class="lineNum">      85 </span><span class="lineCov">         75 :                 cnote &lt;&lt; &quot;Stack offloading (depth: &quot; &lt;&lt; c_offloadPoint &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">      86 </span><span class="lineCov">         75 :                 goOnOffloadedStack(_e, _onOp);</span>
+<span class="lineNum">      87 </span>            :         }
+<span class="lineNum">      88 </span>            :         else
+<span class="lineNum">      89 </span><span class="lineCov">     228266 :                 _e.go(_onOp);</span>
+<span class="lineNum">      90 </span><span class="lineCov">     228341 : }</span>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : } // anonymous namespace
+<a name="93"><span class="lineNum">      93 </span>            : </a>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineCov">     243811 : boost::optional&lt;owning_bytes_ref&gt; ExtVM::call(CallParameters&amp; _p)</span>
+<span class="lineNum">      96 </span>            : {
+<span class="lineNum">      97 </span><span class="lineCov">     487622 :         Executive e{m_s, envInfo(), m_sealEngine, depth + 1};</span>
+<span class="lineNum">      98 </span><span class="lineCov">     243811 :         if (!e.call(_p, gasPrice, origin))</span>
+<span class="lineNum">      99 </span>            :         {
+<span class="lineNum">     100 </span><span class="lineCov">     224574 :                 go(depth, e, _p.onOp);</span>
+<span class="lineNum">     101 </span><span class="lineCov">     224574 :                 e.accrueSubState(sub);</span>
+<span class="lineNum">     102 </span>            :         }
+<span class="lineNum">     103 </span><span class="lineCov">     487622 :         _p.gas = e.gas();</span>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineCov">     243811 :         if (e.excepted())</span>
+<span class="lineNum">     106 </span>            :                 return {};
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span><span class="lineCov">     443208 :         return e.takeOutput();</span>
+<a name="109"><span class="lineNum">     109 </span>            : }</a>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">     102544 : size_t ExtVM::codeSizeAt(dev::Address _a)</span>
+<span class="lineNum">     112 </span>            : {
+<span class="lineNum">     113 </span><span class="lineCov">     102544 :         return m_s.codeSize(_a);</span>
+<a name="114"><span class="lineNum">     114 </span>            : }</a>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">     210818 : void ExtVM::setStore(u256 _n, u256 _v)</span>
+<span class="lineNum">     117 </span>            : {
+<span class="lineNum">     118 </span><span class="lineCov">     210818 :         m_s.setStorage(myAddress, _n, _v);</span>
+<a name="119"><span class="lineNum">     119 </span><span class="lineCov">     210818 : }</span></a>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineCov">       3890 : h160 ExtVM::create(u256 _endowment, u256&amp; io_gas, bytesConstRef _code, OnOpFunc const&amp; _onOp)</span>
+<span class="lineNum">     122 </span>            : {
+<span class="lineNum">     123 </span><span class="lineCov">       7780 :         Executive e{m_s, envInfo(), m_sealEngine, depth + 1};</span>
+<span class="lineNum">     124 </span><span class="lineCov">      11670 :         if (!e.create(myAddress, _endowment, gasPrice, io_gas, _code, origin))</span>
+<span class="lineNum">     125 </span>            :         {
+<span class="lineNum">     126 </span><span class="lineCov">       3767 :                 go(depth, e, _onOp);</span>
+<span class="lineNum">     127 </span><span class="lineCov">       3767 :                 e.accrueSubState(sub);</span>
+<span class="lineNum">     128 </span>            :         }
+<span class="lineNum">     129 </span><span class="lineCov">       7780 :         io_gas = e.gas();</span>
+<span class="lineNum">     130 </span><span class="lineCov">       7780 :         return e.newAddress();</span>
+<a name="131"><span class="lineNum">     131 </span>            : }</a>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineCov">      17855 : void ExtVM::suicide(Address _a)</span>
+<span class="lineNum">     134 </span>            : {
+<span class="lineNum">     135 </span>            :         // TODO: Why transfer is no used here?
+<span class="lineNum">     136 </span><span class="lineCov">      17855 :         m_s.addBalance(_a, m_s.balance(myAddress));</span>
+<a name="137"><span class="lineNum">     137 </span><span class="lineCov">      17855 :         m_s.subBalance(myAddress, m_s.balance(myAddress));</span></a>
+<span class="lineNum">     138 </span><span class="lineCov">      35710 :         ExtVMFace::suicide(_a);</span>
+<span class="lineNum">     139 </span><span class="lineCov">      17858 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

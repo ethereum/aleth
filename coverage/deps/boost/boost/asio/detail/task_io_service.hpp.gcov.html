@@ -1,0 +1,279 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/detail/task_io_service.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/detail</a> - task_io_service.hpp<span style="font-size: 80%;"> (source / <a href="task_io_service.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // detail/task_io_service.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DETAIL_TASK_IO_SERVICE_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DETAIL_TASK_IO_SERVICE_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #if !defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;boost/system/error_code.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/asio/io_service.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/detail/atomic_count.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/detail/call_stack.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/asio/detail/event.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/asio/detail/mutex.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/asio/detail/op_queue.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/asio/detail/reactor_fwd.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/asio/detail/task_io_service_operation.hpp&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace boost {
+<span class="lineNum">      35 </span>            : namespace asio {
+<span class="lineNum">      36 </span>            : namespace detail {
+<span class="lineNum">      37 </span>            : 
+<a name="38"><span class="lineNum">      38 </span>            : struct task_io_service_thread_info;</a>
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">        180 : class task_io_service</span>
+<span class="lineNum">      41 </span>            :   : public boost::asio::detail::service_base&lt;task_io_service&gt;
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span>            : public:
+<span class="lineNum">      44 </span>            :   typedef task_io_service_operation operation;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :   // Constructor. Specifies the number of concurrent threads that are likely to
+<span class="lineNum">      47 </span>            :   // run the io_service. If set to 1 certain optimisation are performed.
+<span class="lineNum">      48 </span>            :   BOOST_ASIO_DECL task_io_service(boost::asio::io_service&amp; io_service,
+<span class="lineNum">      49 </span>            :       std::size_t concurrency_hint = 0);
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            :   // Destroy all user-defined handler objects owned by the service.
+<span class="lineNum">      52 </span>            :   BOOST_ASIO_DECL void shutdown_service();
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            :   // Initialise the task, if required.
+<span class="lineNum">      55 </span>            :   BOOST_ASIO_DECL void init_task();
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :   // Run the event loop until interrupted or no more work.
+<span class="lineNum">      58 </span>            :   BOOST_ASIO_DECL std::size_t run(boost::system::error_code&amp; ec);
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :   // Run until interrupted or one operation is performed.
+<span class="lineNum">      61 </span>            :   BOOST_ASIO_DECL std::size_t run_one(boost::system::error_code&amp; ec);
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            :   // Poll for operations without blocking.
+<span class="lineNum">      64 </span>            :   BOOST_ASIO_DECL std::size_t poll(boost::system::error_code&amp; ec);
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :   // Poll for one operation without blocking.
+<span class="lineNum">      67 </span>            :   BOOST_ASIO_DECL std::size_t poll_one(boost::system::error_code&amp; ec);
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :   // Interrupt the event processing loop.
+<span class="lineNum">      70 </span>            :   BOOST_ASIO_DECL void stop();
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :   // Determine whether the io_service is stopped.
+<span class="lineNum">      73 </span>            :   BOOST_ASIO_DECL bool stopped() const;
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            :   // Reset in preparation for a subsequent run invocation.
+<span class="lineNum">      76 </span>            :   BOOST_ASIO_DECL void reset();
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :   // Notify that some work has started.
+<span class="lineNum">      79 </span>            :   void work_started()
+<span class="lineNum">      80 </span>            :   {
+<span class="lineNum">      81 </span><span class="lineCov">       3386 :     ++outstanding_work_;</span>
+<span class="lineNum">      82 </span>            :   }
+<a name="83"><span class="lineNum">      83 </span>            : </a>
+<span class="lineNum">      84 </span>            :   // Notify that some work has finished.
+<span class="lineNum">      85 </span><span class="lineCov">       1662 :   void work_finished()</span>
+<span class="lineNum">      86 </span>            :   {
+<span class="lineNum">      87 </span><span class="lineCov">       3324 :     if (--outstanding_work_ == 0)</span>
+<span class="lineNum">      88 </span><span class="lineCov">         18 :       stop();</span>
+<span class="lineNum">      89 </span><span class="lineCov">       1662 :   }</span>
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            :   // Return whether a handler can be dispatched immediately.
+<span class="lineNum">      92 </span>            :   bool can_dispatch()
+<span class="lineNum">      93 </span>            :   {
+<span class="lineNum">      94 </span>            :     return thread_call_stack::contains(this) != 0;
+<span class="lineNum">      95 </span>            :   }
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            :   // Request invocation of the given handler.
+<span class="lineNum">      98 </span>            :   template &lt;typename Handler&gt;
+<span class="lineNum">      99 </span>            :   void dispatch(Handler&amp; handler);
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :   // Request invocation of the given handler and return immediately.
+<span class="lineNum">     102 </span>            :   template &lt;typename Handler&gt;
+<span class="lineNum">     103 </span>            :   void post(Handler&amp; handler);
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            :   // Request invocation of the given operation and return immediately. Assumes
+<span class="lineNum">     106 </span>            :   // that work_started() has not yet been called for the operation.
+<span class="lineNum">     107 </span>            :   BOOST_ASIO_DECL void post_immediate_completion(
+<span class="lineNum">     108 </span>            :       operation* op, bool is_continuation);
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            :   // Request invocation of the given operation and return immediately. Assumes
+<span class="lineNum">     111 </span>            :   // that work_started() was previously called for the operation.
+<span class="lineNum">     112 </span>            :   BOOST_ASIO_DECL void post_deferred_completion(operation* op);
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :   // Request invocation of the given operations and return immediately. Assumes
+<span class="lineNum">     115 </span>            :   // that work_started() was previously called for each operation.
+<span class="lineNum">     116 </span>            :   BOOST_ASIO_DECL void post_deferred_completions(op_queue&lt;operation&gt;&amp; ops);
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :   // Process unfinished operations as part of a shutdown_service operation.
+<span class="lineNum">     119 </span>            :   // Assumes that work_started() was previously called for the operations.
+<span class="lineNum">     120 </span>            :   BOOST_ASIO_DECL void abandon_operations(op_queue&lt;operation&gt;&amp; ops);
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : private:
+<span class="lineNum">     123 </span>            :   // Structure containing thread-specific data.
+<span class="lineNum">     124 </span>            :   typedef task_io_service_thread_info thread_info;
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            :   // Enqueue the given operation following a failed attempt to dispatch the
+<span class="lineNum">     127 </span>            :   // operation for immediate invocation.
+<span class="lineNum">     128 </span>            :   BOOST_ASIO_DECL void do_dispatch(operation* op);
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :   // Run at most one operation. May block.
+<span class="lineNum">     131 </span>            :   BOOST_ASIO_DECL std::size_t do_run_one(mutex::scoped_lock&amp; lock,
+<span class="lineNum">     132 </span>            :       thread_info&amp; this_thread, const boost::system::error_code&amp; ec);
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            :   // Poll for at most one operation.
+<span class="lineNum">     135 </span>            :   BOOST_ASIO_DECL std::size_t do_poll_one(mutex::scoped_lock&amp; lock,
+<span class="lineNum">     136 </span>            :       thread_info&amp; this_thread, const boost::system::error_code&amp; ec);
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :   // Stop the task and all idle threads.
+<span class="lineNum">     139 </span>            :   BOOST_ASIO_DECL void stop_all_threads(mutex::scoped_lock&amp; lock);
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            :   // Wake a single idle thread, or the task, and always unlock the mutex.
+<span class="lineNum">     142 </span>            :   BOOST_ASIO_DECL void wake_one_thread_and_unlock(
+<span class="lineNum">     143 </span>            :       mutex::scoped_lock&amp; lock);
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            :   // Helper class to perform task-related operations on block exit.
+<span class="lineNum">     146 </span>            :   struct task_cleanup;
+<span class="lineNum">     147 </span>            :   friend struct task_cleanup;
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            :   // Helper class to call work-related operations on block exit.
+<span class="lineNum">     150 </span>            :   struct work_cleanup;
+<span class="lineNum">     151 </span>            :   friend struct work_cleanup;
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :   // Whether to optimise for single-threaded use cases.
+<span class="lineNum">     154 </span>            :   const bool one_thread_;
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :   // Mutex to protect access to internal data.
+<span class="lineNum">     157 </span>            :   mutable mutex mutex_;
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :   // Event to wake up blocked threads.
+<span class="lineNum">     160 </span>            :   event wakeup_event_;
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :   // The task to be run by this service.
+<span class="lineNum">     163 </span>            :   reactor* task_;
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :   // Operation object to represent the position of the task in the queue.
+<span class="lineNum">     166 </span><span class="lineCov">         60 :   struct task_operation : operation</span>
+<span class="lineNum">     167 </span>            :   {
+<span class="lineNum">     168 </span><span class="lineCov">         60 :     task_operation() : operation(0) {}</span>
+<span class="lineNum">     169 </span>            :   } task_operation_;
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            :   // Whether the task has been interrupted.
+<span class="lineNum">     172 </span>            :   bool task_interrupted_;
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            :   // The count of unfinished work.
+<span class="lineNum">     175 </span>            :   atomic_count outstanding_work_;
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :   // The queue of handlers that are ready to be delivered.
+<span class="lineNum">     178 </span>            :   op_queue&lt;operation&gt; op_queue_;
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            :   // Flag to indicate that the dispatcher has been stopped.
+<span class="lineNum">     181 </span>            :   bool stopped_;
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            :   // Flag to indicate that the dispatcher has been shut down.
+<span class="lineNum">     184 </span>            :   bool shutdown_;
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :   // Per-thread call stack to track the state of each thread in the io_service.
+<span class="lineNum">     187 </span>            :   typedef call_stack&lt;task_io_service, thread_info&gt; thread_call_stack;
+<span class="lineNum">     188 </span>            : };
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            : } // namespace detail
+<span class="lineNum">     191 </span>            : } // namespace asio
+<span class="lineNum">     192 </span>            : } // namespace boost
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            : #include &lt;boost/asio/detail/impl/task_io_service.hpp&gt;
+<span class="lineNum">     197 </span>            : #if defined(BOOST_ASIO_HEADER_ONLY)
+<span class="lineNum">     198 </span>            : # include &lt;boost/asio/detail/impl/task_io_service.ipp&gt;
+<span class="lineNum">     199 </span>            : #endif // defined(BOOST_ASIO_HEADER_ONLY)
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            : #endif // !defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            : #endif // BOOST_ASIO_DETAIL_TASK_IO_SERVICE_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

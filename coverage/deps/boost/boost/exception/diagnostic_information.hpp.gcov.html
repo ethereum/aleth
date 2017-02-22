@@ -1,0 +1,277 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/exception/diagnostic_information.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/exception</a> - diagnostic_information.hpp<span style="font-size: 80%;"> (source / <a href="diagnostic_information.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">37</td>
+            <td class="headerCovTableEntry">50</td>
+            <td class="headerCovTableEntryLo">74.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">66.7 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //Copyright (c) 2006-2010 Emil Dotchevski and Reverge Studios, Inc.</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : //Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       4 </span>            : //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : #ifndef UUID_0552D49838DD11DD90146B8956D89593
+<span class="lineNum">       7 </span>            : #define UUID_0552D49838DD11DD90146B8956D89593
+<span class="lineNum">       8 </span>            : #if (__GNUC__*100+__GNUC_MINOR__&gt;301) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">       9 </span>            : #pragma GCC system_header
+<span class="lineNum">      10 </span>            : #endif
+<span class="lineNum">      11 </span>            : #if defined(_MSC_VER) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">      12 </span>            : #pragma warning(push,1)
+<span class="lineNum">      13 </span>            : #endif
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/exception/get_error_info.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/exception/info.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/utility/enable_if.hpp&gt;
+<span class="lineNum">      19 </span>            : #ifndef BOOST_NO_RTTI
+<span class="lineNum">      20 </span>            : #include &lt;boost/core/demangle.hpp&gt;
+<span class="lineNum">      21 </span>            : #endif
+<span class="lineNum">      22 </span>            : #include &lt;exception&gt;
+<span class="lineNum">      23 </span>            : #include &lt;sstream&gt;
+<span class="lineNum">      24 </span>            : #include &lt;string&gt;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #ifndef BOOST_NO_EXCEPTIONS
+<span class="lineNum">      27 </span>            : #include &lt;boost/exception/current_exception_cast.hpp&gt;
+<span class="lineNum">      28 </span>            : namespace
+<span class="lineNum">      29 </span>            : boost
+<span class="lineNum">      30 </span>            :     {
+<span class="lineNum">      31 </span>            :     namespace
+<span class="lineNum">      32 </span>            :     exception_detail
+<span class="lineNum">      33 </span>            :         {
+<span class="lineNum">      34 </span>            :         std::string diagnostic_information_impl( boost::exception const *, std::exception const *, bool, bool );
+<span class="lineNum">      35 </span>            :         }
+<span class="lineNum">      36 </span>            : 
+<a name="37"><span class="lineNum">      37 </span>            :     inline</a>
+<span class="lineNum">      38 </span>            :     std::string
+<span class="lineNum">      39 </span><span class="lineNoCov">          0 :     current_exception_diagnostic_information( bool verbose=true)</span>
+<span class="lineNum">      40 </span>            :         {
+<span class="lineNum">      41 </span><span class="lineNoCov">          0 :         boost::exception const * be=current_exception_cast&lt;boost::exception const&gt;();</span>
+<span class="lineNum">      42 </span><span class="lineNoCov">          0 :         std::exception const * se=current_exception_cast&lt;std::exception const&gt;();</span>
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 :         if( be || se )</span>
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :             return exception_detail::diagnostic_information_impl(be,se,true,verbose);</span>
+<span class="lineNum">      45 </span>            :         else
+<span class="lineNum">      46 </span><span class="lineNoCov">          0 :             return &quot;No diagnostic information available.&quot;;</span>
+<span class="lineNum">      47 </span>            :         }
+<span class="lineNum">      48 </span>            :     }
+<span class="lineNum">      49 </span>            : #endif
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : namespace
+<span class="lineNum">      52 </span>            : boost
+<span class="lineNum">      53 </span>            :     {
+<span class="lineNum">      54 </span>            :     namespace
+<span class="lineNum">      55 </span>            :     exception_detail
+<span class="lineNum">      56 </span>            :         {
+<span class="lineNum">      57 </span>            :         inline
+<span class="lineNum">      58 </span>            :         exception const *
+<span class="lineNum">      59 </span>            :         get_boost_exception( exception const * e )
+<span class="lineNum">      60 </span>            :             {
+<span class="lineNum">      61 </span>            :             return e;
+<span class="lineNum">      62 </span>            :             }
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :         inline
+<span class="lineNum">      65 </span>            :         exception const *
+<span class="lineNum">      66 </span>            :         get_boost_exception( ... )
+<span class="lineNum">      67 </span>            :             {
+<span class="lineNum">      68 </span>            :             return 0;
+<span class="lineNum">      69 </span>            :             }
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            :         inline
+<span class="lineNum">      72 </span>            :         std::exception const *
+<span class="lineNum">      73 </span>            :         get_std_exception( std::exception const * e )
+<span class="lineNum">      74 </span>            :             {
+<span class="lineNum">      75 </span>            :             return e;
+<span class="lineNum">      76 </span>            :             }
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :         inline
+<span class="lineNum">      79 </span>            :         std::exception const *
+<span class="lineNum">      80 </span>            :         get_std_exception( ... )
+<span class="lineNum">      81 </span>            :             {
+<span class="lineNum">      82 </span>            :             return 0;
+<span class="lineNum">      83 </span>            :             }
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            :         inline
+<span class="lineNum">      86 </span>            :         char const *
+<span class="lineNum">      87 </span><span class="lineCov">     197926 :         get_diagnostic_information( exception const &amp; x, char const * header )</span>
+<span class="lineNum">      88 </span>            :             {
+<span class="lineNum">      89 </span>            : #ifndef BOOST_NO_EXCEPTIONS
+<span class="lineNum">      90 </span>            :             try
+<span class="lineNum">      91 </span>            :                 {
+<span class="lineNum">      92 </span>            : #endif
+<span class="lineNum">      93 </span><span class="lineCov">     395852 :                 error_info_container * c=x.data_.get();</span>
+<span class="lineNum">      94 </span><span class="lineCov">     197926 :                 if( !c )</span>
+<span class="lineNum">      95 </span><span class="lineCov">     194364 :                     x.data_.adopt(c=new exception_detail::error_info_container_impl);</span>
+<span class="lineNum">      96 </span><span class="lineCov">     197926 :                 char const * di=c-&gt;diagnostic_information(header);</span>
+<span class="lineNum">      97 </span><span class="lineCov">     197926 :                 BOOST_ASSERT(di!=0);</span>
+<span class="lineNum">      98 </span>            :                 return di;
+<span class="lineNum">      99 </span>            : #ifndef BOOST_NO_EXCEPTIONS
+<span class="lineNum">     100 </span>            :                 }
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :             catch(...)</span>
+<span class="lineNum">     102 </span>            :                 {
+<span class="lineNum">     103 </span>            :                 return 0;
+<span class="lineNum">     104 </span>            :                 }
+<span class="lineNum">     105 </span>            : #endif
+<span class="lineNum">     106 </span>            :             }
+<span class="lineNum">     107 </span>            : 
+<a name="108"><span class="lineNum">     108 </span>            :         inline</a>
+<span class="lineNum">     109 </span>            :         std::string
+<span class="lineNum">     110 </span><span class="lineCov">      98963 :         diagnostic_information_impl( boost::exception const * be, std::exception const * se, bool with_what, bool verbose )</span>
+<span class="lineNum">     111 </span>            :             {
+<span class="lineNum">     112 </span><span class="lineCov">      98963 :             if( !be &amp;&amp; !se )</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :                 return &quot;Unknown exception.&quot;;</span>
+<span class="lineNum">     114 </span>            : #ifndef BOOST_NO_RTTI
+<span class="lineNum">     115 </span><span class="lineCov">      98963 :             if( !be )</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :                 be=dynamic_cast&lt;boost::exception const *&gt;(se);</span>
+<span class="lineNum">     117 </span><span class="lineCov">      98963 :             if( !se )</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :                 se=dynamic_cast&lt;std::exception const *&gt;(be);</span>
+<span class="lineNum">     119 </span>            : #endif
+<span class="lineNum">     120 </span><span class="lineCov">      98963 :             char const * wh=0;</span>
+<span class="lineNum">     121 </span><span class="lineCov">      98963 :             if( with_what &amp;&amp; se )</span>
+<span class="lineNum">     122 </span>            :                 {
+<span class="lineNum">     123 </span><span class="lineCov">      98963 :                 wh=se-&gt;what();</span>
+<span class="lineNum">     124 </span><span class="lineCov">      98963 :                 if( be &amp;&amp; exception_detail::get_diagnostic_information(*be,0)==wh )</span>
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :                     return wh;</span>
+<span class="lineNum">     126 </span>            :                 }
+<span class="lineNum">     127 </span><span class="lineCov">     197926 :             std::ostringstream tmp;</span>
+<span class="lineNum">     128 </span><span class="lineCov">      98963 :             if( be &amp;&amp; verbose )</span>
+<span class="lineNum">     129 </span>            :                 {
+<span class="lineNum">     130 </span><span class="lineCov">      98963 :                 char const * const * f=get_error_info&lt;throw_file&gt;(*be);</span>
+<span class="lineNum">     131 </span><span class="lineCov">      98963 :                 int const * l=get_error_info&lt;throw_line&gt;(*be);</span>
+<span class="lineNum">     132 </span><span class="lineCov">      98963 :                 char const * const * fn=get_error_info&lt;throw_function&gt;(*be);</span>
+<span class="lineNum">     133 </span><span class="lineCov">      98963 :                 if( !f &amp;&amp; !l &amp;&amp; !fn )</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :                     tmp &lt;&lt; &quot;Throw location unknown (consider using BOOST_THROW_EXCEPTION)\n&quot;;</span>
+<span class="lineNum">     135 </span>            :                 else
+<span class="lineNum">     136 </span>            :                     {
+<span class="lineNum">     137 </span><span class="lineCov">      98963 :                     if( f )</span>
+<span class="lineNum">     138 </span>            :                         {
+<span class="lineNum">     139 </span><span class="lineCov">      98963 :                         tmp &lt;&lt; *f;</span>
+<span class="lineNum">     140 </span><span class="lineCov">      98963 :                         if( int const * l=get_error_info&lt;throw_line&gt;(*be) )</span>
+<span class="lineNum">     141 </span><span class="lineCov">     197926 :                             tmp &lt;&lt; '(' &lt;&lt; *l &lt;&lt; &quot;): &quot;;</span>
+<span class="lineNum">     142 </span>            :                         }
+<span class="lineNum">     143 </span><span class="lineCov">      98963 :                     tmp &lt;&lt; &quot;Throw in function &quot;;</span>
+<span class="lineNum">     144 </span><span class="lineCov">      98963 :                     if( char const * const * fn=get_error_info&lt;throw_function&gt;(*be) )</span>
+<span class="lineNum">     145 </span><span class="lineCov">      98963 :                         tmp &lt;&lt; *fn;</span>
+<span class="lineNum">     146 </span>            :                     else
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :                         tmp &lt;&lt; &quot;(unknown)&quot;;</span>
+<span class="lineNum">     148 </span>            :                     tmp &lt;&lt; '\n';
+<span class="lineNum">     149 </span>            :                     }
+<span class="lineNum">     150 </span>            :                 }
+<span class="lineNum">     151 </span>            : #ifndef BOOST_NO_RTTI
+<span class="lineNum">     152 </span><span class="lineCov">      98963 :             if ( verbose )</span>
+<span class="lineNum">     153 </span><span class="lineCov">     494815 :                 tmp &lt;&lt; std::string(&quot;Dynamic exception type: &quot;) &lt;&lt;</span>
+<span class="lineNum">     154 </span><span class="lineCov">     494815 :                     core::demangle((be?(BOOST_EXCEPTION_DYNAMIC_TYPEID(*be)):(BOOST_EXCEPTION_DYNAMIC_TYPEID(*se))).type_-&gt;name()) &lt;&lt; '\n';</span>
+<span class="lineNum">     155 </span>            : #endif
+<span class="lineNum">     156 </span><span class="lineCov">      98963 :             if( with_what &amp;&amp; se &amp;&amp; verbose )</span>
+<span class="lineNum">     157 </span><span class="lineCov">      98963 :                 tmp &lt;&lt; &quot;std::exception::what: &quot; &lt;&lt; wh &lt;&lt; '\n';</span>
+<span class="lineNum">     158 </span><span class="lineCov">      98963 :             if( be )</span>
+<span class="lineNum">     159 </span><span class="lineCov">     296889 :                 if( char const * s=exception_detail::get_diagnostic_information(*be,tmp.str().c_str()) )</span>
+<span class="lineNum">     160 </span><span class="lineCov">      98963 :                     if( *s )</span>
+<span class="lineNum">     161 </span><span class="lineCov">     197926 :                         return std::string(s);</span>
+<span class="lineNum">     162 </span>            :             return tmp.str();
+<span class="lineNum">     163 </span>            :             }
+<span class="lineNum">     164 </span>            :         }
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :     template &lt;class T&gt;
+<span class="lineNum">     167 </span>            :     std::string
+<span class="lineNum">     168 </span>            :     diagnostic_information( T const &amp; e, bool verbose=true )
+<span class="lineNum">     169 </span>            :         {
+<span class="lineNum">     170 </span><span class="lineCov">      98963 :         return exception_detail::diagnostic_information_impl(exception_detail::get_boost_exception(&amp;e),exception_detail::get_std_exception(&amp;e),true,verbose);</span>
+<span class="lineNum">     171 </span>            :         }
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :     inline
+<span class="lineNum">     174 </span>            :     char const *
+<span class="lineNum">     175 </span>            :     diagnostic_information_what( exception const &amp; e, bool verbose=true ) throw()
+<span class="lineNum">     176 </span>            :         {
+<span class="lineNum">     177 </span>            :         char const * w=0;
+<span class="lineNum">     178 </span>            : #ifndef BOOST_NO_EXCEPTIONS
+<span class="lineNum">     179 </span>            :         try
+<span class="lineNum">     180 </span>            :             {
+<span class="lineNum">     181 </span>            : #endif
+<span class="lineNum">     182 </span>            :             (void) exception_detail::diagnostic_information_impl(&amp;e,0,false,verbose);
+<span class="lineNum">     183 </span>            :             if( char const * di=exception_detail::get_diagnostic_information(e,0) )
+<span class="lineNum">     184 </span>            :                 return di;
+<span class="lineNum">     185 </span>            :             else
+<span class="lineNum">     186 </span>            :                 return &quot;Failed to produce boost::diagnostic_information_what()&quot;;
+<span class="lineNum">     187 </span>            : #ifndef BOOST_NO_EXCEPTIONS
+<span class="lineNum">     188 </span>            :             }
+<span class="lineNum">     189 </span>            :         catch(
+<span class="lineNum">     190 </span>            :         ... )
+<span class="lineNum">     191 </span>            :             {
+<span class="lineNum">     192 </span>            :             }
+<span class="lineNum">     193 </span>            : #endif
+<span class="lineNum">     194 </span>            :         return w;
+<span class="lineNum">     195 </span>            :         }
+<span class="lineNum">     196 </span>            :     }
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            : #if defined(_MSC_VER) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">     199 </span>            : #pragma warning(pop)
+<span class="lineNum">     200 </span>            : #endif
+<span class="lineNum">     201 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

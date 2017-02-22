@@ -1,0 +1,216 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/results_collector.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test</a> - results_collector.hpp<span style="font-size: 80%;"> (source / <a href="results_collector.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">66.7 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : /// @file
+<span class="lineNum">       9 </span>            : /// @brief Defines testing result collector components
+<span class="lineNum">      10 </span>            : ///
+<span class="lineNum">      11 </span>            : /// Defines classes for keeping track (@ref test_results) and collecting
+<span class="lineNum">      12 </span>            : /// (@ref results_collector_t) the states of the test units.
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_RESULTS_COLLECTOR_HPP_071894GER
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_RESULTS_COLLECTOR_HPP_071894GER
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/tree/observer.hpp&gt;
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : #include &lt;boost/test/detail/global_typedef.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/detail/fwd_decl.hpp&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/utils/trivial_singleton.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/utils/class_properties.hpp&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : namespace boost {
+<span class="lineNum">      32 </span>            : namespace unit_test {
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : // ************************************************************************** //
+<span class="lineNum">      37 </span>            : /// First failed assertion debugger hook
+<span class="lineNum">      38 </span>            : ///
+<span class="lineNum">      39 </span>            : /// This function is a placeholder where user can set a breakpoint in debugger to catch the
+<span class="lineNum">      40 </span>            : /// very first assertion failure in each test case
+<span class="lineNum">      41 </span>            : // ************************************************************************** //
+<span class="lineNum">      42 </span>            : inline void first_failed_assertion() {}
+<span class="lineNum">      43 </span>            : }
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : // ************************************************************************** //
+<span class="lineNum">      46 </span>            : /// @brief Collection of attributes constituting test unit results
+<span class="lineNum">      47 </span>            : ///
+<span class="lineNum">      48 </span>            : /// This class is a collection of attributes describing a test result.
+<span class="lineNum">      49 </span>            : ///
+<span class="lineNum">      50 </span>            : /// The attributes presented as public properties on
+<span class="lineNum">      51 </span>            : /// an instance of the class. In addition summary conclusion methods are presented to generate simple answer to pass/fail question
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : class BOOST_TEST_DECL test_results {
+<span class="lineNum">      54 </span>            : public:
+<span class="lineNum">      55 </span>            :     test_results();
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :     /// Type representing counter like public property
+<span class="lineNum">      58 </span><span class="lineCov">       7260 :     typedef BOOST_READONLY_PROPERTY( counter_t, (results_collector_t)</span>
+<span class="lineNum">      59 </span>            :                                                 (test_results)
+<span class="lineNum">      60 </span>            :                                                 (results_collect_helper) ) counter_prop;
+<span class="lineNum">      61 </span>            :     /// Type representing boolean like public property
+<span class="lineNum">      62 </span><span class="lineCov">       1452 :     typedef BOOST_READONLY_PROPERTY( bool,      (results_collector_t)</span>
+<span class="lineNum">      63 </span>            :                                                 (test_results)
+<span class="lineNum">      64 </span>            :                                                 (results_collect_helper) ) bool_prop;
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :     counter_prop    p_assertions_passed;        //!&lt; Number of successful assertions
+<span class="lineNum">      67 </span>            :     counter_prop    p_assertions_failed;        //!&lt; Number of failing assertions
+<span class="lineNum">      68 </span>            :     counter_prop    p_warnings_failed;          //!&lt; Number of warnings
+<span class="lineNum">      69 </span>            :     counter_prop    p_expected_failures;
+<span class="lineNum">      70 </span>            :     counter_prop    p_test_cases_passed;        //!&lt; Number of successfull test cases
+<span class="lineNum">      71 </span>            :     counter_prop    p_test_cases_warned;        //!&lt; Number of warnings in test cases
+<span class="lineNum">      72 </span>            :     counter_prop    p_test_cases_failed;        //!&lt; Number of failing test cases
+<span class="lineNum">      73 </span>            :     counter_prop    p_test_cases_skipped;       //!&lt; Number of skipped test cases
+<span class="lineNum">      74 </span>            :     counter_prop    p_test_cases_aborted;       //!&lt; Number of aborted test cases
+<span class="lineNum">      75 </span>            :     counter_prop    p_duration_microseconds;    //!&lt; Duration of the test in microseconds
+<span class="lineNum">      76 </span>            :     bool_prop       p_aborted;                  //!&lt; Indicates that the test unit execution has been aborted
+<span class="lineNum">      77 </span>            :     bool_prop       p_skipped;                  //!&lt; Indicates that the test unit execution has been skipped
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :     /// Returns true if test unit passed
+<span class="lineNum">      80 </span>            :     bool            passed() const;
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :     /// Produces result code for the test unit execution
+<span class="lineNum">      83 </span>            :     ///
+<span class="lineNum">      84 </span>            :     /// This methhod return one of the result codes defined in @c boost/cstdlib.hpp
+<span class="lineNum">      85 </span>            :     /// @returns
+<span class="lineNum">      86 </span>            :     ///   - @c boost::exit_success on success,
+<span class="lineNum">      87 </span>            :     ///   - @c boost::exit_exception_failure in case test unit
+<span class="lineNum">      88 </span>            :     ///     was aborted for any reason (incuding uncaught exception)
+<span class="lineNum">      89 </span>            :     ///   - and @c boost::exit_test_failure otherwise
+<span class="lineNum">      90 </span>            :     int             result_code() const;
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :     //! Combines the results of the current instance with another
+<span class="lineNum">      93 </span>            :     //!
+<span class="lineNum">      94 </span>            :     //! Only the counters are updated and the @c p_aborted and @c p_skipped are left unchanged.
+<span class="lineNum">      95 </span>            :     void            operator+=( test_results const&amp; );
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            :     //! Resets the current state of the result
+<span class="lineNum">      98 </span>            :     void            clear();
+<span class="lineNum">      99 </span>            : };
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : // ************************************************************************** //
+<span class="lineNum">     102 </span>            : /// @brief Collects and combines the test results
+<span class="lineNum">     103 </span>            : ///
+<span class="lineNum">     104 </span>            : /// This class collects and combines the results of the test unit during the execution of the
+<span class="lineNum">     105 </span>            : /// test tree. The results_collector_t::results() function combines the test results on a subtree
+<span class="lineNum">     106 </span>            : /// of the test tree.
+<a name="107"><span class="lineNum">     107 </span>            : ///</a>
+<span class="lineNum">     108 </span>            : /// @see boost::unit_test::test_observer
+<span class="lineNum">     109 </span><span class="lineCov">          2 : class BOOST_TEST_DECL results_collector_t : public test_observer, public singleton&lt;results_collector_t&gt; {</span>
+<span class="lineNum">     110 </span>            : public:
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            :     virtual void        test_start( counter_t );
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :     virtual void        test_unit_start( test_unit const&amp; );
+<span class="lineNum">     115 </span>            :     virtual void        test_unit_finish( test_unit const&amp;, unsigned long );
+<span class="lineNum">     116 </span>            :     virtual void        test_unit_skipped( test_unit const&amp;, const_string );
+<span class="lineNum">     117 </span>            :     virtual void        test_unit_aborted( test_unit const&amp; );
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :     virtual void        assertion_result( unit_test::assertion_result );
+<a name="120"><span class="lineNum">     120 </span>            :     virtual void        exception_caught( execution_exception const&amp; );</a>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">          2 :     virtual int         priority() { return 2; }</span>
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :     /// Results access per test unit
+<span class="lineNum">     125 </span>            :     ///
+<span class="lineNum">     126 </span>            :     /// @param[in] tu_id id of a test unit
+<span class="lineNum">     127 </span>            :     test_results const&amp; results( test_unit_id tu_id ) const;
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            : private:
+<span class="lineNum">     130 </span><span class="lineCov">          2 :     BOOST_TEST_SINGLETON_CONS( results_collector_t )</span>
+<span class="lineNum">     131 </span>            : };
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineCov">          1 : BOOST_TEST_SINGLETON_INST( results_collector )</span>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : } // namespace unit_test
+<span class="lineNum">     136 </span>            : } // namespace boost
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : #endif // BOOST_TEST_RESULTS_COLLECTOR_HPP_071894GER
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

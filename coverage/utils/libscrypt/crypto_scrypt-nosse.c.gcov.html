@@ -1,0 +1,418 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - utils/libscrypt/crypto_scrypt-nosse.c</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">utils/libscrypt</a> - crypto_scrypt-nosse.c<span style="font-size: 80%;"> (source / <a href="crypto_scrypt-nosse.c.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">85</td>
+            <td class="headerCovTableEntry">97</td>
+            <td class="headerCovTableEntryMed">87.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*-</a>
+<span class="lineNum">       2 </span>            :  * Copyright 2009 Colin Percival
+<span class="lineNum">       3 </span>            :  * All rights reserved.
+<span class="lineNum">       4 </span>            :  *
+<span class="lineNum">       5 </span>            :  * Redistribution and use in source and binary forms, with or without
+<span class="lineNum">       6 </span>            :  * modification, are permitted provided that the following conditions
+<span class="lineNum">       7 </span>            :  * are met:
+<span class="lineNum">       8 </span>            :  * 1. Redistributions of source code must retain the above copyright
+<span class="lineNum">       9 </span>            :  *    notice, this list of conditions and the following disclaimer.
+<span class="lineNum">      10 </span>            :  * 2. Redistributions in binary form must reproduce the above copyright
+<span class="lineNum">      11 </span>            :  *    notice, this list of conditions and the following disclaimer in the
+<span class="lineNum">      12 </span>            :  *    documentation and/or other materials provided with the distribution.
+<span class="lineNum">      13 </span>            :  *
+<span class="lineNum">      14 </span>            :  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+<span class="lineNum">      15 </span>            :  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+<span class="lineNum">      16 </span>            :  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+<span class="lineNum">      17 </span>            :  * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+<span class="lineNum">      18 </span>            :  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+<span class="lineNum">      19 </span>            :  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+<span class="lineNum">      20 </span>            :  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+<span class="lineNum">      21 </span>            :  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+<span class="lineNum">      22 </span>            :  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+<span class="lineNum">      23 </span>            :  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+<span class="lineNum">      24 </span>            :  * SUCH DAMAGE.
+<span class="lineNum">      25 </span>            :  *
+<span class="lineNum">      26 </span>            :  * This file was originally written by Colin Percival as part of the Tarsnap
+<span class="lineNum">      27 </span>            :  * online backup system.
+<span class="lineNum">      28 </span>            :  */
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #include &lt;sys/types.h&gt;
+<span class="lineNum">      31 </span>            : #ifndef _WIN32
+<span class="lineNum">      32 </span>            : #include &lt;sys/mman.h&gt;
+<span class="lineNum">      33 </span>            : #endif
+<span class="lineNum">      34 </span>            : #include &lt;errno.h&gt;
+<span class="lineNum">      35 </span>            : #include &lt;stdint.h&gt;
+<span class="lineNum">      36 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      37 </span>            : #include &lt;string.h&gt;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : #include &quot;sha256.h&quot;
+<span class="lineNum">      40 </span>            : #include &quot;sysendian.h&quot;
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : #include &quot;libscrypt.h&quot;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : static void blkcpy(void *, void *, size_t);
+<span class="lineNum">      45 </span>            : static void blkxor(void *, void *, size_t);
+<span class="lineNum">      46 </span>            : static void salsa20_8(uint32_t[16]);
+<span class="lineNum">      47 </span>            : static void blockmix_salsa8(uint32_t *, uint32_t *, uint32_t *, size_t);
+<span class="lineNum">      48 </span>            : static uint64_t integerify(void *, size_t);
+<span class="lineNum">      49 </span>            : static void smix(uint8_t *, size_t, uint64_t, uint32_t *, uint32_t *);
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : static void
+<span class="lineNum">      52 </span>            : blkcpy(void * dest, void * src, size_t len)
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span><span class="lineCov">  462159872 :         size_t * D = dest;</span>
+<span class="lineNum">      55 </span><span class="lineCov">  462159872 :         size_t * S = src;</span>
+<span class="lineNum">      56 </span><span class="lineCov">  462159872 :         size_t L = len / sizeof(size_t);</span>
+<span class="lineNum">      57 </span>            :         size_t i;
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineCov"> 4962648064 :         for (i = 0; i &lt; L; i++)</span>
+<span class="lineNum">      60 </span><span class="lineCov"> 4500488192 :                 D[i] = S[i];</span>
+<span class="lineNum">      61 </span>            : }
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : static void
+<span class="lineNum">      64 </span>            : blkxor(void * dest, void * src, size_t len)
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span><span class="lineCov">  226754560 :         size_t * D = dest;</span>
+<span class="lineNum">      67 </span><span class="lineCov">  226754560 :         size_t * S = src;</span>
+<span class="lineNum">      68 </span><span class="lineCov">  226754560 :         size_t L = len / sizeof(size_t);</span>
+<span class="lineNum">      69 </span>            :         size_t i;
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineCov"> 2844000256 :         for (i = 0; i &lt; L; i++)</span>
+<span class="lineNum">      72 </span><span class="lineCov"> 2617245696 :                 D[i] ^= S[i];</span>
+<span class="lineNum">      73 </span>            : }
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : /**
+<span class="lineNum">      76 </span>            :  * salsa20_8(B):
+<span class="lineNum">      77 </span>            :  * Apply the salsa20/8 core to the provided block.
+<a name="78"><span class="lineNum">      78 </span>            :  */</a>
+<span class="lineNum">      79 </span>            : static void
+<span class="lineNum">      80 </span><span class="lineCov">  218103808 : salsa20_8(uint32_t B[16])</span>
+<span class="lineNum">      81 </span>            : {
+<span class="lineNum">      82 </span>            :         uint32_t x[16];
+<span class="lineNum">      83 </span>            :         size_t i;
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            :         blkcpy(x, B, 64);
+<span class="lineNum">      86 </span><span class="lineCov">  872415232 :         for (i = 0; i &lt; 8; i += 2) {</span>
+<span class="lineNum">      87 </span>            : #define R(a,b) (((a) &lt;&lt; (b)) | ((a) &gt;&gt; (32 - (b))))
+<span class="lineNum">      88 </span>            :                 /* Operate on columns. */
+<span class="lineNum">      89 </span><span class="lineCov">  872415232 :                 x[ 4] ^= R(x[ 0]+x[12], 7);  x[ 8] ^= R(x[ 4]+x[ 0], 9);</span>
+<span class="lineNum">      90 </span><span class="lineCov">  872415232 :                 x[12] ^= R(x[ 8]+x[ 4],13);  x[ 0] ^= R(x[12]+x[ 8],18);</span>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineCov">  872415232 :                 x[ 9] ^= R(x[ 5]+x[ 1], 7);  x[13] ^= R(x[ 9]+x[ 5], 9);</span>
+<span class="lineNum">      93 </span><span class="lineCov">  872415232 :                 x[ 1] ^= R(x[13]+x[ 9],13);  x[ 5] ^= R(x[ 1]+x[13],18);</span>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineCov">  872415232 :                 x[14] ^= R(x[10]+x[ 6], 7);  x[ 2] ^= R(x[14]+x[10], 9);</span>
+<span class="lineNum">      96 </span><span class="lineCov">  872415232 :                 x[ 6] ^= R(x[ 2]+x[14],13);  x[10] ^= R(x[ 6]+x[ 2],18);</span>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineCov">  872415232 :                 x[ 3] ^= R(x[15]+x[11], 7);  x[ 7] ^= R(x[ 3]+x[15], 9);</span>
+<span class="lineNum">      99 </span><span class="lineCov">  872415232 :                 x[11] ^= R(x[ 7]+x[ 3],13);  x[15] ^= R(x[11]+x[ 7],18);</span>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :                 /* Operate on rows. */
+<span class="lineNum">     102 </span><span class="lineCov">  872415232 :                 x[ 1] ^= R(x[ 0]+x[ 3], 7);  x[ 2] ^= R(x[ 1]+x[ 0], 9);</span>
+<span class="lineNum">     103 </span><span class="lineCov">  872415232 :                 x[ 3] ^= R(x[ 2]+x[ 1],13);  x[ 0] ^= R(x[ 3]+x[ 2],18);</span>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineCov">  872415232 :                 x[ 6] ^= R(x[ 5]+x[ 4], 7);  x[ 7] ^= R(x[ 6]+x[ 5], 9);</span>
+<span class="lineNum">     106 </span><span class="lineCov">  872415232 :                 x[ 4] ^= R(x[ 7]+x[ 6],13);  x[ 5] ^= R(x[ 4]+x[ 7],18);</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span><span class="lineCov">  872415232 :                 x[11] ^= R(x[10]+x[ 9], 7);  x[ 8] ^= R(x[11]+x[10], 9);</span>
+<span class="lineNum">     109 </span><span class="lineCov">  872415232 :                 x[ 9] ^= R(x[ 8]+x[11],13);  x[10] ^= R(x[ 9]+x[ 8],18);</span>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">  872415232 :                 x[12] ^= R(x[15]+x[14], 7);  x[13] ^= R(x[12]+x[15], 9);</span>
+<span class="lineNum">     112 </span><span class="lineCov">  872415232 :                 x[14] ^= R(x[13]+x[12],13);  x[15] ^= R(x[14]+x[13],18);</span>
+<span class="lineNum">     113 </span>            : #undef R
+<span class="lineNum">     114 </span>            :         }
+<span class="lineNum">     115 </span><span class="lineCov"> 3489660928 :         for (i = 0; i &lt; 16; i++)</span>
+<span class="lineNum">     116 </span><span class="lineCov"> 3489660928 :                 B[i] += x[i];</span>
+<span class="lineNum">     117 </span><span class="lineCov">  218103808 : }</span>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : /**
+<span class="lineNum">     120 </span>            :  * blockmix_salsa8(Bin, Bout, X, r):
+<span class="lineNum">     121 </span>            :  * Compute Bout = BlockMix_{salsa20/8, r}(Bin).  The input Bin must be 128r
+<span class="lineNum">     122 </span>            :  * bytes in length; the output Bout must also be the same size.  The
+<span class="lineNum">     123 </span>            :  * temporary space X must be 64 bytes.
+<a name="124"><span class="lineNum">     124 </span>            :  */</a>
+<span class="lineNum">     125 </span>            : static void
+<span class="lineNum">     126 </span><span class="lineCov">   17301504 : blockmix_salsa8(uint32_t * Bin, uint32_t * Bout, uint32_t * X, size_t r)</span>
+<span class="lineNum">     127 </span>            : {
+<span class="lineNum">     128 </span>            :         size_t i;
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :         /* 1: X &lt;-- B_{2r - 1} */
+<span class="lineNum">     131 </span><span class="lineCov">   17301504 :         blkcpy(X, &amp;Bin[(2 * r - 1) * 16], 64);</span>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            :         /* 2: for i = 0 to 2r - 1 do */
+<span class="lineNum">     134 </span><span class="lineCov">  109051904 :         for (i = 0; i &lt; 2 * r; i += 2) {</span>
+<span class="lineNum">     135 </span>            :                 /* 3: X &lt;-- H(X \xor B_i) */
+<span class="lineNum">     136 </span><span class="lineCov">  218103808 :                 blkxor(X, &amp;Bin[i * 16], 64);</span>
+<span class="lineNum">     137 </span><span class="lineCov">  109051904 :                 salsa20_8(X);</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :                 /* 4: Y_i &lt;-- X */
+<span class="lineNum">     140 </span>            :                 /* 6: B' &lt;-- (Y_0, Y_2 ... Y_{2r-2}, Y_1, Y_3 ... Y_{2r-1}) */
+<span class="lineNum">     141 </span><span class="lineCov">  218103808 :                 blkcpy(&amp;Bout[i * 8], X, 64);</span>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :                 /* 3: X &lt;-- H(X \xor B_i) */
+<span class="lineNum">     144 </span><span class="lineCov">  218103808 :                 blkxor(X, &amp;Bin[i * 16 + 16], 64);</span>
+<span class="lineNum">     145 </span><span class="lineCov">  109051904 :                 salsa20_8(X);</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            :                 /* 4: Y_i &lt;-- X */
+<span class="lineNum">     148 </span>            :                 /* 6: B' &lt;-- (Y_0, Y_2 ... Y_{2r-2}, Y_1, Y_3 ... Y_{2r-1}) */
+<span class="lineNum">     149 </span><span class="lineCov">  218103808 :                 blkcpy(&amp;Bout[i * 8 + r * 16], X, 64);</span>
+<span class="lineNum">     150 </span>            :         }
+<span class="lineNum">     151 </span><span class="lineCov">   17301504 : }</span>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            : /**
+<span class="lineNum">     154 </span>            :  * integerify(B, r):
+<span class="lineNum">     155 </span>            :  * Return the result of parsing B_{2r-1} as a little-endian integer.
+<span class="lineNum">     156 </span>            :  */
+<span class="lineNum">     157 </span>            : static uint64_t
+<span class="lineNum">     158 </span>            : integerify(void * B, size_t r)
+<span class="lineNum">     159 </span>            : {
+<span class="lineNum">     160 </span><span class="lineCov">    8650752 :         uint32_t * X = (void *)((uintptr_t)(B) + (2 * r - 1) * 64);</span>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span><span class="lineCov">    8650752 :         return (((uint64_t)(X[1]) &lt;&lt; 32) + X[0]);</span>
+<span class="lineNum">     163 </span>            : }
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : /**
+<span class="lineNum">     166 </span>            :  * smix(B, r, N, V, XY):
+<span class="lineNum">     167 </span>            :  * Compute B = SMix_r(B, N).  The input B must be 128r bytes in length;
+<span class="lineNum">     168 </span>            :  * the temporary storage V must be 128rN bytes in length; the temporary
+<span class="lineNum">     169 </span>            :  * storage XY must be 256r + 64 bytes in length.  The value N must be a
+<span class="lineNum">     170 </span>            :  * power of 2 greater than 1.  The arrays B, V, and XY must be aligned to a
+<span class="lineNum">     171 </span>            :  * multiple of 64 bytes.
+<a name="172"><span class="lineNum">     172 </span>            :  */</a>
+<span class="lineNum">     173 </span>            : static void
+<span class="lineNum">     174 </span><span class="lineCov">         33 : smix(uint8_t * B, size_t r, uint64_t N, uint32_t * V, uint32_t * XY)</span>
+<span class="lineNum">     175 </span>            : {
+<span class="lineNum">     176 </span><span class="lineCov">         33 :         uint32_t * X = XY;</span>
+<span class="lineNum">     177 </span><span class="lineCov">         33 :         uint32_t * Y = &amp;XY[32 * r];</span>
+<span class="lineNum">     178 </span><span class="lineCov">         33 :         uint32_t * Z = &amp;XY[64 * r];</span>
+<span class="lineNum">     179 </span>            :         uint64_t i;
+<span class="lineNum">     180 </span>            :         uint64_t j;
+<span class="lineNum">     181 </span>            :         size_t k;
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            :         /* 1: X &lt;-- B */
+<span class="lineNum">     184 </span><span class="lineCov">       6689 :         for (k = 0; k &lt; 32 * r; k++)</span>
+<span class="lineNum">     185 </span><span class="lineCov">      13312 :                 X[k] = le32dec(&amp;B[4 * k]);</span>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :         /* 2: for i = 0 to N - 1 do */
+<span class="lineNum">     188 </span><span class="lineCov">    4325376 :         for (i = 0; i &lt; N; i += 2) {</span>
+<span class="lineNum">     189 </span>            :                 /* 3: V_i &lt;-- X */
+<span class="lineNum">     190 </span><span class="lineCov">    8650752 :                 blkcpy(&amp;V[i * (32 * r)], X, 128 * r);</span>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :                 /* 4: X &lt;-- H(X) */
+<span class="lineNum">     193 </span><span class="lineCov">    4325376 :                 blockmix_salsa8(X, Y, Z, r);</span>
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            :                 /* 3: V_i &lt;-- X */
+<span class="lineNum">     196 </span><span class="lineCov">    8650752 :                 blkcpy(&amp;V[(i + 1) * (32 * r)], Y, 128 * r);</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :                 /* 4: X &lt;-- H(X) */
+<span class="lineNum">     199 </span><span class="lineCov">    4325376 :                 blockmix_salsa8(Y, X, Z, r);</span>
+<span class="lineNum">     200 </span>            :         }
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            :         /* 6: for i = 0 to N - 1 do */
+<span class="lineNum">     203 </span><span class="lineCov">    4325376 :         for (i = 0; i &lt; N; i += 2) {</span>
+<span class="lineNum">     204 </span>            :                 /* 7: j &lt;-- Integerify(X) mod N */
+<span class="lineNum">     205 </span><span class="lineCov">    4325376 :                 j = integerify(X, r) &amp; (N - 1);</span>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :                 /* 8: X &lt;-- H(X \xor V_j) */
+<span class="lineNum">     208 </span><span class="lineCov">    8650752 :                 blkxor(X, &amp;V[j * (32 * r)], 128 * r);</span>
+<span class="lineNum">     209 </span><span class="lineCov">    4325376 :                 blockmix_salsa8(X, Y, Z, r);</span>
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :                 /* 7: j &lt;-- Integerify(X) mod N */
+<span class="lineNum">     212 </span><span class="lineCov">    4325376 :                 j = integerify(Y, r) &amp; (N - 1);</span>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            :                 /* 8: X &lt;-- H(X \xor V_j) */
+<span class="lineNum">     215 </span><span class="lineCov">    8650752 :                 blkxor(Y, &amp;V[j * (32 * r)], 128 * r);</span>
+<span class="lineNum">     216 </span><span class="lineCov">    4325376 :                 blockmix_salsa8(Y, X, Z, r);</span>
+<span class="lineNum">     217 </span>            :         }
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            :         /* 10: B' &lt;-- X */
+<span class="lineNum">     220 </span><span class="lineCov">       6656 :         for (k = 0; k &lt; 32 * r; k++)</span>
+<span class="lineNum">     221 </span><span class="lineCov">      13312 :                 le32enc(&amp;B[4 * k], X[k]);</span>
+<span class="lineNum">     222 </span><span class="lineCov">         33 : }</span>
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            : /**
+<span class="lineNum">     225 </span>            :  * crypto_scrypt(passwd, passwdlen, salt, saltlen, N, r, p, buf, buflen):
+<span class="lineNum">     226 </span>            :  * Compute scrypt(passwd[0 .. passwdlen - 1], salt[0 .. saltlen - 1], N, r,
+<span class="lineNum">     227 </span>            :  * p, buflen) and write the result into buf.  The parameters r, p, and buflen
+<span class="lineNum">     228 </span>            :  * must satisfy r * p &lt; 2^30 and buflen &lt;= (2^32 - 1) * 32.  The parameter N
+<span class="lineNum">     229 </span>            :  * must be a power of 2 greater than 1.
+<span class="lineNum">     230 </span>            :  *
+<span class="lineNum">     231 </span>            :  * Return 0 on success; or -1 on error
+<a name="232"><span class="lineNum">     232 </span>            :  */</a>
+<span class="lineNum">     233 </span>            : int
+<span class="lineNum">     234 </span><span class="lineCov">         26 : libscrypt_scrypt(const uint8_t * passwd, size_t passwdlen,</span>
+<span class="lineNum">     235 </span>            :     const uint8_t * salt, size_t saltlen, uint64_t N, uint32_t r, uint32_t p,
+<span class="lineNum">     236 </span>            :     uint8_t * buf, size_t buflen)
+<span class="lineNum">     237 </span>            : {
+<span class="lineNum">     238 </span>            :         void * B0, * V0, * XY0;
+<span class="lineNum">     239 </span>            :         uint8_t * B;
+<span class="lineNum">     240 </span>            :         uint32_t * V;
+<span class="lineNum">     241 </span>            :         uint32_t * XY;
+<span class="lineNum">     242 </span>            :         uint32_t i;
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            :         /* Sanity-check parameters. */
+<span class="lineNum">     245 </span>            : #if SIZE_MAX &gt; UINT32_MAX
+<span class="lineNum">     246 </span><span class="lineCov">         26 :         if (buflen &gt; (((uint64_t)(1) &lt;&lt; 32) - 1) * 32) {</span>
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 :                 errno = EFBIG;</span>
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :                 goto err0;</span>
+<span class="lineNum">     249 </span>            :         }
+<span class="lineNum">     250 </span>            : #endif
+<span class="lineNum">     251 </span><span class="lineCov">         26 :         if ((uint64_t)(r) * (uint64_t)(p) &gt;= (1 &lt;&lt; 30)) {</span>
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :                 errno = EFBIG;</span>
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :                 goto err0;</span>
+<span class="lineNum">     254 </span>            :         }
+<span class="lineNum">     255 </span><span class="lineCov">         26 :         if (r == 0 || p == 0) {</span>
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :                 errno = EINVAL;</span>
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :                 goto err0;</span>
+<span class="lineNum">     258 </span>            :         }
+<span class="lineNum">     259 </span><span class="lineCov">         26 :         if (((N &amp; (N - 1)) != 0) || (N &lt; 2)) {</span>
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :                 errno = EINVAL;</span>
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :                 goto err0;</span>
+<span class="lineNum">     262 </span>            :         }
+<span class="lineNum">     263 </span><span class="lineCov">         52 :         if ((r &gt; SIZE_MAX / 128 / p) ||</span>
+<span class="lineNum">     264 </span>            : #if SIZE_MAX / 256 &lt;= UINT32_MAX
+<span class="lineNum">     265 </span>            :             (r &gt; SIZE_MAX / 256) ||
+<span class="lineNum">     266 </span>            : #endif
+<span class="lineNum">     267 </span><span class="lineCov">         26 :             (N &gt; SIZE_MAX / 128 / r)) {</span>
+<span class="lineNum">     268 </span><span class="lineNoCov">          0 :                 errno = ENOMEM;</span>
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :                 goto err0;</span>
+<span class="lineNum">     270 </span>            :         }
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            :         /* Allocate memory. */
+<span class="lineNum">     273 </span>            : #ifdef HAVE_POSIX_MEMALIGN
+<span class="lineNum">     274 </span>            :         if ((errno = posix_memalign(&amp;B0, 64, 128 * r * p)) != 0)
+<span class="lineNum">     275 </span>            :                 goto err0;
+<span class="lineNum">     276 </span>            :         B = (uint8_t *)(B0);
+<span class="lineNum">     277 </span>            :         if ((errno = posix_memalign(&amp;XY0, 64, 256 * r + 64)) != 0)
+<span class="lineNum">     278 </span>            :                 goto err1;
+<span class="lineNum">     279 </span>            :         XY = (uint32_t *)(XY0);
+<span class="lineNum">     280 </span>            : #ifndef MAP_ANON
+<span class="lineNum">     281 </span>            :         if ((errno = posix_memalign(&amp;V0, 64, 128 * r * N)) != 0)
+<span class="lineNum">     282 </span>            :                 goto err2;
+<span class="lineNum">     283 </span>            :         V = (uint32_t *)(V0);
+<span class="lineNum">     284 </span>            : #endif
+<span class="lineNum">     285 </span>            : #else
+<span class="lineNum">     286 </span><span class="lineCov">         26 :         if ((B0 = malloc(128 * r * p + 63)) == NULL)</span>
+<span class="lineNum">     287 </span>            :                 goto err0;
+<span class="lineNum">     288 </span><span class="lineCov">         26 :         B = (uint8_t *)(((uintptr_t)(B0) + 63) &amp; ~ (uintptr_t)(63));</span>
+<span class="lineNum">     289 </span><span class="lineCov">         26 :         if ((XY0 = malloc(256 * r + 64 + 63)) == NULL)</span>
+<span class="lineNum">     290 </span>            :                 goto err1;
+<span class="lineNum">     291 </span><span class="lineCov">         26 :         XY = (uint32_t *)(((uintptr_t)(XY0) + 63) &amp; ~ (uintptr_t)(63));</span>
+<span class="lineNum">     292 </span>            : #ifndef MAP_ANON
+<span class="lineNum">     293 </span>            :         if ((V0 = malloc(128 * r * N + 63)) == NULL)
+<span class="lineNum">     294 </span>            :                 goto err2;
+<span class="lineNum">     295 </span>            :         V = (uint32_t *)(((uintptr_t)(V0) + 63) &amp; ~ (uintptr_t)(63));
+<span class="lineNum">     296 </span>            : #endif
+<span class="lineNum">     297 </span>            : #endif
+<span class="lineNum">     298 </span>            : #ifdef MAP_ANON
+<span class="lineNum">     299 </span><span class="lineCov">         26 :         if ((V0 = mmap(NULL, 128 * r * N, PROT_READ | PROT_WRITE,</span>
+<span class="lineNum">     300 </span>            : #ifdef MAP_NOCORE
+<span class="lineNum">     301 </span>            :             MAP_ANON | MAP_PRIVATE | MAP_NOCORE,
+<span class="lineNum">     302 </span>            : #else
+<span class="lineNum">     303 </span>            :             MAP_ANON | MAP_PRIVATE,
+<span class="lineNum">     304 </span>            : #endif
+<span class="lineNum">     305 </span>            :             -1, 0)) == MAP_FAILED)
+<span class="lineNum">     306 </span>            :                 goto err2;
+<span class="lineNum">     307 </span><span class="lineCov">         26 :         V = (uint32_t *)(V0);</span>
+<span class="lineNum">     308 </span>            : #endif
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            :         /* 1: (B_0 ... B_{p-1}) &lt;-- PBKDF2(P, S, 1, p * MFLen) */
+<span class="lineNum">     311 </span><span class="lineCov">         26 :         libscrypt_PBKDF2_SHA256(passwd, passwdlen, salt, saltlen, 1, B, p * 128 * r);</span>
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            :         /* 2: for i = 0 to p - 1 do */
+<span class="lineNum">     314 </span><span class="lineCov">         59 :         for (i = 0; i &lt; p; i++) {</span>
+<span class="lineNum">     315 </span>            :                 /* 3: B_i &lt;-- MF(B_i, N) */
+<span class="lineNum">     316 </span><span class="lineCov">         33 :                 smix(&amp;B[i * 128 * r], r, N, V, XY);</span>
+<span class="lineNum">     317 </span>            :         }
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            :         /* 5: DK &lt;-- PBKDF2(P, B, 1, dkLen) */
+<span class="lineNum">     320 </span><span class="lineCov">         26 :         libscrypt_PBKDF2_SHA256(passwd, passwdlen, B, p * 128 * r, 1, buf, buflen);</span>
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span>            :         /* Free memory. */
+<span class="lineNum">     323 </span>            : #ifdef MAP_ANON
+<span class="lineNum">     324 </span><span class="lineCov">         26 :         if (munmap(V0, 128 * r * N))</span>
+<span class="lineNum">     325 </span>            :                 goto err2;
+<span class="lineNum">     326 </span>            : #else
+<span class="lineNum">     327 </span>            :         free(V0);
+<span class="lineNum">     328 </span>            : #endif
+<span class="lineNum">     329 </span><span class="lineCov">         26 :         free(XY0);</span>
+<span class="lineNum">     330 </span><span class="lineCov">         26 :         free(B0);</span>
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span>            :         /* Success! */
+<span class="lineNum">     333 </span><span class="lineCov">         26 :         return (0);</span>
+<span class="lineNum">     334 </span>            : 
+<span class="lineNum">     335 </span>            : err2:
+<span class="lineNum">     336 </span><span class="lineNoCov">          0 :         free(XY0);</span>
+<span class="lineNum">     337 </span>            : err1:
+<span class="lineNum">     338 </span><span class="lineNoCov">          0 :         free(B0);</span>
+<span class="lineNum">     339 </span>            : err0:
+<span class="lineNum">     340 </span>            :         /* Failure! */
+<span class="lineNum">     341 </span>            :         return (-1);
+<span class="lineNum">     342 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

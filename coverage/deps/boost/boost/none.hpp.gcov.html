@@ -1,0 +1,135 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/none.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">deps/boost/boost</a> - none.hpp<span style="font-size: 80%;"> (source / <a href="none.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Copyright (C) 2003, Fernando Luis Cacciola Carballal.</a>
+<span class="lineNum">       2 </span>            : // Copyright (C) 2014, 2015 Andrzej Krzemienski.
+<span class="lineNum">       3 </span>            : //
+<span class="lineNum">       4 </span>            : // Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       5 </span>            : // (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       6 </span>            : // http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : // See http://www.boost.org/libs/optional for documentation.
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : // You are welcome to contact the author at:
+<span class="lineNum">      11 </span>            : //  fernando_cacciola@hotmail.com
+<span class="lineNum">      12 </span>            : //
+<span class="lineNum">      13 </span>            : #ifndef BOOST_NONE_17SEP2003_HPP
+<span class="lineNum">      14 </span>            : #define BOOST_NONE_17SEP2003_HPP
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #include &quot;boost/none_t.hpp&quot;
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // NOTE: Borland users have to include this header outside any precompiled headers
+<span class="lineNum">      19 </span>            : // (bcc&lt;=5.64 cannot include instance data in a precompiled header)
+<span class="lineNum">      20 </span>            : //  -- * To be verified, now that there's no unnamed namespace
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : namespace boost {
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #ifdef BOOST_OPTIONAL_USE_OLD_DEFINITION_OF_NONE
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : none_t const none = (static_cast&lt;none_t&gt;(0)) ;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #elif defined BOOST_OPTIONAL_USE_SINGLETON_DEFINITION_OF_NONE
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace detail { namespace optional_detail {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            :   // the trick here is to make boost::none defined once as a global but in a header file
+<span class="lineNum">      33 </span>            :   template &lt;typename T&gt;
+<span class="lineNum">      34 </span>            :   struct none_instance
+<span class="lineNum">      35 </span>            :   {
+<span class="lineNum">      36 </span>            :     static const T instance;
+<span class="lineNum">      37 </span>            :   };
+<span class="lineNum">      38 </span>            :   
+<span class="lineNum">      39 </span>            :   template &lt;typename T&gt;
+<span class="lineNum">      40 </span>            :   const T none_instance&lt;T&gt;::instance = T(); // global, but because 'tis a template, no cpp file required
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : } } // namespace detail::optional_detail
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : namespace {
+<span class="lineNum">      46 </span>            :   // TU-local
+<span class="lineNum">      47 </span>            :   const none_t&amp; none = detail::optional_detail::none_instance&lt;none_t&gt;::instance; 
+<span class="lineNum">      48 </span>            : }
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : #else
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineCov">        127 : const none_t none ((none_t::init_tag()));</span>
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : #endif // older definitions
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : } // namespace boost
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : #endif // header guard
+<span class="lineNum">      59 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

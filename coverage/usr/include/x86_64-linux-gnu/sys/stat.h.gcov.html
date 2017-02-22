@@ -1,0 +1,612 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/x86_64-linux-gnu/sys/stat.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/x86_64-linux-gnu/sys</a> - stat.h<span style="font-size: 80%;"> (source / <a href="stat.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* Copyright (C) 1991-2016 Free Software Foundation, Inc.</a>
+<span class="lineNum">       2 </span>            :    This file is part of the GNU C Library.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :    The GNU C Library is free software; you can redistribute it and/or
+<span class="lineNum">       5 </span>            :    modify it under the terms of the GNU Lesser General Public
+<span class="lineNum">       6 </span>            :    License as published by the Free Software Foundation; either
+<span class="lineNum">       7 </span>            :    version 2.1 of the License, or (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The GNU C Library is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+<span class="lineNum">      12 </span>            :    Lesser General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    You should have received a copy of the GNU Lesser General Public
+<span class="lineNum">      15 </span>            :    License along with the GNU C Library; if not, see
+<span class="lineNum">      16 </span>            :    &lt;http://www.gnu.org/licenses/&gt;.  */
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : /*
+<span class="lineNum">      19 </span>            :  *      POSIX Standard: 5.6 File Characteristics        &lt;sys/stat.h&gt;
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #ifndef _SYS_STAT_H
+<span class="lineNum">      23 </span>            : #define _SYS_STAT_H     1
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;features.h&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;bits/types.h&gt;           /* For __mode_t and __dev_t.  */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #if defined __USE_XOPEN || defined __USE_XOPEN2K || defined __USE_ATFILE
+<span class="lineNum">      30 </span>            : # if defined __USE_XOPEN || defined __USE_XOPEN2K
+<span class="lineNum">      31 </span>            : #  define __need_time_t
+<span class="lineNum">      32 </span>            : # endif
+<span class="lineNum">      33 </span>            : # ifdef __USE_ATFILE
+<span class="lineNum">      34 </span>            : #  define __need_timespec
+<span class="lineNum">      35 </span>            : # endif
+<span class="lineNum">      36 </span>            : # include &lt;time.h&gt;                /* For time_t resp. timespec.  */
+<span class="lineNum">      37 </span>            : #endif
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : #if defined __USE_XOPEN || defined __USE_XOPEN2K
+<span class="lineNum">      40 </span>            : /* The Single Unix specification says that some more types are
+<span class="lineNum">      41 </span>            :    available here.  */
+<span class="lineNum">      42 </span>            : # ifndef __dev_t_defined
+<span class="lineNum">      43 </span>            : typedef __dev_t dev_t;
+<span class="lineNum">      44 </span>            : #  define __dev_t_defined
+<span class="lineNum">      45 </span>            : # endif
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : # ifndef __gid_t_defined
+<span class="lineNum">      48 </span>            : typedef __gid_t gid_t;
+<span class="lineNum">      49 </span>            : #  define __gid_t_defined
+<span class="lineNum">      50 </span>            : # endif
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : # ifndef __ino_t_defined
+<span class="lineNum">      53 </span>            : #  ifndef __USE_FILE_OFFSET64
+<span class="lineNum">      54 </span>            : typedef __ino_t ino_t;
+<span class="lineNum">      55 </span>            : #  else
+<span class="lineNum">      56 </span>            : typedef __ino64_t ino_t;
+<span class="lineNum">      57 </span>            : #  endif
+<span class="lineNum">      58 </span>            : #  define __ino_t_defined
+<span class="lineNum">      59 </span>            : # endif
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : # ifndef __mode_t_defined
+<span class="lineNum">      62 </span>            : typedef __mode_t mode_t;
+<span class="lineNum">      63 </span>            : #  define __mode_t_defined
+<span class="lineNum">      64 </span>            : # endif
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : # ifndef __nlink_t_defined
+<span class="lineNum">      67 </span>            : typedef __nlink_t nlink_t;
+<span class="lineNum">      68 </span>            : #  define __nlink_t_defined
+<span class="lineNum">      69 </span>            : # endif
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : # ifndef __off_t_defined
+<span class="lineNum">      72 </span>            : #  ifndef __USE_FILE_OFFSET64
+<span class="lineNum">      73 </span>            : typedef __off_t off_t;
+<span class="lineNum">      74 </span>            : #  else
+<span class="lineNum">      75 </span>            : typedef __off64_t off_t;
+<span class="lineNum">      76 </span>            : #  endif
+<span class="lineNum">      77 </span>            : #  define __off_t_defined
+<span class="lineNum">      78 </span>            : # endif
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : # ifndef __uid_t_defined
+<span class="lineNum">      81 </span>            : typedef __uid_t uid_t;
+<span class="lineNum">      82 </span>            : #  define __uid_t_defined
+<span class="lineNum">      83 </span>            : # endif
+<span class="lineNum">      84 </span>            : #endif  /* X/Open */
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            : #ifdef __USE_UNIX98
+<span class="lineNum">      87 </span>            : # ifndef __blkcnt_t_defined
+<span class="lineNum">      88 </span>            : #  ifndef __USE_FILE_OFFSET64
+<span class="lineNum">      89 </span>            : typedef __blkcnt_t blkcnt_t;
+<span class="lineNum">      90 </span>            : #  else
+<span class="lineNum">      91 </span>            : typedef __blkcnt64_t blkcnt_t;
+<span class="lineNum">      92 </span>            : #  endif
+<span class="lineNum">      93 </span>            : #  define __blkcnt_t_defined
+<span class="lineNum">      94 </span>            : # endif
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : # ifndef __blksize_t_defined
+<span class="lineNum">      97 </span>            : typedef __blksize_t blksize_t;
+<span class="lineNum">      98 </span>            : #  define __blksize_t_defined
+<span class="lineNum">      99 </span>            : # endif
+<span class="lineNum">     100 </span>            : #endif  /* Unix98 */
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : __BEGIN_DECLS
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            : #include &lt;bits/stat.h&gt;
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : #if defined __USE_MISC || defined __USE_XOPEN
+<span class="lineNum">     107 </span>            : # define S_IFMT         __S_IFMT
+<span class="lineNum">     108 </span>            : # define S_IFDIR        __S_IFDIR
+<span class="lineNum">     109 </span>            : # define S_IFCHR        __S_IFCHR
+<span class="lineNum">     110 </span>            : # define S_IFBLK        __S_IFBLK
+<span class="lineNum">     111 </span>            : # define S_IFREG        __S_IFREG
+<span class="lineNum">     112 </span>            : # ifdef __S_IFIFO
+<span class="lineNum">     113 </span>            : #  define S_IFIFO       __S_IFIFO
+<span class="lineNum">     114 </span>            : # endif
+<span class="lineNum">     115 </span>            : # ifdef __S_IFLNK
+<span class="lineNum">     116 </span>            : #  define S_IFLNK       __S_IFLNK
+<span class="lineNum">     117 </span>            : # endif
+<span class="lineNum">     118 </span>            : # if (defined __USE_MISC || defined __USE_UNIX98) \
+<span class="lineNum">     119 </span>            :      &amp;&amp; defined __S_IFSOCK
+<span class="lineNum">     120 </span>            : #  define S_IFSOCK      __S_IFSOCK
+<span class="lineNum">     121 </span>            : # endif
+<span class="lineNum">     122 </span>            : #endif
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : /* Test macros for file types.  */
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : #define __S_ISTYPE(mode, mask)  (((mode) &amp; __S_IFMT) == (mask))
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : #define S_ISDIR(mode)    __S_ISTYPE((mode), __S_IFDIR)
+<span class="lineNum">     129 </span>            : #define S_ISCHR(mode)    __S_ISTYPE((mode), __S_IFCHR)
+<span class="lineNum">     130 </span>            : #define S_ISBLK(mode)    __S_ISTYPE((mode), __S_IFBLK)
+<span class="lineNum">     131 </span>            : #define S_ISREG(mode)    __S_ISTYPE((mode), __S_IFREG)
+<span class="lineNum">     132 </span>            : #ifdef __S_IFIFO
+<span class="lineNum">     133 </span>            : # define S_ISFIFO(mode)  __S_ISTYPE((mode), __S_IFIFO)
+<span class="lineNum">     134 </span>            : #endif
+<span class="lineNum">     135 </span>            : #ifdef __S_IFLNK
+<span class="lineNum">     136 </span>            : # define S_ISLNK(mode)   __S_ISTYPE((mode), __S_IFLNK)
+<span class="lineNum">     137 </span>            : #endif
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : #if defined __USE_MISC &amp;&amp; !defined __S_IFLNK
+<span class="lineNum">     140 </span>            : # define S_ISLNK(mode)  0
+<span class="lineNum">     141 </span>            : #endif
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            : #if (defined __USE_UNIX98 || defined __USE_XOPEN2K) \
+<span class="lineNum">     144 </span>            :     &amp;&amp; defined __S_IFSOCK
+<span class="lineNum">     145 </span>            : # define S_ISSOCK(mode) __S_ISTYPE((mode), __S_IFSOCK)
+<span class="lineNum">     146 </span>            : #elif defined __USE_XOPEN2K
+<span class="lineNum">     147 </span>            : # define S_ISSOCK(mode) 0
+<span class="lineNum">     148 </span>            : #endif
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            : /* These are from POSIX.1b.  If the objects are not implemented using separate
+<span class="lineNum">     151 </span>            :    distinct file types, the macros always will evaluate to zero.  Unlike the
+<span class="lineNum">     152 </span>            :    other S_* macros the following three take a pointer to a `struct stat'
+<span class="lineNum">     153 </span>            :    object as the argument.  */
+<span class="lineNum">     154 </span>            : #ifdef  __USE_POSIX199309
+<span class="lineNum">     155 </span>            : # define S_TYPEISMQ(buf) __S_TYPEISMQ(buf)
+<span class="lineNum">     156 </span>            : # define S_TYPEISSEM(buf) __S_TYPEISSEM(buf)
+<span class="lineNum">     157 </span>            : # define S_TYPEISSHM(buf) __S_TYPEISSHM(buf)
+<span class="lineNum">     158 </span>            : #endif
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            : /* Protection bits.  */
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            : #define S_ISUID __S_ISUID       /* Set user ID on execution.  */
+<span class="lineNum">     164 </span>            : #define S_ISGID __S_ISGID       /* Set group ID on execution.  */
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            : #if defined __USE_MISC || defined __USE_XOPEN
+<span class="lineNum">     167 </span>            : /* Save swapped text after use (sticky bit).  This is pretty well obsolete.  */
+<span class="lineNum">     168 </span>            : # define S_ISVTX        __S_ISVTX
+<span class="lineNum">     169 </span>            : #endif
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            : #define S_IRUSR __S_IREAD       /* Read by owner.  */
+<span class="lineNum">     172 </span>            : #define S_IWUSR __S_IWRITE      /* Write by owner.  */
+<span class="lineNum">     173 </span>            : #define S_IXUSR __S_IEXEC       /* Execute by owner.  */
+<span class="lineNum">     174 </span>            : /* Read, write, and execute by owner.  */
+<span class="lineNum">     175 </span>            : #define S_IRWXU (__S_IREAD|__S_IWRITE|__S_IEXEC)
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            : #ifdef __USE_MISC
+<span class="lineNum">     178 </span>            : # define S_IREAD        S_IRUSR
+<span class="lineNum">     179 </span>            : # define S_IWRITE       S_IWUSR
+<span class="lineNum">     180 </span>            : # define S_IEXEC        S_IXUSR
+<span class="lineNum">     181 </span>            : #endif
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            : #define S_IRGRP (S_IRUSR &gt;&gt; 3)    /* Read by group.  */
+<span class="lineNum">     184 </span>            : #define S_IWGRP (S_IWUSR &gt;&gt; 3)    /* Write by group.  */
+<span class="lineNum">     185 </span>            : #define S_IXGRP (S_IXUSR &gt;&gt; 3)    /* Execute by group.  */
+<span class="lineNum">     186 </span>            : /* Read, write, and execute by group.  */
+<span class="lineNum">     187 </span>            : #define S_IRWXG (S_IRWXU &gt;&gt; 3)
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            : #define S_IROTH (S_IRGRP &gt;&gt; 3)    /* Read by others.  */
+<span class="lineNum">     190 </span>            : #define S_IWOTH (S_IWGRP &gt;&gt; 3)    /* Write by others.  */
+<span class="lineNum">     191 </span>            : #define S_IXOTH (S_IXGRP &gt;&gt; 3)    /* Execute by others.  */
+<span class="lineNum">     192 </span>            : /* Read, write, and execute by others.  */
+<span class="lineNum">     193 </span>            : #define S_IRWXO (S_IRWXG &gt;&gt; 3)
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            : #ifdef  __USE_MISC
+<span class="lineNum">     197 </span>            : /* Macros for common mode bit masks.  */
+<span class="lineNum">     198 </span>            : # define ACCESSPERMS (S_IRWXU|S_IRWXG|S_IRWXO) /* 0777 */
+<span class="lineNum">     199 </span>            : # define ALLPERMS (S_ISUID|S_ISGID|S_ISVTX|S_IRWXU|S_IRWXG|S_IRWXO)/* 07777 */
+<span class="lineNum">     200 </span>            : # define DEFFILEMODE (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)/* 0666*/
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            : # define S_BLKSIZE      512     /* Block size for `st_blocks'.  */
+<span class="lineNum">     203 </span>            : #endif
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            : #ifndef __USE_FILE_OFFSET64
+<span class="lineNum">     207 </span>            : /* Get file attributes for FILE and put them in BUF.  */
+<span class="lineNum">     208 </span>            : extern int stat (const char *__restrict __file,
+<span class="lineNum">     209 </span>            :                  struct stat *__restrict __buf) __THROW __nonnull ((1, 2));
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            : /* Get file attributes for the file, device, pipe, or socket
+<span class="lineNum">     212 </span>            :    that file descriptor FD is open on and put them in BUF.  */
+<span class="lineNum">     213 </span>            : extern int fstat (int __fd, struct stat *__buf) __THROW __nonnull ((2));
+<span class="lineNum">     214 </span>            : #else
+<span class="lineNum">     215 </span>            : # ifdef __REDIRECT_NTH
+<span class="lineNum">     216 </span>            : extern int __REDIRECT_NTH (stat, (const char *__restrict __file,
+<span class="lineNum">     217 </span>            :                                   struct stat *__restrict __buf), stat64)
+<span class="lineNum">     218 </span>            :      __nonnull ((1, 2));
+<span class="lineNum">     219 </span>            : extern int __REDIRECT_NTH (fstat, (int __fd, struct stat *__buf), fstat64)
+<span class="lineNum">     220 </span>            :      __nonnull ((2));
+<span class="lineNum">     221 </span>            : # else
+<span class="lineNum">     222 </span>            : #  define stat stat64
+<span class="lineNum">     223 </span>            : #  define fstat fstat64
+<span class="lineNum">     224 </span>            : # endif
+<span class="lineNum">     225 </span>            : #endif
+<span class="lineNum">     226 </span>            : #ifdef __USE_LARGEFILE64
+<span class="lineNum">     227 </span>            : extern int stat64 (const char *__restrict __file,
+<span class="lineNum">     228 </span>            :                    struct stat64 *__restrict __buf) __THROW __nonnull ((1, 2));
+<span class="lineNum">     229 </span>            : extern int fstat64 (int __fd, struct stat64 *__buf) __THROW __nonnull ((2));
+<span class="lineNum">     230 </span>            : #endif
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            : #ifdef __USE_ATFILE
+<span class="lineNum">     233 </span>            : /* Similar to stat, get the attributes for FILE and put them in BUF.
+<span class="lineNum">     234 </span>            :    Relative path names are interpreted relative to FD unless FD is
+<span class="lineNum">     235 </span>            :    AT_FDCWD.  */
+<span class="lineNum">     236 </span>            : # ifndef __USE_FILE_OFFSET64
+<span class="lineNum">     237 </span>            : extern int fstatat (int __fd, const char *__restrict __file,
+<span class="lineNum">     238 </span>            :                     struct stat *__restrict __buf, int __flag)
+<span class="lineNum">     239 </span>            :      __THROW __nonnull ((2, 3));
+<span class="lineNum">     240 </span>            : # else
+<span class="lineNum">     241 </span>            : #  ifdef __REDIRECT_NTH
+<span class="lineNum">     242 </span>            : extern int __REDIRECT_NTH (fstatat, (int __fd, const char *__restrict __file,
+<span class="lineNum">     243 </span>            :                                      struct stat *__restrict __buf,
+<span class="lineNum">     244 </span>            :                                      int __flag),
+<span class="lineNum">     245 </span>            :                            fstatat64) __nonnull ((2, 3));
+<span class="lineNum">     246 </span>            : #  else
+<span class="lineNum">     247 </span>            : #   define fstatat fstatat64
+<span class="lineNum">     248 </span>            : #  endif
+<span class="lineNum">     249 </span>            : # endif
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            : # ifdef __USE_LARGEFILE64
+<span class="lineNum">     252 </span>            : extern int fstatat64 (int __fd, const char *__restrict __file,
+<span class="lineNum">     253 </span>            :                       struct stat64 *__restrict __buf, int __flag)
+<span class="lineNum">     254 </span>            :      __THROW __nonnull ((2, 3));
+<span class="lineNum">     255 </span>            : # endif
+<span class="lineNum">     256 </span>            : #endif
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            : #if defined __USE_XOPEN_EXTENDED || defined __USE_XOPEN2K
+<span class="lineNum">     259 </span>            : # ifndef __USE_FILE_OFFSET64
+<span class="lineNum">     260 </span>            : /* Get file attributes about FILE and put them in BUF.
+<span class="lineNum">     261 </span>            :    If FILE is a symbolic link, do not follow it.  */
+<span class="lineNum">     262 </span>            : extern int lstat (const char *__restrict __file,
+<span class="lineNum">     263 </span>            :                   struct stat *__restrict __buf) __THROW __nonnull ((1, 2));
+<span class="lineNum">     264 </span>            : # else
+<span class="lineNum">     265 </span>            : #  ifdef __REDIRECT_NTH
+<span class="lineNum">     266 </span>            : extern int __REDIRECT_NTH (lstat,
+<span class="lineNum">     267 </span>            :                            (const char *__restrict __file,
+<span class="lineNum">     268 </span>            :                             struct stat *__restrict __buf), lstat64)
+<span class="lineNum">     269 </span>            :      __nonnull ((1, 2));
+<span class="lineNum">     270 </span>            : #  else
+<span class="lineNum">     271 </span>            : #   define lstat lstat64
+<span class="lineNum">     272 </span>            : #  endif
+<span class="lineNum">     273 </span>            : # endif
+<span class="lineNum">     274 </span>            : # ifdef __USE_LARGEFILE64
+<span class="lineNum">     275 </span>            : extern int lstat64 (const char *__restrict __file,
+<span class="lineNum">     276 </span>            :                     struct stat64 *__restrict __buf)
+<span class="lineNum">     277 </span>            :      __THROW __nonnull ((1, 2));
+<span class="lineNum">     278 </span>            : # endif
+<span class="lineNum">     279 </span>            : #endif
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span>            : /* Set file access permissions for FILE to MODE.
+<span class="lineNum">     282 </span>            :    If FILE is a symbolic link, this affects its target instead.  */
+<span class="lineNum">     283 </span>            : extern int chmod (const char *__file, __mode_t __mode)
+<span class="lineNum">     284 </span>            :      __THROW __nonnull ((1));
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            : #ifdef __USE_MISC
+<span class="lineNum">     287 </span>            : /* Set file access permissions for FILE to MODE.
+<span class="lineNum">     288 </span>            :    If FILE is a symbolic link, this affects the link itself
+<span class="lineNum">     289 </span>            :    rather than its target.  */
+<span class="lineNum">     290 </span>            : extern int lchmod (const char *__file, __mode_t __mode)
+<span class="lineNum">     291 </span>            :      __THROW __nonnull ((1));
+<span class="lineNum">     292 </span>            : #endif
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            : /* Set file access permissions of the file FD is open on to MODE.  */
+<span class="lineNum">     295 </span>            : #ifdef __USE_POSIX
+<span class="lineNum">     296 </span>            : extern int fchmod (int __fd, __mode_t __mode) __THROW;
+<span class="lineNum">     297 </span>            : #endif
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span>            : #ifdef __USE_ATFILE
+<span class="lineNum">     300 </span>            : /* Set file access permissions of FILE relative to
+<span class="lineNum">     301 </span>            :    the directory FD is open on.  */
+<span class="lineNum">     302 </span>            : extern int fchmodat (int __fd, const char *__file, __mode_t __mode,
+<span class="lineNum">     303 </span>            :                      int __flag)
+<span class="lineNum">     304 </span>            :      __THROW __nonnull ((2)) __wur;
+<span class="lineNum">     305 </span>            : #endif /* Use ATFILE.  */
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span>            : /* Set the file creation mask of the current process to MASK,
+<span class="lineNum">     310 </span>            :    and return the old creation mask.  */
+<span class="lineNum">     311 </span>            : extern __mode_t umask (__mode_t __mask) __THROW;
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            : #ifdef  __USE_GNU
+<span class="lineNum">     314 </span>            : /* Get the current `umask' value without changing it.
+<span class="lineNum">     315 </span>            :    This function is only available under the GNU Hurd.  */
+<span class="lineNum">     316 </span>            : extern __mode_t getumask (void) __THROW;
+<span class="lineNum">     317 </span>            : #endif
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            : /* Create a new directory named PATH, with permission bits MODE.  */
+<span class="lineNum">     320 </span>            : extern int mkdir (const char *__path, __mode_t __mode)
+<span class="lineNum">     321 </span>            :      __THROW __nonnull ((1));
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span>            : #ifdef __USE_ATFILE
+<span class="lineNum">     324 </span>            : /* Like mkdir, create a new directory with permission bits MODE.  But
+<span class="lineNum">     325 </span>            :    interpret relative PATH names relative to the directory associated
+<span class="lineNum">     326 </span>            :    with FD.  */
+<span class="lineNum">     327 </span>            : extern int mkdirat (int __fd, const char *__path, __mode_t __mode)
+<span class="lineNum">     328 </span>            :      __THROW __nonnull ((2));
+<span class="lineNum">     329 </span>            : #endif
+<span class="lineNum">     330 </span>            : 
+<span class="lineNum">     331 </span>            : /* Create a device file named PATH, with permission and special bits MODE
+<span class="lineNum">     332 </span>            :    and device number DEV (which can be constructed from major and minor
+<span class="lineNum">     333 </span>            :    device numbers with the `makedev' macro above).  */
+<span class="lineNum">     334 </span>            : #if defined __USE_MISC || defined __USE_XOPEN_EXTENDED
+<span class="lineNum">     335 </span>            : extern int mknod (const char *__path, __mode_t __mode, __dev_t __dev)
+<span class="lineNum">     336 </span>            :      __THROW __nonnull ((1));
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            : # ifdef __USE_ATFILE
+<span class="lineNum">     339 </span>            : /* Like mknod, create a new device file with permission bits MODE and
+<span class="lineNum">     340 </span>            :    device number DEV.  But interpret relative PATH names relative to
+<span class="lineNum">     341 </span>            :    the directory associated with FD.  */
+<span class="lineNum">     342 </span>            : extern int mknodat (int __fd, const char *__path, __mode_t __mode,
+<span class="lineNum">     343 </span>            :                     __dev_t __dev) __THROW __nonnull ((2));
+<span class="lineNum">     344 </span>            : # endif
+<span class="lineNum">     345 </span>            : #endif
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            : /* Create a new FIFO named PATH, with permission bits MODE.  */
+<span class="lineNum">     349 </span>            : extern int mkfifo (const char *__path, __mode_t __mode)
+<span class="lineNum">     350 </span>            :      __THROW __nonnull ((1));
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span>            : #ifdef __USE_ATFILE
+<span class="lineNum">     353 </span>            : /* Like mkfifo, create a new FIFO with permission bits MODE.  But
+<span class="lineNum">     354 </span>            :    interpret relative PATH names relative to the directory associated
+<span class="lineNum">     355 </span>            :    with FD.  */
+<span class="lineNum">     356 </span>            : extern int mkfifoat (int __fd, const char *__path, __mode_t __mode)
+<span class="lineNum">     357 </span>            :      __THROW __nonnull ((2));
+<span class="lineNum">     358 </span>            : #endif
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span>            : #ifdef __USE_ATFILE
+<span class="lineNum">     361 </span>            : /* Set file access and modification times relative to directory file
+<span class="lineNum">     362 </span>            :    descriptor.  */
+<span class="lineNum">     363 </span>            : extern int utimensat (int __fd, const char *__path,
+<span class="lineNum">     364 </span>            :                       const struct timespec __times[2],
+<span class="lineNum">     365 </span>            :                       int __flags)
+<span class="lineNum">     366 </span>            :      __THROW __nonnull ((2));
+<span class="lineNum">     367 </span>            : #endif
+<span class="lineNum">     368 </span>            : 
+<span class="lineNum">     369 </span>            : #ifdef __USE_XOPEN2K8
+<span class="lineNum">     370 </span>            : /* Set file access and modification times of the file associated with FD.  */
+<span class="lineNum">     371 </span>            : extern int futimens (int __fd, const struct timespec __times[2]) __THROW;
+<span class="lineNum">     372 </span>            : #endif
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span>            : /* To allow the `struct stat' structure and the file type `mode_t'
+<span class="lineNum">     375 </span>            :    bits to vary without changing shared library major version number,
+<span class="lineNum">     376 </span>            :    the `stat' family of functions and `mknod' are in fact inline
+<span class="lineNum">     377 </span>            :    wrappers around calls to `xstat', `fxstat', `lxstat', and `xmknod',
+<span class="lineNum">     378 </span>            :    which all take a leading version-number argument designating the
+<span class="lineNum">     379 </span>            :    data structure and bits used.  &lt;bits/stat.h&gt; defines _STAT_VER with
+<span class="lineNum">     380 </span>            :    the version number corresponding to `struct stat' as defined in
+<span class="lineNum">     381 </span>            :    that file; and _MKNOD_VER with the version number corresponding to
+<span class="lineNum">     382 </span>            :    the S_IF* macros defined therein.  It is arranged that when not
+<span class="lineNum">     383 </span>            :    inlined these function are always statically linked; that way a
+<span class="lineNum">     384 </span>            :    dynamically-linked executable always encodes the version number
+<span class="lineNum">     385 </span>            :    corresponding to the data structures it uses, so the `x' functions
+<span class="lineNum">     386 </span>            :    in the shared library can adapt without needing to recompile all
+<span class="lineNum">     387 </span>            :    callers.  */
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span>            : #ifndef _STAT_VER
+<span class="lineNum">     390 </span>            : # define _STAT_VER      0
+<span class="lineNum">     391 </span>            : #endif
+<span class="lineNum">     392 </span>            : #ifndef _MKNOD_VER
+<span class="lineNum">     393 </span>            : # define _MKNOD_VER     0
+<span class="lineNum">     394 </span>            : #endif
+<span class="lineNum">     395 </span>            : 
+<span class="lineNum">     396 </span>            : /* Wrappers for stat and mknod system calls.  */
+<span class="lineNum">     397 </span>            : #ifndef __USE_FILE_OFFSET64
+<span class="lineNum">     398 </span>            : extern int __fxstat (int __ver, int __fildes, struct stat *__stat_buf)
+<span class="lineNum">     399 </span>            :      __THROW __nonnull ((3));
+<span class="lineNum">     400 </span>            : extern int __xstat (int __ver, const char *__filename,
+<span class="lineNum">     401 </span>            :                     struct stat *__stat_buf) __THROW __nonnull ((2, 3));
+<span class="lineNum">     402 </span>            : extern int __lxstat (int __ver, const char *__filename,
+<span class="lineNum">     403 </span>            :                      struct stat *__stat_buf) __THROW __nonnull ((2, 3));
+<span class="lineNum">     404 </span>            : extern int __fxstatat (int __ver, int __fildes, const char *__filename,
+<span class="lineNum">     405 </span>            :                        struct stat *__stat_buf, int __flag)
+<span class="lineNum">     406 </span>            :      __THROW __nonnull ((3, 4));
+<span class="lineNum">     407 </span>            : #else
+<span class="lineNum">     408 </span>            : # ifdef __REDIRECT_NTH
+<span class="lineNum">     409 </span>            : extern int __REDIRECT_NTH (__fxstat, (int __ver, int __fildes,
+<span class="lineNum">     410 </span>            :                                       struct stat *__stat_buf), __fxstat64)
+<span class="lineNum">     411 </span>            :      __nonnull ((3));
+<span class="lineNum">     412 </span>            : extern int __REDIRECT_NTH (__xstat, (int __ver, const char *__filename,
+<span class="lineNum">     413 </span>            :                                      struct stat *__stat_buf), __xstat64)
+<span class="lineNum">     414 </span>            :      __nonnull ((2, 3));
+<span class="lineNum">     415 </span>            : extern int __REDIRECT_NTH (__lxstat, (int __ver, const char *__filename,
+<span class="lineNum">     416 </span>            :                                       struct stat *__stat_buf), __lxstat64)
+<span class="lineNum">     417 </span>            :      __nonnull ((2, 3));
+<span class="lineNum">     418 </span>            : extern int __REDIRECT_NTH (__fxstatat, (int __ver, int __fildes,
+<span class="lineNum">     419 </span>            :                                         const char *__filename,
+<span class="lineNum">     420 </span>            :                                         struct stat *__stat_buf, int __flag),
+<span class="lineNum">     421 </span>            :                            __fxstatat64) __nonnull ((3, 4));
+<span class="lineNum">     422 </span>            : 
+<span class="lineNum">     423 </span>            : # else
+<span class="lineNum">     424 </span>            : #  define __fxstat __fxstat64
+<span class="lineNum">     425 </span>            : #  define __xstat __xstat64
+<span class="lineNum">     426 </span>            : #  define __lxstat __lxstat64
+<span class="lineNum">     427 </span>            : # endif
+<span class="lineNum">     428 </span>            : #endif
+<span class="lineNum">     429 </span>            : 
+<span class="lineNum">     430 </span>            : #ifdef __USE_LARGEFILE64
+<span class="lineNum">     431 </span>            : extern int __fxstat64 (int __ver, int __fildes, struct stat64 *__stat_buf)
+<span class="lineNum">     432 </span>            :      __THROW __nonnull ((3));
+<span class="lineNum">     433 </span>            : extern int __xstat64 (int __ver, const char *__filename,
+<span class="lineNum">     434 </span>            :                       struct stat64 *__stat_buf) __THROW __nonnull ((2, 3));
+<span class="lineNum">     435 </span>            : extern int __lxstat64 (int __ver, const char *__filename,
+<span class="lineNum">     436 </span>            :                        struct stat64 *__stat_buf) __THROW __nonnull ((2, 3));
+<span class="lineNum">     437 </span>            : extern int __fxstatat64 (int __ver, int __fildes, const char *__filename,
+<span class="lineNum">     438 </span>            :                          struct stat64 *__stat_buf, int __flag)
+<span class="lineNum">     439 </span>            :      __THROW __nonnull ((3, 4));
+<span class="lineNum">     440 </span>            : #endif
+<span class="lineNum">     441 </span>            : extern int __xmknod (int __ver, const char *__path, __mode_t __mode,
+<span class="lineNum">     442 </span>            :                      __dev_t *__dev) __THROW __nonnull ((2, 4));
+<span class="lineNum">     443 </span>            : 
+<span class="lineNum">     444 </span>            : extern int __xmknodat (int __ver, int __fd, const char *__path,
+<span class="lineNum">     445 </span>            :                        __mode_t __mode, __dev_t *__dev)
+<span class="lineNum">     446 </span>            :      __THROW __nonnull ((3, 5));
+<span class="lineNum">     447 </span>            : 
+<span class="lineNum">     448 </span>            : #ifdef __USE_EXTERN_INLINES
+<span class="lineNum">     449 </span>            : /* Inlined versions of the real stat and mknod functions.  */
+<span class="lineNum">     450 </span>            : 
+<span class="lineNum">     451 </span>            : __extern_inline int
+<span class="lineNum">     452 </span>            : __NTH (stat (const char *__path, struct stat *__statbuf))
+<span class="lineNum">     453 </span>            : {
+<span class="lineNum">     454 </span>            :   return __xstat (_STAT_VER, __path, __statbuf);
+<span class="lineNum">     455 </span>            : }
+<span class="lineNum">     456 </span>            : 
+<span class="lineNum">     457 </span>            : # if defined __USE_MISC || defined __USE_XOPEN_EXTENDED
+<span class="lineNum">     458 </span>            : __extern_inline int
+<span class="lineNum">     459 </span>            : __NTH (lstat (const char *__path, struct stat *__statbuf))
+<span class="lineNum">     460 </span>            : {
+<span class="lineNum">     461 </span>            :   return __lxstat (_STAT_VER, __path, __statbuf);
+<span class="lineNum">     462 </span>            : }
+<span class="lineNum">     463 </span>            : # endif
+<span class="lineNum">     464 </span>            : 
+<span class="lineNum">     465 </span>            : __extern_inline int
+<span class="lineNum">     466 </span>            : __NTH (fstat (int __fd, struct stat *__statbuf))
+<span class="lineNum">     467 </span>            : {
+<span class="lineNum">     468 </span><span class="lineCov">          1 :   return __fxstat (_STAT_VER, __fd, __statbuf);</span>
+<span class="lineNum">     469 </span>            : }
+<span class="lineNum">     470 </span>            : 
+<span class="lineNum">     471 </span>            : # ifdef __USE_ATFILE
+<span class="lineNum">     472 </span>            : __extern_inline int
+<span class="lineNum">     473 </span>            : __NTH (fstatat (int __fd, const char *__filename, struct stat *__statbuf,
+<span class="lineNum">     474 </span>            :                 int __flag))
+<span class="lineNum">     475 </span>            : {
+<span class="lineNum">     476 </span>            :   return __fxstatat (_STAT_VER, __fd, __filename, __statbuf, __flag);
+<span class="lineNum">     477 </span>            : }
+<span class="lineNum">     478 </span>            : # endif
+<span class="lineNum">     479 </span>            : 
+<span class="lineNum">     480 </span>            : # ifdef __USE_MISC
+<span class="lineNum">     481 </span>            : __extern_inline int
+<span class="lineNum">     482 </span>            : __NTH (mknod (const char *__path, __mode_t __mode, __dev_t __dev))
+<span class="lineNum">     483 </span>            : {
+<span class="lineNum">     484 </span>            :   return __xmknod (_MKNOD_VER, __path, __mode, &amp;__dev);
+<span class="lineNum">     485 </span>            : }
+<span class="lineNum">     486 </span>            : # endif
+<span class="lineNum">     487 </span>            : 
+<span class="lineNum">     488 </span>            : # ifdef __USE_ATFILE
+<span class="lineNum">     489 </span>            : __extern_inline int
+<span class="lineNum">     490 </span>            : __NTH (mknodat (int __fd, const char *__path, __mode_t __mode,
+<span class="lineNum">     491 </span>            :                 __dev_t __dev))
+<span class="lineNum">     492 </span>            : {
+<span class="lineNum">     493 </span>            :   return __xmknodat (_MKNOD_VER, __fd, __path, __mode, &amp;__dev);
+<span class="lineNum">     494 </span>            : }
+<span class="lineNum">     495 </span>            : # endif
+<span class="lineNum">     496 </span>            : 
+<span class="lineNum">     497 </span>            : # if defined __USE_LARGEFILE64 \
+<span class="lineNum">     498 </span>            :   &amp;&amp; (! defined __USE_FILE_OFFSET64 \
+<span class="lineNum">     499 </span>            :       || (defined __REDIRECT_NTH &amp;&amp; defined __OPTIMIZE__))
+<span class="lineNum">     500 </span>            : __extern_inline int
+<span class="lineNum">     501 </span>            : __NTH (stat64 (const char *__path, struct stat64 *__statbuf))
+<span class="lineNum">     502 </span>            : {
+<span class="lineNum">     503 </span>            :   return __xstat64 (_STAT_VER, __path, __statbuf);
+<span class="lineNum">     504 </span>            : }
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span>            : #  if defined __USE_MISC || defined __USE_XOPEN_EXTENDED
+<span class="lineNum">     507 </span>            : __extern_inline int
+<span class="lineNum">     508 </span>            : __NTH (lstat64 (const char *__path, struct stat64 *__statbuf))
+<span class="lineNum">     509 </span>            : {
+<span class="lineNum">     510 </span>            :   return __lxstat64 (_STAT_VER, __path, __statbuf);
+<span class="lineNum">     511 </span>            : }
+<span class="lineNum">     512 </span>            : #  endif
+<span class="lineNum">     513 </span>            : 
+<span class="lineNum">     514 </span>            : __extern_inline int
+<span class="lineNum">     515 </span>            : __NTH (fstat64 (int __fd, struct stat64 *__statbuf))
+<span class="lineNum">     516 </span>            : {
+<span class="lineNum">     517 </span>            :   return __fxstat64 (_STAT_VER, __fd, __statbuf);
+<span class="lineNum">     518 </span>            : }
+<span class="lineNum">     519 </span>            : 
+<span class="lineNum">     520 </span>            : #  ifdef __USE_ATFILE
+<span class="lineNum">     521 </span>            : __extern_inline int
+<span class="lineNum">     522 </span>            : __NTH (fstatat64 (int __fd, const char *__filename, struct stat64 *__statbuf,
+<span class="lineNum">     523 </span>            :                   int __flag))
+<span class="lineNum">     524 </span>            : {
+<span class="lineNum">     525 </span>            :   return __fxstatat64 (_STAT_VER, __fd, __filename, __statbuf, __flag);
+<span class="lineNum">     526 </span>            : }
+<span class="lineNum">     527 </span>            : #  endif
+<span class="lineNum">     528 </span>            : 
+<span class="lineNum">     529 </span>            : # endif
+<span class="lineNum">     530 </span>            : 
+<span class="lineNum">     531 </span>            : #endif
+<span class="lineNum">     532 </span>            : 
+<span class="lineNum">     533 </span>            : __END_DECLS
+<span class="lineNum">     534 </span>            : 
+<span class="lineNum">     535 </span>            : 
+<span class="lineNum">     536 </span>            : #endif /* sys/stat.h  */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

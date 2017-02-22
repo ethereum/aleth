@@ -1,0 +1,534 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/fuzzTesting/createRandomTest.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/fuzzTesting</a> - createRandomTest.cpp<span style="font-size: 80%;"> (source / <a href="createRandomTest.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">146</td>
+            <td class="headerCovTableEntryLo">4.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryLo">28.6 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file createRandomTest.cpp
+<span class="lineNum">      18 </span>            :  * @author Dimitry Khokhlov &lt;winsvega@mail.ru&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;string&gt;
+<span class="lineNum">      23 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;libdevcore/CommonData.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;test/fuzzTesting/fuzzHelper.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libevm/VMFactory.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : //String Variables
+<span class="lineNum">      32 </span>            : extern std::string const c_testExampleStateTest;
+<span class="lineNum">      33 </span>            : extern std::string const c_testExampleTransactionTest;
+<span class="lineNum">      34 </span>            : extern std::string const c_testExampleVMTest;
+<span class="lineNum">      35 </span>            : extern std::string const c_testExampleBlockchainTest;
+<span class="lineNum">      36 </span>            : extern std::string const c_testExampleRLPTest;
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : //Main Test functinos
+<span class="lineNum">      39 </span>            : void fillRandomTest(std::function&lt;void(json_spirit::mValue&amp;, bool)&gt; _doTests, std::string const&amp; _testString, bool _debug = false);
+<span class="lineNum">      40 </span>            : int checkRandomTest(std::function&lt;void(json_spirit::mValue&amp;, bool)&gt; _doTests, json_spirit::mValue&amp; _value, bool _debug = false);
+<a name="41"><span class="lineNum">      41 </span>            : </a>
+<span class="lineNum">      42 </span>            : namespace dev { namespace test {
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 : int createRandomTest(std::vector&lt;char*&gt; const&amp; _parameters)</span>
+<span class="lineNum">      44 </span>            : {
+<span class="lineNum">      45 </span><span class="lineNoCov">          0 :         std::string testSuite;</span>
+<span class="lineNum">      46 </span><span class="lineNoCov">          0 :         std::string testFillString;</span>
+<span class="lineNum">      47 </span><span class="lineNoCov">          0 :         json_spirit::mValue testmValue;</span>
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 :         bool checktest = false;</span>
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :         bool filldebug = false;</span>
+<span class="lineNum">      50 </span><span class="lineNoCov">          0 :         bool debug = false;</span>
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 :         bool filltest = false;</span>
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 :         dev::test::Options&amp; options = const_cast&lt;dev::test::Options&amp;&gt;(dev::test::Options::get());</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :         testSuite = options.rCurrentTestSuite;</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :         if (testSuite != &quot;BlockChainTests&quot; &amp;&amp; testSuite != &quot;TransactionTests&quot; &amp;&amp; testSuite != &quot;StateTests&quot;</span>
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 :                                 &amp;&amp; testSuite != &quot;VMTests&quot;)</span>
+<span class="lineNum">      58 </span>            :                 testSuite = &quot;&quot;;
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :         for (size_t i = 0; i &lt; _parameters.size(); ++i)</span>
+<span class="lineNum">      61 </span>            :         {
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 :                 auto arg = std::string{_parameters.at(i)};</span>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :                 if (arg == &quot;--fulloutput&quot;)</span>
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :                         options.fulloutput = true;</span>
+<span class="lineNum">      66 </span>            :                 else
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :                 if (arg == &quot;--checktest&quot; || arg == &quot;--filltest&quot;)</span>
+<span class="lineNum">      68 </span>            :                 {
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :                         std::string s = options.rCheckTest;</span>
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :                         BOOST_REQUIRE_MESSAGE(s.length() &gt; 0, &quot;Error! Content of argument is empty! (Usage -checktest textstream)&quot;);</span>
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :                         if (arg == &quot;--filltest&quot;)</span>
+<span class="lineNum">      73 </span>            :                         {
+<span class="lineNum">      74 </span>            :                                 testFillString = s;
+<span class="lineNum">      75 </span>            :                                 filltest = true;
+<span class="lineNum">      76 </span>            :                         }
+<span class="lineNum">      77 </span>            :                         else
+<span class="lineNum">      78 </span>            :                         {
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :                                 if (s.find(&quot;.json&quot;) != std::string::npos)</span>
+<span class="lineNum">      80 </span>            :                                 {
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :                                         boost::filesystem::path p(__FILE__);</span>
+<span class="lineNum">      82 </span><span class="lineNoCov">          0 :                                         s = asString(dev::contents(s));</span>
+<span class="lineNum">      83 </span>            :                                 }
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :                                 read_string(s, testmValue);</span>
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :                                 checktest = true;</span>
+<span class="lineNum">      86 </span>            :                         }
+<span class="lineNum">      87 </span>            :                 }
+<span class="lineNum">      88 </span>            :                 else
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 :                 if (arg == &quot;--debug&quot;)</span>
+<span class="lineNum">      90 </span>            :                         debug = true;
+<span class="lineNum">      91 </span>            :                 else
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :                 if (arg == &quot;--filldebug&quot;)</span>
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :                         filldebug = true;</span>
+<span class="lineNum">      94 </span>            :         }
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :         if (testSuite == &quot;&quot;)</span>
+<span class="lineNum">      97 </span>            :         {
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :                 std::cerr &lt;&lt; &quot;Error! Test suite not supported! (Usage -t TestSuite)&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      99 </span>            :                 return 1;
+<span class="lineNum">     100 </span>            :         }
+<span class="lineNum">     101 </span>            :         else
+<span class="lineNum">     102 </span>            :         {
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :                 if (checktest)</span>
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :                         std::cout &lt;&lt; &quot;Testing: &quot; &lt;&lt; testSuite.substr(0, testSuite.length() - 1) &lt;&lt; &quot;... &quot;;</span>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :                 if (testSuite == &quot;BlockChainTests&quot;)</span>
+<span class="lineNum">     107 </span>            :                 {
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :                         if (checktest)</span>
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :                                 return checkRandomTest(dev::test::doBlockchainTests, testmValue, debug);</span>
+<span class="lineNum">     110 </span>            :                         else
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :                                 fillRandomTest(dev::test::doBlockchainTests, (filltest) ? testFillString : c_testExampleBlockchainTest, filldebug);</span>
+<span class="lineNum">     112 </span>            :                 }
+<span class="lineNum">     113 </span>            :                 else
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :                 if (testSuite == &quot;TransactionTests&quot;)</span>
+<span class="lineNum">     115 </span>            :                 {
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :                         if (checktest)</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :                                 return checkRandomTest(dev::test::doTransactionTests, testmValue, debug);</span>
+<span class="lineNum">     118 </span>            :                         else
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :                                 fillRandomTest(dev::test::doTransactionTests, (filltest) ? testFillString : c_testExampleTransactionTest, filldebug);</span>
+<span class="lineNum">     120 </span>            :                 }
+<span class="lineNum">     121 </span>            :                 else
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :                 if (testSuite == &quot;StateTests&quot;)</span>
+<span class="lineNum">     123 </span>            :                 {
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :                         if (checktest)</span>
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :                                 return checkRandomTest(dev::test::doStateTests, testmValue, debug);</span>
+<span class="lineNum">     126 </span>            :                         else
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :                                 fillRandomTest(dev::test::doStateTests, (filltest) ? testFillString : c_testExampleStateTest, filldebug);</span>
+<span class="lineNum">     128 </span>            :                 }
+<span class="lineNum">     129 </span>            :                 else
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :                 if (testSuite == &quot;VMTests&quot;)</span>
+<span class="lineNum">     131 </span>            :                 {
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :                         if (checktest)</span>
+<span class="lineNum">     133 </span>            :                         {
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :                                 dev::eth::VMFactory::setKind(dev::eth::VMKind::JIT);</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :                                 return checkRandomTest(dev::test::doVMTests, testmValue, debug);</span>
+<span class="lineNum">     136 </span>            :                         }
+<span class="lineNum">     137 </span>            :                         else
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :                                 fillRandomTest(dev::test::doVMTests, (filltest) ? testFillString : c_testExampleVMTest, filldebug);</span>
+<span class="lineNum">     139 </span>            :                 }
+<span class="lineNum">     140 </span>            :         }
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            :         return 0;
+<span class="lineNum">     143 </span>            : }
+<a name="144"><span class="lineNum">     144 </span>            : }} //namespaces</a>
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 : int checkRandomTest(std::function&lt;void(json_spirit::mValue&amp;, bool)&gt; _doTests, json_spirit::mValue&amp; _value, bool _debug)</span>
+<span class="lineNum">     147 </span>            : {
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :         bool ret = 0;</span>
+<span class="lineNum">     149 </span>            :         try
+<span class="lineNum">     150 </span>            :         {
+<span class="lineNum">     151 </span>            :                 //redirect all output to the stream
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :                 std::ostringstream strCout;</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :                 std::streambuf* oldCoutStreamBuf = std::cout.rdbuf();</span>
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :                 if (!_debug)</span>
+<span class="lineNum">     155 </span>            :                 {
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :                         std::cout.rdbuf( strCout.rdbuf() );</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :                         std::cerr.rdbuf( strCout.rdbuf() );</span>
+<span class="lineNum">     158 </span>            :                 }
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :                 _doTests(_value, false);</span>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :                 //restroe output
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :                 if (!_debug)</span>
+<span class="lineNum">     164 </span>            :                 {
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :                         std::cout.rdbuf(oldCoutStreamBuf);</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :                         std::cerr.rdbuf(oldCoutStreamBuf);</span>
+<span class="lineNum">     167 </span>            :                 }
+<span class="lineNum">     168 </span>            :         }
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :         catch (dev::Exception const&amp; _e)</span>
+<span class="lineNum">     170 </span>            :         {
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :                 std::cout &lt;&lt; &quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e) &lt;&lt; std::endl;</span>
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :                 ret = 1;</span>
+<span class="lineNum">     173 </span>            :         }
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     175 </span>            :         {
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :                 std::cout &lt;&lt; &quot;Failed test with Exception: &quot; &lt;&lt; _e.what() &lt;&lt; std::endl;</span>
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :                 ret = 1;</span>
+<span class="lineNum">     178 </span>            :         }
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="180"><span class="lineNum">     180 </span>            : }</a>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 : void fillRandomTest(std::function&lt;void(json_spirit::mValue&amp;, bool)&gt; _doTests, std::string const&amp; _testString, bool _debug)</span>
+<span class="lineNum">     183 </span>            : {
+<span class="lineNum">     184 </span>            :         //redirect all output to the stream
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :         std::ostringstream strCout;</span>
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :         std::streambuf* oldCoutStreamBuf = std::cout.rdbuf();</span>
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :         if (!_debug)</span>
+<span class="lineNum">     188 </span>            :         {
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :                 std::cout.rdbuf( strCout.rdbuf() );</span>
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :                 std::cerr.rdbuf( strCout.rdbuf() );</span>
+<span class="lineNum">     191 </span>            :         }
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :         json_spirit::mValue v;</span>
+<span class="lineNum">     194 </span>            :         try
+<span class="lineNum">     195 </span>            :         {
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :                 std::string newTest = _testString;</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :                 std::map&lt;std::string, std::string&gt; nullReplaceMap;</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :                 dev::test::RandomCode::parseTestWithTypes(newTest, nullReplaceMap);</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :                 json_spirit::read_string(newTest, v);</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :                 _doTests(v, true);</span>
+<span class="lineNum">     201 </span>            :         }
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">     203 </span>            :         {
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :                 std::cerr &lt;&lt; &quot;Test fill exception!&quot;;</span>
+<span class="lineNum">     205 </span>            :         }
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :         //restroe output
+<span class="lineNum">     208 </span><span class="lineNoCov">          0 :         if (!_debug)</span>
+<span class="lineNum">     209 </span>            :         {
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :                 std::cout.rdbuf(oldCoutStreamBuf);</span>
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :                 std::cerr.rdbuf(oldCoutStreamBuf);</span>
+<span class="lineNum">     212 </span>            :         }
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :         std::cout &lt;&lt; json_spirit::write_string(v, true);</span>
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 : }</span>
+<a name="215"><span class="lineNum">     215 </span>            : </a>
+<span class="lineNum">     216 </span>            : /// Parse Test string replacing keywords to fuzzed values
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 : void dev::test::RandomCode::parseTestWithTypes(std::string&amp; _test, std::map&lt;std::string, std::string&gt; const&amp; _varMap)</span>
+<span class="lineNum">     218 </span>            : {
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :         dev::test::RandomCodeOptions options;</span>
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 :         options.setWeight(dev::eth::Instruction::STOP, 10);             //default 50</span>
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :         options.setWeight(dev::eth::Instruction::SSTORE, 70);</span>
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :         options.setWeight(dev::eth::Instruction::CALL, 75);</span>
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :         options.setWeight(dev::eth::Instruction::CALLCODE, 55);</span>
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :         options.addAddress(dev::Address(&quot;0xffffffffffffffffffffffffffffffffffffffff&quot;));</span>
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :         options.addAddress(dev::Address(&quot;0x1000000000000000000000000000000000000000&quot;));</span>
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :         options.addAddress(dev::Address(&quot;0x095e7baea6a6c7c4c2dfeb977efac326af552d87&quot;));</span>
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :         options.addAddress(dev::Address(&quot;0x945304eb96065b2a98b57a48a06ae28d285a71b5&quot;));</span>
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :         options.addAddress(dev::Address(&quot;0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b&quot;));</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :         options.addAddress(dev::Address(&quot;0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6&quot;));</span>
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :         options.addAddress(dev::Address(&quot;0x0000000000000000000000000000000000000001&quot;));</span>
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 :         options.addAddress(dev::Address(&quot;0x0000000000000000000000000000000000000002&quot;));</span>
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :         options.addAddress(dev::Address(&quot;0x0000000000000000000000000000000000000003&quot;));</span>
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :         options.addAddress(dev::Address(&quot;0x0000000000000000000000000000000000000004&quot;));</span>
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :         options.smartCodeProbability = 60;</span>
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span><span class="lineNoCov">          0 :         std::vector&lt;std::string&gt; types = getTypes();</span>
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :         for (std::map&lt;std::string, std::string&gt;::const_iterator it = _varMap.begin(); it != _varMap.end(); it++)</span>
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :                 types.push_back(it-&gt;first);</span>
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :         for (unsigned i = 0; i &lt; types.size(); i++)</span>
+<span class="lineNum">     242 </span>            :         {
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :                 std::size_t pos = _test.find(types.at(i));</span>
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :                 while (pos != std::string::npos)</span>
+<span class="lineNum">     245 </span>            :                 {
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :                         if (types.at(i) == &quot;[RLP]&quot;)</span>
+<span class="lineNum">     247 </span>            :                         {
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :                                 std::string debug;</span>
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :                                 int randomDepth = 1 + (int)dev::test::RandomCode::randomUniInt() % 10;</span>
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :                                 _test.replace(pos, 5, dev::test::RandomCode::rndRLPSequence(randomDepth, debug));</span>
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :                                 cnote &lt;&lt; debug;</span>
+<span class="lineNum">     252 </span>            :                         }
+<span class="lineNum">     253 </span>            :                         else
+<span class="lineNum">     254 </span><span class="lineNoCov">          0 :                         if (types.at(i) == &quot;[CODE]&quot;)</span>
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :                                 _test.replace(pos, 6, &quot;0x&quot;+dev::test::RandomCode::generate(10, options));</span>
+<span class="lineNum">     256 </span>            :                         else
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :                         if (types.at(i) == &quot;[HEX]&quot;)</span>
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :                                 _test.replace(pos, 5, dev::test::RandomCode::randomUniIntHex());</span>
+<span class="lineNum">     259 </span>            :                         else
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :                         if (types.at(i) == &quot;[HEX32]&quot;)</span>
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :                                 _test.replace(pos, 7, dev::test::RandomCode::randomUniIntHex(std::numeric_limits&lt;uint32_t&gt;::max()));</span>
+<span class="lineNum">     262 </span>            :                         else
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :                         if (types.at(i) == &quot;[GASLIMIT]&quot;)</span>
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :                                 _test.replace(pos, 10, dev::test::RandomCode::randomUniIntHex(dev::u256(&quot;3000000000&quot;)));</span>
+<span class="lineNum">     265 </span>            :                         else
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :                         if (types.at(i) == &quot;[HASH20]&quot;)</span>
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :                                 _test.replace(pos, 8, dev::test::RandomCode::rndByteSequence(20));</span>
+<span class="lineNum">     268 </span>            :                         else
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :                         if (types.at(i) == &quot;[0xHASH32]&quot;)</span>
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :                                 _test.replace(pos, 10, &quot;0x&quot; + dev::test::RandomCode::rndByteSequence(32));</span>
+<span class="lineNum">     271 </span>            :                         else
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :                         if (types.at(i) == &quot;[HASH32]&quot;)</span>
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :                                 _test.replace(pos, 8, dev::test::RandomCode::rndByteSequence(32));</span>
+<span class="lineNum">     274 </span>            :                         else
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 :                         if (types.at(i) == &quot;[V]&quot;)</span>
+<span class="lineNum">     276 </span>            :                         {
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :                                 int random = (int)dev::test::RandomCode::randomUniInt() % 100;</span>
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :                                 if (random &lt; 30)</span>
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :                                         _test.replace(pos, 3, &quot;0x1c&quot;);</span>
+<span class="lineNum">     280 </span>            :                                 else
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :                                 if (random &lt; 60)</span>
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :                                         _test.replace(pos, 3, &quot;0x1d&quot;);</span>
+<span class="lineNum">     283 </span>            :                                 else
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :                                         _test.replace(pos, 3, &quot;0x&quot; + dev::test::RandomCode::rndByteSequence(1));</span>
+<span class="lineNum">     285 </span>            :                         }
+<span class="lineNum">     286 </span>            :                         else
+<span class="lineNum">     287 </span><span class="lineNoCov">          0 :                                 _test.replace(pos, types.at(i).size(), _varMap.at(types.at(i)));</span>
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 :                         pos = _test.find(types.at(i));</span>
+<span class="lineNum">     290 </span>            :                 }
+<span class="lineNum">     291 </span>            :         }
+<a name="292"><span class="lineNum">     292 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 : std::vector&lt;std::string&gt; dev::test::RandomCode::getTypes()</span>
+<span class="lineNum">     295 </span>            : {
+<span class="lineNum">     296 </span><span class="lineNoCov">          0 :         return {&quot;[RLP]&quot;, &quot;[CODE]&quot;, &quot;[HEX]&quot;, &quot;[HEX32]&quot;, &quot;[HASH20]&quot;, &quot;[HASH32]&quot;, &quot;[0xHASH32]&quot;, &quot;[V]&quot;, &quot;[GASLIMIT]&quot;};</span>
+<span class="lineNum">     297 </span>            : }
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span><span class="lineCov">          3 : std::string const c_testExampleTransactionTest = R&quot;(</span>
+<span class="lineNum">     300 </span>            : {
+<span class="lineNum">     301 </span>            :         &quot;randomTransactionTest&quot; : {
+<span class="lineNum">     302 </span>            :                 &quot;transaction&quot; :
+<span class="lineNum">     303 </span>            :                 {
+<span class="lineNum">     304 </span>            :                         &quot;data&quot; : &quot;[CODE]&quot;,
+<span class="lineNum">     305 </span>            :                         &quot;gasLimit&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     306 </span>            :                         &quot;gasPrice&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     307 </span>            :                         &quot;nonce&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     308 </span>            :                         &quot;to&quot; : &quot;[HASH20]&quot;,
+<span class="lineNum">     309 </span>            :                         &quot;value&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     310 </span>            :                         &quot;v&quot; : &quot;[V]&quot;,
+<span class="lineNum">     311 </span>            :                         &quot;r&quot; : &quot;[0xHASH32]&quot;,
+<span class="lineNum">     312 </span>            :                         &quot;s&quot; : &quot;[0xHASH32]&quot;
+<span class="lineNum">     313 </span>            :                 }
+<span class="lineNum">     314 </span>            :         }
+<span class="lineNum">     315 </span>            : }
+<span class="lineNum">     316 </span>            : )&quot;;
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span><span class="lineCov">          3 : std::string const c_testExampleStateTest = R&quot;(</span>
+<span class="lineNum">     319 </span>            : {
+<span class="lineNum">     320 </span>            :         &quot;randomStatetest&quot; : {
+<span class="lineNum">     321 </span>            :                 &quot;env&quot; : {
+<span class="lineNum">     322 </span>            :                 &quot;currentCoinbase&quot; : &quot;[HASH20]&quot;,
+<span class="lineNum">     323 </span>            :                 &quot;currentDifficulty&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     324 </span>            :                 &quot;currentGasLimit&quot; : &quot;[GASLIMIT]&quot;,
+<span class="lineNum">     325 </span>            :                 &quot;currentNumber&quot; : &quot;[HEX32]&quot;,
+<span class="lineNum">     326 </span>            :                 &quot;currentTimestamp&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     327 </span>            :                 &quot;previousHash&quot; : &quot;[HASH32]&quot;
+<span class="lineNum">     328 </span>            :                 },
+<span class="lineNum">     329 </span>            :         &quot;pre&quot; : {
+<span class="lineNum">     330 </span>            :                 &quot;095e7baea6a6c7c4c2dfeb977efac326af552d87&quot; : {
+<span class="lineNum">     331 </span>            :                         &quot;balance&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     332 </span>            :                         &quot;code&quot; : &quot;[CODE]&quot;,
+<span class="lineNum">     333 </span>            :                         &quot;nonce&quot; : &quot;[V]&quot;,
+<span class="lineNum">     334 </span>            :                         &quot;storage&quot; : {
+<span class="lineNum">     335 </span>            :                         }
+<span class="lineNum">     336 </span>            :                 },
+<span class="lineNum">     337 </span>            :                 &quot;945304eb96065b2a98b57a48a06ae28d285a71b5&quot; : {
+<span class="lineNum">     338 </span>            :                         &quot;balance&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     339 </span>            :                         &quot;code&quot; : &quot;[CODE]&quot;,
+<span class="lineNum">     340 </span>            :                         &quot;nonce&quot; : &quot;[V]&quot;,
+<span class="lineNum">     341 </span>            :                         &quot;storage&quot; : {
+<span class="lineNum">     342 </span>            :                         }
+<span class="lineNum">     343 </span>            :                 },
+<span class="lineNum">     344 </span>            :                 &quot;a94f5374fce5edbc8e2a8697c15331677e6ebf0b&quot; : {
+<span class="lineNum">     345 </span>            :                         &quot;balance&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     346 </span>            :                         &quot;code&quot; : &quot;0x&quot;,
+<span class="lineNum">     347 </span>            :                         &quot;nonce&quot; : &quot;0&quot;,
+<span class="lineNum">     348 </span>            :                         &quot;storage&quot; : {
+<span class="lineNum">     349 </span>            :                         }
+<span class="lineNum">     350 </span>            :                 }
+<span class="lineNum">     351 </span>            :         },
+<span class="lineNum">     352 </span>            :         &quot;transaction&quot; : {
+<span class="lineNum">     353 </span>            :                 &quot;data&quot; : &quot;[CODE]&quot;,
+<span class="lineNum">     354 </span>            :                 &quot;gasLimit&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     355 </span>            :                 &quot;gasPrice&quot; : &quot;[HEX32]&quot;,
+<span class="lineNum">     356 </span>            :                 &quot;nonce&quot; : &quot;0&quot;,
+<span class="lineNum">     357 </span>            :                 &quot;secretKey&quot; : &quot;45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8&quot;,
+<span class="lineNum">     358 </span>            :                 &quot;to&quot; : &quot;095e7baea6a6c7c4c2dfeb977efac326af552d87&quot;,
+<span class="lineNum">     359 </span>            :                 &quot;value&quot; : &quot;[HEX]&quot;
+<span class="lineNum">     360 </span>            :                 }
+<span class="lineNum">     361 </span>            :         }
+<span class="lineNum">     362 </span>            : }
+<span class="lineNum">     363 </span>            : )&quot;;
+<span class="lineNum">     364 </span>            : 
+<span class="lineNum">     365 </span><span class="lineCov">          3 : std::string const c_testExampleVMTest = R&quot;(</span>
+<span class="lineNum">     366 </span>            : {
+<span class="lineNum">     367 </span>            :         &quot;randomVMTest&quot;: {
+<span class="lineNum">     368 </span>            :                 &quot;env&quot; : {
+<span class="lineNum">     369 </span>            :                                 &quot;previousHash&quot; : &quot;[HASH32]&quot;,
+<span class="lineNum">     370 </span>            :                                 &quot;currentNumber&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     371 </span>            :                                 &quot;currentGasLimit&quot; : &quot;[GASLIMIT]&quot;,
+<span class="lineNum">     372 </span>            :                                 &quot;currentDifficulty&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     373 </span>            :                                 &quot;currentTimestamp&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     374 </span>            :                                 &quot;currentCoinbase&quot; : &quot;[HASH20]&quot;
+<span class="lineNum">     375 </span>            :                 },
+<span class="lineNum">     376 </span>            :                 &quot;pre&quot; : {
+<span class="lineNum">     377 </span>            :                    &quot;0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6&quot; : {
+<span class="lineNum">     378 </span>            :                                 &quot;balance&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     379 </span>            :                                 &quot;nonce&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     380 </span>            :                                 &quot;code&quot; : &quot;[CODE]&quot;,
+<span class="lineNum">     381 </span>            :                                 &quot;storage&quot;: {}
+<span class="lineNum">     382 </span>            :                    }
+<span class="lineNum">     383 </span>            :                 },
+<span class="lineNum">     384 </span>            :                 &quot;exec&quot; : {
+<span class="lineNum">     385 </span>            :                                 &quot;address&quot; : &quot;0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6&quot;,
+<span class="lineNum">     386 </span>            :                                 &quot;origin&quot; : &quot;[HASH20]&quot;,
+<span class="lineNum">     387 </span>            :                                 &quot;caller&quot; : &quot;[HASH20]&quot;,
+<span class="lineNum">     388 </span>            :                                 &quot;value&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     389 </span>            :                                 &quot;data&quot; : &quot;[CODE]&quot;,
+<span class="lineNum">     390 </span>            :                                 &quot;gasPrice&quot; : &quot;[V]&quot;,
+<span class="lineNum">     391 </span>            :                                 &quot;gas&quot; : &quot;[HEX]&quot;
+<span class="lineNum">     392 </span>            :                    }
+<span class="lineNum">     393 </span>            :            }
+<span class="lineNum">     394 </span>            : }
+<span class="lineNum">     395 </span>            : )&quot;;
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span><span class="lineCov">          3 : std::string const c_testExampleRLPTest = R&quot;(</span>
+<span class="lineNum">     398 </span>            : {
+<span class="lineNum">     399 </span>            :         &quot;randomRLPTest&quot; : {
+<span class="lineNum">     400 </span>            :                         &quot;out&quot; : &quot;[RLP]&quot;
+<span class="lineNum">     401 </span>            :                 }
+<span class="lineNum">     402 </span>            : }
+<span class="lineNum">     403 </span>            : )&quot;;
+<span class="lineNum">     404 </span>            : 
+<span class="lineNum">     405 </span><span class="lineCov">          3 : std::string const c_testExampleBlockchainTest = R&quot;(</span>
+<span class="lineNum">     406 </span>            : {
+<span class="lineNum">     407 </span>            :  &quot;randomBlockTest&quot; : {
+<span class="lineNum">     408 </span>            :                  &quot;genesisBlockHeader&quot; : {
+<span class="lineNum">     409 </span>            :                          &quot;bloom&quot; : &quot;00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000&quot;,
+<span class="lineNum">     410 </span>            :                          &quot;coinbase&quot; : &quot;[HASH20]&quot;,
+<span class="lineNum">     411 </span>            :                          &quot;difficulty&quot; : &quot;131072&quot;,
+<span class="lineNum">     412 </span>            :                          &quot;extraData&quot; : &quot;[CODE]&quot;,
+<span class="lineNum">     413 </span>            :                          &quot;gasLimit&quot; : &quot;4712388&quot;,
+<span class="lineNum">     414 </span>            :                          &quot;gasUsed&quot; : &quot;0&quot;,
+<span class="lineNum">     415 </span>            :                          &quot;mixHash&quot; : &quot;[0xHASH32]&quot;,
+<span class="lineNum">     416 </span>            :                          &quot;nonce&quot; : &quot;0x0102030405060708&quot;,
+<span class="lineNum">     417 </span>            :                          &quot;number&quot; : &quot;0&quot;,
+<span class="lineNum">     418 </span>            :                          &quot;parentHash&quot; : &quot;0x0000000000000000000000000000000000000000000000000000000000000000&quot;,
+<span class="lineNum">     419 </span>            :                          &quot;receiptTrie&quot; : &quot;[0xHASH32]&quot;,
+<span class="lineNum">     420 </span>            :                          &quot;stateRoot&quot; : &quot;[0xHASH32]&quot;,
+<span class="lineNum">     421 </span>            :                          &quot;timestamp&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     422 </span>            :                          &quot;transactionsTrie&quot; : &quot;0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421&quot;,
+<span class="lineNum">     423 </span>            :                          &quot;uncleHash&quot; : &quot;0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347&quot;
+<span class="lineNum">     424 </span>            :                  },
+<span class="lineNum">     425 </span>            :                  &quot;pre&quot; : {
+<span class="lineNum">     426 </span>            :                         &quot;a94f5374fce5edbc8e2a8697c15331677e6ebf0b&quot; : {
+<span class="lineNum">     427 </span>            :                                  &quot;balance&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     428 </span>            :                                  &quot;nonce&quot; : &quot;0&quot;,
+<span class="lineNum">     429 </span>            :                                  &quot;code&quot; : &quot;&quot;,
+<span class="lineNum">     430 </span>            :                                  &quot;storage&quot;: {}
+<span class="lineNum">     431 </span>            :                          },
+<span class="lineNum">     432 </span>            :                         &quot;095e7baea6a6c7c4c2dfeb977efac326af552d87&quot; : {
+<span class="lineNum">     433 </span>            :                                 &quot;balance&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     434 </span>            :                                 &quot;nonce&quot; : &quot;0&quot;,
+<span class="lineNum">     435 </span>            :                                 &quot;code&quot; : &quot;[CODE]&quot;,
+<span class="lineNum">     436 </span>            :                                 &quot;storage&quot;: {}
+<span class="lineNum">     437 </span>            :                         }
+<span class="lineNum">     438 </span>            :                  },
+<span class="lineNum">     439 </span>            :                  &quot;blocks&quot; : [
+<span class="lineNum">     440 </span>            :                          {
+<span class="lineNum">     441 </span>            :                                  &quot;transactions&quot; : [
+<span class="lineNum">     442 </span>            :                                          {
+<span class="lineNum">     443 </span>            :                                                  &quot;data&quot; : &quot;[CODE]&quot;,
+<span class="lineNum">     444 </span>            :                                                  &quot;gasLimit&quot; : &quot;[HEX]&quot;,
+<span class="lineNum">     445 </span>            :                                                  &quot;gasPrice&quot; : &quot;[V]&quot;,
+<span class="lineNum">     446 </span>            :                                                  &quot;nonce&quot; : &quot;0&quot;,
+<span class="lineNum">     447 </span>            :                                                  &quot;secretKey&quot; : &quot;45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8&quot;,
+<span class="lineNum">     448 </span>            :                                                  &quot;to&quot; : &quot;095e7baea6a6c7c4c2dfeb977efac326af552d87&quot;,
+<span class="lineNum">     449 </span>            :                                                  &quot;value&quot; : &quot;[V]&quot;
+<span class="lineNum">     450 </span>            :                                          }
+<span class="lineNum">     451 </span>            :                                  ],
+<span class="lineNum">     452 </span>            :                                  &quot;uncleHeaders&quot; : [
+<span class="lineNum">     453 </span>            :                                  ]
+<span class="lineNum">     454 </span>            :                          }
+<span class="lineNum">     455 </span>            :                  ]
+<a name="456"><span class="lineNum">     456 </span>            :          }</a>
+<span class="lineNum">     457 </span>            : }
+<span class="lineNum">     458 </span><span class="lineCov">          3 : )&quot;;</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

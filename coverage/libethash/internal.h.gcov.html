@@ -1,0 +1,259 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethash/internal.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethash</a> - internal.h<span style="font-size: 80%;"> (source / <a href="internal.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #pragma once</a>
+<span class="lineNum">       2 </span>            : #include &quot;compiler.h&quot;
+<span class="lineNum">       3 </span>            : #include &quot;endian.h&quot;
+<span class="lineNum">       4 </span>            : #include &quot;ethash.h&quot;
+<span class="lineNum">       5 </span>            : #include &lt;stdio.h&gt;
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #define ENABLE_SSE 0
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : #if defined(_M_X64) &amp;&amp; ENABLE_SSE
+<span class="lineNum">      10 </span>            : #include &lt;smmintrin.h&gt;
+<span class="lineNum">      11 </span>            : #elif defined(__MIC__)
+<span class="lineNum">      12 </span>            : #include &lt;immintrin.h&gt;
+<span class="lineNum">      13 </span>            : #endif
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifdef __cplusplus
+<span class="lineNum">      16 </span>            : extern &quot;C&quot; {
+<span class="lineNum">      17 </span>            : #endif
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : // compile time settings
+<span class="lineNum">      20 </span>            : #define NODE_WORDS (64/4)
+<span class="lineNum">      21 </span>            : #define MIX_WORDS (ETHASH_MIX_BYTES/4)
+<span class="lineNum">      22 </span>            : #define MIX_NODES (MIX_WORDS / NODE_WORDS)
+<span class="lineNum">      23 </span>            : #include &lt;stdint.h&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : typedef union node {
+<span class="lineNum">      26 </span>            :         uint8_t bytes[NODE_WORDS * 4];
+<span class="lineNum">      27 </span>            :         uint32_t words[NODE_WORDS];
+<span class="lineNum">      28 </span>            :         uint64_t double_words[NODE_WORDS / 2];
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #if defined(_M_X64) &amp;&amp; ENABLE_SSE
+<span class="lineNum">      31 </span>            :         __m128i xmm[NODE_WORDS/4];
+<span class="lineNum">      32 </span>            : #elif defined(__MIC__)
+<span class="lineNum">      33 </span>            :         __m512i zmm[NODE_WORDS/16];
+<span class="lineNum">      34 </span>            : #endif
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : } node;
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : static inline uint8_t ethash_h256_get(ethash_h256_t const* hash, unsigned int i)
+<span class="lineNum">      39 </span>            : {
+<span class="lineNum">      40 </span><span class="lineCov">      62466 :         return hash-&gt;b[i];</span>
+<span class="lineNum">      41 </span>            : }
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : static inline void ethash_h256_set(ethash_h256_t* hash, unsigned int i, uint8_t v)
+<span class="lineNum">      44 </span>            : {
+<span class="lineNum">      45 </span>            :         hash-&gt;b[i] = v;
+<span class="lineNum">      46 </span>            : }
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : static inline void ethash_h256_reset(ethash_h256_t* hash)
+<span class="lineNum">      49 </span>            : {
+<span class="lineNum">      50 </span><span class="lineCov">          2 :         memset(hash, 0, 32);</span>
+<span class="lineNum">      51 </span>            : }
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : // Returns if hash is less than or equal to boundary (2^256/difficulty)
+<span class="lineNum">      54 </span>            : static inline bool ethash_check_difficulty(
+<span class="lineNum">      55 </span>            :         ethash_h256_t const* hash,
+<span class="lineNum">      56 </span>            :         ethash_h256_t const* boundary
+<span class="lineNum">      57 </span>            : )
+<span class="lineNum">      58 </span>            : {
+<span class="lineNum">      59 </span>            :         // Boundary is big endian
+<span class="lineNum">      60 </span><span class="lineCov">      62466 :         for (int i = 0; i &lt; 32; i++) {</span>
+<span class="lineNum">      61 </span><span class="lineCov">      93699 :                 if (ethash_h256_get(hash, i) == ethash_h256_get(boundary, i)) {</span>
+<span class="lineNum">      62 </span><span class="lineCov">      20823 :                         continue;</span>
+<span class="lineNum">      63 </span>            :                 }
+<span class="lineNum">      64 </span><span class="lineCov">      10410 :                 return ethash_h256_get(hash, i) &lt; ethash_h256_get(boundary, i);</span>
+<span class="lineNum">      65 </span>            :         }
+<span class="lineNum">      66 </span>            :         return true;
+<span class="lineNum">      67 </span>            : }
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : /**
+<span class="lineNum">      70 </span>            :  *  Difficulty quick check for POW preverification
+<span class="lineNum">      71 </span>            :  *
+<span class="lineNum">      72 </span>            :  * @param header_hash      The hash of the header
+<span class="lineNum">      73 </span>            :  * @param nonce            The block's nonce
+<span class="lineNum">      74 </span>            :  * @param mix_hash         The mix digest hash
+<span class="lineNum">      75 </span>            :  * @param boundary         The boundary is defined as (2^256 / difficulty)
+<span class="lineNum">      76 </span>            :  * @return                 true for succesful pre-verification and false otherwise
+<span class="lineNum">      77 </span>            :  */
+<span class="lineNum">      78 </span>            : bool ethash_quick_check_difficulty(
+<span class="lineNum">      79 </span>            :         ethash_h256_t const* header_hash,
+<span class="lineNum">      80 </span>            :         uint64_t const nonce,
+<span class="lineNum">      81 </span>            :         ethash_h256_t const* mix_hash,
+<span class="lineNum">      82 </span>            :         ethash_h256_t const* boundary
+<span class="lineNum">      83 </span>            : );
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : struct ethash_light {
+<span class="lineNum">      86 </span>            :         void* cache;
+<span class="lineNum">      87 </span>            :         uint64_t cache_size;
+<span class="lineNum">      88 </span>            :         uint64_t block_number;
+<span class="lineNum">      89 </span>            : };
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : /**
+<span class="lineNum">      92 </span>            :  * Allocate and initialize a new ethash_light handler. Internal version
+<span class="lineNum">      93 </span>            :  *
+<span class="lineNum">      94 </span>            :  * @param cache_size    The size of the cache in bytes
+<span class="lineNum">      95 </span>            :  * @param seed          Block seedhash to be used during the computation of the
+<span class="lineNum">      96 </span>            :  *                      cache nodes
+<span class="lineNum">      97 </span>            :  * @return              Newly allocated ethash_light handler or NULL in case of
+<span class="lineNum">      98 </span>            :  *                      ERRNOMEM or invalid parameters used for @ref ethash_compute_cache_nodes()
+<span class="lineNum">      99 </span>            :  */
+<span class="lineNum">     100 </span>            : ethash_light_t ethash_light_new_internal(uint64_t cache_size, ethash_h256_t const* seed);
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : /**
+<span class="lineNum">     103 </span>            :  * Calculate the light client data. Internal version.
+<span class="lineNum">     104 </span>            :  *
+<span class="lineNum">     105 </span>            :  * @param light          The light client handler
+<span class="lineNum">     106 </span>            :  * @param full_size      The size of the full data in bytes.
+<span class="lineNum">     107 </span>            :  * @param header_hash    The header hash to pack into the mix
+<span class="lineNum">     108 </span>            :  * @param nonce          The nonce to pack into the mix
+<span class="lineNum">     109 </span>            :  * @return               The resulting hash.
+<span class="lineNum">     110 </span>            :  */
+<span class="lineNum">     111 </span>            : ethash_return_value_t ethash_light_compute_internal(
+<span class="lineNum">     112 </span>            :         ethash_light_t light,
+<span class="lineNum">     113 </span>            :         uint64_t full_size,
+<span class="lineNum">     114 </span>            :         ethash_h256_t const header_hash,
+<span class="lineNum">     115 </span>            :         uint64_t nonce
+<span class="lineNum">     116 </span>            : );
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : struct ethash_full {
+<span class="lineNum">     119 </span>            :         FILE* file;
+<span class="lineNum">     120 </span>            :         uint64_t file_size;
+<span class="lineNum">     121 </span>            :         node* data;
+<span class="lineNum">     122 </span>            : };
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : /**
+<span class="lineNum">     125 </span>            :  * Allocate and initialize a new ethash_full handler. Internal version.
+<span class="lineNum">     126 </span>            :  *
+<span class="lineNum">     127 </span>            :  * @param dirname        The directory in which to put the DAG file.
+<span class="lineNum">     128 </span>            :  * @param seedhash       The seed hash of the block. Used in the DAG file naming.
+<span class="lineNum">     129 </span>            :  * @param full_size      The size of the full data in bytes.
+<span class="lineNum">     130 </span>            :  * @param cache          A cache object to use that was allocated with @ref ethash_cache_new().
+<span class="lineNum">     131 </span>            :  *                       Iff this function succeeds the ethash_full_t will take memory
+<span class="lineNum">     132 </span>            :  *                       memory ownership of the cache and free it at deletion. If
+<span class="lineNum">     133 </span>            :  *                       not then the user still has to handle freeing of the cache himself.
+<span class="lineNum">     134 </span>            :  * @param callback       A callback function with signature of @ref ethash_callback_t
+<span class="lineNum">     135 </span>            :  *                       It accepts an unsigned with which a progress of DAG calculation
+<span class="lineNum">     136 </span>            :  *                       can be displayed. If all goes well the callback should return 0.
+<span class="lineNum">     137 </span>            :  *                       If a non-zero value is returned then DAG generation will stop.
+<span class="lineNum">     138 </span>            :  * @return               Newly allocated ethash_full handler or NULL in case of
+<span class="lineNum">     139 </span>            :  *                       ERRNOMEM or invalid parameters used for @ref ethash_compute_full_data()
+<span class="lineNum">     140 </span>            :  */
+<span class="lineNum">     141 </span>            : ethash_full_t ethash_full_new_internal(
+<span class="lineNum">     142 </span>            :         char const* dirname,
+<span class="lineNum">     143 </span>            :         ethash_h256_t const seed_hash,
+<span class="lineNum">     144 </span>            :         uint64_t full_size,
+<span class="lineNum">     145 </span>            :         ethash_light_t const light,
+<span class="lineNum">     146 </span>            :         ethash_callback_t callback
+<span class="lineNum">     147 </span>            : );
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            : void ethash_calculate_dag_item(
+<span class="lineNum">     150 </span>            :         node* const ret,
+<span class="lineNum">     151 </span>            :         uint32_t node_index,
+<span class="lineNum">     152 </span>            :         ethash_light_t const cache
+<span class="lineNum">     153 </span>            : );
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            : void ethash_quick_hash(
+<span class="lineNum">     156 </span>            :         ethash_h256_t* return_hash,
+<span class="lineNum">     157 </span>            :         ethash_h256_t const* header_hash,
+<span class="lineNum">     158 </span>            :         const uint64_t nonce,
+<span class="lineNum">     159 </span>            :         ethash_h256_t const* mix_hash
+<span class="lineNum">     160 </span>            : );
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            : uint64_t ethash_get_datasize(uint64_t const block_number);
+<span class="lineNum">     163 </span>            : uint64_t ethash_get_cachesize(uint64_t const block_number);
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : /**
+<span class="lineNum">     166 </span>            :  * Compute the memory data for a full node's memory
+<span class="lineNum">     167 </span>            :  *
+<span class="lineNum">     168 </span>            :  * @param mem         A pointer to an ethash full's memory
+<span class="lineNum">     169 </span>            :  * @param full_size   The size of the full data in bytes
+<span class="lineNum">     170 </span>            :  * @param cache       A cache object to use in the calculation
+<span class="lineNum">     171 </span>            :  * @param callback    The callback function. Check @ref ethash_full_new() for details.
+<span class="lineNum">     172 </span>            :  * @return            true if all went fine and false for invalid parameters
+<span class="lineNum">     173 </span>            :  */
+<span class="lineNum">     174 </span>            : bool ethash_compute_full_data(
+<span class="lineNum">     175 </span>            :         void* mem,
+<span class="lineNum">     176 </span>            :         uint64_t full_size,
+<span class="lineNum">     177 </span>            :         ethash_light_t const light,
+<span class="lineNum">     178 </span>            :         ethash_callback_t callback
+<span class="lineNum">     179 </span>            : );
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            : #ifdef __cplusplus
+<span class="lineNum">     182 </span>            : }
+<span class="lineNum">     183 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

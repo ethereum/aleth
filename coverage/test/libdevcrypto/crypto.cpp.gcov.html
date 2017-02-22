@@ -1,0 +1,851 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libdevcrypto/crypto.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libdevcrypto</a> - crypto.cpp<span style="font-size: 80%;"> (source / <a href="crypto.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">471</td>
+            <td class="headerCovTableEntry">477</td>
+            <td class="headerCovTableEntryHi">98.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">46</td>
+            <td class="headerCovTableEntry">46</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file crypto.cpp
+<span class="lineNum">      18 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      20 </span>            :  * @date 2014
+<span class="lineNum">      21 </span>            :  * Crypto test functions.
+<span class="lineNum">      22 </span>            :  */
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;libdevcore/Guards.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;secp256k1/include/secp256k1.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;cryptopp/keccak.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;cryptopp/pwdbased.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;cryptopp/sha.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;cryptopp/modes.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;cryptopp/eccrypto.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;cryptopp/osrng.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;cryptopp/oids.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;cryptopp/dsa.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      35 </span>            : #include &lt;libdevcore/RLP.h&gt;
+<span class="lineNum">      36 </span>            : #include &lt;libdevcore/Log.h&gt;
+<span class="lineNum">      37 </span>            : #include &lt;boost/test/unit_test.hpp&gt;
+<span class="lineNum">      38 </span>            : #include &lt;libdevcore/SHA3.h&gt;
+<span class="lineNum">      39 </span>            : #include &lt;libdevcrypto/ECDHE.h&gt;
+<span class="lineNum">      40 </span>            : #include &lt;libdevcrypto/CryptoPP.h&gt;
+<span class="lineNum">      41 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : using namespace std;
+<span class="lineNum">      44 </span>            : using namespace dev;
+<span class="lineNum">      45 </span>            : using namespace dev::test;
+<span class="lineNum">      46 </span>            : using namespace dev::crypto;
+<span class="lineNum">      47 </span>            : using namespace CryptoPP;
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineCov">          3 : BOOST_AUTO_TEST_SUITE(Crypto)</span>
+<a name="50"><span class="lineNum">      50 </span>            : </a>
+<span class="lineNum">      51 </span>            : struct DevcryptoTestFixture: public TestOutputHelper {
+<span class="lineNum">      52 </span><span class="lineCov">         40 :         DevcryptoTestFixture() : s_secp256k1(Secp256k1PP::get()) {}</span>
+<span class="lineNum">      53 </span><span class="lineCov">         20 :         ~DevcryptoTestFixture() {}</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :         Secp256k1PP* s_secp256k1;
+<span class="lineNum">      56 </span>            : };
+<a name="57"><span class="lineNum">      57 </span><span class="lineCov">          3 : BOOST_FIXTURE_TEST_SUITE(devcrypto, DevcryptoTestFixture)</span></a>
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineCov">          2 : static CryptoPP::AutoSeededRandomPool&amp; rng()</span>
+<span class="lineNum">      60 </span>            : {
+<span class="lineNum">      61 </span><span class="lineCov">          2 :         static CryptoPP::AutoSeededRandomPool s_rng;</span>
+<span class="lineNum">      62 </span><span class="lineCov">          2 :         return s_rng;</span>
+<a name="63"><span class="lineNum">      63 </span>            : }</a>
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineCov">          4 : static CryptoPP::OID&amp; curveOID()</span>
+<span class="lineNum">      66 </span>            : {
+<span class="lineNum">      67 </span><span class="lineCov">          4 :         static CryptoPP::OID s_curveOID(CryptoPP::ASN1::secp256k1());</span>
+<span class="lineNum">      68 </span><span class="lineCov">          4 :         return s_curveOID;</span>
+<a name="69"><span class="lineNum">      69 </span>            : }</a>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineCov">         20 : static CryptoPP::DL_GroupParameters_EC&lt;CryptoPP::ECP&gt;&amp; params()</span>
+<span class="lineNum">      72 </span>            : {
+<span class="lineNum">      73 </span><span class="lineCov">         20 :         static CryptoPP::DL_GroupParameters_EC&lt;CryptoPP::ECP&gt; s_params(curveOID());</span>
+<span class="lineNum">      74 </span><span class="lineCov">         20 :         return s_params;</span>
+<a name="75"><span class="lineNum">      75 </span>            : }</a>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(sha3general)</span>
+<span class="lineNum">      78 </span>            : {
+<span class="lineNum">      79 </span><span class="lineCov">         10 :         BOOST_REQUIRE_EQUAL(sha3(&quot;&quot;), h256(&quot;c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470&quot;));</span>
+<span class="lineNum">      80 </span><span class="lineCov">          9 :         BOOST_REQUIRE_EQUAL(sha3(&quot;hello&quot;), h256(&quot;1c8aff950685c2ed4bc3174f3472287b56d9517b9c948127319a09a7a36deac8&quot;));</span>
+<a name="81"><span class="lineNum">      81 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(emptySHA3Types)</span>
+<span class="lineNum">      84 </span>            : {
+<span class="lineNum">      85 </span><span class="lineCov">          4 :         h256 emptySHA3(fromHex(&quot;c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470&quot;));</span>
+<span class="lineNum">      86 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(emptySHA3, EmptySHA3);</span>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">          4 :         h256 emptyListSHA3(fromHex(&quot;1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347&quot;));</span>
+<span class="lineNum">      89 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(emptyListSHA3, EmptyListSHA3);</span>
+<a name="90"><span class="lineNum">      90 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(secp256k1lib)</span>
+<span class="lineNum">      93 </span>            : {
+<span class="lineNum">      94 </span><span class="lineCov">          2 :         KeyPair k = KeyPair::create();</span>
+<span class="lineNum">      95 </span><span class="lineCov">          9 :         BOOST_REQUIRE(!!k.sec());</span>
+<span class="lineNum">      96 </span><span class="lineCov">          9 :         BOOST_REQUIRE(!!k.pub());</span>
+<span class="lineNum">      97 </span><span class="lineCov">          1 :         Public test = toPublic(k.sec());</span>
+<span class="lineNum">      98 </span><span class="lineCov">          9 :         BOOST_REQUIRE(k.pub() == test);</span>
+<a name="99"><span class="lineNum">      99 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(cryptopp_patch)</span>
+<span class="lineNum">     102 </span>            : {
+<span class="lineNum">     103 </span><span class="lineCov">          2 :         KeyPair k = KeyPair::create();</span>
+<span class="lineNum">     104 </span><span class="lineCov">          2 :         bytes io_text;</span>
+<span class="lineNum">     105 </span><span class="lineCov">          1 :         s_secp256k1-&gt;decrypt(k.sec(), io_text);</span>
+<span class="lineNum">     106 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(io_text.size(), 0);</span>
+<a name="107"><span class="lineNum">     107 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(verify_secert)</span>
+<span class="lineNum">     110 </span>            : {
+<span class="lineNum">     111 </span><span class="lineCov">          2 :         Secret empty;</span>
+<span class="lineNum">     112 </span><span class="lineCov">          2 :         KeyPair kNot(empty);</span>
+<span class="lineNum">     113 </span><span class="lineCov">          9 :         BOOST_REQUIRE(!kNot.address());</span>
+<span class="lineNum">     114 </span><span class="lineCov">          3 :         KeyPair k(sha3(empty));</span>
+<span class="lineNum">     115 </span><span class="lineCov">          7 :         BOOST_REQUIRE(k.address());</span>
+<a name="116"><span class="lineNum">     116 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)</span>
+<span class="lineNum">     119 </span>            : {
+<span class="lineNum">     120 </span><span class="lineCov">          4 :         string message(&quot;Now is the time for all good persons to come to the aid of humanity.&quot;);</span>
+<span class="lineNum">     121 </span><span class="lineCov">          2 :         bytes m = asBytes(message);</span>
+<span class="lineNum">     122 </span><span class="lineCov">          1 :         bytesConstRef bcr(&amp;m);</span>
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span><span class="lineCov">          2 :         KeyPair k = KeyPair::create();</span>
+<span class="lineNum">     125 </span><span class="lineCov">          2 :         bytes cipher;</span>
+<span class="lineNum">     126 </span><span class="lineCov">          1 :         encrypt(k.pub(), bcr, cipher);</span>
+<span class="lineNum">     127 </span><span class="lineCov">         12 :         BOOST_REQUIRE(cipher != asBytes(message) &amp;&amp; cipher.size() &gt; 0);</span>
+<span class="lineNum">     128 </span>            :         
+<span class="lineNum">     129 </span><span class="lineCov">          2 :         bytes plain;</span>
+<span class="lineNum">     130 </span><span class="lineCov">          1 :         decrypt(k.sec(), bytesConstRef(&amp;cipher), plain);</span>
+<span class="lineNum">     131 </span>            :         
+<span class="lineNum">     132 </span><span class="lineCov">         10 :         BOOST_REQUIRE(asString(plain) == message);</span>
+<span class="lineNum">     133 </span><span class="lineCov">         10 :         BOOST_REQUIRE(plain == asBytes(message));</span>
+<a name="134"><span class="lineNum">     134 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)</span>
+<span class="lineNum">     137 </span>            : {
+<span class="lineNum">     138 </span><span class="lineCov">          1 :         secp256k1_context_t* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);</span>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :         // base secret
+<span class="lineNum">     141 </span><span class="lineCov">          6 :         Secret secret(sha3(&quot;privacy&quot;));</span>
+<span class="lineNum">     142 </span>            :         
+<span class="lineNum">     143 </span>            :         // we get ec params from signer
+<span class="lineNum">     144 </span><span class="lineCov">          2 :         ECDSA&lt;ECP, Keccak_256&gt;::Signer signer;</span>
+<span class="lineNum">     145 </span>            :         
+<span class="lineNum">     146 </span>            :         // e := sha3(msg)
+<span class="lineNum">     147 </span><span class="lineCov">          4 :         bytes e(fromHex(&quot;0x01&quot;));</span>
+<span class="lineNum">     148 </span><span class="lineCov">          1 :         e.resize(32);</span>
+<span class="lineNum">     149 </span>            :         int tests = 2;
+<span class="lineNum">     150 </span><span class="lineCov">         17 :         while (sha3(&amp;e, &amp;e), secret = sha3(secret), tests--)</span>
+<span class="lineNum">     151 </span>            :         {
+<span class="lineNum">     152 </span><span class="lineCov">          4 :                 KeyPair key(secret);</span>
+<span class="lineNum">     153 </span><span class="lineCov">          2 :                 Public pkey = key.pub();</span>
+<span class="lineNum">     154 </span><span class="lineCov">          6 :                 signer.AccessKey().Initialize(params(), Integer(secret.data(), Secret::size));</span>
+<span class="lineNum">     155 </span>            :                 
+<span class="lineNum">     156 </span><span class="lineCov">          2 :                 h256 he(sha3(e));</span>
+<span class="lineNum">     157 </span><span class="lineCov">          8 :                 Integer heInt(he.asBytes().data(), 32);</span>
+<span class="lineNum">     158 </span><span class="lineCov">          2 :                 h256 k(kdf(secret, he));</span>
+<span class="lineNum">     159 </span><span class="lineCov">          8 :                 Integer kInt(k.asBytes().data(), 32);</span>
+<span class="lineNum">     160 </span><span class="lineCov">          8 :                 kInt %= params().GetSubgroupOrder()-1;</span>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span><span class="lineCov">          4 :                 ECP::Point rp = params().ExponentiateBase(kInt);</span>
+<span class="lineNum">     163 </span><span class="lineCov">          4 :                 Integer const&amp; q = params().GetGroupOrder();</span>
+<span class="lineNum">     164 </span><span class="lineCov">          4 :                 Integer r = params().ConvertElementToInteger(rp);</span>
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span><span class="lineCov">          4 :                 Integer kInv = kInt.InverseMod(q);</span>
+<span class="lineNum">     167 </span><span class="lineCov">         20 :                 Integer s = (kInv * (Integer(secret.data(), 32) * r + heInt)) % q;</span>
+<span class="lineNum">     168 </span><span class="lineCov">         16 :                 BOOST_REQUIRE(!!r &amp;&amp; !!s);</span>
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span><span class="lineCov">          2 :                 Signature sig;</span>
+<span class="lineNum">     171 </span><span class="lineCov">          4 :                 sig[64] = rp.y.IsOdd() ? 1 : 0;</span>
+<span class="lineNum">     172 </span><span class="lineCov">          2 :                 r.Encode(sig.data(), 32);</span>
+<span class="lineNum">     173 </span><span class="lineCov">          2 :                 s.Encode(sig.data() + 32, 32);</span>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span><span class="lineCov">          2 :                 Public p = dev::recover(sig, he);</span>
+<span class="lineNum">     176 </span><span class="lineCov">         18 :                 BOOST_REQUIRE(p == pkey);</span>
+<span class="lineNum">     177 </span>            :                 
+<span class="lineNum">     178 </span>            :                 // verify w/cryptopp
+<span class="lineNum">     179 </span><span class="lineCov">         18 :                 BOOST_REQUIRE(s_secp256k1-&gt;verify(pkey, sig, bytesConstRef(&amp;e)));</span>
+<span class="lineNum">     180 </span>            :                 
+<span class="lineNum">     181 </span>            :                 // verify with secp256k1lib
+<span class="lineNum">     182 </span><span class="lineCov">          2 :                 byte encpub[65] = {0x04};</span>
+<span class="lineNum">     183 </span><span class="lineCov">          4 :                 memcpy(&amp;encpub[1], pkey.data(), 64);</span>
+<span class="lineNum">     184 </span>            :                 byte dersig[72];
+<span class="lineNum">     185 </span><span class="lineCov">          2 :                 size_t cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, sig.data(), 64, DSA_P1363);</span>
+<span class="lineNum">     186 </span><span class="lineCov">         16 :                 BOOST_CHECK(cssz &lt;= 72);</span>
+<span class="lineNum">     187 </span><span class="lineCov">         18 :                 BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(ctx, he.data(), dersig, cssz, encpub, 65));</span>
+<span class="lineNum">     188 </span>            :         }
+<a name="189"><span class="lineNum">     189 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(sha3_norestart)</span>
+<span class="lineNum">     192 </span>            : {
+<span class="lineNum">     193 </span><span class="lineCov">          2 :         CryptoPP::Keccak_256 ctx;</span>
+<span class="lineNum">     194 </span><span class="lineCov">          5 :         bytes input(asBytes(&quot;test&quot;));</span>
+<span class="lineNum">     195 </span><span class="lineCov">          2 :         ctx.Update(input.data(), 4);</span>
+<span class="lineNum">     196 </span><span class="lineCov">          2 :         CryptoPP::Keccak_256 ctxCopy(ctx);</span>
+<span class="lineNum">     197 </span><span class="lineCov">          3 :         bytes interimDigest(32);</span>
+<span class="lineNum">     198 </span><span class="lineCov">          3 :         ctx.Final(interimDigest.data());</span>
+<span class="lineNum">     199 </span><span class="lineCov">          2 :         ctx.Update(input.data(), 4);</span>
+<span class="lineNum">     200 </span><span class="lineCov">          3 :         bytes firstDigest(32);</span>
+<span class="lineNum">     201 </span><span class="lineCov">          2 :         ctx.Final(firstDigest.data());</span>
+<span class="lineNum">     202 </span><span class="lineCov">          8 :         BOOST_REQUIRE(interimDigest == firstDigest);</span>
+<span class="lineNum">     203 </span>            :         
+<span class="lineNum">     204 </span><span class="lineCov">          2 :         ctxCopy.Update(input.data(), 4);</span>
+<span class="lineNum">     205 </span><span class="lineCov">          3 :         bytes finalDigest(32);</span>
+<span class="lineNum">     206 </span><span class="lineCov">          2 :         ctxCopy.Final(interimDigest.data());</span>
+<span class="lineNum">     207 </span><span class="lineCov">          9 :         BOOST_REQUIRE(interimDigest != finalDigest);</span>
+<span class="lineNum">     208 </span>            :         
+<span class="lineNum">     209 </span>            :         // we can do this another way -- copy the context for final
+<span class="lineNum">     210 </span><span class="lineCov">          2 :         ctxCopy.Update(input.data(), 4);</span>
+<span class="lineNum">     211 </span><span class="lineCov">          2 :         ctxCopy.Update(input.data(), 4);</span>
+<span class="lineNum">     212 </span><span class="lineCov">          2 :         CryptoPP::Keccak_256 finalCtx(ctxCopy);</span>
+<span class="lineNum">     213 </span><span class="lineCov">          3 :         bytes finalDigest2(32);</span>
+<span class="lineNum">     214 </span><span class="lineCov">          2 :         finalCtx.Final(finalDigest2.data());</span>
+<span class="lineNum">     215 </span><span class="lineCov">          8 :         BOOST_REQUIRE(finalDigest2 == interimDigest);</span>
+<span class="lineNum">     216 </span><span class="lineCov">          2 :         ctxCopy.Update(input.data(), 4);</span>
+<span class="lineNum">     217 </span><span class="lineCov">          3 :         bytes finalDigest3(32);</span>
+<span class="lineNum">     218 </span><span class="lineCov">          2 :         finalCtx.Final(finalDigest3.data());</span>
+<span class="lineNum">     219 </span><span class="lineCov">          9 :         BOOST_REQUIRE(finalDigest2 != finalDigest3);</span>
+<a name="220"><span class="lineNum">     220 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(ecies_kdf)</span>
+<span class="lineNum">     223 </span>            : {
+<span class="lineNum">     224 </span><span class="lineCov">          2 :         KeyPair local = KeyPair::create();</span>
+<span class="lineNum">     225 </span><span class="lineCov">          2 :         KeyPair remote = KeyPair::create();</span>
+<span class="lineNum">     226 </span>            :         // nonce
+<span class="lineNum">     227 </span><span class="lineCov">          2 :         Secret z1;</span>
+<span class="lineNum">     228 </span><span class="lineCov">          1 :         ecdh::agree(local.sec(), remote.pub(), z1);</span>
+<span class="lineNum">     229 </span><span class="lineCov">          3 :         auto key1 = s_secp256k1-&gt;eciesKDF(z1, bytes(), 64);</span>
+<span class="lineNum">     230 </span><span class="lineCov">          2 :         bytesConstRef eKey1 = bytesConstRef(&amp;key1).cropped(0, 32);</span>
+<span class="lineNum">     231 </span><span class="lineCov">          2 :         bytesRef mKey1 = bytesRef(&amp;key1).cropped(32, 32);</span>
+<span class="lineNum">     232 </span><span class="lineCov">          1 :         sha3(mKey1, mKey1);</span>
+<span class="lineNum">     233 </span>            :         
+<span class="lineNum">     234 </span><span class="lineCov">          2 :         Secret z2;</span>
+<span class="lineNum">     235 </span><span class="lineCov">          1 :         ecdh::agree(remote.sec(), local.pub(), z2);</span>
+<span class="lineNum">     236 </span><span class="lineCov">          3 :         auto key2 = s_secp256k1-&gt;eciesKDF(z2, bytes(), 64);</span>
+<span class="lineNum">     237 </span><span class="lineCov">          2 :         bytesConstRef eKey2 = bytesConstRef(&amp;key2).cropped(0, 32);</span>
+<span class="lineNum">     238 </span><span class="lineCov">          2 :         bytesRef mKey2 = bytesRef(&amp;key2).cropped(32, 32);</span>
+<span class="lineNum">     239 </span><span class="lineCov">          1 :         sha3(mKey2, mKey2);</span>
+<span class="lineNum">     240 </span>            :         
+<span class="lineNum">     241 </span><span class="lineCov">         12 :         BOOST_REQUIRE(eKey1.toBytes() == eKey2.toBytes());</span>
+<span class="lineNum">     242 </span><span class="lineCov">         12 :         BOOST_REQUIRE(mKey1.toBytes() == mKey2.toBytes());</span>
+<span class="lineNum">     243 </span>            :         
+<span class="lineNum">     244 </span><span class="lineCov">          9 :         BOOST_REQUIRE(!!z1);</span>
+<span class="lineNum">     245 </span><span class="lineCov">          9 :         BOOST_REQUIRE(z1 == z2);</span>
+<span class="lineNum">     246 </span>            :         
+<span class="lineNum">     247 </span><span class="lineCov">         11 :         BOOST_REQUIRE(key1.size() &gt; 0 &amp;&amp; ((u512)h512(key1)) &gt; 0);</span>
+<span class="lineNum">     248 </span><span class="lineCov">          8 :         BOOST_REQUIRE(key1 == key2);</span>
+<a name="249"><span class="lineNum">     249 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(ecies_standard)</span>
+<span class="lineNum">     252 </span>            : {
+<span class="lineNum">     253 </span><span class="lineCov">          2 :         KeyPair k = KeyPair::create();</span>
+<span class="lineNum">     254 </span>            :         
+<span class="lineNum">     255 </span><span class="lineCov">          4 :         string message(&quot;Now is the time for all good persons to come to the aid of humanity.&quot;);</span>
+<span class="lineNum">     256 </span><span class="lineCov">          2 :         string original = message;</span>
+<span class="lineNum">     257 </span><span class="lineCov">          2 :         bytes b = asBytes(message);</span>
+<span class="lineNum">     258 </span>            :         
+<span class="lineNum">     259 </span><span class="lineCov">          1 :         s_secp256k1-&gt;encryptECIES(k.pub(), b);</span>
+<span class="lineNum">     260 </span><span class="lineCov">         11 :         BOOST_REQUIRE(b != asBytes(original));</span>
+<span class="lineNum">     261 </span><span class="lineCov">          9 :         BOOST_REQUIRE(b.size() &gt; 0 &amp;&amp; b[0] == 0x04);</span>
+<span class="lineNum">     262 </span>            :         
+<span class="lineNum">     263 </span><span class="lineCov">          1 :         s_secp256k1-&gt;decryptECIES(k.sec(), b);</span>
+<span class="lineNum">     264 </span><span class="lineCov">         14 :         BOOST_REQUIRE(bytesConstRef(&amp;b).cropped(0, original.size()).toBytes() == asBytes(original));</span>
+<a name="265"><span class="lineNum">     265 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(ecies_sharedMacData)</span>
+<span class="lineNum">     268 </span>            : {
+<span class="lineNum">     269 </span><span class="lineCov">          2 :         KeyPair k = KeyPair::create();</span>
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span><span class="lineCov">          4 :         string message(&quot;Now is the time for all good persons to come to the aid of humanity.&quot;);</span>
+<span class="lineNum">     272 </span><span class="lineCov">          2 :         string original = message;</span>
+<span class="lineNum">     273 </span><span class="lineCov">          2 :         bytes b = asBytes(message);</span>
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span><span class="lineCov">          4 :         bytesConstRef shared(&quot;shared MAC data&quot;);</span>
+<span class="lineNum">     276 </span><span class="lineCov">          5 :         bytesConstRef wrongShared(&quot;wrong shared MAC data&quot;);</span>
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span><span class="lineCov">          1 :         s_secp256k1-&gt;encryptECIES(k.pub(), shared, b);</span>
+<span class="lineNum">     279 </span><span class="lineCov">         11 :         BOOST_REQUIRE(b != asBytes(original));</span>
+<span class="lineNum">     280 </span><span class="lineCov">          9 :         BOOST_REQUIRE(b.size() &gt; 0 &amp;&amp; b[0] == 0x04);</span>
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span><span class="lineCov">          8 :         BOOST_REQUIRE(!s_secp256k1-&gt;decryptECIES(k.sec(), wrongShared, b));</span>
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span><span class="lineCov">          1 :         s_secp256k1-&gt;decryptECIES(k.sec(), shared, b);</span>
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            :         // Temporary disable this assertion, which is failing in TravisCI only for Ubuntu Trusty.               
+<span class="lineNum">     287 </span>            :         // See https://travis-ci.org/bobsummerwill/cpp-ethereum/jobs/143250866.
+<span class="lineNum">     288 </span>            :         #if !defined(DISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
+<span class="lineNum">     289 </span>            :                 BOOST_REQUIRE(bytesConstRef(&amp;b).cropped(0, original.size()).toBytes() == asBytes(original));
+<span class="lineNum">     290 </span>            :         #endif // !defined(DISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
+<a name="291"><span class="lineNum">     291 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(ecies_eckeypair)</span>
+<span class="lineNum">     294 </span>            : {
+<span class="lineNum">     295 </span><span class="lineCov">          2 :         KeyPair k = KeyPair::create();</span>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span><span class="lineCov">          4 :         string message(&quot;Now is the time for all good persons to come to the aid of humanity.&quot;);</span>
+<span class="lineNum">     298 </span><span class="lineCov">          2 :         string original = message;</span>
+<span class="lineNum">     299 </span>            :         
+<span class="lineNum">     300 </span><span class="lineCov">          2 :         bytes b = asBytes(message);</span>
+<span class="lineNum">     301 </span><span class="lineCov">          1 :         s_secp256k1-&gt;encrypt(k.pub(), b);</span>
+<span class="lineNum">     302 </span><span class="lineCov">         11 :         BOOST_REQUIRE(b != asBytes(original));</span>
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span><span class="lineCov">          1 :         s_secp256k1-&gt;decrypt(k.sec(), b);</span>
+<span class="lineNum">     305 </span><span class="lineCov">         10 :         BOOST_REQUIRE(b == asBytes(original));</span>
+<a name="306"><span class="lineNum">     306 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(ecdh)</span>
+<span class="lineNum">     309 </span>            : {
+<span class="lineNum">     310 </span><span class="lineCov">          1 :         cnote &lt;&lt; &quot;Testing ecdh...&quot;;</span>
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span><span class="lineCov">          2 :         ECDH&lt;ECP&gt;::Domain dhLocal(curveOID());</span>
+<span class="lineNum">     313 </span><span class="lineCov">          3 :         SecByteBlock privLocal(dhLocal.PrivateKeyLength());</span>
+<span class="lineNum">     314 </span><span class="lineCov">          3 :         SecByteBlock pubLocal(dhLocal.PublicKeyLength());</span>
+<span class="lineNum">     315 </span><span class="lineCov">          1 :         dhLocal.GenerateKeyPair(rng(), privLocal, pubLocal);</span>
+<span class="lineNum">     316 </span>            :         
+<span class="lineNum">     317 </span><span class="lineCov">          2 :         ECDH&lt;ECP&gt;::Domain dhRemote(curveOID());</span>
+<span class="lineNum">     318 </span><span class="lineCov">          3 :         SecByteBlock privRemote(dhRemote.PrivateKeyLength());</span>
+<span class="lineNum">     319 </span><span class="lineCov">          3 :         SecByteBlock pubRemote(dhRemote.PublicKeyLength());</span>
+<span class="lineNum">     320 </span><span class="lineCov">          1 :         dhRemote.GenerateKeyPair(rng(), privRemote, pubRemote);</span>
+<span class="lineNum">     321 </span>            :         
+<span class="lineNum">     322 </span><span class="lineCov">          2 :         assert(dhLocal.AgreedValueLength() == dhRemote.AgreedValueLength());</span>
+<span class="lineNum">     323 </span>            :         
+<span class="lineNum">     324 </span>            :         // local: send public to remote; remote: send public to local
+<span class="lineNum">     325 </span>            :         
+<span class="lineNum">     326 </span>            :         // Local
+<span class="lineNum">     327 </span><span class="lineCov">          3 :         SecByteBlock sharedLocal(dhLocal.AgreedValueLength());</span>
+<span class="lineNum">     328 </span><span class="lineCov">          1 :         assert(dhLocal.Agree(sharedLocal, privLocal, pubRemote));</span>
+<span class="lineNum">     329 </span>            :         
+<span class="lineNum">     330 </span>            :         // Remote
+<span class="lineNum">     331 </span><span class="lineCov">          3 :         SecByteBlock sharedRemote(dhRemote.AgreedValueLength());</span>
+<span class="lineNum">     332 </span><span class="lineCov">          1 :         assert(dhRemote.Agree(sharedRemote, privRemote, pubLocal));</span>
+<span class="lineNum">     333 </span>            :         
+<span class="lineNum">     334 </span>            :         // Test
+<span class="lineNum">     335 </span><span class="lineCov">          3 :         Integer ssLocal, ssRemote;</span>
+<span class="lineNum">     336 </span><span class="lineCov">          1 :         ssLocal.Decode(sharedLocal.BytePtr(), sharedLocal.SizeInBytes());</span>
+<span class="lineNum">     337 </span><span class="lineCov">          1 :         ssRemote.Decode(sharedRemote.BytePtr(), sharedRemote.SizeInBytes());</span>
+<span class="lineNum">     338 </span>            :         
+<span class="lineNum">     339 </span><span class="lineCov">          3 :         assert(ssLocal != 0);</span>
+<span class="lineNum">     340 </span><span class="lineCov">          1 :         assert(ssLocal == ssRemote);</span>
+<span class="lineNum">     341 </span>            :         
+<span class="lineNum">     342 </span>            :         
+<span class="lineNum">     343 </span>            :         // Now use our keys
+<span class="lineNum">     344 </span><span class="lineCov">          2 :         KeyPair a = KeyPair::create();</span>
+<span class="lineNum">     345 </span><span class="lineCov">          1 :         byte puba[65] = {0x04};</span>
+<span class="lineNum">     346 </span><span class="lineCov">          3 :         memcpy(&amp;puba[1], a.pub().data(), 64);</span>
+<span class="lineNum">     347 </span>            :         
+<span class="lineNum">     348 </span><span class="lineCov">          2 :         KeyPair b = KeyPair::create();</span>
+<span class="lineNum">     349 </span><span class="lineCov">          1 :         byte pubb[65] = {0x04};</span>
+<span class="lineNum">     350 </span><span class="lineCov">          3 :         memcpy(&amp;pubb[1], b.pub().data(), 64);</span>
+<span class="lineNum">     351 </span>            :         
+<span class="lineNum">     352 </span><span class="lineCov">          2 :         ECDH&lt;ECP&gt;::Domain dhA(curveOID());</span>
+<span class="lineNum">     353 </span><span class="lineCov">          1 :         Secret shared;</span>
+<span class="lineNum">     354 </span><span class="lineCov">         11 :         BOOST_REQUIRE(dhA.Agree(shared.writable().data(), a.sec().data(), pubb));</span>
+<span class="lineNum">     355 </span><span class="lineCov">          7 :         BOOST_REQUIRE(shared);</span>
+<a name="356"><span class="lineNum">     356 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(ecdhe)</span>
+<span class="lineNum">     359 </span>            : {
+<span class="lineNum">     360 </span><span class="lineCov">          1 :         cnote &lt;&lt; &quot;Testing ecdhe...&quot;;</span>
+<span class="lineNum">     361 </span>            :         
+<span class="lineNum">     362 </span><span class="lineCov">          3 :         ECDHE a, b;</span>
+<span class="lineNum">     363 </span><span class="lineCov">          7 :         BOOST_CHECK_NE(a.pubkey(), b.pubkey());</span>
+<span class="lineNum">     364 </span>            :         
+<span class="lineNum">     365 </span><span class="lineCov">          2 :         ECDHE local;</span>
+<span class="lineNum">     366 </span><span class="lineCov">          2 :         ECDHE remote;</span>
+<span class="lineNum">     367 </span>            :         
+<span class="lineNum">     368 </span>            :         // local tx pubkey -&gt; remote
+<span class="lineNum">     369 </span><span class="lineCov">          2 :         Secret sremote;</span>
+<span class="lineNum">     370 </span><span class="lineCov">          1 :         remote.agree(local.pubkey(), sremote);</span>
+<span class="lineNum">     371 </span>            :         
+<span class="lineNum">     372 </span>            :         // remote tx pbukey -&gt; local
+<span class="lineNum">     373 </span><span class="lineCov">          2 :         Secret slocal;</span>
+<span class="lineNum">     374 </span><span class="lineCov">          1 :         local.agree(remote.pubkey(), slocal);</span>
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span><span class="lineCov">          7 :         BOOST_REQUIRE(sremote);</span>
+<span class="lineNum">     377 </span><span class="lineCov">          7 :         BOOST_REQUIRE(slocal);</span>
+<span class="lineNum">     378 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(sremote, slocal);</span>
+<a name="379"><span class="lineNum">     379 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(handshakeNew)</span>
+<span class="lineNum">     382 </span>            : {
+<span class="lineNum">     383 </span>            :         //      authInitiator -&gt; E(remote-pubk, S(ecdhe-random, ecdh-shared-secret^nonce) || H(ecdhe-random-pubk) || pubk || nonce || 0x0)
+<span class="lineNum">     384 </span>            :         //      authRecipient -&gt; E(remote-pubk, ecdhe-random-pubk || nonce || 0x0)
+<span class="lineNum">     385 </span>            :         
+<span class="lineNum">     386 </span><span class="lineCov">          4 :         h256 base(sha3(&quot;privacy&quot;));</span>
+<span class="lineNum">     387 </span><span class="lineCov">          3 :         sha3(base.ref(), base.ref());</span>
+<span class="lineNum">     388 </span><span class="lineCov">          2 :         Secret nodeAsecret(base);</span>
+<span class="lineNum">     389 </span><span class="lineCov">          2 :         KeyPair nodeA(nodeAsecret);</span>
+<span class="lineNum">     390 </span><span class="lineCov">          7 :         BOOST_REQUIRE(nodeA.pub());</span>
+<span class="lineNum">     391 </span>            :         
+<span class="lineNum">     392 </span><span class="lineCov">          3 :         sha3(base.ref(), base.ref());</span>
+<span class="lineNum">     393 </span><span class="lineCov">          2 :         Secret nodeBsecret(base);</span>
+<span class="lineNum">     394 </span><span class="lineCov">          2 :         KeyPair nodeB(nodeBsecret);</span>
+<span class="lineNum">     395 </span><span class="lineCov">          7 :         BOOST_REQUIRE(nodeB.pub());</span>
+<span class="lineNum">     396 </span>            :         
+<span class="lineNum">     397 </span><span class="lineCov">          5 :         BOOST_REQUIRE_NE(nodeA.sec(), nodeB.sec());</span>
+<span class="lineNum">     398 </span>            :         
+<span class="lineNum">     399 </span>            :         // Initiator is Alice (nodeA)
+<span class="lineNum">     400 </span><span class="lineCov">          2 :         ECDHE eA;</span>
+<span class="lineNum">     401 </span><span class="lineCov">          4 :         bytes nAbytes(fromHex(&quot;0xAAAA&quot;));</span>
+<span class="lineNum">     402 </span><span class="lineCov">          1 :         h256 nonceA(sha3(nAbytes));</span>
+<span class="lineNum">     403 </span><span class="lineCov">          3 :         bytes auth(Signature::size + h256::size + Public::size + h256::size + 1);</span>
+<span class="lineNum">     404 </span><span class="lineCov">          2 :         Secret ssA;</span>
+<span class="lineNum">     405 </span>            :         {
+<span class="lineNum">     406 </span><span class="lineCov">          2 :                 bytesRef sig(&amp;auth[0], Signature::size);</span>
+<span class="lineNum">     407 </span><span class="lineCov">          3 :                 bytesRef hepubk(&amp;auth[Signature::size], h256::size);</span>
+<span class="lineNum">     408 </span><span class="lineCov">          3 :                 bytesRef pubk(&amp;auth[Signature::size + h256::size], Public::size);</span>
+<span class="lineNum">     409 </span><span class="lineCov">          3 :                 bytesRef nonce(&amp;auth[Signature::size + h256::size + Public::size], h256::size);</span>
+<span class="lineNum">     410 </span>            :                 
+<span class="lineNum">     411 </span><span class="lineCov">          1 :                 crypto::ecdh::agree(nodeA.sec(), nodeB.pub(), ssA);</span>
+<span class="lineNum">     412 </span><span class="lineCov">          5 :                 sign(eA.seckey(), (ssA ^ nonceA).makeInsecure()).ref().copyTo(sig);</span>
+<span class="lineNum">     413 </span><span class="lineCov">          3 :                 sha3(eA.pubkey().ref(), hepubk);</span>
+<span class="lineNum">     414 </span><span class="lineCov">          2 :                 nodeA.pub().ref().copyTo(pubk);</span>
+<span class="lineNum">     415 </span><span class="lineCov">          1 :                 nonceA.ref().copyTo(nonce);</span>
+<span class="lineNum">     416 </span><span class="lineCov">          3 :                 auth[auth.size() - 1] = 0x0;</span>
+<span class="lineNum">     417 </span>            :         }
+<span class="lineNum">     418 </span><span class="lineCov">          2 :         bytes authcipher;</span>
+<span class="lineNum">     419 </span><span class="lineCov">          1 :         encrypt(nodeB.pub(), &amp;auth, authcipher);</span>
+<span class="lineNum">     420 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(authcipher.size(), 279);</span>
+<span class="lineNum">     421 </span>            :         
+<span class="lineNum">     422 </span>            :         // Receipient is Bob (nodeB)
+<span class="lineNum">     423 </span><span class="lineCov">          2 :         ECDHE eB;</span>
+<span class="lineNum">     424 </span><span class="lineCov">          4 :         bytes nBbytes(fromHex(&quot;0xBBBB&quot;));</span>
+<span class="lineNum">     425 </span><span class="lineCov">          1 :         h256 nonceB(sha3(nAbytes));</span>
+<span class="lineNum">     426 </span><span class="lineCov">          3 :         bytes ack(Public::size + h256::size + 1);</span>
+<span class="lineNum">     427 </span>            :         {
+<span class="lineNum">     428 </span>            :                 // todo: replace nodeA.pub() in encrypt()
+<span class="lineNum">     429 </span>            :                 // decrypt public key from auth
+<span class="lineNum">     430 </span><span class="lineCov">          2 :                 bytes authdecrypted;</span>
+<span class="lineNum">     431 </span><span class="lineCov">          1 :                 decrypt(nodeB.sec(), &amp;authcipher, authdecrypted);</span>
+<span class="lineNum">     432 </span><span class="lineCov">          1 :                 Public node;</span>
+<span class="lineNum">     433 </span><span class="lineCov">          3 :                 bytesConstRef pubk(&amp;authdecrypted[Signature::size + h256::size], Public::size);</span>
+<span class="lineNum">     434 </span><span class="lineCov">          1 :                 pubk.copyTo(node.ref());</span>
+<span class="lineNum">     435 </span>            :                 
+<span class="lineNum">     436 </span><span class="lineCov">          2 :                 bytesRef epubk(&amp;ack[0], Public::size);</span>
+<span class="lineNum">     437 </span><span class="lineCov">          3 :                 bytesRef nonce(&amp;ack[Public::size], h256::size);</span>
+<span class="lineNum">     438 </span>            :                 
+<span class="lineNum">     439 </span><span class="lineCov">          2 :                 eB.pubkey().ref().copyTo(epubk);</span>
+<span class="lineNum">     440 </span><span class="lineCov">          1 :                 nonceB.ref().copyTo(nonce);</span>
+<span class="lineNum">     441 </span><span class="lineCov">          3 :                 auth[auth.size() - 1] = 0x0;</span>
+<span class="lineNum">     442 </span>            :         }
+<span class="lineNum">     443 </span><span class="lineCov">          2 :         bytes ackcipher;</span>
+<span class="lineNum">     444 </span><span class="lineCov">          1 :         encrypt(nodeA.pub(), &amp;ack, ackcipher);</span>
+<span class="lineNum">     445 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(ackcipher.size(), 182);</span>
+<span class="lineNum">     446 </span>            :         
+<span class="lineNum">     447 </span><span class="lineCov">          8 :         BOOST_REQUIRE(eA.pubkey());</span>
+<span class="lineNum">     448 </span><span class="lineCov">          8 :         BOOST_REQUIRE(eB.pubkey());</span>
+<span class="lineNum">     449 </span><span class="lineCov">          9 :         BOOST_REQUIRE_NE(eA.seckey(), eB.seckey());</span>
+<span class="lineNum">     450 </span>            :         
+<span class="lineNum">     451 </span>            :         /// Alice (after receiving ack)
+<span class="lineNum">     452 </span><span class="lineCov">          2 :         Secret aEncryptK;</span>
+<span class="lineNum">     453 </span><span class="lineCov">          2 :         Secret aMacK;</span>
+<span class="lineNum">     454 </span><span class="lineCov">          2 :         Secret aEgressMac;</span>
+<span class="lineNum">     455 </span><span class="lineCov">          2 :         Secret aIngressMac;</span>
+<span class="lineNum">     456 </span>            :         {
+<span class="lineNum">     457 </span><span class="lineCov">          2 :                 bytes ackdecrypted;</span>
+<span class="lineNum">     458 </span><span class="lineCov">          1 :                 decrypt(nodeA.sec(), &amp;ackcipher, ackdecrypted);</span>
+<span class="lineNum">     459 </span><span class="lineCov">          9 :                 BOOST_REQUIRE(ackdecrypted.size());</span>
+<span class="lineNum">     460 </span><span class="lineCov">          1 :                 bytesConstRef ackRef(&amp;ackdecrypted);</span>
+<span class="lineNum">     461 </span><span class="lineCov">          1 :                 Public eBAck;</span>
+<span class="lineNum">     462 </span><span class="lineCov">          1 :                 h256 nonceBAck;</span>
+<span class="lineNum">     463 </span><span class="lineCov">          3 :                 ackRef.cropped(0, Public::size).copyTo(bytesRef(eBAck.data(), Public::size));</span>
+<span class="lineNum">     464 </span><span class="lineCov">          2 :                 ackRef.cropped(Public::size, h256::size).copyTo(nonceBAck.ref());</span>
+<span class="lineNum">     465 </span><span class="lineCov">          6 :                 BOOST_REQUIRE_EQUAL(eBAck, eB.pubkey());</span>
+<span class="lineNum">     466 </span><span class="lineCov">          5 :                 BOOST_REQUIRE_EQUAL(nonceBAck, nonceB);</span>
+<span class="lineNum">     467 </span>            :                 
+<span class="lineNum">     468 </span>            :                 // TODO: export ess and require equal to b
+<span class="lineNum">     469 </span>            :                 
+<span class="lineNum">     470 </span><span class="lineCov">          3 :                 bytes keyMaterialBytes(512);</span>
+<span class="lineNum">     471 </span><span class="lineCov">          1 :                 bytesRef keyMaterial(&amp;keyMaterialBytes);</span>
+<span class="lineNum">     472 </span>            :                 
+<span class="lineNum">     473 </span><span class="lineCov">          2 :                 Secret ess;</span>
+<span class="lineNum">     474 </span>            :                 // todo: ecdh-agree should be able to output bytes
+<span class="lineNum">     475 </span><span class="lineCov">          1 :                 eA.agree(eBAck, ess);</span>
+<span class="lineNum">     476 </span><span class="lineCov">          2 :                 ess.ref().copyTo(keyMaterial.cropped(0, h256::size));</span>
+<span class="lineNum">     477 </span><span class="lineCov">          2 :                 ssA.ref().copyTo(keyMaterial.cropped(h256::size, h256::size));</span>
+<span class="lineNum">     478 </span>            : //              auto token = sha3(ssA);
+<span class="lineNum">     479 </span><span class="lineCov">          3 :                 aEncryptK = sha3Secure(keyMaterial);</span>
+<span class="lineNum">     480 </span><span class="lineCov">          2 :                 aEncryptK.ref().copyTo(keyMaterial.cropped(h256::size, h256::size));</span>
+<span class="lineNum">     481 </span><span class="lineCov">          3 :                 aMacK = sha3Secure(keyMaterial);</span>
+<span class="lineNum">     482 </span>            : 
+<span class="lineNum">     483 </span><span class="lineCov">          2 :                 keyMaterialBytes.resize(h256::size + authcipher.size());</span>
+<span class="lineNum">     484 </span><span class="lineCov">          4 :                 keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());</span>
+<span class="lineNum">     485 </span><span class="lineCov">          3 :                 (aMacK ^ nonceBAck).ref().copyTo(keyMaterial);</span>
+<span class="lineNum">     486 </span><span class="lineCov">          4 :                 bytesConstRef(&amp;authcipher).copyTo(keyMaterial.cropped(h256::size, authcipher.size()));</span>
+<span class="lineNum">     487 </span><span class="lineCov">          3 :                 aEgressMac = sha3Secure(keyMaterial);</span>
+<span class="lineNum">     488 </span>            :                 
+<span class="lineNum">     489 </span><span class="lineCov">          2 :                 keyMaterialBytes.resize(h256::size + ackcipher.size());</span>
+<span class="lineNum">     490 </span><span class="lineCov">          4 :                 keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());</span>
+<span class="lineNum">     491 </span><span class="lineCov">          3 :                 (aMacK ^ nonceA).ref().copyTo(keyMaterial);</span>
+<span class="lineNum">     492 </span><span class="lineCov">          4 :                 bytesConstRef(&amp;ackcipher).copyTo(keyMaterial.cropped(h256::size, ackcipher.size()));</span>
+<span class="lineNum">     493 </span><span class="lineCov">          3 :                 aIngressMac = sha3Secure(keyMaterial);</span>
+<span class="lineNum">     494 </span>            :         }
+<span class="lineNum">     495 </span>            :         
+<span class="lineNum">     496 </span>            :         
+<span class="lineNum">     497 </span>            :         /// Bob (after sending ack)
+<span class="lineNum">     498 </span><span class="lineCov">          2 :         Secret ssB;</span>
+<span class="lineNum">     499 </span><span class="lineCov">          1 :         crypto::ecdh::agree(nodeB.sec(), nodeA.pub(), ssB);</span>
+<span class="lineNum">     500 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(ssA, ssB);</span>
+<span class="lineNum">     501 </span>            :         
+<span class="lineNum">     502 </span><span class="lineCov">          2 :         Secret bEncryptK;</span>
+<span class="lineNum">     503 </span><span class="lineCov">          2 :         Secret bMacK;</span>
+<span class="lineNum">     504 </span><span class="lineCov">          2 :         Secret bEgressMac;</span>
+<span class="lineNum">     505 </span><span class="lineCov">          2 :         Secret bIngressMac;</span>
+<span class="lineNum">     506 </span>            :         {
+<span class="lineNum">     507 </span><span class="lineCov">          2 :                 bytes authdecrypted;</span>
+<span class="lineNum">     508 </span><span class="lineCov">          1 :                 decrypt(nodeB.sec(), &amp;authcipher, authdecrypted);</span>
+<span class="lineNum">     509 </span><span class="lineCov">          9 :                 BOOST_REQUIRE(authdecrypted.size());</span>
+<span class="lineNum">     510 </span><span class="lineCov">          1 :                 bytesConstRef ackRef(&amp;authdecrypted);</span>
+<span class="lineNum">     511 </span><span class="lineCov">          1 :                 Signature sigAuth;</span>
+<span class="lineNum">     512 </span><span class="lineCov">          1 :                 h256 heA;</span>
+<span class="lineNum">     513 </span><span class="lineCov">          1 :                 Public eAAuth;</span>
+<span class="lineNum">     514 </span><span class="lineCov">          1 :                 Public nodeAAuth;</span>
+<span class="lineNum">     515 </span><span class="lineCov">          1 :                 h256 nonceAAuth;</span>
+<span class="lineNum">     516 </span><span class="lineCov">          2 :                 bytesConstRef sig(&amp;authdecrypted[0], Signature::size);</span>
+<span class="lineNum">     517 </span><span class="lineCov">          3 :                 bytesConstRef hepubk(&amp;authdecrypted[Signature::size], h256::size);</span>
+<span class="lineNum">     518 </span><span class="lineCov">          3 :                 bytesConstRef pubk(&amp;authdecrypted[Signature::size + h256::size], Public::size);</span>
+<span class="lineNum">     519 </span><span class="lineCov">          3 :                 bytesConstRef nonce(&amp;authdecrypted[Signature::size + h256::size + Public::size], h256::size);</span>
+<span class="lineNum">     520 </span>            : 
+<span class="lineNum">     521 </span><span class="lineCov">          1 :                 nonce.copyTo(nonceAAuth.ref());</span>
+<span class="lineNum">     522 </span><span class="lineCov">          1 :                 pubk.copyTo(nodeAAuth.ref());</span>
+<span class="lineNum">     523 </span><span class="lineCov">          7 :                 BOOST_REQUIRE(nonceAAuth);</span>
+<span class="lineNum">     524 </span><span class="lineCov">          5 :                 BOOST_REQUIRE_EQUAL(nonceA, nonceAAuth);</span>
+<span class="lineNum">     525 </span><span class="lineCov">          7 :                 BOOST_REQUIRE(nodeAAuth);</span>
+<span class="lineNum">     526 </span><span class="lineCov">          5 :                 BOOST_REQUIRE_EQUAL(nodeA.pub(), nodeAAuth); // bad test, bad!!!</span>
+<span class="lineNum">     527 </span><span class="lineCov">          1 :                 hepubk.copyTo(heA.ref());</span>
+<span class="lineNum">     528 </span><span class="lineCov">          1 :                 sig.copyTo(sigAuth.ref());</span>
+<span class="lineNum">     529 </span>            :                 
+<span class="lineNum">     530 </span><span class="lineCov">          2 :                 Secret ss;</span>
+<span class="lineNum">     531 </span><span class="lineCov">          1 :                 s_secp256k1-&gt;agree(nodeB.sec(), nodeAAuth, ss);</span>
+<span class="lineNum">     532 </span><span class="lineCov">          2 :                 eAAuth = recover(sigAuth, (ss ^ nonceAAuth).makeInsecure());</span>
+<span class="lineNum">     533 </span>            :                 // todo: test when this fails; means remote is bad or packet bits were flipped
+<span class="lineNum">     534 </span><span class="lineCov">          5 :                 BOOST_REQUIRE_EQUAL(heA, sha3(eAAuth));</span>
+<span class="lineNum">     535 </span><span class="lineCov">          6 :                 BOOST_REQUIRE_EQUAL(eAAuth, eA.pubkey());</span>
+<span class="lineNum">     536 </span>            :                 
+<span class="lineNum">     537 </span><span class="lineCov">          3 :                 bytes keyMaterialBytes(512);</span>
+<span class="lineNum">     538 </span><span class="lineCov">          1 :                 bytesRef keyMaterial(&amp;keyMaterialBytes);</span>
+<span class="lineNum">     539 </span>            :                 
+<span class="lineNum">     540 </span><span class="lineCov">          2 :                 Secret ess;</span>
+<span class="lineNum">     541 </span>            :                 // todo: ecdh-agree should be able to output bytes
+<span class="lineNum">     542 </span><span class="lineCov">          1 :                 eB.agree(eAAuth, ess);</span>
+<span class="lineNum">     543 </span>            : //              s_secp256k1-&gt;agree(eB.seckey(), eAAuth, ess);
+<span class="lineNum">     544 </span><span class="lineCov">          2 :                 ess.ref().copyTo(keyMaterial.cropped(0, h256::size));</span>
+<span class="lineNum">     545 </span><span class="lineCov">          2 :                 ssB.ref().copyTo(keyMaterial.cropped(h256::size, h256::size));</span>
+<span class="lineNum">     546 </span>            : //              auto token = sha3(ssA);
+<span class="lineNum">     547 </span><span class="lineCov">          3 :                 bEncryptK = sha3Secure(keyMaterial);</span>
+<span class="lineNum">     548 </span><span class="lineCov">          2 :                 bEncryptK.ref().copyTo(keyMaterial.cropped(h256::size, h256::size));</span>
+<span class="lineNum">     549 </span><span class="lineCov">          3 :                 bMacK = sha3Secure(keyMaterial);</span>
+<span class="lineNum">     550 </span>            :                 
+<span class="lineNum">     551 </span>            :                 // todo: replace nonceB with decrypted nonceB
+<span class="lineNum">     552 </span><span class="lineCov">          2 :                 keyMaterialBytes.resize(h256::size + ackcipher.size());</span>
+<span class="lineNum">     553 </span><span class="lineCov">          4 :                 keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());</span>
+<span class="lineNum">     554 </span><span class="lineCov">          3 :                 (bMacK ^ nonceAAuth).ref().copyTo(keyMaterial);</span>
+<span class="lineNum">     555 </span><span class="lineCov">          4 :                 bytesConstRef(&amp;ackcipher).copyTo(keyMaterial.cropped(h256::size, ackcipher.size()));</span>
+<span class="lineNum">     556 </span><span class="lineCov">          3 :                 bEgressMac = sha3Secure(keyMaterial);</span>
+<span class="lineNum">     557 </span>            :                 
+<span class="lineNum">     558 </span><span class="lineCov">          2 :                 keyMaterialBytes.resize(h256::size + authcipher.size());</span>
+<span class="lineNum">     559 </span><span class="lineCov">          4 :                 keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());</span>
+<span class="lineNum">     560 </span><span class="lineCov">          3 :                 (bMacK ^ nonceB).ref().copyTo(keyMaterial);</span>
+<span class="lineNum">     561 </span><span class="lineCov">          4 :                 bytesConstRef(&amp;authcipher).copyTo(keyMaterial.cropped(h256::size, authcipher.size()));</span>
+<span class="lineNum">     562 </span><span class="lineCov">          3 :                 bIngressMac = sha3Secure(keyMaterial);</span>
+<span class="lineNum">     563 </span>            :         }
+<span class="lineNum">     564 </span>            :         
+<span class="lineNum">     565 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(aEncryptK, bEncryptK);</span>
+<span class="lineNum">     566 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(aMacK, bMacK);</span>
+<span class="lineNum">     567 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(aEgressMac, bIngressMac);</span>
+<span class="lineNum">     568 </span><span class="lineCov">          5 :         BOOST_REQUIRE_EQUAL(bEgressMac, aIngressMac);</span>
+<span class="lineNum">     569 </span>            :         
+<span class="lineNum">     570 </span>            :         
+<span class="lineNum">     571 </span>            :         
+<a name="572"><span class="lineNum">     572 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     573 </span>            : 
+<span class="lineNum">     574 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(ecies_aes128_ctr_unaligned)</span>
+<span class="lineNum">     575 </span>            : {
+<span class="lineNum">     576 </span><span class="lineCov">          5 :         SecureFixedHash&lt;16&gt; encryptK(sha3(&quot;...&quot;), h128::AlignLeft);</span>
+<span class="lineNum">     577 </span><span class="lineCov">          3 :         h256 egressMac(sha3(&quot;+++&quot;));</span>
+<span class="lineNum">     578 </span>            :         // TESTING: send encrypt magic sequence
+<span class="lineNum">     579 </span><span class="lineCov">          4 :         bytes magic {0x22,0x40,0x08,0x91};</span>
+<span class="lineNum">     580 </span><span class="lineCov">          2 :         bytes magicCipherAndMac;</span>
+<span class="lineNum">     581 </span><span class="lineCov">          5 :         magicCipherAndMac = encryptSymNoAuth(encryptK, h128(), &amp;magic);</span>
+<span class="lineNum">     582 </span>            :         
+<span class="lineNum">     583 </span><span class="lineCov">          2 :         magicCipherAndMac.resize(magicCipherAndMac.size() + 32);</span>
+<span class="lineNum">     584 </span><span class="lineCov">          4 :         sha3mac(egressMac.ref(), &amp;magic, egressMac.ref());</span>
+<span class="lineNum">     585 </span><span class="lineCov">          5 :         egressMac.ref().copyTo(bytesRef(&amp;magicCipherAndMac).cropped(magicCipherAndMac.size() - 32, 32));</span>
+<span class="lineNum">     586 </span>            :         
+<span class="lineNum">     587 </span><span class="lineCov">          3 :         bytesConstRef cipher(&amp;magicCipherAndMac[0], magicCipherAndMac.size() - 32);</span>
+<span class="lineNum">     588 </span><span class="lineCov">          3 :         bytes plaintext = decryptSymNoAuth(encryptK, h128(), cipher).makeInsecure();</span>
+<span class="lineNum">     589 </span>            :         
+<span class="lineNum">     590 </span><span class="lineCov">          2 :         plaintext.resize(magic.size());</span>
+<span class="lineNum">     591 </span>            :         // @alex @subtly TODO: FIX: this check is pointless with the above line.
+<span class="lineNum">     592 </span><span class="lineCov">          9 :         BOOST_REQUIRE(plaintext.size() &gt; 0);</span>
+<span class="lineNum">     593 </span><span class="lineCov">          8 :         BOOST_REQUIRE(magic == plaintext);</span>
+<a name="594"><span class="lineNum">     594 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     595 </span>            : 
+<span class="lineNum">     596 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(ecies_aes128_ctr)</span>
+<span class="lineNum">     597 </span>            : {
+<span class="lineNum">     598 </span><span class="lineCov">          5 :         SecureFixedHash&lt;16&gt; k(sha3(&quot;0xAAAA&quot;), h128::AlignLeft);</span>
+<span class="lineNum">     599 </span><span class="lineCov">          3 :         string m = &quot;AAAAAAAAAAAAAAAA&quot;;</span>
+<span class="lineNum">     600 </span><span class="lineCov">          3 :         bytesConstRef msg((byte*)m.data(), m.size());</span>
+<span class="lineNum">     601 </span>            : 
+<span class="lineNum">     602 </span><span class="lineCov">          2 :         bytes ciphertext;</span>
+<span class="lineNum">     603 </span><span class="lineCov">          1 :         h128 iv;</span>
+<span class="lineNum">     604 </span><span class="lineCov">          4 :         tie(ciphertext, iv) = encryptSymNoAuth(k, msg);</span>
+<span class="lineNum">     605 </span>            :         
+<span class="lineNum">     606 </span><span class="lineCov">          3 :         bytes plaintext = decryptSymNoAuth(k, iv, &amp;ciphertext).makeInsecure();</span>
+<span class="lineNum">     607 </span><span class="lineCov">          7 :         BOOST_REQUIRE_EQUAL(asString(plaintext), m);</span>
+<a name="608"><span class="lineNum">     608 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     609 </span>            : 
+<span class="lineNum">     610 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)</span>
+<span class="lineNum">     611 </span>            : {
+<span class="lineNum">     612 </span><span class="lineCov">          1 :         const int aesKeyLen = 16;</span>
+<span class="lineNum">     613 </span><span class="lineCov">          8 :         BOOST_REQUIRE(sizeof(char) == sizeof(byte));</span>
+<span class="lineNum">     614 </span>            :         
+<span class="lineNum">     615 </span>            :         // generate test key
+<span class="lineNum">     616 </span><span class="lineCov">          2 :         AutoSeededRandomPool rng;</span>
+<span class="lineNum">     617 </span><span class="lineCov">          2 :         SecByteBlock key(0x00, aesKeyLen);</span>
+<span class="lineNum">     618 </span><span class="lineCov">          1 :         rng.GenerateBlock(key, key.size());</span>
+<span class="lineNum">     619 </span>            :         
+<span class="lineNum">     620 </span>            :         // cryptopp uses IV as nonce/counter which is same as using nonce w/0 ctr
+<span class="lineNum">     621 </span><span class="lineCov">          1 :         FixedHash&lt;AES::BLOCKSIZE&gt; ctr;</span>
+<span class="lineNum">     622 </span><span class="lineCov">          1 :         rng.GenerateBlock(ctr.data(), sizeof(ctr));</span>
+<span class="lineNum">     623 </span>            : 
+<span class="lineNum">     624 </span>            :         // used for decrypt
+<span class="lineNum">     625 </span><span class="lineCov">          1 :         FixedHash&lt;AES::BLOCKSIZE&gt; ctrcopy(ctr);</span>
+<span class="lineNum">     626 </span>            :         
+<span class="lineNum">     627 </span><span class="lineCov">          4 :         string text = &quot;Now is the time for all good persons to come to the aid of humanity.&quot;;</span>
+<span class="lineNum">     628 </span><span class="lineCov">          1 :         unsigned char const* in = (unsigned char*)&amp;text[0];</span>
+<span class="lineNum">     629 </span><span class="lineCov">          1 :         unsigned char* out = (unsigned char*)&amp;text[0];</span>
+<span class="lineNum">     630 </span><span class="lineCov">          2 :         string original = text;</span>
+<span class="lineNum">     631 </span><span class="lineCov">          2 :         string doublespeak = text + text;</span>
+<span class="lineNum">     632 </span>            :         
+<span class="lineNum">     633 </span><span class="lineCov">          2 :         string cipherCopy;</span>
+<span class="lineNum">     634 </span>            :         try
+<span class="lineNum">     635 </span>            :         {
+<span class="lineNum">     636 </span><span class="lineCov">          2 :                 CTR_Mode&lt;AES&gt;::Encryption e;</span>
+<span class="lineNum">     637 </span><span class="lineCov">          1 :                 e.SetKeyWithIV(key, key.size(), ctr.data());</span>
+<span class="lineNum">     638 </span>            :                 
+<span class="lineNum">     639 </span>            :                 // 68 % 255 should be difference of counter
+<span class="lineNum">     640 </span><span class="lineCov">          1 :                 e.ProcessData(out, in, text.size());</span>
+<span class="lineNum">     641 </span><span class="lineCov">          4 :                 ctr = h128(u128(ctr) + text.size() / 16);</span>
+<span class="lineNum">     642 </span>            :                 
+<span class="lineNum">     643 </span><span class="lineCov">          9 :                 BOOST_REQUIRE(text != original);</span>
+<span class="lineNum">     644 </span><span class="lineCov">          1 :                 cipherCopy = text;</span>
+<span class="lineNum">     645 </span>            :         }
+<span class="lineNum">     646 </span><span class="lineNoCov">          0 :         catch (CryptoPP::Exception&amp; _e)</span>
+<span class="lineNum">     647 </span>            :         {
+<span class="lineNum">     648 </span><span class="lineNoCov">          0 :                 cerr &lt;&lt; _e.what() &lt;&lt; endl;</span>
+<span class="lineNum">     649 </span>            :         }
+<span class="lineNum">     650 </span>            :         
+<span class="lineNum">     651 </span>            :         try
+<span class="lineNum">     652 </span>            :         {
+<span class="lineNum">     653 </span><span class="lineCov">          2 :                 CTR_Mode&lt; AES &gt;::Decryption d;</span>
+<span class="lineNum">     654 </span><span class="lineCov">          1 :                 d.SetKeyWithIV(key, key.size(), ctrcopy.data());</span>
+<span class="lineNum">     655 </span><span class="lineCov">          1 :                 d.ProcessData(out, in, text.size());</span>
+<span class="lineNum">     656 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(text == original);</span>
+<span class="lineNum">     657 </span>            :         }
+<span class="lineNum">     658 </span><span class="lineNoCov">          0 :         catch (CryptoPP::Exception&amp; _e)</span>
+<span class="lineNum">     659 </span>            :         {
+<span class="lineNum">     660 </span><span class="lineNoCov">          0 :                 cerr &lt;&lt; _e.what() &lt;&lt; endl;</span>
+<span class="lineNum">     661 </span>            :         }
+<span class="lineNum">     662 </span>            :         
+<span class="lineNum">     663 </span>            :         
+<span class="lineNum">     664 </span>            :         // reencrypt ciphertext...
+<span class="lineNum">     665 </span>            :         try
+<span class="lineNum">     666 </span>            :         {
+<span class="lineNum">     667 </span><span class="lineCov">          9 :                 BOOST_REQUIRE(cipherCopy != text);</span>
+<span class="lineNum">     668 </span><span class="lineCov">          1 :                 in = (unsigned char*)&amp;cipherCopy[0];</span>
+<span class="lineNum">     669 </span><span class="lineCov">          1 :                 out = (unsigned char*)&amp;cipherCopy[0];</span>
+<span class="lineNum">     670 </span>            :                 
+<span class="lineNum">     671 </span><span class="lineCov">          2 :                 CTR_Mode&lt;AES&gt;::Encryption e;</span>
+<span class="lineNum">     672 </span><span class="lineCov">          1 :                 e.SetKeyWithIV(key, key.size(), ctrcopy.data());</span>
+<span class="lineNum">     673 </span><span class="lineCov">          1 :                 e.ProcessData(out, in, text.size());</span>
+<span class="lineNum">     674 </span>            :                 
+<span class="lineNum">     675 </span>            :                 // yep, ctr mode.
+<span class="lineNum">     676 </span><span class="lineCov">          8 :                 BOOST_REQUIRE(cipherCopy == original);</span>
+<span class="lineNum">     677 </span>            :         }
+<span class="lineNum">     678 </span><span class="lineNoCov">          0 :         catch (CryptoPP::Exception&amp; _e)</span>
+<span class="lineNum">     679 </span>            :         {
+<span class="lineNum">     680 </span><span class="lineNoCov">          0 :                 cerr &lt;&lt; _e.what() &lt;&lt; endl;</span>
+<span class="lineNum">     681 </span>            :         }
+<span class="lineNum">     682 </span>            :         
+<a name="683"><span class="lineNum">     683 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     684 </span>            : 
+<span class="lineNum">     685 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)</span>
+<span class="lineNum">     686 </span>            : {
+<span class="lineNum">     687 </span><span class="lineCov">          1 :         const int aesKeyLen = 16;</span>
+<span class="lineNum">     688 </span><span class="lineCov">          8 :         BOOST_REQUIRE(sizeof(char) == sizeof(byte));</span>
+<span class="lineNum">     689 </span>            :         
+<span class="lineNum">     690 </span><span class="lineCov">          2 :         AutoSeededRandomPool rng;</span>
+<span class="lineNum">     691 </span><span class="lineCov">          2 :         SecByteBlock key(0x00, aesKeyLen);</span>
+<span class="lineNum">     692 </span><span class="lineCov">          1 :         rng.GenerateBlock(key, key.size());</span>
+<span class="lineNum">     693 </span>            :         
+<span class="lineNum">     694 </span>            :         // Generate random IV
+<span class="lineNum">     695 </span>            :         byte iv[AES::BLOCKSIZE];
+<span class="lineNum">     696 </span><span class="lineCov">          1 :         rng.GenerateBlock(iv, AES::BLOCKSIZE);</span>
+<span class="lineNum">     697 </span>            :         
+<span class="lineNum">     698 </span><span class="lineCov">          4 :         string string128(&quot;AAAAAAAAAAAAAAAA&quot;);</span>
+<span class="lineNum">     699 </span><span class="lineCov">          2 :         string plainOriginal = string128;</span>
+<span class="lineNum">     700 </span>            :         
+<span class="lineNum">     701 </span><span class="lineCov">          2 :         CryptoPP::CBC_Mode&lt;Rijndael&gt;::Encryption cbcEncryption(key, key.size(), iv);</span>
+<span class="lineNum">     702 </span><span class="lineCov">          3 :         cbcEncryption.ProcessData((byte*)&amp;string128[0], (byte*)&amp;string128[0], string128.size());</span>
+<span class="lineNum">     703 </span><span class="lineCov">          9 :         BOOST_REQUIRE(string128 != plainOriginal);</span>
+<span class="lineNum">     704 </span>            :         
+<span class="lineNum">     705 </span><span class="lineCov">          2 :         CBC_Mode&lt;Rijndael&gt;::Decryption cbcDecryption(key, key.size(), iv);</span>
+<span class="lineNum">     706 </span><span class="lineCov">          3 :         cbcDecryption.ProcessData((byte*)&amp;string128[0], (byte*)&amp;string128[0], string128.size());</span>
+<span class="lineNum">     707 </span><span class="lineCov">          8 :         BOOST_REQUIRE(plainOriginal == string128);</span>
+<span class="lineNum">     708 </span>            :         
+<span class="lineNum">     709 </span>            :         
+<span class="lineNum">     710 </span>            :         // plaintext whose size isn't divisible by block size must use stream filter for padding
+<span class="lineNum">     711 </span><span class="lineCov">          4 :         string string192(&quot;AAAAAAAAAAAAAAAABBBBBBBB&quot;);</span>
+<span class="lineNum">     712 </span><span class="lineCov">          1 :         plainOriginal = string192;</span>
+<span class="lineNum">     713 </span>            : 
+<span class="lineNum">     714 </span><span class="lineCov">          2 :         string cipher;</span>
+<span class="lineNum">     715 </span><span class="lineCov">          2 :         StreamTransformationFilter* aesStream = new StreamTransformationFilter(cbcEncryption, new StringSink(cipher));</span>
+<span class="lineNum">     716 </span><span class="lineCov">          2 :         StringSource source(string192, true, aesStream);</span>
+<span class="lineNum">     717 </span><span class="lineCov">          8 :         BOOST_REQUIRE(cipher.size() == 32);</span>
+<span class="lineNum">     718 </span>            : 
+<span class="lineNum">     719 </span><span class="lineCov">          3 :         cbcDecryption.ProcessData((byte*)&amp;cipher[0], (byte*)&amp;string192[0], cipher.size());</span>
+<span class="lineNum">     720 </span><span class="lineCov">          8 :         BOOST_REQUIRE(string192 == plainOriginal);</span>
+<a name="721"><span class="lineNum">     721 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     722 </span>            : 
+<span class="lineNum">     723 </span><span class="lineCov">         26 : BOOST_AUTO_TEST_CASE(recoverVgt3)</span>
+<span class="lineNum">     724 </span>            : {
+<span class="lineNum">     725 </span>            :         // base secret
+<span class="lineNum">     726 </span><span class="lineCov">          6 :         Secret secret(sha3(&quot;privacy&quot;));</span>
+<span class="lineNum">     727 </span>            : 
+<span class="lineNum">     728 </span>            :         // we get ec params from signer
+<span class="lineNum">     729 </span><span class="lineCov">          2 :         ECDSA&lt;ECP, Keccak_256&gt;::Signer signer;</span>
+<span class="lineNum">     730 </span>            : 
+<span class="lineNum">     731 </span>            :         // e := sha3(msg)
+<span class="lineNum">     732 </span><span class="lineCov">          4 :         bytes e(fromHex(&quot;0x01&quot;));</span>
+<span class="lineNum">     733 </span><span class="lineCov">          1 :         e.resize(32);</span>
+<span class="lineNum">     734 </span>            :         int tests = 2;
+<span class="lineNum">     735 </span><span class="lineCov">         17 :         while (sha3(&amp;e, &amp;e), secret = sha3(secret), tests--)</span>
+<span class="lineNum">     736 </span>            :         {
+<span class="lineNum">     737 </span><span class="lineCov">          4 :                 KeyPair key(secret);</span>
+<span class="lineNum">     738 </span><span class="lineCov">          2 :                 Public pkey = key.pub();</span>
+<span class="lineNum">     739 </span><span class="lineCov">          6 :                 signer.AccessKey().Initialize(params(), Integer(secret.data(), Secret::size));</span>
+<span class="lineNum">     740 </span>            : 
+<span class="lineNum">     741 </span><span class="lineCov">          2 :                 h256 he(sha3(e));</span>
+<span class="lineNum">     742 </span><span class="lineCov">          8 :                 Integer heInt(he.asBytes().data(), 32);</span>
+<span class="lineNum">     743 </span><span class="lineCov">          2 :                 h256 k(crypto::kdf(secret, he));</span>
+<span class="lineNum">     744 </span><span class="lineCov">          8 :                 Integer kInt(k.asBytes().data(), 32);</span>
+<span class="lineNum">     745 </span><span class="lineCov">          8 :                 kInt %= params().GetSubgroupOrder()-1;</span>
+<span class="lineNum">     746 </span>            : 
+<span class="lineNum">     747 </span><span class="lineCov">          4 :                 ECP::Point rp = params().ExponentiateBase(kInt);</span>
+<span class="lineNum">     748 </span><span class="lineCov">          4 :                 Integer const&amp; q = params().GetGroupOrder();</span>
+<span class="lineNum">     749 </span><span class="lineCov">          4 :                 Integer r = params().ConvertElementToInteger(rp);</span>
+<span class="lineNum">     750 </span>            : 
+<span class="lineNum">     751 </span><span class="lineCov">          4 :                 Integer kInv = kInt.InverseMod(q);</span>
+<span class="lineNum">     752 </span><span class="lineCov">         20 :                 Integer s = (kInv * (Integer(secret.data(), 32) * r + heInt)) % q;</span>
+<span class="lineNum">     753 </span><span class="lineCov">         16 :                 BOOST_REQUIRE(!!r &amp;&amp; !!s);</span>
+<span class="lineNum">     754 </span>            : 
+<span class="lineNum">     755 </span>            :                 //try recover function on diffrent v values (should be invalid)
+<span class="lineNum">     756 </span><span class="lineCov">         22 :                 for (size_t i = 0; i &lt; 10; i++)</span>
+<span class="lineNum">     757 </span>            :                 {
+<span class="lineNum">     758 </span><span class="lineCov">         20 :                         Signature sig;</span>
+<span class="lineNum">     759 </span><span class="lineCov">         20 :                         sig[64] = i;</span>
+<span class="lineNum">     760 </span><span class="lineCov">         20 :                         r.Encode(sig.data(), 32);</span>
+<span class="lineNum">     761 </span><span class="lineCov">         20 :                         s.Encode(sig.data() + 32, 32);</span>
+<span class="lineNum">     762 </span>            : 
+<span class="lineNum">     763 </span><span class="lineCov">         20 :                         Public p = dev::recover(sig, he);</span>
+<span class="lineNum">     764 </span><span class="lineCov">         20 :                         size_t expectI = rp.y.IsOdd() ? 1 : 0;</span>
+<span class="lineNum">     765 </span><span class="lineCov">         20 :                         if (i == expectI)</span>
+<span class="lineNum">     766 </span><span class="lineCov">         18 :                                 BOOST_REQUIRE(p == pkey);</span>
+<span class="lineNum">     767 </span>            :                         else
+<span class="lineNum">     768 </span><span class="lineCov">        162 :                                 BOOST_REQUIRE(p != pkey);</span>
+<span class="lineNum">     769 </span>            :                 }
+<span class="lineNum">     770 </span>            :         }
+<span class="lineNum">     771 </span><span class="lineCov">          1 : }</span>
+<a name="772"><span class="lineNum">     772 </span>            : </a>
+<span class="lineNum">     773 </span><span class="lineCov">          1 : BOOST_AUTO_TEST_SUITE_END()</span>
+<span class="lineNum">     774 </span><span class="lineCov">          3 : BOOST_AUTO_TEST_SUITE_END()</span>
+<span class="lineNum">     775 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

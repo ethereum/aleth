@@ -1,0 +1,154 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/detail/task_io_service_operation.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/detail</a> - task_io_service_operation.hpp<span style="font-size: 80%;"> (source / <a href="task_io_service_operation.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // detail/task_io_service_operation.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DETAIL_TASK_IO_SERVICE_OPERATION_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DETAIL_TASK_IO_SERVICE_OPERATION_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/system/error_code.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/asio/detail/handler_tracking.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/asio/detail/op_queue.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : namespace boost {
+<span class="lineNum">      25 </span>            : namespace asio {
+<span class="lineNum">      26 </span>            : namespace detail {
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : class task_io_service;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : // Base class for all operations. A function pointer is used instead of virtual
+<span class="lineNum">      31 </span>            : // functions to avoid the associated overhead.
+<span class="lineNum">      32 </span>            : class task_io_service_operation BOOST_ASIO_INHERIT_TRACKED_HANDLER
+<span class="lineNum">      33 </span>            : {
+<span class="lineNum">      34 </span>            : public:
+<span class="lineNum">      35 </span>            :   void complete(task_io_service&amp; owner,
+<span class="lineNum">      36 </span>            :       const boost::system::error_code&amp; ec, std::size_t bytes_transferred)
+<span class="lineNum">      37 </span>            :   {
+<span class="lineNum">      38 </span><span class="lineCov">       1831 :     func_(&amp;owner, this, ec, bytes_transferred);</span>
+<a name="39"><span class="lineNum">      39 </span>            :   }</a>
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span><span class="lineCov">         37 :   void destroy()</span>
+<span class="lineNum">      42 </span>            :   {
+<span class="lineNum">      43 </span><span class="lineCov">         74 :     func_(0, this, boost::system::error_code(), 0);</span>
+<span class="lineNum">      44 </span><span class="lineCov">         37 :   }</span>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : protected:
+<span class="lineNum">      47 </span>            :   typedef void (*func_type)(task_io_service*,
+<span class="lineNum">      48 </span>            :       task_io_service_operation*,
+<span class="lineNum">      49 </span>            :       const boost::system::error_code&amp;, std::size_t);
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            :   task_io_service_operation(func_type func)
+<span class="lineNum">      52 </span>            :     : next_(0),
+<span class="lineNum">      53 </span>            :       func_(func),
+<span class="lineNum">      54 </span><span class="lineCov">       1730 :       task_result_(0)</span>
+<span class="lineNum">      55 </span>            :   {
+<span class="lineNum">      56 </span>            :   }
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            :   // Prevents deletion through this type.
+<span class="lineNum">      59 </span>            :   ~task_io_service_operation()
+<span class="lineNum">      60 </span><span class="lineCov">       1730 :   {</span>
+<span class="lineNum">      61 </span>            :   }
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : private:
+<span class="lineNum">      64 </span>            :   friend class op_queue_access;
+<span class="lineNum">      65 </span>            :   task_io_service_operation* next_;
+<span class="lineNum">      66 </span>            :   func_type func_;
+<span class="lineNum">      67 </span>            : protected:
+<span class="lineNum">      68 </span>            :   friend class task_io_service;
+<span class="lineNum">      69 </span>            :   unsigned int task_result_; // Passed into bytes transferred.
+<span class="lineNum">      70 </span>            : };
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : } // namespace detail
+<span class="lineNum">      73 </span>            : } // namespace asio
+<span class="lineNum">      74 </span>            : } // namespace boost
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : #endif // BOOST_ASIO_DETAIL_TASK_IO_SERVICE_OPERATION_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

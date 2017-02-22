@@ -1,0 +1,751 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/impl/unit_test_log.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/impl</a> - unit_test_log.ipp<span style="font-size: 80%;"> (source / <a href="unit_test_log.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">99</td>
+            <td class="headerCovTableEntry">244</td>
+            <td class="headerCovTableEntryLo">40.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntry">41</td>
+            <td class="headerCovTableEntryLo">51.2 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : implemets Unit Test Log
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_UNIT_TEST_LOG_IPP_012205GER
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_UNIT_TEST_LOG_IPP_012205GER
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/unit_test_log.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/unit_test_log_formatter.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/test/execution_monitor.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/framework.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/test/unit_test_parameters.hpp&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/utils/basic_cstring/compare.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/test/utils/foreach.hpp&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #include &lt;boost/test/output/compiler_log_formatter.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/test/output/xml_log_formatter.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/test/output/junit_log_formatter.hpp&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : // Boost
+<span class="lineNum">      33 </span>            : #include &lt;boost/shared_ptr.hpp&gt;
+<span class="lineNum">      34 </span>            : #include &lt;boost/io/ios_state.hpp&gt;
+<span class="lineNum">      35 </span>            : typedef ::boost::io::ios_base_all_saver io_saver_type;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : namespace boost {
+<span class="lineNum">      42 </span>            : namespace unit_test {
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : // ************************************************************************** //
+<span class="lineNum">      45 </span>            : // **************             entry_value_collector            ************** //
+<span class="lineNum">      46 </span>            : // ************************************************************************** //
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : namespace ut_detail {
+<a name="49"><span class="lineNum">      49 </span>            : </a>
+<span class="lineNum">      50 </span>            : entry_value_collector const&amp;
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 : entry_value_collector::operator&lt;&lt;( lazy_ostream const&amp; v ) const</span>
+<span class="lineNum">      52 </span>            : {
+<span class="lineNum">      53 </span><span class="lineCov">         25 :     unit_test_log &lt;&lt; v;</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :     return *this;</span>
+<span class="lineNum">      56 </span>            : }
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : //____________________________________________________________________________//
+<a name="59"><span class="lineNum">      59 </span>            : </a>
+<span class="lineNum">      60 </span>            : entry_value_collector const&amp;
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 : entry_value_collector::operator&lt;&lt;( const_string v ) const</span>
+<span class="lineNum">      62 </span>            : {
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :     unit_test_log &lt;&lt; v;</span>
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :     return *this;</span>
+<span class="lineNum">      66 </span>            : }
+<span class="lineNum">      67 </span>            : 
+<a name="68"><span class="lineNum">      68 </span>            : //____________________________________________________________________________//</a>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 : entry_value_collector::~entry_value_collector()</span>
+<span class="lineNum">      71 </span>            : {
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :     if( m_last )</span>
+<span class="lineNum">      73 </span><span class="lineCov">         25 :         unit_test_log &lt;&lt; log::end();</span>
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : } // namespace ut_detail
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : // ************************************************************************** //
+<span class="lineNum">      81 </span>            : // **************                 unit_test_log                ************** //
+<span class="lineNum">      82 </span>            : // ************************************************************************** //
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : namespace {
+<a name="85"><span class="lineNum">      85 </span>            : </a>
+<span class="lineNum">      86 </span>            : // log data
+<span class="lineNum">      87 </span><span class="lineCov">         45 : struct unit_test_log_data_helper_impl {</span>
+<span class="lineNum">      88 </span>            :   typedef boost::shared_ptr&lt;unit_test_log_formatter&gt; formatter_ptr;
+<span class="lineNum">      89 </span>            :   typedef boost::shared_ptr&lt;io_saver_type&gt;           saver_ptr;
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            :   bool                m_enabled;
+<span class="lineNum">      92 </span>            :   output_format       m_format;
+<span class="lineNum">      93 </span>            :   std::ostream*       m_stream;
+<span class="lineNum">      94 </span>            :   saver_ptr           m_stream_state_saver;
+<span class="lineNum">      95 </span>            :   formatter_ptr       m_log_formatter;
+<a name="96"><span class="lineNum">      96 </span>            :   bool                m_entry_in_progress;</a>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineCov">          3 :   unit_test_log_data_helper_impl(unit_test_log_formatter* p_log_formatter, output_format format, bool enabled = false)</span>
+<span class="lineNum">      99 </span>            :     : m_enabled( enabled )
+<span class="lineNum">     100 </span>            :     , m_format( format )
+<span class="lineNum">     101 </span>            :     , m_stream( &amp;std::cout )
+<span class="lineNum">     102 </span><span class="lineCov">          3 :     , m_stream_state_saver( new io_saver_type( std::cout ) )</span>
+<span class="lineNum">     103 </span>            :     , m_log_formatter()
+<span class="lineNum">     104 </span><span class="lineCov">          9 :     , m_entry_in_progress( false )</span>
+<span class="lineNum">     105 </span>            :   {
+<span class="lineNum">     106 </span><span class="lineCov">          3 :     m_log_formatter.reset(p_log_formatter);</span>
+<span class="lineNum">     107 </span><span class="lineCov">          6 :     m_log_formatter-&gt;set_log_level(log_all_errors);</span>
+<span class="lineNum">     108 </span><span class="lineCov">          3 :   }</span>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            :   // helper functions
+<span class="lineNum">     111 </span>            :   std::ostream&amp;       stream()
+<span class="lineNum">     112 </span>            :   {
+<span class="lineNum">     113 </span>            :       return *m_stream;
+<a name="114"><span class="lineNum">     114 </span>            :   }</a>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">    1377907 :   log_level get_log_level() const</span>
+<span class="lineNum">     117 </span>            :   {
+<span class="lineNum">     118 </span><span class="lineCov">    2755814 :       return m_log_formatter-&gt;get_log_level();</span>
+<span class="lineNum">     119 </span>            :   }
+<a name="120"><span class="lineNum">     120 </span>            : };</a>
+<span class="lineNum">     121 </span>            : 
+<a name="122"><span class="lineNum">     122 </span><span class="lineCov">          3 : struct unit_test_log_impl {</span></a>
+<span class="lineNum">     123 </span>            :     // Constructor
+<span class="lineNum">     124 </span><span class="lineCov">          1 :     unit_test_log_impl()</span>
+<span class="lineNum">     125 </span><span class="lineCov">          3 :     {</span>
+<span class="lineNum">     126 </span><span class="lineCov">          3 :       m_log_formatter_data.push_back( unit_test_log_data_helper_impl(new output::compiler_log_formatter, OF_CLF, true) ); // only this one is active by default,</span>
+<span class="lineNum">     127 </span><span class="lineCov">          3 :       m_log_formatter_data.push_back( unit_test_log_data_helper_impl(new output::xml_log_formatter, OF_XML, false) );</span>
+<span class="lineNum">     128 </span><span class="lineCov">          3 :       m_log_formatter_data.push_back( unit_test_log_data_helper_impl(new output::junit_log_formatter, OF_JUNIT, false) );</span>
+<span class="lineNum">     129 </span><span class="lineCov">          1 :     }</span>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            :     typedef std::vector&lt;unit_test_log_data_helper_impl&gt; v_formatter_data_t;
+<span class="lineNum">     132 </span>            :     v_formatter_data_t m_log_formatter_data;
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            :     // entry data
+<span class="lineNum">     135 </span>            :     log_entry_data      m_entry_data;
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :     bool has_entry_in_progress() const {
+<span class="lineNum">     138 </span><span class="lineCov">   11525457 :         BOOST_TEST_FOREACH( unit_test_log_data_helper_impl const&amp;, current_logger_data, m_log_formatter_data ) {</span>
+<span class="lineNum">     139 </span><span class="lineCov">    1819809 :             if( current_logger_data.m_entry_in_progress )</span>
+<span class="lineNum">     140 </span>            :                 return true;
+<span class="lineNum">     141 </span>            :         }
+<span class="lineNum">     142 </span>            :         return false;
+<span class="lineNum">     143 </span>            :     }
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            :     // check point data
+<span class="lineNum">     146 </span>            :     log_checkpoint_data m_checkpoint_data;
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            :     void                set_checkpoint( const_string file, std::size_t line_num, const_string msg )
+<span class="lineNum">     149 </span>            :     {
+<span class="lineNum">     150 </span><span class="lineCov">     607730 :         assign_op( m_checkpoint_data.m_message, msg, 0 );</span>
+<span class="lineNum">     151 </span><span class="lineCov">     607730 :         m_checkpoint_data.m_file_name   = file;</span>
+<span class="lineNum">     152 </span><span class="lineCov">     303865 :         m_checkpoint_data.m_line_num    = line_num;</span>
+<span class="lineNum">     153 </span>            :     }
+<a name="154"><span class="lineNum">     154 </span>            : };</a>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineCov">   44748897 : unit_test_log_impl&amp; s_log_impl() { static unit_test_log_impl the_inst; return the_inst; }</span>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            : } // local namespace
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            : //____________________________________________________________________________//
+<a name="161"><span class="lineNum">     161 </span>            : </a>
+<span class="lineNum">     162 </span>            : void
+<span class="lineNum">     163 </span><span class="lineCov">          1 : unit_test_log_t::test_start( counter_t test_cases_amount )</span>
+<span class="lineNum">     164 </span>            : {
+<span class="lineNum">     165 </span><span class="lineCov">         22 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     166 </span><span class="lineCov">          3 :       if( !current_logger_data.m_enabled || current_logger_data.get_log_level() == log_nothing )</span>
+<span class="lineNum">     167 </span>            :           continue;
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineCov">          2 :       current_logger_data.m_log_formatter-&gt;log_start( current_logger_data.stream(), test_cases_amount );</span>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineCov">          2 :       if( runtime_config::get&lt;bool&gt;( runtime_config::BUILD_INFO ) )</span>
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :           current_logger_data.m_log_formatter-&gt;log_build_info( current_logger_data.stream() );</span>
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span><span class="lineCov">          1 :       current_logger_data.m_entry_in_progress = false;</span>
+<span class="lineNum">     175 </span>            :     }
+<span class="lineNum">     176 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            : //____________________________________________________________________________//
+<a name="179"><span class="lineNum">     179 </span>            : </a>
+<span class="lineNum">     180 </span>            : void
+<span class="lineNum">     181 </span><span class="lineCov">          1 : unit_test_log_t::test_finish()</span>
+<span class="lineNum">     182 </span>            : {
+<span class="lineNum">     183 </span><span class="lineCov">         22 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     184 </span><span class="lineCov">          3 :       if( !current_logger_data.m_enabled || current_logger_data.get_log_level() == log_nothing )</span>
+<span class="lineNum">     185 </span>            :           continue;
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">          2 :       current_logger_data.m_log_formatter-&gt;log_finish( current_logger_data.stream() );</span>
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span><span class="lineCov">          1 :       current_logger_data.stream().flush();</span>
+<span class="lineNum">     190 </span>            :     }
+<span class="lineNum">     191 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : //____________________________________________________________________________//
+<a name="194"><span class="lineNum">     194 </span>            : </a>
+<span class="lineNum">     195 </span>            : void
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 : unit_test_log_t::test_aborted()</span>
+<span class="lineNum">     197 </span>            : {
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :     BOOST_TEST_LOG_ENTRY( log_messages ) &lt;&lt; &quot;Test is aborted&quot;;</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            : //____________________________________________________________________________//
+<a name="202"><span class="lineNum">     202 </span>            : </a>
+<span class="lineNum">     203 </span>            : void
+<span class="lineNum">     204 </span><span class="lineCov">        363 : unit_test_log_t::test_unit_start( test_unit const&amp; tu )</span>
+<span class="lineNum">     205 </span>            : {
+<span class="lineNum">     206 </span><span class="lineCov">        726 :     if( s_log_impl().has_entry_in_progress() )</span>
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :         *this &lt;&lt; log::end();</span>
+<span class="lineNum">     208 </span><span class="lineCov">       7986 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     209 </span><span class="lineCov">       1089 :         if( !current_logger_data.m_enabled || current_logger_data.get_log_level() &gt; log_test_units )</span>
+<span class="lineNum">     210 </span>            :             continue;
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :         current_logger_data.m_log_formatter-&gt;test_unit_start( current_logger_data.stream(), tu );</span>
+<span class="lineNum">     212 </span>            :     }
+<span class="lineNum">     213 </span><span class="lineCov">        363 : }</span>
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            : //____________________________________________________________________________//
+<a name="216"><span class="lineNum">     216 </span>            : </a>
+<span class="lineNum">     217 </span>            : void
+<span class="lineNum">     218 </span><span class="lineCov">        363 : unit_test_log_t::test_unit_finish( test_unit const&amp; tu, unsigned long elapsed )</span>
+<span class="lineNum">     219 </span>            : {
+<span class="lineNum">     220 </span><span class="lineCov">        363 :     s_log_impl().m_checkpoint_data.clear();</span>
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span><span class="lineCov">        726 :     if( s_log_impl().has_entry_in_progress() )</span>
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :         *this &lt;&lt; log::end();</span>
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span><span class="lineCov">       7986 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span><span class="lineCov">       1089 :         if( !current_logger_data.m_enabled || current_logger_data.get_log_level() &gt; log_test_units )</span>
+<span class="lineNum">     228 </span>            :             continue;
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :         current_logger_data.m_log_formatter-&gt;test_unit_finish( current_logger_data.stream(), tu, elapsed );</span>
+<span class="lineNum">     231 </span>            :     }
+<span class="lineNum">     232 </span><span class="lineCov">        363 : }</span>
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            : //____________________________________________________________________________//
+<a name="235"><span class="lineNum">     235 </span>            : </a>
+<span class="lineNum">     236 </span>            : void
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 : unit_test_log_t::test_unit_skipped( test_unit const&amp; tu, const_string reason )</span>
+<span class="lineNum">     238 </span>            : {
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :     if( s_log_impl().has_entry_in_progress() )</span>
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :         *this &lt;&lt; log::end();</span>
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :         if( !current_logger_data.m_enabled || current_logger_data.get_log_level() &gt; log_test_units )</span>
+<span class="lineNum">     244 </span>            :             continue;
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :         current_logger_data.m_log_formatter-&gt;test_unit_skipped( current_logger_data.stream(), tu, reason );</span>
+<span class="lineNum">     247 </span>            :     }
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 : }</span>
+<a name="249"><span class="lineNum">     249 </span>            : </a>
+<span class="lineNum">     250 </span>            : void
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 : unit_test_log_t::test_unit_aborted( test_unit const&amp; tu )</span>
+<span class="lineNum">     252 </span>            : {
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :     if( s_log_impl().has_entry_in_progress() )</span>
+<span class="lineNum">     254 </span><span class="lineNoCov">          0 :         *this &lt;&lt; log::end();</span>
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :         if( !current_logger_data.m_enabled || current_logger_data.get_log_level() &gt; log_test_units )</span>
+<span class="lineNum">     258 </span>            :             continue;
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :         current_logger_data.m_log_formatter-&gt;test_unit_aborted(current_logger_data.stream(), tu );</span>
+<span class="lineNum">     261 </span>            :     }
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            : //____________________________________________________________________________//
+<a name="265"><span class="lineNum">     265 </span>            : </a>
+<span class="lineNum">     266 </span>            : void
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 : unit_test_log_t::exception_caught( execution_exception const&amp; ex )</span>
+<span class="lineNum">     268 </span>            : {
+<span class="lineNum">     269 </span>            :     log_level l =
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :         ex.code() &lt;= execution_exception::cpp_exception_error   ? log_cpp_exception_errors :</span>
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :         (ex.code() &lt;= execution_exception::timeout_error        ? log_system_errors</span>
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :                                                                 : log_fatal_errors );</span>
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :     if( s_log_impl().has_entry_in_progress() )</span>
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 :         *this &lt;&lt; log::end();</span>
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :       if( current_logger_data.m_enabled &amp;&amp; l &gt;= current_logger_data.get_log_level() ) {</span>
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :           current_logger_data.m_log_formatter-&gt;log_exception_start( current_logger_data.stream(), s_log_impl().m_checkpoint_data, ex );</span>
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :           log_entry_context( l );</span>
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :           current_logger_data.m_log_formatter-&gt;log_exception_finish( current_logger_data.stream() );</span>
+<span class="lineNum">     286 </span>            :       }
+<span class="lineNum">     287 </span>            :     }
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :     clear_entry_context();</span>
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            : //____________________________________________________________________________//
+<a name="292"><span class="lineNum">     292 </span>            : </a>
+<span class="lineNum">     293 </span>            : void
+<span class="lineNum">     294 </span><span class="lineCov">     303865 : unit_test_log_t::set_checkpoint( const_string file, std::size_t line_num, const_string msg )</span>
+<span class="lineNum">     295 </span>            : {
+<span class="lineNum">     296 </span><span class="lineCov">     607730 :     s_log_impl().set_checkpoint( file, line_num, msg );</span>
+<span class="lineNum">     297 </span><span class="lineCov">     303865 : }</span>
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span>            : //____________________________________________________________________________//
+<a name="300"><span class="lineNum">     300 </span>            : </a>
+<span class="lineNum">     301 </span>            : char
+<span class="lineNum">     302 </span><span class="lineCov">   21881926 : set_unix_slash( char in )</span>
+<span class="lineNum">     303 </span>            : {
+<span class="lineNum">     304 </span><span class="lineCov">   21881926 :     return in == '\\' ? '/' : in;</span>
+<span class="lineNum">     305 </span>            : }
+<a name="306"><span class="lineNum">     306 </span>            : </a>
+<span class="lineNum">     307 </span>            : unit_test_log_t&amp;
+<span class="lineNum">     308 </span><span class="lineCov">     302937 : unit_test_log_t::operator&lt;&lt;( log::begin const&amp; b )</span>
+<span class="lineNum">     309 </span>            : {
+<span class="lineNum">     310 </span><span class="lineCov">     605874 :     if( s_log_impl().has_entry_in_progress() )</span>
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :         *this &lt;&lt; log::end();</span>
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span><span class="lineCov">    6664614 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     314 </span><span class="lineCov">     908811 :         if( current_logger_data.m_enabled ) {</span>
+<span class="lineNum">     315 </span><span class="lineCov">     605874 :             current_logger_data.m_stream_state_saver-&gt;restore();</span>
+<span class="lineNum">     316 </span>            :         }
+<span class="lineNum">     317 </span>            :     }
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span><span class="lineCov">     605874 :     s_log_impl().m_entry_data.clear();</span>
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span><span class="lineCov">     605874 :     assign_op( s_log_impl().m_entry_data.m_file_name, b.m_file_name, 0 );</span>
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span>            :     // normalize file name
+<span class="lineNum">     324 </span><span class="lineCov">     605874 :     std::transform( s_log_impl().m_entry_data.m_file_name.begin(), s_log_impl().m_entry_data.m_file_name.end(),</span>
+<span class="lineNum">     325 </span><span class="lineCov">     302937 :                     s_log_impl().m_entry_data.m_file_name.begin(),</span>
+<span class="lineNum">     326 </span><span class="lineCov">    2120559 :                     &amp;set_unix_slash );</span>
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span><span class="lineCov">     302937 :     s_log_impl().m_entry_data.m_line_num = b.m_line_num;</span>
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span><span class="lineCov">     302937 :     return *this;</span>
+<span class="lineNum">     331 </span>            : }
+<span class="lineNum">     332 </span>            : 
+<span class="lineNum">     333 </span>            : //____________________________________________________________________________//
+<a name="334"><span class="lineNum">     334 </span>            : </a>
+<span class="lineNum">     335 </span>            : unit_test_log_t&amp;
+<span class="lineNum">     336 </span><span class="lineCov">     302937 : unit_test_log_t::operator&lt;&lt;( log::end const&amp; )</span>
+<span class="lineNum">     337 </span>            : {
+<span class="lineNum">     338 </span><span class="lineCov">     605874 :     if( s_log_impl().has_entry_in_progress() ) {</span>
+<span class="lineNum">     339 </span><span class="lineNoCov">          0 :         log_entry_context( s_log_impl().m_entry_data.m_level );</span>
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span><span class="lineNoCov">          0 :         BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 :             if( current_logger_data.m_enabled &amp;&amp; current_logger_data.m_entry_in_progress ) {</span>
+<span class="lineNum">     343 </span><span class="lineNoCov">          0 :                 current_logger_data.m_log_formatter-&gt;log_entry_finish( current_logger_data.stream() );</span>
+<span class="lineNum">     344 </span>            :             }
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :             current_logger_data.m_entry_in_progress = false;</span>
+<span class="lineNum">     346 </span>            :         }
+<span class="lineNum">     347 </span>            :     }
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span><span class="lineCov">     302937 :     clear_entry_context();</span>
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span><span class="lineCov">     302937 :     return *this;</span>
+<span class="lineNum">     352 </span>            : }
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span>            : //____________________________________________________________________________//
+<a name="355"><span class="lineNum">     355 </span>            : </a>
+<span class="lineNum">     356 </span>            : unit_test_log_t&amp;
+<span class="lineNum">     357 </span><span class="lineNoCov">          0 : unit_test_log_t::operator&lt;&lt;( log_level l )</span>
+<span class="lineNum">     358 </span>            : {
+<span class="lineNum">     359 </span><span class="lineCov">     302937 :     s_log_impl().m_entry_data.m_level = l;</span>
+<span class="lineNum">     360 </span>            : 
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :     return *this;</span>
+<span class="lineNum">     362 </span>            : }
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span>            : //____________________________________________________________________________//
+<a name="365"><span class="lineNum">     365 </span>            : </a>
+<span class="lineNum">     366 </span>            : ut_detail::entry_value_collector
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 : unit_test_log_t::operator()( log_level l )</span>
+<span class="lineNum">     368 </span>            : {
+<span class="lineNum">     369 </span><span class="lineCov">         25 :     *this &lt;&lt; l;</span>
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span><span class="lineCov">         25 :     return ut_detail::entry_value_collector();</span>
+<span class="lineNum">     372 </span>            : }
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span>            : //____________________________________________________________________________//
+<a name="375"><span class="lineNum">     375 </span>            : </a>
+<span class="lineNum">     376 </span>            : bool
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 : unit_test_log_t::log_entry_start(output_format log_format)</span>
+<span class="lineNum">     378 </span>            : {
+<span class="lineNum">     379 </span><span class="lineNoCov">          0 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 :         if( current_logger_data.m_format != log_format )</span>
+<span class="lineNum">     382 </span>            :             continue;
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span><span class="lineNoCov">          0 :         if( current_logger_data.m_entry_in_progress )</span>
+<span class="lineNum">     385 </span>            :             return true;
+<span class="lineNum">     386 </span>            : 
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 :         if( !current_logger_data.m_enabled )</span>
+<span class="lineNum">     388 </span>            :             return false;
+<span class="lineNum">     389 </span>            : 
+<span class="lineNum">     390 </span><span class="lineNoCov">          0 :         switch( s_log_impl().m_entry_data.m_level ) {</span>
+<span class="lineNum">     391 </span>            :         case log_successful_tests:
+<span class="lineNum">     392 </span><span class="lineNoCov">          0 :             current_logger_data.m_log_formatter-&gt;log_entry_start( current_logger_data.stream(), s_log_impl().m_entry_data,</span>
+<span class="lineNum">     393 </span><span class="lineNoCov">          0 :                                                   unit_test_log_formatter::BOOST_UTL_ET_INFO );</span>
+<span class="lineNum">     394 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     395 </span>            :         case log_messages:
+<span class="lineNum">     396 </span><span class="lineNoCov">          0 :             current_logger_data.m_log_formatter-&gt;log_entry_start( current_logger_data.stream(), s_log_impl().m_entry_data,</span>
+<span class="lineNum">     397 </span><span class="lineNoCov">          0 :                                                   unit_test_log_formatter::BOOST_UTL_ET_MESSAGE );</span>
+<span class="lineNum">     398 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     399 </span>            :         case log_warnings:
+<span class="lineNum">     400 </span><span class="lineNoCov">          0 :             current_logger_data.m_log_formatter-&gt;log_entry_start( current_logger_data.stream(), s_log_impl().m_entry_data,</span>
+<span class="lineNum">     401 </span><span class="lineNoCov">          0 :                                                   unit_test_log_formatter::BOOST_UTL_ET_WARNING );</span>
+<span class="lineNum">     402 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     403 </span>            :         case log_all_errors:
+<span class="lineNum">     404 </span>            :         case log_cpp_exception_errors:
+<span class="lineNum">     405 </span>            :         case log_system_errors:
+<span class="lineNum">     406 </span><span class="lineNoCov">          0 :             current_logger_data.m_log_formatter-&gt;log_entry_start( current_logger_data.stream(), s_log_impl().m_entry_data,</span>
+<span class="lineNum">     407 </span><span class="lineNoCov">          0 :                                                   unit_test_log_formatter::BOOST_UTL_ET_ERROR );</span>
+<span class="lineNum">     408 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     409 </span>            :         case log_fatal_errors:
+<span class="lineNum">     410 </span><span class="lineNoCov">          0 :             current_logger_data.m_log_formatter-&gt;log_entry_start( current_logger_data.stream(), s_log_impl().m_entry_data,</span>
+<span class="lineNum">     411 </span><span class="lineNoCov">          0 :                                                   unit_test_log_formatter::BOOST_UTL_ET_FATAL_ERROR );</span>
+<span class="lineNum">     412 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     413 </span>            :         case log_nothing:
+<span class="lineNum">     414 </span>            :         case log_test_units:
+<span class="lineNum">     415 </span>            :         case invalid_log_level:
+<span class="lineNum">     416 </span>            :             return false;
+<span class="lineNum">     417 </span>            :         }
+<span class="lineNum">     418 </span>            : 
+<span class="lineNum">     419 </span><span class="lineNoCov">          0 :         current_logger_data.m_entry_in_progress = true;</span>
+<span class="lineNum">     420 </span><span class="lineNoCov">          0 :         return true;</span>
+<span class="lineNum">     421 </span>            :     }
+<span class="lineNum">     422 </span>            : 
+<span class="lineNum">     423 </span>            :     return false;
+<span class="lineNum">     424 </span>            : }
+<span class="lineNum">     425 </span>            : 
+<span class="lineNum">     426 </span>            : //____________________________________________________________________________//
+<a name="427"><span class="lineNum">     427 </span>            : </a>
+<span class="lineNum">     428 </span>            : unit_test_log_t&amp;
+<span class="lineNum">     429 </span><span class="lineCov">    1095371 : unit_test_log_t::operator&lt;&lt;( const_string value )</span>
+<span class="lineNum">     430 </span>            : {
+<span class="lineNum">     431 </span><span class="lineCov">   24098162 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     432 </span><span class="lineCov">    3286113 :         if( current_logger_data.m_enabled &amp;&amp; s_log_impl().m_entry_data.m_level &gt;= current_logger_data.get_log_level() &amp;&amp; !value.empty() &amp;&amp; log_entry_start(current_logger_data.m_format) )</span>
+<span class="lineNum">     433 </span><span class="lineNoCov">          0 :             current_logger_data.m_log_formatter-&gt;log_entry_value( current_logger_data.stream(), value );</span>
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span>            :     }
+<span class="lineNum">     436 </span><span class="lineCov">    1095371 :     return *this;</span>
+<span class="lineNum">     437 </span>            : }
+<span class="lineNum">     438 </span>            : 
+<span class="lineNum">     439 </span>            : //____________________________________________________________________________//
+<a name="440"><span class="lineNum">     440 </span>            : </a>
+<span class="lineNum">     441 </span>            : unit_test_log_t&amp;
+<span class="lineNum">     442 </span><span class="lineCov">     281808 : unit_test_log_t::operator&lt;&lt;( lazy_ostream const&amp; value )</span>
+<span class="lineNum">     443 </span>            : {
+<span class="lineNum">     444 </span><span class="lineCov">    6199776 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     445 </span><span class="lineCov">     845424 :         if( current_logger_data.m_enabled &amp;&amp; s_log_impl().m_entry_data.m_level &gt;= current_logger_data.get_log_level() &amp;&amp; !value.empty() &amp;&amp; log_entry_start(current_logger_data.m_format) )</span>
+<span class="lineNum">     446 </span><span class="lineNoCov">          0 :             current_logger_data.m_log_formatter-&gt;log_entry_value( current_logger_data.stream(), value );</span>
+<span class="lineNum">     447 </span>            :     }
+<span class="lineNum">     448 </span><span class="lineCov">     281808 :     return *this;</span>
+<span class="lineNum">     449 </span>            : }
+<span class="lineNum">     450 </span>            : 
+<span class="lineNum">     451 </span>            : //____________________________________________________________________________//
+<a name="452"><span class="lineNum">     452 </span>            : </a>
+<span class="lineNum">     453 </span>            : void
+<span class="lineNum">     454 </span><span class="lineNoCov">          0 : unit_test_log_t::log_entry_context( log_level l )</span>
+<span class="lineNum">     455 </span>            : {
+<span class="lineNum">     456 </span><span class="lineNoCov">          0 :     framework::context_generator const&amp; context = framework::get_context();</span>
+<span class="lineNum">     457 </span><span class="lineNoCov">          0 :     if( context.is_empty() )</span>
+<span class="lineNum">     458 </span>            :         return;
+<span class="lineNum">     459 </span>            : 
+<span class="lineNum">     460 </span><span class="lineNoCov">          0 :     const_string frame;</span>
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     463 </span><span class="lineNoCov">          0 :         if( current_logger_data.m_enabled ) {</span>
+<span class="lineNum">     464 </span><span class="lineNoCov">          0 :             current_logger_data.m_log_formatter-&gt;entry_context_start( current_logger_data.stream(), l );</span>
+<span class="lineNum">     465 </span>            :         }
+<span class="lineNum">     466 </span>            :     }
+<span class="lineNum">     467 </span>            : 
+<span class="lineNum">     468 </span><span class="lineNoCov">          0 :     while( !(frame=context.next()).is_empty() )</span>
+<span class="lineNum">     469 </span>            :     {
+<span class="lineNum">     470 </span><span class="lineNoCov">          0 :         BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     471 </span><span class="lineNoCov">          0 :             if( current_logger_data.m_enabled ) {</span>
+<span class="lineNum">     472 </span><span class="lineNoCov">          0 :                 current_logger_data.m_log_formatter-&gt;log_entry_context( current_logger_data.stream(), frame );</span>
+<span class="lineNum">     473 </span>            :             }
+<span class="lineNum">     474 </span>            :         }
+<span class="lineNum">     475 </span>            :     }
+<span class="lineNum">     476 </span>            : 
+<span class="lineNum">     477 </span><span class="lineNoCov">          0 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     478 </span><span class="lineNoCov">          0 :         if( current_logger_data.m_enabled ) {</span>
+<span class="lineNum">     479 </span><span class="lineNoCov">          0 :             current_logger_data.m_log_formatter-&gt;entry_context_finish( current_logger_data.stream() );</span>
+<span class="lineNum">     480 </span>            :         }
+<span class="lineNum">     481 </span>            :     }
+<span class="lineNum">     482 </span>            : }
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span>            : //____________________________________________________________________________//
+<a name="485"><span class="lineNum">     485 </span>            : </a>
+<span class="lineNum">     486 </span>            : void
+<span class="lineNum">     487 </span><span class="lineNoCov">          0 : unit_test_log_t::clear_entry_context()</span>
+<span class="lineNum">     488 </span>            : {
+<span class="lineNum">     489 </span><span class="lineCov">     302937 :     framework::clear_context();</span>
+<span class="lineNum">     490 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     491 </span>            : 
+<span class="lineNum">     492 </span>            : //____________________________________________________________________________//
+<a name="493"><span class="lineNum">     493 </span>            : </a>
+<span class="lineNum">     494 </span>            : void
+<span class="lineNum">     495 </span><span class="lineCov">          1 : unit_test_log_t::set_stream( std::ostream&amp; str )</span>
+<span class="lineNum">     496 </span>            : {
+<span class="lineNum">     497 </span><span class="lineCov">          2 :     if( s_log_impl().has_entry_in_progress() )</span>
+<span class="lineNum">     498 </span>            :         return;
+<span class="lineNum">     499 </span>            : 
+<span class="lineNum">     500 </span><span class="lineCov">         22 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     501 </span><span class="lineCov">          3 :         current_logger_data.m_stream = &amp;str;</span>
+<span class="lineNum">     502 </span><span class="lineCov">          6 :         current_logger_data.m_stream_state_saver.reset( new io_saver_type( str ) );</span>
+<span class="lineNum">     503 </span>            :     }
+<span class="lineNum">     504 </span>            : }
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span>            : //____________________________________________________________________________//
+<a name="507"><span class="lineNum">     507 </span>            : </a>
+<span class="lineNum">     508 </span>            : void
+<span class="lineNum">     509 </span><span class="lineNoCov">          0 : unit_test_log_t::set_stream( output_format log_format, std::ostream&amp; str )</span>
+<span class="lineNum">     510 </span>            : {
+<span class="lineNum">     511 </span><span class="lineNoCov">          0 :     if( s_log_impl().has_entry_in_progress() )</span>
+<span class="lineNum">     512 </span>            :         return;
+<span class="lineNum">     513 </span>            : 
+<span class="lineNum">     514 </span><span class="lineNoCov">          0 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     515 </span><span class="lineNoCov">          0 :         if( current_logger_data.m_format == log_format) {</span>
+<span class="lineNum">     516 </span><span class="lineNoCov">          0 :             current_logger_data.m_stream = &amp;str;</span>
+<span class="lineNum">     517 </span><span class="lineNoCov">          0 :             current_logger_data.m_stream_state_saver.reset( new io_saver_type( str ) );</span>
+<span class="lineNum">     518 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     519 </span>            :         }
+<span class="lineNum">     520 </span>            :     }
+<span class="lineNum">     521 </span>            : }
+<span class="lineNum">     522 </span>            : 
+<span class="lineNum">     523 </span>            : //____________________________________________________________________________//
+<a name="524"><span class="lineNum">     524 </span>            : </a>
+<span class="lineNum">     525 </span>            : void
+<span class="lineNum">     526 </span><span class="lineCov">          1 : unit_test_log_t::set_threshold_level( log_level lev )</span>
+<span class="lineNum">     527 </span>            : {
+<span class="lineNum">     528 </span><span class="lineCov">          2 :     if( s_log_impl().has_entry_in_progress() || lev == invalid_log_level )</span>
+<span class="lineNum">     529 </span>            :         return;
+<span class="lineNum">     530 </span>            : 
+<span class="lineNum">     531 </span><span class="lineCov">         22 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     532 </span><span class="lineCov">          6 :         current_logger_data.m_log_formatter-&gt;set_log_level( lev );</span>
+<span class="lineNum">     533 </span>            :     }
+<span class="lineNum">     534 </span>            : }
+<span class="lineNum">     535 </span>            : 
+<span class="lineNum">     536 </span>            : //____________________________________________________________________________//
+<a name="537"><span class="lineNum">     537 </span>            : </a>
+<span class="lineNum">     538 </span>            : void
+<span class="lineNum">     539 </span><span class="lineNoCov">          0 : unit_test_log_t::set_threshold_level( output_format log_format, log_level lev )</span>
+<span class="lineNum">     540 </span>            : {
+<span class="lineNum">     541 </span><span class="lineNoCov">          0 :     if( s_log_impl().has_entry_in_progress() || lev == invalid_log_level )</span>
+<span class="lineNum">     542 </span>            :         return;
+<span class="lineNum">     543 </span>            : 
+<span class="lineNum">     544 </span><span class="lineNoCov">          0 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 :         if( current_logger_data.m_format == log_format) {</span>
+<span class="lineNum">     546 </span><span class="lineNoCov">          0 :             current_logger_data.m_log_formatter-&gt;set_log_level( lev );</span>
+<span class="lineNum">     547 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     548 </span>            :         }
+<span class="lineNum">     549 </span>            :     }
+<span class="lineNum">     550 </span>            : }
+<span class="lineNum">     551 </span>            : 
+<span class="lineNum">     552 </span>            : //____________________________________________________________________________//
+<a name="553"><span class="lineNum">     553 </span>            : </a>
+<span class="lineNum">     554 </span>            : void
+<span class="lineNum">     555 </span><span class="lineCov">          1 : unit_test_log_t::set_format( output_format log_format )</span>
+<span class="lineNum">     556 </span>            : {
+<span class="lineNum">     557 </span><span class="lineCov">          2 :     if( s_log_impl().has_entry_in_progress() )</span>
+<span class="lineNum">     558 </span>            :         return;
+<span class="lineNum">     559 </span>            : 
+<span class="lineNum">     560 </span><span class="lineCov">         22 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     561 </span><span class="lineCov">          3 :         current_logger_data.m_enabled = current_logger_data.m_format == log_format;</span>
+<span class="lineNum">     562 </span>            :     }
+<span class="lineNum">     563 </span>            : }
+<span class="lineNum">     564 </span>            : 
+<span class="lineNum">     565 </span>            : //____________________________________________________________________________//
+<a name="566"><span class="lineNum">     566 </span>            : </a>
+<span class="lineNum">     567 </span>            : void
+<span class="lineNum">     568 </span><span class="lineNoCov">          0 : unit_test_log_t::add_format( output_format log_format )</span>
+<span class="lineNum">     569 </span>            : {
+<span class="lineNum">     570 </span><span class="lineNoCov">          0 :     if( s_log_impl().has_entry_in_progress() )</span>
+<span class="lineNum">     571 </span>            :         return;
+<span class="lineNum">     572 </span>            : 
+<span class="lineNum">     573 </span><span class="lineNoCov">          0 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     574 </span><span class="lineNoCov">          0 :         if( current_logger_data.m_format == log_format) {</span>
+<span class="lineNum">     575 </span><span class="lineNoCov">          0 :             current_logger_data.m_enabled = true;</span>
+<span class="lineNum">     576 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     577 </span>            :         }
+<span class="lineNum">     578 </span>            :     }
+<span class="lineNum">     579 </span>            : }
+<span class="lineNum">     580 </span>            : 
+<span class="lineNum">     581 </span>            : //____________________________________________________________________________//
+<a name="582"><span class="lineNum">     582 </span>            : </a>
+<span class="lineNum">     583 </span>            : unit_test_log_formatter*
+<span class="lineNum">     584 </span><span class="lineNoCov">          0 : unit_test_log_t::get_formatter( output_format log_format ) {</span>
+<span class="lineNum">     585 </span><span class="lineNoCov">          0 :     BOOST_TEST_FOREACH( unit_test_log_data_helper_impl&amp;, current_logger_data, s_log_impl().m_log_formatter_data ) {</span>
+<span class="lineNum">     586 </span><span class="lineNoCov">          0 :         if( current_logger_data.m_format == log_format) {</span>
+<span class="lineNum">     587 </span><span class="lineNoCov">          0 :             return current_logger_data.m_log_formatter.get();</span>
+<span class="lineNum">     588 </span>            :         }
+<span class="lineNum">     589 </span>            :     }
+<span class="lineNum">     590 </span>            :     return 0;
+<span class="lineNum">     591 </span>            : }
+<span class="lineNum">     592 </span>            : 
+<a name="593"><span class="lineNum">     593 </span>            : </a>
+<span class="lineNum">     594 </span>            : void
+<span class="lineNum">     595 </span><span class="lineNoCov">          0 : unit_test_log_t::add_formatter( unit_test_log_formatter* the_formatter )</span>
+<span class="lineNum">     596 </span>            : {
+<span class="lineNum">     597 </span>            :     // remove only user defined logger
+<span class="lineNum">     598 </span><span class="lineNoCov">          0 :     for(unit_test_log_impl::v_formatter_data_t::iterator it(s_log_impl().m_log_formatter_data.begin()),</span>
+<span class="lineNum">     599 </span><span class="lineNoCov">          0 :             ite(s_log_impl().m_log_formatter_data.end());</span>
+<span class="lineNum">     600 </span>            :         it != ite;
+<span class="lineNum">     601 </span>            :         ++it)
+<span class="lineNum">     602 </span>            :     {
+<span class="lineNum">     603 </span><span class="lineNoCov">          0 :         if( it-&gt;m_format == OF_CUSTOM_LOGGER) {</span>
+<span class="lineNum">     604 </span><span class="lineNoCov">          0 :             s_log_impl().m_log_formatter_data.erase(it);</span>
+<span class="lineNum">     605 </span><span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     606 </span>            :         }
+<span class="lineNum">     607 </span>            :     }
+<span class="lineNum">     608 </span>            : 
+<span class="lineNum">     609 </span><span class="lineNoCov">          0 :     if( the_formatter ) {</span>
+<span class="lineNum">     610 </span><span class="lineNoCov">          0 :         s_log_impl().m_log_formatter_data.push_back( unit_test_log_data_helper_impl(the_formatter, OF_CUSTOM_LOGGER, true) );</span>
+<span class="lineNum">     611 </span>            :     }
+<span class="lineNum">     612 </span><span class="lineNoCov">          0 : }</span>
+<a name="613"><span class="lineNum">     613 </span>            : </a>
+<span class="lineNum">     614 </span>            : void
+<span class="lineNum">     615 </span><span class="lineNoCov">          0 : unit_test_log_t::set_formatter( unit_test_log_formatter* the_formatter )</span>
+<span class="lineNum">     616 </span>            : {
+<span class="lineNum">     617 </span>            :     // remove only user defined logger
+<span class="lineNum">     618 </span><span class="lineNoCov">          0 :     log_level current_level = invalid_log_level;</span>
+<span class="lineNum">     619 </span><span class="lineNoCov">          0 :     std::ostream *current_stream = 0;</span>
+<span class="lineNum">     620 </span><span class="lineNoCov">          0 :     output_format previous_format = OF_INVALID;</span>
+<span class="lineNum">     621 </span><span class="lineNoCov">          0 :     for(unit_test_log_impl::v_formatter_data_t::iterator it(s_log_impl().m_log_formatter_data.begin()),</span>
+<span class="lineNum">     622 </span><span class="lineNoCov">          0 :             ite(s_log_impl().m_log_formatter_data.end());</span>
+<span class="lineNum">     623 </span>            :         it != ite;
+<span class="lineNum">     624 </span>            :         ++it)
+<span class="lineNum">     625 </span>            :     {
+<span class="lineNum">     626 </span><span class="lineNoCov">          0 :         if( it-&gt;m_enabled ) {</span>
+<span class="lineNum">     627 </span><span class="lineNoCov">          0 :             if( current_level == invalid_log_level || it-&gt;m_format &lt; previous_format || it-&gt;m_format == OF_CUSTOM_LOGGER) {</span>
+<span class="lineNum">     628 </span><span class="lineNoCov">          0 :                 current_level = it-&gt;get_log_level();</span>
+<span class="lineNum">     629 </span><span class="lineNoCov">          0 :                 current_stream = &amp;(it-&gt;stream());</span>
+<span class="lineNum">     630 </span><span class="lineNoCov">          0 :                 previous_format = it-&gt;m_format;</span>
+<span class="lineNum">     631 </span>            :             }
+<span class="lineNum">     632 </span>            :         }
+<span class="lineNum">     633 </span>            :     }
+<span class="lineNum">     634 </span>            : 
+<span class="lineNum">     635 </span><span class="lineNoCov">          0 :     if( the_formatter ) {</span>
+<span class="lineNum">     636 </span><span class="lineNoCov">          0 :         add_formatter(the_formatter);</span>
+<span class="lineNum">     637 </span><span class="lineNoCov">          0 :         set_format(OF_CUSTOM_LOGGER);</span>
+<span class="lineNum">     638 </span><span class="lineNoCov">          0 :         set_threshold_level(OF_CUSTOM_LOGGER, current_level);</span>
+<span class="lineNum">     639 </span><span class="lineNoCov">          0 :         set_stream(OF_CUSTOM_LOGGER, *current_stream);</span>
+<span class="lineNum">     640 </span>            :     }
+<span class="lineNum">     641 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     642 </span>            : 
+<span class="lineNum">     643 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     644 </span>            : 
+<span class="lineNum">     645 </span>            : // ************************************************************************** //
+<span class="lineNum">     646 </span>            : // **************            unit_test_log_formatter           ************** //
+<span class="lineNum">     647 </span>            : // ************************************************************************** //
+<a name="648"><span class="lineNum">     648 </span>            : </a>
+<span class="lineNum">     649 </span>            : void
+<span class="lineNum">     650 </span><span class="lineNoCov">          0 : unit_test_log_formatter::log_entry_value( std::ostream&amp; ostr, lazy_ostream const&amp; value )</span>
+<span class="lineNum">     651 </span>            : {
+<span class="lineNum">     652 </span><span class="lineNoCov">          0 :     log_entry_value( ostr, (wrap_stringstream().ref() &lt;&lt; value).str() );</span>
+<span class="lineNum">     653 </span><span class="lineNoCov">          0 : }</span>
+<a name="654"><span class="lineNum">     654 </span>            : </a>
+<span class="lineNum">     655 </span>            : void
+<span class="lineNum">     656 </span><span class="lineCov">          4 : unit_test_log_formatter::set_log_level(log_level new_log_level)</span>
+<span class="lineNum">     657 </span>            : {
+<span class="lineNum">     658 </span><span class="lineCov">          4 :     m_log_level = new_log_level;</span>
+<span class="lineNum">     659 </span><span class="lineCov">          4 : }</span>
+<a name="660"><span class="lineNum">     660 </span>            : </a>
+<span class="lineNum">     661 </span>            : log_level
+<span class="lineNum">     662 </span><span class="lineCov">    1377907 : unit_test_log_formatter::get_log_level() const</span>
+<span class="lineNum">     663 </span>            : {
+<span class="lineNum">     664 </span><span class="lineCov">    1377907 :     return m_log_level;</span>
+<span class="lineNum">     665 </span>            : }
+<span class="lineNum">     666 </span>            : 
+<span class="lineNum">     667 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     668 </span>            : 
+<span class="lineNum">     669 </span>            : } // namespace unit_test
+<span class="lineNum">     670 </span>            : } // namespace boost
+<span class="lineNum">     671 </span>            : 
+<span class="lineNum">     672 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     673 </span>            : 
+<span class="lineNum">     674 </span>            : #endif // BOOST_TEST_UNIT_TEST_LOG_IPP_012205GER
+<span class="lineNum">     675 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,341 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libp2p/Common.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libp2p</a> - Common.cpp<span style="font-size: 80%;"> (source / <a href="Common.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">70</td>
+            <td class="headerCovTableEntry">129</td>
+            <td class="headerCovTableEntryLo">54.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntry">32</td>
+            <td class="headerCovTableEntryLo">71.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Common.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;Network.h&quot;
+<span class="lineNum">      24 </span>            : using namespace std;
+<span class="lineNum">      25 </span>            : using namespace dev;
+<span class="lineNum">      26 </span>            : using namespace dev::p2p;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : const unsigned dev::p2p::c_protocolVersion = 4;
+<span class="lineNum">      29 </span>            : const unsigned dev::p2p::c_defaultIPPort = 30303;
+<span class="lineNum">      30 </span>            : static_assert(dev::p2p::c_protocolVersion == 4, &quot;Replace v3 compatbility with v4 compatibility before updating network version.&quot;);
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span><span class="lineCov">          2 : const dev::p2p::NodeIPEndpoint dev::p2p::UnspecifiedNodeIPEndpoint = NodeIPEndpoint(bi::address(), 0, 0);</span>
+<span class="lineNum">      33 </span><span class="lineCov">          2 : const dev::p2p::Node dev::p2p::UnspecifiedNode = dev::p2p::Node(NodeID(), UnspecifiedNodeIPEndpoint);</span>
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : bool dev::p2p::NodeIPEndpoint::test_allowLocal = false;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : //⊳⊲◀▶■▣▢□▷◁▧▨▩▲◆◉◈◇◎●◍◌○◼☑☒☎☢☣☰☀♽♥♠✩✭❓✔✓✖✕✘✓✔✅⚒⚡⦸⬌∅⁕«««»»»⚙━┅┉▬
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : #if defined(_WIN32)
+<span class="lineNum">      40 </span>            : const char* NetWarn::name() { return EthYellow &quot;N&quot; EthRed &quot; X&quot;; }
+<span class="lineNum">      41 </span>            : const char* NetImpolite::name() { return EthYellow &quot;N&quot; EthRed &quot; !&quot;; }
+<span class="lineNum">      42 </span>            : const char* NetNote::name() { return EthYellow &quot;N&quot; EthBlue &quot; i&quot;; }
+<span class="lineNum">      43 </span>            : const char* NetConnect::name() { return EthYellow &quot;N&quot; EthYellow &quot; C&quot;; }
+<span class="lineNum">      44 </span>            : const char* NetMessageSummary::name() { return EthYellow &quot;N&quot; EthWhite &quot; .&quot;; }
+<span class="lineNum">      45 </span>            : const char* NetMessageDetail::name() { return EthYellow &quot;N&quot; EthGray &quot; o&quot;; }
+<span class="lineNum">      46 </span>            : const char* NetTriviaSummary::name() { return EthYellow &quot;N&quot; EthGray &quot; O&quot;; }
+<span class="lineNum">      47 </span>            : const char* NetTriviaDetail::name() { return EthYellow &quot;N&quot; EthCoal &quot; 0&quot;; }
+<span class="lineNum">      48 </span>            : const char* NetAllDetail::name() { return EthYellow &quot;N&quot; EthCoal &quot; A&quot;; }
+<span class="lineNum">      49 </span>            : const char* NetRight::name() { return EthYellow &quot;N&quot; EthGreen &quot;-&gt;&quot;; }
+<span class="lineNum">      50 </span>            : const char* NetLeft::name() { return EthYellow &quot;N&quot; EthNavy &quot;&lt;-&quot;; }
+<span class="lineNum">      51 </span>            : const char* NetP2PWarn::name() { return EthYellow &quot;N&quot; EthRed &quot; X&quot;; }
+<span class="lineNum">      52 </span>            : const char* NetP2PNote::name() { return EthYellow &quot;N&quot; EthBlue &quot; i&quot;; }
+<a name="53"><span class="lineNum">      53 </span>            : const char* NetP2PConnect::name() { return EthYellow &quot;N&quot; EthYellow &quot; C&quot;; }</a>
+<a name="54"><span class="lineNum">      54 </span>            : #else</a>
+<a name="55"><span class="lineNum">      55 </span><span class="lineCov">         19 : const char* NetWarn::name() { return EthYellow &quot;⧎&quot; EthRed &quot; ✘&quot;; }</span></a>
+<a name="56"><span class="lineNum">      56 </span><span class="lineNoCov">          0 : const char* NetImpolite::name() { return EthYellow &quot;⧎&quot; EthRed &quot; !&quot;; }</span></a>
+<a name="57"><span class="lineNum">      57 </span><span class="lineCov">         21 : const char* NetNote::name() { return EthYellow &quot;⧎&quot; EthBlue &quot; ℹ&quot;; }</span></a>
+<a name="58"><span class="lineNum">      58 </span><span class="lineCov">        198 : const char* NetConnect::name() { return EthYellow &quot;⧎&quot; EthYellow &quot; ▢&quot;; }</span></a>
+<a name="59"><span class="lineNum">      59 </span><span class="lineCov">         87 : const char* NetMessageSummary::name() { return EthYellow &quot;⧎&quot; EthWhite &quot; ◌&quot;; }</span></a>
+<a name="60"><span class="lineNum">      60 </span><span class="lineNoCov">          0 : const char* NetMessageDetail::name() { return EthYellow &quot;⧎&quot; EthGray &quot; ○&quot;; }</span></a>
+<a name="61"><span class="lineNum">      61 </span><span class="lineCov">         86 : const char* NetTriviaSummary::name() { return EthYellow &quot;⧎&quot; EthGray &quot; ◎&quot;; }</span></a>
+<a name="62"><span class="lineNum">      62 </span><span class="lineNoCov">          0 : const char* NetTriviaDetail::name() { return EthYellow &quot;⧎&quot; EthCoal &quot; ◍&quot;; }</span></a>
+<a name="63"><span class="lineNum">      63 </span><span class="lineCov">          4 : const char* NetAllDetail::name() { return EthYellow &quot;⧎&quot; EthCoal &quot; ●&quot;; }</span></a>
+<a name="64"><span class="lineNum">      64 </span><span class="lineCov">        124 : const char* NetRight::name() { return EthYellow &quot;⧎&quot; EthGreen &quot;▬▶&quot;; }</span></a>
+<a name="65"><span class="lineNum">      65 </span><span class="lineCov">        138 : const char* NetLeft::name() { return EthYellow &quot;⧎&quot; EthNavy &quot;◀▬&quot;; }</span></a>
+<a name="66"><span class="lineNum">      66 </span><span class="lineNoCov">          0 : const char* NetP2PWarn::name() { return EthYellow &quot;⧎&quot; EthRed &quot; ✘&quot;; }</span></a>
+<span class="lineNum">      67 </span><span class="lineCov">        115 : const char* NetP2PNote::name() { return EthYellow &quot;⧎&quot; EthBlue &quot; ℹ&quot;; }</span>
+<span class="lineNum">      68 </span><span class="lineCov">        135 : const char* NetP2PConnect::name() { return EthYellow &quot;⧎&quot; EthYellow &quot; ▢&quot;; }</span>
+<a name="69"><span class="lineNum">      69 </span>            : #endif</a>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineCov">          5 : bool p2p::isPublicAddress(std::string const&amp; _addressToCheck)</span>
+<span class="lineNum">      72 </span>            : {
+<span class="lineNum">      73 </span><span class="lineCov">         10 :         return _addressToCheck.empty() ? false : isPublicAddress(bi::address::from_string(_addressToCheck));</span>
+<a name="74"><span class="lineNum">      74 </span>            : }</a>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">         43 : bool p2p::isPublicAddress(bi::address const&amp; _addressToCheck)</span>
+<span class="lineNum">      77 </span>            : {
+<span class="lineNum">      78 </span><span class="lineCov">         43 :         return !(isPrivateAddress(_addressToCheck) || isLocalHostAddress(_addressToCheck));</span>
+<span class="lineNum">      79 </span>            : }
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : // Helper function to determine if an address falls within one of the reserved ranges
+<a name="82"><span class="lineNum">      82 </span>            : // For V4:</a>
+<span class="lineNum">      83 </span>            : // Class A &quot;10.*&quot;, Class B &quot;172.[16-&gt;31].*&quot;, Class C &quot;192.168.*&quot;
+<span class="lineNum">      84 </span><span class="lineCov">         48 : bool p2p::isPrivateAddress(bi::address const&amp; _addressToCheck)</span>
+<span class="lineNum">      85 </span>            : {
+<span class="lineNum">      86 </span><span class="lineCov">         48 :         if (_addressToCheck.is_v4())</span>
+<span class="lineNum">      87 </span>            :         {
+<span class="lineNum">      88 </span><span class="lineCov">         48 :                 bi::address_v4 v4Address = _addressToCheck.to_v4();</span>
+<span class="lineNum">      89 </span><span class="lineCov">         48 :                 bi::address_v4::bytes_type bytesToCheck = v4Address.to_bytes();</span>
+<span class="lineNum">      90 </span><span class="lineCov">         94 :                 if (bytesToCheck[0] == 10 || bytesToCheck[0] == 127)</span>
+<span class="lineNum">      91 </span><span class="lineCov">         44 :                         return true;</span>
+<span class="lineNum">      92 </span><span class="lineCov">         16 :                 if (bytesToCheck[0] == 172 &amp;&amp; (bytesToCheck[1] &gt;= 16 &amp;&amp; bytesToCheck[1] &lt;= 31))</span>
+<span class="lineNum">      93 </span>            :                         return true;
+<span class="lineNum">      94 </span><span class="lineCov">         10 :                 if (bytesToCheck[0] == 192 &amp;&amp; bytesToCheck[1] == 168)</span>
+<span class="lineNum">      95 </span>            :                         return true;
+<span class="lineNum">      96 </span>            :         }
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :         else if (_addressToCheck.is_v6())</span>
+<span class="lineNum">      98 </span>            :         {
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :                 bi::address_v6 v6Address = _addressToCheck.to_v6();</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :                 bi::address_v6::bytes_type bytesToCheck = v6Address.to_bytes();</span>
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :                 if (bytesToCheck[0] == 0xfd &amp;&amp; bytesToCheck[1] == 0)</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :                         return true;</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :                 if (!bytesToCheck[0] &amp;&amp; !bytesToCheck[1] &amp;&amp; !bytesToCheck[2] &amp;&amp; !bytesToCheck[3] &amp;&amp; !bytesToCheck[4] &amp;&amp; !bytesToCheck[5] &amp;&amp; !bytesToCheck[6] &amp;&amp; !bytesToCheck[7]</span>
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :                                  &amp;&amp; !bytesToCheck[8] &amp;&amp; !bytesToCheck[9] &amp;&amp; !bytesToCheck[10] &amp;&amp; !bytesToCheck[11] &amp;&amp; !bytesToCheck[12] &amp;&amp; !bytesToCheck[13] &amp;&amp; !bytesToCheck[14] &amp;&amp; (bytesToCheck[15] == 0 || bytesToCheck[15] == 1))</span>
+<span class="lineNum">     105 </span>            :                         return true;
+<span class="lineNum">     106 </span>            :         }
+<span class="lineNum">     107 </span>            :         return false;
+<a name="108"><span class="lineNum">     108 </span>            : }</a>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineCov">          5 : bool p2p::isPrivateAddress(std::string const&amp; _addressToCheck)</span>
+<span class="lineNum">     111 </span>            : {
+<span class="lineNum">     112 </span><span class="lineCov">         10 :         return _addressToCheck.empty() ? false : isPrivateAddress(bi::address::from_string(_addressToCheck));</span>
+<span class="lineNum">     113 </span>            : }
+<a name="114"><span class="lineNum">     114 </span>            : </a>
+<span class="lineNum">     115 </span>            : // Helper function to determine if an address is localhost
+<span class="lineNum">     116 </span><span class="lineCov">        205 : bool p2p::isLocalHostAddress(bi::address const&amp; _addressToCheck)</span>
+<span class="lineNum">     117 </span>            : {
+<span class="lineNum">     118 </span>            :         // @todo: ivp6 link-local adresses (macos), ex: fe80::1%lo0
+<span class="lineNum">     119 </span>            :         static const set&lt;bi::address&gt; c_rejectAddresses = {
+<span class="lineNum">     120 </span><span class="lineCov">          2 :                 {bi::address_v4::from_string(&quot;127.0.0.1&quot;)},</span>
+<span class="lineNum">     121 </span><span class="lineCov">          2 :                 {bi::address_v4::from_string(&quot;0.0.0.0&quot;)},</span>
+<span class="lineNum">     122 </span><span class="lineCov">          2 :                 {bi::address_v6::from_string(&quot;::1&quot;)},</span>
+<span class="lineNum">     123 </span><span class="lineCov">          2 :                 {bi::address_v6::from_string(&quot;::&quot;)}</span>
+<span class="lineNum">     124 </span><span class="lineCov">        211 :         };</span>
+<span class="lineNum">     125 </span>            :         
+<span class="lineNum">     126 </span><span class="lineCov">       1025 :         return find(c_rejectAddresses.begin(), c_rejectAddresses.end(), _addressToCheck) != c_rejectAddresses.end();</span>
+<a name="127"><span class="lineNum">     127 </span>            : }</a>
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span><span class="lineCov">          5 : bool p2p::isLocalHostAddress(std::string const&amp; _addressToCheck)</span>
+<span class="lineNum">     130 </span>            : {
+<span class="lineNum">     131 </span><span class="lineCov">         10 :         return _addressToCheck.empty() ? false : isLocalHostAddress(bi::address::from_string(_addressToCheck));</span>
+<a name="132"><span class="lineNum">     132 </span>            : }</a>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">         76 : std::string p2p::reasonOf(DisconnectReason _r)</span>
+<span class="lineNum">     135 </span>            : {
+<span class="lineNum">     136 </span><span class="lineCov">         76 :         switch (_r)</span>
+<span class="lineNum">     137 </span>            :         {
+<span class="lineNum">     138 </span><span class="lineCov">         24 :         case DisconnectRequested: return &quot;Disconnect was requested.&quot;;</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :         case TCPError: return &quot;Low-level TCP communication error.&quot;;</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :         case BadProtocol: return &quot;Data format error.&quot;;</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :         case UselessPeer: return &quot;Peer had no use for this node.&quot;;</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :         case TooManyPeers: return &quot;Peer had too many connections.&quot;;</span>
+<span class="lineNum">     143 </span><span class="lineCov">         56 :         case DuplicatePeer: return &quot;Peer was already connected.&quot;;</span>
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :         case IncompatibleProtocol: return &quot;Peer protocol versions are incompatible.&quot;;</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :         case NullIdentity: return &quot;Null identity given.&quot;;</span>
+<span class="lineNum">     146 </span><span class="lineCov">         72 :         case ClientQuit: return &quot;Peer is exiting.&quot;;</span>
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :         case UnexpectedIdentity: return &quot;Unexpected identity given.&quot;;</span>
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :         case LocalIdentity: return &quot;Connected to ourselves.&quot;;</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :         case UserReason: return &quot;Subprotocol reason.&quot;;</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :         case NoDisconnect: return &quot;(No disconnect has happened.)&quot;;</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :         default: return &quot;Unknown reason.&quot;;</span>
+<span class="lineNum">     152 </span>            :         }
+<a name="153"><span class="lineNum">     153 </span>            : }</a>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">        130 : void NodeIPEndpoint::streamRLP(RLPStream&amp; _s, RLPAppend _append) const</span>
+<span class="lineNum">     156 </span>            : {
+<span class="lineNum">     157 </span><span class="lineCov">        130 :         if (_append == StreamList)</span>
+<span class="lineNum">     158 </span><span class="lineCov">         78 :                 _s.appendList(3);</span>
+<span class="lineNum">     159 </span><span class="lineCov">        130 :         if (address.is_v4())</span>
+<span class="lineNum">     160 </span><span class="lineCov">        520 :                 _s &lt;&lt; bytesConstRef(&amp;address.to_v4().to_bytes()[0], 4);</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :         else if (address.is_v6())</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :                 _s &lt;&lt; bytesConstRef(&amp;address.to_v6().to_bytes()[0], 16);</span>
+<span class="lineNum">     163 </span>            :         else
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :                 _s &lt;&lt; bytes();</span>
+<span class="lineNum">     165 </span><span class="lineCov">        390 :         _s &lt;&lt; udpPort &lt;&lt; tcpPort;</span>
+<a name="166"><span class="lineNum">     166 </span><span class="lineCov">        130 : }</span></a>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span><span class="lineCov">        103 : void NodeIPEndpoint::interpretRLP(RLP const&amp; _r)</span>
+<span class="lineNum">     169 </span>            : {
+<span class="lineNum">     170 </span><span class="lineCov">        103 :         if (_r[0].size() == 4)</span>
+<span class="lineNum">     171 </span><span class="lineCov">        485 :                 address = bi::address_v4(*(bi::address_v4::bytes_type*)_r[0].toBytes().data());</span>
+<span class="lineNum">     172 </span><span class="lineCov">          6 :         else if (_r[0].size() == 16)</span>
+<span class="lineNum">     173 </span><span class="lineCov">         30 :                 address = bi::address_v6(*(bi::address_v6::bytes_type*)_r[0].toBytes().data());</span>
+<span class="lineNum">     174 </span>            :         else
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :                 address = bi::address();</span>
+<span class="lineNum">     176 </span><span class="lineCov">        103 :         udpPort = _r[1].toInt&lt;uint16_t&gt;();</span>
+<span class="lineNum">     177 </span><span class="lineCov">        103 :         tcpPort = _r[2].toInt&lt;uint16_t&gt;();</span>
+<a name="178"><span class="lineNum">     178 </span><span class="lineCov">        103 : }</span></a>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">        402 : void DeadlineOps::reap()</span>
+<span class="lineNum">     181 </span>            : {
+<span class="lineNum">     182 </span><span class="lineCov">        804 :         if (m_stopped)</span>
+<span class="lineNum">     183 </span>            :                 return;
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span><span class="lineCov">        804 :         Guard l(x_timers);</span>
+<span class="lineNum">     186 </span><span class="lineCov">        804 :         std::vector&lt;DeadlineOp&gt;::iterator t = m_timers.begin();</span>
+<span class="lineNum">     187 </span><span class="lineCov">       3486 :         while (t != m_timers.end())</span>
+<span class="lineNum">     188 </span><span class="lineCov">        760 :                 if (t-&gt;expired())</span>
+<span class="lineNum">     189 </span>            :                 {
+<span class="lineNum">     190 </span><span class="lineCov">        380 :                         t-&gt;wait();</span>
+<span class="lineNum">     191 </span><span class="lineCov">        760 :                         t = m_timers.erase(t);</span>
+<span class="lineNum">     192 </span>            :                 }
+<span class="lineNum">     193 </span>            :                 else
+<a name="194"><span class="lineNum">     194 </span><span class="lineCov">        380 :                         t++;</span></a>
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span><span class="lineCov">       1196 :         m_timers.emplace_back(m_io, m_reapIntervalMs, [this](boost::system::error_code const&amp; ec)</span>
+<span class="lineNum">     197 </span><span class="lineCov">        760 :         {</span>
+<span class="lineNum">     198 </span><span class="lineCov">       1152 :                 if (!ec &amp;&amp; !m_stopped)</span>
+<span class="lineNum">     199 </span><span class="lineCov">        380 :                         reap();</span>
+<span class="lineNum">     200 </span><span class="lineCov">        794 :         });</span>
+<a name="201"><span class="lineNum">     201 </span>            : }</a>
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 : Node::Node(NodeSpec const&amp; _s, PeerType _p):</span>
+<span class="lineNum">     204 </span>            :         id(_s.id()),
+<span class="lineNum">     205 </span>            :         endpoint(_s.nodeIPEndpoint()),
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :         peerType(_p)</span>
+<a name="207"><span class="lineNum">     207 </span><span class="lineNoCov">          0 : {}</span></a>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 : NodeSpec::NodeSpec(string const&amp; _user)</span>
+<span class="lineNum">     210 </span>            : {
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :         m_address = _user;</span>
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :         if (m_address.substr(0, 8) == &quot;enode://&quot; &amp;&amp; m_address.find('@') == 136)</span>
+<span class="lineNum">     213 </span>            :         {
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :                 m_id = p2p::NodeID(m_address.substr(8, 128));</span>
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :                 m_address = m_address.substr(137);</span>
+<span class="lineNum">     216 </span>            :         }
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :         size_t colon = m_address.find_first_of(&quot;:&quot;);</span>
+<span class="lineNum">     218 </span><span class="lineNoCov">          0 :         if (colon != string::npos)</span>
+<span class="lineNum">     219 </span>            :         {
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 :                 string ports = m_address.substr(colon + 1);</span>
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :                 m_address = m_address.substr(0, colon);</span>
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :                 size_t p2 = ports.find_first_of(&quot;.&quot;);</span>
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :                 if (p2 != string::npos)</span>
+<span class="lineNum">     224 </span>            :                 {
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :                         m_udpPort = stoi(ports.substr(p2 + 1));</span>
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :                         m_tcpPort = stoi(ports.substr(0, p2));</span>
+<span class="lineNum">     227 </span>            :                 }
+<span class="lineNum">     228 </span>            :                 else
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :                         m_tcpPort = m_udpPort = stoi(ports);</span>
+<span class="lineNum">     230 </span>            :         }
+<a name="231"><span class="lineNum">     231 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 : NodeIPEndpoint NodeSpec::nodeIPEndpoint() const</span>
+<span class="lineNum">     234 </span>            : {
+<span class="lineNum">     235 </span><span class="lineNoCov">          0 :         return NodeIPEndpoint(p2p::Network::resolveHost(m_address).address(), m_udpPort, m_tcpPort);</span>
+<a name="236"><span class="lineNum">     236 </span>            : }</a>
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 : std::string NodeSpec::enode() const</span>
+<span class="lineNum">     239 </span>            : {
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :         string ret = m_address;</span>
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :         if (m_tcpPort)</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :                 if (m_udpPort &amp;&amp; m_tcpPort != m_udpPort)</span>
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :                         ret += &quot;:&quot; + toString(m_tcpPort) + &quot;.&quot; + toString(m_udpPort);</span>
+<span class="lineNum">     245 </span>            :                 else
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :                         ret += &quot;:&quot; + toString(m_tcpPort);</span>
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 :         else if (m_udpPort)</span>
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :                 ret += &quot;:&quot; + toString(m_udpPort);</span>
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :         if (m_id)</span>
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :                 return &quot;enode://&quot; + m_id.hex() + &quot;@&quot; + ret;</span>
+<span class="lineNum">     252 </span>            :         return ret;
+<span class="lineNum">     253 </span>            : }
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            : namespace dev
+<a name="256"><span class="lineNum">     256 </span>            : {</a>
+<span class="lineNum">     257 </span>            :         
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 : std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, dev::p2p::NodeIPEndpoint const&amp; _ep)</span>
+<span class="lineNum">     259 </span>            : {
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :         _out &lt;&lt; _ep.address &lt;&lt; _ep.udpPort &lt;&lt; _ep.tcpPort;</span>
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :         return _out;</span>
+<a name="262"><span class="lineNum">     262 </span>            : }</a>
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     265 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

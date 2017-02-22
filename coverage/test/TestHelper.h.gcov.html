@@ -1,0 +1,405 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/TestHelper.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">test</a> - TestHelper.h<span style="font-size: 80%;"> (source / <a href="TestHelper.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryMed">76.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryLo">54.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file TestHelper.h
+<span class="lineNum">      18 </span>            :  * @author Marko Simovic &lt;markobarko@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;thread&gt;
+<span class="lineNum">      25 </span>            : #include &lt;future&gt;
+<span class="lineNum">      26 </span>            : #include &lt;functional&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/test/unit_test.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/filesystem.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/progress.hpp&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : #include &quot;JsonSpiritHeaders.h&quot;
+<span class="lineNum">      32 </span>            : #include &lt;libethashseal/Ethash.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;libethereum/State.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;libethashseal/GenesisInfo.h&gt;
+<span class="lineNum">      35 </span>            : #include &lt;libevm/ExtVMFace.h&gt;
+<span class="lineNum">      36 </span>            : #include &lt;test/libtestutils/Common.h&gt;
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : namespace dev
+<span class="lineNum">      39 </span>            : {
+<span class="lineNum">      40 </span>            : namespace eth
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : class Client;
+<span class="lineNum">      44 </span>            : class State;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : void mine(Client&amp; c, int numBlocks);
+<span class="lineNum">      47 </span>            : void connectClients(Client&amp; c1, Client&amp; c2);
+<span class="lineNum">      48 </span>            : void mine(Block&amp; _s, BlockChain const&amp; _bc, SealEngineFace* _sealer);
+<span class="lineNum">      49 </span>            : void mine(BlockHeader&amp; _bi, SealEngineFace* _sealer, bool _verify = true);
+<span class="lineNum">      50 </span>            : }
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : namespace test
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : const int c_testHomesteadBlock = 1150000;
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : /// Make sure that no Exception is thrown during testing. If one is thrown show its info and fail the test.
+<span class="lineNum">      58 </span>            : /// Our version of BOOST_REQUIRE_NO_THROW()
+<span class="lineNum">      59 </span>            : /// @param _statenent    The statement for which to make sure no exceptions are thrown
+<span class="lineNum">      60 </span>            : /// @param _message       A message to act as a prefix to the expression's error information
+<span class="lineNum">      61 </span>            : #define ETH_TEST_REQUIRE_NO_THROW(_statement, _message)                         \
+<span class="lineNum">      62 </span>            :         do                                                                                                                                      \
+<span class="lineNum">      63 </span>            :         {                                                                                                                                       \
+<span class="lineNum">      64 </span>            :                 try                                                                                                                     \
+<span class="lineNum">      65 </span>            :                 {                                                                                                                               \
+<span class="lineNum">      66 </span>            :                         BOOST_TEST_PASSPOINT();                                                                         \
+<span class="lineNum">      67 </span>            :                         _statement;                                                                                             \
+<span class="lineNum">      68 </span>            :                 }                                                                                                                               \
+<span class="lineNum">      69 </span>            :                 catch (boost::exception const&amp; _e)                                                          \
+<span class="lineNum">      70 </span>            :                 {                                                                                                                               \
+<span class="lineNum">      71 </span>            :                         auto msg = std::string(_message &quot; due to an exception thrown by &quot; \
+<span class="lineNum">      72 </span>            :                                 BOOST_STRINGIZE(_statement) &quot;\n&quot;) + boost::diagnostic_information(_e); \
+<span class="lineNum">      73 </span>            :                         BOOST_CHECK_IMPL(false, msg, REQUIRE, CHECK_MSG);                       \
+<span class="lineNum">      74 </span>            :                 }                                                                                                                               \
+<span class="lineNum">      75 </span>            :                 catch (...)                                                                                                             \
+<span class="lineNum">      76 </span>            :                 {                                                                                                                               \
+<span class="lineNum">      77 </span>            :                         BOOST_CHECK_IMPL(false, &quot;Unknown exception thrown by &quot;                \
+<span class="lineNum">      78 </span>            :                                 BOOST_STRINGIZE(_statement), REQUIRE, CHECK_MSG);               \
+<span class="lineNum">      79 </span>            :                 }                                                                                                                               \
+<span class="lineNum">      80 </span>            :         }                                                                                                                                       \
+<span class="lineNum">      81 </span>            :         while (0)
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : /// Check if an Exception is thrown during testing. If one is thrown show its info and continue the test
+<span class="lineNum">      84 </span>            : /// Our version of BOOST_CHECK_NO_THROW()
+<span class="lineNum">      85 </span>            : /// @param _statement    The statement for which to make sure no exceptions are thrown
+<span class="lineNum">      86 </span>            : /// @param _message       A message to act as a prefix to the expression's error information
+<span class="lineNum">      87 </span>            : #define ETH_TEST_CHECK_NO_THROW(_statement, _message)                                   \
+<span class="lineNum">      88 </span>            :         do                                                                                                                                      \
+<span class="lineNum">      89 </span>            :         {                                                                                                                                       \
+<span class="lineNum">      90 </span>            :                 try                                                                                                                     \
+<span class="lineNum">      91 </span>            :                 {                                                                                                                               \
+<span class="lineNum">      92 </span>            :                         BOOST_TEST_PASSPOINT();                                                                         \
+<span class="lineNum">      93 </span>            :                         _statement;                                                                                             \
+<span class="lineNum">      94 </span>            :                 }                                                                                                                               \
+<span class="lineNum">      95 </span>            :                 catch (boost::exception const&amp; _e)                                                          \
+<span class="lineNum">      96 </span>            :                 {                                                                                                                               \
+<span class="lineNum">      97 </span>            :                         auto msg = std::string(_message &quot; due to an exception thrown by &quot; \
+<span class="lineNum">      98 </span>            :                                 BOOST_STRINGIZE(_statement) &quot;\n&quot;) + boost::diagnostic_information(_e); \
+<span class="lineNum">      99 </span>            :                         BOOST_CHECK_IMPL(false, msg, CHECK, CHECK_MSG);                         \
+<span class="lineNum">     100 </span>            :                 }                                                                                                                               \
+<span class="lineNum">     101 </span>            :                 catch (...)                                                                                                             \
+<span class="lineNum">     102 </span>            :                 {                                                                                                                               \
+<span class="lineNum">     103 </span>            :                         BOOST_CHECK_IMPL(false, &quot;Unknown exception thrown by &quot;                \
+<span class="lineNum">     104 </span>            :                                 BOOST_STRINGIZE(_statement), CHECK, CHECK_MSG );                \
+<span class="lineNum">     105 </span>            :                 }                                                                                                                               \
+<span class="lineNum">     106 </span>            :         }                                                                                                                                       \
+<span class="lineNum">     107 </span>            :         while (0)
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : enum class testType
+<span class="lineNum">     110 </span>            : {
+<span class="lineNum">     111 </span>            :         StateTests,
+<span class="lineNum">     112 </span>            :         BlockChainTests,
+<span class="lineNum">     113 </span>            :         GeneralStateTest,
+<span class="lineNum">     114 </span>            :         Other
+<a name="115"><span class="lineNum">     115 </span>            : };</a>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span><span class="lineCov">       4677 : class ImportTest</span>
+<span class="lineNum">     118 </span>            : {
+<span class="lineNum">     119 </span>            : public:
+<span class="lineNum">     120 </span>            :         ImportTest(json_spirit::mObject&amp; _o, bool isFiller, testType testTemplate = testType::StateTests);
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :         // imports
+<span class="lineNum">     123 </span>            :         void importEnv(json_spirit::mObject&amp; _o);
+<span class="lineNum">     124 </span>            :         static void importState(json_spirit::mObject const&amp; _o, eth::State&amp; _state);
+<span class="lineNum">     125 </span>            :         static void importState(json_spirit::mObject const&amp; _o, eth::State&amp; _state, eth::AccountMaskMap&amp; o_mask);
+<span class="lineNum">     126 </span>            :         static void importTransaction (json_spirit::mObject const&amp; _o, eth::Transaction&amp; o_tr);
+<span class="lineNum">     127 </span>            :         void importTransaction(json_spirit::mObject const&amp; _o);
+<span class="lineNum">     128 </span>            :         static json_spirit::mObject&amp; makeAllFieldsHex(json_spirit::mObject&amp; _o);
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :         bytes executeTest();
+<span class="lineNum">     131 </span>            :         int exportTest(bytes const&amp; _output);
+<span class="lineNum">     132 </span>            :         static int compareStates(eth::State const&amp; _stateExpect, eth::State const&amp; _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
+<span class="lineNum">     133 </span>            :         void checkGeneralTestSection(json_spirit::mObject const&amp; _expects, std::vector&lt;size_t&gt;&amp; _errorTransactions, std::string const&amp; _network=&quot;&quot;) const;
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            :         eth::State m_statePre;
+<span class="lineNum">     136 </span>            :         eth::State m_statePost;
+<span class="lineNum">     137 </span>            :         eth::LogEntries m_logs;
+<span class="lineNum">     138 </span>            :         eth::LogEntries m_logsExpected;
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : private:
+<span class="lineNum">     141 </span>            :         typedef std::pair&lt;eth::ExecutionResult, eth::TransactionReceipt&gt; execOutput;
+<span class="lineNum">     142 </span>            :         std::pair&lt;eth::State, execOutput&gt; executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const&amp; _env, eth::State const&amp; _preState, eth::Transaction const&amp; _tr);
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            :         eth::EnvInfo m_envInfo;
+<span class="lineNum">     145 </span>            :         eth::Transaction m_transaction;
+<a name="146"><span class="lineNum">     146 </span>            : </a>
+<span class="lineNum">     147 </span>            :         //General State Tests
+<a name="148"><span class="lineNum">     148 </span><span class="lineCov">    1851912 :         struct transactionToExecute</span></a>
+<span class="lineNum">     149 </span>            :         {
+<span class="lineNum">     150 </span><span class="lineCov">       1810 :                 transactionToExecute(int d, int g, int v, eth::Transaction const&amp; t):</span>
+<span class="lineNum">     151 </span><span class="lineCov">       5430 :                         dataInd(d), gasInd(g), valInd(v), transaction(t), postState(0), netId(eth::Network::MainNetwork) {}</span>
+<span class="lineNum">     152 </span>            :                 int dataInd;
+<span class="lineNum">     153 </span>            :                 int gasInd;
+<span class="lineNum">     154 </span>            :                 int valInd;
+<span class="lineNum">     155 </span>            :                 eth::Transaction transaction;
+<span class="lineNum">     156 </span>            :                 eth::State postState;
+<span class="lineNum">     157 </span>            :                 eth::Network netId;
+<span class="lineNum">     158 </span>            :         };
+<span class="lineNum">     159 </span>            :         std::vector&lt;transactionToExecute&gt; m_transactions;
+<span class="lineNum">     160 </span>            :         using StateAndMap = std::pair&lt;eth::State, eth::AccountMaskMap&gt;;
+<span class="lineNum">     161 </span>            :         using TrExpectSection = std::pair&lt;transactionToExecute, StateAndMap&gt;;
+<span class="lineNum">     162 </span>            :         void checkGeneralTestSectionSearch(json_spirit::mObject const&amp; _expects, std::vector&lt;size_t&gt;&amp; _errorTransactions, std::string const&amp; _network = &quot;&quot;, TrExpectSection* _search = NULL) const;
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :         json_spirit::mObject&amp; m_testObject;
+<span class="lineNum">     165 </span>            :         testType m_testType;
+<a name="166"><span class="lineNum">     166 </span>            : };</a>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span><span class="lineCov">         46 : class ZeroGasPricer: public eth::GasPricer</span>
+<a name="169"><span class="lineNum">     169 </span>            : {</a>
+<a name="170"><span class="lineNum">     170 </span>            : protected:</a>
+<span class="lineNum">     171 </span><span class="lineCov">      77266 :         u256 ask(eth::Block const&amp;) const override { return 0; }</span>
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :         u256 bid(eth::TransactionPriority = eth::TransactionPriority::Medium) const override { return 0; }</span>
+<span class="lineNum">     173 </span>            : };
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            : // helping functions
+<span class="lineNum">     176 </span>            : std::string netIdToString(eth::Network _netId);
+<span class="lineNum">     177 </span>            : eth::Network stringToNetId(std::string const&amp; _netname);
+<span class="lineNum">     178 </span>            : u256 toInt(json_spirit::mValue const&amp; _v);
+<span class="lineNum">     179 </span>            : byte toByte(json_spirit::mValue const&amp; _v);
+<span class="lineNum">     180 </span>            : void replaceLLLinState(json_spirit::mObject&amp; _o);
+<span class="lineNum">     181 </span>            : std::string compileLLL(std::string const&amp; _code);
+<span class="lineNum">     182 </span>            : bytes importCode(json_spirit::mObject&amp; _o);
+<span class="lineNum">     183 </span>            : bytes importData(json_spirit::mObject const&amp; _o);
+<span class="lineNum">     184 </span>            : bytes importByteArray(std::string const&amp; _str);
+<span class="lineNum">     185 </span>            : void copyFile(std::string const&amp; _source, std::string const&amp; _destination);
+<span class="lineNum">     186 </span>            : eth::LogEntries importLog(json_spirit::mArray&amp; _o);
+<span class="lineNum">     187 </span>            : json_spirit::mArray exportLog(eth::LogEntries _logs);
+<span class="lineNum">     188 </span>            : void checkOutput(bytesConstRef _output, json_spirit::mObject&amp; _o);
+<span class="lineNum">     189 </span>            : void checkStorage(std::map&lt;u256, u256&gt; _expectedStore, std::map&lt;u256, u256&gt; _resultStore, Address _expectedAddr);
+<span class="lineNum">     190 </span>            : void checkLog(eth::LogEntries _resultLogs, eth::LogEntries _expectedLogs);
+<span class="lineNum">     191 </span>            : void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates);
+<span class="lineNum">     192 </span>            : dev::eth::BlockHeader constructHeader(
+<span class="lineNum">     193 </span>            :         h256 const&amp; _parentHash,
+<span class="lineNum">     194 </span>            :         h256 const&amp; _sha3Uncles,
+<span class="lineNum">     195 </span>            :         Address const&amp; _author,
+<span class="lineNum">     196 </span>            :         h256 const&amp; _stateRoot,
+<span class="lineNum">     197 </span>            :         h256 const&amp; _transactionsRoot,
+<span class="lineNum">     198 </span>            :         h256 const&amp; _receiptsRoot,
+<span class="lineNum">     199 </span>            :         dev::eth::LogBloom const&amp; _logBloom,
+<span class="lineNum">     200 </span>            :         u256 const&amp; _difficulty,
+<span class="lineNum">     201 </span>            :         u256 const&amp; _number,
+<span class="lineNum">     202 </span>            :         u256 const&amp; _gasLimit,
+<span class="lineNum">     203 </span>            :         u256 const&amp; _gasUsed,
+<span class="lineNum">     204 </span>            :         u256 const&amp; _timestamp,
+<span class="lineNum">     205 </span>            :         bytes const&amp; _extraData);
+<span class="lineNum">     206 </span>            : void updateEthashSeal(dev::eth::BlockHeader&amp; _header, h256 const&amp; _mixHash, dev::eth::Nonce const&amp; _nonce);
+<span class="lineNum">     207 </span>            : void executeTests(const std::string&amp; _name, const std::string&amp; _testPathAppendix, const std::string&amp; _fillerPathAppendix, std::function&lt;void(json_spirit::mValue&amp;, bool)&gt; doTests, bool _addFillerSuffix = true);
+<span class="lineNum">     208 </span>            : void userDefinedTest(std::function&lt;void(json_spirit::mValue&amp;, bool)&gt; doTests);
+<span class="lineNum">     209 </span>            : RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const&amp; _tObj);
+<span class="lineNum">     210 </span>            : eth::LastHashes lastHashes(u256 _currentBlockNumber);
+<span class="lineNum">     211 </span>            : json_spirit::mObject fillJsonWithState(eth::State const&amp; _state);
+<span class="lineNum">     212 </span>            : json_spirit::mObject fillJsonWithState(eth::State const&amp; _state, eth::AccountMaskMap const&amp; _map);
+<span class="lineNum">     213 </span>            : json_spirit::mObject fillJsonWithTransaction(eth::Transaction const&amp; _txn);
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            : //Fill Test Functions
+<span class="lineNum">     216 </span>            : int createRandomTest(std::vector&lt;char*&gt; const&amp; _parameters);
+<span class="lineNum">     217 </span>            : void doTransactionTests(json_spirit::mValue&amp; _v, bool _fillin);
+<span class="lineNum">     218 </span>            : void doStateTests(json_spirit::mValue&amp; v, bool _fillin);
+<span class="lineNum">     219 </span>            : void doVMTests(json_spirit::mValue&amp; v, bool _fillin);
+<span class="lineNum">     220 </span>            : void doBlockchainTests(json_spirit::mValue&amp; _v, bool _fillin);
+<span class="lineNum">     221 </span>            : void doRlpTests(json_spirit::mValue&amp; v, bool _fillin);
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            : enum class Verbosity
+<span class="lineNum">     224 </span>            : {
+<span class="lineNum">     225 </span>            :         Full,
+<span class="lineNum">     226 </span>            :         NiceReport,
+<span class="lineNum">     227 </span>            :         None
+<a name="228"><span class="lineNum">     228 </span>            : };</a>
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span><span class="lineCov">          7 : class Options</span>
+<span class="lineNum">     231 </span>            : {
+<span class="lineNum">     232 </span>            : public:
+<span class="lineNum">     233 </span>            :         bool vmtrace = false;   ///&lt; Create EVM execution tracer
+<span class="lineNum">     234 </span>            :         bool filltests = false; ///&lt; Create JSON test files from execution results
+<span class="lineNum">     235 </span>            :         bool fillchain = false; ///&lt; Fill tests as a blockchain tests if possible
+<span class="lineNum">     236 </span>            :         bool stats = false;             ///&lt; Execution time and stats for state tests
+<span class="lineNum">     237 </span>            :         std::string statsOutFile; ///&lt; Stats output file. &quot;out&quot; for standard output
+<span class="lineNum">     238 </span>            :         bool exectimelog = false; ///&lt; Print execution time for each test suite
+<span class="lineNum">     239 </span>            :         std::string rCheckTest;   ///&lt; Test Input (for random tests)
+<span class="lineNum">     240 </span>            :         std::string rCurrentTestSuite; ///&lt; Remember test suite before boost overwrite (for random tests)
+<span class="lineNum">     241 </span>            :         bool checkstate = false;///&lt; Throw error when checking test states
+<span class="lineNum">     242 </span>            :         bool fulloutput = false;///&lt; Replace large output to just it's length
+<span class="lineNum">     243 </span>            :         bool createRandomTest = false; ///&lt; Generate random test
+<span class="lineNum">     244 </span>            :         Verbosity logVerbosity = Verbosity::NiceReport;
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            :         /// Test selection
+<span class="lineNum">     247 </span>            :         /// @{
+<span class="lineNum">     248 </span>            :         bool singleTest = false;
+<span class="lineNum">     249 </span>            :         std::string singleTestFile;
+<span class="lineNum">     250 </span>            :         std::string singleTestName;
+<span class="lineNum">     251 </span>            :         std::string singleTestNet;
+<span class="lineNum">     252 </span>            :         int trDataIndex; ///&lt; GeneralState data
+<span class="lineNum">     253 </span>            :         int trGasIndex; ///&lt; GeneralState gas
+<span class="lineNum">     254 </span>            :         int trValueIndex; ///&lt; GeneralState value
+<span class="lineNum">     255 </span>            :         bool performance = false;
+<span class="lineNum">     256 </span>            :         bool nonetwork = false;///&lt; For libp2p
+<span class="lineNum">     257 </span>            :         bool quadratic = false;
+<span class="lineNum">     258 </span>            :         bool memory = false;
+<span class="lineNum">     259 </span>            :         bool inputLimits = false;
+<span class="lineNum">     260 </span>            :         bool bigData = false;
+<span class="lineNum">     261 </span>            :         bool wallet = false;
+<span class="lineNum">     262 </span>            :         /// @}
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            :         /// Get reference to options
+<span class="lineNum">     265 </span>            :         /// The first time used, options are parsed with argc, argv
+<span class="lineNum">     266 </span>            :         static Options const&amp; get(int argc = 0, char** argv = 0);
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            : private:
+<span class="lineNum">     269 </span>            :         Options(int argc = 0, char** argv = 0);
+<span class="lineNum">     270 </span>            :         Options(Options const&amp;) = delete;
+<span class="lineNum">     271 </span>            : };
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span>            : class TestOutputHelper
+<span class="lineNum">     274 </span>            : {
+<span class="lineNum">     275 </span>            : public:
+<span class="lineNum">     276 </span><span class="lineCov">        190 :         TestOutputHelper() { TestOutputHelper::initTest(); }</span>
+<span class="lineNum">     277 </span>            :         static void initTest(int _maxTests = 1);
+<span class="lineNum">     278 </span>            :         static void initTest(json_spirit::mValue&amp; _v);
+<span class="lineNum">     279 </span>            :         static bool passTest(json_spirit::mObject&amp; _o, std::string&amp; _testName);
+<span class="lineNum">     280 </span><span class="lineCov">          1 :         static void setMaxTests(int _count) { m_maxTests = _count; }</span>
+<span class="lineNum">     281 </span>            :         static void setCurrentTestFileName(std::string _name) { m_currentTestFileName = _name; }
+<span class="lineNum">     282 </span>            :         static std::string const&amp; testName() { return m_currentTestName; }
+<span class="lineNum">     283 </span>            :         static std::string const&amp; caseName() { return m_currentTestCaseName; }
+<span class="lineNum">     284 </span>            :         static std::string const&amp; testFileName() { return m_currentTestFileName; }
+<span class="lineNum">     285 </span>            :         static void finishTest();
+<span class="lineNum">     286 </span>            :         static void printTestExecStats();
+<span class="lineNum">     287 </span><span class="lineCov">        190 :         ~TestOutputHelper() { TestOutputHelper::finishTest(); }</span>
+<span class="lineNum">     288 </span>            : private:
+<span class="lineNum">     289 </span>            :         static Timer m_timer;
+<span class="lineNum">     290 </span>            :         static size_t m_currTest;
+<span class="lineNum">     291 </span>            :         static size_t m_maxTests;
+<span class="lineNum">     292 </span>            :         static std::string m_currentTestName;
+<span class="lineNum">     293 </span>            :         static std::string m_currentTestCaseName;
+<span class="lineNum">     294 </span>            :         static std::string m_currentTestFileName;
+<span class="lineNum">     295 </span>            :         typedef std::pair&lt;double, std::string&gt; execTimeName;
+<span class="lineNum">     296 </span>            :         static std::vector&lt;execTimeName&gt; m_execTimeResults;
+<span class="lineNum">     297 </span>            : };
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span>            : /// Allows observing test execution process.
+<span class="lineNum">     300 </span>            : /// This class also provides methods for registering and notifying the listener
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 : class Listener</span>
+<span class="lineNum">     302 </span>            : {
+<span class="lineNum">     303 </span>            : public:
+<a name="304"><span class="lineNum">     304 </span><span class="lineNoCov">          0 :         virtual ~Listener() = default;</span></a>
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span><span class="lineNoCov">          0 :         virtual void suiteStarted(std::string const&amp;) {}</span>
+<span class="lineNum">     307 </span>            :         virtual void testStarted(std::string const&amp; _name) = 0;
+<span class="lineNum">     308 </span>            :         virtual void testFinished(int64_t _gasUsed) = 0;
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            :         static void registerListener(Listener&amp; _listener);
+<span class="lineNum">     311 </span>            :         static void notifySuiteStarted(std::string const&amp; _name);
+<span class="lineNum">     312 </span>            :         static void notifyTestStarted(std::string const&amp; _name);
+<span class="lineNum">     313 </span>            :         static void notifyTestFinished(int64_t _gasUsed);
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span>            :         /// Test started/finished notification RAII helper
+<span class="lineNum">     316 </span>            :         class ExecTimeGuard
+<span class="lineNum">     317 </span>            :         {
+<span class="lineNum">     318 </span>            :                 int64_t m_gasUsed = -1;
+<span class="lineNum">     319 </span>            :         public:
+<span class="lineNum">     320 </span><span class="lineCov">       2218 :                 ExecTimeGuard(std::string const&amp; _testName) { notifyTestStarted(_testName); }</span>
+<span class="lineNum">     321 </span><span class="lineCov">       2218 :                 ~ExecTimeGuard() { notifyTestFinished(m_gasUsed); }</span>
+<span class="lineNum">     322 </span>            :                 ExecTimeGuard(ExecTimeGuard const&amp;) = delete;
+<span class="lineNum">     323 </span>            :                 ExecTimeGuard&amp; operator=(ExecTimeGuard) = delete;
+<span class="lineNum">     324 </span><span class="lineCov">        531 :                 void setGasUsed(int64_t _gas) { m_gasUsed = _gas; }</span>
+<span class="lineNum">     325 </span>            :         };
+<span class="lineNum">     326 </span>            : };
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span>            : }
+<span class="lineNum">     329 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

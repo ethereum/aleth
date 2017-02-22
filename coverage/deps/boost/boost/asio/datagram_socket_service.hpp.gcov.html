@@ -1,0 +1,510 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/datagram_socket_service.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio</a> - datagram_socket_service.hpp<span style="font-size: 80%;"> (source / <a href="datagram_socket_service.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // datagram_socket_service.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DATAGRAM_SOCKET_SERVICE_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DATAGRAM_SOCKET_SERVICE_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;cstddef&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/asio/async_result.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/asio/detail/type_traits.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/asio/error.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/asio/io_service.hpp&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #if defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">      26 </span>            : # include &lt;boost/asio/detail/null_socket_service.hpp&gt;
+<span class="lineNum">      27 </span>            : #elif defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      28 </span>            : # include &lt;boost/asio/detail/win_iocp_socket_service.hpp&gt;
+<span class="lineNum">      29 </span>            : #else
+<span class="lineNum">      30 </span>            : # include &lt;boost/asio/detail/reactive_socket_service.hpp&gt;
+<span class="lineNum">      31 </span>            : #endif
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : namespace boost {
+<span class="lineNum">      36 </span>            : namespace asio {
+<span class="lineNum">      37 </span>            : 
+<a name="38"><span class="lineNum">      38 </span>            : /// Default service implementation for a datagram socket.</a>
+<span class="lineNum">      39 </span>            : template &lt;typename Protocol&gt;
+<span class="lineNum">      40 </span><span class="lineCov">         30 : class datagram_socket_service</span>
+<span class="lineNum">      41 </span>            : #if defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      42 </span>            :   : public boost::asio::io_service::service
+<span class="lineNum">      43 </span>            : #else
+<span class="lineNum">      44 </span>            :   : public boost::asio::detail::service_base&lt;datagram_socket_service&lt;Protocol&gt; &gt;
+<span class="lineNum">      45 </span>            : #endif
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span>            : public:
+<span class="lineNum">      48 </span>            : #if defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      49 </span>            :   /// The unique service identifier.
+<span class="lineNum">      50 </span>            :   static boost::asio::io_service::id id;
+<span class="lineNum">      51 </span>            : #endif
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            :   /// The protocol type.
+<span class="lineNum">      54 </span>            :   typedef Protocol protocol_type;
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            :   /// The endpoint type.
+<span class="lineNum">      57 </span>            :   typedef typename Protocol::endpoint endpoint_type;
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : private:
+<span class="lineNum">      60 </span>            :   // The type of the platform-specific implementation.
+<span class="lineNum">      61 </span>            : #if defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">      62 </span>            :   typedef detail::null_socket_service&lt;Protocol&gt; service_impl_type;
+<span class="lineNum">      63 </span>            : #elif defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      64 </span>            :   typedef detail::win_iocp_socket_service&lt;Protocol&gt; service_impl_type;
+<span class="lineNum">      65 </span>            : #else
+<span class="lineNum">      66 </span>            :   typedef detail::reactive_socket_service&lt;Protocol&gt; service_impl_type;
+<span class="lineNum">      67 </span>            : #endif
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : public:
+<span class="lineNum">      70 </span>            :   /// The type of a datagram socket.
+<span class="lineNum">      71 </span>            : #if defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      72 </span>            :   typedef implementation_defined implementation_type;
+<span class="lineNum">      73 </span>            : #else
+<span class="lineNum">      74 </span>            :   typedef typename service_impl_type::implementation_type implementation_type;
+<span class="lineNum">      75 </span>            : #endif
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :   /// (Deprecated: Use native_handle_type.) The native socket type.
+<span class="lineNum">      78 </span>            : #if defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      79 </span>            :   typedef implementation_defined native_type;
+<span class="lineNum">      80 </span>            : #else
+<span class="lineNum">      81 </span>            :   typedef typename service_impl_type::native_handle_type native_type;
+<span class="lineNum">      82 </span>            : #endif
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            :   /// The native socket type.
+<span class="lineNum">      85 </span>            : #if defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      86 </span>            :   typedef implementation_defined native_handle_type;
+<span class="lineNum">      87 </span>            : #else
+<span class="lineNum">      88 </span>            :   typedef typename service_impl_type::native_handle_type native_handle_type;
+<span class="lineNum">      89 </span>            : #endif
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            :   /// Construct a new datagram socket service for the specified io_service.
+<span class="lineNum">      92 </span>            :   explicit datagram_socket_service(boost::asio::io_service&amp; io_service)
+<span class="lineNum">      93 </span>            :     : boost::asio::detail::service_base&lt;
+<span class="lineNum">      94 </span>            :         datagram_socket_service&lt;Protocol&gt; &gt;(io_service),
+<span class="lineNum">      95 </span><span class="lineCov">         30 :       service_impl_(io_service)</span>
+<span class="lineNum">      96 </span>            :   {
+<span class="lineNum">      97 </span>            :   }
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :   /// Construct a new datagram socket implementation.
+<span class="lineNum">     100 </span>            :   void construct(implementation_type&amp; impl)
+<span class="lineNum">     101 </span>            :   {
+<span class="lineNum">     102 </span><span class="lineCov">         46 :     service_impl_.construct(impl);</span>
+<span class="lineNum">     103 </span>            :   }
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : #if defined(BOOST_ASIO_HAS_MOVE) || defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">     106 </span>            :   /// Move-construct a new datagram socket implementation.
+<span class="lineNum">     107 </span>            :   void move_construct(implementation_type&amp; impl,
+<span class="lineNum">     108 </span>            :       implementation_type&amp; other_impl)
+<span class="lineNum">     109 </span>            :   {
+<span class="lineNum">     110 </span>            :     service_impl_.move_construct(impl, other_impl);
+<span class="lineNum">     111 </span>            :   }
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :   /// Move-assign from another datagram socket implementation.
+<span class="lineNum">     114 </span>            :   void move_assign(implementation_type&amp; impl,
+<span class="lineNum">     115 </span>            :       datagram_socket_service&amp; other_service,
+<span class="lineNum">     116 </span>            :       implementation_type&amp; other_impl)
+<span class="lineNum">     117 </span>            :   {
+<span class="lineNum">     118 </span>            :     service_impl_.move_assign(impl, other_service.service_impl_, other_impl);
+<span class="lineNum">     119 </span>            :   }
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            :   /// Move-construct a new datagram socket implementation from another protocol
+<span class="lineNum">     122 </span>            :   /// type.
+<span class="lineNum">     123 </span>            :   template &lt;typename Protocol1&gt;
+<span class="lineNum">     124 </span>            :   void converting_move_construct(implementation_type&amp; impl,
+<span class="lineNum">     125 </span>            :       typename datagram_socket_service&lt;
+<span class="lineNum">     126 </span>            :         Protocol1&gt;::implementation_type&amp; other_impl,
+<span class="lineNum">     127 </span>            :       typename enable_if&lt;is_convertible&lt;
+<span class="lineNum">     128 </span>            :         Protocol1, Protocol&gt;::value&gt;::type* = 0)
+<span class="lineNum">     129 </span>            :   {
+<span class="lineNum">     130 </span>            :     service_impl_.template converting_move_construct&lt;Protocol1&gt;(
+<span class="lineNum">     131 </span>            :         impl, other_impl);
+<span class="lineNum">     132 </span>            :   }
+<span class="lineNum">     133 </span>            : #endif // defined(BOOST_ASIO_HAS_MOVE) || defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            :   /// Destroy a datagram socket implementation.
+<span class="lineNum">     136 </span>            :   void destroy(implementation_type&amp; impl)
+<span class="lineNum">     137 </span>            :   {
+<span class="lineNum">     138 </span><span class="lineCov">         23 :     service_impl_.destroy(impl);</span>
+<span class="lineNum">     139 </span>            :   }
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            :   // Open a new datagram socket implementation.
+<span class="lineNum">     142 </span>            :   boost::system::error_code open(implementation_type&amp; impl,
+<span class="lineNum">     143 </span>            :       const protocol_type&amp; protocol, boost::system::error_code&amp; ec)
+<span class="lineNum">     144 </span>            :   {
+<span class="lineNum">     145 </span><span class="lineCov">         23 :     if (protocol.type() == BOOST_ASIO_OS_DEF(SOCK_DGRAM))</span>
+<span class="lineNum">     146 </span><span class="lineCov">         23 :       service_impl_.open(impl, protocol, ec);</span>
+<span class="lineNum">     147 </span>            :     else
+<span class="lineNum">     148 </span>            :       ec = boost::asio::error::invalid_argument;
+<span class="lineNum">     149 </span><span class="lineCov">         23 :     return ec;</span>
+<span class="lineNum">     150 </span>            :   }
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :   /// Assign an existing native socket to a datagram socket.
+<span class="lineNum">     153 </span>            :   boost::system::error_code assign(implementation_type&amp; impl,
+<span class="lineNum">     154 </span>            :       const protocol_type&amp; protocol, const native_handle_type&amp; native_socket,
+<span class="lineNum">     155 </span>            :       boost::system::error_code&amp; ec)
+<span class="lineNum">     156 </span>            :   {
+<span class="lineNum">     157 </span>            :     return service_impl_.assign(impl, protocol, native_socket, ec);
+<span class="lineNum">     158 </span>            :   }
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            :   /// Determine whether the socket is open.
+<span class="lineNum">     161 </span>            :   bool is_open(const implementation_type&amp; impl) const
+<span class="lineNum">     162 </span>            :   {
+<span class="lineNum">     163 </span><span class="lineCov">         34 :     return service_impl_.is_open(impl);</span>
+<span class="lineNum">     164 </span>            :   }
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :   /// Close a datagram socket implementation.
+<span class="lineNum">     167 </span>            :   boost::system::error_code close(implementation_type&amp; impl,
+<span class="lineNum">     168 </span>            :       boost::system::error_code&amp; ec)
+<span class="lineNum">     169 </span>            :   {
+<span class="lineNum">     170 </span><span class="lineCov">         23 :     return service_impl_.close(impl, ec);</span>
+<span class="lineNum">     171 </span>            :   }
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :   /// (Deprecated: Use native_handle().) Get the native socket implementation.
+<span class="lineNum">     174 </span>            :   native_type native(implementation_type&amp; impl)
+<span class="lineNum">     175 </span>            :   {
+<span class="lineNum">     176 </span>            :     return service_impl_.native_handle(impl);
+<span class="lineNum">     177 </span>            :   }
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :   /// Get the native socket implementation.
+<span class="lineNum">     180 </span>            :   native_handle_type native_handle(implementation_type&amp; impl)
+<span class="lineNum">     181 </span>            :   {
+<span class="lineNum">     182 </span>            :     return service_impl_.native_handle(impl);
+<span class="lineNum">     183 </span>            :   }
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :   /// Cancel all asynchronous operations associated with the socket.
+<span class="lineNum">     186 </span>            :   boost::system::error_code cancel(implementation_type&amp; impl,
+<span class="lineNum">     187 </span>            :       boost::system::error_code&amp; ec)
+<span class="lineNum">     188 </span>            :   {
+<span class="lineNum">     189 </span>            :     return service_impl_.cancel(impl, ec);
+<span class="lineNum">     190 </span>            :   }
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :   /// Determine whether the socket is at the out-of-band data mark.
+<span class="lineNum">     193 </span>            :   bool at_mark(const implementation_type&amp; impl,
+<span class="lineNum">     194 </span>            :       boost::system::error_code&amp; ec) const
+<span class="lineNum">     195 </span>            :   {
+<span class="lineNum">     196 </span>            :     return service_impl_.at_mark(impl, ec);
+<span class="lineNum">     197 </span>            :   }
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            :   /// Determine the number of bytes available for reading.
+<span class="lineNum">     200 </span>            :   std::size_t available(const implementation_type&amp; impl,
+<span class="lineNum">     201 </span>            :       boost::system::error_code&amp; ec) const
+<span class="lineNum">     202 </span>            :   {
+<span class="lineNum">     203 </span>            :     return service_impl_.available(impl, ec);
+<span class="lineNum">     204 </span>            :   }
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            :   // Bind the datagram socket to the specified local endpoint.
+<span class="lineNum">     207 </span>            :   boost::system::error_code bind(implementation_type&amp; impl,
+<span class="lineNum">     208 </span>            :       const endpoint_type&amp; endpoint, boost::system::error_code&amp; ec)
+<span class="lineNum">     209 </span>            :   {
+<span class="lineNum">     210 </span><span class="lineCov">         46 :     return service_impl_.bind(impl, endpoint, ec);</span>
+<span class="lineNum">     211 </span>            :   }
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            :   /// Connect the datagram socket to the specified endpoint.
+<span class="lineNum">     214 </span>            :   boost::system::error_code connect(implementation_type&amp; impl,
+<span class="lineNum">     215 </span>            :       const endpoint_type&amp; peer_endpoint, boost::system::error_code&amp; ec)
+<span class="lineNum">     216 </span>            :   {
+<span class="lineNum">     217 </span>            :     return service_impl_.connect(impl, peer_endpoint, ec);
+<span class="lineNum">     218 </span>            :   }
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            :   /// Start an asynchronous connect.
+<span class="lineNum">     221 </span>            :   template &lt;typename ConnectHandler&gt;
+<span class="lineNum">     222 </span>            :   BOOST_ASIO_INITFN_RESULT_TYPE(ConnectHandler,
+<span class="lineNum">     223 </span>            :       void (boost::system::error_code))
+<span class="lineNum">     224 </span>            :   async_connect(implementation_type&amp; impl,
+<span class="lineNum">     225 </span>            :       const endpoint_type&amp; peer_endpoint,
+<span class="lineNum">     226 </span>            :       BOOST_ASIO_MOVE_ARG(ConnectHandler) handler)
+<span class="lineNum">     227 </span>            :   {
+<span class="lineNum">     228 </span>            :     detail::async_result_init&lt;
+<span class="lineNum">     229 </span>            :       ConnectHandler, void (boost::system::error_code)&gt; init(
+<span class="lineNum">     230 </span>            :         BOOST_ASIO_MOVE_CAST(ConnectHandler)(handler));
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            :     service_impl_.async_connect(impl, peer_endpoint, init.handler);
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            :     return init.result.get();
+<span class="lineNum">     235 </span>            :   }
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            :   /// Set a socket option.
+<span class="lineNum">     238 </span>            :   template &lt;typename SettableSocketOption&gt;
+<span class="lineNum">     239 </span>            :   boost::system::error_code set_option(implementation_type&amp; impl,
+<span class="lineNum">     240 </span>            :       const SettableSocketOption&amp; option, boost::system::error_code&amp; ec)
+<span class="lineNum">     241 </span>            :   {
+<span class="lineNum">     242 </span>            :     return service_impl_.set_option(impl, option, ec);
+<span class="lineNum">     243 </span>            :   }
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span>            :   /// Get a socket option.
+<span class="lineNum">     246 </span>            :   template &lt;typename GettableSocketOption&gt;
+<span class="lineNum">     247 </span>            :   boost::system::error_code get_option(const implementation_type&amp; impl,
+<span class="lineNum">     248 </span>            :       GettableSocketOption&amp; option, boost::system::error_code&amp; ec) const
+<span class="lineNum">     249 </span>            :   {
+<span class="lineNum">     250 </span>            :     return service_impl_.get_option(impl, option, ec);
+<span class="lineNum">     251 </span>            :   }
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span>            :   /// Perform an IO control command on the socket.
+<span class="lineNum">     254 </span>            :   template &lt;typename IoControlCommand&gt;
+<span class="lineNum">     255 </span>            :   boost::system::error_code io_control(implementation_type&amp; impl,
+<span class="lineNum">     256 </span>            :       IoControlCommand&amp; command, boost::system::error_code&amp; ec)
+<span class="lineNum">     257 </span>            :   {
+<span class="lineNum">     258 </span>            :     return service_impl_.io_control(impl, command, ec);
+<span class="lineNum">     259 </span>            :   }
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            :   /// Gets the non-blocking mode of the socket.
+<span class="lineNum">     262 </span>            :   bool non_blocking(const implementation_type&amp; impl) const
+<span class="lineNum">     263 </span>            :   {
+<span class="lineNum">     264 </span>            :     return service_impl_.non_blocking(impl);
+<span class="lineNum">     265 </span>            :   }
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span>            :   /// Sets the non-blocking mode of the socket.
+<span class="lineNum">     268 </span>            :   boost::system::error_code non_blocking(implementation_type&amp; impl,
+<span class="lineNum">     269 </span>            :       bool mode, boost::system::error_code&amp; ec)
+<span class="lineNum">     270 </span>            :   {
+<span class="lineNum">     271 </span>            :     return service_impl_.non_blocking(impl, mode, ec);
+<span class="lineNum">     272 </span>            :   }
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            :   /// Gets the non-blocking mode of the native socket implementation.
+<span class="lineNum">     275 </span>            :   bool native_non_blocking(const implementation_type&amp; impl) const
+<span class="lineNum">     276 </span>            :   {
+<span class="lineNum">     277 </span>            :     return service_impl_.native_non_blocking(impl);
+<span class="lineNum">     278 </span>            :   }
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span>            :   /// Sets the non-blocking mode of the native socket implementation.
+<span class="lineNum">     281 </span>            :   boost::system::error_code native_non_blocking(implementation_type&amp; impl,
+<span class="lineNum">     282 </span>            :       bool mode, boost::system::error_code&amp; ec)
+<span class="lineNum">     283 </span>            :   {
+<span class="lineNum">     284 </span>            :     return service_impl_.native_non_blocking(impl, mode, ec);
+<span class="lineNum">     285 </span>            :   }
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            :   /// Get the local endpoint.
+<span class="lineNum">     288 </span>            :   endpoint_type local_endpoint(const implementation_type&amp; impl,
+<span class="lineNum">     289 </span>            :       boost::system::error_code&amp; ec) const
+<span class="lineNum">     290 </span>            :   {
+<span class="lineNum">     291 </span>            :     return service_impl_.local_endpoint(impl, ec);
+<span class="lineNum">     292 </span>            :   }
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            :   /// Get the remote endpoint.
+<span class="lineNum">     295 </span>            :   endpoint_type remote_endpoint(const implementation_type&amp; impl,
+<span class="lineNum">     296 </span>            :       boost::system::error_code&amp; ec) const
+<span class="lineNum">     297 </span>            :   {
+<span class="lineNum">     298 </span>            :     return service_impl_.remote_endpoint(impl, ec);
+<span class="lineNum">     299 </span>            :   }
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span>            :   /// Disable sends or receives on the socket.
+<span class="lineNum">     302 </span>            :   boost::system::error_code shutdown(implementation_type&amp; impl,
+<span class="lineNum">     303 </span>            :       socket_base::shutdown_type what, boost::system::error_code&amp; ec)
+<span class="lineNum">     304 </span>            :   {
+<span class="lineNum">     305 </span><span class="lineCov">         46 :     return service_impl_.shutdown(impl, what, ec);</span>
+<span class="lineNum">     306 </span>            :   }
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            :   /// Send the given data to the peer.
+<span class="lineNum">     309 </span>            :   template &lt;typename ConstBufferSequence&gt;
+<span class="lineNum">     310 </span>            :   std::size_t send(implementation_type&amp; impl,
+<span class="lineNum">     311 </span>            :       const ConstBufferSequence&amp; buffers,
+<span class="lineNum">     312 </span>            :       socket_base::message_flags flags, boost::system::error_code&amp; ec)
+<span class="lineNum">     313 </span>            :   {
+<span class="lineNum">     314 </span>            :     return service_impl_.send(impl, buffers, flags, ec);
+<span class="lineNum">     315 </span>            :   }
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            :   /// Start an asynchronous send.
+<span class="lineNum">     318 </span>            :   template &lt;typename ConstBufferSequence, typename WriteHandler&gt;
+<span class="lineNum">     319 </span>            :   BOOST_ASIO_INITFN_RESULT_TYPE(WriteHandler,
+<span class="lineNum">     320 </span>            :       void (boost::system::error_code, std::size_t))
+<span class="lineNum">     321 </span>            :   async_send(implementation_type&amp; impl, const ConstBufferSequence&amp; buffers,
+<span class="lineNum">     322 </span>            :       socket_base::message_flags flags,
+<span class="lineNum">     323 </span>            :       BOOST_ASIO_MOVE_ARG(WriteHandler) handler)
+<span class="lineNum">     324 </span>            :   {
+<span class="lineNum">     325 </span>            :     detail::async_result_init&lt;
+<span class="lineNum">     326 </span>            :       WriteHandler, void (boost::system::error_code, std::size_t)&gt; init(
+<span class="lineNum">     327 </span>            :         BOOST_ASIO_MOVE_CAST(WriteHandler)(handler));
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span>            :     service_impl_.async_send(impl, buffers, flags, init.handler);
+<span class="lineNum">     330 </span>            : 
+<span class="lineNum">     331 </span>            :     return init.result.get();
+<span class="lineNum">     332 </span>            :   }
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span>            :   /// Send a datagram to the specified endpoint.
+<span class="lineNum">     335 </span>            :   template &lt;typename ConstBufferSequence&gt;
+<span class="lineNum">     336 </span>            :   std::size_t send_to(implementation_type&amp; impl,
+<span class="lineNum">     337 </span>            :       const ConstBufferSequence&amp; buffers, const endpoint_type&amp; destination,
+<span class="lineNum">     338 </span>            :       socket_base::message_flags flags, boost::system::error_code&amp; ec)
+<span class="lineNum">     339 </span>            :   {
+<span class="lineNum">     340 </span>            :     return service_impl_.send_to(impl, buffers, destination, flags, ec);
+<span class="lineNum">     341 </span>            :   }
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span>            :   /// Start an asynchronous send.
+<span class="lineNum">     344 </span>            :   template &lt;typename ConstBufferSequence, typename WriteHandler&gt;
+<a name="345"><span class="lineNum">     345 </span>            :   BOOST_ASIO_INITFN_RESULT_TYPE(WriteHandler,</a>
+<span class="lineNum">     346 </span>            :       void (boost::system::error_code, std::size_t))
+<span class="lineNum">     347 </span><span class="lineCov">         53 :   async_send_to(implementation_type&amp; impl,</span>
+<span class="lineNum">     348 </span>            :       const ConstBufferSequence&amp; buffers, const endpoint_type&amp; destination,
+<span class="lineNum">     349 </span>            :       socket_base::message_flags flags,
+<span class="lineNum">     350 </span>            :       BOOST_ASIO_MOVE_ARG(WriteHandler) handler)
+<span class="lineNum">     351 </span>            :   {
+<span class="lineNum">     352 </span>            :     detail::async_result_init&lt;
+<span class="lineNum">     353 </span>            :       WriteHandler, void (boost::system::error_code, std::size_t)&gt; init(
+<span class="lineNum">     354 </span><span class="lineCov">        106 :         BOOST_ASIO_MOVE_CAST(WriteHandler)(handler));</span>
+<span class="lineNum">     355 </span>            : 
+<span class="lineNum">     356 </span><span class="lineCov">         53 :     service_impl_.async_send_to(impl, buffers,</span>
+<span class="lineNum">     357 </span>            :         destination, flags, init.handler);
+<span class="lineNum">     358 </span>            : 
+<span class="lineNum">     359 </span><span class="lineCov">        106 :     return init.result.get();</span>
+<span class="lineNum">     360 </span>            :   }
+<span class="lineNum">     361 </span>            : 
+<span class="lineNum">     362 </span>            :   /// Receive some data from the peer.
+<span class="lineNum">     363 </span>            :   template &lt;typename MutableBufferSequence&gt;
+<span class="lineNum">     364 </span>            :   std::size_t receive(implementation_type&amp; impl,
+<span class="lineNum">     365 </span>            :       const MutableBufferSequence&amp; buffers,
+<span class="lineNum">     366 </span>            :       socket_base::message_flags flags, boost::system::error_code&amp; ec)
+<span class="lineNum">     367 </span>            :   {
+<span class="lineNum">     368 </span>            :     return service_impl_.receive(impl, buffers, flags, ec);
+<span class="lineNum">     369 </span>            :   }
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span>            :   /// Start an asynchronous receive.
+<span class="lineNum">     372 </span>            :   template &lt;typename MutableBufferSequence, typename ReadHandler&gt;
+<span class="lineNum">     373 </span>            :   BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,
+<span class="lineNum">     374 </span>            :       void (boost::system::error_code, std::size_t))
+<span class="lineNum">     375 </span>            :   async_receive(implementation_type&amp; impl,
+<span class="lineNum">     376 </span>            :       const MutableBufferSequence&amp; buffers,
+<span class="lineNum">     377 </span>            :       socket_base::message_flags flags,
+<span class="lineNum">     378 </span>            :       BOOST_ASIO_MOVE_ARG(ReadHandler) handler)
+<span class="lineNum">     379 </span>            :   {
+<span class="lineNum">     380 </span>            :     detail::async_result_init&lt;
+<span class="lineNum">     381 </span>            :       ReadHandler, void (boost::system::error_code, std::size_t)&gt; init(
+<span class="lineNum">     382 </span>            :         BOOST_ASIO_MOVE_CAST(ReadHandler)(handler));
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span>            :     service_impl_.async_receive(impl, buffers, flags, init.handler);
+<span class="lineNum">     385 </span>            : 
+<span class="lineNum">     386 </span>            :     return init.result.get();
+<span class="lineNum">     387 </span>            :   }
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span>            :   /// Receive a datagram with the endpoint of the sender.
+<span class="lineNum">     390 </span>            :   template &lt;typename MutableBufferSequence&gt;
+<span class="lineNum">     391 </span>            :   std::size_t receive_from(implementation_type&amp; impl,
+<span class="lineNum">     392 </span>            :       const MutableBufferSequence&amp; buffers, endpoint_type&amp; sender_endpoint,
+<span class="lineNum">     393 </span>            :       socket_base::message_flags flags, boost::system::error_code&amp; ec)
+<span class="lineNum">     394 </span>            :   {
+<span class="lineNum">     395 </span>            :     return service_impl_.receive_from(impl, buffers, sender_endpoint, flags,
+<span class="lineNum">     396 </span>            :         ec);
+<span class="lineNum">     397 </span>            :   }
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span>            :   /// Start an asynchronous receive that will get the endpoint of the sender.
+<span class="lineNum">     400 </span>            :   template &lt;typename MutableBufferSequence, typename ReadHandler&gt;
+<a name="401"><span class="lineNum">     401 </span>            :   BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,</a>
+<span class="lineNum">     402 </span>            :       void (boost::system::error_code, std::size_t))
+<span class="lineNum">     403 </span><span class="lineCov">         76 :   async_receive_from(implementation_type&amp; impl,</span>
+<span class="lineNum">     404 </span>            :       const MutableBufferSequence&amp; buffers, endpoint_type&amp; sender_endpoint,
+<span class="lineNum">     405 </span>            :       socket_base::message_flags flags,
+<span class="lineNum">     406 </span>            :       BOOST_ASIO_MOVE_ARG(ReadHandler) handler)
+<span class="lineNum">     407 </span>            :   {
+<span class="lineNum">     408 </span>            :     detail::async_result_init&lt;
+<span class="lineNum">     409 </span>            :       ReadHandler, void (boost::system::error_code, std::size_t)&gt; init(
+<span class="lineNum">     410 </span><span class="lineCov">        152 :         BOOST_ASIO_MOVE_CAST(ReadHandler)(handler));</span>
+<span class="lineNum">     411 </span>            : 
+<span class="lineNum">     412 </span><span class="lineCov">         76 :     service_impl_.async_receive_from(impl, buffers,</span>
+<span class="lineNum">     413 </span>            :         sender_endpoint, flags, init.handler);
+<span class="lineNum">     414 </span>            : 
+<span class="lineNum">     415 </span><span class="lineCov">        152 :     return init.result.get();</span>
+<span class="lineNum">     416 </span>            :   }
+<span class="lineNum">     417 </span>            : 
+<a name="418"><span class="lineNum">     418 </span>            : private:</a>
+<span class="lineNum">     419 </span>            :   // Destroy all user-defined handler objects owned by the service.
+<span class="lineNum">     420 </span><span class="lineCov">         15 :   void shutdown_service()</span>
+<span class="lineNum">     421 </span>            :   {
+<span class="lineNum">     422 </span><span class="lineCov">         15 :     service_impl_.shutdown_service();</span>
+<span class="lineNum">     423 </span><span class="lineCov">         15 :   }</span>
+<span class="lineNum">     424 </span>            : 
+<span class="lineNum">     425 </span>            :   // The platform-specific implementation.
+<span class="lineNum">     426 </span>            :   service_impl_type service_impl_;
+<span class="lineNum">     427 </span>            : };
+<span class="lineNum">     428 </span>            : 
+<span class="lineNum">     429 </span>            : } // namespace asio
+<span class="lineNum">     430 </span>            : } // namespace boost
+<span class="lineNum">     431 </span>            : 
+<span class="lineNum">     432 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     433 </span>            : 
+<span class="lineNum">     434 </span>            : #endif // BOOST_ASIO_DATAGRAM_SOCKET_SERVICE_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

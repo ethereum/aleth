@@ -1,0 +1,423 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libp2p/Host.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libp2p</a> - Host.h<span style="font-size: 80%;"> (source / <a href="Host.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntryLo">72.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryLo">70.6 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Host.h
+<span class="lineNum">      18 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      20 </span>            :  * @date 2014
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #pragma once
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;mutex&gt;
+<span class="lineNum">      26 </span>            : #include &lt;map&gt;
+<span class="lineNum">      27 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      28 </span>            : #include &lt;set&gt;
+<span class="lineNum">      29 </span>            : #include &lt;memory&gt;
+<span class="lineNum">      30 </span>            : #include &lt;utility&gt;
+<span class="lineNum">      31 </span>            : #include &lt;thread&gt;
+<span class="lineNum">      32 </span>            : #include &lt;chrono&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #include &lt;libdevcore/Guards.h&gt;
+<span class="lineNum">      35 </span>            : #include &lt;libdevcore/Worker.h&gt;
+<span class="lineNum">      36 </span>            : #include &lt;libdevcrypto/Common.h&gt;
+<span class="lineNum">      37 </span>            : #include &lt;libdevcrypto/ECDHE.h&gt;
+<span class="lineNum">      38 </span>            : #include &quot;NodeTable.h&quot;
+<span class="lineNum">      39 </span>            : #include &quot;HostCapability.h&quot;
+<span class="lineNum">      40 </span>            : #include &quot;Network.h&quot;
+<span class="lineNum">      41 </span>            : #include &quot;Peer.h&quot;
+<span class="lineNum">      42 </span>            : #include &quot;RLPXSocket.h&quot;
+<span class="lineNum">      43 </span>            : #include &quot;RLPXFrameCoder.h&quot;
+<span class="lineNum">      44 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      45 </span>            : namespace ba = boost::asio;
+<span class="lineNum">      46 </span>            : namespace bi = ba::ip;
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : namespace std
+<span class="lineNum">      49 </span>            : {
+<a name="50"><span class="lineNum">      50 </span>            : template&lt;&gt; struct hash&lt;pair&lt;dev::p2p::NodeID, string&gt;&gt;</a>
+<span class="lineNum">      51 </span>            : {
+<span class="lineNum">      52 </span><span class="lineCov">         36 :         size_t operator()(pair&lt;dev::p2p::NodeID, string&gt; const&amp; _value) const</span>
+<span class="lineNum">      53 </span>            :         {
+<span class="lineNum">      54 </span><span class="lineCov">         72 :                 size_t ret = hash&lt;dev::p2p::NodeID&gt;()(_value.first);</span>
+<span class="lineNum">      55 </span><span class="lineCov">         72 :                 return ret ^ (hash&lt;string&gt;()(_value.second) + 0x9e3779b9 + (ret &lt;&lt; 6) + (ret &gt;&gt; 2));</span>
+<span class="lineNum">      56 </span>            :         }
+<span class="lineNum">      57 </span>            : };
+<span class="lineNum">      58 </span>            : }
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : namespace dev
+<span class="lineNum">      61 </span>            : {
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : namespace p2p
+<span class="lineNum">      64 </span>            : {
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : class Host;
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : class HostNodeTableHandler: public NodeTableEventHandler
+<span class="lineNum">      69 </span>            : {
+<span class="lineNum">      70 </span>            : public:
+<span class="lineNum">      71 </span>            :         HostNodeTableHandler(Host&amp; _host);
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :         Host const&amp; host() const { return m_host; }
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : private:
+<span class="lineNum">      76 </span>            :         virtual void processEvent(NodeID const&amp; _n, NodeTableEventType const&amp; _e);
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :         Host&amp; m_host;
+<span class="lineNum">      79 </span>            : };
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span><span class="lineCov">         16 : struct SubReputation</span>
+<span class="lineNum">      82 </span>            : {
+<span class="lineNum">      83 </span>            :         bool isRude = false;
+<span class="lineNum">      84 </span>            :         int utility = 0;
+<span class="lineNum">      85 </span>            :         bytes data;
+<span class="lineNum">      86 </span>            : };
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">         16 : struct Reputation</span>
+<span class="lineNum">      89 </span>            : {
+<span class="lineNum">      90 </span>            :         std::unordered_map&lt;std::string, SubReputation&gt; subs;
+<span class="lineNum">      91 </span>            : };
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">         52 : class ReputationManager</span>
+<span class="lineNum">      94 </span>            : {
+<span class="lineNum">      95 </span>            : public:
+<span class="lineNum">      96 </span>            :         ReputationManager();
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            :         void noteRude(SessionFace const&amp; _s, std::string const&amp; _sub = std::string());
+<span class="lineNum">      99 </span>            :         bool isRude(SessionFace const&amp; _s, std::string const&amp; _sub = std::string()) const;
+<span class="lineNum">     100 </span>            :         void setData(SessionFace const&amp; _s, std::string const&amp; _sub, bytes const&amp; _data);
+<span class="lineNum">     101 </span>            :         bytes data(SessionFace const&amp; _s, std::string const&amp; _subs) const;
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : private:
+<span class="lineNum">     104 </span>            :         std::unordered_map&lt;std::pair&lt;p2p::NodeID, std::string&gt;, Reputation&gt; m_nodes;        ///&lt; Nodes that were impolite while syncing. We avoid syncing from these if possible.
+<span class="lineNum">     105 </span>            :         SharedMutex mutable x_nodes;
+<span class="lineNum">     106 </span>            : };
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : struct NodeInfo
+<a name="109"><span class="lineNum">     109 </span>            : {</a>
+<span class="lineNum">     110 </span>            :         NodeInfo() = default;
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :         NodeInfo(NodeID const&amp; _id, std::string const&amp; _address, unsigned _port, std::string const&amp; _version):</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :                 id(_id), address(_address), port(_port), version(_version) {}</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :         std::string enode() const { return &quot;enode://&quot; + id.hex() + &quot;@&quot; + address + &quot;:&quot; + toString(port); }
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            :         NodeID id;
+<span class="lineNum">     117 </span>            :         std::string address;
+<span class="lineNum">     118 </span>            :         unsigned port;
+<span class="lineNum">     119 </span>            :         std::string version;
+<span class="lineNum">     120 </span>            : };
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : /**
+<span class="lineNum">     123 </span>            :  * @brief The Host class
+<span class="lineNum">     124 </span>            :  * Capabilities should be registered prior to startNetwork, since m_capabilities is not thread-safe.
+<span class="lineNum">     125 </span>            :  *
+<span class="lineNum">     126 </span>            :  * @todo determinePublic: ipv6, udp
+<span class="lineNum">     127 </span>            :  * @todo per-session keepalive/ping instead of broadcast; set ping-timeout via median-latency
+<span class="lineNum">     128 </span>            :  */
+<span class="lineNum">     129 </span>            : class Host: public Worker
+<span class="lineNum">     130 </span>            : {
+<span class="lineNum">     131 </span>            :         friend class HostNodeTableHandler;
+<span class="lineNum">     132 </span>            :         friend class RLPXHandshake;
+<span class="lineNum">     133 </span>            :         
+<span class="lineNum">     134 </span>            :         friend class Session;
+<span class="lineNum">     135 </span>            :         friend class HostCapabilityFace;
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : public:
+<span class="lineNum">     138 </span>            :         /// Start server, listening for connections on the given port.
+<span class="lineNum">     139 </span>            :         Host(
+<span class="lineNum">     140 </span>            :                 std::string const&amp; _clientVersion,
+<span class="lineNum">     141 </span>            :                 NetworkPreferences const&amp; _n = NetworkPreferences(),
+<span class="lineNum">     142 </span>            :                 bytesConstRef _restoreNetwork = bytesConstRef()
+<span class="lineNum">     143 </span>            :         );
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            :         /// Alternative constructor that allows providing the node key directly
+<span class="lineNum">     146 </span>            :         /// without restoring the network.
+<span class="lineNum">     147 </span>            :         Host(
+<span class="lineNum">     148 </span>            :                 std::string const&amp; _clientVersion,
+<span class="lineNum">     149 </span>            :                 KeyPair const&amp; _alias,
+<span class="lineNum">     150 </span>            :                 NetworkPreferences const&amp; _n = NetworkPreferences()
+<span class="lineNum">     151 </span>            :         );
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :         /// Will block on network process events.
+<span class="lineNum">     154 </span>            :         virtual ~Host();
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :         /// Default hosts for current version of client.
+<span class="lineNum">     157 </span>            :         static std::unordered_map&lt;Public, std::string&gt; pocHosts();
+<a name="158"><span class="lineNum">     158 </span>            : </a>
+<a name="159"><span class="lineNum">     159 </span>            :         /// Register a peer-capability; all new peer connections will have this capability.</a>
+<span class="lineNum">     160 </span><span class="lineCov">         78 :         template &lt;class T&gt; std::shared_ptr&lt;T&gt; registerCapability(std::shared_ptr&lt;T&gt; const&amp; _t) { _t-&gt;m_host = this; m_capabilities[std::make_pair(T::staticName(), T::staticVersion())] = _t; return _t; }</span>
+<span class="lineNum">     161 </span><span class="lineCov">          4 :         template &lt;class T&gt; void addCapability(std::shared_ptr&lt;T&gt; const &amp; _p, std::string const&amp; _name, u256 const&amp; _version) { m_capabilities[std::make_pair(_name, _version)] = _p; }</span>
+<a name="162"><span class="lineNum">     162 </span>            : </a>
+<span class="lineNum">     163 </span><span class="lineCov">         76 :         bool haveCapability(CapDesc const&amp; _name) const { return m_capabilities.count(_name) != 0; }</span>
+<span class="lineNum">     164 </span><span class="lineCov">        258 :         CapDescs caps() const { CapDescs ret; for (auto const&amp; i: m_capabilities) ret.push_back(i.first); return ret; }</span>
+<span class="lineNum">     165 </span>            :         template &lt;class T&gt; std::shared_ptr&lt;T&gt; cap() const { try { return std::static_pointer_cast&lt;T&gt;(m_capabilities.at(std::make_pair(T::staticName(), T::staticVersion()))); } catch (...) { return nullptr; } }
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            :         /// Add a potential peer.
+<span class="lineNum">     168 </span>            :         void addPeer(NodeSpec const&amp; _s, PeerType _t);
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :         /// Add node as a peer candidate. Node is added if discovery ping is successful and table has capacity.
+<span class="lineNum">     171 </span>            :         void addNode(NodeID const&amp; _node, NodeIPEndpoint const&amp; _endpoint);
+<span class="lineNum">     172 </span>            :         
+<span class="lineNum">     173 </span>            :         /// Create Peer and attempt keeping peer connected.
+<span class="lineNum">     174 </span>            :         void requirePeer(NodeID const&amp; _node, NodeIPEndpoint const&amp; _endpoint);
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            :         /// Create Peer and attempt keeping peer connected.
+<span class="lineNum">     177 </span>            :         void requirePeer(NodeID const&amp; _node, bi::address const&amp; _addr, unsigned short _udpPort, unsigned short _tcpPort) { requirePeer(_node, NodeIPEndpoint(_addr, _udpPort, _tcpPort)); }
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :         /// Note peer as no longer being required.
+<span class="lineNum">     180 </span>            :         void relinquishPeer(NodeID const&amp; _node);
+<span class="lineNum">     181 </span>            :         
+<span class="lineNum">     182 </span>            :         /// Set ideal number of peers.
+<span class="lineNum">     183 </span><span class="lineCov">          6 :         void setIdealPeerCount(unsigned _n) { m_idealPeerCount = _n; }</span>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :         /// Set multipier for max accepted connections.
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :         void setPeerStretch(unsigned _n) { m_stretchPeers = _n; }</span>
+<span class="lineNum">     187 </span>            :         
+<span class="lineNum">     188 </span>            :         /// Get peer information.
+<span class="lineNum">     189 </span>            :         PeerSessionInfos peerSessionInfo() const;
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            :         /// Get number of peers connected.
+<span class="lineNum">     192 </span>            :         size_t peerCount() const;
+<a name="193"><span class="lineNum">     193 </span>            : </a>
+<span class="lineNum">     194 </span>            :         /// Get the address we're listening on currently.
+<span class="lineNum">     195 </span><span class="lineCov">         48 :         std::string listenAddress() const { return m_tcpPublic.address().is_unspecified() ? &quot;0.0.0.0&quot; : m_tcpPublic.address().to_string(); }</span>
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :         /// Get the port we're listening on currently.
+<span class="lineNum">     198 </span><span class="lineCov">        220 :         unsigned short listenPort() const { return std::max(0, m_listenPort); }</span>
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            :         /// Serialise the set of known peers.
+<span class="lineNum">     201 </span>            :         bytes saveNetwork() const;
+<a name="202"><span class="lineNum">     202 </span>            : </a>
+<span class="lineNum">     203 </span>            :         // TODO: P2P this should be combined with peers into a HostStat object of some kind; coalesce data, as it's only used for status information.
+<span class="lineNum">     204 </span><span class="lineCov">         14 :         Peers getPeers() const { RecursiveGuard l(x_sessions); Peers ret; for (auto const&amp; i: m_peers) ret.push_back(*i.second); return ret; }</span>
+<span class="lineNum">     205 </span>            : 
+<a name="206"><span class="lineNum">     206 </span><span class="lineNoCov">          0 :         NetworkPreferences const&amp; networkPreferences() const { return m_netPrefs; }</span></a>
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span><span class="lineNoCov">          0 :         void setNetworkPreferences(NetworkPreferences const&amp; _p, bool _dropPeers = false) { m_dropPeers = _dropPeers; auto had = isStarted(); if (had) stop(); m_netPrefs = _p; if (had) start(); }</span>
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :         /// Start network. @threadsafe
+<span class="lineNum">     211 </span>            :         void start();
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            :         /// Stop network. @threadsafe
+<span class="lineNum">     214 </span>            :         /// Resets acceptor, socket, and IO service. Called by deallocator.
+<span class="lineNum">     215 </span>            :         void stop();
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :         /// @returns if network has been started.
+<span class="lineNum">     218 </span><span class="lineCov">          8 :         bool isStarted() const { return isWorking(); }</span>
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            :         /// @returns our reputation manager.
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :         ReputationManager&amp; repMan() { return m_repMan; }</span>
+<a name="222"><span class="lineNum">     222 </span>            : </a>
+<span class="lineNum">     223 </span>            :         /// @returns if network is started and interactive.
+<span class="lineNum">     224 </span><span class="lineCov">        141 :         bool haveNetwork() const { Guard l(x_runTimer); return m_run &amp;&amp; !!m_nodeTable; }</span>
+<span class="lineNum">     225 </span>            :         
+<span class="lineNum">     226 </span>            :         /// Validates and starts peer session, taking ownership of _io. Disconnects and returns false upon error.
+<span class="lineNum">     227 </span>            :         void startPeerSession(Public const&amp; _id, RLP const&amp; _hello, std::unique_ptr&lt;RLPXFrameCoder&gt;&amp;&amp; _io, std::shared_ptr&lt;RLPXSocket&gt; const&amp; _s);
+<a name="228"><span class="lineNum">     228 </span>            : </a>
+<span class="lineNum">     229 </span>            :         /// Get session by id
+<span class="lineNum">     230 </span><span class="lineCov">       1350 :         std::shared_ptr&lt;SessionFace&gt; peerSession(NodeID const&amp; _id) { RecursiveGuard l(x_sessions); return m_sessions.count(_id) ? m_sessions[_id].lock() : std::shared_ptr&lt;SessionFace&gt;(); }</span>
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            :         /// Get our current node ID.
+<span class="lineNum">     233 </span><span class="lineCov">        192 :         NodeID id() const { return m_alias.pub(); }</span>
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            :         /// Get the public TCP endpoint.
+<span class="lineNum">     236 </span>            :         bi::tcp::endpoint const&amp; tcpPublic() const { return m_tcpPublic; }
+<a name="237"><span class="lineNum">     237 </span>            : </a>
+<span class="lineNum">     238 </span>            :         /// Get the public endpoint information.
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :         std::string enode() const { return &quot;enode://&quot; + id().hex() + &quot;@&quot; + (networkPreferences().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkPreferences().publicIPAddress) + &quot;:&quot; + toString(m_tcpPublic.port()); }</span>
+<a name="240"><span class="lineNum">     240 </span>            : </a>
+<span class="lineNum">     241 </span>            :         /// Get the node information.
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :         p2p::NodeInfo nodeInfo() const { return NodeInfo(id(), (networkPreferences().publicIPAddress.empty() ? m_tcpPublic.address().to_string() : networkPreferences().publicIPAddress), m_tcpPublic.port(), m_clientVersion); }</span>
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            : protected:
+<span class="lineNum">     245 </span>            :         void onNodeTableEvent(NodeID const&amp; _n, NodeTableEventType const&amp; _e);
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            :         /// Deserialise the data and populate the set of known peers.
+<span class="lineNum">     248 </span>            :         void restoreNetwork(bytesConstRef _b);
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            : private:
+<span class="lineNum">     251 </span>            :         enum PeerSlotType { Egress, Ingress };
+<span class="lineNum">     252 </span>            :         
+<a name="253"><span class="lineNum">     253 </span><span class="lineCov">         67 :         unsigned peerSlots(PeerSlotType _type) { return _type == Egress ? m_idealPeerCount : m_idealPeerCount * m_stretchPeers; }</span></a>
+<span class="lineNum">     254 </span>            :         
+<span class="lineNum">     255 </span><span class="lineCov">        810 :         bool havePeerSession(NodeID const&amp; _id) { return !!peerSession(_id); }</span>
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            :         /// Determines and sets m_tcpPublic to publicly advertised address.
+<span class="lineNum">     258 </span>            :         void determinePublic();
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span>            :         void connect(std::shared_ptr&lt;Peer&gt; const&amp; _p);
+<a name="261"><span class="lineNum">     261 </span>            : </a>
+<span class="lineNum">     262 </span>            :         /// Returns true if pending and connected peer count is less than maximum
+<span class="lineNum">     263 </span><span class="lineCov">        240 :         bool peerSlotsAvailable(PeerSlotType _type = Ingress) { Guard l(x_pendingNodeConns); return peerCount() + m_pendingPeerConns.size() &lt; peerSlots(_type); }</span>
+<span class="lineNum">     264 </span>            :         
+<span class="lineNum">     265 </span>            :         /// Ping the peers to update the latency information and disconnect peers which have timed out.
+<span class="lineNum">     266 </span>            :         void keepAlivePeers();
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            :         /// Disconnect peers which didn't respond to keepAlivePeers ping prior to c_keepAliveTimeOut.
+<span class="lineNum">     269 </span>            :         void disconnectLatePeers();
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            :         /// Called only from startedWorking().
+<span class="lineNum">     272 </span>            :         void runAcceptor();
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            :         /// Called by Worker. Not thread-safe; to be called only by worker.
+<span class="lineNum">     275 </span>            :         virtual void startedWorking();
+<span class="lineNum">     276 </span>            :         /// Called by startedWorking. Not thread-safe; to be called only be Worker.
+<span class="lineNum">     277 </span>            :         void run(boost::system::error_code const&amp; error);                   ///&lt; Run network. Called serially via ASIO deadline timer. Manages connection state transitions.
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            :         /// Run network. Not thread-safe; to be called only by worker.
+<span class="lineNum">     280 </span>            :         virtual void doWork();
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span>            :         /// Shutdown network. Not thread-safe; to be called only by worker.
+<span class="lineNum">     283 </span>            :         virtual void doneWorking();
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span>            :         /// Get or create host identifier (KeyPair).
+<span class="lineNum">     286 </span>            :         static KeyPair networkAlias(bytesConstRef _b);
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            :         bytes m_restoreNetwork;                                                                         ///&lt; Set by constructor and used to set Host key and restore network peers &amp; nodes.
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            :         bool m_run = false;                                                                                                     ///&lt; Whether network is running.
+<span class="lineNum">     291 </span>            :         mutable std::mutex x_runTimer;  ///&lt; Start/stop mutex.
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            :         std::string m_clientVersion;                                                                                    ///&lt; Our version string.
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span>            :         NetworkPreferences m_netPrefs;                                                                          ///&lt; Network settings.
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            :         /// Interface addresses (private, public)
+<span class="lineNum">     298 </span>            :         std::set&lt;bi::address&gt; m_ifAddresses;                                                              ///&lt; Interface addresses.
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            :         int m_listenPort = -1;                                                                                          ///&lt; What port are we listening on. -1 means binding failed or acceptor hasn't been initialized.
+<span class="lineNum">     301 </span>            : 
+<span class="lineNum">     302 </span>            :         ba::io_service m_ioService;                                                                                     ///&lt; IOService for network stuff.
+<span class="lineNum">     303 </span>            :         bi::tcp::acceptor m_tcp4Acceptor;                                                                               ///&lt; Listening acceptor.
+<span class="lineNum">     304 </span>            : 
+<span class="lineNum">     305 </span>            :         std::unique_ptr&lt;boost::asio::deadline_timer&gt; m_timer;                                     ///&lt; Timer which, when network is running, calls scheduler() every c_timerInterval ms.
+<span class="lineNum">     306 </span>            :         static const unsigned c_timerInterval = 100;                                                    ///&lt; Interval which m_timer is run when network is connected.
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            :         std::set&lt;Peer*&gt; m_pendingPeerConns;                                                                       /// Used only by connect(Peer&amp;) to limit concurrently connecting to same node. See connect(shared_ptr&lt;Peer&gt;const&amp;).
+<span class="lineNum">     309 </span>            :         Mutex x_pendingNodeConns;
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            :         bi::tcp::endpoint m_tcpPublic;                                                                                  ///&lt; Our public listening endpoint.
+<span class="lineNum">     312 </span>            :         KeyPair m_alias;                                                                                                                        ///&lt; Alias for network communication. Network address is k*G. k is key material. TODO: Replace KeyPair.
+<span class="lineNum">     313 </span>            :         std::shared_ptr&lt;NodeTable&gt; m_nodeTable;                                                                   ///&lt; Node table (uses kademlia-like discovery).
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span>            :         /// Shared storage of Peer objects. Peers are created or destroyed on demand by the Host. Active sessions maintain a shared_ptr to a Peer;
+<span class="lineNum">     316 </span>            :         std::unordered_map&lt;NodeID, std::shared_ptr&lt;Peer&gt;&gt; m_peers;
+<span class="lineNum">     317 </span>            :         
+<span class="lineNum">     318 </span>            :         /// Peers we try to connect regardless of p2p network.
+<span class="lineNum">     319 </span>            :         std::set&lt;NodeID&gt; m_requiredPeers;
+<span class="lineNum">     320 </span>            :         Mutex x_requiredPeers;
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span>            :         /// The nodes to which we are currently connected. Used by host to service peer requests and keepAlivePeers and for shutdown. (see run())
+<span class="lineNum">     323 </span>            :         /// Mutable because we flush zombie entries (null-weakptrs) as regular maintenance from a const method.
+<span class="lineNum">     324 </span>            :         mutable std::unordered_map&lt;NodeID, std::weak_ptr&lt;SessionFace&gt;&gt; m_sessions;
+<span class="lineNum">     325 </span>            :         mutable RecursiveMutex x_sessions;
+<span class="lineNum">     326 </span>            :         
+<span class="lineNum">     327 </span>            :         std::list&lt;std::weak_ptr&lt;RLPXHandshake&gt;&gt; m_connecting;                                       ///&lt; Pending connections.
+<span class="lineNum">     328 </span>            :         Mutex x_connecting;                                                                                                     ///&lt; Mutex for m_connecting.
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span>            :         unsigned m_idealPeerCount = 11;                                                                         ///&lt; Ideal number of peers to be connected to.
+<span class="lineNum">     331 </span>            :         unsigned m_stretchPeers = 7;                                                                            ///&lt; Accepted connection multiplier (max peers = ideal*stretch).
+<span class="lineNum">     332 </span>            : 
+<span class="lineNum">     333 </span>            :         std::map&lt;CapDesc, std::shared_ptr&lt;HostCapabilityFace&gt;&gt; m_capabilities;      ///&lt; Each of the capabilities we support.
+<span class="lineNum">     334 </span>            :         
+<span class="lineNum">     335 </span>            :         /// Deadline timers used for isolated network events. GC'd by run.
+<span class="lineNum">     336 </span>            :         std::list&lt;std::shared_ptr&lt;boost::asio::deadline_timer&gt;&gt; m_timers;
+<span class="lineNum">     337 </span>            :         Mutex x_timers;
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span>            :         std::chrono::steady_clock::time_point m_lastPing;                                               ///&lt; Time we sent the last ping to all peers.
+<span class="lineNum">     340 </span>            :         bool m_accepting = false;
+<span class="lineNum">     341 </span>            :         bool m_dropPeers = false;
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span>            :         ReputationManager m_repMan;
+<span class="lineNum">     344 </span>            : };
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span>            : }
+<span class="lineNum">     347 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

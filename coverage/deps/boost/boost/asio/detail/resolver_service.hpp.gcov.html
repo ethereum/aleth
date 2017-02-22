@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/detail/resolver_service.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/detail</a> - resolver_service.hpp<span style="font-size: 80%;"> (source / <a href="resolver_service.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // detail/resolver_service.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DETAIL_RESOLVER_SERVICE_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DETAIL_RESOLVER_SERVICE_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #if !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;boost/asio/ip/basic_resolver_iterator.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/asio/ip/basic_resolver_query.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/detail/addressof.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/detail/resolve_endpoint_op.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/asio/detail/resolve_op.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/asio/detail/resolver_service_base.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : namespace boost {
+<span class="lineNum">      32 </span>            : namespace asio {
+<span class="lineNum">      33 </span>            : namespace detail {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : template &lt;typename Protocol&gt;
+<span class="lineNum">      36 </span><span class="lineNoCov">          0 : class resolver_service : public resolver_service_base</span>
+<span class="lineNum">      37 </span>            : {
+<span class="lineNum">      38 </span>            : public:
+<span class="lineNum">      39 </span>            :   // The implementation type of the resolver. A cancellation token is used to
+<span class="lineNum">      40 </span>            :   // indicate to the background thread that the operation has been cancelled.
+<span class="lineNum">      41 </span>            :   typedef socket_ops::shared_cancel_token_type implementation_type;
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            :   // The endpoint type.
+<span class="lineNum">      44 </span>            :   typedef typename Protocol::endpoint endpoint_type;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :   // The query type.
+<span class="lineNum">      47 </span>            :   typedef boost::asio::ip::basic_resolver_query&lt;Protocol&gt; query_type;
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :   // The iterator type.
+<span class="lineNum">      50 </span>            :   typedef boost::asio::ip::basic_resolver_iterator&lt;Protocol&gt; iterator_type;
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            :   // Constructor.
+<span class="lineNum">      53 </span>            :   resolver_service(boost::asio::io_service&amp; io_service)
+<span class="lineNum">      54 </span><span class="lineNoCov">          0 :     : resolver_service_base(io_service)</span>
+<span class="lineNum">      55 </span>            :   {
+<span class="lineNum">      56 </span>            :   }
+<a name="57"><span class="lineNum">      57 </span>            : </a>
+<span class="lineNum">      58 </span>            :   // Resolve a query to a list of entries.
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :   iterator_type resolve(implementation_type&amp;, const query_type&amp; query,</span>
+<span class="lineNum">      60 </span>            :       boost::system::error_code&amp; ec)
+<span class="lineNum">      61 </span>            :   {
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 :     boost::asio::detail::addrinfo_type* address_info = 0;</span>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :     socket_ops::getaddrinfo(query.host_name().c_str(),</span>
+<span class="lineNum">      65 </span>            :         query.service_name().c_str(), query.hints(), &amp;address_info, ec);
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :     auto_addrinfo auto_address_info(address_info);</span>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :     return ec ? iterator_type() : iterator_type::create(</span>
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :         address_info, query.host_name(), query.service_name());</span>
+<span class="lineNum">      70 </span>            :   }
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :   // Asynchronously resolve a query to a list of entries.
+<span class="lineNum">      73 </span>            :   template &lt;typename Handler&gt;
+<span class="lineNum">      74 </span>            :   void async_resolve(implementation_type&amp; impl,
+<span class="lineNum">      75 </span>            :       const query_type&amp; query, Handler&amp; handler)
+<span class="lineNum">      76 </span>            :   {
+<span class="lineNum">      77 </span>            :     // Allocate and construct an operation to wrap the handler.
+<span class="lineNum">      78 </span>            :     typedef resolve_op&lt;Protocol, Handler&gt; op;
+<span class="lineNum">      79 </span>            :     typename op::ptr p = { boost::asio::detail::addressof(handler),
+<span class="lineNum">      80 </span>            :       boost_asio_handler_alloc_helpers::allocate(
+<span class="lineNum">      81 </span>            :         sizeof(op), handler), 0 };
+<span class="lineNum">      82 </span>            :     p.p = new (p.v) op(impl, query, io_service_impl_, handler);
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            :     BOOST_ASIO_HANDLER_CREATION((p.p, &quot;resolver&quot;, &amp;impl, &quot;async_resolve&quot;));
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            :     start_resolve_op(p.p);
+<span class="lineNum">      87 </span>            :     p.v = p.p = 0;
+<span class="lineNum">      88 </span>            :   }
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            :   // Resolve an endpoint to a list of entries.
+<span class="lineNum">      91 </span>            :   iterator_type resolve(implementation_type&amp;,
+<span class="lineNum">      92 </span>            :       const endpoint_type&amp; endpoint, boost::system::error_code&amp; ec)
+<span class="lineNum">      93 </span>            :   {
+<span class="lineNum">      94 </span>            :     char host_name[NI_MAXHOST];
+<span class="lineNum">      95 </span>            :     char service_name[NI_MAXSERV];
+<span class="lineNum">      96 </span>            :     socket_ops::sync_getnameinfo(endpoint.data(), endpoint.size(),
+<span class="lineNum">      97 </span>            :         host_name, NI_MAXHOST, service_name, NI_MAXSERV,
+<span class="lineNum">      98 </span>            :         endpoint.protocol().type(), ec);
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :     return ec ? iterator_type() : iterator_type::create(
+<span class="lineNum">     101 </span>            :         endpoint, host_name, service_name);
+<span class="lineNum">     102 </span>            :   }
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :   // Asynchronously resolve an endpoint to a list of entries.
+<span class="lineNum">     105 </span>            :   template &lt;typename Handler&gt;
+<span class="lineNum">     106 </span>            :   void async_resolve(implementation_type&amp; impl,
+<span class="lineNum">     107 </span>            :       const endpoint_type&amp; endpoint, Handler&amp; handler)
+<span class="lineNum">     108 </span>            :   {
+<span class="lineNum">     109 </span>            :     // Allocate and construct an operation to wrap the handler.
+<span class="lineNum">     110 </span>            :     typedef resolve_endpoint_op&lt;Protocol, Handler&gt; op;
+<span class="lineNum">     111 </span>            :     typename op::ptr p = { boost::asio::detail::addressof(handler),
+<span class="lineNum">     112 </span>            :       boost_asio_handler_alloc_helpers::allocate(
+<span class="lineNum">     113 </span>            :         sizeof(op), handler), 0 };
+<span class="lineNum">     114 </span>            :     p.p = new (p.v) op(impl, endpoint, io_service_impl_, handler);
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            :     BOOST_ASIO_HANDLER_CREATION((p.p, &quot;resolver&quot;, &amp;impl, &quot;async_resolve&quot;));
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :     start_resolve_op(p.p);
+<span class="lineNum">     119 </span>            :     p.v = p.p = 0;
+<span class="lineNum">     120 </span>            :   }
+<span class="lineNum">     121 </span>            : };
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : } // namespace detail
+<span class="lineNum">     124 </span>            : } // namespace asio
+<span class="lineNum">     125 </span>            : } // namespace boost
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            : #endif // !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            : #endif // BOOST_ASIO_DETAIL_RESOLVER_SERVICE_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

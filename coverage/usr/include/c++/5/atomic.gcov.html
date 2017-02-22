@@ -1,0 +1,1328 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/atomic</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5</a> - atomic<span style="font-size: 80%;"> (source / <a href="atomic.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // -*- C++ -*- header.</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2008-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file include/atomic
+<span class="lineNum">      26 </span>            :  *  This is a Standard C++ Library header.
+<span class="lineNum">      27 </span>            :  */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : // Based on &quot;C++ Atomic Types and Operations&quot; by Hans Boehm and Lawrence Crowl.
+<span class="lineNum">      30 </span>            : // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2427.html
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #ifndef _GLIBCXX_ATOMIC
+<span class="lineNum">      33 </span>            : #define _GLIBCXX_ATOMIC 1
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #pragma GCC system_header
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : #if __cplusplus &lt; 201103L
+<span class="lineNum">      38 </span>            : # include &lt;bits/c++0x_warning.h&gt;
+<span class="lineNum">      39 </span>            : #else
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : #include &lt;bits/atomic_base.h&gt;
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      44 </span>            : {
+<span class="lineNum">      45 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            :   /**
+<span class="lineNum">      48 </span>            :    * @addtogroup atomics
+<span class="lineNum">      49 </span>            :    * @{
+<span class="lineNum">      50 </span>            :    */
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">      53 </span>            :     struct atomic;
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :   /// atomic&lt;bool&gt;
+<span class="lineNum">      56 </span>            :   // NB: No operators or fetch-operations for this type.
+<span class="lineNum">      57 </span>            :   template&lt;&gt;
+<span class="lineNum">      58 </span>            :   struct atomic&lt;bool&gt;
+<span class="lineNum">      59 </span>            :   {
+<span class="lineNum">      60 </span>            :   private:
+<span class="lineNum">      61 </span>            :     __atomic_base&lt;bool&gt;   _M_base;
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            :   public:
+<span class="lineNum">      64 </span><span class="lineCov">         46 :     atomic() noexcept = default;</span>
+<span class="lineNum">      65 </span>            :     ~atomic() noexcept = default;
+<span class="lineNum">      66 </span>            :     atomic(const atomic&amp;) = delete;
+<span class="lineNum">      67 </span>            :     atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">      68 </span>            :     atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineCov">      81170 :     constexpr atomic(bool __i) noexcept : _M_base(__i) { }</span>
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :     bool
+<span class="lineNum">      73 </span>            :     operator=(bool __i) noexcept
+<span class="lineNum">      74 </span><span class="lineCov">      81390 :     { return _M_base.operator=(__i); }</span>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            :     bool
+<span class="lineNum">      77 </span>            :     operator=(bool __i) volatile noexcept
+<span class="lineNum">      78 </span>            :     { return _M_base.operator=(__i); }
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            :     operator bool() const noexcept
+<span class="lineNum">      81 </span><span class="lineCov">    1449450 :     { return _M_base.load(); }</span>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :     operator bool() const volatile noexcept
+<span class="lineNum">      84 </span>            :     { return _M_base.load(); }
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            :     bool
+<span class="lineNum">      87 </span>            :     is_lock_free() const noexcept { return _M_base.is_lock_free(); }
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :     bool
+<span class="lineNum">      90 </span>            :     is_lock_free() const volatile noexcept { return _M_base.is_lock_free(); }
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :     void
+<span class="lineNum">      93 </span>            :     store(bool __i, memory_order __m = memory_order_seq_cst) noexcept
+<span class="lineNum">      94 </span><span class="lineCov">         92 :     { _M_base.store(__i, __m); }</span>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            :     void
+<span class="lineNum">      97 </span>            :     store(bool __i, memory_order __m = memory_order_seq_cst) volatile noexcept
+<span class="lineNum">      98 </span>            :     { _M_base.store(__i, __m); }
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :     bool
+<span class="lineNum">     101 </span>            :     load(memory_order __m = memory_order_seq_cst) const noexcept
+<span class="lineNum">     102 </span>            :     { return _M_base.load(__m); }
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :     bool
+<span class="lineNum">     105 </span>            :     load(memory_order __m = memory_order_seq_cst) const volatile noexcept
+<span class="lineNum">     106 </span>            :     { return _M_base.load(__m); }
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :     bool
+<span class="lineNum">     109 </span>            :     exchange(bool __i, memory_order __m = memory_order_seq_cst) noexcept
+<span class="lineNum">     110 </span>            :     { return _M_base.exchange(__i, __m); }
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            :     bool
+<span class="lineNum">     113 </span>            :     exchange(bool __i,
+<span class="lineNum">     114 </span>            :              memory_order __m = memory_order_seq_cst) volatile noexcept
+<span class="lineNum">     115 </span>            :     { return _M_base.exchange(__i, __m); }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :     bool
+<span class="lineNum">     118 </span>            :     compare_exchange_weak(bool&amp; __i1, bool __i2, memory_order __m1,
+<span class="lineNum">     119 </span>            :                           memory_order __m2) noexcept
+<span class="lineNum">     120 </span>            :     { return _M_base.compare_exchange_weak(__i1, __i2, __m1, __m2); }
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :     bool
+<span class="lineNum">     123 </span>            :     compare_exchange_weak(bool&amp; __i1, bool __i2, memory_order __m1,
+<span class="lineNum">     124 </span>            :                           memory_order __m2) volatile noexcept
+<span class="lineNum">     125 </span>            :     { return _M_base.compare_exchange_weak(__i1, __i2, __m1, __m2); }
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :     bool
+<span class="lineNum">     128 </span>            :     compare_exchange_weak(bool&amp; __i1, bool __i2,
+<span class="lineNum">     129 </span>            :                           memory_order __m = memory_order_seq_cst) noexcept
+<span class="lineNum">     130 </span>            :     { return _M_base.compare_exchange_weak(__i1, __i2, __m); }
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            :     bool
+<span class="lineNum">     133 </span>            :     compare_exchange_weak(bool&amp; __i1, bool __i2,
+<span class="lineNum">     134 </span>            :                      memory_order __m = memory_order_seq_cst) volatile noexcept
+<span class="lineNum">     135 </span>            :     { return _M_base.compare_exchange_weak(__i1, __i2, __m); }
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :     bool
+<span class="lineNum">     138 </span>            :     compare_exchange_strong(bool&amp; __i1, bool __i2, memory_order __m1,
+<span class="lineNum">     139 </span>            :                             memory_order __m2) noexcept
+<span class="lineNum">     140 </span>            :     { return _M_base.compare_exchange_strong(__i1, __i2, __m1, __m2); }
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            :     bool
+<span class="lineNum">     143 </span>            :     compare_exchange_strong(bool&amp; __i1, bool __i2, memory_order __m1,
+<span class="lineNum">     144 </span>            :                             memory_order __m2) volatile noexcept
+<span class="lineNum">     145 </span>            :     { return _M_base.compare_exchange_strong(__i1, __i2, __m1, __m2); }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            :     bool
+<span class="lineNum">     148 </span>            :     compare_exchange_strong(bool&amp; __i1, bool __i2,
+<span class="lineNum">     149 </span>            :                             memory_order __m = memory_order_seq_cst) noexcept
+<span class="lineNum">     150 </span><span class="lineCov">        232 :     { return _M_base.compare_exchange_strong(__i1, __i2, __m); }</span>
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :     bool
+<span class="lineNum">     153 </span>            :     compare_exchange_strong(bool&amp; __i1, bool __i2,
+<span class="lineNum">     154 </span>            :                     memory_order __m = memory_order_seq_cst) volatile noexcept
+<span class="lineNum">     155 </span>            :     { return _M_base.compare_exchange_strong(__i1, __i2, __m); }
+<span class="lineNum">     156 </span>            :   };
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :   /**
+<span class="lineNum">     160 </span>            :    *  @brief Generic atomic type, primary class template.
+<span class="lineNum">     161 </span>            :    *
+<span class="lineNum">     162 </span>            :    *  @tparam _Tp  Type to be made atomic, must be trivally copyable.
+<span class="lineNum">     163 </span>            :    */
+<span class="lineNum">     164 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">     165 </span>            :     struct atomic
+<span class="lineNum">     166 </span>            :     {
+<span class="lineNum">     167 </span>            :     private:
+<span class="lineNum">     168 </span>            :       // Align 1/2/4/8/16-byte types to at least their size.
+<span class="lineNum">     169 </span>            :       static constexpr int _S_min_alignment
+<span class="lineNum">     170 </span>            :         = (sizeof(_Tp) &amp; (sizeof(_Tp) - 1)) || sizeof(_Tp) &gt; 16
+<span class="lineNum">     171 </span>            :         ? 0 : sizeof(_Tp);
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :       static constexpr int _S_alignment
+<span class="lineNum">     174 </span>            :         = _S_min_alignment &gt; alignof(_Tp) ? _S_min_alignment : alignof(_Tp);
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            :       alignas(_S_alignment) _Tp _M_i;
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :       static_assert(__is_trivially_copyable(_Tp),
+<span class="lineNum">     179 </span>            :                     &quot;std::atomic requires a trivially copyable type&quot;);
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            :       static_assert(sizeof(_Tp) &gt; 0,
+<span class="lineNum">     182 </span>            :                     &quot;Incomplete or zero-sized types are not supported&quot;);
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            :     public:
+<span class="lineNum">     185 </span>            :       atomic() noexcept = default;
+<span class="lineNum">     186 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     187 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     188 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     189 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">        125 :       constexpr atomic(_Tp __i) noexcept : _M_i(__i) { }</span>
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            :       operator _Tp() const noexcept
+<span class="lineNum">     194 </span><span class="lineCov">  130973566 :       { return load(); }</span>
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            :       operator _Tp() const volatile noexcept
+<span class="lineNum">     197 </span>            :       { return load(); }
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            :       _Tp
+<span class="lineNum">     200 </span>            :       operator=(_Tp __i) noexcept 
+<span class="lineNum">     201 </span><span class="lineCov">        103 :       { store(__i); return __i; }</span>
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            :       _Tp
+<span class="lineNum">     204 </span>            :       operator=(_Tp __i) volatile noexcept 
+<span class="lineNum">     205 </span>            :       { store(__i); return __i; }
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :       bool
+<span class="lineNum">     208 </span>            :       is_lock_free() const noexcept
+<span class="lineNum">     209 </span>            :       {
+<span class="lineNum">     210 </span>            :         // Produce a fake, minimally aligned pointer.
+<span class="lineNum">     211 </span>            :         return __atomic_is_lock_free(sizeof(_M_i),
+<span class="lineNum">     212 </span>            :             reinterpret_cast&lt;void *&gt;(-__alignof(_M_i)));
+<span class="lineNum">     213 </span>            :       }
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            :       bool
+<span class="lineNum">     216 </span>            :       is_lock_free() const volatile noexcept
+<span class="lineNum">     217 </span>            :       {
+<span class="lineNum">     218 </span>            :         // Produce a fake, minimally aligned pointer.
+<span class="lineNum">     219 </span>            :         return __atomic_is_lock_free(sizeof(_M_i),
+<span class="lineNum">     220 </span>            :             reinterpret_cast&lt;void *&gt;(-__alignof(_M_i)));
+<span class="lineNum">     221 </span>            :       }
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            :       void
+<span class="lineNum">     224 </span>            :       store(_Tp __i, memory_order __m = memory_order_seq_cst) noexcept
+<span class="lineNum">     225 </span><span class="lineCov">        103 :       { __atomic_store(&amp;_M_i, &amp;__i, __m); }</span>
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span>            :       void
+<span class="lineNum">     228 </span>            :       store(_Tp __i, memory_order __m = memory_order_seq_cst) volatile noexcept
+<span class="lineNum">     229 </span>            :       { __atomic_store(&amp;_M_i, &amp;__i, __m); }
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :       _Tp
+<span class="lineNum">     232 </span>            :       load(memory_order __m = memory_order_seq_cst) const noexcept
+<span class="lineNum">     233 </span>            :       { 
+<span class="lineNum">     234 </span>            :         _Tp tmp;
+<span class="lineNum">     235 </span><span class="lineCov">  130973566 :         __atomic_load(&amp;_M_i, &amp;tmp, __m);</span>
+<span class="lineNum">     236 </span>            :         return tmp;
+<span class="lineNum">     237 </span>            :       }
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            :       _Tp
+<span class="lineNum">     240 </span>            :       load(memory_order __m = memory_order_seq_cst) const volatile noexcept
+<span class="lineNum">     241 </span>            :       { 
+<span class="lineNum">     242 </span>            :         _Tp tmp;
+<span class="lineNum">     243 </span>            :         __atomic_load(&amp;_M_i, &amp;tmp, __m);
+<span class="lineNum">     244 </span>            :         return tmp;
+<span class="lineNum">     245 </span>            :       }
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            :       _Tp
+<span class="lineNum">     248 </span>            :       exchange(_Tp __i, memory_order __m = memory_order_seq_cst) noexcept
+<span class="lineNum">     249 </span>            :       { 
+<span class="lineNum">     250 </span>            :         _Tp tmp;
+<span class="lineNum">     251 </span><span class="lineCov">        254 :         __atomic_exchange(&amp;_M_i, &amp;__i, &amp;tmp, __m);</span>
+<span class="lineNum">     252 </span>            :         return tmp;
+<span class="lineNum">     253 </span>            :       }
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            :       _Tp
+<span class="lineNum">     256 </span>            :       exchange(_Tp __i, 
+<span class="lineNum">     257 </span>            :                memory_order __m = memory_order_seq_cst) volatile noexcept
+<span class="lineNum">     258 </span>            :       { 
+<span class="lineNum">     259 </span>            :         _Tp tmp;
+<span class="lineNum">     260 </span>            :         __atomic_exchange(&amp;_M_i, &amp;__i, &amp;tmp, __m);
+<span class="lineNum">     261 </span>            :         return tmp;
+<span class="lineNum">     262 </span>            :       }
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            :       bool
+<span class="lineNum">     265 </span>            :       compare_exchange_weak(_Tp&amp; __e, _Tp __i, memory_order __s, 
+<span class="lineNum">     266 </span>            :                             memory_order __f) noexcept
+<span class="lineNum">     267 </span>            :       {
+<span class="lineNum">     268 </span>            :         return __atomic_compare_exchange(&amp;_M_i, &amp;__e, &amp;__i, true, __s, __f);
+<span class="lineNum">     269 </span>            :       }
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            :       bool
+<span class="lineNum">     272 </span>            :       compare_exchange_weak(_Tp&amp; __e, _Tp __i, memory_order __s, 
+<span class="lineNum">     273 </span>            :                             memory_order __f) volatile noexcept
+<span class="lineNum">     274 </span>            :       {
+<span class="lineNum">     275 </span>            :         return __atomic_compare_exchange(&amp;_M_i, &amp;__e, &amp;__i, true, __s, __f);
+<span class="lineNum">     276 </span>            :       }
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span>            :       bool
+<span class="lineNum">     279 </span>            :       compare_exchange_weak(_Tp&amp; __e, _Tp __i,
+<span class="lineNum">     280 </span>            :                             memory_order __m = memory_order_seq_cst) noexcept
+<span class="lineNum">     281 </span>            :       { return compare_exchange_weak(__e, __i, __m,
+<span class="lineNum">     282 </span>            :                                      __cmpexch_failure_order(__m)); }
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            :       bool
+<span class="lineNum">     285 </span>            :       compare_exchange_weak(_Tp&amp; __e, _Tp __i,
+<span class="lineNum">     286 </span>            :                      memory_order __m = memory_order_seq_cst) volatile noexcept
+<span class="lineNum">     287 </span>            :       { return compare_exchange_weak(__e, __i, __m,
+<span class="lineNum">     288 </span>            :                                      __cmpexch_failure_order(__m)); }
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            :       bool
+<span class="lineNum">     291 </span>            :       compare_exchange_strong(_Tp&amp; __e, _Tp __i, memory_order __s, 
+<span class="lineNum">     292 </span>            :                               memory_order __f) noexcept
+<span class="lineNum">     293 </span>            :       {
+<span class="lineNum">     294 </span><span class="lineCov">        432 :         return __atomic_compare_exchange(&amp;_M_i, &amp;__e, &amp;__i, false, __s, __f);</span>
+<span class="lineNum">     295 </span>            :       }
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            :       bool
+<span class="lineNum">     298 </span>            :       compare_exchange_strong(_Tp&amp; __e, _Tp __i, memory_order __s, 
+<span class="lineNum">     299 </span>            :                               memory_order __f) volatile noexcept
+<span class="lineNum">     300 </span>            :       {
+<span class="lineNum">     301 </span>            :         return __atomic_compare_exchange(&amp;_M_i, &amp;__e, &amp;__i, false, __s, __f);
+<span class="lineNum">     302 </span>            :       }
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span>            :       bool
+<span class="lineNum">     305 </span>            :       compare_exchange_strong(_Tp&amp; __e, _Tp __i,
+<span class="lineNum">     306 </span>            :                                memory_order __m = memory_order_seq_cst) noexcept
+<span class="lineNum">     307 </span><span class="lineCov">        432 :       { return compare_exchange_strong(__e, __i, __m,</span>
+<span class="lineNum">     308 </span><span class="lineCov">        432 :                                        __cmpexch_failure_order(__m)); }</span>
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            :       bool
+<span class="lineNum">     311 </span>            :       compare_exchange_strong(_Tp&amp; __e, _Tp __i,
+<span class="lineNum">     312 </span>            :                      memory_order __m = memory_order_seq_cst) volatile noexcept
+<span class="lineNum">     313 </span>            :       { return compare_exchange_strong(__e, __i, __m,
+<span class="lineNum">     314 </span>            :                                        __cmpexch_failure_order(__m)); }
+<span class="lineNum">     315 </span>            :     };
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            :   /// Partial specialization for pointer types.
+<span class="lineNum">     319 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">     320 </span>            :     struct atomic&lt;_Tp*&gt;
+<span class="lineNum">     321 </span>            :     {
+<span class="lineNum">     322 </span>            :       typedef _Tp*                      __pointer_type;
+<span class="lineNum">     323 </span>            :       typedef __atomic_base&lt;_Tp*&gt; __base_type;
+<span class="lineNum">     324 </span>            :       __base_type                       _M_b;
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span><span class="lineCov">          4 :       atomic() noexcept = default;</span>
+<span class="lineNum">     327 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     328 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     329 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     330 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span>            :       constexpr atomic(__pointer_type __p) noexcept : _M_b(__p) { }
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span>            :       operator __pointer_type() const noexcept
+<span class="lineNum">     335 </span>            :       { return __pointer_type(_M_b); }
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span>            :       operator __pointer_type() const volatile noexcept
+<span class="lineNum">     338 </span>            :       { return __pointer_type(_M_b); }
+<span class="lineNum">     339 </span>            : 
+<span class="lineNum">     340 </span>            :       __pointer_type
+<span class="lineNum">     341 </span>            :       operator=(__pointer_type __p) noexcept
+<span class="lineNum">     342 </span>            :       { return _M_b.operator=(__p); }
+<span class="lineNum">     343 </span>            : 
+<span class="lineNum">     344 </span>            :       __pointer_type
+<span class="lineNum">     345 </span>            :       operator=(__pointer_type __p) volatile noexcept
+<span class="lineNum">     346 </span>            :       { return _M_b.operator=(__p); }
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            :       __pointer_type
+<span class="lineNum">     349 </span>            :       operator++(int) noexcept
+<span class="lineNum">     350 </span>            :       { return _M_b++; }
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span>            :       __pointer_type
+<span class="lineNum">     353 </span>            :       operator++(int) volatile noexcept
+<span class="lineNum">     354 </span>            :       { return _M_b++; }
+<span class="lineNum">     355 </span>            : 
+<span class="lineNum">     356 </span>            :       __pointer_type
+<span class="lineNum">     357 </span>            :       operator--(int) noexcept
+<span class="lineNum">     358 </span>            :       { return _M_b--; }
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span>            :       __pointer_type
+<span class="lineNum">     361 </span>            :       operator--(int) volatile noexcept
+<span class="lineNum">     362 </span>            :       { return _M_b--; }
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span>            :       __pointer_type
+<span class="lineNum">     365 </span>            :       operator++() noexcept
+<span class="lineNum">     366 </span>            :       { return ++_M_b; }
+<span class="lineNum">     367 </span>            : 
+<span class="lineNum">     368 </span>            :       __pointer_type
+<span class="lineNum">     369 </span>            :       operator++() volatile noexcept
+<span class="lineNum">     370 </span>            :       { return ++_M_b; }
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span>            :       __pointer_type
+<span class="lineNum">     373 </span>            :       operator--() noexcept
+<span class="lineNum">     374 </span>            :       { return --_M_b; }
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span>            :       __pointer_type
+<span class="lineNum">     377 </span>            :       operator--() volatile noexcept
+<span class="lineNum">     378 </span>            :       { return --_M_b; }
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span>            :       __pointer_type
+<span class="lineNum">     381 </span>            :       operator+=(ptrdiff_t __d) noexcept
+<span class="lineNum">     382 </span>            :       { return _M_b.operator+=(__d); }
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span>            :       __pointer_type
+<span class="lineNum">     385 </span>            :       operator+=(ptrdiff_t __d) volatile noexcept
+<span class="lineNum">     386 </span>            :       { return _M_b.operator+=(__d); }
+<span class="lineNum">     387 </span>            : 
+<span class="lineNum">     388 </span>            :       __pointer_type
+<span class="lineNum">     389 </span>            :       operator-=(ptrdiff_t __d) noexcept
+<span class="lineNum">     390 </span>            :       { return _M_b.operator-=(__d); }
+<span class="lineNum">     391 </span>            : 
+<span class="lineNum">     392 </span>            :       __pointer_type
+<span class="lineNum">     393 </span>            :       operator-=(ptrdiff_t __d) volatile noexcept
+<span class="lineNum">     394 </span>            :       { return _M_b.operator-=(__d); }
+<span class="lineNum">     395 </span>            : 
+<span class="lineNum">     396 </span>            :       bool
+<span class="lineNum">     397 </span>            :       is_lock_free() const noexcept
+<span class="lineNum">     398 </span>            :       { return _M_b.is_lock_free(); }
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span>            :       bool
+<span class="lineNum">     401 </span>            :       is_lock_free() const volatile noexcept
+<span class="lineNum">     402 </span>            :       { return _M_b.is_lock_free(); }
+<span class="lineNum">     403 </span>            : 
+<span class="lineNum">     404 </span>            :       void
+<span class="lineNum">     405 </span>            :       store(__pointer_type __p,
+<span class="lineNum">     406 </span>            :             memory_order __m = memory_order_seq_cst) noexcept
+<span class="lineNum">     407 </span><span class="lineCov">          8 :       { return _M_b.store(__p, __m); }</span>
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span>            :       void
+<span class="lineNum">     410 </span>            :       store(__pointer_type __p,
+<span class="lineNum">     411 </span>            :             memory_order __m = memory_order_seq_cst) volatile noexcept
+<span class="lineNum">     412 </span>            :       { return _M_b.store(__p, __m); }
+<span class="lineNum">     413 </span>            : 
+<span class="lineNum">     414 </span>            :       __pointer_type
+<span class="lineNum">     415 </span>            :       load(memory_order __m = memory_order_seq_cst) const noexcept
+<span class="lineNum">     416 </span><span class="lineCov">        518 :       { return _M_b.load(__m); }</span>
+<span class="lineNum">     417 </span>            : 
+<span class="lineNum">     418 </span>            :       __pointer_type
+<span class="lineNum">     419 </span>            :       load(memory_order __m = memory_order_seq_cst) const volatile noexcept
+<span class="lineNum">     420 </span>            :       { return _M_b.load(__m); }
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span>            :       __pointer_type
+<span class="lineNum">     423 </span>            :       exchange(__pointer_type __p,
+<span class="lineNum">     424 </span>            :                memory_order __m = memory_order_seq_cst) noexcept
+<span class="lineNum">     425 </span>            :       { return _M_b.exchange(__p, __m); }
+<span class="lineNum">     426 </span>            : 
+<span class="lineNum">     427 </span>            :       __pointer_type
+<span class="lineNum">     428 </span>            :       exchange(__pointer_type __p,
+<span class="lineNum">     429 </span>            :                memory_order __m = memory_order_seq_cst) volatile noexcept
+<span class="lineNum">     430 </span>            :       { return _M_b.exchange(__p, __m); }
+<span class="lineNum">     431 </span>            : 
+<span class="lineNum">     432 </span>            :       bool
+<span class="lineNum">     433 </span>            :       compare_exchange_weak(__pointer_type&amp; __p1, __pointer_type __p2,
+<span class="lineNum">     434 </span>            :                             memory_order __m1, memory_order __m2) noexcept
+<span class="lineNum">     435 </span>            :       { return _M_b.compare_exchange_strong(__p1, __p2, __m1, __m2); }
+<span class="lineNum">     436 </span>            : 
+<span class="lineNum">     437 </span>            :       bool
+<span class="lineNum">     438 </span>            :       compare_exchange_weak(__pointer_type&amp; __p1, __pointer_type __p2,
+<span class="lineNum">     439 </span>            :                             memory_order __m1,
+<span class="lineNum">     440 </span>            :                             memory_order __m2) volatile noexcept
+<span class="lineNum">     441 </span>            :       { return _M_b.compare_exchange_strong(__p1, __p2, __m1, __m2); }
+<span class="lineNum">     442 </span>            : 
+<span class="lineNum">     443 </span>            :       bool
+<span class="lineNum">     444 </span>            :       compare_exchange_weak(__pointer_type&amp; __p1, __pointer_type __p2,
+<span class="lineNum">     445 </span>            :                             memory_order __m = memory_order_seq_cst) noexcept
+<span class="lineNum">     446 </span>            :       {
+<span class="lineNum">     447 </span>            :         return compare_exchange_weak(__p1, __p2, __m,
+<span class="lineNum">     448 </span>            :                                      __cmpexch_failure_order(__m));
+<span class="lineNum">     449 </span>            :       }
+<span class="lineNum">     450 </span>            : 
+<span class="lineNum">     451 </span>            :       bool
+<span class="lineNum">     452 </span>            :       compare_exchange_weak(__pointer_type&amp; __p1, __pointer_type __p2,
+<span class="lineNum">     453 </span>            :                     memory_order __m = memory_order_seq_cst) volatile noexcept
+<span class="lineNum">     454 </span>            :       {
+<span class="lineNum">     455 </span>            :         return compare_exchange_weak(__p1, __p2, __m,
+<span class="lineNum">     456 </span>            :                                      __cmpexch_failure_order(__m));
+<span class="lineNum">     457 </span>            :       }
+<span class="lineNum">     458 </span>            : 
+<span class="lineNum">     459 </span>            :       bool
+<span class="lineNum">     460 </span>            :       compare_exchange_strong(__pointer_type&amp; __p1, __pointer_type __p2,
+<span class="lineNum">     461 </span>            :                               memory_order __m1, memory_order __m2) noexcept
+<span class="lineNum">     462 </span>            :       { return _M_b.compare_exchange_strong(__p1, __p2, __m1, __m2); }
+<span class="lineNum">     463 </span>            : 
+<span class="lineNum">     464 </span>            :       bool
+<span class="lineNum">     465 </span>            :       compare_exchange_strong(__pointer_type&amp; __p1, __pointer_type __p2,
+<span class="lineNum">     466 </span>            :                               memory_order __m1,
+<span class="lineNum">     467 </span>            :                               memory_order __m2) volatile noexcept
+<span class="lineNum">     468 </span>            :       { return _M_b.compare_exchange_strong(__p1, __p2, __m1, __m2); }
+<span class="lineNum">     469 </span>            : 
+<span class="lineNum">     470 </span>            :       bool
+<span class="lineNum">     471 </span>            :       compare_exchange_strong(__pointer_type&amp; __p1, __pointer_type __p2,
+<span class="lineNum">     472 </span>            :                               memory_order __m = memory_order_seq_cst) noexcept
+<span class="lineNum">     473 </span>            :       {
+<span class="lineNum">     474 </span>            :         return _M_b.compare_exchange_strong(__p1, __p2, __m,
+<span class="lineNum">     475 </span>            :                                             __cmpexch_failure_order(__m));
+<span class="lineNum">     476 </span>            :       }
+<span class="lineNum">     477 </span>            : 
+<span class="lineNum">     478 </span>            :       bool
+<span class="lineNum">     479 </span>            :       compare_exchange_strong(__pointer_type&amp; __p1, __pointer_type __p2,
+<span class="lineNum">     480 </span>            :                     memory_order __m = memory_order_seq_cst) volatile noexcept
+<span class="lineNum">     481 </span>            :       {
+<span class="lineNum">     482 </span>            :         return _M_b.compare_exchange_strong(__p1, __p2, __m,
+<span class="lineNum">     483 </span>            :                                             __cmpexch_failure_order(__m));
+<span class="lineNum">     484 </span>            :       }
+<span class="lineNum">     485 </span>            : 
+<span class="lineNum">     486 </span>            :       __pointer_type
+<span class="lineNum">     487 </span>            :       fetch_add(ptrdiff_t __d,
+<span class="lineNum">     488 </span>            :                 memory_order __m = memory_order_seq_cst) noexcept
+<span class="lineNum">     489 </span>            :       { return _M_b.fetch_add(__d, __m); }
+<span class="lineNum">     490 </span>            : 
+<span class="lineNum">     491 </span>            :       __pointer_type
+<span class="lineNum">     492 </span>            :       fetch_add(ptrdiff_t __d,
+<span class="lineNum">     493 </span>            :                 memory_order __m = memory_order_seq_cst) volatile noexcept
+<span class="lineNum">     494 </span>            :       { return _M_b.fetch_add(__d, __m); }
+<span class="lineNum">     495 </span>            : 
+<span class="lineNum">     496 </span>            :       __pointer_type
+<span class="lineNum">     497 </span>            :       fetch_sub(ptrdiff_t __d,
+<span class="lineNum">     498 </span>            :                 memory_order __m = memory_order_seq_cst) noexcept
+<span class="lineNum">     499 </span>            :       { return _M_b.fetch_sub(__d, __m); }
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span>            :       __pointer_type
+<span class="lineNum">     502 </span>            :       fetch_sub(ptrdiff_t __d,
+<span class="lineNum">     503 </span>            :                 memory_order __m = memory_order_seq_cst) volatile noexcept
+<span class="lineNum">     504 </span>            :       { return _M_b.fetch_sub(__d, __m); }
+<span class="lineNum">     505 </span>            :     };
+<span class="lineNum">     506 </span>            : 
+<span class="lineNum">     507 </span>            : 
+<span class="lineNum">     508 </span>            :   /// Explicit specialization for char.
+<span class="lineNum">     509 </span>            :   template&lt;&gt;
+<span class="lineNum">     510 </span>            :     struct atomic&lt;char&gt; : __atomic_base&lt;char&gt;
+<span class="lineNum">     511 </span>            :     {
+<span class="lineNum">     512 </span>            :       typedef char                      __integral_type;
+<span class="lineNum">     513 </span>            :       typedef __atomic_base&lt;char&gt;         __base_type;
+<span class="lineNum">     514 </span>            : 
+<span class="lineNum">     515 </span>            :       atomic() noexcept = default;
+<span class="lineNum">     516 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     517 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     518 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     519 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     520 </span>            : 
+<span class="lineNum">     521 </span>            :       constexpr atomic(__integral_type __i) noexcept : __base_type(__i) { }
+<span class="lineNum">     522 </span>            : 
+<span class="lineNum">     523 </span>            :       using __base_type::operator __integral_type;
+<span class="lineNum">     524 </span>            :       using __base_type::operator=;
+<span class="lineNum">     525 </span>            :     };
+<span class="lineNum">     526 </span>            : 
+<span class="lineNum">     527 </span>            :   /// Explicit specialization for signed char.
+<span class="lineNum">     528 </span>            :   template&lt;&gt;
+<span class="lineNum">     529 </span>            :     struct atomic&lt;signed char&gt; : __atomic_base&lt;signed char&gt;
+<span class="lineNum">     530 </span>            :     {
+<span class="lineNum">     531 </span>            :       typedef signed char               __integral_type;
+<span class="lineNum">     532 </span>            :       typedef __atomic_base&lt;signed char&gt;  __base_type;
+<span class="lineNum">     533 </span>            : 
+<span class="lineNum">     534 </span>            :       atomic() noexcept= default;
+<span class="lineNum">     535 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     536 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     537 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     538 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     539 </span>            : 
+<span class="lineNum">     540 </span>            :       constexpr atomic(__integral_type __i) noexcept : __base_type(__i) { }
+<span class="lineNum">     541 </span>            : 
+<span class="lineNum">     542 </span>            :       using __base_type::operator __integral_type;
+<span class="lineNum">     543 </span>            :       using __base_type::operator=;
+<span class="lineNum">     544 </span>            :     };
+<span class="lineNum">     545 </span>            : 
+<span class="lineNum">     546 </span>            :   /// Explicit specialization for unsigned char.
+<span class="lineNum">     547 </span>            :   template&lt;&gt;
+<span class="lineNum">     548 </span>            :     struct atomic&lt;unsigned char&gt; : __atomic_base&lt;unsigned char&gt;
+<span class="lineNum">     549 </span>            :     {
+<span class="lineNum">     550 </span>            :       typedef unsigned char             __integral_type;
+<span class="lineNum">     551 </span>            :       typedef __atomic_base&lt;unsigned char&gt;        __base_type;
+<span class="lineNum">     552 </span>            : 
+<span class="lineNum">     553 </span>            :       atomic() noexcept= default;
+<span class="lineNum">     554 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     555 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     556 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     557 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     558 </span>            : 
+<span class="lineNum">     559 </span>            :       constexpr atomic(__integral_type __i) noexcept : __base_type(__i) { }
+<span class="lineNum">     560 </span>            : 
+<span class="lineNum">     561 </span>            :       using __base_type::operator __integral_type;
+<span class="lineNum">     562 </span>            :       using __base_type::operator=;
+<span class="lineNum">     563 </span>            :     };
+<span class="lineNum">     564 </span>            : 
+<span class="lineNum">     565 </span>            :   /// Explicit specialization for short.
+<span class="lineNum">     566 </span>            :   template&lt;&gt;
+<span class="lineNum">     567 </span>            :     struct atomic&lt;short&gt; : __atomic_base&lt;short&gt;
+<span class="lineNum">     568 </span>            :     {
+<span class="lineNum">     569 </span>            :       typedef short                     __integral_type;
+<span class="lineNum">     570 </span>            :       typedef __atomic_base&lt;short&gt;                __base_type;
+<span class="lineNum">     571 </span>            : 
+<span class="lineNum">     572 </span>            :       atomic() noexcept = default;
+<span class="lineNum">     573 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     574 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     575 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     576 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     577 </span>            : 
+<span class="lineNum">     578 </span>            :       constexpr atomic(__integral_type __i) noexcept : __base_type(__i) { }
+<span class="lineNum">     579 </span>            : 
+<span class="lineNum">     580 </span>            :       using __base_type::operator __integral_type;
+<span class="lineNum">     581 </span>            :       using __base_type::operator=;
+<span class="lineNum">     582 </span>            :     };
+<span class="lineNum">     583 </span>            : 
+<span class="lineNum">     584 </span>            :   /// Explicit specialization for unsigned short.
+<span class="lineNum">     585 </span>            :   template&lt;&gt;
+<span class="lineNum">     586 </span>            :     struct atomic&lt;unsigned short&gt; : __atomic_base&lt;unsigned short&gt;
+<span class="lineNum">     587 </span>            :     {
+<span class="lineNum">     588 </span>            :       typedef unsigned short            __integral_type;
+<span class="lineNum">     589 </span>            :       typedef __atomic_base&lt;unsigned short&gt;               __base_type;
+<span class="lineNum">     590 </span>            : 
+<span class="lineNum">     591 </span>            :       atomic() noexcept = default;
+<span class="lineNum">     592 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     593 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     594 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     595 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     596 </span>            : 
+<span class="lineNum">     597 </span>            :       constexpr atomic(__integral_type __i) noexcept : __base_type(__i) { }
+<span class="lineNum">     598 </span>            : 
+<span class="lineNum">     599 </span>            :       using __base_type::operator __integral_type;
+<span class="lineNum">     600 </span>            :       using __base_type::operator=;
+<span class="lineNum">     601 </span>            :     };
+<span class="lineNum">     602 </span>            : 
+<span class="lineNum">     603 </span>            :   /// Explicit specialization for int.
+<span class="lineNum">     604 </span>            :   template&lt;&gt;
+<span class="lineNum">     605 </span>            :     struct atomic&lt;int&gt; : __atomic_base&lt;int&gt;
+<span class="lineNum">     606 </span>            :     {
+<span class="lineNum">     607 </span>            :       typedef int                       __integral_type;
+<span class="lineNum">     608 </span>            :       typedef __atomic_base&lt;int&gt;          __base_type;
+<span class="lineNum">     609 </span>            : 
+<span class="lineNum">     610 </span>            :       atomic() noexcept = default;
+<span class="lineNum">     611 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     612 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     613 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     614 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     615 </span>            : 
+<span class="lineNum">     616 </span><span class="lineCov">    2444252 :       constexpr atomic(__integral_type __i) noexcept : __base_type(__i) { }</span>
+<span class="lineNum">     617 </span>            : 
+<span class="lineNum">     618 </span>            :       using __base_type::operator __integral_type;
+<span class="lineNum">     619 </span>            :       using __base_type::operator=;
+<span class="lineNum">     620 </span>            :     };
+<span class="lineNum">     621 </span>            : 
+<span class="lineNum">     622 </span>            :   /// Explicit specialization for unsigned int.
+<span class="lineNum">     623 </span>            :   template&lt;&gt;
+<span class="lineNum">     624 </span>            :     struct atomic&lt;unsigned int&gt; : __atomic_base&lt;unsigned int&gt;
+<span class="lineNum">     625 </span>            :     {
+<span class="lineNum">     626 </span>            :       typedef unsigned int              __integral_type;
+<span class="lineNum">     627 </span>            :       typedef __atomic_base&lt;unsigned int&gt;         __base_type;
+<span class="lineNum">     628 </span>            : 
+<span class="lineNum">     629 </span>            :       atomic() noexcept = default;
+<span class="lineNum">     630 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     631 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     632 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     633 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     634 </span>            : 
+<span class="lineNum">     635 </span><span class="lineCov">          2 :       constexpr atomic(__integral_type __i) noexcept : __base_type(__i) { }</span>
+<span class="lineNum">     636 </span>            : 
+<span class="lineNum">     637 </span>            :       using __base_type::operator __integral_type;
+<span class="lineNum">     638 </span>            :       using __base_type::operator=;
+<span class="lineNum">     639 </span>            :     };
+<span class="lineNum">     640 </span>            : 
+<span class="lineNum">     641 </span>            :   /// Explicit specialization for long.
+<span class="lineNum">     642 </span>            :   template&lt;&gt;
+<span class="lineNum">     643 </span>            :     struct atomic&lt;long&gt; : __atomic_base&lt;long&gt;
+<span class="lineNum">     644 </span>            :     {
+<span class="lineNum">     645 </span>            :       typedef long                      __integral_type;
+<span class="lineNum">     646 </span>            :       typedef __atomic_base&lt;long&gt;         __base_type;
+<span class="lineNum">     647 </span>            : 
+<span class="lineNum">     648 </span><span class="lineCov">          5 :       atomic() noexcept = default;</span>
+<span class="lineNum">     649 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     650 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     651 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     652 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     653 </span>            : 
+<span class="lineNum">     654 </span><span class="lineCov">         62 :       constexpr atomic(__integral_type __i) noexcept : __base_type(__i) { }</span>
+<span class="lineNum">     655 </span>            : 
+<span class="lineNum">     656 </span>            :       using __base_type::operator __integral_type;
+<span class="lineNum">     657 </span>            :       using __base_type::operator=;
+<span class="lineNum">     658 </span>            :     };
+<span class="lineNum">     659 </span>            : 
+<span class="lineNum">     660 </span>            :   /// Explicit specialization for unsigned long.
+<span class="lineNum">     661 </span>            :   template&lt;&gt;
+<span class="lineNum">     662 </span>            :     struct atomic&lt;unsigned long&gt; : __atomic_base&lt;unsigned long&gt;
+<span class="lineNum">     663 </span>            :     {
+<span class="lineNum">     664 </span>            :       typedef unsigned long             __integral_type;
+<span class="lineNum">     665 </span>            :       typedef __atomic_base&lt;unsigned long&gt;        __base_type;
+<span class="lineNum">     666 </span>            : 
+<span class="lineNum">     667 </span>            :       atomic() noexcept = default;
+<span class="lineNum">     668 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     669 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     670 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     671 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     672 </span>            : 
+<span class="lineNum">     673 </span><span class="lineCov">     150910 :       constexpr atomic(__integral_type __i) noexcept : __base_type(__i) { }</span>
+<span class="lineNum">     674 </span>            : 
+<span class="lineNum">     675 </span>            :       using __base_type::operator __integral_type;
+<span class="lineNum">     676 </span>            :       using __base_type::operator=;
+<span class="lineNum">     677 </span>            :     };
+<span class="lineNum">     678 </span>            : 
+<span class="lineNum">     679 </span>            :   /// Explicit specialization for long long.
+<span class="lineNum">     680 </span>            :   template&lt;&gt;
+<span class="lineNum">     681 </span>            :     struct atomic&lt;long long&gt; : __atomic_base&lt;long long&gt;
+<span class="lineNum">     682 </span>            :     {
+<span class="lineNum">     683 </span>            :       typedef long long                 __integral_type;
+<span class="lineNum">     684 </span>            :       typedef __atomic_base&lt;long long&gt;            __base_type;
+<span class="lineNum">     685 </span>            : 
+<span class="lineNum">     686 </span>            :       atomic() noexcept = default;
+<span class="lineNum">     687 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     688 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     689 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     690 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     691 </span>            : 
+<span class="lineNum">     692 </span>            :       constexpr atomic(__integral_type __i) noexcept : __base_type(__i) { }
+<span class="lineNum">     693 </span>            : 
+<span class="lineNum">     694 </span>            :       using __base_type::operator __integral_type;
+<span class="lineNum">     695 </span>            :       using __base_type::operator=;
+<span class="lineNum">     696 </span>            :     };
+<span class="lineNum">     697 </span>            : 
+<span class="lineNum">     698 </span>            :   /// Explicit specialization for unsigned long long.
+<span class="lineNum">     699 </span>            :   template&lt;&gt;
+<span class="lineNum">     700 </span>            :     struct atomic&lt;unsigned long long&gt; : __atomic_base&lt;unsigned long long&gt;
+<span class="lineNum">     701 </span>            :     {
+<span class="lineNum">     702 </span>            :       typedef unsigned long long        __integral_type;
+<span class="lineNum">     703 </span>            :       typedef __atomic_base&lt;unsigned long long&gt;   __base_type;
+<span class="lineNum">     704 </span>            : 
+<span class="lineNum">     705 </span>            :       atomic() noexcept = default;
+<span class="lineNum">     706 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     707 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     708 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     709 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     710 </span>            : 
+<span class="lineNum">     711 </span>            :       constexpr atomic(__integral_type __i) noexcept : __base_type(__i) { }
+<span class="lineNum">     712 </span>            : 
+<span class="lineNum">     713 </span>            :       using __base_type::operator __integral_type;
+<span class="lineNum">     714 </span>            :       using __base_type::operator=;
+<span class="lineNum">     715 </span>            :     };
+<span class="lineNum">     716 </span>            : 
+<span class="lineNum">     717 </span>            :   /// Explicit specialization for wchar_t.
+<span class="lineNum">     718 </span>            :   template&lt;&gt;
+<span class="lineNum">     719 </span>            :     struct atomic&lt;wchar_t&gt; : __atomic_base&lt;wchar_t&gt;
+<span class="lineNum">     720 </span>            :     {
+<span class="lineNum">     721 </span>            :       typedef wchar_t                   __integral_type;
+<span class="lineNum">     722 </span>            :       typedef __atomic_base&lt;wchar_t&gt;      __base_type;
+<span class="lineNum">     723 </span>            : 
+<span class="lineNum">     724 </span>            :       atomic() noexcept = default;
+<span class="lineNum">     725 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     726 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     727 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     728 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     729 </span>            : 
+<span class="lineNum">     730 </span>            :       constexpr atomic(__integral_type __i) noexcept : __base_type(__i) { }
+<span class="lineNum">     731 </span>            : 
+<span class="lineNum">     732 </span>            :       using __base_type::operator __integral_type;
+<span class="lineNum">     733 </span>            :       using __base_type::operator=;
+<span class="lineNum">     734 </span>            :     };
+<span class="lineNum">     735 </span>            : 
+<span class="lineNum">     736 </span>            :   /// Explicit specialization for char16_t.
+<span class="lineNum">     737 </span>            :   template&lt;&gt;
+<span class="lineNum">     738 </span>            :     struct atomic&lt;char16_t&gt; : __atomic_base&lt;char16_t&gt;
+<span class="lineNum">     739 </span>            :     {
+<span class="lineNum">     740 </span>            :       typedef char16_t                  __integral_type;
+<span class="lineNum">     741 </span>            :       typedef __atomic_base&lt;char16_t&gt;     __base_type;
+<span class="lineNum">     742 </span>            : 
+<span class="lineNum">     743 </span>            :       atomic() noexcept = default;
+<span class="lineNum">     744 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     745 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     746 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     747 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     748 </span>            : 
+<span class="lineNum">     749 </span>            :       constexpr atomic(__integral_type __i) noexcept : __base_type(__i) { }
+<span class="lineNum">     750 </span>            : 
+<span class="lineNum">     751 </span>            :       using __base_type::operator __integral_type;
+<span class="lineNum">     752 </span>            :       using __base_type::operator=;
+<span class="lineNum">     753 </span>            :     };
+<span class="lineNum">     754 </span>            : 
+<span class="lineNum">     755 </span>            :   /// Explicit specialization for char32_t.
+<span class="lineNum">     756 </span>            :   template&lt;&gt;
+<span class="lineNum">     757 </span>            :     struct atomic&lt;char32_t&gt; : __atomic_base&lt;char32_t&gt;
+<span class="lineNum">     758 </span>            :     {
+<span class="lineNum">     759 </span>            :       typedef char32_t                  __integral_type;
+<span class="lineNum">     760 </span>            :       typedef __atomic_base&lt;char32_t&gt;     __base_type;
+<span class="lineNum">     761 </span>            : 
+<span class="lineNum">     762 </span>            :       atomic() noexcept = default;
+<span class="lineNum">     763 </span>            :       ~atomic() noexcept = default;
+<span class="lineNum">     764 </span>            :       atomic(const atomic&amp;) = delete;
+<span class="lineNum">     765 </span>            :       atomic&amp; operator=(const atomic&amp;) = delete;
+<span class="lineNum">     766 </span>            :       atomic&amp; operator=(const atomic&amp;) volatile = delete;
+<span class="lineNum">     767 </span>            : 
+<span class="lineNum">     768 </span>            :       constexpr atomic(__integral_type __i) noexcept : __base_type(__i) { }
+<span class="lineNum">     769 </span>            : 
+<span class="lineNum">     770 </span>            :       using __base_type::operator __integral_type;
+<span class="lineNum">     771 </span>            :       using __base_type::operator=;
+<span class="lineNum">     772 </span>            :     };
+<span class="lineNum">     773 </span>            : 
+<span class="lineNum">     774 </span>            : 
+<span class="lineNum">     775 </span>            :   /// atomic_bool
+<span class="lineNum">     776 </span>            :   typedef atomic&lt;bool&gt;                    atomic_bool;
+<span class="lineNum">     777 </span>            : 
+<span class="lineNum">     778 </span>            :   /// atomic_char
+<span class="lineNum">     779 </span>            :   typedef atomic&lt;char&gt;                    atomic_char;
+<span class="lineNum">     780 </span>            : 
+<span class="lineNum">     781 </span>            :   /// atomic_schar
+<span class="lineNum">     782 </span>            :   typedef atomic&lt;signed char&gt;             atomic_schar;
+<span class="lineNum">     783 </span>            : 
+<span class="lineNum">     784 </span>            :   /// atomic_uchar
+<span class="lineNum">     785 </span>            :   typedef atomic&lt;unsigned char&gt;           atomic_uchar;
+<span class="lineNum">     786 </span>            : 
+<span class="lineNum">     787 </span>            :   /// atomic_short
+<span class="lineNum">     788 </span>            :   typedef atomic&lt;short&gt;                   atomic_short;
+<span class="lineNum">     789 </span>            : 
+<span class="lineNum">     790 </span>            :   /// atomic_ushort
+<span class="lineNum">     791 </span>            :   typedef atomic&lt;unsigned short&gt;  atomic_ushort;
+<span class="lineNum">     792 </span>            : 
+<span class="lineNum">     793 </span>            :   /// atomic_int
+<span class="lineNum">     794 </span>            :   typedef atomic&lt;int&gt;                     atomic_int;
+<span class="lineNum">     795 </span>            : 
+<span class="lineNum">     796 </span>            :   /// atomic_uint
+<span class="lineNum">     797 </span>            :   typedef atomic&lt;unsigned int&gt;            atomic_uint;
+<span class="lineNum">     798 </span>            : 
+<span class="lineNum">     799 </span>            :   /// atomic_long
+<span class="lineNum">     800 </span>            :   typedef atomic&lt;long&gt;                    atomic_long;
+<span class="lineNum">     801 </span>            : 
+<span class="lineNum">     802 </span>            :   /// atomic_ulong
+<span class="lineNum">     803 </span>            :   typedef atomic&lt;unsigned long&gt;           atomic_ulong;
+<span class="lineNum">     804 </span>            : 
+<span class="lineNum">     805 </span>            :   /// atomic_llong
+<span class="lineNum">     806 </span>            :   typedef atomic&lt;long long&gt;               atomic_llong;
+<span class="lineNum">     807 </span>            : 
+<span class="lineNum">     808 </span>            :   /// atomic_ullong
+<span class="lineNum">     809 </span>            :   typedef atomic&lt;unsigned long long&gt;      atomic_ullong;
+<span class="lineNum">     810 </span>            : 
+<span class="lineNum">     811 </span>            :   /// atomic_wchar_t
+<span class="lineNum">     812 </span>            :   typedef atomic&lt;wchar_t&gt;         atomic_wchar_t;
+<span class="lineNum">     813 </span>            : 
+<span class="lineNum">     814 </span>            :   /// atomic_char16_t
+<span class="lineNum">     815 </span>            :   typedef atomic&lt;char16_t&gt;                atomic_char16_t;
+<span class="lineNum">     816 </span>            : 
+<span class="lineNum">     817 </span>            :   /// atomic_char32_t
+<span class="lineNum">     818 </span>            :   typedef atomic&lt;char32_t&gt;                atomic_char32_t;
+<span class="lineNum">     819 </span>            : 
+<span class="lineNum">     820 </span>            : 
+<span class="lineNum">     821 </span>            :   /// atomic_int_least8_t
+<span class="lineNum">     822 </span>            :   typedef atomic&lt;int_least8_t&gt;            atomic_int_least8_t;
+<span class="lineNum">     823 </span>            : 
+<span class="lineNum">     824 </span>            :   /// atomic_uint_least8_t
+<span class="lineNum">     825 </span>            :   typedef atomic&lt;uint_least8_t&gt;           atomic_uint_least8_t;
+<span class="lineNum">     826 </span>            : 
+<span class="lineNum">     827 </span>            :   /// atomic_int_least16_t
+<span class="lineNum">     828 </span>            :   typedef atomic&lt;int_least16_t&gt;           atomic_int_least16_t;
+<span class="lineNum">     829 </span>            : 
+<span class="lineNum">     830 </span>            :   /// atomic_uint_least16_t
+<span class="lineNum">     831 </span>            :   typedef atomic&lt;uint_least16_t&gt;  atomic_uint_least16_t;
+<span class="lineNum">     832 </span>            : 
+<span class="lineNum">     833 </span>            :   /// atomic_int_least32_t
+<span class="lineNum">     834 </span>            :   typedef atomic&lt;int_least32_t&gt;           atomic_int_least32_t;
+<span class="lineNum">     835 </span>            : 
+<span class="lineNum">     836 </span>            :   /// atomic_uint_least32_t
+<span class="lineNum">     837 </span>            :   typedef atomic&lt;uint_least32_t&gt;  atomic_uint_least32_t;
+<span class="lineNum">     838 </span>            : 
+<span class="lineNum">     839 </span>            :   /// atomic_int_least64_t
+<span class="lineNum">     840 </span>            :   typedef atomic&lt;int_least64_t&gt;           atomic_int_least64_t;
+<span class="lineNum">     841 </span>            : 
+<span class="lineNum">     842 </span>            :   /// atomic_uint_least64_t
+<span class="lineNum">     843 </span>            :   typedef atomic&lt;uint_least64_t&gt;  atomic_uint_least64_t;
+<span class="lineNum">     844 </span>            : 
+<span class="lineNum">     845 </span>            : 
+<span class="lineNum">     846 </span>            :   /// atomic_int_fast8_t
+<span class="lineNum">     847 </span>            :   typedef atomic&lt;int_fast8_t&gt;             atomic_int_fast8_t;
+<span class="lineNum">     848 </span>            : 
+<span class="lineNum">     849 </span>            :   /// atomic_uint_fast8_t
+<span class="lineNum">     850 </span>            :   typedef atomic&lt;uint_fast8_t&gt;            atomic_uint_fast8_t;
+<span class="lineNum">     851 </span>            : 
+<span class="lineNum">     852 </span>            :   /// atomic_int_fast16_t
+<span class="lineNum">     853 </span>            :   typedef atomic&lt;int_fast16_t&gt;            atomic_int_fast16_t;
+<span class="lineNum">     854 </span>            : 
+<span class="lineNum">     855 </span>            :   /// atomic_uint_fast16_t
+<span class="lineNum">     856 </span>            :   typedef atomic&lt;uint_fast16_t&gt;           atomic_uint_fast16_t;
+<span class="lineNum">     857 </span>            : 
+<span class="lineNum">     858 </span>            :   /// atomic_int_fast32_t
+<span class="lineNum">     859 </span>            :   typedef atomic&lt;int_fast32_t&gt;            atomic_int_fast32_t;
+<span class="lineNum">     860 </span>            : 
+<span class="lineNum">     861 </span>            :   /// atomic_uint_fast32_t
+<span class="lineNum">     862 </span>            :   typedef atomic&lt;uint_fast32_t&gt;           atomic_uint_fast32_t;
+<span class="lineNum">     863 </span>            : 
+<span class="lineNum">     864 </span>            :   /// atomic_int_fast64_t
+<span class="lineNum">     865 </span>            :   typedef atomic&lt;int_fast64_t&gt;            atomic_int_fast64_t;
+<span class="lineNum">     866 </span>            : 
+<span class="lineNum">     867 </span>            :   /// atomic_uint_fast64_t
+<span class="lineNum">     868 </span>            :   typedef atomic&lt;uint_fast64_t&gt;           atomic_uint_fast64_t;
+<span class="lineNum">     869 </span>            : 
+<span class="lineNum">     870 </span>            : 
+<span class="lineNum">     871 </span>            :   /// atomic_intptr_t
+<span class="lineNum">     872 </span>            :   typedef atomic&lt;intptr_t&gt;                atomic_intptr_t;
+<span class="lineNum">     873 </span>            : 
+<span class="lineNum">     874 </span>            :   /// atomic_uintptr_t
+<span class="lineNum">     875 </span>            :   typedef atomic&lt;uintptr_t&gt;               atomic_uintptr_t;
+<span class="lineNum">     876 </span>            : 
+<span class="lineNum">     877 </span>            :   /// atomic_size_t
+<span class="lineNum">     878 </span>            :   typedef atomic&lt;size_t&gt;          atomic_size_t;
+<span class="lineNum">     879 </span>            : 
+<span class="lineNum">     880 </span>            :   /// atomic_intmax_t
+<span class="lineNum">     881 </span>            :   typedef atomic&lt;intmax_t&gt;                atomic_intmax_t;
+<span class="lineNum">     882 </span>            : 
+<span class="lineNum">     883 </span>            :   /// atomic_uintmax_t
+<span class="lineNum">     884 </span>            :   typedef atomic&lt;uintmax_t&gt;               atomic_uintmax_t;
+<span class="lineNum">     885 </span>            : 
+<span class="lineNum">     886 </span>            :   /// atomic_ptrdiff_t
+<span class="lineNum">     887 </span>            :   typedef atomic&lt;ptrdiff_t&gt;               atomic_ptrdiff_t;
+<span class="lineNum">     888 </span>            : 
+<span class="lineNum">     889 </span>            : 
+<span class="lineNum">     890 </span>            :   // Function definitions, atomic_flag operations.
+<span class="lineNum">     891 </span>            :   inline bool
+<span class="lineNum">     892 </span>            :   atomic_flag_test_and_set_explicit(atomic_flag* __a,
+<span class="lineNum">     893 </span>            :                                     memory_order __m) noexcept
+<span class="lineNum">     894 </span>            :   { return __a-&gt;test_and_set(__m); }
+<span class="lineNum">     895 </span>            : 
+<span class="lineNum">     896 </span>            :   inline bool
+<span class="lineNum">     897 </span>            :   atomic_flag_test_and_set_explicit(volatile atomic_flag* __a,
+<span class="lineNum">     898 </span>            :                                     memory_order __m) noexcept
+<span class="lineNum">     899 </span>            :   { return __a-&gt;test_and_set(__m); }
+<span class="lineNum">     900 </span>            : 
+<span class="lineNum">     901 </span>            :   inline void
+<span class="lineNum">     902 </span>            :   atomic_flag_clear_explicit(atomic_flag* __a, memory_order __m) noexcept
+<span class="lineNum">     903 </span>            :   { __a-&gt;clear(__m); }
+<span class="lineNum">     904 </span>            : 
+<span class="lineNum">     905 </span>            :   inline void
+<span class="lineNum">     906 </span>            :   atomic_flag_clear_explicit(volatile atomic_flag* __a,
+<span class="lineNum">     907 </span>            :                              memory_order __m) noexcept
+<span class="lineNum">     908 </span>            :   { __a-&gt;clear(__m); }
+<span class="lineNum">     909 </span>            : 
+<span class="lineNum">     910 </span>            :   inline bool
+<span class="lineNum">     911 </span>            :   atomic_flag_test_and_set(atomic_flag* __a) noexcept
+<span class="lineNum">     912 </span>            :   { return atomic_flag_test_and_set_explicit(__a, memory_order_seq_cst); }
+<span class="lineNum">     913 </span>            : 
+<span class="lineNum">     914 </span>            :   inline bool
+<span class="lineNum">     915 </span>            :   atomic_flag_test_and_set(volatile atomic_flag* __a) noexcept
+<span class="lineNum">     916 </span>            :   { return atomic_flag_test_and_set_explicit(__a, memory_order_seq_cst); }
+<span class="lineNum">     917 </span>            : 
+<span class="lineNum">     918 </span>            :   inline void
+<span class="lineNum">     919 </span>            :   atomic_flag_clear(atomic_flag* __a) noexcept
+<span class="lineNum">     920 </span>            :   { atomic_flag_clear_explicit(__a, memory_order_seq_cst); }
+<span class="lineNum">     921 </span>            : 
+<span class="lineNum">     922 </span>            :   inline void
+<span class="lineNum">     923 </span>            :   atomic_flag_clear(volatile atomic_flag* __a) noexcept
+<span class="lineNum">     924 </span>            :   { atomic_flag_clear_explicit(__a, memory_order_seq_cst); }
+<span class="lineNum">     925 </span>            : 
+<span class="lineNum">     926 </span>            : 
+<span class="lineNum">     927 </span>            :   // Function templates generally applicable to atomic types.
+<span class="lineNum">     928 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">     929 </span>            :     inline bool
+<span class="lineNum">     930 </span>            :     atomic_is_lock_free(const atomic&lt;_ITp&gt;* __a) noexcept
+<span class="lineNum">     931 </span>            :     { return __a-&gt;is_lock_free(); }
+<span class="lineNum">     932 </span>            : 
+<span class="lineNum">     933 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">     934 </span>            :     inline bool
+<span class="lineNum">     935 </span>            :     atomic_is_lock_free(const volatile atomic&lt;_ITp&gt;* __a) noexcept
+<span class="lineNum">     936 </span>            :     { return __a-&gt;is_lock_free(); }
+<span class="lineNum">     937 </span>            : 
+<span class="lineNum">     938 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">     939 </span>            :     inline void
+<span class="lineNum">     940 </span>            :     atomic_init(atomic&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">     941 </span>            :     { __a-&gt;store(__i, memory_order_relaxed); }
+<span class="lineNum">     942 </span>            : 
+<span class="lineNum">     943 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">     944 </span>            :     inline void
+<span class="lineNum">     945 </span>            :     atomic_init(volatile atomic&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">     946 </span>            :     { __a-&gt;store(__i, memory_order_relaxed); }
+<span class="lineNum">     947 </span>            : 
+<span class="lineNum">     948 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">     949 </span>            :     inline void
+<span class="lineNum">     950 </span>            :     atomic_store_explicit(atomic&lt;_ITp&gt;* __a, _ITp __i,
+<span class="lineNum">     951 </span>            :                           memory_order __m) noexcept
+<span class="lineNum">     952 </span>            :     { __a-&gt;store(__i, __m); }
+<span class="lineNum">     953 </span>            : 
+<span class="lineNum">     954 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">     955 </span>            :     inline void
+<span class="lineNum">     956 </span>            :     atomic_store_explicit(volatile atomic&lt;_ITp&gt;* __a, _ITp __i,
+<span class="lineNum">     957 </span>            :                           memory_order __m) noexcept
+<span class="lineNum">     958 </span>            :     { __a-&gt;store(__i, __m); }
+<span class="lineNum">     959 </span>            : 
+<span class="lineNum">     960 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">     961 </span>            :     inline _ITp
+<span class="lineNum">     962 </span>            :     atomic_load_explicit(const atomic&lt;_ITp&gt;* __a, memory_order __m) noexcept
+<span class="lineNum">     963 </span>            :     { return __a-&gt;load(__m); }
+<span class="lineNum">     964 </span>            : 
+<span class="lineNum">     965 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">     966 </span>            :     inline _ITp
+<span class="lineNum">     967 </span>            :     atomic_load_explicit(const volatile atomic&lt;_ITp&gt;* __a,
+<span class="lineNum">     968 </span>            :                          memory_order __m) noexcept
+<span class="lineNum">     969 </span>            :     { return __a-&gt;load(__m); }
+<span class="lineNum">     970 </span>            : 
+<span class="lineNum">     971 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">     972 </span>            :     inline _ITp
+<span class="lineNum">     973 </span>            :     atomic_exchange_explicit(atomic&lt;_ITp&gt;* __a, _ITp __i,
+<span class="lineNum">     974 </span>            :                              memory_order __m) noexcept
+<span class="lineNum">     975 </span>            :     { return __a-&gt;exchange(__i, __m); }
+<span class="lineNum">     976 </span>            : 
+<span class="lineNum">     977 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">     978 </span>            :     inline _ITp
+<span class="lineNum">     979 </span>            :     atomic_exchange_explicit(volatile atomic&lt;_ITp&gt;* __a, _ITp __i,
+<span class="lineNum">     980 </span>            :                              memory_order __m) noexcept
+<span class="lineNum">     981 </span>            :     { return __a-&gt;exchange(__i, __m); }
+<span class="lineNum">     982 </span>            : 
+<span class="lineNum">     983 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">     984 </span>            :     inline bool
+<span class="lineNum">     985 </span>            :     atomic_compare_exchange_weak_explicit(atomic&lt;_ITp&gt;* __a,
+<span class="lineNum">     986 </span>            :                                           _ITp* __i1, _ITp __i2,
+<span class="lineNum">     987 </span>            :                                           memory_order __m1,
+<span class="lineNum">     988 </span>            :                                           memory_order __m2) noexcept
+<span class="lineNum">     989 </span>            :     { return __a-&gt;compare_exchange_weak(*__i1, __i2, __m1, __m2); }
+<span class="lineNum">     990 </span>            : 
+<span class="lineNum">     991 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">     992 </span>            :     inline bool
+<span class="lineNum">     993 </span>            :     atomic_compare_exchange_weak_explicit(volatile atomic&lt;_ITp&gt;* __a,
+<span class="lineNum">     994 </span>            :                                           _ITp* __i1, _ITp __i2,
+<span class="lineNum">     995 </span>            :                                           memory_order __m1,
+<span class="lineNum">     996 </span>            :                                           memory_order __m2) noexcept
+<span class="lineNum">     997 </span>            :     { return __a-&gt;compare_exchange_weak(*__i1, __i2, __m1, __m2); }
+<span class="lineNum">     998 </span>            : 
+<span class="lineNum">     999 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1000 </span>            :     inline bool
+<span class="lineNum">    1001 </span>            :     atomic_compare_exchange_strong_explicit(atomic&lt;_ITp&gt;* __a,
+<span class="lineNum">    1002 </span>            :                                             _ITp* __i1, _ITp __i2,
+<span class="lineNum">    1003 </span>            :                                             memory_order __m1,
+<span class="lineNum">    1004 </span>            :                                             memory_order __m2) noexcept
+<span class="lineNum">    1005 </span>            :     { return __a-&gt;compare_exchange_strong(*__i1, __i2, __m1, __m2); }
+<span class="lineNum">    1006 </span>            : 
+<span class="lineNum">    1007 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1008 </span>            :     inline bool
+<span class="lineNum">    1009 </span>            :     atomic_compare_exchange_strong_explicit(volatile atomic&lt;_ITp&gt;* __a,
+<span class="lineNum">    1010 </span>            :                                             _ITp* __i1, _ITp __i2,
+<span class="lineNum">    1011 </span>            :                                             memory_order __m1,
+<span class="lineNum">    1012 </span>            :                                             memory_order __m2) noexcept
+<span class="lineNum">    1013 </span>            :     { return __a-&gt;compare_exchange_strong(*__i1, __i2, __m1, __m2); }
+<span class="lineNum">    1014 </span>            : 
+<span class="lineNum">    1015 </span>            : 
+<span class="lineNum">    1016 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1017 </span>            :     inline void
+<span class="lineNum">    1018 </span>            :     atomic_store(atomic&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">    1019 </span>            :     { atomic_store_explicit(__a, __i, memory_order_seq_cst); }
+<span class="lineNum">    1020 </span>            : 
+<span class="lineNum">    1021 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1022 </span>            :     inline void
+<span class="lineNum">    1023 </span>            :     atomic_store(volatile atomic&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">    1024 </span>            :     { atomic_store_explicit(__a, __i, memory_order_seq_cst); }
+<span class="lineNum">    1025 </span>            : 
+<span class="lineNum">    1026 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1027 </span>            :     inline _ITp
+<span class="lineNum">    1028 </span>            :     atomic_load(const atomic&lt;_ITp&gt;* __a) noexcept
+<span class="lineNum">    1029 </span>            :     { return atomic_load_explicit(__a, memory_order_seq_cst); }
+<span class="lineNum">    1030 </span>            : 
+<span class="lineNum">    1031 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1032 </span>            :     inline _ITp
+<span class="lineNum">    1033 </span>            :     atomic_load(const volatile atomic&lt;_ITp&gt;* __a) noexcept
+<span class="lineNum">    1034 </span>            :     { return atomic_load_explicit(__a, memory_order_seq_cst); }
+<span class="lineNum">    1035 </span>            : 
+<span class="lineNum">    1036 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1037 </span>            :     inline _ITp
+<span class="lineNum">    1038 </span>            :     atomic_exchange(atomic&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">    1039 </span>            :     { return atomic_exchange_explicit(__a, __i, memory_order_seq_cst); }
+<span class="lineNum">    1040 </span>            : 
+<span class="lineNum">    1041 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1042 </span>            :     inline _ITp
+<span class="lineNum">    1043 </span>            :     atomic_exchange(volatile atomic&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">    1044 </span>            :     { return atomic_exchange_explicit(__a, __i, memory_order_seq_cst); }
+<span class="lineNum">    1045 </span>            : 
+<span class="lineNum">    1046 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1047 </span>            :     inline bool
+<span class="lineNum">    1048 </span>            :     atomic_compare_exchange_weak(atomic&lt;_ITp&gt;* __a,
+<span class="lineNum">    1049 </span>            :                                  _ITp* __i1, _ITp __i2) noexcept
+<span class="lineNum">    1050 </span>            :     {
+<span class="lineNum">    1051 </span>            :       return atomic_compare_exchange_weak_explicit(__a, __i1, __i2,
+<span class="lineNum">    1052 </span>            :                                                    memory_order_seq_cst,
+<span class="lineNum">    1053 </span>            :                                                    memory_order_seq_cst);
+<span class="lineNum">    1054 </span>            :     }
+<span class="lineNum">    1055 </span>            : 
+<span class="lineNum">    1056 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1057 </span>            :     inline bool
+<span class="lineNum">    1058 </span>            :     atomic_compare_exchange_weak(volatile atomic&lt;_ITp&gt;* __a,
+<span class="lineNum">    1059 </span>            :                                  _ITp* __i1, _ITp __i2) noexcept
+<span class="lineNum">    1060 </span>            :     {
+<span class="lineNum">    1061 </span>            :       return atomic_compare_exchange_weak_explicit(__a, __i1, __i2,
+<span class="lineNum">    1062 </span>            :                                                    memory_order_seq_cst,
+<span class="lineNum">    1063 </span>            :                                                    memory_order_seq_cst);
+<span class="lineNum">    1064 </span>            :     }
+<span class="lineNum">    1065 </span>            : 
+<span class="lineNum">    1066 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1067 </span>            :     inline bool
+<span class="lineNum">    1068 </span>            :     atomic_compare_exchange_strong(atomic&lt;_ITp&gt;* __a,
+<span class="lineNum">    1069 </span>            :                                    _ITp* __i1, _ITp __i2) noexcept
+<span class="lineNum">    1070 </span>            :     {
+<span class="lineNum">    1071 </span>            :       return atomic_compare_exchange_strong_explicit(__a, __i1, __i2,
+<span class="lineNum">    1072 </span>            :                                                      memory_order_seq_cst,
+<span class="lineNum">    1073 </span>            :                                                      memory_order_seq_cst);
+<span class="lineNum">    1074 </span>            :     }
+<span class="lineNum">    1075 </span>            : 
+<span class="lineNum">    1076 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1077 </span>            :     inline bool
+<span class="lineNum">    1078 </span>            :     atomic_compare_exchange_strong(volatile atomic&lt;_ITp&gt;* __a,
+<span class="lineNum">    1079 </span>            :                                    _ITp* __i1, _ITp __i2) noexcept
+<span class="lineNum">    1080 </span>            :     {
+<span class="lineNum">    1081 </span>            :       return atomic_compare_exchange_strong_explicit(__a, __i1, __i2,
+<span class="lineNum">    1082 </span>            :                                                      memory_order_seq_cst,
+<span class="lineNum">    1083 </span>            :                                                      memory_order_seq_cst);
+<span class="lineNum">    1084 </span>            :     }
+<span class="lineNum">    1085 </span>            : 
+<span class="lineNum">    1086 </span>            :   // Function templates for atomic_integral operations only, using
+<span class="lineNum">    1087 </span>            :   // __atomic_base. Template argument should be constricted to
+<span class="lineNum">    1088 </span>            :   // intergral types as specified in the standard, excluding address
+<span class="lineNum">    1089 </span>            :   // types.
+<span class="lineNum">    1090 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1091 </span>            :     inline _ITp
+<span class="lineNum">    1092 </span>            :     atomic_fetch_add_explicit(__atomic_base&lt;_ITp&gt;* __a, _ITp __i,
+<span class="lineNum">    1093 </span>            :                               memory_order __m) noexcept
+<span class="lineNum">    1094 </span>            :     { return __a-&gt;fetch_add(__i, __m); }
+<span class="lineNum">    1095 </span>            : 
+<span class="lineNum">    1096 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1097 </span>            :     inline _ITp
+<span class="lineNum">    1098 </span>            :     atomic_fetch_add_explicit(volatile __atomic_base&lt;_ITp&gt;* __a, _ITp __i,
+<span class="lineNum">    1099 </span>            :                               memory_order __m) noexcept
+<span class="lineNum">    1100 </span>            :     { return __a-&gt;fetch_add(__i, __m); }
+<span class="lineNum">    1101 </span>            : 
+<span class="lineNum">    1102 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1103 </span>            :     inline _ITp
+<span class="lineNum">    1104 </span>            :     atomic_fetch_sub_explicit(__atomic_base&lt;_ITp&gt;* __a, _ITp __i,
+<span class="lineNum">    1105 </span>            :                               memory_order __m) noexcept
+<span class="lineNum">    1106 </span>            :     { return __a-&gt;fetch_sub(__i, __m); }
+<span class="lineNum">    1107 </span>            : 
+<span class="lineNum">    1108 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1109 </span>            :     inline _ITp
+<span class="lineNum">    1110 </span>            :     atomic_fetch_sub_explicit(volatile __atomic_base&lt;_ITp&gt;* __a, _ITp __i,
+<span class="lineNum">    1111 </span>            :                               memory_order __m) noexcept
+<span class="lineNum">    1112 </span>            :     { return __a-&gt;fetch_sub(__i, __m); }
+<span class="lineNum">    1113 </span>            : 
+<span class="lineNum">    1114 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1115 </span>            :     inline _ITp
+<span class="lineNum">    1116 </span>            :     atomic_fetch_and_explicit(__atomic_base&lt;_ITp&gt;* __a, _ITp __i,
+<span class="lineNum">    1117 </span>            :                               memory_order __m) noexcept
+<span class="lineNum">    1118 </span>            :     { return __a-&gt;fetch_and(__i, __m); }
+<span class="lineNum">    1119 </span>            : 
+<span class="lineNum">    1120 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1121 </span>            :     inline _ITp
+<span class="lineNum">    1122 </span>            :     atomic_fetch_and_explicit(volatile __atomic_base&lt;_ITp&gt;* __a, _ITp __i,
+<span class="lineNum">    1123 </span>            :                               memory_order __m) noexcept
+<span class="lineNum">    1124 </span>            :     { return __a-&gt;fetch_and(__i, __m); }
+<span class="lineNum">    1125 </span>            : 
+<span class="lineNum">    1126 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1127 </span>            :     inline _ITp
+<span class="lineNum">    1128 </span>            :     atomic_fetch_or_explicit(__atomic_base&lt;_ITp&gt;* __a, _ITp __i,
+<span class="lineNum">    1129 </span>            :                              memory_order __m) noexcept
+<span class="lineNum">    1130 </span>            :     { return __a-&gt;fetch_or(__i, __m); }
+<span class="lineNum">    1131 </span>            : 
+<span class="lineNum">    1132 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1133 </span>            :     inline _ITp
+<span class="lineNum">    1134 </span>            :     atomic_fetch_or_explicit(volatile __atomic_base&lt;_ITp&gt;* __a, _ITp __i,
+<span class="lineNum">    1135 </span>            :                              memory_order __m) noexcept
+<span class="lineNum">    1136 </span>            :     { return __a-&gt;fetch_or(__i, __m); }
+<span class="lineNum">    1137 </span>            : 
+<span class="lineNum">    1138 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1139 </span>            :     inline _ITp
+<span class="lineNum">    1140 </span>            :     atomic_fetch_xor_explicit(__atomic_base&lt;_ITp&gt;* __a, _ITp __i,
+<span class="lineNum">    1141 </span>            :                               memory_order __m) noexcept
+<span class="lineNum">    1142 </span>            :     { return __a-&gt;fetch_xor(__i, __m); }
+<span class="lineNum">    1143 </span>            : 
+<span class="lineNum">    1144 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1145 </span>            :     inline _ITp
+<span class="lineNum">    1146 </span>            :     atomic_fetch_xor_explicit(volatile __atomic_base&lt;_ITp&gt;* __a, _ITp __i,
+<span class="lineNum">    1147 </span>            :                               memory_order __m) noexcept
+<span class="lineNum">    1148 </span>            :     { return __a-&gt;fetch_xor(__i, __m); }
+<span class="lineNum">    1149 </span>            : 
+<span class="lineNum">    1150 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1151 </span>            :     inline _ITp
+<span class="lineNum">    1152 </span>            :     atomic_fetch_add(__atomic_base&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">    1153 </span>            :     { return atomic_fetch_add_explicit(__a, __i, memory_order_seq_cst); }
+<span class="lineNum">    1154 </span>            : 
+<span class="lineNum">    1155 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1156 </span>            :     inline _ITp
+<span class="lineNum">    1157 </span>            :     atomic_fetch_add(volatile __atomic_base&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">    1158 </span>            :     { return atomic_fetch_add_explicit(__a, __i, memory_order_seq_cst); }
+<span class="lineNum">    1159 </span>            : 
+<span class="lineNum">    1160 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1161 </span>            :     inline _ITp
+<span class="lineNum">    1162 </span>            :     atomic_fetch_sub(__atomic_base&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">    1163 </span>            :     { return atomic_fetch_sub_explicit(__a, __i, memory_order_seq_cst); }
+<span class="lineNum">    1164 </span>            : 
+<span class="lineNum">    1165 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1166 </span>            :     inline _ITp
+<span class="lineNum">    1167 </span>            :     atomic_fetch_sub(volatile __atomic_base&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">    1168 </span>            :     { return atomic_fetch_sub_explicit(__a, __i, memory_order_seq_cst); }
+<span class="lineNum">    1169 </span>            : 
+<span class="lineNum">    1170 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1171 </span>            :     inline _ITp
+<span class="lineNum">    1172 </span>            :     atomic_fetch_and(__atomic_base&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">    1173 </span>            :     { return atomic_fetch_and_explicit(__a, __i, memory_order_seq_cst); }
+<span class="lineNum">    1174 </span>            : 
+<span class="lineNum">    1175 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1176 </span>            :     inline _ITp
+<span class="lineNum">    1177 </span>            :     atomic_fetch_and(volatile __atomic_base&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">    1178 </span>            :     { return atomic_fetch_and_explicit(__a, __i, memory_order_seq_cst); }
+<span class="lineNum">    1179 </span>            : 
+<span class="lineNum">    1180 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1181 </span>            :     inline _ITp
+<span class="lineNum">    1182 </span>            :     atomic_fetch_or(__atomic_base&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">    1183 </span>            :     { return atomic_fetch_or_explicit(__a, __i, memory_order_seq_cst); }
+<span class="lineNum">    1184 </span>            : 
+<span class="lineNum">    1185 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1186 </span>            :     inline _ITp
+<span class="lineNum">    1187 </span>            :     atomic_fetch_or(volatile __atomic_base&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">    1188 </span>            :     { return atomic_fetch_or_explicit(__a, __i, memory_order_seq_cst); }
+<span class="lineNum">    1189 </span>            : 
+<span class="lineNum">    1190 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1191 </span>            :     inline _ITp
+<span class="lineNum">    1192 </span>            :     atomic_fetch_xor(__atomic_base&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">    1193 </span>            :     { return atomic_fetch_xor_explicit(__a, __i, memory_order_seq_cst); }
+<span class="lineNum">    1194 </span>            : 
+<span class="lineNum">    1195 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1196 </span>            :     inline _ITp
+<span class="lineNum">    1197 </span>            :     atomic_fetch_xor(volatile __atomic_base&lt;_ITp&gt;* __a, _ITp __i) noexcept
+<span class="lineNum">    1198 </span>            :     { return atomic_fetch_xor_explicit(__a, __i, memory_order_seq_cst); }
+<span class="lineNum">    1199 </span>            : 
+<span class="lineNum">    1200 </span>            : 
+<span class="lineNum">    1201 </span>            :   // Partial specializations for pointers.
+<span class="lineNum">    1202 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1203 </span>            :     inline _ITp*
+<span class="lineNum">    1204 </span>            :     atomic_fetch_add_explicit(atomic&lt;_ITp*&gt;* __a, ptrdiff_t __d,
+<span class="lineNum">    1205 </span>            :                               memory_order __m) noexcept
+<span class="lineNum">    1206 </span>            :     { return __a-&gt;fetch_add(__d, __m); }
+<span class="lineNum">    1207 </span>            : 
+<span class="lineNum">    1208 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1209 </span>            :     inline _ITp*
+<span class="lineNum">    1210 </span>            :     atomic_fetch_add_explicit(volatile atomic&lt;_ITp*&gt;* __a, ptrdiff_t __d,
+<span class="lineNum">    1211 </span>            :                               memory_order __m) noexcept
+<span class="lineNum">    1212 </span>            :     { return __a-&gt;fetch_add(__d, __m); }
+<span class="lineNum">    1213 </span>            : 
+<span class="lineNum">    1214 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1215 </span>            :     inline _ITp*
+<span class="lineNum">    1216 </span>            :     atomic_fetch_add(volatile atomic&lt;_ITp*&gt;* __a, ptrdiff_t __d) noexcept
+<span class="lineNum">    1217 </span>            :     { return __a-&gt;fetch_add(__d); }
+<span class="lineNum">    1218 </span>            : 
+<span class="lineNum">    1219 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1220 </span>            :     inline _ITp*
+<span class="lineNum">    1221 </span>            :     atomic_fetch_add(atomic&lt;_ITp*&gt;* __a, ptrdiff_t __d) noexcept
+<span class="lineNum">    1222 </span>            :     { return __a-&gt;fetch_add(__d); }
+<span class="lineNum">    1223 </span>            : 
+<span class="lineNum">    1224 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1225 </span>            :     inline _ITp*
+<span class="lineNum">    1226 </span>            :     atomic_fetch_sub_explicit(volatile atomic&lt;_ITp*&gt;* __a,
+<span class="lineNum">    1227 </span>            :                               ptrdiff_t __d, memory_order __m) noexcept
+<span class="lineNum">    1228 </span>            :     { return __a-&gt;fetch_sub(__d, __m); }
+<span class="lineNum">    1229 </span>            : 
+<span class="lineNum">    1230 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1231 </span>            :     inline _ITp*
+<span class="lineNum">    1232 </span>            :     atomic_fetch_sub_explicit(atomic&lt;_ITp*&gt;* __a, ptrdiff_t __d,
+<span class="lineNum">    1233 </span>            :                               memory_order __m) noexcept
+<span class="lineNum">    1234 </span>            :     { return __a-&gt;fetch_sub(__d, __m); }
+<span class="lineNum">    1235 </span>            : 
+<span class="lineNum">    1236 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1237 </span>            :     inline _ITp*
+<span class="lineNum">    1238 </span>            :     atomic_fetch_sub(volatile atomic&lt;_ITp*&gt;* __a, ptrdiff_t __d) noexcept
+<span class="lineNum">    1239 </span>            :     { return __a-&gt;fetch_sub(__d); }
+<span class="lineNum">    1240 </span>            : 
+<span class="lineNum">    1241 </span>            :   template&lt;typename _ITp&gt;
+<span class="lineNum">    1242 </span>            :     inline _ITp*
+<span class="lineNum">    1243 </span>            :     atomic_fetch_sub(atomic&lt;_ITp*&gt;* __a, ptrdiff_t __d) noexcept
+<span class="lineNum">    1244 </span>            :     { return __a-&gt;fetch_sub(__d); }
+<span class="lineNum">    1245 </span>            :   // @} group atomics
+<span class="lineNum">    1246 </span>            : 
+<span class="lineNum">    1247 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">    1248 </span>            : } // namespace
+<span class="lineNum">    1249 </span>            : 
+<span class="lineNum">    1250 </span>            : #endif // C++11
+<span class="lineNum">    1251 </span>            : 
+<span class="lineNum">    1252 </span>            : #endif // _GLIBCXX_ATOMIC
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

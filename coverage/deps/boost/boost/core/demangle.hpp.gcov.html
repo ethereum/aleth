@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/core/demangle.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/core</a> - demangle.hpp<span style="font-size: 80%;"> (source / <a href="demangle.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntryHi">92.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef BOOST_CORE_DEMANGLE_HPP_INCLUDED</a>
+<span class="lineNum">       2 </span>            : #define BOOST_CORE_DEMANGLE_HPP_INCLUDED
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : // core::demangle
+<span class="lineNum">       5 </span>            : //
+<span class="lineNum">       6 </span>            : // Copyright 2014 Peter Dimov
+<span class="lineNum">       7 </span>            : // Copyright 2014 Andrey Semashev
+<span class="lineNum">       8 </span>            : //
+<span class="lineNum">       9 </span>            : // Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">      10 </span>            : // See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">      11 </span>            : // http://www.boost.org/LICENSE_1_0.txt
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;string&gt;
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #if defined(BOOST_HAS_PRAGMA_ONCE)
+<span class="lineNum">      17 </span>            : # pragma once
+<span class="lineNum">      18 </span>            : #endif
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // __has_include is currently supported by GCC and Clang. However GCC 4.9 may have issues and
+<span class="lineNum">      21 </span>            : // returns 1 for 'defined( __has_include )', while '__has_include' is actually not supported:
+<span class="lineNum">      22 </span>            : // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63662
+<span class="lineNum">      23 </span>            : #if defined( __has_include ) &amp;&amp; (!defined( BOOST_GCC ) || (__GNUC__ + 0) &gt;= 5)
+<span class="lineNum">      24 </span>            : # if __has_include(&lt;cxxabi.h&gt;)
+<span class="lineNum">      25 </span>            : #  define BOOST_CORE_HAS_CXXABI_H
+<span class="lineNum">      26 </span>            : # endif
+<span class="lineNum">      27 </span>            : #elif defined( __GLIBCXX__ ) || defined( __GLIBCPP__ )
+<span class="lineNum">      28 </span>            : # define BOOST_CORE_HAS_CXXABI_H
+<span class="lineNum">      29 </span>            : #endif
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : #if defined( BOOST_CORE_HAS_CXXABI_H )
+<span class="lineNum">      32 </span>            : # include &lt;cxxabi.h&gt;
+<span class="lineNum">      33 </span>            : // For some archtectures (mips, mips64, x86, x86_64) cxxabi.h in Android NDK is implemented by gabi++ library
+<span class="lineNum">      34 </span>            : // (https://android.googlesource.com/platform/ndk/+/master/sources/cxx-stl/gabi++/), which does not implement
+<span class="lineNum">      35 </span>            : // abi::__cxa_demangle(). We detect this implementation by checking the include guard here.
+<span class="lineNum">      36 </span>            : # if defined( __GABIXX_CXXABI_H__ )
+<span class="lineNum">      37 </span>            : #  undef BOOST_CORE_HAS_CXXABI_H
+<span class="lineNum">      38 </span>            : # else
+<span class="lineNum">      39 </span>            : #  include &lt;cstdlib&gt;
+<span class="lineNum">      40 </span>            : #  include &lt;cstddef&gt;
+<span class="lineNum">      41 </span>            : # endif
+<span class="lineNum">      42 </span>            : #endif
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : namespace boost
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : namespace core
+<span class="lineNum">      48 </span>            : {
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : inline char const * demangle_alloc( char const * name ) BOOST_NOEXCEPT;
+<span class="lineNum">      51 </span>            : inline void demangle_free( char const * name ) BOOST_NOEXCEPT;
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : class scoped_demangled_name
+<span class="lineNum">      54 </span>            : {
+<span class="lineNum">      55 </span>            : private:
+<span class="lineNum">      56 </span>            :     char const * m_p;
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : public:
+<span class="lineNum">      59 </span>            :     explicit scoped_demangled_name( char const * name ) BOOST_NOEXCEPT :
+<span class="lineNum">      60 </span><span class="lineCov">     103426 :         m_p( demangle_alloc( name ) )</span>
+<span class="lineNum">      61 </span>            :     {
+<span class="lineNum">      62 </span>            :     }
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :     ~scoped_demangled_name() BOOST_NOEXCEPT
+<span class="lineNum">      65 </span><span class="lineCov">     103426 :     {</span>
+<span class="lineNum">      66 </span><span class="lineCov">     206852 :         demangle_free( m_p );</span>
+<span class="lineNum">      67 </span>            :     }
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :     char const * get() const BOOST_NOEXCEPT
+<span class="lineNum">      70 </span>            :     {
+<span class="lineNum">      71 </span>            :         return m_p;
+<span class="lineNum">      72 </span>            :     }
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :     BOOST_DELETED_FUNCTION(scoped_demangled_name( scoped_demangled_name const&amp; ))
+<span class="lineNum">      75 </span>            :     BOOST_DELETED_FUNCTION(scoped_demangled_name&amp; operator= ( scoped_demangled_name const&amp; ))
+<span class="lineNum">      76 </span>            : };
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : #if defined( BOOST_CORE_HAS_CXXABI_H )
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : inline char const * demangle_alloc( char const * name ) BOOST_NOEXCEPT
+<span class="lineNum">      82 </span>            : {
+<span class="lineNum">      83 </span><span class="lineCov">     103426 :     int status = 0;</span>
+<span class="lineNum">      84 </span><span class="lineCov">     103426 :     std::size_t size = 0;</span>
+<span class="lineNum">      85 </span><span class="lineCov">     103426 :     return abi::__cxa_demangle( name, NULL, &amp;size, &amp;status );</span>
+<span class="lineNum">      86 </span>            : }
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : inline void demangle_free( char const * name ) BOOST_NOEXCEPT
+<span class="lineNum">      89 </span>            : {
+<span class="lineNum">      90 </span><span class="lineCov">     103426 :     std::free( const_cast&lt; char* &gt;( name ) );</span>
+<a name="91"><span class="lineNum">      91 </span>            : }</a>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">     103426 : inline std::string demangle( char const * name )</span>
+<span class="lineNum">      94 </span>            : {
+<span class="lineNum">      95 </span><span class="lineCov">     206852 :     scoped_demangled_name demangled_name( name );</span>
+<span class="lineNum">      96 </span><span class="lineCov">     103426 :     char const * const p = demangled_name.get();</span>
+<span class="lineNum">      97 </span><span class="lineCov">     103426 :     if( p )</span>
+<span class="lineNum">      98 </span>            :     {
+<span class="lineNum">      99 </span><span class="lineCov">     206852 :         return p;</span>
+<span class="lineNum">     100 </span>            :     }
+<span class="lineNum">     101 </span>            :     else
+<span class="lineNum">     102 </span>            :     {
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :         return name;</span>
+<span class="lineNum">     104 </span>            :     }
+<span class="lineNum">     105 </span>            : }
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : #else
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : inline char const * demangle_alloc( char const * name ) BOOST_NOEXCEPT
+<span class="lineNum">     110 </span>            : {
+<span class="lineNum">     111 </span>            :     return name;
+<span class="lineNum">     112 </span>            : }
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            : inline void demangle_free( char const * ) BOOST_NOEXCEPT
+<span class="lineNum">     115 </span>            : {
+<span class="lineNum">     116 </span>            : }
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : inline std::string demangle( char const * name )
+<span class="lineNum">     119 </span>            : {
+<span class="lineNum">     120 </span>            :     return name;
+<span class="lineNum">     121 </span>            : }
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : #endif
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            : } // namespace core
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            : } // namespace boost
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            : #undef BOOST_CORE_HAS_CXXABI_H
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            : #endif // #ifndef BOOST_CORE_DEMANGLE_HPP_INCLUDED
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

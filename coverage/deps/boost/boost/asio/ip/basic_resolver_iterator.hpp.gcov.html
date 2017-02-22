@@ -1,0 +1,338 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/ip/basic_resolver_iterator.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/ip</a> - basic_resolver_iterator.hpp<span style="font-size: 80%;"> (source / <a href="basic_resolver_iterator.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // ip/basic_resolver_iterator.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_IP_BASIC_RESOLVER_ITERATOR_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_IP_BASIC_RESOLVER_ITERATOR_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;cstddef&gt;
+<span class="lineNum">      20 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      21 </span>            : #include &lt;iterator&gt;
+<span class="lineNum">      22 </span>            : #include &lt;string&gt;
+<span class="lineNum">      23 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/detail/shared_ptr.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/detail/socket_ops.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/asio/detail/socket_types.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/asio/ip/basic_resolver_entry.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #if defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">      30 </span>            : # include &lt;boost/asio/detail/winrt_utils.hpp&gt;
+<span class="lineNum">      31 </span>            : #endif // defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : namespace boost {
+<span class="lineNum">      36 </span>            : namespace asio {
+<span class="lineNum">      37 </span>            : namespace ip {
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : /// An iterator over the entries produced by a resolver.
+<span class="lineNum">      40 </span>            : /**
+<span class="lineNum">      41 </span>            :  * The boost::asio::ip::basic_resolver_iterator class template is used to define
+<span class="lineNum">      42 </span>            :  * iterators over the results returned by a resolver.
+<span class="lineNum">      43 </span>            :  *
+<span class="lineNum">      44 </span>            :  * The iterator's value_type, obtained when the iterator is dereferenced, is:
+<span class="lineNum">      45 </span>            :  * @code const basic_resolver_entry&lt;InternetProtocol&gt; @endcode
+<span class="lineNum">      46 </span>            :  *
+<span class="lineNum">      47 </span>            :  * @par Thread Safety
+<span class="lineNum">      48 </span>            :  * @e Distinct @e objects: Safe.@n
+<span class="lineNum">      49 </span>            :  * @e Shared @e objects: Unsafe.
+<span class="lineNum">      50 </span>            :  */
+<span class="lineNum">      51 </span>            : template &lt;typename InternetProtocol&gt;
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 : class basic_resolver_iterator</span>
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span>            : public:
+<span class="lineNum">      55 </span>            :   /// The type used for the distance between two iterators.
+<span class="lineNum">      56 </span>            :   typedef std::ptrdiff_t difference_type;
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            :   /// The type of the value pointed to by the iterator.
+<span class="lineNum">      59 </span>            :   typedef basic_resolver_entry&lt;InternetProtocol&gt; value_type;
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            :   /// The type of the result of applying operator-&gt;() to the iterator.
+<span class="lineNum">      62 </span>            :   typedef const basic_resolver_entry&lt;InternetProtocol&gt;* pointer;
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :   /// The type of the result of applying operator*() to the iterator.
+<span class="lineNum">      65 </span>            :   typedef const basic_resolver_entry&lt;InternetProtocol&gt;&amp; reference;
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :   /// The iterator category.
+<span class="lineNum">      68 </span>            :   typedef std::forward_iterator_tag iterator_category;
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            :   /// Default constructor creates an end iterator.
+<span class="lineNum">      71 </span>            :   basic_resolver_iterator()
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :     : index_(0)</span>
+<span class="lineNum">      73 </span>            :   {
+<span class="lineNum">      74 </span>            :   }
+<a name="75"><span class="lineNum">      75 </span>            : </a>
+<span class="lineNum">      76 </span>            :   /// Create an iterator from an addrinfo list returned by getaddrinfo.
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :   static basic_resolver_iterator create(</span>
+<span class="lineNum">      78 </span>            :       boost::asio::detail::addrinfo_type* address_info,
+<span class="lineNum">      79 </span>            :       const std::string&amp; host_name, const std::string&amp; service_name)
+<span class="lineNum">      80 </span>            :   {
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :     basic_resolver_iterator iter;</span>
+<span class="lineNum">      82 </span><span class="lineNoCov">          0 :     if (!address_info)</span>
+<span class="lineNum">      83 </span>            :       return iter;
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :     std::string actual_host_name = host_name;</span>
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :     if (address_info-&gt;ai_canonname)</span>
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :       actual_host_name = address_info-&gt;ai_canonname;</span>
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 :     iter.values_.reset(new values_type);</span>
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :     while (address_info)</span>
+<span class="lineNum">      92 </span>            :     {
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :       if (address_info-&gt;ai_family == BOOST_ASIO_OS_DEF(AF_INET)</span>
+<span class="lineNum">      94 </span>            :           || address_info-&gt;ai_family == BOOST_ASIO_OS_DEF(AF_INET6))
+<span class="lineNum">      95 </span>            :       {
+<span class="lineNum">      96 </span>            :         using namespace std; // For memcpy.
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :         typename InternetProtocol::endpoint endpoint;</span>
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :         endpoint.resize(static_cast&lt;std::size_t&gt;(address_info-&gt;ai_addrlen));</span>
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :         memcpy(endpoint.data(), address_info-&gt;ai_addr,</span>
+<span class="lineNum">     100 </span>            :             address_info-&gt;ai_addrlen);
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :         iter.values_-&gt;push_back(</span>
+<span class="lineNum">     102 </span>            :             basic_resolver_entry&lt;InternetProtocol&gt;(endpoint,
+<span class="lineNum">     103 </span>            :               actual_host_name, service_name));
+<span class="lineNum">     104 </span>            :       }
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :       address_info = address_info-&gt;ai_next;</span>
+<span class="lineNum">     106 </span>            :     }
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :     return iter;
+<span class="lineNum">     109 </span>            :   }
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            :   /// Create an iterator from an endpoint, host name and service name.
+<span class="lineNum">     112 </span>            :   static basic_resolver_iterator create(
+<span class="lineNum">     113 </span>            :       const typename InternetProtocol::endpoint&amp; endpoint,
+<span class="lineNum">     114 </span>            :       const std::string&amp; host_name, const std::string&amp; service_name)
+<span class="lineNum">     115 </span>            :   {
+<span class="lineNum">     116 </span>            :     basic_resolver_iterator iter;
+<span class="lineNum">     117 </span>            :     iter.values_.reset(new values_type);
+<span class="lineNum">     118 </span>            :     iter.values_-&gt;push_back(
+<span class="lineNum">     119 </span>            :         basic_resolver_entry&lt;InternetProtocol&gt;(
+<span class="lineNum">     120 </span>            :           endpoint, host_name, service_name));
+<span class="lineNum">     121 </span>            :     return iter;
+<span class="lineNum">     122 </span>            :   }
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :   /// Create an iterator from a sequence of endpoints, host and service name.
+<span class="lineNum">     125 </span>            :   template &lt;typename EndpointIterator&gt;
+<span class="lineNum">     126 </span>            :   static basic_resolver_iterator create(
+<span class="lineNum">     127 </span>            :       EndpointIterator begin, EndpointIterator end,
+<span class="lineNum">     128 </span>            :       const std::string&amp; host_name, const std::string&amp; service_name)
+<span class="lineNum">     129 </span>            :   {
+<span class="lineNum">     130 </span>            :     basic_resolver_iterator iter;
+<span class="lineNum">     131 </span>            :     if (begin != end)
+<span class="lineNum">     132 </span>            :     {
+<span class="lineNum">     133 </span>            :       iter.values_.reset(new values_type);
+<span class="lineNum">     134 </span>            :       for (EndpointIterator ep_iter = begin; ep_iter != end; ++ep_iter)
+<span class="lineNum">     135 </span>            :       {
+<span class="lineNum">     136 </span>            :         iter.values_-&gt;push_back(
+<span class="lineNum">     137 </span>            :             basic_resolver_entry&lt;InternetProtocol&gt;(
+<span class="lineNum">     138 </span>            :               *ep_iter, host_name, service_name));
+<span class="lineNum">     139 </span>            :       }
+<span class="lineNum">     140 </span>            :     }
+<span class="lineNum">     141 </span>            :     return iter;
+<span class="lineNum">     142 </span>            :   }
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : #if defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">     145 </span>            :   /// Create an iterator from a Windows Runtime list of EndpointPair objects.
+<span class="lineNum">     146 </span>            :   static basic_resolver_iterator create(
+<span class="lineNum">     147 </span>            :       Windows::Foundation::Collections::IVectorView&lt;
+<span class="lineNum">     148 </span>            :         Windows::Networking::EndpointPair^&gt;^ endpoints,
+<span class="lineNum">     149 </span>            :       const boost::asio::detail::addrinfo_type&amp; hints,
+<span class="lineNum">     150 </span>            :       const std::string&amp; host_name, const std::string&amp; service_name)
+<span class="lineNum">     151 </span>            :   {
+<span class="lineNum">     152 </span>            :     basic_resolver_iterator iter;
+<span class="lineNum">     153 </span>            :     if (endpoints-&gt;Size)
+<span class="lineNum">     154 </span>            :     {
+<span class="lineNum">     155 </span>            :       iter.values_.reset(new values_type);
+<span class="lineNum">     156 </span>            :       for (unsigned int i = 0; i &lt; endpoints-&gt;Size; ++i)
+<span class="lineNum">     157 </span>            :       {
+<span class="lineNum">     158 </span>            :         auto pair = endpoints-&gt;GetAt(i);
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            :         if (hints.ai_family == BOOST_ASIO_OS_DEF(AF_INET)
+<span class="lineNum">     161 </span>            :             &amp;&amp; pair-&gt;RemoteHostName-&gt;Type
+<span class="lineNum">     162 </span>            :               != Windows::Networking::HostNameType::Ipv4)
+<span class="lineNum">     163 </span>            :           continue;
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :         if (hints.ai_family == BOOST_ASIO_OS_DEF(AF_INET6)
+<span class="lineNum">     166 </span>            :             &amp;&amp; pair-&gt;RemoteHostName-&gt;Type
+<span class="lineNum">     167 </span>            :               != Windows::Networking::HostNameType::Ipv6)
+<span class="lineNum">     168 </span>            :           continue;
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :         iter.values_-&gt;push_back(
+<span class="lineNum">     171 </span>            :             basic_resolver_entry&lt;InternetProtocol&gt;(
+<span class="lineNum">     172 </span>            :               typename InternetProtocol::endpoint(
+<span class="lineNum">     173 </span>            :                 ip::address::from_string(
+<span class="lineNum">     174 </span>            :                   boost::asio::detail::winrt_utils::string(
+<span class="lineNum">     175 </span>            :                     pair-&gt;RemoteHostName-&gt;CanonicalName)),
+<span class="lineNum">     176 </span>            :                 boost::asio::detail::winrt_utils::integer(
+<span class="lineNum">     177 </span>            :                   pair-&gt;RemoteServiceName)),
+<span class="lineNum">     178 </span>            :               host_name, service_name));
+<span class="lineNum">     179 </span>            :       }
+<span class="lineNum">     180 </span>            :     }
+<span class="lineNum">     181 </span>            :     return iter;
+<span class="lineNum">     182 </span>            :   }
+<span class="lineNum">     183 </span>            : #endif // defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :   /// Dereference an iterator.
+<span class="lineNum">     186 </span>            :   const basic_resolver_entry&lt;InternetProtocol&gt;&amp; operator*() const
+<span class="lineNum">     187 </span>            :   {
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :     return dereference();</span>
+<span class="lineNum">     189 </span>            :   }
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            :   /// Dereference an iterator.
+<span class="lineNum">     192 </span>            :   const basic_resolver_entry&lt;InternetProtocol&gt;* operator-&gt;() const
+<span class="lineNum">     193 </span>            :   {
+<span class="lineNum">     194 </span>            :     return &amp;dereference();
+<span class="lineNum">     195 </span>            :   }
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :   /// Increment operator (prefix).
+<span class="lineNum">     198 </span>            :   basic_resolver_iterator&amp; operator++()
+<span class="lineNum">     199 </span>            :   {
+<span class="lineNum">     200 </span>            :     increment();
+<span class="lineNum">     201 </span>            :     return *this;
+<span class="lineNum">     202 </span>            :   }
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            :   /// Increment operator (postfix).
+<span class="lineNum">     205 </span>            :   basic_resolver_iterator operator++(int)
+<span class="lineNum">     206 </span>            :   {
+<span class="lineNum">     207 </span>            :     basic_resolver_iterator tmp(*this);
+<span class="lineNum">     208 </span>            :     ++*this;
+<span class="lineNum">     209 </span>            :     return tmp;
+<span class="lineNum">     210 </span>            :   }
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            :   /// Test two iterators for equality.
+<span class="lineNum">     213 </span>            :   friend bool operator==(const basic_resolver_iterator&amp; a,
+<span class="lineNum">     214 </span>            :       const basic_resolver_iterator&amp; b)
+<span class="lineNum">     215 </span>            :   {
+<span class="lineNum">     216 </span>            :     return a.equal(b);
+<span class="lineNum">     217 </span>            :   }
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            :   /// Test two iterators for inequality.
+<span class="lineNum">     220 </span>            :   friend bool operator!=(const basic_resolver_iterator&amp; a,
+<span class="lineNum">     221 </span>            :       const basic_resolver_iterator&amp; b)
+<span class="lineNum">     222 </span>            :   {
+<span class="lineNum">     223 </span>            :     return !a.equal(b);
+<span class="lineNum">     224 </span>            :   }
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            : private:
+<span class="lineNum">     227 </span>            :   void increment()
+<span class="lineNum">     228 </span>            :   {
+<span class="lineNum">     229 </span>            :     if (++index_ == values_-&gt;size())
+<span class="lineNum">     230 </span>            :     {
+<span class="lineNum">     231 </span>            :       // Reset state to match a default constructed end iterator.
+<span class="lineNum">     232 </span>            :       values_.reset();
+<span class="lineNum">     233 </span>            :       index_ = 0;
+<span class="lineNum">     234 </span>            :     }
+<span class="lineNum">     235 </span>            :   }
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            :   bool equal(const basic_resolver_iterator&amp; other) const
+<span class="lineNum">     238 </span>            :   {
+<span class="lineNum">     239 </span>            :     if (!values_ &amp;&amp; !other.values_)
+<span class="lineNum">     240 </span>            :       return true;
+<span class="lineNum">     241 </span>            :     if (values_ != other.values_)
+<span class="lineNum">     242 </span>            :       return false;
+<span class="lineNum">     243 </span>            :     return index_ == other.index_;
+<span class="lineNum">     244 </span>            :   }
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            :   const basic_resolver_entry&lt;InternetProtocol&gt;&amp; dereference() const
+<span class="lineNum">     247 </span>            :   {
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :     return (*values_)[index_];</span>
+<span class="lineNum">     249 </span>            :   }
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            :   typedef std::vector&lt;basic_resolver_entry&lt;InternetProtocol&gt; &gt; values_type;
+<span class="lineNum">     252 </span>            :   boost::asio::detail::shared_ptr&lt;values_type&gt; values_;
+<span class="lineNum">     253 </span>            :   std::size_t index_;
+<span class="lineNum">     254 </span>            : };
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            : } // namespace ip
+<span class="lineNum">     257 </span>            : } // namespace asio
+<span class="lineNum">     258 </span>            : } // namespace boost
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span>            : #endif // BOOST_ASIO_IP_BASIC_RESOLVER_ITERATOR_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

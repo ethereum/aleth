@@ -1,0 +1,253 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/bits/ptr_traits.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5/bits</a> - ptr_traits.h<span style="font-size: 80%;"> (source / <a href="ptr_traits.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Pointer Traits -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2011-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file bits/ptr_traits.h
+<span class="lineNum">      26 </span>            :  *  This is an internal header file, included by other library headers.
+<span class="lineNum">      27 </span>            :  *  Do not attempt to use it directly. @headername{memory}
+<span class="lineNum">      28 </span>            :  */
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #ifndef _PTR_TRAITS_H
+<span class="lineNum">      31 </span>            : #define _PTR_TRAITS_H 1
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #include &lt;type_traits&gt; // For _GLIBCXX_HAS_NESTED_TYPE
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      38 </span>            : {
+<span class="lineNum">      39 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : _GLIBCXX_HAS_NESTED_TYPE(element_type)
+<span class="lineNum">      42 </span>            : _GLIBCXX_HAS_NESTED_TYPE(difference_type)
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            :   template&lt;typename _Tp, bool = __has_element_type&lt;_Tp&gt;::value&gt;
+<span class="lineNum">      45 </span>            :     struct __ptrtr_elt_type;
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">      48 </span>            :     struct __ptrtr_elt_type&lt;_Tp, true&gt;
+<span class="lineNum">      49 </span>            :     {
+<span class="lineNum">      50 </span>            :       typedef typename _Tp::element_type __type;
+<span class="lineNum">      51 </span>            :     };
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            :   template&lt;template&lt;typename, typename...&gt; class _SomePtr, typename _Tp,
+<span class="lineNum">      54 </span>            :             typename... _Args&gt;
+<span class="lineNum">      55 </span>            :     struct __ptrtr_elt_type&lt;_SomePtr&lt;_Tp, _Args...&gt;, false&gt;
+<span class="lineNum">      56 </span>            :     {
+<span class="lineNum">      57 </span>            :       typedef _Tp __type;
+<span class="lineNum">      58 </span>            :     };
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :   template&lt;typename _Tp, bool = __has_difference_type&lt;_Tp&gt;::value&gt;
+<span class="lineNum">      61 </span>            :     struct __ptrtr_diff_type
+<span class="lineNum">      62 </span>            :     {
+<span class="lineNum">      63 </span>            :       typedef typename _Tp::difference_type __type;
+<span class="lineNum">      64 </span>            :     };
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">      67 </span>            :     struct __ptrtr_diff_type&lt;_Tp, false&gt;
+<span class="lineNum">      68 </span>            :     {
+<span class="lineNum">      69 </span>            :       typedef ptrdiff_t __type;
+<span class="lineNum">      70 </span>            :     };
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :   template&lt;typename _Ptr, typename _Up&gt;
+<span class="lineNum">      73 </span>            :     class __ptrtr_rebind_helper
+<span class="lineNum">      74 </span>            :     {
+<span class="lineNum">      75 </span>            :       template&lt;typename _Ptr2, typename _Up2&gt;
+<span class="lineNum">      76 </span>            :         static constexpr true_type
+<span class="lineNum">      77 </span>            :         _S_chk(typename _Ptr2::template rebind&lt;_Up2&gt;*);
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :       template&lt;typename, typename&gt;
+<span class="lineNum">      80 </span>            :         static constexpr false_type
+<span class="lineNum">      81 </span>            :         _S_chk(...);
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :     public:
+<span class="lineNum">      84 </span>            :       using __type = decltype(_S_chk&lt;_Ptr, _Up&gt;(nullptr));
+<span class="lineNum">      85 </span>            :     };
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :   template&lt;typename _Tp, typename _Up,
+<span class="lineNum">      88 </span>            :            bool = __ptrtr_rebind_helper&lt;_Tp, _Up&gt;::__type::value&gt;
+<span class="lineNum">      89 </span>            :     struct __ptrtr_rebind;
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            :   template&lt;typename _Tp, typename _Up&gt;
+<span class="lineNum">      92 </span>            :     struct __ptrtr_rebind&lt;_Tp, _Up, true&gt;
+<span class="lineNum">      93 </span>            :     {
+<span class="lineNum">      94 </span>            :       typedef typename _Tp::template rebind&lt;_Up&gt; __type;
+<span class="lineNum">      95 </span>            :     };
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            :   template&lt;template&lt;typename, typename...&gt; class _SomePtr, typename _Up,
+<span class="lineNum">      98 </span>            :             typename _Tp, typename... _Args&gt;
+<span class="lineNum">      99 </span>            :     struct __ptrtr_rebind&lt;_SomePtr&lt;_Tp, _Args...&gt;, _Up, false&gt;
+<span class="lineNum">     100 </span>            :     {
+<span class="lineNum">     101 </span>            :       typedef _SomePtr&lt;_Up, _Args...&gt; __type;
+<span class="lineNum">     102 </span>            :     };
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :   template&lt;typename _Tp, typename = typename remove_cv&lt;_Tp&gt;::type&gt;
+<span class="lineNum">     105 </span>            :     struct __ptrtr_not_void
+<span class="lineNum">     106 </span>            :     {
+<span class="lineNum">     107 </span>            :       typedef _Tp __type;
+<span class="lineNum">     108 </span>            :     };
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">     111 </span>            :     struct __ptrtr_not_void&lt;_Tp, void&gt;
+<span class="lineNum">     112 </span>            :     {
+<span class="lineNum">     113 </span>            :       struct __type { };
+<span class="lineNum">     114 </span>            :     };
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            :   template&lt;typename _Ptr&gt;
+<span class="lineNum">     117 </span>            :     class __ptrtr_pointer_to
+<span class="lineNum">     118 </span>            :     {
+<span class="lineNum">     119 </span>            :       typedef typename __ptrtr_elt_type&lt;_Ptr&gt;::__type   __orig_type;
+<span class="lineNum">     120 </span>            :       typedef typename __ptrtr_not_void&lt;__orig_type&gt;::__type __element_type;
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :     public:
+<span class="lineNum">     123 </span>            :       static _Ptr pointer_to(__element_type&amp; __e)
+<span class="lineNum">     124 </span>            :       { return _Ptr::pointer_to(__e); }
+<span class="lineNum">     125 </span>            :     };
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :   /**
+<span class="lineNum">     128 </span>            :    * @brief  Uniform interface to all pointer-like types
+<span class="lineNum">     129 </span>            :    * @ingroup pointer_abstractions
+<span class="lineNum">     130 </span>            :   */
+<span class="lineNum">     131 </span>            :   template&lt;typename _Ptr&gt;
+<span class="lineNum">     132 </span>            :     struct pointer_traits : __ptrtr_pointer_to&lt;_Ptr&gt;
+<span class="lineNum">     133 </span>            :     {
+<span class="lineNum">     134 </span>            :       /// The pointer type
+<span class="lineNum">     135 </span>            :       typedef _Ptr                                      pointer;
+<span class="lineNum">     136 </span>            :       /// The type pointed to
+<span class="lineNum">     137 </span>            :       typedef typename __ptrtr_elt_type&lt;_Ptr&gt;::__type   element_type;
+<span class="lineNum">     138 </span>            :       /// Type used to represent the difference between two pointers
+<span class="lineNum">     139 </span>            :       typedef typename __ptrtr_diff_type&lt;_Ptr&gt;::__type  difference_type;
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            :       template&lt;typename _Up&gt;
+<span class="lineNum">     142 </span>            :         using rebind = typename __ptrtr_rebind&lt;_Ptr, _Up&gt;::__type;
+<span class="lineNum">     143 </span>            :     };
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            :   /**
+<span class="lineNum">     146 </span>            :    * @brief  Partial specialization for built-in pointers.
+<span class="lineNum">     147 </span>            :    * @ingroup pointer_abstractions
+<span class="lineNum">     148 </span>            :   */
+<span class="lineNum">     149 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">     150 </span>            :     struct pointer_traits&lt;_Tp*&gt;
+<span class="lineNum">     151 </span>            :     {
+<span class="lineNum">     152 </span>            :       /// The pointer type
+<span class="lineNum">     153 </span>            :       typedef _Tp* pointer;
+<span class="lineNum">     154 </span>            :       /// The type pointed to
+<span class="lineNum">     155 </span>            :       typedef _Tp  element_type;
+<span class="lineNum">     156 </span>            :       /// Type used to represent the difference between two pointers
+<span class="lineNum">     157 </span>            :       typedef ptrdiff_t difference_type;
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :       template&lt;typename _Up&gt;
+<span class="lineNum">     160 </span>            :         using rebind = _Up*;
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :       /**
+<span class="lineNum">     163 </span>            :        *  @brief  Obtain a pointer to an object
+<span class="lineNum">     164 </span>            :        *  @param  __r  A reference to an object of type @c element_type
+<span class="lineNum">     165 </span>            :        *  @return @c addressof(__r)
+<span class="lineNum">     166 </span>            :       */
+<span class="lineNum">     167 </span>            :       static pointer
+<span class="lineNum">     168 </span>            :       pointer_to(typename __ptrtr_not_void&lt;element_type&gt;::__type&amp; __r) noexcept
+<span class="lineNum">     169 </span><span class="lineCov">  141525301 :       { return std::addressof(__r); }</span>
+<span class="lineNum">     170 </span>            :     };
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     173 </span>            : } // namespace std
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            : #endif
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

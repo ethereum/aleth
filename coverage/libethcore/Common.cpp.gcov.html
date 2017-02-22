@@ -1,0 +1,275 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethcore/Common.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethcore</a> - Common.cpp<span style="font-size: 80%;"> (source / <a href="Common.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">40</td>
+            <td class="headerCovTableEntry">94</td>
+            <td class="headerCovTableEntryLo">42.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryLo">62.5 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Common.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      23 </span>            : #include &lt;boost/algorithm/string/case_conv.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;libdevcore/Base64.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libdevcore/Terminal.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libdevcore/CommonData.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libdevcore/CommonIO.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libdevcore/Log.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libdevcore/SHA3.h&gt;
+<span class="lineNum">      30 </span>            : #include &quot;ICAP.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;Exceptions.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;BlockHeader.h&quot;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : using namespace std;
+<span class="lineNum">      35 </span>            : using namespace dev;
+<span class="lineNum">      36 </span>            : using namespace dev::eth;
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : namespace dev
+<span class="lineNum">      39 </span>            : {
+<span class="lineNum">      40 </span>            : namespace eth
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : const unsigned c_protocolVersion = 63;
+<span class="lineNum">      44 </span>            : #if ETH_FATDB
+<span class="lineNum">      45 </span>            : const unsigned c_minorProtocolVersion = 3;
+<span class="lineNum">      46 </span>            : const unsigned c_databaseBaseVersion = 9;
+<span class="lineNum">      47 </span>            : const unsigned c_databaseVersionModifier = 1;
+<span class="lineNum">      48 </span>            : #else
+<span class="lineNum">      49 </span>            : const unsigned c_minorProtocolVersion = 2;
+<span class="lineNum">      50 </span>            : const unsigned c_databaseBaseVersion = 9;
+<span class="lineNum">      51 </span>            : const unsigned c_databaseVersionModifier = 0;
+<span class="lineNum">      52 </span>            : #endif
+<span class="lineNum">      53 </span>            : 
+<a name="54"><span class="lineNum">      54 </span>            : const unsigned c_databaseVersion = c_databaseBaseVersion + (c_databaseVersionModifier &lt;&lt; 8) + (23 &lt;&lt; 9);</a>
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span><span class="lineCov">         15 : Address toAddress(std::string const&amp; _s)</span>
+<span class="lineNum">      57 </span>            : {
+<span class="lineNum">      58 </span>            :         try
+<span class="lineNum">      59 </span>            :         {
+<span class="lineNum">      60 </span><span class="lineCov">         15 :                 eth::ICAP i = eth::ICAP::decoded(_s);</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :                 return i.direct();</span>
+<span class="lineNum">      62 </span>            :         }
+<span class="lineNum">      63 </span><span class="lineCov">         15 :         catch (eth::InvalidICAP&amp;) {}</span>
+<span class="lineNum">      64 </span>            :         try
+<span class="lineNum">      65 </span>            :         {
+<span class="lineNum">      66 </span><span class="lineCov">         75 :                 auto b = fromHex(_s.substr(0, 2) == &quot;0x&quot; ? _s.substr(2) : _s, WhenError::Throw);</span>
+<span class="lineNum">      67 </span><span class="lineCov">         30 :                 if (b.size() == 20)</span>
+<span class="lineNum">      68 </span><span class="lineCov">         30 :                         return Address(b);</span>
+<span class="lineNum">      69 </span>            :         }
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :         catch (BadHexCharacter&amp;) {}</span>
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :         BOOST_THROW_EXCEPTION(InvalidAddress());</span>
+<span class="lineNum">      72 </span>            : }
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineCov">      53416 : vector&lt;pair&lt;u256, string&gt;&gt; const&amp; units()</span>
+<span class="lineNum">      75 </span>            : {
+<span class="lineNum">      76 </span>            :         static const vector&lt;pair&lt;u256, string&gt;&gt; s_units =
+<span class="lineNum">      77 </span>            :         {
+<span class="lineNum">      78 </span><span class="lineCov">          2 :                 {exp10&lt;54&gt;(), &quot;Uether&quot;},</span>
+<span class="lineNum">      79 </span><span class="lineCov">          2 :                 {exp10&lt;51&gt;(), &quot;Vether&quot;},</span>
+<span class="lineNum">      80 </span><span class="lineCov">          2 :                 {exp10&lt;48&gt;(), &quot;Dether&quot;},</span>
+<span class="lineNum">      81 </span><span class="lineCov">          2 :                 {exp10&lt;45&gt;(), &quot;Nether&quot;},</span>
+<span class="lineNum">      82 </span><span class="lineCov">          2 :                 {exp10&lt;42&gt;(), &quot;Yether&quot;},</span>
+<span class="lineNum">      83 </span><span class="lineCov">          2 :                 {exp10&lt;39&gt;(), &quot;Zether&quot;},</span>
+<span class="lineNum">      84 </span><span class="lineCov">          2 :                 {exp10&lt;36&gt;(), &quot;Eether&quot;},</span>
+<span class="lineNum">      85 </span><span class="lineCov">          2 :                 {exp10&lt;33&gt;(), &quot;Pether&quot;},</span>
+<span class="lineNum">      86 </span><span class="lineCov">          2 :                 {exp10&lt;30&gt;(), &quot;Tether&quot;},</span>
+<span class="lineNum">      87 </span><span class="lineCov">          2 :                 {exp10&lt;27&gt;(), &quot;Gether&quot;},</span>
+<span class="lineNum">      88 </span><span class="lineCov">          2 :                 {exp10&lt;24&gt;(), &quot;Mether&quot;},</span>
+<span class="lineNum">      89 </span><span class="lineCov">          2 :                 {exp10&lt;21&gt;(), &quot;grand&quot;},</span>
+<span class="lineNum">      90 </span><span class="lineCov">          2 :                 {exp10&lt;18&gt;(), &quot;ether&quot;},</span>
+<span class="lineNum">      91 </span><span class="lineCov">          2 :                 {exp10&lt;15&gt;(), &quot;finney&quot;},</span>
+<span class="lineNum">      92 </span><span class="lineCov">          2 :                 {exp10&lt;12&gt;(), &quot;szabo&quot;},</span>
+<span class="lineNum">      93 </span><span class="lineCov">          2 :                 {exp10&lt;9&gt;(), &quot;Gwei&quot;},</span>
+<span class="lineNum">      94 </span><span class="lineCov">          2 :                 {exp10&lt;6&gt;(), &quot;Mwei&quot;},</span>
+<span class="lineNum">      95 </span><span class="lineCov">          2 :                 {exp10&lt;3&gt;(), &quot;Kwei&quot;},</span>
+<span class="lineNum">      96 </span><span class="lineCov">          1 :                 {exp10&lt;0&gt;(), &quot;wei&quot;}</span>
+<span class="lineNum">      97 </span><span class="lineCov">      53438 :         };</span>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineCov">      53416 :         return s_units;</span>
+<span class="lineNum">     100 </span>            : }
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span><span class="lineCov">      26708 : std::string formatBalance(bigint const&amp; _b)</span>
+<span class="lineNum">     103 </span>            : {
+<span class="lineNum">     104 </span><span class="lineCov">      53416 :         ostringstream ret;</span>
+<span class="lineNum">     105 </span><span class="lineCov">      26708 :         u256 b;</span>
+<span class="lineNum">     106 </span><span class="lineCov">      53416 :         if (_b &lt; 0)</span>
+<span class="lineNum">     107 </span>            :         {
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :                 ret &lt;&lt; &quot;-&quot;;</span>
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :                 b = (u256)-_b;</span>
+<span class="lineNum">     110 </span>            :         }
+<span class="lineNum">     111 </span>            :         else
+<span class="lineNum">     112 </span><span class="lineCov">      53416 :                 b = (u256)_b;</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span><span class="lineCov">      53416 :         if (b &gt; units()[0].first * 1000)</span>
+<span class="lineNum">     115 </span>            :         {
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :                 ret &lt;&lt; (b / units()[0].first) &lt;&lt; &quot; &quot; &lt;&lt; units()[0].second;</span>
+<span class="lineNum">     117 </span>            :                 return ret.str();
+<span class="lineNum">     118 </span>            :         }
+<span class="lineNum">     119 </span><span class="lineCov">      53416 :         ret &lt;&lt; setprecision(5);</span>
+<span class="lineNum">     120 </span><span class="lineCov">     578981 :         for (auto const&amp; i: units())</span>
+<span class="lineNum">     121 </span><span class="lineCov">    1443367 :                 if (i.first != 1 &amp;&amp; b &gt;= i.first)</span>
+<span class="lineNum">     122 </span>            :                 {
+<span class="lineNum">     123 </span><span class="lineCov">      67035 :                         ret &lt;&lt; (double(b / (i.first / 1000)) / 1000.0) &lt;&lt; &quot; &quot; &lt;&lt; i.second;</span>
+<span class="lineNum">     124 </span>            :                         return ret.str();
+<span class="lineNum">     125 </span>            :                 }
+<span class="lineNum">     126 </span><span class="lineCov">      13301 :         ret &lt;&lt; b &lt;&lt; &quot; wei&quot;;</span>
+<span class="lineNum">     127 </span>            :         return ret.str();
+<a name="128"><span class="lineNum">     128 </span>            : }</a>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 : static void badBlockInfo(BlockHeader const&amp; _bi, string const&amp; _err)</span>
+<span class="lineNum">     131 </span>            : {
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :         string const c_line = EthReset EthOnMaroon + string(80, ' ') + EthReset;</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :         string const c_border = EthReset EthOnMaroon + string(2, ' ') + EthReset EthMaroonBold;</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :         string const c_space = c_border + string(76, ' ') + c_border + EthReset;</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :         stringstream ss;</span>
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :         ss &lt;&lt; c_line &lt;&lt; endl;</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :         ss &lt;&lt; c_space &lt;&lt; endl;</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :         ss &lt;&lt; c_border + &quot;  Import Failure     &quot; + _err + string(max&lt;int&gt;(0, 53 - _err.size()), ' ') + &quot;  &quot; + c_border &lt;&lt; endl;</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :         ss &lt;&lt; c_space &lt;&lt; endl;</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :         string bin = toString(_bi.number());</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :         ss &lt;&lt; c_border + (&quot;                     Guru Meditation #&quot; + string(max&lt;int&gt;(0, 8 - bin.size()), '0') + bin + &quot;.&quot; + _bi.hash().abridged() + &quot;                    &quot;) + c_border &lt;&lt; endl;</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :         ss &lt;&lt; c_space &lt;&lt; endl;</span>
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :         ss &lt;&lt; c_line;</span>
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :         cwarn &lt;&lt; &quot;\n&quot; + ss.str();</span>
+<a name="145"><span class="lineNum">     145 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 : void badBlock(bytesConstRef _block, string const&amp; _err)</span>
+<span class="lineNum">     148 </span>            : {
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :         BlockHeader bi;</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :         DEV_IGNORE_EXCEPTIONS(bi = BlockHeader(_block));</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :         badBlockInfo(bi, _err);</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 : string TransactionSkeleton::userReadable(bool _toProxy, function&lt;pair&lt;bool, string&gt;(TransactionSkeleton const&amp;)&gt; const&amp; _getNatSpec, function&lt;string(Address const&amp;)&gt; const&amp; _formatAddress) const</span>
+<span class="lineNum">     155 </span>            : {
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :         if (creation)</span>
+<span class="lineNum">     157 </span>            :         {
+<span class="lineNum">     158 </span>            :                 // show notice concerning the creation code. TODO: this needs entering into natspec.
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :                 return string(&quot;ÐApp is attempting to create a contract; &quot;) + (_toProxy ? &quot;(this transaction is not executed directly, but forwarded to another ÐApp) &quot; : &quot;&quot;) + &quot;to be endowed with &quot; + formatBalance(value) + &quot;, with additional network fees of up to &quot; + formatBalance(gas * gasPrice) + &quot;.\n\nMaximum total cost is &quot; + formatBalance(value + gas * gasPrice) + &quot;.&quot;;</span>
+<span class="lineNum">     160 </span>            :         }
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :         bool isContract;
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :         std::string natSpec;</span>
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :         tie(isContract, natSpec) = _getNatSpec(*this);</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :         if (!isContract)</span>
+<span class="lineNum">     166 </span>            :         {
+<span class="lineNum">     167 </span>            :                 // recipient has no code - nothing special about this transaction, show basic value transfer info
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :                 return &quot;ÐApp is attempting to send &quot; + formatBalance(value) + &quot; to a recipient &quot; + _formatAddress(to) + (_toProxy ? &quot; (this transaction is not executed directly, but forwarded to another ÐApp)&quot; : &quot;&quot;) + &quot;, with additional network fees of up to &quot; + formatBalance(gas * gasPrice) + &quot;.\n\nMaximum total cost is &quot; + formatBalance(value + gas * gasPrice) + &quot;.&quot;;</span>
+<span class="lineNum">     169 </span>            :         }
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :         if (natSpec.empty())</span>
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :                 return &quot;ÐApp is attempting to call into an unknown contract at address &quot; +</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :                                 _formatAddress(to) + &quot;.\n\n&quot; +</span>
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :                                 (_toProxy ? &quot;This transaction is not executed directly, but forwarded to another ÐApp.\n\n&quot; : &quot;&quot;)  +</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :                                 &quot;Call involves sending &quot; +</span>
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :                                 formatBalance(value) + &quot; to the recipient, with additional network fees of up to &quot; +</span>
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :                                 formatBalance(gas * gasPrice) +</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :                                 &quot;However, this also does other stuff which we don't understand, and does so in your name.\n\n&quot; +</span>
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :                                 &quot;WARNING: This is probably going to cost you at least &quot; +</span>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :                                 formatBalance(value + gas * gasPrice) +</span>
+<span class="lineNum">     181 </span>            :                                 &quot;, however this doesn't include any side-effects, which could be of far greater importance.\n\n&quot; +
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :                                 &quot;REJECT UNLESS YOU REALLY KNOW WHAT YOU ARE DOING!&quot;;</span>
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :         return &quot;ÐApp attempting to conduct contract interaction with &quot; +</span>
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :         _formatAddress(to) +</span>
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :         &quot;: &lt;b&gt;&quot; + natSpec + &quot;&lt;/b&gt;.\n\n&quot; +</span>
+<span class="lineNum">     187 </span>            :         (_toProxy ? &quot;This transaction is not executed directly, but forwarded to another ÐApp.\n\n&quot; : &quot;&quot;) +
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :         (value &gt; 0 ?</span>
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :                 &quot;In addition, ÐApp is attempting to send &quot; +</span>
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :                 formatBalance(value) + &quot; to said recipient, with additional network fees of up to &quot; +</span>
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :                 formatBalance(gas * gasPrice) + &quot; = &quot; +</span>
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :                 formatBalance(value + gas * gasPrice) + &quot;.&quot;</span>
+<span class="lineNum">     193 </span>            :         :
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :                 &quot;Additional network fees are at most&quot; +</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :                 formatBalance(gas * gasPrice) + &quot;.&quot;);</span>
+<span class="lineNum">     196 </span>            : }
+<a name="197"><span class="lineNum">     197 </span>            : </a>
+<span class="lineNum">     198 </span>            : }
+<span class="lineNum">     199 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

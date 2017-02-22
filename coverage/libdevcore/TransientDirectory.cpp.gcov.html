@@ -1,0 +1,143 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/TransientDirectory.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - TransientDirectory.cpp<span style="font-size: 80%;"> (source / <a href="TransientDirectory.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntryLo">66.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            :  */
+<span class="lineNum">      17 </span>            : /** @file TransientDirectory.cpp
+<span class="lineNum">      18 </span>            :  * @author Marek Kotewicz &lt;marek@ethdev.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;thread&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/filesystem.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &quot;Exceptions.h&quot;
+<span class="lineNum">      25 </span>            : #include &quot;TransientDirectory.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;CommonIO.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;Log.h&quot;
+<span class="lineNum">      28 </span>            : using namespace std;
+<span class="lineNum">      29 </span>            : using namespace dev;
+<span class="lineNum">      30 </span>            : namespace fs = boost::filesystem;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span><span class="lineCov">      10861 : TransientDirectory::TransientDirectory():</span>
+<span class="lineNum">      33 </span><span class="lineCov">     108610 :         TransientDirectory((boost::filesystem::temp_directory_path() / &quot;eth_transient&quot; / toString(FixedHash&lt;4&gt;::random())).string())</span>
+<span class="lineNum">      34 </span><span class="lineCov">      10861 : {}</span>
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span><span class="lineCov">      10861 : TransientDirectory::TransientDirectory(std::string const&amp; _path):</span>
+<span class="lineNum">      37 </span><span class="lineCov">      21722 :         m_path(_path)</span>
+<span class="lineNum">      38 </span>            : {
+<span class="lineNum">      39 </span>            :         // we never ever want to delete a directory (including all its contents) that we did not create ourselves.
+<span class="lineNum">      40 </span><span class="lineCov">      43444 :         if (boost::filesystem::exists(m_path))</span>
+<span class="lineNum">      41 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(FileError());</span>
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span><span class="lineCov">      43444 :         if (!fs::create_directories(m_path))</span>
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(FileError());</span>
+<span class="lineNum">      45 </span><span class="lineCov">      43444 :         DEV_IGNORE_EXCEPTIONS(fs::permissions(m_path, fs::owner_all));</span>
+<span class="lineNum">      46 </span><span class="lineCov">      10861 : }</span>
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span><span class="lineCov">      21722 : TransientDirectory::~TransientDirectory()</span>
+<span class="lineNum">      49 </span>            : {
+<span class="lineNum">      50 </span><span class="lineCov">      10861 :         boost::system::error_code ec;           </span>
+<span class="lineNum">      51 </span><span class="lineCov">      43444 :         fs::remove_all(m_path, ec);</span>
+<span class="lineNum">      52 </span><span class="lineCov">      10861 :         if (!ec)</span>
+<span class="lineNum">      53 </span>            :                 return;
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :         // In some cases, antivirus runnig on Windows will scan all the newly created directories.
+<span class="lineNum">      56 </span>            :         // As a consequence, directory is locked and can not be deleted immediately.
+<span class="lineNum">      57 </span>            :         // Retry after 10 milliseconds usually is successful.
+<span class="lineNum">      58 </span>            :         // This will help our tests run smoothly in such environment.
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :         this_thread::sleep_for(chrono::milliseconds(10));</span>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :         ec.clear();</span>
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 :         fs::remove_all(m_path, ec);</span>
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :         if (!ec)</span>
+<span class="lineNum">      64 </span>            :         {
+<a name="65"><span class="lineNum">      65 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Failed to delete directory '&quot; &lt;&lt; m_path &lt;&lt; &quot;': &quot; &lt;&lt; ec.message();</span></a>
+<span class="lineNum">      66 </span>            :         }
+<span class="lineNum">      67 </span><span class="lineCov">      10864 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,322 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/ip/basic_resolver_query.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/ip</a> - basic_resolver_query.hpp<span style="font-size: 80%;"> (source / <a href="basic_resolver_query.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // ip/basic_resolver_query.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_IP_BASIC_RESOLVER_QUERY_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_IP_BASIC_RESOLVER_QUERY_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;string&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/asio/detail/socket_ops.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/asio/ip/resolver_query_base.hpp&gt;
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : namespace boost {
+<span class="lineNum">      26 </span>            : namespace asio {
+<span class="lineNum">      27 </span>            : namespace ip {
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : /// An query to be passed to a resolver.
+<span class="lineNum">      30 </span>            : /**
+<span class="lineNum">      31 </span>            :  * The boost::asio::ip::basic_resolver_query class template describes a query
+<span class="lineNum">      32 </span>            :  * that can be passed to a resolver.
+<span class="lineNum">      33 </span>            :  *
+<span class="lineNum">      34 </span>            :  * @par Thread Safety
+<span class="lineNum">      35 </span>            :  * @e Distinct @e objects: Safe.@n
+<span class="lineNum">      36 </span>            :  * @e Shared @e objects: Unsafe.
+<a name="37"><span class="lineNum">      37 </span>            :  */</a>
+<span class="lineNum">      38 </span>            : template &lt;typename InternetProtocol&gt;
+<span class="lineNum">      39 </span><span class="lineNoCov">          0 : class basic_resolver_query</span>
+<span class="lineNum">      40 </span>            :   : public resolver_query_base
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span>            : public:
+<span class="lineNum">      43 </span>            :   /// The protocol type associated with the endpoint query.
+<span class="lineNum">      44 </span>            :   typedef InternetProtocol protocol_type;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :   /// Construct with specified service name for any protocol.
+<span class="lineNum">      47 </span>            :   /**
+<span class="lineNum">      48 </span>            :    * This constructor is typically used to perform name resolution for local
+<span class="lineNum">      49 </span>            :    * service binding.
+<span class="lineNum">      50 </span>            :    *
+<span class="lineNum">      51 </span>            :    * @param service A string identifying the requested service. This may be a
+<span class="lineNum">      52 </span>            :    * descriptive name or a numeric string corresponding to a port number.
+<span class="lineNum">      53 </span>            :    *
+<span class="lineNum">      54 </span>            :    * @param resolve_flags A set of flags that determine how name resolution
+<span class="lineNum">      55 </span>            :    * should be performed. The default flags are suitable for local service
+<span class="lineNum">      56 </span>            :    * binding.
+<span class="lineNum">      57 </span>            :    *
+<span class="lineNum">      58 </span>            :    * @note On POSIX systems, service names are typically defined in the file
+<span class="lineNum">      59 </span>            :    * &lt;tt&gt;/etc/services&lt;/tt&gt;. On Windows, service names may be found in the file
+<span class="lineNum">      60 </span>            :    * &lt;tt&gt;c:\\windows\\system32\\drivers\\etc\\services&lt;/tt&gt;. Operating systems
+<span class="lineNum">      61 </span>            :    * may use additional locations when resolving service names.
+<span class="lineNum">      62 </span>            :    */
+<span class="lineNum">      63 </span>            :   basic_resolver_query(const std::string&amp; service,
+<span class="lineNum">      64 </span>            :       resolver_query_base::flags resolve_flags = passive | address_configured)
+<span class="lineNum">      65 </span>            :     : hints_(),
+<span class="lineNum">      66 </span>            :       host_name_(),
+<span class="lineNum">      67 </span>            :       service_name_(service)
+<span class="lineNum">      68 </span>            :   {
+<span class="lineNum">      69 </span>            :     typename InternetProtocol::endpoint endpoint;
+<span class="lineNum">      70 </span>            :     hints_.ai_flags = static_cast&lt;int&gt;(resolve_flags);
+<span class="lineNum">      71 </span>            :     hints_.ai_family = PF_UNSPEC;
+<span class="lineNum">      72 </span>            :     hints_.ai_socktype = endpoint.protocol().type();
+<span class="lineNum">      73 </span>            :     hints_.ai_protocol = endpoint.protocol().protocol();
+<span class="lineNum">      74 </span>            :     hints_.ai_addrlen = 0;
+<span class="lineNum">      75 </span>            :     hints_.ai_canonname = 0;
+<span class="lineNum">      76 </span>            :     hints_.ai_addr = 0;
+<span class="lineNum">      77 </span>            :     hints_.ai_next = 0;
+<span class="lineNum">      78 </span>            :   }
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            :   /// Construct with specified service name for a given protocol.
+<span class="lineNum">      81 </span>            :   /**
+<span class="lineNum">      82 </span>            :    * This constructor is typically used to perform name resolution for local
+<span class="lineNum">      83 </span>            :    * service binding with a specific protocol version.
+<span class="lineNum">      84 </span>            :    *
+<span class="lineNum">      85 </span>            :    * @param protocol A protocol object, normally representing either the IPv4 or
+<span class="lineNum">      86 </span>            :    * IPv6 version of an internet protocol.
+<span class="lineNum">      87 </span>            :    *
+<span class="lineNum">      88 </span>            :    * @param service A string identifying the requested service. This may be a
+<span class="lineNum">      89 </span>            :    * descriptive name or a numeric string corresponding to a port number.
+<span class="lineNum">      90 </span>            :    *
+<span class="lineNum">      91 </span>            :    * @param resolve_flags A set of flags that determine how name resolution
+<span class="lineNum">      92 </span>            :    * should be performed. The default flags are suitable for local service
+<span class="lineNum">      93 </span>            :    * binding.
+<span class="lineNum">      94 </span>            :    *
+<span class="lineNum">      95 </span>            :    * @note On POSIX systems, service names are typically defined in the file
+<span class="lineNum">      96 </span>            :    * &lt;tt&gt;/etc/services&lt;/tt&gt;. On Windows, service names may be found in the file
+<span class="lineNum">      97 </span>            :    * &lt;tt&gt;c:\\windows\\system32\\drivers\\etc\\services&lt;/tt&gt;. Operating systems
+<span class="lineNum">      98 </span>            :    * may use additional locations when resolving service names.
+<span class="lineNum">      99 </span>            :    */
+<span class="lineNum">     100 </span>            :   basic_resolver_query(const protocol_type&amp; protocol,
+<span class="lineNum">     101 </span>            :       const std::string&amp; service,
+<span class="lineNum">     102 </span>            :       resolver_query_base::flags resolve_flags = passive | address_configured)
+<span class="lineNum">     103 </span>            :     : hints_(),
+<span class="lineNum">     104 </span>            :       host_name_(),
+<span class="lineNum">     105 </span>            :       service_name_(service)
+<span class="lineNum">     106 </span>            :   {
+<span class="lineNum">     107 </span>            :     hints_.ai_flags = static_cast&lt;int&gt;(resolve_flags);
+<span class="lineNum">     108 </span>            :     hints_.ai_family = protocol.family();
+<span class="lineNum">     109 </span>            :     hints_.ai_socktype = protocol.type();
+<span class="lineNum">     110 </span>            :     hints_.ai_protocol = protocol.protocol();
+<span class="lineNum">     111 </span>            :     hints_.ai_addrlen = 0;
+<span class="lineNum">     112 </span>            :     hints_.ai_canonname = 0;
+<span class="lineNum">     113 </span>            :     hints_.ai_addr = 0;
+<span class="lineNum">     114 </span>            :     hints_.ai_next = 0;
+<span class="lineNum">     115 </span>            :   }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :   /// Construct with specified host name and service name for any protocol.
+<span class="lineNum">     118 </span>            :   /**
+<span class="lineNum">     119 </span>            :    * This constructor is typically used to perform name resolution for
+<span class="lineNum">     120 </span>            :    * communication with remote hosts.
+<span class="lineNum">     121 </span>            :    *
+<span class="lineNum">     122 </span>            :    * @param host A string identifying a location. May be a descriptive name or
+<span class="lineNum">     123 </span>            :    * a numeric address string. If an empty string and the passive flag has been
+<span class="lineNum">     124 </span>            :    * specified, the resolved endpoints are suitable for local service binding.
+<span class="lineNum">     125 </span>            :    * If an empty string and passive is not specified, the resolved endpoints
+<span class="lineNum">     126 </span>            :    * will use the loopback address.
+<span class="lineNum">     127 </span>            :    *
+<span class="lineNum">     128 </span>            :    * @param service A string identifying the requested service. This may be a
+<span class="lineNum">     129 </span>            :    * descriptive name or a numeric string corresponding to a port number. May
+<span class="lineNum">     130 </span>            :    * be an empty string, in which case all resolved endpoints will have a port
+<span class="lineNum">     131 </span>            :    * number of 0.
+<span class="lineNum">     132 </span>            :    *
+<span class="lineNum">     133 </span>            :    * @param resolve_flags A set of flags that determine how name resolution
+<span class="lineNum">     134 </span>            :    * should be performed. The default flags are suitable for communication with
+<span class="lineNum">     135 </span>            :    * remote hosts.
+<span class="lineNum">     136 </span>            :    *
+<span class="lineNum">     137 </span>            :    * @note On POSIX systems, host names may be locally defined in the file
+<span class="lineNum">     138 </span>            :    * &lt;tt&gt;/etc/hosts&lt;/tt&gt;. On Windows, host names may be defined in the file
+<span class="lineNum">     139 </span>            :    * &lt;tt&gt;c:\\windows\\system32\\drivers\\etc\\hosts&lt;/tt&gt;. Remote host name
+<span class="lineNum">     140 </span>            :    * resolution is performed using DNS. Operating systems may use additional
+<span class="lineNum">     141 </span>            :    * locations when resolving host names (such as NETBIOS names on Windows).
+<span class="lineNum">     142 </span>            :    *
+<span class="lineNum">     143 </span>            :    * On POSIX systems, service names are typically defined in the file
+<span class="lineNum">     144 </span>            :    * &lt;tt&gt;/etc/services&lt;/tt&gt;. On Windows, service names may be found in the file
+<span class="lineNum">     145 </span>            :    * &lt;tt&gt;c:\\windows\\system32\\drivers\\etc\\services&lt;/tt&gt;. Operating systems
+<span class="lineNum">     146 </span>            :    * may use additional locations when resolving service names.
+<span class="lineNum">     147 </span>            :    */
+<span class="lineNum">     148 </span>            :   basic_resolver_query(const std::string&amp; host, const std::string&amp; service,
+<span class="lineNum">     149 </span>            :       resolver_query_base::flags resolve_flags = address_configured)
+<span class="lineNum">     150 </span>            :     : hints_(),
+<span class="lineNum">     151 </span>            :       host_name_(host),
+<span class="lineNum">     152 </span>            :       service_name_(service)
+<span class="lineNum">     153 </span>            :   {
+<span class="lineNum">     154 </span>            :     typename InternetProtocol::endpoint endpoint;
+<span class="lineNum">     155 </span>            :     hints_.ai_flags = static_cast&lt;int&gt;(resolve_flags);
+<span class="lineNum">     156 </span>            :     hints_.ai_family = BOOST_ASIO_OS_DEF(AF_UNSPEC);
+<span class="lineNum">     157 </span>            :     hints_.ai_socktype = endpoint.protocol().type();
+<span class="lineNum">     158 </span>            :     hints_.ai_protocol = endpoint.protocol().protocol();
+<span class="lineNum">     159 </span>            :     hints_.ai_addrlen = 0;
+<span class="lineNum">     160 </span>            :     hints_.ai_canonname = 0;
+<span class="lineNum">     161 </span>            :     hints_.ai_addr = 0;
+<span class="lineNum">     162 </span>            :     hints_.ai_next = 0;
+<span class="lineNum">     163 </span>            :   }
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :   /// Construct with specified host name and service name for a given protocol.
+<span class="lineNum">     166 </span>            :   /**
+<span class="lineNum">     167 </span>            :    * This constructor is typically used to perform name resolution for
+<span class="lineNum">     168 </span>            :    * communication with remote hosts.
+<span class="lineNum">     169 </span>            :    *
+<span class="lineNum">     170 </span>            :    * @param protocol A protocol object, normally representing either the IPv4 or
+<span class="lineNum">     171 </span>            :    * IPv6 version of an internet protocol.
+<span class="lineNum">     172 </span>            :    *
+<span class="lineNum">     173 </span>            :    * @param host A string identifying a location. May be a descriptive name or
+<span class="lineNum">     174 </span>            :    * a numeric address string. If an empty string and the passive flag has been
+<span class="lineNum">     175 </span>            :    * specified, the resolved endpoints are suitable for local service binding.
+<span class="lineNum">     176 </span>            :    * If an empty string and passive is not specified, the resolved endpoints
+<span class="lineNum">     177 </span>            :    * will use the loopback address.
+<span class="lineNum">     178 </span>            :    *
+<span class="lineNum">     179 </span>            :    * @param service A string identifying the requested service. This may be a
+<span class="lineNum">     180 </span>            :    * descriptive name or a numeric string corresponding to a port number. May
+<span class="lineNum">     181 </span>            :    * be an empty string, in which case all resolved endpoints will have a port
+<span class="lineNum">     182 </span>            :    * number of 0.
+<span class="lineNum">     183 </span>            :    *
+<span class="lineNum">     184 </span>            :    * @param resolve_flags A set of flags that determine how name resolution
+<span class="lineNum">     185 </span>            :    * should be performed. The default flags are suitable for communication with
+<span class="lineNum">     186 </span>            :    * remote hosts.
+<span class="lineNum">     187 </span>            :    *
+<span class="lineNum">     188 </span>            :    * @note On POSIX systems, host names may be locally defined in the file
+<span class="lineNum">     189 </span>            :    * &lt;tt&gt;/etc/hosts&lt;/tt&gt;. On Windows, host names may be defined in the file
+<span class="lineNum">     190 </span>            :    * &lt;tt&gt;c:\\windows\\system32\\drivers\\etc\\hosts&lt;/tt&gt;. Remote host name
+<span class="lineNum">     191 </span>            :    * resolution is performed using DNS. Operating systems may use additional
+<span class="lineNum">     192 </span>            :    * locations when resolving host names (such as NETBIOS names on Windows).
+<span class="lineNum">     193 </span>            :    *
+<span class="lineNum">     194 </span>            :    * On POSIX systems, service names are typically defined in the file
+<span class="lineNum">     195 </span>            :    * &lt;tt&gt;/etc/services&lt;/tt&gt;. On Windows, service names may be found in the file
+<span class="lineNum">     196 </span>            :    * &lt;tt&gt;c:\\windows\\system32\\drivers\\etc\\services&lt;/tt&gt;. Operating systems
+<a name="197"><span class="lineNum">     197 </span>            :    * may use additional locations when resolving service names.</a>
+<span class="lineNum">     198 </span>            :    */
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :   basic_resolver_query(const protocol_type&amp; protocol,</span>
+<span class="lineNum">     200 </span>            :       const std::string&amp; host, const std::string&amp; service,
+<span class="lineNum">     201 </span>            :       resolver_query_base::flags resolve_flags = address_configured)
+<span class="lineNum">     202 </span>            :     : hints_(),
+<span class="lineNum">     203 </span>            :       host_name_(host),
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :       service_name_(service)</span>
+<span class="lineNum">     205 </span>            :   {
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :     hints_.ai_flags = static_cast&lt;int&gt;(resolve_flags);</span>
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :     hints_.ai_family = protocol.family();</span>
+<span class="lineNum">     208 </span><span class="lineNoCov">          0 :     hints_.ai_socktype = protocol.type();</span>
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 :     hints_.ai_protocol = protocol.protocol();</span>
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :     hints_.ai_addrlen = 0;</span>
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :     hints_.ai_canonname = 0;</span>
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :     hints_.ai_addr = 0;</span>
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :     hints_.ai_next = 0;</span>
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :   }</span>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            :   /// Get the hints associated with the query.
+<span class="lineNum">     217 </span>            :   const boost::asio::detail::addrinfo_type&amp; hints() const
+<span class="lineNum">     218 </span>            :   {
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :     return hints_;</span>
+<span class="lineNum">     220 </span>            :   }
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            :   /// Get the host name associated with the query.
+<span class="lineNum">     223 </span>            :   std::string host_name() const
+<span class="lineNum">     224 </span>            :   {
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :     return host_name_;</span>
+<span class="lineNum">     226 </span>            :   }
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :   /// Get the service name associated with the query.
+<span class="lineNum">     229 </span>            :   std::string service_name() const
+<span class="lineNum">     230 </span>            :   {
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 :     return service_name_;</span>
+<span class="lineNum">     232 </span>            :   }
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            : private:
+<span class="lineNum">     235 </span>            :   boost::asio::detail::addrinfo_type hints_;
+<span class="lineNum">     236 </span>            :   std::string host_name_;
+<span class="lineNum">     237 </span>            :   std::string service_name_;
+<span class="lineNum">     238 </span>            : };
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            : } // namespace ip
+<span class="lineNum">     241 </span>            : } // namespace asio
+<span class="lineNum">     242 </span>            : } // namespace boost
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            : #endif // BOOST_ASIO_IP_BASIC_RESOLVER_QUERY_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

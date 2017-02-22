@@ -1,0 +1,226 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/ext/new_allocator.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5/ext</a> - new_allocator.h<span style="font-size: 80%;"> (source / <a href="new_allocator.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntryMed">76.7 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Allocator that wraps operator new -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2001-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file ext/new_allocator.h
+<span class="lineNum">      26 </span>            :  *  This file is a GNU extension to the Standard C++ Library.
+<span class="lineNum">      27 </span>            :  */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #ifndef _NEW_ALLOCATOR_H
+<span class="lineNum">      30 </span>            : #define _NEW_ALLOCATOR_H 1
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &lt;bits/c++config.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;new&gt;
+<span class="lineNum">      34 </span>            : #include &lt;bits/functexcept.h&gt;
+<span class="lineNum">      35 </span>            : #include &lt;bits/move.h&gt;
+<span class="lineNum">      36 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">      37 </span>            : #include &lt;type_traits&gt;
+<span class="lineNum">      38 </span>            : #endif
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : namespace __gnu_cxx _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            :   using std::size_t;
+<span class="lineNum">      45 </span>            :   using std::ptrdiff_t;
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            :   /**
+<span class="lineNum">      48 </span>            :    *  @brief  An allocator that uses global new, as per [20.4].
+<span class="lineNum">      49 </span>            :    *  @ingroup allocators
+<span class="lineNum">      50 </span>            :    *
+<span class="lineNum">      51 </span>            :    *  This is precisely the allocator defined in the C++ Standard. 
+<span class="lineNum">      52 </span>            :    *    - all allocation calls operator new
+<span class="lineNum">      53 </span>            :    *    - all deallocation calls operator delete
+<span class="lineNum">      54 </span>            :    *
+<span class="lineNum">      55 </span>            :    *  @tparam  _Tp  Type of allocated object.
+<span class="lineNum">      56 </span>            :    */
+<span class="lineNum">      57 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">      58 </span>            :     class new_allocator
+<span class="lineNum">      59 </span>            :     {
+<span class="lineNum">      60 </span>            :     public:
+<span class="lineNum">      61 </span>            :       typedef size_t     size_type;
+<span class="lineNum">      62 </span>            :       typedef ptrdiff_t  difference_type;
+<span class="lineNum">      63 </span>            :       typedef _Tp*       pointer;
+<span class="lineNum">      64 </span>            :       typedef const _Tp* const_pointer;
+<span class="lineNum">      65 </span>            :       typedef _Tp&amp;       reference;
+<span class="lineNum">      66 </span>            :       typedef const _Tp&amp; const_reference;
+<span class="lineNum">      67 </span>            :       typedef _Tp        value_type;
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :       template&lt;typename _Tp1&gt;
+<span class="lineNum">      70 </span>            :         struct rebind
+<span class="lineNum">      71 </span>            :         { typedef new_allocator&lt;_Tp1&gt; other; };
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">      74 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">      75 </span>            :       // 2103. propagate_on_container_move_assignment
+<span class="lineNum">      76 </span>            :       typedef std::true_type propagate_on_container_move_assignment;
+<span class="lineNum">      77 </span>            : #endif
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :       new_allocator() _GLIBCXX_USE_NOEXCEPT { }
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            :       new_allocator(const new_allocator&amp;) _GLIBCXX_USE_NOEXCEPT { }
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :       template&lt;typename _Tp1&gt;
+<span class="lineNum">      84 </span>            :         new_allocator(const new_allocator&lt;_Tp1&gt;&amp;) _GLIBCXX_USE_NOEXCEPT { }
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            :       ~new_allocator() _GLIBCXX_USE_NOEXCEPT { }
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            :       pointer
+<span class="lineNum">      89 </span>            :       address(reference __x) const _GLIBCXX_NOEXCEPT
+<span class="lineNum">      90 </span>            :       { return std::__addressof(__x); }
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :       const_pointer
+<span class="lineNum">      93 </span>            :       address(const_reference __x) const _GLIBCXX_NOEXCEPT
+<span class="lineNum">      94 </span>            :       { return std::__addressof(__x); }
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            :       // NB: __n is permitted to be 0.  The C++ standard says nothing
+<span class="lineNum">      97 </span>            :       // about what the return value is when __n == 0.
+<span class="lineNum">      98 </span>            :       pointer
+<span class="lineNum">      99 </span>            :       allocate(size_type __n, const void* = 0)
+<span class="lineNum">     100 </span>            :       { 
+<span class="lineNum">     101 </span><span class="lineCov">   50692376 :         if (__n &gt; this-&gt;max_size())</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :           std::__throw_bad_alloc();</span>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineCov">   50692376 :         return static_cast&lt;_Tp*&gt;(::operator new(__n * sizeof(_Tp)));</span>
+<span class="lineNum">     105 </span>            :       }
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :       // __p is not permitted to be a null pointer.
+<span class="lineNum">     108 </span>            :       void
+<span class="lineNum">     109 </span>            :       deallocate(pointer __p, size_type)
+<span class="lineNum">     110 </span><span class="lineCov">   69758604 :       { ::operator delete(__p); }</span>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            :       size_type
+<span class="lineNum">     113 </span>            :       max_size() const _GLIBCXX_USE_NOEXCEPT
+<span class="lineNum">     114 </span>            :       { return size_t(-1) / sizeof(_Tp); }
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            : #if __cplusplus &gt;= 201103L
+<a name="117"><span class="lineNum">     117 </span>            :       template&lt;typename _Up, typename... _Args&gt;</a>
+<span class="lineNum">     118 </span>            :         void
+<span class="lineNum">     119 </span><span class="lineCov">     526131 :         construct(_Up* __p, _Args&amp;&amp;... __args)</span>
+<span class="lineNum">     120 </span><span class="lineCov">  186405931 :         { ::new((void *)__p) _Up(std::forward&lt;_Args&gt;(__args)...); }</span>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :       template&lt;typename _Up&gt;
+<span class="lineNum">     123 </span>            :         void 
+<span class="lineNum">     124 </span><span class="lineCov">   20490608 :         destroy(_Up* __p) { __p-&gt;~_Up(); }</span>
+<span class="lineNum">     125 </span>            : #else
+<span class="lineNum">     126 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     127 </span>            :       // 402. wrong new expression in [some_] allocator::construct
+<span class="lineNum">     128 </span>            :       void 
+<span class="lineNum">     129 </span>            :       construct(pointer __p, const _Tp&amp; __val) 
+<span class="lineNum">     130 </span>            :       { ::new((void *)__p) _Tp(__val); }
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            :       void 
+<span class="lineNum">     133 </span>            :       destroy(pointer __p) { __p-&gt;~_Tp(); }
+<span class="lineNum">     134 </span>            : #endif
+<span class="lineNum">     135 </span>            :     };
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">     138 </span>            :     inline bool
+<span class="lineNum">     139 </span>            :     operator==(const new_allocator&lt;_Tp&gt;&amp;, const new_allocator&lt;_Tp&gt;&amp;)
+<span class="lineNum">     140 </span>            :     { return true; }
+<span class="lineNum">     141 </span>            :   
+<span class="lineNum">     142 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">     143 </span>            :     inline bool
+<span class="lineNum">     144 </span>            :     operator!=(const new_allocator&lt;_Tp&gt;&amp;, const new_allocator&lt;_Tp&gt;&amp;)
+<span class="lineNum">     145 </span>            :     { return false; }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     148 </span>            : } // namespace
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

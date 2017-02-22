@@ -1,0 +1,597 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/exception/exception.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/exception</a> - exception.hpp<span style="font-size: 80%;"> (source / <a href="exception.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">48</td>
+            <td class="headerCovTableEntry">56</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">152</td>
+            <td class="headerCovTableEntry">5186</td>
+            <td class="headerCovTableEntryLo">2.9 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //Copyright (c) 2006-2009 Emil Dotchevski and Reverge Studios, Inc.</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : //Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       4 </span>            : //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : #ifndef UUID_274DA366004E11DCB1DDFE2E56D89593
+<span class="lineNum">       7 </span>            : #define UUID_274DA366004E11DCB1DDFE2E56D89593
+<span class="lineNum">       8 </span>            : #if (__GNUC__*100+__GNUC_MINOR__&gt;301) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">       9 </span>            : #pragma GCC system_header
+<span class="lineNum">      10 </span>            : #endif
+<span class="lineNum">      11 </span>            : #if defined(_MSC_VER) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">      12 </span>            : #pragma warning(push,1)
+<span class="lineNum">      13 </span>            : #endif
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifdef BOOST_EXCEPTION_MINI_BOOST
+<span class="lineNum">      16 </span>            : #include  &lt;memory&gt;
+<span class="lineNum">      17 </span>            : namespace boost { namespace exception_detail { using std::shared_ptr; } }
+<span class="lineNum">      18 </span>            : #else
+<span class="lineNum">      19 </span>            : namespace boost { template &lt;class T&gt; class shared_ptr; };
+<span class="lineNum">      20 </span>            : namespace boost { namespace exception_detail { using boost::shared_ptr; } }
+<span class="lineNum">      21 </span>            : #endif
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : namespace
+<span class="lineNum">      24 </span>            : boost
+<span class="lineNum">      25 </span>            :     {
+<span class="lineNum">      26 </span>            :     namespace
+<span class="lineNum">      27 </span>            :     exception_detail
+<span class="lineNum">      28 </span>            :         {
+<span class="lineNum">      29 </span>            :         template &lt;class T&gt;
+<span class="lineNum">      30 </span>            :         class
+<span class="lineNum">      31 </span>            :         refcount_ptr
+<span class="lineNum">      32 </span>            :             {
+<span class="lineNum">      33 </span>            :             public:
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            :             refcount_ptr():
+<span class="lineNum">      36 </span><span class="lineCov">    1046182 :                 px_(0)</span>
+<span class="lineNum">      37 </span>            :                 {
+<span class="lineNum">      38 </span>            :                 }
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            :             ~refcount_ptr()
+<span class="lineNum">      41 </span>            :                 {
+<span class="lineNum">      42 </span><span class="lineCov">    2573777 :                 release();</span>
+<span class="lineNum">      43 </span><span class="lineCov">    2573777 :                 }</span>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            :             refcount_ptr( refcount_ptr const &amp; x ):
+<span class="lineNum">      46 </span><span class="lineCov">    1145758 :                 px_(x.px_)</span>
+<span class="lineNum">      47 </span>            :                 {
+<span class="lineNum">      48 </span><span class="lineCov">    1145758 :                 add_ref();</span>
+<span class="lineNum">      49 </span>            :                 }
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            :             refcount_ptr &amp;
+<span class="lineNum">      52 </span>            :             operator=( refcount_ptr const &amp; x )
+<span class="lineNum">      53 </span>            :                 {
+<span class="lineNum">      54 </span><span class="lineCov">     664178 :                 adopt(x.px_);</span>
+<span class="lineNum">      55 </span>            :                 return *this;
+<span class="lineNum">      56 </span>            :                 }
+<a name="57"><span class="lineNum">      57 </span>            : </a>
+<span class="lineNum">      58 </span>            :             void
+<span class="lineNum">      59 </span><span class="lineCov">    1326155 :             adopt( T * px )</span>
+<span class="lineNum">      60 </span>            :                 {
+<span class="lineNum">      61 </span><span class="lineCov">    1326155 :                 release();</span>
+<span class="lineNum">      62 </span><span class="lineCov">    1326155 :                 px_=px;</span>
+<span class="lineNum">      63 </span><span class="lineCov">    1326155 :                 add_ref();</span>
+<span class="lineNum">      64 </span><span class="lineCov">    1326155 :                 }</span>
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :             T *
+<span class="lineNum">      67 </span>            :             get() const
+<span class="lineNum">      68 </span>            :                 {
+<span class="lineNum">      69 </span><span class="lineCov">    1440767 :                 return px_;</span>
+<span class="lineNum">      70 </span>            :                 }
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :             private:
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :             T * px_;
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            :             void
+<span class="lineNum">      77 </span>            :             add_ref()
+<span class="lineNum">      78 </span>            :                 {
+<span class="lineNum">      79 </span><span class="lineCov">    2471913 :                 if( px_ )</span>
+<span class="lineNum">      80 </span><span class="lineCov">    2073252 :                     px_-&gt;add_ref();</span>
+<span class="lineNum">      81 </span>            :                 }
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :             void
+<span class="lineNum">      84 </span>            :             release()
+<span class="lineNum">      85 </span>            :                 {
+<span class="lineNum">      86 </span><span class="lineCov">    3899932 :                 if( px_ &amp;&amp; px_-&gt;release() )</span>
+<span class="lineNum">      87 </span><span class="lineCov">     661977 :                     px_=0;</span>
+<span class="lineNum">      88 </span>            :                 }
+<span class="lineNum">      89 </span>            :             };
+<span class="lineNum">      90 </span>            :         }
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :     ////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :     template &lt;class Tag,class T&gt;
+<span class="lineNum">      95 </span>            :     class error_info;
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            :     typedef error_info&lt;struct throw_function_,char const *&gt; throw_function;
+<span class="lineNum">      98 </span>            :     typedef error_info&lt;struct throw_file_,char const *&gt; throw_file;
+<span class="lineNum">      99 </span>            :     typedef error_info&lt;struct throw_line_,int&gt; throw_line;
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :     template &lt;&gt;
+<span class="lineNum">     102 </span>            :     class
+<span class="lineNum">     103 </span>            :     error_info&lt;throw_function_,char const *&gt;
+<span class="lineNum">     104 </span>            :         {
+<span class="lineNum">     105 </span>            :         public:
+<span class="lineNum">     106 </span>            :         typedef char const * value_type;
+<span class="lineNum">     107 </span>            :         value_type v_;
+<span class="lineNum">     108 </span>            :         explicit
+<span class="lineNum">     109 </span>            :         error_info( value_type v ):
+<span class="lineNum">     110 </span>            :             v_(v)
+<span class="lineNum">     111 </span>            :             {
+<span class="lineNum">     112 </span>            :             }
+<span class="lineNum">     113 </span>            :         };
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            :     template &lt;&gt;
+<span class="lineNum">     116 </span>            :     class
+<span class="lineNum">     117 </span>            :     error_info&lt;throw_file_,char const *&gt;
+<span class="lineNum">     118 </span>            :         {
+<span class="lineNum">     119 </span>            :         public:
+<span class="lineNum">     120 </span>            :         typedef char const * value_type;
+<span class="lineNum">     121 </span>            :         value_type v_;
+<span class="lineNum">     122 </span>            :         explicit
+<span class="lineNum">     123 </span>            :         error_info( value_type v ):
+<span class="lineNum">     124 </span>            :             v_(v)
+<span class="lineNum">     125 </span>            :             {
+<span class="lineNum">     126 </span>            :             }
+<span class="lineNum">     127 </span>            :         };
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            :     template &lt;&gt;
+<span class="lineNum">     130 </span>            :     class
+<span class="lineNum">     131 </span>            :     error_info&lt;throw_line_,int&gt;
+<span class="lineNum">     132 </span>            :         {
+<span class="lineNum">     133 </span>            :         public:
+<span class="lineNum">     134 </span>            :         typedef int value_type;
+<span class="lineNum">     135 </span>            :         value_type v_;
+<span class="lineNum">     136 </span>            :         explicit
+<span class="lineNum">     137 </span>            :         error_info( value_type v ):
+<span class="lineNum">     138 </span>            :             v_(v)
+<span class="lineNum">     139 </span>            :             {
+<span class="lineNum">     140 </span>            :             }
+<span class="lineNum">     141 </span>            :         };
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            : #if defined(__GNUC__)
+<span class="lineNum">     144 </span>            : # if (__GNUC__ == 4 &amp;&amp; __GNUC_MINOR__ &gt;= 1) || (__GNUC__ &gt; 4)
+<span class="lineNum">     145 </span>            : #  pragma GCC visibility push (default)
+<span class="lineNum">     146 </span>            : # endif
+<span class="lineNum">     147 </span>            : #endif
+<span class="lineNum">     148 </span>            :     class exception;
+<span class="lineNum">     149 </span>            : #if defined(__GNUC__)
+<span class="lineNum">     150 </span>            : # if (__GNUC__ == 4 &amp;&amp; __GNUC_MINOR__ &gt;= 1) || (__GNUC__ &gt; 4)
+<span class="lineNum">     151 </span>            : #  pragma GCC visibility pop
+<span class="lineNum">     152 </span>            : # endif
+<span class="lineNum">     153 </span>            : #endif
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            :     namespace
+<span class="lineNum">     156 </span>            :     exception_detail
+<span class="lineNum">     157 </span>            :         {
+<span class="lineNum">     158 </span>            :         class error_info_base;
+<span class="lineNum">     159 </span>            :         struct type_info_;
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :         struct
+<span class="lineNum">     162 </span><span class="lineCov">     661977 :         error_info_container</span>
+<span class="lineNum">     163 </span>            :             {
+<span class="lineNum">     164 </span>            :             virtual char const * diagnostic_information( char const * ) const = 0;
+<span class="lineNum">     165 </span>            :             virtual shared_ptr&lt;error_info_base&gt; get( type_info_ const &amp; ) const = 0;
+<span class="lineNum">     166 </span>            :             virtual void set( shared_ptr&lt;error_info_base&gt; const &amp;, type_info_ const &amp; ) = 0;
+<span class="lineNum">     167 </span>            :             virtual void add_ref() const = 0;
+<span class="lineNum">     168 </span>            :             virtual bool release() const = 0;
+<span class="lineNum">     169 </span>            :             virtual refcount_ptr&lt;exception_detail::error_info_container&gt; clone() const = 0;
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            :             protected:
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :             ~error_info_container() throw()
+<span class="lineNum">     174 </span><span class="lineCov">     661977 :                 {</span>
+<span class="lineNum">     175 </span>            :                 }
+<span class="lineNum">     176 </span>            :             };
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :         template &lt;class&gt;
+<span class="lineNum">     179 </span>            :         struct get_info;
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            :         template &lt;&gt;
+<span class="lineNum">     182 </span>            :         struct get_info&lt;throw_function&gt;;
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            :         template &lt;&gt;
+<span class="lineNum">     185 </span>            :         struct get_info&lt;throw_file&gt;;
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :         template &lt;&gt;
+<span class="lineNum">     188 </span>            :         struct get_info&lt;throw_line&gt;;
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            :         template &lt;class&gt;
+<span class="lineNum">     191 </span>            :         struct set_info_rv;
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            :         template &lt;&gt;
+<span class="lineNum">     194 </span>            :         struct set_info_rv&lt;throw_function&gt;;
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            :         template &lt;&gt;
+<span class="lineNum">     197 </span>            :         struct set_info_rv&lt;throw_file&gt;;
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            :         template &lt;&gt;
+<span class="lineNum">     200 </span>            :         struct set_info_rv&lt;throw_line&gt;;
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            :         char const * get_diagnostic_information( exception const &amp;, char const * );
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            :         void copy_boost_exception( exception *, exception const * );
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            :         template &lt;class E,class Tag,class T&gt;
+<span class="lineNum">     207 </span>            :         E const &amp; set_info( E const &amp;, error_info&lt;Tag,T&gt; const &amp; );
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            :         template &lt;class E&gt;
+<span class="lineNum">     210 </span>            :         E const &amp; set_info( E const &amp;, throw_function const &amp; );
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            :         template &lt;class E&gt;
+<span class="lineNum">     213 </span>            :         E const &amp; set_info( E const &amp;, throw_file const &amp; );
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            :         template &lt;class E&gt;
+<span class="lineNum">     216 </span>            :         E const &amp; set_info( E const &amp;, throw_line const &amp; );
+<span class="lineNum">     217 </span>            :         }
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            : #if defined(__GNUC__)
+<span class="lineNum">     220 </span>            : # if (__GNUC__ == 4 &amp;&amp; __GNUC_MINOR__ &gt;= 1) || (__GNUC__ &gt; 4)
+<span class="lineNum">     221 </span>            : #  pragma GCC visibility push (default)
+<span class="lineNum">     222 </span>            : # endif
+<span class="lineNum">     223 </span>            : #endif
+<span class="lineNum">     224 </span>            :     class
+<span class="lineNum">     225 </span><span class="lineCov">    2291516 :     exception</span>
+<span class="lineNum">     226 </span>            :         {
+<span class="lineNum">     227 </span>            :         //&lt;N3757&gt;
+<span class="lineNum">     228 </span>            :         public:
+<span class="lineNum">     229 </span>            :         template &lt;class Tag&gt; void set( typename Tag::type const &amp; );
+<span class="lineNum">     230 </span>            :         template &lt;class Tag&gt; typename Tag::type const * get() const;
+<span class="lineNum">     231 </span>            :         //&lt;/N3757&gt;
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            :         protected:
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            :         exception():
+<span class="lineNum">     236 </span>            :             throw_function_(0),
+<span class="lineNum">     237 </span>            :             throw_file_(0),
+<span class="lineNum">     238 </span><span class="lineCov">    1145847 :             throw_line_(-1)</span>
+<span class="lineNum">     239 </span>            :             {
+<span class="lineNum">     240 </span>            :             }
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            : #ifdef __HP_aCC
+<span class="lineNum">     243 </span>            :         //On HP aCC, this protected copy constructor prevents throwing boost::exception.
+<span class="lineNum">     244 </span>            :         //On all other platforms, the same effect is achieved by the pure virtual destructor.
+<span class="lineNum">     245 </span>            :         exception( exception const &amp; x ) throw():
+<span class="lineNum">     246 </span>            :             data_(x.data_),
+<span class="lineNum">     247 </span>            :             throw_function_(x.throw_function_),
+<span class="lineNum">     248 </span>            :             throw_file_(x.throw_file_),
+<span class="lineNum">     249 </span>            :             throw_line_(x.throw_line_)
+<span class="lineNum">     250 </span>            :             {
+<span class="lineNum">     251 </span>            :             }
+<span class="lineNum">     252 </span>            : #endif
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            :         virtual ~exception() throw()
+<span class="lineNum">     255 </span>            : #ifndef __HP_aCC
+<span class="lineNum">     256 </span>            :             = 0 //Workaround for HP aCC, =0 incorrectly leads to link errors.
+<span class="lineNum">     257 </span>            : #endif
+<span class="lineNum">     258 </span>            :             ;
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span>            : #if (defined(__MWERKS__) &amp;&amp; __MWERKS__&lt;=0x3207) || (defined(_MSC_VER) &amp;&amp; _MSC_VER&lt;=1310)
+<span class="lineNum">     261 </span>            :         public:
+<span class="lineNum">     262 </span>            : #else
+<span class="lineNum">     263 </span>            :         private:
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :         template &lt;class E&gt;
+<span class="lineNum">     266 </span>            :         friend E const &amp; exception_detail::set_info( E const &amp;, throw_function const &amp; );
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            :         template &lt;class E&gt;
+<span class="lineNum">     269 </span>            :         friend E const &amp; exception_detail::set_info( E const &amp;, throw_file const &amp; );
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            :         template &lt;class E&gt;
+<span class="lineNum">     272 </span>            :         friend E const &amp; exception_detail::set_info( E const &amp;, throw_line const &amp; );
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            :         template &lt;class E,class Tag,class T&gt;
+<span class="lineNum">     275 </span>            :         friend E const &amp; exception_detail::set_info( E const &amp;, error_info&lt;Tag,T&gt; const &amp; );
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            :         friend char const * exception_detail::get_diagnostic_information( exception const &amp;, char const * );
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            :         template &lt;class&gt;
+<span class="lineNum">     280 </span>            :         friend struct exception_detail::get_info;
+<span class="lineNum">     281 </span>            :         friend struct exception_detail::get_info&lt;throw_function&gt;;
+<span class="lineNum">     282 </span>            :         friend struct exception_detail::get_info&lt;throw_file&gt;;
+<span class="lineNum">     283 </span>            :         friend struct exception_detail::get_info&lt;throw_line&gt;;
+<span class="lineNum">     284 </span>            :         template &lt;class&gt;
+<span class="lineNum">     285 </span>            :         friend struct exception_detail::set_info_rv;
+<span class="lineNum">     286 </span>            :         friend struct exception_detail::set_info_rv&lt;throw_function&gt;;
+<span class="lineNum">     287 </span>            :         friend struct exception_detail::set_info_rv&lt;throw_file&gt;;
+<span class="lineNum">     288 </span>            :         friend struct exception_detail::set_info_rv&lt;throw_line&gt;;
+<span class="lineNum">     289 </span>            :         friend void exception_detail::copy_boost_exception( exception *, exception const * );
+<span class="lineNum">     290 </span>            : #endif
+<span class="lineNum">     291 </span>            :         mutable exception_detail::refcount_ptr&lt;exception_detail::error_info_container&gt; data_;
+<span class="lineNum">     292 </span>            :         mutable char const * throw_function_;
+<span class="lineNum">     293 </span>            :         mutable char const * throw_file_;
+<span class="lineNum">     294 </span>            :         mutable int throw_line_;
+<span class="lineNum">     295 </span>            :         };
+<span class="lineNum">     296 </span>            : #if defined(__GNUC__)
+<span class="lineNum">     297 </span>            : # if (__GNUC__ == 4 &amp;&amp; __GNUC_MINOR__ &gt;= 1) || (__GNUC__ &gt; 4)
+<span class="lineNum">     298 </span>            : #  pragma GCC visibility pop
+<span class="lineNum">     299 </span>            : # endif
+<span class="lineNum">     300 </span>            : #endif
+<span class="lineNum">     301 </span>            : 
+<span class="lineNum">     302 </span>            :     inline
+<span class="lineNum">     303 </span>            :     exception::
+<span class="lineNum">     304 </span><span class="lineCov">    3819198 :     ~exception() throw()</span>
+<span class="lineNum">     305 </span>            :         {
+<span class="lineNum">     306 </span>            :         }
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            :     namespace
+<span class="lineNum">     309 </span>            :     exception_detail
+<span class="lineNum">     310 </span>            :         {
+<span class="lineNum">     311 </span>            :         template &lt;class E&gt;
+<span class="lineNum">     312 </span>            :         E const &amp;
+<span class="lineNum">     313 </span>            :         set_info( E const &amp; x, throw_function const &amp; y )
+<span class="lineNum">     314 </span>            :             {
+<span class="lineNum">     315 </span><span class="lineCov">     381907 :             x.throw_function_=y.v_;</span>
+<span class="lineNum">     316 </span>            :             return x;
+<span class="lineNum">     317 </span>            :             }
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            :         template &lt;class E&gt;
+<span class="lineNum">     320 </span>            :         E const &amp;
+<span class="lineNum">     321 </span>            :         set_info( E const &amp; x, throw_file const &amp; y )
+<span class="lineNum">     322 </span>            :             {
+<span class="lineNum">     323 </span><span class="lineCov">     381907 :             x.throw_file_=y.v_;</span>
+<span class="lineNum">     324 </span>            :             return x;
+<span class="lineNum">     325 </span>            :             }
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span>            :         template &lt;class E&gt;
+<span class="lineNum">     328 </span>            :         E const &amp;
+<span class="lineNum">     329 </span>            :         set_info( E const &amp; x, throw_line const &amp; y )
+<span class="lineNum">     330 </span>            :             {
+<span class="lineNum">     331 </span><span class="lineCov">     381907 :             x.throw_line_=y.v_;</span>
+<span class="lineNum">     332 </span>            :             return x;
+<span class="lineNum">     333 </span>            :             }
+<span class="lineNum">     334 </span>            :         }
+<span class="lineNum">     335 </span>            : 
+<span class="lineNum">     336 </span>            :     ////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            :     namespace
+<span class="lineNum">     339 </span>            :     exception_detail
+<span class="lineNum">     340 </span>            :         {
+<span class="lineNum">     341 </span>            : #if defined(__GNUC__)
+<span class="lineNum">     342 </span>            : # if (__GNUC__ == 4 &amp;&amp; __GNUC_MINOR__ &gt;= 1) || (__GNUC__ &gt; 4)
+<span class="lineNum">     343 </span>            : #  pragma GCC visibility push (default)
+<span class="lineNum">     344 </span>            : # endif
+<span class="lineNum">     345 </span>            : #endif
+<a name="346"><span class="lineNum">     346 </span>            :         template &lt;class T&gt;</a>
+<span class="lineNum">     347 </span>            :         struct
+<span class="lineNum">     348 </span><span class="lineCov">         66 :         error_info_injector:</span>
+<span class="lineNum">     349 </span>            :             public T,
+<span class="lineNum">     350 </span>            :             public exception
+<span class="lineNum">     351 </span>            :             {
+<span class="lineNum">     352 </span>            :             explicit
+<span class="lineNum">     353 </span>            :             error_info_injector( T const &amp; x ):
+<span class="lineNum">     354 </span><span class="lineCov">         28 :                 T(x)</span>
+<span class="lineNum">     355 </span>            :                 {
+<a name="356"><span class="lineNum">     356 </span>            :                 }</a>
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span><span class="lineCov">         47 :             ~error_info_injector() throw()</span>
+<span class="lineNum">     359 </span>            :                 {
+<span class="lineNum">     360 </span><span class="lineCov">         94 :                 }</span>
+<span class="lineNum">     361 </span>            :             };
+<span class="lineNum">     362 </span>            : #if defined(__GNUC__)
+<span class="lineNum">     363 </span>            : # if (__GNUC__ == 4 &amp;&amp; __GNUC_MINOR__ &gt;= 1) || (__GNUC__ &gt; 4)
+<span class="lineNum">     364 </span>            : #  pragma GCC visibility pop
+<span class="lineNum">     365 </span>            : # endif
+<span class="lineNum">     366 </span>            : #endif
+<span class="lineNum">     367 </span>            : 
+<span class="lineNum">     368 </span>            :         struct large_size { char c[256]; };
+<span class="lineNum">     369 </span>            :         large_size dispatch_boost_exception( exception const * );
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span>            :         struct small_size { };
+<span class="lineNum">     372 </span>            :         small_size dispatch_boost_exception( void const * );
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span>            :         template &lt;class,int&gt;
+<span class="lineNum">     375 </span>            :         struct enable_error_info_helper;
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span>            :         template &lt;class T&gt;
+<span class="lineNum">     378 </span>            :         struct
+<span class="lineNum">     379 </span>            :         enable_error_info_helper&lt;T,sizeof(large_size)&gt;
+<span class="lineNum">     380 </span>            :             {
+<span class="lineNum">     381 </span>            :             typedef T type;
+<span class="lineNum">     382 </span>            :             };
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span>            :         template &lt;class T&gt;
+<span class="lineNum">     385 </span>            :         struct
+<span class="lineNum">     386 </span>            :         enable_error_info_helper&lt;T,sizeof(small_size)&gt;
+<span class="lineNum">     387 </span>            :             {
+<span class="lineNum">     388 </span>            :             typedef error_info_injector&lt;T&gt; type;
+<span class="lineNum">     389 </span>            :             };
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span>            :         template &lt;class T&gt;
+<span class="lineNum">     392 </span>            :         struct
+<span class="lineNum">     393 </span>            :         enable_error_info_return_type
+<span class="lineNum">     394 </span>            :             {
+<span class="lineNum">     395 </span>            :             typedef typename enable_error_info_helper&lt;T,sizeof(exception_detail::dispatch_boost_exception(static_cast&lt;T *&gt;(0)))&gt;::type type;
+<span class="lineNum">     396 </span>            :             };
+<span class="lineNum">     397 </span>            :         }
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span>            :     template &lt;class T&gt;
+<span class="lineNum">     400 </span>            :     inline
+<span class="lineNum">     401 </span>            :     typename
+<span class="lineNum">     402 </span>            :     exception_detail::enable_error_info_return_type&lt;T&gt;::type
+<span class="lineNum">     403 </span>            :     enable_error_info( T const &amp; x )
+<span class="lineNum">     404 </span>            :         {
+<span class="lineNum">     405 </span>            :         typedef typename exception_detail::enable_error_info_return_type&lt;T&gt;::type rt;
+<span class="lineNum">     406 </span><span class="lineCov">     763833 :         return rt(x);</span>
+<span class="lineNum">     407 </span>            :         }
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span>            :     ////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span>            :     namespace
+<span class="lineNum">     412 </span>            :     exception_detail
+<span class="lineNum">     413 </span>            :         {
+<span class="lineNum">     414 </span>            : #if defined(__GNUC__)
+<span class="lineNum">     415 </span>            : # if (__GNUC__ == 4 &amp;&amp; __GNUC_MINOR__ &gt;= 1) || (__GNUC__ &gt; 4)
+<span class="lineNum">     416 </span>            : #  pragma GCC visibility push (default)
+<span class="lineNum">     417 </span>            : # endif
+<span class="lineNum">     418 </span>            : #endif
+<span class="lineNum">     419 </span>            :         class
+<span class="lineNum">     420 </span><span class="lineCov">     763846 :         clone_base</span>
+<span class="lineNum">     421 </span>            :             {
+<span class="lineNum">     422 </span>            :             public:
+<span class="lineNum">     423 </span>            : 
+<span class="lineNum">     424 </span>            :             virtual clone_base const * clone() const = 0;
+<span class="lineNum">     425 </span>            :             virtual void rethrow() const = 0;
+<span class="lineNum">     426 </span>            : 
+<span class="lineNum">     427 </span>            :             virtual
+<span class="lineNum">     428 </span>            :             ~clone_base() throw()
+<span class="lineNum">     429 </span><span class="lineCov">     763844 :                 {</span>
+<span class="lineNum">     430 </span>            :                 }
+<span class="lineNum">     431 </span>            :             };
+<span class="lineNum">     432 </span>            : #if defined(__GNUC__)
+<span class="lineNum">     433 </span>            : # if (__GNUC__ == 4 &amp;&amp; __GNUC_MINOR__ &gt;= 1) || (__GNUC__ &gt; 4)
+<span class="lineNum">     434 </span>            : #  pragma GCC visibility pop
+<span class="lineNum">     435 </span>            : # endif
+<span class="lineNum">     436 </span>            : #endif
+<span class="lineNum">     437 </span>            : 
+<a name="438"><span class="lineNum">     438 </span>            :         inline</a>
+<span class="lineNum">     439 </span>            :         void
+<span class="lineNum">     440 </span><span class="lineCov">     381923 :         copy_boost_exception( exception * a, exception const * b )</span>
+<span class="lineNum">     441 </span>            :             {
+<span class="lineNum">     442 </span><span class="lineCov">     763846 :             refcount_ptr&lt;error_info_container&gt; data;</span>
+<span class="lineNum">     443 </span><span class="lineCov">     763846 :             if( error_info_container * d=b-&gt;data_.get() )</span>
+<span class="lineNum">     444 </span><span class="lineCov">     846765 :                 data = d-&gt;clone();</span>
+<span class="lineNum">     445 </span><span class="lineCov">     381923 :             a-&gt;throw_file_ = b-&gt;throw_file_;</span>
+<span class="lineNum">     446 </span><span class="lineCov">     381923 :             a-&gt;throw_line_ = b-&gt;throw_line_;</span>
+<span class="lineNum">     447 </span><span class="lineCov">     381923 :             a-&gt;throw_function_ = b-&gt;throw_function_;</span>
+<span class="lineNum">     448 </span><span class="lineCov">     763846 :             a-&gt;data_ = data;</span>
+<span class="lineNum">     449 </span><span class="lineCov">     381923 :             }</span>
+<span class="lineNum">     450 </span>            : 
+<span class="lineNum">     451 </span>            :         inline
+<span class="lineNum">     452 </span>            :         void
+<span class="lineNum">     453 </span>            :         copy_boost_exception( void *, void const * )
+<span class="lineNum">     454 </span>            :             {
+<span class="lineNum">     455 </span>            :             }
+<span class="lineNum">     456 </span>            : 
+<span class="lineNum">     457 </span>            : #if defined(__GNUC__)
+<span class="lineNum">     458 </span>            : # if (__GNUC__ == 4 &amp;&amp; __GNUC_MINOR__ &gt;= 1) || (__GNUC__ &gt; 4)
+<span class="lineNum">     459 </span>            : #  pragma GCC visibility push (default)
+<span class="lineNum">     460 </span>            : # endif
+<span class="lineNum">     461 </span>            : #endif
+<a name="462"><span class="lineNum">     462 </span>            :         template &lt;class T&gt;</a>
+<span class="lineNum">     463 </span>            :         class
+<span class="lineNum">     464 </span><span class="lineCov">    2010128 :         clone_impl:</span>
+<span class="lineNum">     465 </span>            :             public T,
+<span class="lineNum">     466 </span>            :             public virtual clone_base
+<a name="467"><span class="lineNum">     467 </span>            :             {</a>
+<span class="lineNum">     468 </span>            :             struct clone_tag { };
+<span class="lineNum">     469 </span><span class="lineNoCov">          0 :             clone_impl( clone_impl const &amp; x, clone_tag ):</span>
+<span class="lineNum">     470 </span><span class="lineNoCov">          0 :                 T(x)</span>
+<span class="lineNum">     471 </span>            :                 {
+<span class="lineNum">     472 </span><span class="lineNoCov">          0 :                 copy_boost_exception(this,&amp;x);</span>
+<span class="lineNum">     473 </span><span class="lineNoCov">          0 :                 }</span>
+<span class="lineNum">     474 </span>            : 
+<span class="lineNum">     475 </span>            :             public:
+<a name="476"><span class="lineNum">     476 </span>            : </a>
+<span class="lineNum">     477 </span>            :             explicit
+<span class="lineNum">     478 </span><span class="lineCov">     381923 :             clone_impl( T const &amp; x ):</span>
+<span class="lineNum">     479 </span><span class="lineCov">    3160767 :                 T(x)</span>
+<span class="lineNum">     480 </span>            :                 {
+<span class="lineNum">     481 </span><span class="lineCov">     381923 :                 copy_boost_exception(this,&amp;x);</span>
+<a name="482"><span class="lineNum">     482 </span><span class="lineCov">     381923 :                 }</span></a>
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span><span class="lineCov">     763828 :             ~clone_impl() throw()</span>
+<span class="lineNum">     485 </span>            :                 {
+<span class="lineNum">     486 </span><span class="lineCov">    3256434 :                 }</span>
+<span class="lineNum">     487 </span>            : 
+<span class="lineNum">     488 </span>            :             private:
+<a name="489"><span class="lineNum">     489 </span>            : </a>
+<span class="lineNum">     490 </span>            :             clone_base const *
+<span class="lineNum">     491 </span><span class="lineNoCov">          0 :             clone() const</span>
+<span class="lineNum">     492 </span>            :                 {
+<span class="lineNum">     493 </span><span class="lineNoCov">          0 :                 return new clone_impl(*this,clone_tag());</span>
+<span class="lineNum">     494 </span>            :                 }
+<a name="495"><span class="lineNum">     495 </span>            : </a>
+<span class="lineNum">     496 </span>            :             void
+<span class="lineNum">     497 </span><span class="lineNoCov">          0 :             rethrow() const</span>
+<span class="lineNum">     498 </span>            :                 {
+<span class="lineNum">     499 </span><span class="lineNoCov">          0 :                 throw*this;</span>
+<span class="lineNum">     500 </span>            :                 }
+<span class="lineNum">     501 </span>            :             };
+<span class="lineNum">     502 </span>            :         }
+<span class="lineNum">     503 </span>            : #if defined(__GNUC__)
+<span class="lineNum">     504 </span>            : # if (__GNUC__ == 4 &amp;&amp; __GNUC_MINOR__ &gt;= 1) || (__GNUC__ &gt; 4)
+<span class="lineNum">     505 </span>            : #  pragma GCC visibility pop
+<span class="lineNum">     506 </span>            : # endif
+<span class="lineNum">     507 </span>            : #endif
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            :     template &lt;class T&gt;
+<span class="lineNum">     510 </span>            :     inline
+<span class="lineNum">     511 </span>            :     exception_detail::clone_impl&lt;T&gt;
+<span class="lineNum">     512 </span>            :     enable_current_exception( T const &amp; x )
+<span class="lineNum">     513 </span>            :         {
+<span class="lineNum">     514 </span><span class="lineCov">     381921 :         return exception_detail::clone_impl&lt;T&gt;(x);</span>
+<span class="lineNum">     515 </span>            :         }
+<span class="lineNum">     516 </span>            :     }
+<span class="lineNum">     517 </span>            : 
+<span class="lineNum">     518 </span>            : #if defined(_MSC_VER) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">     519 </span>            : #pragma warning(pop)
+<span class="lineNum">     520 </span>            : #endif
+<span class="lineNum">     521 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

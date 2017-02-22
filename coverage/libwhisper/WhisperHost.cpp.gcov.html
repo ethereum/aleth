@@ -1,0 +1,365 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libwhisper/WhisperHost.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libwhisper</a> - WhisperHost.cpp<span style="font-size: 80%;"> (source / <a href="WhisperHost.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">147</td>
+            <td class="headerCovTableEntryLo">0.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryLo">11.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file WhisperHost.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;WhisperHost.h&quot;
+<span class="lineNum">      23 </span>            : #include &lt;libdevcore/CommonIO.h&gt;
+<span class="lineNum">      24 </span>            : #include &lt;libdevcore/Log.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libp2p/All.h&gt;
+<span class="lineNum">      26 </span>            : #include &quot;WhisperDB.h&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : using namespace std;
+<span class="lineNum">      29 </span>            : using namespace dev;
+<span class="lineNum">      30 </span>            : using namespace dev::p2p;
+<a name="31"><span class="lineNum">      31 </span>            : using namespace dev::shh;</a>
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span><span class="lineNoCov">          0 : WhisperHost::WhisperHost(bool _storeMessagesInDB): Worker(&quot;shh&quot;), m_storeMessagesInDB(_storeMessagesInDB)</span>
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span><span class="lineNoCov">          0 :         loadMessagesFromBD();</span>
+<a name="36"><span class="lineNum">      36 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span><span class="lineNoCov">          0 : WhisperHost::~WhisperHost()</span>
+<span class="lineNum">      39 </span>            : {
+<span class="lineNum">      40 </span><span class="lineNoCov">          0 :         saveMessagesToBD();</span>
+<a name="41"><span class="lineNum">      41 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 : void WhisperHost::streamMessage(h256 _m, RLPStream&amp; _s) const</span>
+<span class="lineNum">      44 </span>            : {
+<span class="lineNum">      45 </span><span class="lineNoCov">          0 :         UpgradableGuard l(x_messages);</span>
+<span class="lineNum">      46 </span><span class="lineNoCov">          0 :         if (m_messages.count(_m))</span>
+<span class="lineNum">      47 </span>            :         {
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 :                 UpgradeGuard ll(l);</span>
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :                 auto const&amp; m = m_messages.at(_m);</span>
+<span class="lineNum">      50 </span>            : //              cnote &lt;&lt; &quot;streamRLP: &quot; &lt;&lt; m.expiry() &lt;&lt; m.ttl() &lt;&lt; m.topic() &lt;&lt; toHex(m.data());
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 :                 m.streamRLP(_s);</span>
+<span class="lineNum">      52 </span>            :         }
+<a name="53"><span class="lineNum">      53 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 : void WhisperHost::inject(Envelope const&amp; _m, WhisperPeer* _p)</span>
+<span class="lineNum">      56 </span>            : {
+<span class="lineNum">      57 </span>            :         // this function processes both outgoing messages originated both by local host (_p == null)
+<span class="lineNum">      58 </span>            :         // and incoming messages from remote peers (_p != null)
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :         //cnote &lt;&lt; this &lt;&lt; &quot;: inject: &quot; &lt;&lt; _m.expiry() &lt;&lt; _m.ttl() &lt;&lt; _m.topic() &lt;&lt; toHex(_m.data());
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 :         if (_m.isExpired())</span>
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :                 return;</span>
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :         auto h = _m.sha3();</span>
+<span class="lineNum">      66 </span>            :         {
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :                 UpgradableGuard l(x_messages);</span>
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :                 if (m_messages.count(h))</span>
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :                         return;</span>
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :                 UpgradeGuard ll(l);</span>
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :                 m_messages[h] = _m;</span>
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :                 m_expiryQueue.insert(make_pair(_m.expiry(), h));</span>
+<span class="lineNum">      73 </span>            :         }
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            :         // rating of incoming message from remote host is assessed according to the following criteria:
+<span class="lineNum">      76 </span>            :         // 1. installed watch match; 2. bloom filter match; 2. ttl; 3. proof of work
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :         int rating = 0;</span>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :         DEV_GUARDED(m_filterLock)</span>
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :                 if (_m.matchesBloomFilter(m_bloom))</span>
+<span class="lineNum">      82 </span>            :                 {
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :                         ++rating;</span>
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :                         for (auto const&amp; f: m_filters)</span>
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :                                 if (f.second.filter.matches(_m))</span>
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :                                         for (auto&amp; i: m_watches)</span>
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :                                                 if (i.second.id == f.first) // match one of the watches</span>
+<span class="lineNum">      88 </span>            :                                                 {
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 :                                                         i.second.changes.push_back(h);</span>
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 :                                                         rating += 2;</span>
+<span class="lineNum">      91 </span>            :                                                 }
+<span class="lineNum">      92 </span>            :                 }
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :         if (_p) // incoming message from remote peer</span>
+<span class="lineNum">      95 </span>            :         {
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :                 rating *= 256;</span>
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :                 unsigned ttlReward = (256 &gt; _m.ttl() ? 256 - _m.ttl() : 0);</span>
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :                 rating += ttlReward;</span>
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :                 rating *= 256;</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :                 rating += _m.workProved();</span>
+<span class="lineNum">     101 </span>            :         }
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            :         // TODO p2p: capability-based rating
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :         for (auto i: peerSessions())</span>
+<span class="lineNum">     105 </span>            :         {
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :                 auto w = capabilityFromSession&lt;WhisperPeer&gt;(*i.first).get();</span>
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :                 if (w == _p)</span>
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :                         w-&gt;addRating(rating);</span>
+<span class="lineNum">     109 </span>            :                 else
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :                         w-&gt;noteNewMessage(h, _m);</span>
+<span class="lineNum">     111 </span>            :         }
+<a name="112"><span class="lineNum">     112 </span>            : }</a>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 : unsigned WhisperHost::installWatch(shh::Topics const&amp; _t)</span>
+<span class="lineNum">     115 </span>            : {
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :         InstalledFilter f(_t);</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :         h256 h = f.filter.sha3();</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :         unsigned ret = 0;</span>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :         DEV_GUARDED(m_filterLock)</span>
+<span class="lineNum">     121 </span>            :         {
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :                 auto it = m_filters.find(h);</span>
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :                 if (m_filters.end() == it)</span>
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :                         m_filters.insert(make_pair(h, f));</span>
+<span class="lineNum">     125 </span>            :                 else
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :                         it-&gt;second.refCount++;</span>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :                 m_bloom.addRaw(f.filter.exportBloom());</span>
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :                 ret = m_watches.size() ? m_watches.rbegin()-&gt;first + 1 : 0;</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :                 m_watches[ret] = ClientWatch(h);</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :                 cwatshh &lt;&lt; &quot;+++&quot; &lt;&lt; ret &lt;&lt; h;</span>
+<span class="lineNum">     132 </span>            :         }
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :         noteAdvertiseTopicsOfInterest();</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="136"><span class="lineNum">     136 </span>            : }</a>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 : void WhisperHost::uninstallWatch(unsigned _i)</span>
+<span class="lineNum">     139 </span>            : {
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :         cwatshh &lt;&lt; &quot;XXX&quot; &lt;&lt; _i;</span>
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :         DEV_GUARDED(m_filterLock)</span>
+<span class="lineNum">     143 </span>            :         {
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :                 auto it = m_watches.find(_i);</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :                 if (it == m_watches.end())</span>
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :                         return;</span>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :                 auto id = it-&gt;second.id;</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :                 m_watches.erase(it);</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :                 auto fit = m_filters.find(id);</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :                 if (fit != m_filters.end())</span>
+<span class="lineNum">     153 </span>            :                 {
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :                         m_bloom.removeRaw(fit-&gt;second.filter.exportBloom());</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :                         if (!--fit-&gt;second.refCount)</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :                                 m_filters.erase(fit);</span>
+<span class="lineNum">     157 </span>            :                 }
+<span class="lineNum">     158 </span>            :         }
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :         noteAdvertiseTopicsOfInterest();</span>
+<a name="161"><span class="lineNum">     161 </span>            : }</a>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 : h256s WhisperHost::watchMessages(unsigned _watchId)</span>
+<span class="lineNum">     164 </span>            : {
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :         h256s ret;</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :         auto wit = m_watches.find(_watchId);</span>
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :         if (wit == m_watches.end())</span>
+<span class="lineNum">     168 </span>            :                 return ret;
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :         TopicFilter f;</span>
+<span class="lineNum">     170 </span>            :         {
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :                 Guard l(m_filterLock);</span>
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :                 auto fit = m_filters.find(wit-&gt;second.id);</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :                 if (fit == m_filters.end())</span>
+<span class="lineNum">     174 </span>            :                         return ret;
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :                 f = fit-&gt;second.filter;</span>
+<span class="lineNum">     176 </span>            :         }
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :         ReadGuard l(x_messages);</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :         for (auto const&amp; m: m_messages)</span>
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :                 if (f.matches(m.second))</span>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :                         ret.push_back(m.first);</span>
+<span class="lineNum">     181 </span>            :         return ret;
+<a name="182"><span class="lineNum">     182 </span>            : }</a>
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 : h256s WhisperHost::checkWatch(unsigned _watchId)</span>
+<span class="lineNum">     185 </span>            : {
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :         h256s ret;</span>
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :         cleanup();</span>
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :         dev::Guard l(m_filterLock);</span>
+<span class="lineNum">     190 </span>            :         try
+<span class="lineNum">     191 </span>            :         {
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :                 ret = m_watches.at(_watchId).changes;</span>
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :                 m_watches.at(_watchId).changes.clear();</span>
+<span class="lineNum">     194 </span>            :         }
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     196 </span>            :         {
+<span class="lineNum">     197 </span>            :         }
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="200"><span class="lineNum">     200 </span>            : }</a>
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 : void WhisperHost::doWork()</span>
+<span class="lineNum">     203 </span>            : {
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :         for (auto i: peerSessions())</span>
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :                 capabilityFromSession&lt;WhisperPeer&gt;(*i.first)-&gt;sendMessages();</span>
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :         cleanup();</span>
+<a name="207"><span class="lineNum">     207 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 : void WhisperHost::cleanup()</span>
+<span class="lineNum">     210 </span>            : {
+<span class="lineNum">     211 </span>            :         // remove old messages.
+<span class="lineNum">     212 </span>            :         // should be called every now and again.
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :         uint64_t now = utcTime();</span>
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :         WriteGuard l(x_messages);</span>
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :         for (auto it = m_expiryQueue.begin(); it != m_expiryQueue.end() &amp;&amp; it-&gt;first &lt;= now; it = m_expiryQueue.erase(it))</span>
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :                 m_messages.erase(it-&gt;second);</span>
+<a name="217"><span class="lineNum">     217 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 : void WhisperHost::noteAdvertiseTopicsOfInterest()</span>
+<span class="lineNum">     220 </span>            : {
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :         for (auto i: peerSessions())</span>
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :                 capabilityFromSession&lt;WhisperPeer&gt;(*i.first)-&gt;noteAdvertiseTopicsOfInterest();</span>
+<a name="223"><span class="lineNum">     223 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 : bool WhisperHost::isWatched(Envelope const&amp; _e) const</span>
+<span class="lineNum">     226 </span>            : {
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :         DEV_GUARDED(m_filterLock)</span>
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :                 if (_e.matchesBloomFilter(m_bloom))</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :                         for (auto const&amp; f: m_filters)</span>
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :                                 if (f.second.filter.matches(_e))</span>
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 :                                         for (auto const&amp; i: m_watches)</span>
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :                                                 if (i.second.id == f.first)</span>
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :                                                         return true;</span>
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :         return false;</span>
+<a name="235"><span class="lineNum">     235 </span>            : }</a>
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 : void WhisperHost::saveMessagesToBD()</span>
+<span class="lineNum">     238 </span>            : {
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :         if (!m_storeMessagesInDB)</span>
+<span class="lineNum">     240 </span>            :                 return;
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            :         try
+<span class="lineNum">     243 </span>            :         {
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :                 WhisperMessagesDB db;</span>
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :                 ReadGuard g(x_messages);</span>
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :                 uint64_t now = utcTime();</span>
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 :                 for (auto const&amp; m: m_messages)</span>
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :                         if (m.second.expiry() &gt; now)</span>
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :                                 if (isWatched(m.second))</span>
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :                                         db.saveSingleMessage(m.first, m.second);</span>
+<span class="lineNum">     251 </span>            :         }
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :         catch(FailedToOpenLevelDB const&amp; ex)</span>
+<span class="lineNum">     253 </span>            :         {
+<span class="lineNum">     254 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Exception in WhisperHost::saveMessagesToBD() - failed to open DB:&quot; &lt;&lt; ex.what();</span>
+<span class="lineNum">     255 </span>            :         }
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :         catch(Exception const&amp; ex)</span>
+<span class="lineNum">     257 </span>            :         {
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Exception in WhisperHost::saveMessagesToBD():&quot; &lt;&lt; ex.what();</span>
+<span class="lineNum">     259 </span>            :         }
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">     261 </span>            :         {
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Unknown Exception in WhisperHost::saveMessagesToBD()&quot;;</span>
+<span class="lineNum">     263 </span>            :         }
+<a name="264"><span class="lineNum">     264 </span>            : }</a>
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 : void WhisperHost::loadMessagesFromBD()</span>
+<span class="lineNum">     267 </span>            : {
+<span class="lineNum">     268 </span><span class="lineNoCov">          0 :         if (!m_storeMessagesInDB)</span>
+<span class="lineNum">     269 </span>            :                 return;
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            :         try
+<span class="lineNum">     272 </span>            :         {
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :                 map&lt;h256, Envelope&gt; m;</span>
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :                 WhisperMessagesDB db;</span>
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 :                 db.loadAllMessages(m);</span>
+<span class="lineNum">     276 </span><span class="lineNoCov">          0 :                 WriteGuard g(x_messages);</span>
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :                 m_messages.swap(m);</span>
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :                 for (auto const&amp; msg: m)</span>
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :                         m_expiryQueue.insert(make_pair(msg.second.expiry(), msg.first));</span>
+<span class="lineNum">     280 </span>            :         }
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :         catch(Exception const&amp; ex)</span>
+<span class="lineNum">     282 </span>            :         {
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Exception in WhisperHost::loadMessagesFromBD():&quot; &lt;&lt; ex.what();</span>
+<span class="lineNum">     284 </span>            :         }
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">     286 </span>            :         {
+<a name="287"><span class="lineNum">     287 </span><span class="lineNoCov">          0 :                 cwarn &lt;&lt; &quot;Unknown Exception in WhisperHost::loadMessagesFromBD()&quot;;</span></a>
+<span class="lineNum">     288 </span>            :         }
+<span class="lineNum">     289 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

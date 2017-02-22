@@ -1,0 +1,260 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/spirit/home/classic/utility/escape_char.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/spirit/home/classic/utility</a> - escape_char.hpp<span style="font-size: 80%;"> (source / <a href="escape_char.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*=============================================================================</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 2001-2003 Daniel Nuffer
+<span class="lineNum">       3 </span>            :     http://spirit.sourceforge.net/
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :   Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       6 </span>            :   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       7 </span>            : =============================================================================*/
+<span class="lineNum">       8 </span>            : #ifndef BOOST_SPIRIT_ESCAPE_CHAR_HPP
+<span class="lineNum">       9 </span>            : #define BOOST_SPIRIT_ESCAPE_CHAR_HPP
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      12 </span>            : #include &lt;string&gt;
+<span class="lineNum">      13 </span>            : #include &lt;iterator&gt;
+<span class="lineNum">      14 </span>            : #include &lt;cctype&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/limits.hpp&gt;
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : #include &lt;boost/spirit/home/classic/namespace.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/spirit/home/classic/debug.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #include &lt;boost/spirit/home/classic/utility/escape_char_fwd.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/spirit/home/classic/utility/impl/escape_char.ipp&gt;
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      24 </span>            : namespace boost { namespace spirit {
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      29 </span>            : //
+<span class="lineNum">      30 </span>            : //  escape_char_action class
+<span class="lineNum">      31 </span>            : //
+<span class="lineNum">      32 </span>            : //      Links an escape char parser with a user defined semantic action.
+<span class="lineNum">      33 </span>            : //      The semantic action may be a function or a functor. A function
+<span class="lineNum">      34 </span>            : //      should be compatible with the interface:
+<span class="lineNum">      35 </span>            : //
+<span class="lineNum">      36 </span>            : //          void f(CharT ch);
+<span class="lineNum">      37 </span>            : //
+<span class="lineNum">      38 </span>            : //      A functor should have a member operator() with a compatible signature
+<span class="lineNum">      39 </span>            : //      as above. The matching character is passed into the function/functor.
+<span class="lineNum">      40 </span>            : //      This is the default class that character parsers use when dealing with
+<span class="lineNum">      41 </span>            : //      the construct:
+<span class="lineNum">      42 </span>            : //
+<span class="lineNum">      43 </span>            : //          p[f]
+<span class="lineNum">      44 </span>            : //
+<span class="lineNum">      45 </span>            : //      where p is a parser and f is a function or functor.
+<span class="lineNum">      46 </span>            : //
+<span class="lineNum">      47 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      48 </span>            : template &lt;
+<span class="lineNum">      49 </span>            :     typename ParserT, typename ActionT,
+<span class="lineNum">      50 </span>            :     unsigned long Flags, typename CharT
+<span class="lineNum">      51 </span>            : &gt;
+<span class="lineNum">      52 </span>            : struct escape_char_action
+<span class="lineNum">      53 </span>            : :   public unary&lt;ParserT,
+<span class="lineNum">      54 </span>            :         parser&lt;escape_char_action&lt;ParserT, ActionT, Flags, CharT&gt; &gt; &gt;
+<span class="lineNum">      55 </span>            : {
+<span class="lineNum">      56 </span>            :     typedef escape_char_action
+<span class="lineNum">      57 </span>            :         &lt;ParserT, ActionT, Flags, CharT&gt;        self_t;
+<span class="lineNum">      58 </span>            :     typedef action_parser_category              parser_category_t;
+<span class="lineNum">      59 </span>            :     typedef unary&lt;ParserT, parser&lt;self_t&gt; &gt;     base_t;
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            :     template &lt;typename ScannerT&gt;
+<span class="lineNum">      62 </span>            :     struct result
+<span class="lineNum">      63 </span>            :     {
+<span class="lineNum">      64 </span>            :         typedef typename match_result&lt;ScannerT, CharT&gt;::type type;
+<span class="lineNum">      65 </span>            :     };
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :     escape_char_action(ParserT const&amp; p, ActionT const&amp; a)
+<span class="lineNum">      68 </span>            :     : base_t(p), actor(a) {}
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            :     template &lt;typename ScannerT&gt;
+<span class="lineNum">      71 </span>            :     typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">      72 </span>            :     parse(ScannerT const&amp; scan) const
+<span class="lineNum">      73 </span>            :     {
+<span class="lineNum">      74 </span>            :         return impl::escape_char_action_parse&lt;Flags, CharT&gt;::
+<span class="lineNum">      75 </span>            :             parse(scan, *this);
+<span class="lineNum">      76 </span>            :     }
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :     ActionT const&amp; predicate() const { return actor; }
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : private:
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :     ActionT actor;
+<span class="lineNum">      83 </span>            : };
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      86 </span>            : //
+<span class="lineNum">      87 </span>            : //  escape_char_parser class
+<span class="lineNum">      88 </span>            : //
+<span class="lineNum">      89 </span>            : //      The escape_char_parser helps in conjunction with the escape_char_action
+<span class="lineNum">      90 </span>            : //      template class (see above) in parsing escaped characters. There are two
+<span class="lineNum">      91 </span>            : //      different variants of this parser: one for parsing C style escaped
+<span class="lineNum">      92 </span>            : //      characters and one for parsing LEX style escaped characters.
+<span class="lineNum">      93 </span>            : //
+<span class="lineNum">      94 </span>            : //      The C style escaped character parser is generated, when the template
+<span class="lineNum">      95 </span>            : //      parameter 'Flags' is equal to 'c_escapes' (a constant defined in the
+<span class="lineNum">      96 </span>            : //      file impl/escape_char.ipp). This parser recognizes all valid C escape
+<span class="lineNum">      97 </span>            : //      character sequences: '\t', '\b', '\f', '\n', '\r', '\&quot;', '\'', '\\'
+<span class="lineNum">      98 </span>            : //      and the numeric style escapes '\120' (octal) and '\x2f' (hexadecimal)
+<span class="lineNum">      99 </span>            : //      and converts these to their character equivalent, for instance the
+<span class="lineNum">     100 </span>            : //      sequence of a backslash and a 'b' is parsed as the character '\b'.
+<span class="lineNum">     101 </span>            : //      All other escaped characters are rejected by this parser.
+<span class="lineNum">     102 </span>            : //
+<span class="lineNum">     103 </span>            : //      The LEX style escaped character parser is generated, when the template
+<span class="lineNum">     104 </span>            : //      parameter 'Flags' is equal to 'lex_escapes' (a constant defined in the
+<span class="lineNum">     105 </span>            : //      file impl/escape_char.ipp). This parser recognizes all the C style
+<span class="lineNum">     106 </span>            : //      escaped character sequences (as described above) and additionally
+<span class="lineNum">     107 </span>            : //      does not reject all other escape sequences. All not mentioned escape
+<span class="lineNum">     108 </span>            : //      sequences are converted by the parser to the plain character, for
+<span class="lineNum">     109 </span>            : //      instance '\a' will be parsed as 'a'.
+<span class="lineNum">     110 </span>            : //
+<span class="lineNum">     111 </span>            : //      All not escaped characters are parsed without modification.
+<span class="lineNum">     112 </span>            : //
+<span class="lineNum">     113 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : template &lt;unsigned long Flags, typename CharT&gt;
+<span class="lineNum">     116 </span>            : struct escape_char_action_parser_gen;
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : template &lt;unsigned long Flags, typename CharT&gt;
+<span class="lineNum">     119 </span>            : struct escape_char_parser :
+<span class="lineNum">     120 </span>            :     public parser&lt;escape_char_parser&lt;Flags, CharT&gt; &gt; {
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :     // only the values c_escapes and lex_escapes are valid for Flags
+<span class="lineNum">     123 </span>            :     BOOST_STATIC_ASSERT(Flags == c_escapes || Flags == lex_escapes);
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :     typedef escape_char_parser&lt;Flags, CharT&gt; self_t;
+<span class="lineNum">     126 </span>            :     typedef
+<span class="lineNum">     127 </span>            :         escape_char_action_parser_gen&lt;Flags, CharT&gt;
+<span class="lineNum">     128 </span>            :         action_parser_generator_t;
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :     template &lt;typename ScannerT&gt;
+<span class="lineNum">     131 </span>            :     struct result {
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            :         typedef typename match_result&lt;ScannerT, CharT&gt;::type type;
+<span class="lineNum">     134 </span>            :     };
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :     template &lt;typename ActionT&gt;
+<span class="lineNum">     137 </span>            :     escape_char_action&lt;self_t, ActionT, Flags, CharT&gt;
+<span class="lineNum">     138 </span>            :     operator[](ActionT const&amp; actor) const
+<span class="lineNum">     139 </span>            :     {
+<span class="lineNum">     140 </span>            :         return escape_char_action&lt;self_t, ActionT, Flags, CharT&gt;(*this, actor);
+<span class="lineNum">     141 </span>            :     }
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :     template &lt;typename ScannerT&gt;
+<span class="lineNum">     144 </span>            :     typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">     145 </span>            :     parse(ScannerT const &amp;scan) const
+<span class="lineNum">     146 </span>            :     {
+<span class="lineNum">     147 </span><span class="lineCov">  202491376 :         return impl::escape_char_parse&lt;CharT&gt;::parse(scan, *this);</span>
+<span class="lineNum">     148 </span>            :     }
+<span class="lineNum">     149 </span>            : };
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            : template &lt;unsigned long Flags, typename CharT&gt;
+<span class="lineNum">     152 </span>            : struct escape_char_action_parser_gen {
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            :     template &lt;typename ParserT, typename ActionT&gt;
+<span class="lineNum">     155 </span>            :     static escape_char_action&lt;ParserT, ActionT, Flags, CharT&gt;
+<span class="lineNum">     156 </span>            :     generate (ParserT const &amp;p, ActionT const &amp;actor)
+<span class="lineNum">     157 </span>            :     {
+<span class="lineNum">     158 </span>            :         typedef
+<span class="lineNum">     159 </span>            :             escape_char_action&lt;ParserT, ActionT, Flags, CharT&gt;
+<span class="lineNum">     160 </span>            :             action_parser_t;
+<span class="lineNum">     161 </span>            :         return action_parser_t(p, actor);
+<span class="lineNum">     162 </span>            :     }
+<span class="lineNum">     163 </span>            : };
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     166 </span>            : //
+<span class="lineNum">     167 </span>            : //  predefined escape_char_parser objects
+<span class="lineNum">     168 </span>            : //
+<span class="lineNum">     169 </span>            : //      These objects should be used for generating correct escaped character
+<span class="lineNum">     170 </span>            : //      parsers.
+<span class="lineNum">     171 </span>            : //
+<span class="lineNum">     172 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     173 </span>            : const escape_char_parser&lt;lex_escapes&gt; lex_escape_ch_p =
+<span class="lineNum">     174 </span>            :     escape_char_parser&lt;lex_escapes&gt;();
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            : const escape_char_parser&lt;c_escapes&gt; c_escape_ch_p =
+<span class="lineNum">     177 </span>            :     escape_char_parser&lt;c_escapes&gt;();
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     180 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_END
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            : }} // namespace BOOST_SPIRIT_CLASSIC_NS
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

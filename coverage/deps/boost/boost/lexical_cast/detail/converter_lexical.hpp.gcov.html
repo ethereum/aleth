@@ -1,0 +1,574 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/lexical_cast/detail/converter_lexical.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/lexical_cast/detail</a> - converter_lexical.hpp<span style="font-size: 80%;"> (source / <a href="converter_lexical.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntryLo">7.7 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Copyright Kevlin Henney, 2000-2005.</a>
+<span class="lineNum">       2 </span>            : // Copyright Alexander Nasonov, 2006-2010.
+<span class="lineNum">       3 </span>            : // Copyright Antony Polukhin, 2011-2014.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">       6 </span>            : // accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       7 </span>            : // http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            : //
+<span class="lineNum">       9 </span>            : // what:  lexical_cast custom keyword cast
+<span class="lineNum">      10 </span>            : // who:   contributed by Kevlin Henney,
+<span class="lineNum">      11 </span>            : //        enhanced with contributions from Terje Slettebo,
+<span class="lineNum">      12 </span>            : //        with additional fixes and suggestions from Gennaro Prota,
+<span class="lineNum">      13 </span>            : //        Beman Dawes, Dave Abrahams, Daryle Walker, Peter Dimov,
+<span class="lineNum">      14 </span>            : //        Alexander Nasonov, Antony Polukhin, Justin Viiret, Michael Hofmann,
+<span class="lineNum">      15 </span>            : //        Cheng Yang, Matthew Bradbury, David W. Birdsall, Pavel Korzh and other Boosters
+<span class="lineNum">      16 </span>            : // when:  November 2000, March 2003, June 2005, June 2006, March 2011 - 2014
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #ifndef BOOST_LEXICAL_CAST_DETAIL_CONVERTER_LEXICAL_HPP
+<span class="lineNum">      19 </span>            : #define BOOST_LEXICAL_CAST_DETAIL_CONVERTER_LEXICAL_HPP
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      22 </span>            : #ifdef BOOST_HAS_PRAGMA_ONCE
+<span class="lineNum">      23 </span>            : #   pragma once
+<span class="lineNum">      24 </span>            : #endif
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #if defined(BOOST_NO_STRINGSTREAM) || defined(BOOST_NO_STD_WSTRING)
+<span class="lineNum">      27 </span>            : #define BOOST_LCAST_NO_WCHAR_T
+<span class="lineNum">      28 </span>            : #endif
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #include &lt;cstddef&gt;
+<span class="lineNum">      31 </span>            : #include &lt;string&gt;
+<span class="lineNum">      32 </span>            : #include &lt;boost/limits.hpp&gt;
+<span class="lineNum">      33 </span>            : #include &lt;boost/mpl/bool.hpp&gt;
+<span class="lineNum">      34 </span>            : #include &lt;boost/mpl/identity.hpp&gt;
+<span class="lineNum">      35 </span>            : #include &lt;boost/mpl/if.hpp&gt;
+<span class="lineNum">      36 </span>            : #include &lt;boost/type_traits/is_integral.hpp&gt;
+<span class="lineNum">      37 </span>            : #include &lt;boost/type_traits/is_float.hpp&gt;
+<span class="lineNum">      38 </span>            : #include &lt;boost/type_traits/has_left_shift.hpp&gt;
+<span class="lineNum">      39 </span>            : #include &lt;boost/type_traits/has_right_shift.hpp&gt;
+<span class="lineNum">      40 </span>            : #include &lt;boost/static_assert.hpp&gt;
+<span class="lineNum">      41 </span>            : #include &lt;boost/detail/lcast_precision.hpp&gt;
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : #include &lt;boost/lexical_cast/detail/widest_char.hpp&gt;
+<span class="lineNum">      44 </span>            : #include &lt;boost/lexical_cast/detail/is_character.hpp&gt;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : #ifndef BOOST_NO_CXX11_HDR_ARRAY
+<span class="lineNum">      47 </span>            : #include &lt;array&gt;
+<span class="lineNum">      48 </span>            : #endif
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : #include &lt;boost/array.hpp&gt;
+<span class="lineNum">      51 </span>            : #include &lt;boost/range/iterator_range_core.hpp&gt;
+<span class="lineNum">      52 </span>            : #include &lt;boost/container/container_fwd.hpp&gt;
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : #include &lt;boost/lexical_cast/detail/converter_lexical_streams.hpp&gt;
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : namespace boost {
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            :     namespace detail // normalize_single_byte_char&lt;Char&gt;
+<span class="lineNum">      59 </span>            :     {
+<span class="lineNum">      60 </span>            :         // Converts signed/unsigned char to char
+<span class="lineNum">      61 </span>            :         template &lt; class Char &gt;
+<span class="lineNum">      62 </span>            :         struct normalize_single_byte_char 
+<span class="lineNum">      63 </span>            :         {
+<span class="lineNum">      64 </span>            :             typedef Char type;
+<span class="lineNum">      65 </span>            :         };
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :         template &lt;&gt;
+<span class="lineNum">      68 </span>            :         struct normalize_single_byte_char&lt; signed char &gt;
+<span class="lineNum">      69 </span>            :         {
+<span class="lineNum">      70 </span>            :             typedef char type;
+<span class="lineNum">      71 </span>            :         };
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :         template &lt;&gt;
+<span class="lineNum">      74 </span>            :         struct normalize_single_byte_char&lt; unsigned char &gt;
+<span class="lineNum">      75 </span>            :         {
+<span class="lineNum">      76 </span>            :             typedef char type;
+<span class="lineNum">      77 </span>            :         };
+<span class="lineNum">      78 </span>            :     }
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            :     namespace detail // deduce_character_type_later&lt;T&gt;
+<span class="lineNum">      81 </span>            :     {
+<span class="lineNum">      82 </span>            :         // Helper type, meaning that stram character for T must be deduced 
+<span class="lineNum">      83 </span>            :         // at Stage 2 (See deduce_source_char&lt;T&gt; and deduce_target_char&lt;T&gt;)
+<span class="lineNum">      84 </span>            :         template &lt; class T &gt; struct deduce_character_type_later {};
+<span class="lineNum">      85 </span>            :     }
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :     namespace detail // stream_char_common&lt;T&gt;
+<span class="lineNum">      88 </span>            :     {
+<span class="lineNum">      89 </span>            :         // Selectors to choose stream character type (common for Source and Target)
+<span class="lineNum">      90 </span>            :         // Returns one of char, wchar_t, char16_t, char32_t or deduce_character_type_later&lt;T&gt; types
+<span class="lineNum">      91 </span>            :         // Executed on Stage 1 (See deduce_source_char&lt;T&gt; and deduce_target_char&lt;T&gt;)
+<span class="lineNum">      92 </span>            :         template &lt; typename Type &gt;
+<span class="lineNum">      93 </span>            :         struct stream_char_common: public boost::mpl::if_c&lt;
+<span class="lineNum">      94 </span>            :             boost::detail::is_character&lt; Type &gt;::value,
+<span class="lineNum">      95 </span>            :             Type,
+<span class="lineNum">      96 </span>            :             boost::detail::deduce_character_type_later&lt; Type &gt;
+<span class="lineNum">      97 </span>            :         &gt; {};
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :         template &lt; typename Char &gt;
+<span class="lineNum">     100 </span>            :         struct stream_char_common&lt; Char* &gt;: public boost::mpl::if_c&lt;
+<span class="lineNum">     101 </span>            :             boost::detail::is_character&lt; Char &gt;::value,
+<span class="lineNum">     102 </span>            :             Char,
+<span class="lineNum">     103 </span>            :             boost::detail::deduce_character_type_later&lt; Char* &gt;
+<span class="lineNum">     104 </span>            :         &gt; {};
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            :         template &lt; typename Char &gt;
+<span class="lineNum">     107 </span>            :         struct stream_char_common&lt; const Char* &gt;: public boost::mpl::if_c&lt;
+<span class="lineNum">     108 </span>            :             boost::detail::is_character&lt; Char &gt;::value,
+<span class="lineNum">     109 </span>            :             Char,
+<span class="lineNum">     110 </span>            :             boost::detail::deduce_character_type_later&lt; const Char* &gt;
+<span class="lineNum">     111 </span>            :         &gt; {};
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :         template &lt; typename Char &gt;
+<span class="lineNum">     114 </span>            :         struct stream_char_common&lt; boost::iterator_range&lt; Char* &gt; &gt;: public boost::mpl::if_c&lt;
+<span class="lineNum">     115 </span>            :             boost::detail::is_character&lt; Char &gt;::value,
+<span class="lineNum">     116 </span>            :             Char,
+<span class="lineNum">     117 </span>            :             boost::detail::deduce_character_type_later&lt; boost::iterator_range&lt; Char* &gt; &gt;
+<span class="lineNum">     118 </span>            :         &gt; {};
+<span class="lineNum">     119 </span>            :     
+<span class="lineNum">     120 </span>            :         template &lt; typename Char &gt;
+<span class="lineNum">     121 </span>            :         struct stream_char_common&lt; boost::iterator_range&lt; const Char* &gt; &gt;: public boost::mpl::if_c&lt;
+<span class="lineNum">     122 </span>            :             boost::detail::is_character&lt; Char &gt;::value,
+<span class="lineNum">     123 </span>            :             Char,
+<span class="lineNum">     124 </span>            :             boost::detail::deduce_character_type_later&lt; boost::iterator_range&lt; const Char* &gt; &gt;
+<span class="lineNum">     125 </span>            :         &gt; {};
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :         template &lt; class Char, class Traits, class Alloc &gt;
+<span class="lineNum">     128 </span>            :         struct stream_char_common&lt; std::basic_string&lt; Char, Traits, Alloc &gt; &gt;
+<span class="lineNum">     129 </span>            :         {
+<span class="lineNum">     130 </span>            :             typedef Char type;
+<span class="lineNum">     131 </span>            :         };
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            :         template &lt; class Char, class Traits, class Alloc &gt;
+<span class="lineNum">     134 </span>            :         struct stream_char_common&lt; boost::container::basic_string&lt; Char, Traits, Alloc &gt; &gt;
+<span class="lineNum">     135 </span>            :         {
+<span class="lineNum">     136 </span>            :             typedef Char type;
+<span class="lineNum">     137 </span>            :         };
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :         template &lt; typename Char, std::size_t N &gt;
+<span class="lineNum">     140 </span>            :         struct stream_char_common&lt; boost::array&lt; Char, N &gt; &gt;: public boost::mpl::if_c&lt;
+<span class="lineNum">     141 </span>            :             boost::detail::is_character&lt; Char &gt;::value,
+<span class="lineNum">     142 </span>            :             Char,
+<span class="lineNum">     143 </span>            :             boost::detail::deduce_character_type_later&lt; boost::array&lt; Char, N &gt; &gt;
+<span class="lineNum">     144 </span>            :         &gt; {};
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :         template &lt; typename Char, std::size_t N &gt;
+<span class="lineNum">     147 </span>            :         struct stream_char_common&lt; boost::array&lt; const Char, N &gt; &gt;: public boost::mpl::if_c&lt;
+<span class="lineNum">     148 </span>            :             boost::detail::is_character&lt; Char &gt;::value,
+<span class="lineNum">     149 </span>            :             Char,
+<span class="lineNum">     150 </span>            :             boost::detail::deduce_character_type_later&lt; boost::array&lt; const Char, N &gt; &gt;
+<span class="lineNum">     151 </span>            :         &gt; {};
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            : #ifndef BOOST_NO_CXX11_HDR_ARRAY
+<span class="lineNum">     154 </span>            :         template &lt; typename Char, std::size_t N &gt;
+<span class="lineNum">     155 </span>            :         struct stream_char_common&lt; std::array&lt;Char, N &gt; &gt;: public boost::mpl::if_c&lt;
+<span class="lineNum">     156 </span>            :             boost::detail::is_character&lt; Char &gt;::value,
+<span class="lineNum">     157 </span>            :             Char,
+<span class="lineNum">     158 </span>            :             boost::detail::deduce_character_type_later&lt; std::array&lt; Char, N &gt; &gt;
+<span class="lineNum">     159 </span>            :         &gt; {};
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :         template &lt; typename Char, std::size_t N &gt;
+<span class="lineNum">     162 </span>            :         struct stream_char_common&lt; std::array&lt; const Char, N &gt; &gt;: public boost::mpl::if_c&lt;
+<span class="lineNum">     163 </span>            :             boost::detail::is_character&lt; Char &gt;::value,
+<span class="lineNum">     164 </span>            :             Char,
+<span class="lineNum">     165 </span>            :             boost::detail::deduce_character_type_later&lt; std::array&lt; const Char, N &gt; &gt;
+<span class="lineNum">     166 </span>            :         &gt; {};
+<span class="lineNum">     167 </span>            : #endif
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            : #ifdef BOOST_HAS_INT128
+<span class="lineNum">     170 </span>            :         template &lt;&gt; struct stream_char_common&lt; boost::int128_type &gt;: public boost::mpl::identity&lt; char &gt; {};
+<span class="lineNum">     171 </span>            :         template &lt;&gt; struct stream_char_common&lt; boost::uint128_type &gt;: public boost::mpl::identity&lt; char &gt; {};
+<span class="lineNum">     172 </span>            : #endif
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : #if !defined(BOOST_LCAST_NO_WCHAR_T) &amp;&amp; defined(BOOST_NO_INTRINSIC_WCHAR_T)
+<span class="lineNum">     175 </span>            :         template &lt;&gt;
+<span class="lineNum">     176 </span>            :         struct stream_char_common&lt; wchar_t &gt;
+<span class="lineNum">     177 </span>            :         {
+<span class="lineNum">     178 </span>            :             typedef char type;
+<span class="lineNum">     179 </span>            :         };
+<span class="lineNum">     180 </span>            : #endif
+<span class="lineNum">     181 </span>            :     }
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            :     namespace detail // deduce_source_char_impl&lt;T&gt;
+<span class="lineNum">     184 </span>            :     {
+<span class="lineNum">     185 </span>            :         // If type T is `deduce_character_type_later` type, then tries to deduce
+<span class="lineNum">     186 </span>            :         // character type using boost::has_left_shift&lt;T&gt; metafunction.
+<span class="lineNum">     187 </span>            :         // Otherwise supplied type T is a character type, that must be normalized
+<span class="lineNum">     188 </span>            :         // using normalize_single_byte_char&lt;Char&gt;.
+<span class="lineNum">     189 </span>            :         // Executed at Stage 2  (See deduce_source_char&lt;T&gt; and deduce_target_char&lt;T&gt;)
+<span class="lineNum">     190 </span>            :         template &lt; class Char &gt; 
+<span class="lineNum">     191 </span>            :         struct deduce_source_char_impl
+<span class="lineNum">     192 </span>            :         { 
+<span class="lineNum">     193 </span>            :             typedef BOOST_DEDUCED_TYPENAME boost::detail::normalize_single_byte_char&lt; Char &gt;::type type; 
+<span class="lineNum">     194 </span>            :         };
+<span class="lineNum">     195 </span>            :         
+<span class="lineNum">     196 </span>            :         template &lt; class T &gt; 
+<span class="lineNum">     197 </span>            :         struct deduce_source_char_impl&lt; deduce_character_type_later&lt; T &gt; &gt; 
+<span class="lineNum">     198 </span>            :         {
+<span class="lineNum">     199 </span>            :             typedef boost::has_left_shift&lt; std::basic_ostream&lt; char &gt;, T &gt; result_t;
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            : #if defined(BOOST_LCAST_NO_WCHAR_T)
+<span class="lineNum">     202 </span>            :             BOOST_STATIC_ASSERT_MSG((result_t::value), 
+<span class="lineNum">     203 </span>            :                 &quot;Source type is not std::ostream`able and std::wostream`s are not supported by your STL implementation&quot;);
+<span class="lineNum">     204 </span>            :             typedef char type;
+<span class="lineNum">     205 </span>            : #else
+<span class="lineNum">     206 </span>            :             typedef BOOST_DEDUCED_TYPENAME boost::mpl::if_c&lt;
+<span class="lineNum">     207 </span>            :                 result_t::value, char, wchar_t
+<span class="lineNum">     208 </span>            :             &gt;::type type;
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :             BOOST_STATIC_ASSERT_MSG((result_t::value || boost::has_left_shift&lt; std::basic_ostream&lt; type &gt;, T &gt;::value), 
+<span class="lineNum">     211 </span>            :                 &quot;Source type is neither std::ostream`able nor std::wostream`able&quot;);
+<span class="lineNum">     212 </span>            : #endif
+<span class="lineNum">     213 </span>            :         };
+<span class="lineNum">     214 </span>            :     }
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            :     namespace detail  // deduce_target_char_impl&lt;T&gt;
+<span class="lineNum">     217 </span>            :     {
+<span class="lineNum">     218 </span>            :         // If type T is `deduce_character_type_later` type, then tries to deduce
+<span class="lineNum">     219 </span>            :         // character type using boost::has_right_shift&lt;T&gt; metafunction.
+<span class="lineNum">     220 </span>            :         // Otherwise supplied type T is a character type, that must be normalized
+<span class="lineNum">     221 </span>            :         // using normalize_single_byte_char&lt;Char&gt;.
+<span class="lineNum">     222 </span>            :         // Executed at Stage 2  (See deduce_source_char&lt;T&gt; and deduce_target_char&lt;T&gt;)
+<span class="lineNum">     223 </span>            :         template &lt; class Char &gt; 
+<span class="lineNum">     224 </span>            :         struct deduce_target_char_impl 
+<span class="lineNum">     225 </span>            :         { 
+<span class="lineNum">     226 </span>            :             typedef BOOST_DEDUCED_TYPENAME normalize_single_byte_char&lt; Char &gt;::type type; 
+<span class="lineNum">     227 </span>            :         };
+<span class="lineNum">     228 </span>            :         
+<span class="lineNum">     229 </span>            :         template &lt; class T &gt; 
+<span class="lineNum">     230 </span>            :         struct deduce_target_char_impl&lt; deduce_character_type_later&lt;T&gt; &gt; 
+<span class="lineNum">     231 </span>            :         { 
+<span class="lineNum">     232 </span>            :             typedef boost::has_right_shift&lt;std::basic_istream&lt;char&gt;, T &gt; result_t;
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            : #if defined(BOOST_LCAST_NO_WCHAR_T)
+<span class="lineNum">     235 </span>            :             BOOST_STATIC_ASSERT_MSG((result_t::value), 
+<span class="lineNum">     236 </span>            :                 &quot;Target type is not std::istream`able and std::wistream`s are not supported by your STL implementation&quot;);
+<span class="lineNum">     237 </span>            :             typedef char type;
+<span class="lineNum">     238 </span>            : #else
+<span class="lineNum">     239 </span>            :             typedef BOOST_DEDUCED_TYPENAME boost::mpl::if_c&lt;
+<span class="lineNum">     240 </span>            :                 result_t::value, char, wchar_t
+<span class="lineNum">     241 </span>            :             &gt;::type type;
+<span class="lineNum">     242 </span>            :             
+<span class="lineNum">     243 </span>            :             BOOST_STATIC_ASSERT_MSG((result_t::value || boost::has_right_shift&lt;std::basic_istream&lt;wchar_t&gt;, T &gt;::value), 
+<span class="lineNum">     244 </span>            :                 &quot;Target type is neither std::istream`able nor std::wistream`able&quot;);
+<span class="lineNum">     245 </span>            : #endif
+<span class="lineNum">     246 </span>            :         };
+<span class="lineNum">     247 </span>            :     } 
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            :     namespace detail  // deduce_target_char&lt;T&gt; and deduce_source_char&lt;T&gt;
+<span class="lineNum">     250 </span>            :     {
+<span class="lineNum">     251 </span>            :         // We deduce stream character types in two stages.
+<span class="lineNum">     252 </span>            :         //
+<span class="lineNum">     253 </span>            :         // Stage 1 is common for Target and Source. At Stage 1 we get 
+<span class="lineNum">     254 </span>            :         // non normalized character type (may contain unsigned/signed char)
+<span class="lineNum">     255 </span>            :         // or deduce_character_type_later&lt;T&gt; where T is the original type.
+<span class="lineNum">     256 </span>            :         // Stage 1 is executed by stream_char_common&lt;T&gt;
+<span class="lineNum">     257 </span>            :         //
+<span class="lineNum">     258 </span>            :         // At Stage 2 we normalize character types or try to deduce character 
+<span class="lineNum">     259 </span>            :         // type using metafunctions. 
+<span class="lineNum">     260 </span>            :         // Stage 2 is executed by deduce_target_char_impl&lt;T&gt; and 
+<span class="lineNum">     261 </span>            :         // deduce_source_char_impl&lt;T&gt;
+<span class="lineNum">     262 </span>            :         //
+<span class="lineNum">     263 </span>            :         // deduce_target_char&lt;T&gt; and deduce_source_char&lt;T&gt; functions combine 
+<span class="lineNum">     264 </span>            :         // both stages
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            :         template &lt; class T &gt;
+<span class="lineNum">     267 </span>            :         struct deduce_target_char
+<span class="lineNum">     268 </span>            :         {
+<span class="lineNum">     269 </span>            :             typedef BOOST_DEDUCED_TYPENAME stream_char_common&lt; T &gt;::type stage1_type;
+<span class="lineNum">     270 </span>            :             typedef BOOST_DEDUCED_TYPENAME deduce_target_char_impl&lt; stage1_type &gt;::type stage2_type;
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            :             typedef stage2_type type;
+<span class="lineNum">     273 </span>            :         };
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            :         template &lt; class T &gt;
+<span class="lineNum">     276 </span>            :         struct deduce_source_char
+<span class="lineNum">     277 </span>            :         {
+<span class="lineNum">     278 </span>            :             typedef BOOST_DEDUCED_TYPENAME stream_char_common&lt; T &gt;::type stage1_type;
+<span class="lineNum">     279 </span>            :             typedef BOOST_DEDUCED_TYPENAME deduce_source_char_impl&lt; stage1_type &gt;::type stage2_type;
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span>            :             typedef stage2_type type;
+<span class="lineNum">     282 </span>            :         };
+<span class="lineNum">     283 </span>            :     }
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span>            :     namespace detail // extract_char_traits template
+<span class="lineNum">     286 </span>            :     {
+<span class="lineNum">     287 </span>            :         // We are attempting to get char_traits&lt;&gt; from T
+<span class="lineNum">     288 </span>            :         // template parameter. Otherwise we'll be using std::char_traits&lt;Char&gt;
+<span class="lineNum">     289 </span>            :         template &lt; class Char, class T &gt;
+<span class="lineNum">     290 </span>            :         struct extract_char_traits
+<span class="lineNum">     291 </span>            :                 : boost::false_type
+<span class="lineNum">     292 </span>            :         {
+<span class="lineNum">     293 </span>            :             typedef std::char_traits&lt; Char &gt; trait_t;
+<span class="lineNum">     294 </span>            :         };
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            :         template &lt; class Char, class Traits, class Alloc &gt;
+<span class="lineNum">     297 </span>            :         struct extract_char_traits&lt; Char, std::basic_string&lt; Char, Traits, Alloc &gt; &gt;
+<span class="lineNum">     298 </span>            :             : boost::true_type
+<span class="lineNum">     299 </span>            :         {
+<span class="lineNum">     300 </span>            :             typedef Traits trait_t;
+<span class="lineNum">     301 </span>            :         };
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span>            :         template &lt; class Char, class Traits, class Alloc&gt;
+<span class="lineNum">     304 </span>            :         struct extract_char_traits&lt; Char, boost::container::basic_string&lt; Char, Traits, Alloc &gt; &gt;
+<span class="lineNum">     305 </span>            :             : boost::true_type
+<span class="lineNum">     306 </span>            :         {
+<span class="lineNum">     307 </span>            :             typedef Traits trait_t;
+<span class="lineNum">     308 </span>            :         };
+<span class="lineNum">     309 </span>            :     }
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            :     namespace detail // array_to_pointer_decay&lt;T&gt;
+<span class="lineNum">     312 </span>            :     {
+<span class="lineNum">     313 </span>            :         template&lt;class T&gt;
+<span class="lineNum">     314 </span>            :         struct array_to_pointer_decay
+<span class="lineNum">     315 </span>            :         {
+<span class="lineNum">     316 </span>            :             typedef T type;
+<span class="lineNum">     317 </span>            :         };
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            :         template&lt;class T, std::size_t N&gt;
+<span class="lineNum">     320 </span>            :         struct array_to_pointer_decay&lt;T[N]&gt;
+<span class="lineNum">     321 </span>            :         {
+<span class="lineNum">     322 </span>            :             typedef const T * type;
+<span class="lineNum">     323 </span>            :         };
+<span class="lineNum">     324 </span>            :     }
+<span class="lineNum">     325 </span>            :     
+<span class="lineNum">     326 </span>            :     namespace detail // lcast_src_length
+<span class="lineNum">     327 </span>            :     {
+<span class="lineNum">     328 </span>            :         // Return max. length of string representation of Source;
+<span class="lineNum">     329 </span>            :         template&lt; class Source,         // Source type of lexical_cast.
+<span class="lineNum">     330 </span>            :                   class Enable = void   // helper type
+<span class="lineNum">     331 </span>            :                 &gt;
+<span class="lineNum">     332 </span>            :         struct lcast_src_length
+<span class="lineNum">     333 </span>            :         {
+<span class="lineNum">     334 </span>            :             BOOST_STATIC_CONSTANT(std::size_t, value = 1);
+<span class="lineNum">     335 </span>            :         };
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span>            :         // Helper for integral types.
+<span class="lineNum">     338 </span>            :         // Notes on length calculation:
+<span class="lineNum">     339 </span>            :         // Max length for 32bit int with grouping &quot;\1&quot; and thousands_sep ',':
+<span class="lineNum">     340 </span>            :         // &quot;-2,1,4,7,4,8,3,6,4,7&quot;
+<span class="lineNum">     341 </span>            :         //  ^                    - is_signed
+<span class="lineNum">     342 </span>            :         //   ^                   - 1 digit not counted by digits10
+<span class="lineNum">     343 </span>            :         //    ^^^^^^^^^^^^^^^^^^ - digits10 * 2
+<span class="lineNum">     344 </span>            :         //
+<span class="lineNum">     345 </span>            :         // Constant is_specialized is used instead of constant 1
+<span class="lineNum">     346 </span>            :         // to prevent buffer overflow in a rare case when
+<span class="lineNum">     347 </span>            :         // &lt;boost/limits.hpp&gt; doesn't add missing specialization for
+<span class="lineNum">     348 </span>            :         // numeric_limits&lt;T&gt; for some integral type T.
+<span class="lineNum">     349 </span>            :         // When is_specialized is false, the whole expression is 0.
+<span class="lineNum">     350 </span>            :         template &lt;class Source&gt;
+<span class="lineNum">     351 </span>            :         struct lcast_src_length&lt;
+<span class="lineNum">     352 </span>            :                     Source, BOOST_DEDUCED_TYPENAME boost::enable_if&lt;boost::is_integral&lt;Source&gt; &gt;::type
+<span class="lineNum">     353 </span>            :                 &gt;
+<span class="lineNum">     354 </span>            :         {
+<span class="lineNum">     355 </span>            : #ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+<span class="lineNum">     356 </span>            :             BOOST_STATIC_CONSTANT(std::size_t, value =
+<span class="lineNum">     357 </span>            :                   std::numeric_limits&lt;Source&gt;::is_signed +
+<span class="lineNum">     358 </span>            :                   std::numeric_limits&lt;Source&gt;::is_specialized + /* == 1 */
+<span class="lineNum">     359 </span>            :                   std::numeric_limits&lt;Source&gt;::digits10 * 2
+<span class="lineNum">     360 </span>            :               );
+<span class="lineNum">     361 </span>            : #else
+<span class="lineNum">     362 </span>            :             BOOST_STATIC_CONSTANT(std::size_t, value = 156);
+<span class="lineNum">     363 </span>            :             BOOST_STATIC_ASSERT(sizeof(Source) * CHAR_BIT &lt;= 256);
+<span class="lineNum">     364 </span>            : #endif
+<span class="lineNum">     365 </span>            :         };
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span>            :         // Helper for floating point types.
+<span class="lineNum">     368 </span>            :         // -1.23456789e-123456
+<span class="lineNum">     369 </span>            :         // ^                   sign
+<span class="lineNum">     370 </span>            :         //  ^                  leading digit
+<span class="lineNum">     371 </span>            :         //   ^                 decimal point 
+<span class="lineNum">     372 </span>            :         //    ^^^^^^^^         lcast_precision&lt;Source&gt;::value
+<span class="lineNum">     373 </span>            :         //            ^        &quot;e&quot;
+<span class="lineNum">     374 </span>            :         //             ^       exponent sign
+<span class="lineNum">     375 </span>            :         //              ^^^^^^ exponent (assumed 6 or less digits)
+<span class="lineNum">     376 </span>            :         // sign + leading digit + decimal point + &quot;e&quot; + exponent sign == 5
+<span class="lineNum">     377 </span>            :         template&lt;class Source&gt;
+<span class="lineNum">     378 </span>            :         struct lcast_src_length&lt;
+<span class="lineNum">     379 </span>            :                 Source, BOOST_DEDUCED_TYPENAME boost::enable_if&lt;boost::is_float&lt;Source&gt; &gt;::type
+<span class="lineNum">     380 </span>            :             &gt;
+<span class="lineNum">     381 </span>            :         {
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span>            : #ifndef BOOST_LCAST_NO_COMPILE_TIME_PRECISION
+<span class="lineNum">     384 </span>            :             BOOST_STATIC_ASSERT(
+<span class="lineNum">     385 </span>            :                     std::numeric_limits&lt;Source&gt;::max_exponent10 &lt;=  999999L &amp;&amp;
+<span class="lineNum">     386 </span>            :                     std::numeric_limits&lt;Source&gt;::min_exponent10 &gt;= -999999L
+<span class="lineNum">     387 </span>            :                 );
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span>            :             BOOST_STATIC_CONSTANT(std::size_t, value =
+<span class="lineNum">     390 </span>            :                     5 + lcast_precision&lt;Source&gt;::value + 6
+<span class="lineNum">     391 </span>            :                 );
+<span class="lineNum">     392 </span>            : #else // #ifndef BOOST_LCAST_NO_COMPILE_TIME_PRECISION
+<span class="lineNum">     393 </span>            :             BOOST_STATIC_CONSTANT(std::size_t, value = 156);
+<span class="lineNum">     394 </span>            : #endif // #ifndef BOOST_LCAST_NO_COMPILE_TIME_PRECISION
+<span class="lineNum">     395 </span>            :         };
+<span class="lineNum">     396 </span>            :     }
+<span class="lineNum">     397 </span>            : 
+<span class="lineNum">     398 </span>            :     namespace detail // lexical_cast_stream_traits&lt;Source, Target&gt;
+<span class="lineNum">     399 </span>            :     {
+<span class="lineNum">     400 </span>            :         template &lt;class Source, class Target&gt;
+<span class="lineNum">     401 </span>            :         struct lexical_cast_stream_traits {
+<span class="lineNum">     402 </span>            :             typedef BOOST_DEDUCED_TYPENAME boost::detail::array_to_pointer_decay&lt;Source&gt;::type src;
+<span class="lineNum">     403 </span>            :             typedef BOOST_DEDUCED_TYPENAME boost::remove_cv&lt;src&gt;::type            no_cv_src;
+<span class="lineNum">     404 </span>            :                 
+<span class="lineNum">     405 </span>            :             typedef boost::detail::deduce_source_char&lt;no_cv_src&gt;                           deduce_src_char_metafunc;
+<span class="lineNum">     406 </span>            :             typedef BOOST_DEDUCED_TYPENAME deduce_src_char_metafunc::type           src_char_t;
+<span class="lineNum">     407 </span>            :             typedef BOOST_DEDUCED_TYPENAME boost::detail::deduce_target_char&lt;Target&gt;::type target_char_t;
+<span class="lineNum">     408 </span>            :                 
+<span class="lineNum">     409 </span>            :             typedef BOOST_DEDUCED_TYPENAME boost::detail::widest_char&lt;
+<span class="lineNum">     410 </span>            :                 target_char_t, src_char_t
+<span class="lineNum">     411 </span>            :             &gt;::type char_type;
+<span class="lineNum">     412 </span>            : 
+<span class="lineNum">     413 </span>            : #if !defined(BOOST_NO_CXX11_CHAR16_T) &amp;&amp; defined(BOOST_NO_CXX11_UNICODE_LITERALS)
+<span class="lineNum">     414 </span>            :             BOOST_STATIC_ASSERT_MSG(( !boost::is_same&lt;char16_t, src_char_t&gt;::value
+<span class="lineNum">     415 </span>            :                                         &amp;&amp; !boost::is_same&lt;char16_t, target_char_t&gt;::value),
+<span class="lineNum">     416 </span>            :                 &quot;Your compiler does not have full support for char16_t&quot; );
+<span class="lineNum">     417 </span>            : #endif
+<span class="lineNum">     418 </span>            : #if !defined(BOOST_NO_CXX11_CHAR32_T) &amp;&amp; defined(BOOST_NO_CXX11_UNICODE_LITERALS)
+<span class="lineNum">     419 </span>            :             BOOST_STATIC_ASSERT_MSG(( !boost::is_same&lt;char32_t, src_char_t&gt;::value
+<span class="lineNum">     420 </span>            :                                         &amp;&amp; !boost::is_same&lt;char32_t, target_char_t&gt;::value),
+<span class="lineNum">     421 </span>            :                 &quot;Your compiler does not have full support for char32_t&quot; );
+<span class="lineNum">     422 </span>            : #endif
+<span class="lineNum">     423 </span>            : 
+<span class="lineNum">     424 </span>            :             typedef BOOST_DEDUCED_TYPENAME boost::mpl::if_c&lt;
+<span class="lineNum">     425 </span>            :                 boost::detail::extract_char_traits&lt;char_type, Target&gt;::value,
+<span class="lineNum">     426 </span>            :                 BOOST_DEDUCED_TYPENAME boost::detail::extract_char_traits&lt;char_type, Target&gt;,
+<span class="lineNum">     427 </span>            :                 BOOST_DEDUCED_TYPENAME boost::detail::extract_char_traits&lt;char_type, no_cv_src&gt;
+<span class="lineNum">     428 </span>            :             &gt;::type::trait_t traits;
+<span class="lineNum">     429 </span>            :             
+<span class="lineNum">     430 </span>            :             typedef boost::mpl::bool_
+<span class="lineNum">     431 </span>            :                 &lt;
+<span class="lineNum">     432 </span>            :                 boost::is_same&lt;char, src_char_t&gt;::value &amp;&amp;                                 // source is not a wide character based type
+<span class="lineNum">     433 </span>            :                 (sizeof(char) != sizeof(target_char_t)) &amp;&amp;  // target type is based on wide character
+<span class="lineNum">     434 </span>            :                 (!(boost::detail::is_character&lt;no_cv_src&gt;::value))
+<span class="lineNum">     435 </span>            :                 &gt; is_string_widening_required_t;
+<span class="lineNum">     436 </span>            : 
+<span class="lineNum">     437 </span>            :             typedef boost::mpl::bool_
+<span class="lineNum">     438 </span>            :                 &lt;
+<span class="lineNum">     439 </span>            :                 !(boost::is_integral&lt;no_cv_src&gt;::value || 
+<span class="lineNum">     440 </span>            :                   boost::detail::is_character&lt;
+<span class="lineNum">     441 </span>            :                     BOOST_DEDUCED_TYPENAME deduce_src_char_metafunc::stage1_type          // if we did not get character type at stage1
+<span class="lineNum">     442 </span>            :                   &gt;::value                                                           // then we have no optimization for that type
+<span class="lineNum">     443 </span>            :                  )
+<span class="lineNum">     444 </span>            :                 &gt; is_source_input_not_optimized_t;
+<span class="lineNum">     445 </span>            :             
+<span class="lineNum">     446 </span>            :             // If we have an optimized conversion for
+<span class="lineNum">     447 </span>            :             // Source, we do not need to construct stringbuf.
+<span class="lineNum">     448 </span>            :             BOOST_STATIC_CONSTANT(bool, requires_stringbuf = 
+<span class="lineNum">     449 </span>            :                 (is_string_widening_required_t::value || is_source_input_not_optimized_t::value)
+<span class="lineNum">     450 </span>            :             );
+<span class="lineNum">     451 </span>            :             
+<span class="lineNum">     452 </span>            :             typedef boost::detail::lcast_src_length&lt;no_cv_src&gt; len_t;
+<span class="lineNum">     453 </span>            :         };
+<span class="lineNum">     454 </span>            :     }
+<span class="lineNum">     455 </span>            :  
+<span class="lineNum">     456 </span>            :     namespace detail
+<span class="lineNum">     457 </span>            :     {
+<span class="lineNum">     458 </span>            :         template&lt;typename Target, typename Source&gt;
+<span class="lineNum">     459 </span>            :         struct lexical_converter_impl
+<span class="lineNum">     460 </span>            :         {
+<span class="lineNum">     461 </span>            :             typedef lexical_cast_stream_traits&lt;Source, Target&gt;  stream_trait;
+<span class="lineNum">     462 </span>            : 
+<span class="lineNum">     463 </span>            :             typedef detail::lexical_istream_limited_src&lt;
+<span class="lineNum">     464 </span>            :                 BOOST_DEDUCED_TYPENAME stream_trait::char_type,
+<span class="lineNum">     465 </span>            :                 BOOST_DEDUCED_TYPENAME stream_trait::traits,
+<span class="lineNum">     466 </span>            :                 stream_trait::requires_stringbuf,
+<span class="lineNum">     467 </span>            :                 stream_trait::len_t::value + 1
+<span class="lineNum">     468 </span>            :             &gt; i_interpreter_type;
+<span class="lineNum">     469 </span>            : 
+<span class="lineNum">     470 </span>            :             typedef detail::lexical_ostream_limited_src&lt;
+<span class="lineNum">     471 </span>            :                 BOOST_DEDUCED_TYPENAME stream_trait::char_type,
+<span class="lineNum">     472 </span>            :                 BOOST_DEDUCED_TYPENAME stream_trait::traits
+<a name="473"><span class="lineNum">     473 </span>            :             &gt; o_interpreter_type;</a>
+<span class="lineNum">     474 </span>            : 
+<span class="lineNum">     475 </span><span class="lineCov">      25554 :             static inline bool try_convert(const Source&amp; arg, Target&amp; result) {</span>
+<span class="lineNum">     476 </span><span class="lineCov">      25554 :                 i_interpreter_type i_interpreter;</span>
+<span class="lineNum">     477 </span>            : 
+<span class="lineNum">     478 </span>            :                 // Disabling ADL, by directly specifying operators.
+<span class="lineNum">     479 </span><span class="lineCov">      51108 :                 if (!(i_interpreter.operator &lt;&lt;(arg)))</span>
+<span class="lineNum">     480 </span>            :                     return false;
+<span class="lineNum">     481 </span>            : 
+<span class="lineNum">     482 </span><span class="lineCov">      51108 :                 o_interpreter_type out(i_interpreter.cbegin(), i_interpreter.cend());</span>
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span>            :                 // Disabling ADL, by directly specifying operators.
+<span class="lineNum">     485 </span><span class="lineCov">      25553 :                 if(!(out.operator &gt;&gt;(result)))</span>
+<span class="lineNum">     486 </span>            :                     return false;
+<span class="lineNum">     487 </span>            : 
+<span class="lineNum">     488 </span>            :                 return true;
+<span class="lineNum">     489 </span>            :             }
+<span class="lineNum">     490 </span>            :         };
+<span class="lineNum">     491 </span>            :     }
+<span class="lineNum">     492 </span>            : 
+<span class="lineNum">     493 </span>            : } // namespace boost
+<span class="lineNum">     494 </span>            : 
+<span class="lineNum">     495 </span>            : #undef BOOST_LCAST_NO_WCHAR_T
+<span class="lineNum">     496 </span>            : 
+<span class="lineNum">     497 </span>            : #endif // BOOST_LEXICAL_CAST_DETAIL_CONVERTER_LEXICAL_HPP
+<span class="lineNum">     498 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

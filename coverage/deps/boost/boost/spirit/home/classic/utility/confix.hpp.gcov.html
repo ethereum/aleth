@@ -1,0 +1,481 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/spirit/home/classic/utility/confix.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/spirit/home/classic/utility</a> - confix.hpp<span style="font-size: 80%;"> (source / <a href="confix.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*=============================================================================</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 2002-2003 Hartmut Kaiser
+<span class="lineNum">       3 </span>            :     http://spirit.sourceforge.net/
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :   Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       6 </span>            :   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       7 </span>            : =============================================================================*/
+<span class="lineNum">       8 </span>            : #ifndef BOOST_SPIRIT_CONFIX_HPP
+<span class="lineNum">       9 </span>            : #define BOOST_SPIRIT_CONFIX_HPP
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      12 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      13 </span>            : #include &lt;boost/spirit/home/classic/namespace.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/spirit/home/classic/meta/as_parser.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/spirit/home/classic/core/composite/operators.hpp&gt;
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : #include &lt;boost/spirit/home/classic/utility/confix_fwd.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/spirit/home/classic/utility/impl/confix.ipp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      21 </span>            : namespace boost { namespace spirit {
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      26 </span>            : //
+<span class="lineNum">      27 </span>            : //  confix_parser class
+<span class="lineNum">      28 </span>            : //
+<span class="lineNum">      29 </span>            : //      Parses a sequence of 3 sub-matches. This class may
+<span class="lineNum">      30 </span>            : //      be used to parse structures, where the opening part is possibly
+<span class="lineNum">      31 </span>            : //      contained in the expression part and the whole sequence is only
+<span class="lineNum">      32 </span>            : //      parsed after seeing the closing part matching the first opening
+<span class="lineNum">      33 </span>            : //      subsequence. Example: C-comments:
+<span class="lineNum">      34 </span>            : //
+<span class="lineNum">      35 </span>            : //      /* This is a C-comment */
+<span class="lineNum">      36 </span>            : //
+<span class="lineNum">      37 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &gt;= 1400)
+<span class="lineNum">      40 </span>            : #pragma warning(push)
+<span class="lineNum">      41 </span>            : #pragma warning(disable:4512) //assignment operator could not be generated
+<span class="lineNum">      42 </span>            : #endif
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : template&lt;typename NestedT = non_nested, typename LexemeT = non_lexeme&gt;
+<span class="lineNum">      45 </span>            : struct confix_parser_gen;
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : template &lt;
+<span class="lineNum">      48 </span>            :     typename OpenT, typename ExprT, typename CloseT, typename CategoryT,
+<span class="lineNum">      49 </span>            :     typename NestedT, typename LexemeT
+<span class="lineNum">      50 </span>            : &gt;
+<span class="lineNum">      51 </span>            : struct confix_parser :
+<span class="lineNum">      52 </span>            :     public parser&lt;
+<span class="lineNum">      53 </span>            :         confix_parser&lt;OpenT, ExprT, CloseT, CategoryT, NestedT, LexemeT&gt;
+<span class="lineNum">      54 </span>            :     &gt;
+<span class="lineNum">      55 </span>            : {
+<span class="lineNum">      56 </span>            :     typedef
+<span class="lineNum">      57 </span>            :         confix_parser&lt;OpenT, ExprT, CloseT, CategoryT, NestedT, LexemeT&gt;
+<span class="lineNum">      58 </span>            :         self_t;
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :     confix_parser(OpenT const &amp;open_, ExprT const &amp;expr_, CloseT const &amp;close_)
+<span class="lineNum">      61 </span><span class="lineCov">      48754 :     : open(open_), expr(expr_), close(close_)</span>
+<span class="lineNum">      62 </span>            :     {}
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :     template &lt;typename ScannerT&gt;
+<span class="lineNum">      65 </span>            :     typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">      66 </span>            :     parse(ScannerT const&amp; scan) const
+<span class="lineNum">      67 </span>            :     {
+<span class="lineNum">      68 </span>            :         return impl::confix_parser_type&lt;CategoryT&gt;::
+<span class="lineNum">      69 </span><span class="lineCov">    6563418 :             parse(NestedT(), LexemeT(), *this, scan, open, expr, close);</span>
+<span class="lineNum">      70 </span>            :     }
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : private:
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :     typename as_parser&lt;OpenT&gt;::type::embed_t open;
+<span class="lineNum">      75 </span>            :     typename as_parser&lt;ExprT&gt;::type::embed_t expr;
+<span class="lineNum">      76 </span>            :     typename as_parser&lt;CloseT&gt;::type::embed_t close;
+<span class="lineNum">      77 </span>            : };
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &gt;= 1400)
+<span class="lineNum">      80 </span>            : #pragma warning(pop)
+<span class="lineNum">      81 </span>            : #endif
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      84 </span>            : //
+<span class="lineNum">      85 </span>            : //  Confix parser generator template
+<span class="lineNum">      86 </span>            : //
+<span class="lineNum">      87 </span>            : //      This is a helper for generating a correct confix_parser&lt;&gt; from
+<span class="lineNum">      88 </span>            : //      auxiliary parameters. There are the following types supported as
+<span class="lineNum">      89 </span>            : //      parameters yet: parsers, single characters and strings (see
+<span class="lineNum">      90 </span>            : //      as_parser).
+<span class="lineNum">      91 </span>            : //
+<span class="lineNum">      92 </span>            : //      If the body parser is an action_parser_category type parser (a parser
+<span class="lineNum">      93 </span>            : //      with an attached semantic action) we have to do something special. This
+<span class="lineNum">      94 </span>            : //      happens, if the user wrote something like:
+<span class="lineNum">      95 </span>            : //
+<span class="lineNum">      96 </span>            : //          confix_p(open, body[f], close)
+<span class="lineNum">      97 </span>            : //
+<span class="lineNum">      98 </span>            : //      where 'body' is the parser matching the body of the confix sequence
+<span class="lineNum">      99 </span>            : //      and 'f' is a functor to be called after matching the body. If we would
+<span class="lineNum">     100 </span>            : //      do nothing, the resulting code would parse the sequence as follows:
+<span class="lineNum">     101 </span>            : //
+<span class="lineNum">     102 </span>            : //          start &gt;&gt; (body[f] - close) &gt;&gt; close
+<span class="lineNum">     103 </span>            : //
+<span class="lineNum">     104 </span>            : //      what in most cases is not what the user expects.
+<span class="lineNum">     105 </span>            : //      (If this _is_ what you've expected, then please use the confix_p
+<span class="lineNum">     106 </span>            : //      generator function 'direct()', which will inhibit
+<span class="lineNum">     107 </span>            : //      re-attaching the actor to the body parser).
+<span class="lineNum">     108 </span>            : //
+<span class="lineNum">     109 </span>            : //      To make the confix parser behave as expected:
+<span class="lineNum">     110 </span>            : //
+<span class="lineNum">     111 </span>            : //          start &gt;&gt; (body - close)[f] &gt;&gt; close
+<span class="lineNum">     112 </span>            : //
+<span class="lineNum">     113 </span>            : //      the actor attached to the 'body' parser has to be re-attached to the
+<span class="lineNum">     114 </span>            : //      (body - close) parser construct, which will make the resulting confix
+<span class="lineNum">     115 </span>            : //      parser 'do the right thing'. This refactoring is done by the help of
+<span class="lineNum">     116 </span>            : //      the refactoring parsers (see the files refactoring.[hi]pp).
+<span class="lineNum">     117 </span>            : //
+<span class="lineNum">     118 </span>            : //      Additionally special care must be taken, if the body parser is a
+<span class="lineNum">     119 </span>            : //      unary_parser_category type parser as
+<span class="lineNum">     120 </span>            : //
+<span class="lineNum">     121 </span>            : //          confix_p(open, *anychar_p, close)
+<span class="lineNum">     122 </span>            : //
+<span class="lineNum">     123 </span>            : //      which without any refactoring would result in
+<span class="lineNum">     124 </span>            : //
+<span class="lineNum">     125 </span>            : //          start &gt;&gt; (*anychar_p - close) &gt;&gt; close
+<span class="lineNum">     126 </span>            : //
+<span class="lineNum">     127 </span>            : //      and will not give the expected result (*anychar_p will eat up all the
+<span class="lineNum">     128 </span>            : //      input up to the end of the input stream). So we have to refactor this
+<span class="lineNum">     129 </span>            : //      into:
+<span class="lineNum">     130 </span>            : //
+<span class="lineNum">     131 </span>            : //          start &gt;&gt; *(anychar_p - close) &gt;&gt; close
+<span class="lineNum">     132 </span>            : //
+<span class="lineNum">     133 </span>            : //      what will give the correct result.
+<span class="lineNum">     134 </span>            : //
+<span class="lineNum">     135 </span>            : //      The case, where the body parser is a combination of the two mentioned
+<span class="lineNum">     136 </span>            : //      problems (i.e. the body parser is a unary parser  with an attached
+<span class="lineNum">     137 </span>            : //      action), is handled accordingly too:
+<span class="lineNum">     138 </span>            : //
+<span class="lineNum">     139 </span>            : //          confix_p(start, (*anychar_p)[f], end)
+<span class="lineNum">     140 </span>            : //
+<span class="lineNum">     141 </span>            : //      will be parsed as expected:
+<span class="lineNum">     142 </span>            : //
+<span class="lineNum">     143 </span>            : //          start &gt;&gt; (*(anychar_p - end))[f] &gt;&gt; end.
+<span class="lineNum">     144 </span>            : //
+<span class="lineNum">     145 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : template&lt;typename NestedT, typename LexemeT&gt;
+<span class="lineNum">     148 </span>            : struct confix_parser_gen
+<span class="lineNum">     149 </span>            : {
+<span class="lineNum">     150 </span>            :     // Generic generator function for creation of concrete confix parsers
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :     template&lt;typename StartT, typename ExprT, typename EndT&gt;
+<span class="lineNum">     153 </span>            :     struct paren_op_result_type
+<span class="lineNum">     154 </span>            :     {
+<span class="lineNum">     155 </span>            :         typedef confix_parser&lt;
+<span class="lineNum">     156 </span>            :             typename as_parser&lt;StartT&gt;::type,
+<span class="lineNum">     157 </span>            :             typename as_parser&lt;ExprT&gt;::type,
+<span class="lineNum">     158 </span>            :             typename as_parser&lt;EndT&gt;::type,
+<span class="lineNum">     159 </span>            :             typename as_parser&lt;ExprT&gt;::type::parser_category_t,
+<span class="lineNum">     160 </span>            :             NestedT,
+<span class="lineNum">     161 </span>            :             LexemeT
+<span class="lineNum">     162 </span>            :         &gt; type;
+<span class="lineNum">     163 </span>            :     };
+<span class="lineNum">     164 </span>            :   
+<span class="lineNum">     165 </span>            :     template&lt;typename StartT, typename ExprT, typename EndT&gt;
+<span class="lineNum">     166 </span>            :     typename paren_op_result_type&lt;StartT, ExprT, EndT&gt;::type 
+<span class="lineNum">     167 </span>            :     operator()(StartT const &amp;start_, ExprT const &amp;expr_, EndT const &amp;end_) const
+<span class="lineNum">     168 </span>            :     {
+<span class="lineNum">     169 </span>            :         typedef typename paren_op_result_type&lt;StartT,ExprT,EndT&gt;::type 
+<span class="lineNum">     170 </span>            :             return_t;
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :         return return_t(
+<span class="lineNum">     173 </span>            :             as_parser&lt;StartT&gt;::convert(start_),
+<span class="lineNum">     174 </span><span class="lineCov">      48754 :             as_parser&lt;ExprT&gt;::convert(expr_),</span>
+<span class="lineNum">     175 </span>            :             as_parser&lt;EndT&gt;::convert(end_)
+<span class="lineNum">     176 </span><span class="lineCov">     146262 :         );</span>
+<span class="lineNum">     177 </span>            :     }
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :     // Generic generator function for creation of concrete confix parsers
+<span class="lineNum">     180 </span>            :     // which have an action directly attached to the ExprT part of the
+<span class="lineNum">     181 </span>            :     // parser (see comment above, no automatic refactoring)
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            :     template&lt;typename StartT, typename ExprT, typename EndT&gt;
+<span class="lineNum">     184 </span>            :     struct direct_result_type
+<span class="lineNum">     185 </span>            :     {
+<span class="lineNum">     186 </span>            :         typedef confix_parser&lt;
+<span class="lineNum">     187 </span>            :             typename as_parser&lt;StartT&gt;::type,
+<span class="lineNum">     188 </span>            :             typename as_parser&lt;ExprT&gt;::type,
+<span class="lineNum">     189 </span>            :             typename as_parser&lt;EndT&gt;::type,
+<span class="lineNum">     190 </span>            :             plain_parser_category,   // do not re-attach action
+<span class="lineNum">     191 </span>            :             NestedT,
+<span class="lineNum">     192 </span>            :             LexemeT
+<span class="lineNum">     193 </span>            :         &gt; type;
+<span class="lineNum">     194 </span>            :     };
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            :     template&lt;typename StartT, typename ExprT, typename EndT&gt;
+<span class="lineNum">     197 </span>            :     typename direct_result_type&lt;StartT,ExprT,EndT&gt;::type
+<span class="lineNum">     198 </span>            :     direct(StartT const &amp;start_, ExprT const &amp;expr_, EndT const &amp;end_) const
+<span class="lineNum">     199 </span>            :     {
+<span class="lineNum">     200 </span>            :         typedef typename direct_result_type&lt;StartT,ExprT,EndT&gt;::type
+<span class="lineNum">     201 </span>            :             return_t;
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            :         return return_t(
+<span class="lineNum">     204 </span>            :             as_parser&lt;StartT&gt;::convert(start_),
+<span class="lineNum">     205 </span>            :             as_parser&lt;ExprT&gt;::convert(expr_),
+<span class="lineNum">     206 </span>            :             as_parser&lt;EndT&gt;::convert(end_)
+<span class="lineNum">     207 </span>            :         );
+<span class="lineNum">     208 </span>            :     }
+<span class="lineNum">     209 </span>            : };
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     212 </span>            : //
+<span class="lineNum">     213 </span>            : //  Predefined non_nested confix parser generators
+<span class="lineNum">     214 </span>            : //
+<span class="lineNum">     215 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            : const confix_parser_gen&lt;non_nested, non_lexeme&gt; confix_p =
+<span class="lineNum">     218 </span>            :     confix_parser_gen&lt;non_nested, non_lexeme&gt;();
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     221 </span>            : //
+<span class="lineNum">     222 </span>            : //  Comments are special types of confix parsers
+<span class="lineNum">     223 </span>            : //
+<span class="lineNum">     224 </span>            : //      Comment parser generator template. This is a helper for generating a
+<span class="lineNum">     225 </span>            : //      correct confix_parser&lt;&gt; from auxiliary parameters, which is able to
+<span class="lineNum">     226 </span>            : //      parse comment constructs: (StartToken &gt;&gt; Comment text &gt;&gt; EndToken).
+<span class="lineNum">     227 </span>            : //
+<span class="lineNum">     228 </span>            : //      There are the following types supported as parameters yet: parsers,
+<span class="lineNum">     229 </span>            : //      single characters and strings (see as_parser).
+<span class="lineNum">     230 </span>            : //
+<span class="lineNum">     231 </span>            : //      There are two diffenerent predefined comment parser generators
+<span class="lineNum">     232 </span>            : //      (comment_p and comment_nest_p, see below), which may be used for
+<span class="lineNum">     233 </span>            : //      creating special comment parsers in two different ways.
+<span class="lineNum">     234 </span>            : //
+<span class="lineNum">     235 </span>            : //      If these are used with one parameter, a comment starting with the given
+<span class="lineNum">     236 </span>            : //      first parser parameter up to the end of the line is matched. So for
+<span class="lineNum">     237 </span>            : //      instance the following parser matches C++ style comments:
+<span class="lineNum">     238 </span>            : //
+<span class="lineNum">     239 </span>            : //          comment_p(&quot;//&quot;).
+<span class="lineNum">     240 </span>            : //
+<span class="lineNum">     241 </span>            : //      If these are used with two parameters, a comment starting with the
+<span class="lineNum">     242 </span>            : //      first parser parameter up to the second parser parameter is matched.
+<span class="lineNum">     243 </span>            : //      For instance a C style comment parser should be constrcuted as:
+<span class="lineNum">     244 </span>            : //
+<span class="lineNum">     245 </span>            : //          comment_p(&quot;/*&quot;, &quot;*/&quot;).
+<span class="lineNum">     246 </span>            : //
+<span class="lineNum">     247 </span>            : //      Please note, that a comment is parsed implicitly as if the whole
+<span class="lineNum">     248 </span>            : //      comment_p(...) statement were embedded into a lexeme_d[] directive.
+<span class="lineNum">     249 </span>            : //
+<span class="lineNum">     250 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            : template&lt;typename NestedT&gt;
+<span class="lineNum">     253 </span>            : struct comment_parser_gen
+<span class="lineNum">     254 </span>            : {
+<span class="lineNum">     255 </span>            :     // Generic generator function for creation of concrete comment parsers
+<span class="lineNum">     256 </span>            :     // from an open token. The newline parser eol_p is used as the
+<span class="lineNum">     257 </span>            :     // closing token.
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            :     template&lt;typename StartT&gt;
+<span class="lineNum">     260 </span>            :     struct paren_op1_result_type
+<span class="lineNum">     261 </span>            :     {
+<span class="lineNum">     262 </span>            :         typedef confix_parser&lt;
+<span class="lineNum">     263 </span>            :             typename as_parser&lt;StartT&gt;::type,
+<span class="lineNum">     264 </span>            :             kleene_star&lt;anychar_parser&gt;,
+<span class="lineNum">     265 </span>            :             alternative&lt;eol_parser, end_parser&gt;,
+<span class="lineNum">     266 </span>            :             unary_parser_category,          // there is no action to re-attach
+<span class="lineNum">     267 </span>            :             NestedT,
+<span class="lineNum">     268 </span>            :             is_lexeme                       // insert implicit lexeme_d[]
+<span class="lineNum">     269 </span>            :         &gt;
+<span class="lineNum">     270 </span>            :         type;
+<span class="lineNum">     271 </span>            :     };
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span>            :     template&lt;typename StartT&gt;
+<span class="lineNum">     274 </span>            :     typename paren_op1_result_type&lt;StartT&gt;::type 
+<span class="lineNum">     275 </span>            :     operator() (StartT const &amp;start_) const
+<span class="lineNum">     276 </span>            :     {
+<span class="lineNum">     277 </span>            :         typedef typename paren_op1_result_type&lt;StartT&gt;::type
+<span class="lineNum">     278 </span>            :             return_t;
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span>            :         return return_t(
+<span class="lineNum">     281 </span>            :             as_parser&lt;StartT&gt;::convert(start_),
+<span class="lineNum">     282 </span>            :             *anychar_p,
+<span class="lineNum">     283 </span>            :             eol_p | end_p
+<span class="lineNum">     284 </span>            :         );
+<span class="lineNum">     285 </span>            :     }
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            :     // Generic generator function for creation of concrete comment parsers
+<span class="lineNum">     288 </span>            :     // from an open and a close tokens.
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            :     template&lt;typename StartT, typename EndT&gt;
+<span class="lineNum">     291 </span>            :     struct paren_op2_result_type
+<span class="lineNum">     292 </span>            :     {
+<span class="lineNum">     293 </span>            :         typedef confix_parser&lt;
+<span class="lineNum">     294 </span>            :             typename as_parser&lt;StartT&gt;::type,
+<span class="lineNum">     295 </span>            :             kleene_star&lt;anychar_parser&gt;,
+<span class="lineNum">     296 </span>            :             typename as_parser&lt;EndT&gt;::type,
+<span class="lineNum">     297 </span>            :             unary_parser_category,          // there is no action to re-attach
+<span class="lineNum">     298 </span>            :             NestedT,
+<span class="lineNum">     299 </span>            :             is_lexeme                       // insert implicit lexeme_d[]
+<span class="lineNum">     300 </span>            :         &gt; type;
+<span class="lineNum">     301 </span>            :     };
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span>            :     template&lt;typename StartT, typename EndT&gt;
+<span class="lineNum">     304 </span>            :     typename paren_op2_result_type&lt;StartT,EndT&gt;::type
+<span class="lineNum">     305 </span>            :     operator() (StartT const &amp;start_, EndT const &amp;end_) const
+<span class="lineNum">     306 </span>            :     {
+<span class="lineNum">     307 </span>            :         typedef typename paren_op2_result_type&lt;StartT,EndT&gt;::type
+<span class="lineNum">     308 </span>            :             return_t;
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            :         return return_t(
+<span class="lineNum">     311 </span>            :             as_parser&lt;StartT&gt;::convert(start_),
+<span class="lineNum">     312 </span>            :             *anychar_p,
+<span class="lineNum">     313 </span>            :             as_parser&lt;EndT&gt;::convert(end_)
+<span class="lineNum">     314 </span>            :         );
+<span class="lineNum">     315 </span>            :     }
+<span class="lineNum">     316 </span>            : };
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     319 </span>            : //
+<span class="lineNum">     320 </span>            : //  Predefined non_nested comment parser generator
+<span class="lineNum">     321 </span>            : //
+<span class="lineNum">     322 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span>            : const comment_parser_gen&lt;non_nested&gt; comment_p =
+<span class="lineNum">     325 </span>            :     comment_parser_gen&lt;non_nested&gt;();
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     328 </span>            : //
+<span class="lineNum">     329 </span>            : //  comment_nest_parser class
+<span class="lineNum">     330 </span>            : //
+<span class="lineNum">     331 </span>            : //      Parses a nested comments.
+<span class="lineNum">     332 </span>            : //      Example: nested PASCAL-comments:
+<span class="lineNum">     333 </span>            : //
+<span class="lineNum">     334 </span>            : //      { This is a { nested } PASCAL-comment }
+<span class="lineNum">     335 </span>            : //
+<span class="lineNum">     336 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            : template&lt;typename OpenT, typename CloseT&gt;
+<span class="lineNum">     339 </span>            : struct comment_nest_parser:
+<span class="lineNum">     340 </span>            :     public parser&lt;comment_nest_parser&lt;OpenT, CloseT&gt; &gt;
+<span class="lineNum">     341 </span>            : {
+<span class="lineNum">     342 </span>            :     typedef comment_nest_parser&lt;OpenT, CloseT&gt; self_t;
+<span class="lineNum">     343 </span>            : 
+<span class="lineNum">     344 </span>            :     comment_nest_parser(OpenT const &amp;open_, CloseT const &amp;close_):
+<span class="lineNum">     345 </span>            :         open(open_), close(close_)
+<span class="lineNum">     346 </span>            :     {}
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            :     template&lt;typename ScannerT&gt;
+<span class="lineNum">     349 </span>            :     typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">     350 </span>            :         parse(ScannerT const &amp;scan) const
+<span class="lineNum">     351 </span>            :     {
+<span class="lineNum">     352 </span>            :         return do_parse(
+<span class="lineNum">     353 </span>            :             open &gt;&gt; *(*this | (anychar_p - close)) &gt;&gt; close,
+<span class="lineNum">     354 </span>            :             scan);
+<span class="lineNum">     355 </span>            :     }
+<span class="lineNum">     356 </span>            : 
+<span class="lineNum">     357 </span>            : private:
+<span class="lineNum">     358 </span>            :     template&lt;typename ParserT, typename ScannerT&gt;
+<span class="lineNum">     359 </span>            :     typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">     360 </span>            :         do_parse(ParserT const &amp;p, ScannerT const &amp;scan) const
+<span class="lineNum">     361 </span>            :     {
+<span class="lineNum">     362 </span>            :         return
+<span class="lineNum">     363 </span>            :             impl::contiguous_parser_parse&lt;
+<span class="lineNum">     364 </span>            :                 typename parser_result&lt;ParserT, ScannerT&gt;::type
+<span class="lineNum">     365 </span>            :             &gt;(p, scan, scan);
+<span class="lineNum">     366 </span>            :     }
+<span class="lineNum">     367 </span>            : 
+<span class="lineNum">     368 </span>            :     typename as_parser&lt;OpenT&gt;::type::embed_t open;
+<span class="lineNum">     369 </span>            :     typename as_parser&lt;CloseT&gt;::type::embed_t close;
+<span class="lineNum">     370 </span>            : };
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     373 </span>            : //
+<span class="lineNum">     374 </span>            : //  Predefined nested comment parser generator
+<span class="lineNum">     375 </span>            : //
+<span class="lineNum">     376 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span>            : template&lt;typename OpenT, typename CloseT&gt;
+<span class="lineNum">     379 </span>            : struct comment_nest_p_result
+<span class="lineNum">     380 </span>            : {
+<span class="lineNum">     381 </span>            :     typedef comment_nest_parser&lt;
+<span class="lineNum">     382 </span>            :         typename as_parser&lt;OpenT&gt;::type,
+<span class="lineNum">     383 </span>            :         typename as_parser&lt;CloseT&gt;::type
+<span class="lineNum">     384 </span>            :     &gt; type;
+<span class="lineNum">     385 </span>            : };
+<span class="lineNum">     386 </span>            : 
+<span class="lineNum">     387 </span>            : template&lt;typename OpenT, typename CloseT&gt;
+<span class="lineNum">     388 </span>            : inline typename comment_nest_p_result&lt;OpenT,CloseT&gt;::type 
+<span class="lineNum">     389 </span>            : comment_nest_p(OpenT const &amp;open, CloseT const &amp;close)
+<span class="lineNum">     390 </span>            : {
+<span class="lineNum">     391 </span>            :     typedef typename comment_nest_p_result&lt;OpenT,CloseT&gt;::type
+<span class="lineNum">     392 </span>            :         result_t;
+<span class="lineNum">     393 </span>            : 
+<span class="lineNum">     394 </span>            :     return result_t(
+<span class="lineNum">     395 </span>            :         as_parser&lt;OpenT&gt;::convert(open),
+<span class="lineNum">     396 </span>            :         as_parser&lt;CloseT&gt;::convert(close)
+<span class="lineNum">     397 </span>            :     );
+<span class="lineNum">     398 </span>            : }
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     401 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_END
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span>            : }} // namespace BOOST_SPIRIT_CLASSIC_NS
+<span class="lineNum">     404 </span>            : 
+<span class="lineNum">     405 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

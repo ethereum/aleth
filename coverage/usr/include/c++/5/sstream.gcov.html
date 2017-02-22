@@ -1,0 +1,891 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/sstream</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5</a> - sstream<span style="font-size: 80%;"> (source / <a href="sstream.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryMed">80.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // String based streams -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 1997-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file include/sstream
+<span class="lineNum">      26 </span>            :  *  This is a Standard C++ Library header.
+<span class="lineNum">      27 </span>            :  */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : //
+<span class="lineNum">      30 </span>            : // ISO C++ 14882: 27.7  String-based streams
+<span class="lineNum">      31 </span>            : //
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #ifndef _GLIBCXX_SSTREAM
+<span class="lineNum">      34 </span>            : #define _GLIBCXX_SSTREAM 1
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #pragma GCC system_header
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #include &lt;istream&gt;
+<span class="lineNum">      39 </span>            : #include &lt;ostream&gt;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      44 </span>            : _GLIBCXX_BEGIN_NAMESPACE_CXX11
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :   // [27.7.1] template class basic_stringbuf
+<span class="lineNum">      47 </span>            :   /**
+<span class="lineNum">      48 </span>            :    *  @brief  The actual work of input and output (for std::string).
+<span class="lineNum">      49 </span>            :    *  @ingroup io
+<span class="lineNum">      50 </span>            :    *
+<span class="lineNum">      51 </span>            :    *  @tparam _CharT  Type of character stream.
+<span class="lineNum">      52 </span>            :    *  @tparam _Traits  Traits for character type, defaults to
+<span class="lineNum">      53 </span>            :    *                   char_traits&lt;_CharT&gt;.
+<span class="lineNum">      54 </span>            :    *  @tparam _Alloc  Allocator type, defaults to allocator&lt;_CharT&gt;.
+<span class="lineNum">      55 </span>            :    *
+<span class="lineNum">      56 </span>            :    *  This class associates either or both of its input and output sequences
+<span class="lineNum">      57 </span>            :    *  with a sequence of characters, which can be initialized from, or made
+<span class="lineNum">      58 </span>            :    *  available as, a @c std::basic_string.  (Paraphrased from [27.7.1]/1.)
+<span class="lineNum">      59 </span>            :    *
+<span class="lineNum">      60 </span>            :    *  For this class, open modes (of type @c ios_base::openmode) have
+<span class="lineNum">      61 </span>            :    *  @c in set if the input sequence can be read, and @c out set if the
+<span class="lineNum">      62 </span>            :    *  output sequence can be written.
+<a name="63"><span class="lineNum">      63 </span>            :   */</a>
+<span class="lineNum">      64 </span>            :   template&lt;typename _CharT, typename _Traits, typename _Alloc&gt;
+<span class="lineNum">      65 </span><span class="lineCov">    3452788 :     class basic_stringbuf : public basic_streambuf&lt;_CharT, _Traits&gt;</span>
+<span class="lineNum">      66 </span>            :     {
+<span class="lineNum">      67 </span>            :       struct __xfer_bufptrs;
+<span class="lineNum">      68 </span>            :     public:
+<span class="lineNum">      69 </span>            :       // Types:
+<span class="lineNum">      70 </span>            :       typedef _CharT                                    char_type;
+<span class="lineNum">      71 </span>            :       typedef _Traits                                   traits_type;
+<span class="lineNum">      72 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">      73 </span>            :       // 251. basic_stringbuf missing allocator_type
+<span class="lineNum">      74 </span>            :       typedef _Alloc                                    allocator_type;
+<span class="lineNum">      75 </span>            :       typedef typename traits_type::int_type            int_type;
+<span class="lineNum">      76 </span>            :       typedef typename traits_type::pos_type            pos_type;
+<span class="lineNum">      77 </span>            :       typedef typename traits_type::off_type            off_type;
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :       typedef basic_streambuf&lt;char_type, traits_type&gt;     __streambuf_type;
+<span class="lineNum">      80 </span>            :       typedef basic_string&lt;char_type, _Traits, _Alloc&gt;    __string_type;
+<span class="lineNum">      81 </span>            :       typedef typename __string_type::size_type         __size_type;
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :     protected:
+<span class="lineNum">      84 </span>            :       /// Place to stash in || out || in | out settings for current stringbuf.
+<span class="lineNum">      85 </span>            :       ios_base::openmode        _M_mode;
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :       // Data Members:
+<span class="lineNum">      88 </span>            :       __string_type             _M_string;
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            :     public:
+<span class="lineNum">      91 </span>            :       // Constructors:
+<span class="lineNum">      92 </span>            :       /**
+<span class="lineNum">      93 </span>            :        *  @brief  Starts with an empty string buffer.
+<span class="lineNum">      94 </span>            :        *  @param  __mode  Whether the buffer can read, or write, or both.
+<span class="lineNum">      95 </span>            :        *
+<span class="lineNum">      96 </span>            :        *  The default constructor initializes the parent class using its
+<span class="lineNum">      97 </span>            :        *  own default ctor.
+<span class="lineNum">      98 </span>            :       */
+<span class="lineNum">      99 </span>            :       explicit
+<span class="lineNum">     100 </span>            :       basic_stringbuf(ios_base::openmode __mode = ios_base::in | ios_base::out)
+<span class="lineNum">     101 </span>            :       : __streambuf_type(), _M_mode(__mode), _M_string()
+<span class="lineNum">     102 </span>            :       { }
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :       /**
+<span class="lineNum">     105 </span>            :        *  @brief  Starts with an existing string buffer.
+<span class="lineNum">     106 </span>            :        *  @param  __str  A string to copy as a starting buffer.
+<span class="lineNum">     107 </span>            :        *  @param  __mode  Whether the buffer can read, or write, or both.
+<span class="lineNum">     108 </span>            :        *
+<span class="lineNum">     109 </span>            :        *  This constructor initializes the parent class using its
+<span class="lineNum">     110 </span>            :        *  own default ctor.
+<span class="lineNum">     111 </span>            :       */
+<span class="lineNum">     112 </span>            :       explicit
+<span class="lineNum">     113 </span>            :       basic_stringbuf(const __string_type&amp; __str,
+<span class="lineNum">     114 </span>            :                       ios_base::openmode __mode = ios_base::in | ios_base::out)
+<span class="lineNum">     115 </span>            :       : __streambuf_type(), _M_mode(), _M_string(__str.data(), __str.size())
+<span class="lineNum">     116 </span>            :       { _M_stringbuf_init(__mode); }
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     119 </span>            :       basic_stringbuf(const basic_stringbuf&amp;) = delete;
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            :       basic_stringbuf(basic_stringbuf&amp;&amp; __rhs)
+<span class="lineNum">     122 </span>            :       : basic_stringbuf(std::move(__rhs), __xfer_bufptrs(__rhs, this))
+<span class="lineNum">     123 </span>            :       { __rhs._M_sync(const_cast&lt;char_type*&gt;(__rhs._M_string.data()), 0, 0); }
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :       // 27.8.2.2 Assign and swap:
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :       basic_stringbuf&amp;
+<span class="lineNum">     128 </span>            :       operator=(const basic_stringbuf&amp;) = delete;
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :       basic_stringbuf&amp;
+<span class="lineNum">     131 </span>            :       operator=(basic_stringbuf&amp;&amp; __rhs)
+<span class="lineNum">     132 </span>            :       {
+<span class="lineNum">     133 </span>            :         __xfer_bufptrs __st{__rhs, this};
+<span class="lineNum">     134 </span>            :         const __streambuf_type&amp; __base = __rhs;
+<span class="lineNum">     135 </span>            :         __streambuf_type::operator=(__base);
+<span class="lineNum">     136 </span>            :         this-&gt;pubimbue(__rhs.getloc());
+<span class="lineNum">     137 </span>            :         _M_mode = __rhs._M_mode;
+<span class="lineNum">     138 </span>            :         _M_string = std::move(__rhs._M_string);
+<span class="lineNum">     139 </span>            :         __rhs._M_sync(const_cast&lt;char_type*&gt;(__rhs._M_string.data()), 0, 0);
+<span class="lineNum">     140 </span>            :         return *this;
+<span class="lineNum">     141 </span>            :       }
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :       void
+<span class="lineNum">     144 </span>            :       swap(basic_stringbuf&amp; __rhs)
+<span class="lineNum">     145 </span>            :       {
+<span class="lineNum">     146 </span>            :         __xfer_bufptrs __l_st{*this, std::__addressof(__rhs)};
+<span class="lineNum">     147 </span>            :         __xfer_bufptrs __r_st{__rhs, this};
+<span class="lineNum">     148 </span>            :         __streambuf_type&amp; __base = __rhs;
+<span class="lineNum">     149 </span>            :         __streambuf_type::swap(__base);
+<span class="lineNum">     150 </span>            :         __rhs.pubimbue(this-&gt;pubimbue(__rhs.getloc()));
+<span class="lineNum">     151 </span>            :         std::swap(_M_mode, __rhs._M_mode);
+<span class="lineNum">     152 </span>            :         std::swap(_M_string, __rhs._M_string);
+<span class="lineNum">     153 </span>            :       }
+<span class="lineNum">     154 </span>            : #endif
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :       // Get and set:
+<span class="lineNum">     157 </span>            :       /**
+<span class="lineNum">     158 </span>            :        *  @brief  Copying out the string buffer.
+<span class="lineNum">     159 </span>            :        *  @return  A copy of one of the underlying sequences.
+<span class="lineNum">     160 </span>            :        *
+<span class="lineNum">     161 </span>            :        *  &lt;em&gt;If the buffer is only created in input mode, the underlying
+<span class="lineNum">     162 </span>            :        *  character sequence is equal to the input sequence; otherwise, it
+<span class="lineNum">     163 </span>            :        *  is equal to the output sequence.&lt;/em&gt; [27.7.1.2]/1
+<span class="lineNum">     164 </span>            :       */
+<span class="lineNum">     165 </span>            :       __string_type
+<span class="lineNum">     166 </span>            :       str() const
+<span class="lineNum">     167 </span>            :       {
+<span class="lineNum">     168 </span>            :         __string_type __ret;
+<span class="lineNum">     169 </span>            :         if (this-&gt;pptr())
+<span class="lineNum">     170 </span>            :           {
+<span class="lineNum">     171 </span>            :             // The current egptr() may not be the actual string end.
+<span class="lineNum">     172 </span>            :             if (this-&gt;pptr() &gt; this-&gt;egptr())
+<span class="lineNum">     173 </span>            :               __ret = __string_type(this-&gt;pbase(), this-&gt;pptr());
+<span class="lineNum">     174 </span>            :             else
+<span class="lineNum">     175 </span>            :               __ret = __string_type(this-&gt;pbase(), this-&gt;egptr());
+<span class="lineNum">     176 </span>            :           }
+<span class="lineNum">     177 </span>            :         else
+<span class="lineNum">     178 </span>            :           __ret = _M_string;
+<span class="lineNum">     179 </span>            :         return __ret;
+<span class="lineNum">     180 </span>            :       }
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            :       /**
+<span class="lineNum">     183 </span>            :        *  @brief  Setting a new buffer.
+<span class="lineNum">     184 </span>            :        *  @param  __s  The string to use as a new sequence.
+<span class="lineNum">     185 </span>            :        *
+<span class="lineNum">     186 </span>            :        *  Deallocates any previous stored sequence, then copies @a s to
+<span class="lineNum">     187 </span>            :        *  use as a new one.
+<span class="lineNum">     188 </span>            :       */
+<span class="lineNum">     189 </span>            :       void
+<span class="lineNum">     190 </span>            :       str(const __string_type&amp; __s)
+<span class="lineNum">     191 </span>            :       {
+<span class="lineNum">     192 </span>            :         // Cannot use _M_string = __s, since v3 strings are COW
+<span class="lineNum">     193 </span>            :         // (not always true now but assign() always works).
+<span class="lineNum">     194 </span>            :         _M_string.assign(__s.data(), __s.size());
+<span class="lineNum">     195 </span>            :         _M_stringbuf_init(_M_mode);
+<span class="lineNum">     196 </span>            :       }
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :     protected:
+<span class="lineNum">     199 </span>            :       // Common initialization code goes here.
+<span class="lineNum">     200 </span>            :       void
+<span class="lineNum">     201 </span>            :       _M_stringbuf_init(ios_base::openmode __mode)
+<span class="lineNum">     202 </span>            :       {
+<span class="lineNum">     203 </span>            :         _M_mode = __mode;
+<span class="lineNum">     204 </span>            :         __size_type __len = 0;
+<span class="lineNum">     205 </span>            :         if (_M_mode &amp; (ios_base::ate | ios_base::app))
+<span class="lineNum">     206 </span>            :           __len = _M_string.size();
+<span class="lineNum">     207 </span>            :         _M_sync(const_cast&lt;char_type*&gt;(_M_string.data()), 0, __len);
+<span class="lineNum">     208 </span>            :       }
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :       virtual streamsize
+<span class="lineNum">     211 </span>            :       showmanyc()
+<span class="lineNum">     212 </span>            :       { 
+<span class="lineNum">     213 </span>            :         streamsize __ret = -1;
+<span class="lineNum">     214 </span>            :         if (_M_mode &amp; ios_base::in)
+<span class="lineNum">     215 </span>            :           {
+<span class="lineNum">     216 </span>            :             _M_update_egptr();
+<span class="lineNum">     217 </span>            :             __ret = this-&gt;egptr() - this-&gt;gptr();
+<span class="lineNum">     218 </span>            :           }
+<span class="lineNum">     219 </span>            :         return __ret;
+<span class="lineNum">     220 </span>            :       }
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span>            :       virtual int_type
+<span class="lineNum">     223 </span>            :       underflow();
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span>            :       virtual int_type
+<span class="lineNum">     226 </span>            :       pbackfail(int_type __c = traits_type::eof());
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :       virtual int_type
+<span class="lineNum">     229 </span>            :       overflow(int_type __c = traits_type::eof());
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :       /**
+<span class="lineNum">     232 </span>            :        *  @brief  Manipulates the buffer.
+<span class="lineNum">     233 </span>            :        *  @param  __s  Pointer to a buffer area.
+<span class="lineNum">     234 </span>            :        *  @param  __n  Size of @a __s.
+<span class="lineNum">     235 </span>            :        *  @return  @c this
+<span class="lineNum">     236 </span>            :        *
+<span class="lineNum">     237 </span>            :        *  If no buffer has already been created, and both @a __s and @a __n are
+<span class="lineNum">     238 </span>            :        *  non-zero, then @c __s is used as a buffer; see
+<span class="lineNum">     239 </span>            :        *  https://gcc.gnu.org/onlinedocs/libstdc++/manual/streambufs.html#io.streambuf.buffering
+<span class="lineNum">     240 </span>            :        *  for more.
+<span class="lineNum">     241 </span>            :       */
+<span class="lineNum">     242 </span>            :       virtual __streambuf_type*
+<span class="lineNum">     243 </span>            :       setbuf(char_type* __s, streamsize __n)
+<span class="lineNum">     244 </span>            :       {
+<span class="lineNum">     245 </span>            :         if (__s &amp;&amp; __n &gt;= 0)
+<span class="lineNum">     246 </span>            :           {
+<span class="lineNum">     247 </span>            :             // This is implementation-defined behavior, and assumes
+<span class="lineNum">     248 </span>            :             // that an external char_type array of length __n exists
+<span class="lineNum">     249 </span>            :             // and has been pre-allocated. If this is not the case,
+<span class="lineNum">     250 </span>            :             // things will quickly blow up.
+<span class="lineNum">     251 </span>            :             
+<span class="lineNum">     252 </span>            :             // Step 1: Destroy the current internal array.
+<span class="lineNum">     253 </span>            :             _M_string.clear();
+<span class="lineNum">     254 </span>            :             
+<span class="lineNum">     255 </span>            :             // Step 2: Use the external array.
+<span class="lineNum">     256 </span>            :             _M_sync(__s, __n, 0);
+<span class="lineNum">     257 </span>            :           }
+<span class="lineNum">     258 </span>            :         return this;
+<span class="lineNum">     259 </span>            :       }
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            :       virtual pos_type
+<span class="lineNum">     262 </span>            :       seekoff(off_type __off, ios_base::seekdir __way,
+<span class="lineNum">     263 </span>            :               ios_base::openmode __mode = ios_base::in | ios_base::out);
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :       virtual pos_type
+<span class="lineNum">     266 </span>            :       seekpos(pos_type __sp,
+<span class="lineNum">     267 </span>            :               ios_base::openmode __mode = ios_base::in | ios_base::out);
+<span class="lineNum">     268 </span>            : 
+<span class="lineNum">     269 </span>            :       // Internal function for correctly updating the internal buffer
+<span class="lineNum">     270 </span>            :       // for a particular _M_string, due to initialization or re-sizing
+<span class="lineNum">     271 </span>            :       // of an existing _M_string.
+<span class="lineNum">     272 </span>            :       void
+<span class="lineNum">     273 </span>            :       _M_sync(char_type* __base, __size_type __i, __size_type __o);
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            :       // Internal function for correctly updating egptr() to the actual
+<span class="lineNum">     276 </span>            :       // string end.
+<span class="lineNum">     277 </span>            :       void
+<span class="lineNum">     278 </span>            :       _M_update_egptr()
+<span class="lineNum">     279 </span>            :       {
+<span class="lineNum">     280 </span>            :         const bool __testin = _M_mode &amp; ios_base::in;
+<span class="lineNum">     281 </span>            :         if (this-&gt;pptr() &amp;&amp; this-&gt;pptr() &gt; this-&gt;egptr())
+<span class="lineNum">     282 </span>            :           {
+<span class="lineNum">     283 </span>            :             if (__testin)
+<span class="lineNum">     284 </span>            :               this-&gt;setg(this-&gt;eback(), this-&gt;gptr(), this-&gt;pptr());
+<span class="lineNum">     285 </span>            :             else
+<span class="lineNum">     286 </span>            :               this-&gt;setg(this-&gt;pptr(), this-&gt;pptr(), this-&gt;pptr());
+<span class="lineNum">     287 </span>            :           }
+<span class="lineNum">     288 </span>            :       }
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            :       // Works around the issue with pbump, part of the protected
+<span class="lineNum">     291 </span>            :       // interface of basic_streambuf, taking just an int.
+<span class="lineNum">     292 </span>            :       void
+<span class="lineNum">     293 </span>            :       _M_pbump(char_type* __pbeg, char_type* __pend, off_type __off);
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span>            :     private:
+<span class="lineNum">     296 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     297 </span>            : #if _GLIBCXX_USE_CXX11_ABI
+<span class="lineNum">     298 </span>            :       // This type captures the state of the gptr / pptr pointers as offsets
+<span class="lineNum">     299 </span>            :       // so they can be restored in another object after moving the string.
+<span class="lineNum">     300 </span>            :       struct __xfer_bufptrs
+<span class="lineNum">     301 </span>            :       {
+<span class="lineNum">     302 </span>            :         __xfer_bufptrs(const basic_stringbuf&amp; __from, basic_stringbuf* __to)
+<span class="lineNum">     303 </span>            :         : _M_to{__to}, _M_goff{-1, -1, -1}, _M_poff{-1, -1, -1}
+<span class="lineNum">     304 </span>            :         {
+<span class="lineNum">     305 </span>            :           const _CharT* __str = __from._M_string.data();
+<span class="lineNum">     306 </span>            :           if (__from.eback())
+<span class="lineNum">     307 </span>            :             {
+<span class="lineNum">     308 </span>            :             _M_goff[0] = __from.eback() - __str;
+<span class="lineNum">     309 </span>            :             _M_goff[1] = __from.gptr() - __str;
+<span class="lineNum">     310 </span>            :             _M_goff[2] = __from.egptr() - __str;
+<span class="lineNum">     311 </span>            :             }
+<span class="lineNum">     312 </span>            :           if (__from.pbase())
+<span class="lineNum">     313 </span>            :             {
+<span class="lineNum">     314 </span>            :               _M_poff[0] = __from.pbase() - __str;
+<span class="lineNum">     315 </span>            :               _M_poff[1] = __from.pptr() - __from.pbase();
+<span class="lineNum">     316 </span>            :               _M_poff[2] = __from.epptr() - __str;
+<span class="lineNum">     317 </span>            :             }
+<span class="lineNum">     318 </span>            :         }
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span>            :         ~__xfer_bufptrs()
+<span class="lineNum">     321 </span>            :         {
+<span class="lineNum">     322 </span>            :           char_type* __str = const_cast&lt;char_type*&gt;(_M_to-&gt;_M_string.data());
+<span class="lineNum">     323 </span>            :           if (_M_goff[0] != -1)
+<span class="lineNum">     324 </span>            :             _M_to-&gt;setg(__str+_M_goff[0], __str+_M_goff[1], __str+_M_goff[2]);
+<span class="lineNum">     325 </span>            :           if (_M_poff[0] != -1)
+<span class="lineNum">     326 </span>            :             _M_to-&gt;_M_pbump(__str+_M_poff[0], __str+_M_poff[2], _M_poff[1]);
+<span class="lineNum">     327 </span>            :         }
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span>            :         basic_stringbuf* _M_to;
+<span class="lineNum">     330 </span>            :         off_type _M_goff[3];
+<span class="lineNum">     331 </span>            :         off_type _M_poff[3];
+<span class="lineNum">     332 </span>            :       };
+<span class="lineNum">     333 </span>            : #else
+<span class="lineNum">     334 </span>            :       // This type does nothing when using Copy-On-Write strings.
+<span class="lineNum">     335 </span>            :       struct __xfer_bufptrs
+<span class="lineNum">     336 </span>            :       {
+<span class="lineNum">     337 </span>            :         __xfer_bufptrs(const basic_stringbuf&amp;, basic_stringbuf*) { }
+<span class="lineNum">     338 </span>            :       };
+<span class="lineNum">     339 </span>            : #endif
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span>            :       // The move constructor initializes an __xfer_bufptrs temporary then
+<span class="lineNum">     342 </span>            :       // delegates to this constructor to performs moves during its lifetime.
+<span class="lineNum">     343 </span>            :       basic_stringbuf(basic_stringbuf&amp;&amp; __rhs, __xfer_bufptrs&amp;&amp;)
+<span class="lineNum">     344 </span>            :       : __streambuf_type(static_cast&lt;const __streambuf_type&amp;&gt;(__rhs)),
+<span class="lineNum">     345 </span>            :       _M_mode(__rhs._M_mode), _M_string(std::move(__rhs._M_string))
+<span class="lineNum">     346 </span>            :       { }
+<span class="lineNum">     347 </span>            : #endif
+<span class="lineNum">     348 </span>            :     };
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span>            :   // [27.7.2] Template class basic_istringstream
+<span class="lineNum">     352 </span>            :   /**
+<span class="lineNum">     353 </span>            :    *  @brief  Controlling input for std::string.
+<span class="lineNum">     354 </span>            :    *  @ingroup io
+<span class="lineNum">     355 </span>            :    *
+<span class="lineNum">     356 </span>            :    *  @tparam _CharT  Type of character stream.
+<span class="lineNum">     357 </span>            :    *  @tparam _Traits  Traits for character type, defaults to
+<span class="lineNum">     358 </span>            :    *                   char_traits&lt;_CharT&gt;.
+<span class="lineNum">     359 </span>            :    *  @tparam _Alloc  Allocator type, defaults to allocator&lt;_CharT&gt;.
+<span class="lineNum">     360 </span>            :    *
+<span class="lineNum">     361 </span>            :    *  This class supports reading from objects of type std::basic_string,
+<span class="lineNum">     362 </span>            :    *  using the inherited functions from std::basic_istream.  To control
+<span class="lineNum">     363 </span>            :    *  the associated sequence, an instance of std::basic_stringbuf is used,
+<span class="lineNum">     364 </span>            :    *  which this page refers to as @c sb.
+<span class="lineNum">     365 </span>            :   */
+<span class="lineNum">     366 </span>            :   template&lt;typename _CharT, typename _Traits, typename _Alloc&gt;
+<span class="lineNum">     367 </span>            :     class basic_istringstream : public basic_istream&lt;_CharT, _Traits&gt;
+<span class="lineNum">     368 </span>            :     {
+<span class="lineNum">     369 </span>            :     public:
+<span class="lineNum">     370 </span>            :       // Types:
+<span class="lineNum">     371 </span>            :       typedef _CharT                                    char_type;
+<span class="lineNum">     372 </span>            :       typedef _Traits                                   traits_type;
+<span class="lineNum">     373 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     374 </span>            :       // 251. basic_stringbuf missing allocator_type
+<span class="lineNum">     375 </span>            :       typedef _Alloc                                    allocator_type;
+<span class="lineNum">     376 </span>            :       typedef typename traits_type::int_type            int_type;
+<span class="lineNum">     377 </span>            :       typedef typename traits_type::pos_type            pos_type;
+<span class="lineNum">     378 </span>            :       typedef typename traits_type::off_type            off_type;
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span>            :       // Non-standard types:
+<span class="lineNum">     381 </span>            :       typedef basic_string&lt;_CharT, _Traits, _Alloc&gt;       __string_type;
+<span class="lineNum">     382 </span>            :       typedef basic_stringbuf&lt;_CharT, _Traits, _Alloc&gt;    __stringbuf_type;
+<span class="lineNum">     383 </span>            :       typedef basic_istream&lt;char_type, traits_type&gt;       __istream_type;
+<span class="lineNum">     384 </span>            : 
+<span class="lineNum">     385 </span>            :     private:
+<span class="lineNum">     386 </span>            :       __stringbuf_type  _M_stringbuf;
+<span class="lineNum">     387 </span>            : 
+<span class="lineNum">     388 </span>            :     public:
+<span class="lineNum">     389 </span>            :       // Constructors:
+<span class="lineNum">     390 </span>            :       /**
+<span class="lineNum">     391 </span>            :        *  @brief  Default constructor starts with an empty string buffer.
+<span class="lineNum">     392 </span>            :        *  @param  __mode  Whether the buffer can read, or write, or both.
+<span class="lineNum">     393 </span>            :        *
+<span class="lineNum">     394 </span>            :        *  @c ios_base::in is automatically included in @a __mode.
+<span class="lineNum">     395 </span>            :        *
+<span class="lineNum">     396 </span>            :        *  Initializes @c sb using @c __mode|in, and passes @c &amp;sb to the base
+<span class="lineNum">     397 </span>            :        *  class initializer.  Does not allocate any buffer.
+<span class="lineNum">     398 </span>            :        *
+<span class="lineNum">     399 </span>            :        *  That's a lie.  We initialize the base class with NULL, because the
+<span class="lineNum">     400 </span>            :        *  string class does its own memory management.
+<span class="lineNum">     401 </span>            :       */
+<span class="lineNum">     402 </span>            :       explicit
+<span class="lineNum">     403 </span>            :       basic_istringstream(ios_base::openmode __mode = ios_base::in)
+<span class="lineNum">     404 </span>            :       : __istream_type(), _M_stringbuf(__mode | ios_base::in)
+<span class="lineNum">     405 </span>            :       { this-&gt;init(&amp;_M_stringbuf); }
+<span class="lineNum">     406 </span>            : 
+<span class="lineNum">     407 </span>            :       /**
+<span class="lineNum">     408 </span>            :        *  @brief  Starts with an existing string buffer.
+<span class="lineNum">     409 </span>            :        *  @param  __str  A string to copy as a starting buffer.
+<span class="lineNum">     410 </span>            :        *  @param  __mode  Whether the buffer can read, or write, or both.
+<span class="lineNum">     411 </span>            :        *
+<span class="lineNum">     412 </span>            :        *  @c ios_base::in is automatically included in @a mode.
+<span class="lineNum">     413 </span>            :        *
+<span class="lineNum">     414 </span>            :        *  Initializes @c sb using @a str and @c mode|in, and passes @c &amp;sb
+<span class="lineNum">     415 </span>            :        *  to the base class initializer.
+<span class="lineNum">     416 </span>            :        *
+<span class="lineNum">     417 </span>            :        *  That's a lie.  We initialize the base class with NULL, because the
+<span class="lineNum">     418 </span>            :        *  string class does its own memory management.
+<span class="lineNum">     419 </span>            :       */
+<span class="lineNum">     420 </span>            :       explicit
+<span class="lineNum">     421 </span>            :       basic_istringstream(const __string_type&amp; __str,
+<span class="lineNum">     422 </span>            :                           ios_base::openmode __mode = ios_base::in)
+<span class="lineNum">     423 </span>            :       : __istream_type(), _M_stringbuf(__str, __mode | ios_base::in)
+<span class="lineNum">     424 </span>            :       { this-&gt;init(&amp;_M_stringbuf); }
+<span class="lineNum">     425 </span>            : 
+<span class="lineNum">     426 </span>            :       /**
+<span class="lineNum">     427 </span>            :        *  @brief  The destructor does nothing.
+<span class="lineNum">     428 </span>            :        *
+<span class="lineNum">     429 </span>            :        *  The buffer is deallocated by the stringbuf object, not the
+<span class="lineNum">     430 </span>            :        *  formatting stream.
+<span class="lineNum">     431 </span>            :       */
+<span class="lineNum">     432 </span>            :       ~basic_istringstream()
+<span class="lineNum">     433 </span>            :       { }
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     436 </span>            :       basic_istringstream(const basic_istringstream&amp;) = delete;
+<span class="lineNum">     437 </span>            : 
+<span class="lineNum">     438 </span>            :       basic_istringstream(basic_istringstream&amp;&amp; __rhs)
+<span class="lineNum">     439 </span>            :       : __istream_type(std::move(__rhs)),
+<span class="lineNum">     440 </span>            :       _M_stringbuf(std::move(__rhs._M_stringbuf))
+<span class="lineNum">     441 </span>            :       { __istream_type::set_rdbuf(&amp;_M_stringbuf); }
+<span class="lineNum">     442 </span>            : 
+<span class="lineNum">     443 </span>            :       // 27.8.3.2 Assign and swap:
+<span class="lineNum">     444 </span>            : 
+<span class="lineNum">     445 </span>            :       basic_istringstream&amp;
+<span class="lineNum">     446 </span>            :       operator=(const basic_istringstream&amp;) = delete;
+<span class="lineNum">     447 </span>            : 
+<span class="lineNum">     448 </span>            :       basic_istringstream&amp;
+<span class="lineNum">     449 </span>            :       operator=(basic_istringstream&amp;&amp; __rhs)
+<span class="lineNum">     450 </span>            :       {
+<span class="lineNum">     451 </span>            :         __istream_type::operator=(std::move(__rhs));
+<span class="lineNum">     452 </span>            :         _M_stringbuf = std::move(__rhs._M_stringbuf);
+<span class="lineNum">     453 </span>            :         return *this;
+<span class="lineNum">     454 </span>            :       }
+<span class="lineNum">     455 </span>            : 
+<span class="lineNum">     456 </span>            :       void
+<span class="lineNum">     457 </span>            :       swap(basic_istringstream&amp; __rhs)
+<span class="lineNum">     458 </span>            :       {
+<span class="lineNum">     459 </span>            :         __istream_type::swap(__rhs);
+<span class="lineNum">     460 </span>            :         _M_stringbuf.swap(__rhs._M_stringbuf);
+<span class="lineNum">     461 </span>            :       }
+<span class="lineNum">     462 </span>            : #endif
+<span class="lineNum">     463 </span>            : 
+<span class="lineNum">     464 </span>            :       // Members:
+<span class="lineNum">     465 </span>            :       /**
+<span class="lineNum">     466 </span>            :        *  @brief  Accessing the underlying buffer.
+<span class="lineNum">     467 </span>            :        *  @return  The current basic_stringbuf buffer.
+<span class="lineNum">     468 </span>            :        *
+<span class="lineNum">     469 </span>            :        *  This hides both signatures of std::basic_ios::rdbuf().
+<span class="lineNum">     470 </span>            :       */
+<span class="lineNum">     471 </span>            :       __stringbuf_type*
+<span class="lineNum">     472 </span>            :       rdbuf() const
+<span class="lineNum">     473 </span>            :       { return const_cast&lt;__stringbuf_type*&gt;(&amp;_M_stringbuf); }
+<span class="lineNum">     474 </span>            : 
+<span class="lineNum">     475 </span>            :       /**
+<span class="lineNum">     476 </span>            :        *  @brief  Copying out the string buffer.
+<span class="lineNum">     477 </span>            :        *  @return  @c rdbuf()-&gt;str()
+<span class="lineNum">     478 </span>            :       */
+<span class="lineNum">     479 </span>            :       __string_type
+<span class="lineNum">     480 </span>            :       str() const
+<span class="lineNum">     481 </span>            :       { return _M_stringbuf.str(); }
+<span class="lineNum">     482 </span>            : 
+<span class="lineNum">     483 </span>            :       /**
+<span class="lineNum">     484 </span>            :        *  @brief  Setting a new buffer.
+<span class="lineNum">     485 </span>            :        *  @param  __s  The string to use as a new sequence.
+<span class="lineNum">     486 </span>            :        *
+<span class="lineNum">     487 </span>            :        *  Calls @c rdbuf()-&gt;str(s).
+<span class="lineNum">     488 </span>            :       */
+<span class="lineNum">     489 </span>            :       void
+<span class="lineNum">     490 </span>            :       str(const __string_type&amp; __s)
+<span class="lineNum">     491 </span>            :       { _M_stringbuf.str(__s); }
+<span class="lineNum">     492 </span>            :     };
+<span class="lineNum">     493 </span>            : 
+<span class="lineNum">     494 </span>            : 
+<span class="lineNum">     495 </span>            :   // [27.7.3] Template class basic_ostringstream
+<span class="lineNum">     496 </span>            :   /**
+<span class="lineNum">     497 </span>            :    *  @brief  Controlling output for std::string.
+<span class="lineNum">     498 </span>            :    *  @ingroup io
+<span class="lineNum">     499 </span>            :    *
+<span class="lineNum">     500 </span>            :    *  @tparam _CharT  Type of character stream.
+<span class="lineNum">     501 </span>            :    *  @tparam _Traits  Traits for character type, defaults to
+<span class="lineNum">     502 </span>            :    *                   char_traits&lt;_CharT&gt;.
+<span class="lineNum">     503 </span>            :    *  @tparam _Alloc  Allocator type, defaults to allocator&lt;_CharT&gt;.
+<span class="lineNum">     504 </span>            :    *
+<span class="lineNum">     505 </span>            :    *  This class supports writing to objects of type std::basic_string,
+<span class="lineNum">     506 </span>            :    *  using the inherited functions from std::basic_ostream.  To control
+<span class="lineNum">     507 </span>            :    *  the associated sequence, an instance of std::basic_stringbuf is used,
+<span class="lineNum">     508 </span>            :    *  which this page refers to as @c sb.
+<span class="lineNum">     509 </span>            :   */
+<span class="lineNum">     510 </span>            :   template &lt;typename _CharT, typename _Traits, typename _Alloc&gt;
+<span class="lineNum">     511 </span>            :     class basic_ostringstream : public basic_ostream&lt;_CharT, _Traits&gt;
+<span class="lineNum">     512 </span>            :     {
+<span class="lineNum">     513 </span>            :     public:
+<span class="lineNum">     514 </span>            :       // Types:
+<span class="lineNum">     515 </span>            :       typedef _CharT                                    char_type;
+<span class="lineNum">     516 </span>            :       typedef _Traits                                   traits_type;
+<span class="lineNum">     517 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     518 </span>            :       // 251. basic_stringbuf missing allocator_type
+<span class="lineNum">     519 </span>            :       typedef _Alloc                                    allocator_type;
+<span class="lineNum">     520 </span>            :       typedef typename traits_type::int_type            int_type;
+<span class="lineNum">     521 </span>            :       typedef typename traits_type::pos_type            pos_type;
+<span class="lineNum">     522 </span>            :       typedef typename traits_type::off_type            off_type;
+<span class="lineNum">     523 </span>            : 
+<span class="lineNum">     524 </span>            :       // Non-standard types:
+<span class="lineNum">     525 </span>            :       typedef basic_string&lt;_CharT, _Traits, _Alloc&gt;       __string_type;
+<span class="lineNum">     526 </span>            :       typedef basic_stringbuf&lt;_CharT, _Traits, _Alloc&gt;    __stringbuf_type;
+<span class="lineNum">     527 </span>            :       typedef basic_ostream&lt;char_type, traits_type&gt;       __ostream_type;
+<span class="lineNum">     528 </span>            : 
+<span class="lineNum">     529 </span>            :     private:
+<span class="lineNum">     530 </span>            :       __stringbuf_type  _M_stringbuf;
+<span class="lineNum">     531 </span>            : 
+<span class="lineNum">     532 </span>            :     public:
+<span class="lineNum">     533 </span>            :       // Constructors/destructor:
+<span class="lineNum">     534 </span>            :       /**
+<span class="lineNum">     535 </span>            :        *  @brief  Default constructor starts with an empty string buffer.
+<span class="lineNum">     536 </span>            :        *  @param  __mode  Whether the buffer can read, or write, or both.
+<span class="lineNum">     537 </span>            :        *
+<span class="lineNum">     538 </span>            :        *  @c ios_base::out is automatically included in @a mode.
+<span class="lineNum">     539 </span>            :        *
+<span class="lineNum">     540 </span>            :        *  Initializes @c sb using @c mode|out, and passes @c &amp;sb to the base
+<span class="lineNum">     541 </span>            :        *  class initializer.  Does not allocate any buffer.
+<span class="lineNum">     542 </span>            :        *
+<span class="lineNum">     543 </span>            :        *  That's a lie.  We initialize the base class with NULL, because the
+<span class="lineNum">     544 </span>            :        *  string class does its own memory management.
+<span class="lineNum">     545 </span>            :       */
+<span class="lineNum">     546 </span>            :       explicit
+<span class="lineNum">     547 </span>            :       basic_ostringstream(ios_base::openmode __mode = ios_base::out)
+<span class="lineNum">     548 </span>            :       : __ostream_type(), _M_stringbuf(__mode | ios_base::out)
+<span class="lineNum">     549 </span>            :       { this-&gt;init(&amp;_M_stringbuf); }
+<span class="lineNum">     550 </span>            : 
+<span class="lineNum">     551 </span>            :       /**
+<span class="lineNum">     552 </span>            :        *  @brief  Starts with an existing string buffer.
+<span class="lineNum">     553 </span>            :        *  @param  __str  A string to copy as a starting buffer.
+<span class="lineNum">     554 </span>            :        *  @param  __mode  Whether the buffer can read, or write, or both.
+<span class="lineNum">     555 </span>            :        *
+<span class="lineNum">     556 </span>            :        *  @c ios_base::out is automatically included in @a mode.
+<span class="lineNum">     557 </span>            :        *
+<span class="lineNum">     558 </span>            :        *  Initializes @c sb using @a str and @c mode|out, and passes @c &amp;sb
+<span class="lineNum">     559 </span>            :        *  to the base class initializer.
+<span class="lineNum">     560 </span>            :        *
+<span class="lineNum">     561 </span>            :        *  That's a lie.  We initialize the base class with NULL, because the
+<span class="lineNum">     562 </span>            :        *  string class does its own memory management.
+<span class="lineNum">     563 </span>            :       */
+<span class="lineNum">     564 </span>            :       explicit
+<span class="lineNum">     565 </span>            :       basic_ostringstream(const __string_type&amp; __str,
+<span class="lineNum">     566 </span>            :                           ios_base::openmode __mode = ios_base::out)
+<span class="lineNum">     567 </span>            :       : __ostream_type(), _M_stringbuf(__str, __mode | ios_base::out)
+<span class="lineNum">     568 </span>            :       { this-&gt;init(&amp;_M_stringbuf); }
+<span class="lineNum">     569 </span>            : 
+<span class="lineNum">     570 </span>            :       /**
+<span class="lineNum">     571 </span>            :        *  @brief  The destructor does nothing.
+<span class="lineNum">     572 </span>            :        *
+<span class="lineNum">     573 </span>            :        *  The buffer is deallocated by the stringbuf object, not the
+<span class="lineNum">     574 </span>            :        *  formatting stream.
+<span class="lineNum">     575 </span>            :       */
+<span class="lineNum">     576 </span>            :       ~basic_ostringstream()
+<span class="lineNum">     577 </span>            :       { }
+<span class="lineNum">     578 </span>            : 
+<span class="lineNum">     579 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     580 </span>            :       basic_ostringstream(const basic_ostringstream&amp;) = delete;
+<span class="lineNum">     581 </span>            : 
+<span class="lineNum">     582 </span>            :       basic_ostringstream(basic_ostringstream&amp;&amp; __rhs)
+<span class="lineNum">     583 </span>            :       : __ostream_type(std::move(__rhs)),
+<span class="lineNum">     584 </span>            :       _M_stringbuf(std::move(__rhs._M_stringbuf))
+<span class="lineNum">     585 </span>            :       { __ostream_type::set_rdbuf(&amp;_M_stringbuf); }
+<span class="lineNum">     586 </span>            : 
+<span class="lineNum">     587 </span>            :       // 27.8.3.2 Assign and swap:
+<span class="lineNum">     588 </span>            : 
+<span class="lineNum">     589 </span>            :       basic_ostringstream&amp;
+<span class="lineNum">     590 </span>            :       operator=(const basic_ostringstream&amp;) = delete;
+<span class="lineNum">     591 </span>            : 
+<span class="lineNum">     592 </span>            :       basic_ostringstream&amp;
+<span class="lineNum">     593 </span>            :       operator=(basic_ostringstream&amp;&amp; __rhs)
+<span class="lineNum">     594 </span>            :       {
+<span class="lineNum">     595 </span>            :         __ostream_type::operator=(std::move(__rhs));
+<span class="lineNum">     596 </span>            :         _M_stringbuf = std::move(__rhs._M_stringbuf);
+<span class="lineNum">     597 </span>            :         return *this;
+<span class="lineNum">     598 </span>            :       }
+<span class="lineNum">     599 </span>            : 
+<span class="lineNum">     600 </span>            :       void
+<span class="lineNum">     601 </span>            :       swap(basic_ostringstream&amp; __rhs)
+<span class="lineNum">     602 </span>            :       {
+<span class="lineNum">     603 </span>            :         __ostream_type::swap(__rhs);
+<span class="lineNum">     604 </span>            :         _M_stringbuf.swap(__rhs._M_stringbuf);
+<span class="lineNum">     605 </span>            :       }
+<span class="lineNum">     606 </span>            : #endif
+<span class="lineNum">     607 </span>            : 
+<span class="lineNum">     608 </span>            :       // Members:
+<span class="lineNum">     609 </span>            :       /**
+<span class="lineNum">     610 </span>            :        *  @brief  Accessing the underlying buffer.
+<span class="lineNum">     611 </span>            :        *  @return  The current basic_stringbuf buffer.
+<span class="lineNum">     612 </span>            :        *
+<span class="lineNum">     613 </span>            :        *  This hides both signatures of std::basic_ios::rdbuf().
+<span class="lineNum">     614 </span>            :       */
+<span class="lineNum">     615 </span>            :       __stringbuf_type*
+<span class="lineNum">     616 </span>            :       rdbuf() const
+<span class="lineNum">     617 </span>            :       { return const_cast&lt;__stringbuf_type*&gt;(&amp;_M_stringbuf); }
+<span class="lineNum">     618 </span>            : 
+<span class="lineNum">     619 </span>            :       /**
+<span class="lineNum">     620 </span>            :        *  @brief  Copying out the string buffer.
+<span class="lineNum">     621 </span>            :        *  @return  @c rdbuf()-&gt;str()
+<span class="lineNum">     622 </span>            :       */
+<span class="lineNum">     623 </span>            :       __string_type
+<span class="lineNum">     624 </span>            :       str() const
+<span class="lineNum">     625 </span><span class="lineCov">     704624 :       { return _M_stringbuf.str(); }</span>
+<span class="lineNum">     626 </span>            : 
+<span class="lineNum">     627 </span>            :       /**
+<span class="lineNum">     628 </span>            :        *  @brief  Setting a new buffer.
+<span class="lineNum">     629 </span>            :        *  @param  __s  The string to use as a new sequence.
+<span class="lineNum">     630 </span>            :        *
+<span class="lineNum">     631 </span>            :        *  Calls @c rdbuf()-&gt;str(s).
+<span class="lineNum">     632 </span>            :       */
+<span class="lineNum">     633 </span>            :       void
+<span class="lineNum">     634 </span>            :       str(const __string_type&amp; __s)
+<span class="lineNum">     635 </span><span class="lineNoCov">          0 :       { _M_stringbuf.str(__s); }</span>
+<span class="lineNum">     636 </span>            :     };
+<span class="lineNum">     637 </span>            : 
+<span class="lineNum">     638 </span>            : 
+<span class="lineNum">     639 </span>            :   // [27.7.4] Template class basic_stringstream
+<span class="lineNum">     640 </span>            :   /**
+<span class="lineNum">     641 </span>            :    *  @brief  Controlling input and output for std::string.
+<span class="lineNum">     642 </span>            :    *  @ingroup io
+<span class="lineNum">     643 </span>            :    *
+<span class="lineNum">     644 </span>            :    *  @tparam _CharT  Type of character stream.
+<span class="lineNum">     645 </span>            :    *  @tparam _Traits  Traits for character type, defaults to
+<span class="lineNum">     646 </span>            :    *                   char_traits&lt;_CharT&gt;.
+<span class="lineNum">     647 </span>            :    *  @tparam _Alloc  Allocator type, defaults to allocator&lt;_CharT&gt;.
+<span class="lineNum">     648 </span>            :    *
+<span class="lineNum">     649 </span>            :    *  This class supports reading from and writing to objects of type
+<span class="lineNum">     650 </span>            :    *  std::basic_string, using the inherited functions from
+<span class="lineNum">     651 </span>            :    *  std::basic_iostream.  To control the associated sequence, an instance
+<span class="lineNum">     652 </span>            :    *  of std::basic_stringbuf is used, which this page refers to as @c sb.
+<span class="lineNum">     653 </span>            :   */
+<span class="lineNum">     654 </span>            :   template &lt;typename _CharT, typename _Traits, typename _Alloc&gt;
+<span class="lineNum">     655 </span>            :     class basic_stringstream : public basic_iostream&lt;_CharT, _Traits&gt;
+<span class="lineNum">     656 </span>            :     {
+<span class="lineNum">     657 </span>            :     public:
+<span class="lineNum">     658 </span>            :       // Types:
+<span class="lineNum">     659 </span>            :       typedef _CharT                                    char_type;
+<span class="lineNum">     660 </span>            :       typedef _Traits                                   traits_type;
+<span class="lineNum">     661 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     662 </span>            :       // 251. basic_stringbuf missing allocator_type
+<span class="lineNum">     663 </span>            :       typedef _Alloc                                    allocator_type;
+<span class="lineNum">     664 </span>            :       typedef typename traits_type::int_type            int_type;
+<span class="lineNum">     665 </span>            :       typedef typename traits_type::pos_type            pos_type;
+<span class="lineNum">     666 </span>            :       typedef typename traits_type::off_type            off_type;
+<span class="lineNum">     667 </span>            : 
+<span class="lineNum">     668 </span>            :       // Non-standard Types:
+<span class="lineNum">     669 </span>            :       typedef basic_string&lt;_CharT, _Traits, _Alloc&gt;       __string_type;
+<span class="lineNum">     670 </span>            :       typedef basic_stringbuf&lt;_CharT, _Traits, _Alloc&gt;    __stringbuf_type;
+<span class="lineNum">     671 </span>            :       typedef basic_iostream&lt;char_type, traits_type&gt;      __iostream_type;
+<span class="lineNum">     672 </span>            : 
+<span class="lineNum">     673 </span>            :     private:
+<span class="lineNum">     674 </span>            :       __stringbuf_type  _M_stringbuf;
+<span class="lineNum">     675 </span>            : 
+<span class="lineNum">     676 </span>            :     public:
+<span class="lineNum">     677 </span>            :       // Constructors/destructors
+<span class="lineNum">     678 </span>            :       /**
+<span class="lineNum">     679 </span>            :        *  @brief  Default constructor starts with an empty string buffer.
+<span class="lineNum">     680 </span>            :        *  @param  __m  Whether the buffer can read, or write, or both.
+<span class="lineNum">     681 </span>            :        *
+<span class="lineNum">     682 </span>            :        *  Initializes @c sb using the mode from @c __m, and passes @c
+<span class="lineNum">     683 </span>            :        *  &amp;sb to the base class initializer.  Does not allocate any
+<span class="lineNum">     684 </span>            :        *  buffer.
+<span class="lineNum">     685 </span>            :        *
+<span class="lineNum">     686 </span>            :        *  That's a lie.  We initialize the base class with NULL, because the
+<span class="lineNum">     687 </span>            :        *  string class does its own memory management.
+<span class="lineNum">     688 </span>            :       */
+<span class="lineNum">     689 </span>            :       explicit
+<span class="lineNum">     690 </span>            :       basic_stringstream(ios_base::openmode __m = ios_base::out | ios_base::in)
+<span class="lineNum">     691 </span>            :       : __iostream_type(), _M_stringbuf(__m)
+<span class="lineNum">     692 </span>            :       { this-&gt;init(&amp;_M_stringbuf); }
+<span class="lineNum">     693 </span>            : 
+<span class="lineNum">     694 </span>            :       /**
+<span class="lineNum">     695 </span>            :        *  @brief  Starts with an existing string buffer.
+<span class="lineNum">     696 </span>            :        *  @param  __str  A string to copy as a starting buffer.
+<span class="lineNum">     697 </span>            :        *  @param  __m  Whether the buffer can read, or write, or both.
+<span class="lineNum">     698 </span>            :        *
+<span class="lineNum">     699 </span>            :        *  Initializes @c sb using @a __str and @c __m, and passes @c &amp;sb
+<span class="lineNum">     700 </span>            :        *  to the base class initializer.
+<span class="lineNum">     701 </span>            :        *
+<span class="lineNum">     702 </span>            :        *  That's a lie.  We initialize the base class with NULL, because the
+<span class="lineNum">     703 </span>            :        *  string class does its own memory management.
+<span class="lineNum">     704 </span>            :       */
+<span class="lineNum">     705 </span>            :       explicit
+<span class="lineNum">     706 </span>            :       basic_stringstream(const __string_type&amp; __str,
+<span class="lineNum">     707 </span>            :                          ios_base::openmode __m = ios_base::out | ios_base::in)
+<span class="lineNum">     708 </span>            :       : __iostream_type(), _M_stringbuf(__str, __m)
+<span class="lineNum">     709 </span>            :       { this-&gt;init(&amp;_M_stringbuf); }
+<span class="lineNum">     710 </span>            : 
+<span class="lineNum">     711 </span>            :       /**
+<span class="lineNum">     712 </span>            :        *  @brief  The destructor does nothing.
+<span class="lineNum">     713 </span>            :        *
+<span class="lineNum">     714 </span>            :        *  The buffer is deallocated by the stringbuf object, not the
+<span class="lineNum">     715 </span>            :        *  formatting stream.
+<span class="lineNum">     716 </span>            :       */
+<span class="lineNum">     717 </span>            :       ~basic_stringstream()
+<span class="lineNum">     718 </span>            :       { }
+<span class="lineNum">     719 </span>            : 
+<span class="lineNum">     720 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     721 </span>            :       basic_stringstream(const basic_stringstream&amp;) = delete;
+<span class="lineNum">     722 </span>            : 
+<span class="lineNum">     723 </span>            :       basic_stringstream(basic_stringstream&amp;&amp; __rhs)
+<span class="lineNum">     724 </span>            :       : __iostream_type(std::move(__rhs)),
+<span class="lineNum">     725 </span>            :       _M_stringbuf(std::move(__rhs._M_stringbuf))
+<span class="lineNum">     726 </span>            :       { __iostream_type::set_rdbuf(&amp;_M_stringbuf); }
+<span class="lineNum">     727 </span>            : 
+<span class="lineNum">     728 </span>            :       // 27.8.3.2 Assign and swap:
+<span class="lineNum">     729 </span>            : 
+<span class="lineNum">     730 </span>            :       basic_stringstream&amp;
+<span class="lineNum">     731 </span>            :       operator=(const basic_stringstream&amp;) = delete;
+<span class="lineNum">     732 </span>            : 
+<span class="lineNum">     733 </span>            :       basic_stringstream&amp;
+<span class="lineNum">     734 </span>            :       operator=(basic_stringstream&amp;&amp; __rhs)
+<span class="lineNum">     735 </span>            :       {
+<span class="lineNum">     736 </span>            :         __iostream_type::operator=(std::move(__rhs));
+<span class="lineNum">     737 </span>            :         _M_stringbuf = std::move(__rhs._M_stringbuf);
+<span class="lineNum">     738 </span>            :         return *this;
+<span class="lineNum">     739 </span>            :       }
+<span class="lineNum">     740 </span>            : 
+<span class="lineNum">     741 </span>            :       void
+<span class="lineNum">     742 </span>            :       swap(basic_stringstream&amp; __rhs)
+<span class="lineNum">     743 </span>            :       {
+<span class="lineNum">     744 </span>            :         __iostream_type::swap(__rhs);
+<span class="lineNum">     745 </span>            :         _M_stringbuf.swap(__rhs._M_stringbuf);
+<span class="lineNum">     746 </span>            :       }
+<span class="lineNum">     747 </span>            : #endif
+<span class="lineNum">     748 </span>            : 
+<span class="lineNum">     749 </span>            :       // Members:
+<span class="lineNum">     750 </span>            :       /**
+<span class="lineNum">     751 </span>            :        *  @brief  Accessing the underlying buffer.
+<span class="lineNum">     752 </span>            :        *  @return  The current basic_stringbuf buffer.
+<span class="lineNum">     753 </span>            :        *
+<span class="lineNum">     754 </span>            :        *  This hides both signatures of std::basic_ios::rdbuf().
+<span class="lineNum">     755 </span>            :       */
+<span class="lineNum">     756 </span>            :       __stringbuf_type*
+<span class="lineNum">     757 </span>            :       rdbuf() const
+<span class="lineNum">     758 </span>            :       { return const_cast&lt;__stringbuf_type*&gt;(&amp;_M_stringbuf); }
+<span class="lineNum">     759 </span>            : 
+<span class="lineNum">     760 </span>            :       /**
+<span class="lineNum">     761 </span>            :        *  @brief  Copying out the string buffer.
+<span class="lineNum">     762 </span>            :        *  @return  @c rdbuf()-&gt;str()
+<span class="lineNum">     763 </span>            :       */
+<span class="lineNum">     764 </span>            :       __string_type
+<span class="lineNum">     765 </span>            :       str() const
+<span class="lineNum">     766 </span><span class="lineCov">         89 :       { return _M_stringbuf.str(); }</span>
+<span class="lineNum">     767 </span>            : 
+<span class="lineNum">     768 </span>            :       /**
+<span class="lineNum">     769 </span>            :        *  @brief  Setting a new buffer.
+<span class="lineNum">     770 </span>            :        *  @param  __s  The string to use as a new sequence.
+<span class="lineNum">     771 </span>            :        *
+<span class="lineNum">     772 </span>            :        *  Calls @c rdbuf()-&gt;str(s).
+<span class="lineNum">     773 </span>            :       */
+<span class="lineNum">     774 </span>            :       void
+<span class="lineNum">     775 </span>            :       str(const __string_type&amp; __s)
+<span class="lineNum">     776 </span><span class="lineCov">         17 :       { _M_stringbuf.str(__s); }</span>
+<span class="lineNum">     777 </span>            :     };
+<span class="lineNum">     778 </span>            : 
+<span class="lineNum">     779 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     780 </span>            :   /// Swap specialization for stringbufs.
+<span class="lineNum">     781 </span>            :   template &lt;class _CharT, class _Traits, class _Allocator&gt;
+<span class="lineNum">     782 </span>            :     inline void
+<span class="lineNum">     783 </span>            :     swap(basic_stringbuf&lt;_CharT, _Traits, _Allocator&gt;&amp; __x,
+<span class="lineNum">     784 </span>            :          basic_stringbuf&lt;_CharT, _Traits, _Allocator&gt;&amp; __y)
+<span class="lineNum">     785 </span>            :     { __x.swap(__y); }
+<span class="lineNum">     786 </span>            : 
+<span class="lineNum">     787 </span>            :   /// Swap specialization for istringstreams.
+<span class="lineNum">     788 </span>            :   template &lt;class _CharT, class _Traits, class _Allocator&gt;
+<span class="lineNum">     789 </span>            :     inline void
+<span class="lineNum">     790 </span>            :     swap(basic_istringstream&lt;_CharT, _Traits, _Allocator&gt;&amp; __x,
+<span class="lineNum">     791 </span>            :          basic_istringstream&lt;_CharT, _Traits, _Allocator&gt;&amp; __y)
+<span class="lineNum">     792 </span>            :     { __x.swap(__y); }
+<span class="lineNum">     793 </span>            : 
+<span class="lineNum">     794 </span>            :   /// Swap specialization for ostringstreams.
+<span class="lineNum">     795 </span>            :   template &lt;class _CharT, class _Traits, class _Allocator&gt;
+<span class="lineNum">     796 </span>            :     inline void
+<span class="lineNum">     797 </span>            :     swap(basic_ostringstream&lt;_CharT, _Traits, _Allocator&gt;&amp; __x,
+<span class="lineNum">     798 </span>            :          basic_ostringstream&lt;_CharT, _Traits, _Allocator&gt;&amp; __y)
+<span class="lineNum">     799 </span>            :     { __x.swap(__y); }
+<span class="lineNum">     800 </span>            : 
+<span class="lineNum">     801 </span>            :   /// Swap specialization for stringstreams.
+<span class="lineNum">     802 </span>            :   template &lt;class _CharT, class _Traits, class _Allocator&gt;
+<span class="lineNum">     803 </span>            :     inline void
+<span class="lineNum">     804 </span>            :     swap(basic_stringstream&lt;_CharT, _Traits, _Allocator&gt;&amp; __x,
+<span class="lineNum">     805 </span>            :          basic_stringstream&lt;_CharT, _Traits, _Allocator&gt;&amp; __y)
+<span class="lineNum">     806 </span>            :     { __x.swap(__y); }
+<span class="lineNum">     807 </span>            : #endif
+<span class="lineNum">     808 </span>            : 
+<span class="lineNum">     809 </span>            : _GLIBCXX_END_NAMESPACE_CXX11
+<span class="lineNum">     810 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     811 </span>            : } // namespace
+<span class="lineNum">     812 </span>            : 
+<span class="lineNum">     813 </span>            : #include &lt;bits/sstream.tcc&gt;
+<span class="lineNum">     814 </span>            : 
+<span class="lineNum">     815 </span>            : #endif /* _GLIBCXX_SSTREAM */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

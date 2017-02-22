@@ -1,0 +1,198 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/random/variate_generator.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/random</a> - variate_generator.hpp<span style="font-size: 80%;"> (source / <a href="variate_generator.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* boost random/variate_generator.hpp header file</a>
+<span class="lineNum">       2 </span>            :  *
+<span class="lineNum">       3 </span>            :  * Copyright Jens Maurer 2002
+<span class="lineNum">       4 </span>            :  * Copyright Steven Watanabe 2011
+<span class="lineNum">       5 </span>            :  * Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">       6 </span>            :  * accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       7 </span>            :  * http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            :  *
+<span class="lineNum">       9 </span>            :  * See http://www.boost.org for most recent version including documentation.
+<span class="lineNum">      10 </span>            :  *
+<span class="lineNum">      11 </span>            :  * $Id$
+<span class="lineNum">      12 </span>            :  *
+<span class="lineNum">      13 </span>            :  */
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_RANDOM_RANDOM_GENERATOR_HPP
+<span class="lineNum">      16 </span>            : #define BOOST_RANDOM_RANDOM_GENERATOR_HPP
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/random/detail/ptr_helper.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #include &lt;boost/random/detail/disable_warnings.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : namespace boost {
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : /// \cond hide_private_members
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : namespace random {
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : ///\endcond
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : /**
+<span class="lineNum">      31 </span>            :  * A random variate generator is used to join a random number
+<span class="lineNum">      32 </span>            :  * generator together with a random number distribution.
+<span class="lineNum">      33 </span>            :  * Boost.Random provides a vast choice of \generators as well
+<span class="lineNum">      34 </span>            :  * as \distributions.
+<span class="lineNum">      35 </span>            :  *
+<span class="lineNum">      36 </span>            :  * The argument for the template parameter Engine shall be of
+<span class="lineNum">      37 </span>            :  * the form U, U&amp;, or U*, where U models a
+<span class="lineNum">      38 </span>            :  * \uniform_random_number_generator.  Then, the member
+<span class="lineNum">      39 </span>            :  * engine_value_type names U (not the pointer or reference to U).
+<span class="lineNum">      40 </span>            :  *
+<span class="lineNum">      41 </span>            :  * Specializations of @c variate_generator satisfy the
+<span class="lineNum">      42 </span>            :  * requirements of CopyConstructible. They also satisfy the
+<span class="lineNum">      43 </span>            :  * requirements of Assignable unless the template parameter
+<span class="lineNum">      44 </span>            :  * Engine is of the form U&amp;.
+<span class="lineNum">      45 </span>            :  *
+<span class="lineNum">      46 </span>            :  * The complexity of all functions specified in this section
+<span class="lineNum">      47 </span>            :  * is constant. No function described in this section except
+<span class="lineNum">      48 </span>            :  * the constructor throws an exception.
+<span class="lineNum">      49 </span>            :  */
+<span class="lineNum">      50 </span>            : template&lt;class Engine, class Distribution&gt;
+<span class="lineNum">      51 </span><span class="lineCov">          2 : class variate_generator</span>
+<span class="lineNum">      52 </span>            : {
+<span class="lineNum">      53 </span>            : private:
+<span class="lineNum">      54 </span>            :     typedef boost::random::detail::ptr_helper&lt;Engine&gt; helper_type;
+<span class="lineNum">      55 </span>            : public:
+<span class="lineNum">      56 </span>            :     typedef typename helper_type::value_type engine_value_type;
+<span class="lineNum">      57 </span>            :     typedef Engine engine_type;
+<span class="lineNum">      58 </span>            :     typedef Distribution distribution_type;
+<span class="lineNum">      59 </span>            :     typedef typename Distribution::result_type result_type;
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            :     /**
+<span class="lineNum">      62 </span>            :      * Constructs a @c variate_generator object with the associated
+<span class="lineNum">      63 </span>            :      * \uniform_random_number_generator eng and the associated
+<span class="lineNum">      64 </span>            :      * \random_distribution d.
+<span class="lineNum">      65 </span>            :      *
+<span class="lineNum">      66 </span>            :      * Throws: If and what the copy constructor of Engine or
+<span class="lineNum">      67 </span>            :      * Distribution throws.
+<span class="lineNum">      68 </span>            :      */
+<span class="lineNum">      69 </span>            :     variate_generator(Engine e, Distribution d)
+<span class="lineNum">      70 </span><span class="lineCov">          7 :       : _eng(e), _dist(d) { }</span>
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :     /** Returns: distribution()(engine()) */
+<span class="lineNum">      73 </span><span class="lineCov">        271 :     result_type operator()() { return _dist(engine()); }</span>
+<span class="lineNum">      74 </span>            :     /**
+<span class="lineNum">      75 </span>            :      * Returns: distribution()(engine(), value).
+<span class="lineNum">      76 </span>            :      */
+<span class="lineNum">      77 </span>            :     template&lt;class T&gt;
+<span class="lineNum">      78 </span>            :     result_type operator()(const T&amp; value) { return _dist(engine(), value); }
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            :     /**
+<span class="lineNum">      81 </span>            :      * Returns: A reference to the associated uniform random number generator.
+<span class="lineNum">      82 </span>            :      */
+<span class="lineNum">      83 </span><span class="lineCov">         93 :     engine_value_type&amp; engine() { return helper_type::ref(_eng); }</span>
+<span class="lineNum">      84 </span>            :     /**
+<span class="lineNum">      85 </span>            :      * Returns: A reference to the associated uniform random number generator.
+<span class="lineNum">      86 </span>            :      */
+<span class="lineNum">      87 </span>            :     const engine_value_type&amp; engine() const { return helper_type::ref(_eng); }
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :     /** Returns: A reference to the associated \random_distribution. */
+<span class="lineNum">      90 </span>            :     distribution_type&amp; distribution() { return _dist; }
+<span class="lineNum">      91 </span>            :     /**
+<span class="lineNum">      92 </span>            :      * Returns: A reference to the associated random distribution.
+<span class="lineNum">      93 </span>            :      */
+<span class="lineNum">      94 </span>            :     const distribution_type&amp; distribution() const { return _dist; }
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            :     /**
+<span class="lineNum">      97 </span>            :      * Precondition: distribution().min() is well-formed
+<span class="lineNum">      98 </span>            :      *
+<span class="lineNum">      99 </span>            :      * Returns: distribution().min()
+<span class="lineNum">     100 </span>            :      */
+<span class="lineNum">     101 </span>            :     result_type min BOOST_PREVENT_MACRO_SUBSTITUTION () const { return (distribution().min)(); }
+<span class="lineNum">     102 </span>            :     /**
+<span class="lineNum">     103 </span>            :      * Precondition: distribution().max() is well-formed
+<span class="lineNum">     104 </span>            :      *
+<span class="lineNum">     105 </span>            :      * Returns: distribution().max()
+<span class="lineNum">     106 </span>            :      */
+<span class="lineNum">     107 </span>            :     result_type max BOOST_PREVENT_MACRO_SUBSTITUTION () const { return (distribution().max)(); }
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : private:
+<span class="lineNum">     110 </span>            :     Engine _eng;
+<span class="lineNum">     111 </span>            :     distribution_type _dist;
+<span class="lineNum">     112 </span>            : };
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            : } // namespace random
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            : using random::variate_generator;
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : } // namespace boost
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : #include &lt;boost/random/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : #endif // BOOST_RANDOM_RANDOM_GENERATOR_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/boostTest.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">test</a> - boostTest.cpp<span style="font-size: 80%;"> (source / <a href="boostTest.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntry">53</td>
+            <td class="headerCovTableEntryLo">56.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file boostTest.cpp
+<span class="lineNum">      18 </span>            :  * @author Dimitry Khokhlov &lt;dimitry@ethdev.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  * Stub for generating main boost.test module.
+<span class="lineNum">      21 </span>            :  * Original code taken from boost sources.
+<span class="lineNum">      22 </span>            :  */
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #define BOOST_TEST_MODULE EthereumTests
+<span class="lineNum">      25 </span>            : #pragma GCC diagnostic push
+<span class="lineNum">      26 </span>            : #pragma GCC diagnostic ignored &quot;-Wunused-parameter&quot;
+<span class="lineNum">      27 </span>            : //#define BOOST_DISABLE_WIN32 //disables SEH warning
+<span class="lineNum">      28 </span>            : #define BOOST_TEST_NO_MAIN
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #if defined(_MSC_VER)
+<span class="lineNum">      31 </span>            : #pragma warning(push)
+<span class="lineNum">      32 </span>            : #pragma warning(disable:4535) // calling _set_se_translator requires /EHa
+<span class="lineNum">      33 </span>            : #endif
+<span class="lineNum">      34 </span>            : #include &lt;boost/test/included/unit_test.hpp&gt;
+<span class="lineNum">      35 </span>            : #if defined(_MSC_VER)
+<span class="lineNum">      36 </span>            : #pragma warning(pop)
+<span class="lineNum">      37 </span>            : #endif
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : #pragma GCC diagnostic pop
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : #include &lt;clocale&gt;
+<span class="lineNum">      42 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      43 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      44 </span>            : #include &lt;boost/version.hpp&gt;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : using namespace boost::unit_test;
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span><span class="lineCov">          1 : std::vector&lt;char*&gt; parameters;</span>
+<span class="lineNum">      49 </span><span class="lineCov">          1 : static std::ostringstream strCout;</span>
+<span class="lineNum">      50 </span>            : std::streambuf* oldCoutStreamBuf;
+<span class="lineNum">      51 </span>            : std::streambuf* oldCerrStreamBuf;
+<a name="52"><span class="lineNum">      52 </span>            : </a>
+<span class="lineNum">      53 </span>            : //Custom Boost Initialization
+<span class="lineNum">      54 </span><span class="lineCov">          1 : test_suite* fake_init_func(int argc, char* argv[])</span>
+<span class="lineNum">      55 </span>            : {
+<span class="lineNum">      56 </span>            :         //Required for boost. -nowarning
+<span class="lineNum">      57 </span>            :         (void) argc;
+<span class="lineNum">      58 </span>            :         (void) argv;
+<span class="lineNum">      59 </span><span class="lineCov">          1 :         return 0;</span>
+<a name="60"><span class="lineNum">      60 </span>            : }</a>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 : void createRandomTest()</span>
+<span class="lineNum">      63 </span>            : {
+<span class="lineNum">      64 </span>            :         //restore output for creating test
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :         std::cout.rdbuf(oldCoutStreamBuf);</span>
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :         std::cerr.rdbuf(oldCerrStreamBuf);</span>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            :         //For no reason BOOST tend to remove valuable arg -t &quot;TestSuiteName&quot;
+<span class="lineNum">      69 </span>            :         //And can't hadle large input stream of data
+<span class="lineNum">      70 </span>            :         //so the actual test suite and raw test input is read into Options
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :         if (dev::test::createRandomTest(parameters))</span>
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :                 throw framework::internal_error(&quot;Create Random Test Error!&quot;);</span>
+<span class="lineNum">      73 </span>            :         else
+<span class="lineNum">      74 </span>            :         {
+<span class="lineNum">      75 </span>            :                 //disable post output so the test json would be clean
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :                 if (dev::test::Options::get().rCheckTest.size() &gt; 0)</span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :                         std::cout &lt;&lt; &quot;correct&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :                 exit(0);</span>
+<span class="lineNum">      79 </span>            :         }
+<span class="lineNum">      80 </span>            : }
+<a name="81"><span class="lineNum">      81 </span>            : </a>
+<span class="lineNum">      82 </span>            : static std::atomic_bool stopTravisOut;
+<span class="lineNum">      83 </span><span class="lineCov">          1 : void travisOut()</span>
+<span class="lineNum">      84 </span>            : {
+<span class="lineNum">      85 </span><span class="lineCov">          1 :         int tickCounter = 0;</span>
+<span class="lineNum">      86 </span><span class="lineCov">        133 :         while (!stopTravisOut)</span>
+<span class="lineNum">      87 </span>            :         {
+<span class="lineNum">      88 </span><span class="lineCov">        264 :                 std::this_thread::sleep_for(std::chrono::seconds(1));</span>
+<span class="lineNum">      89 </span><span class="lineCov">        132 :                 ++tickCounter;</span>
+<span class="lineNum">      90 </span><span class="lineCov">        132 :                 if (tickCounter % 10 == 0)</span>
+<span class="lineNum">      91 </span><span class="lineCov">         13 :                         std::cout &lt;&lt; &quot;.&quot; &lt;&lt; std::endl;  // Output dot every 10s.</span>
+<span class="lineNum">      92 </span>            :         }
+<span class="lineNum">      93 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : /*
+<span class="lineNum">      96 </span>            : The equivalent of setlocale(LC_ALL, “C”) is called before any user code is run.
+<span class="lineNum">      97 </span>            : If the user has an invalid environment setting then it is possible for the call
+<span class="lineNum">      98 </span>            : to set locale to fail, so there are only two possible actions, the first is to
+<span class="lineNum">      99 </span>            : throw a runtime exception and cause the program to quit (default behaviour),
+<span class="lineNum">     100 </span>            : or the second is to modify the environment to something sensible (least
+<span class="lineNum">     101 </span>            : surprising behaviour).
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : The follow code produces the least surprising behaviour. It will use the user
+<span class="lineNum">     104 </span>            : specified default locale if it is valid, and if not then it will modify the
+<span class="lineNum">     105 </span>            : environment the process is running in to use a sensible default. This also means
+<a name="106"><span class="lineNum">     106 </span>            : that users do not need to install language packs for their OS.</a>
+<span class="lineNum">     107 </span>            : */
+<span class="lineNum">     108 </span><span class="lineCov">          1 : void setDefaultOrCLocale()</span>
+<span class="lineNum">     109 </span>            : {
+<span class="lineNum">     110 </span>            : #if __unix__
+<span class="lineNum">     111 </span><span class="lineCov">          1 :         if (!std::setlocale(LC_ALL, &quot;&quot;))</span>
+<span class="lineNum">     112 </span>            :         {
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :                 setenv(&quot;LC_ALL&quot;, &quot;C&quot;, 1);</span>
+<span class="lineNum">     114 </span>            :         }
+<span class="lineNum">     115 </span>            : #endif
+<span class="lineNum">     116 </span><span class="lineCov">          1 : }</span>
+<a name="117"><span class="lineNum">     117 </span>            : </a>
+<span class="lineNum">     118 </span>            : //Custom Boost Unit Test Main
+<span class="lineNum">     119 </span><span class="lineCov">          1 : int main( int argc, char* argv[] )</span>
+<span class="lineNum">     120 </span>            : {
+<span class="lineNum">     121 </span><span class="lineCov">          1 :         setDefaultOrCLocale();</span>
+<span class="lineNum">     122 </span>            :         //Initialize options
+<span class="lineNum">     123 </span><span class="lineCov">          1 :         dev::test::Options const&amp; opt = dev::test::Options::get(argc, argv);</span>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineCov">          1 :         if (opt.createRandomTest)</span>
+<span class="lineNum">     126 </span>            :         {
+<span class="lineNum">     127 </span>            :                 //disable initial output
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :                 oldCoutStreamBuf = std::cout.rdbuf();</span>
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :                 oldCerrStreamBuf = std::cerr.rdbuf();</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :                 std::cout.rdbuf(strCout.rdbuf());</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :                 std::cerr.rdbuf(strCout.rdbuf());</span>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :                 for (int i = 0; i &lt; argc; i++)</span>
+<span class="lineNum">     134 </span>            :                 {
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :                         std::string arg = std::string{argv[i]};</span>
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :                         //replace test suite to random tests
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :                         if (arg == &quot;-t&quot; &amp;&amp; i+1 &lt; argc)</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :                                 argv[i+1] = (char*)std::string(&quot;RandomTestCreationSuite&quot;).c_str();</span>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            :                         //don't pass long raw test input to boost
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :                         if (arg == &quot;--checktest&quot;)</span>
+<span class="lineNum">     143 </span>            :                         {
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :                                 argc = i + 1;</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :                                 break;</span>
+<span class="lineNum">     146 </span>            :                         }
+<span class="lineNum">     147 </span>            :                 }
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            :                 //add random tests suite
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :                 test_suite* ts1 = BOOST_TEST_SUITE(&quot;RandomTestCreationSuite&quot;);</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :                 ts1-&gt;add(BOOST_TEST_CASE(&amp;createRandomTest));</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :                 framework::master_test_suite().add(ts1);</span>
+<span class="lineNum">     153 </span>            :         }
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">          3 :         for (int i = 0; i &lt; argc; i++)</span>
+<span class="lineNum">     156 </span><span class="lineCov">          1 :                 parameters.push_back(argv[i]);</span>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineCov">          1 :         stopTravisOut = false;</span>
+<span class="lineNum">     159 </span><span class="lineCov">          2 :         std::future&lt;int&gt; ret = std::async(unit_test_main, fake_init_func, argc, argv);</span>
+<span class="lineNum">     160 </span><span class="lineCov">          2 :         std::thread outputThread(travisOut);</span>
+<span class="lineNum">     161 </span><span class="lineCov">          1 :         int result = ret.get();</span>
+<span class="lineNum">     162 </span><span class="lineCov">          1 :         stopTravisOut = true;</span>
+<span class="lineNum">     163 </span><span class="lineCov">          1 :         outputThread.join();</span>
+<a name="164"><span class="lineNum">     164 </span><span class="lineCov">          1 :         dev::test::TestOutputHelper::printTestExecStats();</span></a>
+<span class="lineNum">     165 </span><span class="lineCov">          1 :         return result;</span>
+<span class="lineNum">     166 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

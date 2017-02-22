@@ -1,0 +1,220 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - utils/libscrypt/sysendian.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">utils/libscrypt</a> - sysendian.h<span style="font-size: 80%;"> (source / <a href="sysendian.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*-</a>
+<span class="lineNum">       2 </span>            :  * Copyright 2007-2009 Colin Percival
+<span class="lineNum">       3 </span>            :  * All rights reserved.
+<span class="lineNum">       4 </span>            :  *
+<span class="lineNum">       5 </span>            :  * Redistribution and use in source and binary forms, with or without
+<span class="lineNum">       6 </span>            :  * modification, are permitted provided that the following conditions
+<span class="lineNum">       7 </span>            :  * are met:
+<span class="lineNum">       8 </span>            :  * 1. Redistributions of source code must retain the above copyright
+<span class="lineNum">       9 </span>            :  *    notice, this list of conditions and the following disclaimer.
+<span class="lineNum">      10 </span>            :  * 2. Redistributions in binary form must reproduce the above copyright
+<span class="lineNum">      11 </span>            :  *    notice, this list of conditions and the following disclaimer in the
+<span class="lineNum">      12 </span>            :  *    documentation and/or other materials provided with the distribution.
+<span class="lineNum">      13 </span>            :  *
+<span class="lineNum">      14 </span>            :  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+<span class="lineNum">      15 </span>            :  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+<span class="lineNum">      16 </span>            :  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+<span class="lineNum">      17 </span>            :  * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+<span class="lineNum">      18 </span>            :  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+<span class="lineNum">      19 </span>            :  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+<span class="lineNum">      20 </span>            :  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+<span class="lineNum">      21 </span>            :  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+<span class="lineNum">      22 </span>            :  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+<span class="lineNum">      23 </span>            :  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+<span class="lineNum">      24 </span>            :  * SUCH DAMAGE.
+<span class="lineNum">      25 </span>            :  *
+<span class="lineNum">      26 </span>            :  * This file was originally written by Colin Percival as part of the Tarsnap
+<span class="lineNum">      27 </span>            :  * online backup system.
+<span class="lineNum">      28 </span>            :  */
+<span class="lineNum">      29 </span>            : #ifndef _SYSENDIAN_H_
+<span class="lineNum">      30 </span>            : #define _SYSENDIAN_H_
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : /* If we don't have be64enc, the &lt;sys/endian.h&gt; we have isn't usable. */
+<span class="lineNum">      34 </span>            : #if !HAVE_DECL_BE64ENC
+<span class="lineNum">      35 </span>            : #undef HAVE_SYS_ENDIAN_H
+<span class="lineNum">      36 </span>            : #endif
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #ifdef HAVE_SYS_ENDIAN_H
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : #include &lt;sys/endian.h&gt;
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : #else
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : #include &lt;stdint.h&gt;
+<span class="lineNum">      45 </span>            : #ifdef _MSC_VER
+<span class="lineNum">      46 </span>            :   #define INLINE __inline
+<span class="lineNum">      47 </span>            : #else
+<span class="lineNum">      48 </span>            :   #define INLINE inline
+<span class="lineNum">      49 </span>            : #endif
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : static INLINE uint32_t
+<span class="lineNum">      52 </span>            : be32dec(const void *pp)
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span><span class="lineCov">      35776 :         const uint8_t *p = (uint8_t const *)pp;</span>
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span><span class="lineCov">     107328 :         return ((uint32_t)(p[3]) + ((uint32_t)(p[2]) &lt;&lt; 8) +</span>
+<span class="lineNum">      57 </span><span class="lineCov">      71552 :             ((uint32_t)(p[1]) &lt;&lt; 16) + ((uint32_t)(p[0]) &lt;&lt; 24));</span>
+<span class="lineNum">      58 </span>            : }
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : static INLINE void
+<span class="lineNum">      61 </span>            : be32enc(void *pp, uint32_t x)
+<span class="lineNum">      62 </span>            : {
+<span class="lineNum">      63 </span><span class="lineCov">      18018 :         uint8_t * p = (uint8_t *)pp;</span>
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineCov">      18018 :         p[3] = x &amp; 0xff;</span>
+<span class="lineNum">      66 </span><span class="lineCov">      18018 :         p[2] = (x &gt;&gt; 8) &amp; 0xff;</span>
+<span class="lineNum">      67 </span><span class="lineCov">      18018 :         p[1] = (x &gt;&gt; 16) &amp; 0xff;</span>
+<span class="lineNum">      68 </span><span class="lineCov">      18018 :         p[0] = (x &gt;&gt; 24) &amp; 0xff;</span>
+<span class="lineNum">      69 </span>            : }
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : static INLINE uint64_t
+<span class="lineNum">      72 </span>            : be64dec(const void *pp)
+<span class="lineNum">      73 </span>            : {
+<span class="lineNum">      74 </span>            :         const uint8_t *p = (uint8_t const *)pp;
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            :         return ((uint64_t)(p[7]) + ((uint64_t)(p[6]) &lt;&lt; 8) +
+<span class="lineNum">      77 </span>            :             ((uint64_t)(p[5]) &lt;&lt; 16) + ((uint64_t)(p[4]) &lt;&lt; 24) +
+<span class="lineNum">      78 </span>            :             ((uint64_t)(p[3]) &lt;&lt; 32) + ((uint64_t)(p[2]) &lt;&lt; 40) +
+<span class="lineNum">      79 </span>            :             ((uint64_t)(p[1]) &lt;&lt; 48) + ((uint64_t)(p[0]) &lt;&lt; 56));
+<span class="lineNum">      80 </span>            : }
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : static INLINE void
+<span class="lineNum">      83 </span>            : be64enc(void *pp, uint64_t x)
+<span class="lineNum">      84 </span>            : {
+<span class="lineNum">      85 </span>            :         uint8_t * p = (uint8_t *)pp;
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :         p[7] = x &amp; 0xff;
+<span class="lineNum">      88 </span>            :         p[6] = (x &gt;&gt; 8) &amp; 0xff;
+<span class="lineNum">      89 </span>            :         p[5] = (x &gt;&gt; 16) &amp; 0xff;
+<span class="lineNum">      90 </span>            :         p[4] = (x &gt;&gt; 24) &amp; 0xff;
+<span class="lineNum">      91 </span>            :         p[3] = (x &gt;&gt; 32) &amp; 0xff;
+<span class="lineNum">      92 </span>            :         p[2] = (x &gt;&gt; 40) &amp; 0xff;
+<span class="lineNum">      93 </span>            :         p[1] = (x &gt;&gt; 48) &amp; 0xff;
+<span class="lineNum">      94 </span>            :         p[0] = (x &gt;&gt; 56) &amp; 0xff;
+<span class="lineNum">      95 </span>            : }
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : static INLINE uint32_t
+<span class="lineNum">      98 </span>            : le32dec(const void *pp)
+<span class="lineNum">      99 </span>            : {
+<span class="lineNum">     100 </span><span class="lineCov">       6656 :         const uint8_t *p = (uint8_t const *)pp;</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span><span class="lineCov">      19968 :         return ((uint32_t)(p[0]) + ((uint32_t)(p[1]) &lt;&lt; 8) +</span>
+<span class="lineNum">     103 </span><span class="lineCov">      13312 :             ((uint32_t)(p[2]) &lt;&lt; 16) + ((uint32_t)(p[3]) &lt;&lt; 24));</span>
+<span class="lineNum">     104 </span>            : }
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : static INLINE void
+<span class="lineNum">     107 </span>            : le32enc(void *pp, uint32_t x)
+<span class="lineNum">     108 </span>            : {
+<span class="lineNum">     109 </span><span class="lineCov">       6656 :         uint8_t * p = (uint8_t *)pp;</span>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">       6656 :         p[0] = x &amp; 0xff;</span>
+<span class="lineNum">     112 </span><span class="lineCov">       6656 :         p[1] = (x &gt;&gt; 8) &amp; 0xff;</span>
+<span class="lineNum">     113 </span><span class="lineCov">       6656 :         p[2] = (x &gt;&gt; 16) &amp; 0xff;</span>
+<span class="lineNum">     114 </span><span class="lineCov">       6656 :         p[3] = (x &gt;&gt; 24) &amp; 0xff;</span>
+<span class="lineNum">     115 </span>            : }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            : static INLINE uint64_t
+<span class="lineNum">     118 </span>            : le64dec(const void *pp)
+<span class="lineNum">     119 </span>            : {
+<span class="lineNum">     120 </span>            :         const uint8_t *p = (uint8_t const *)pp;
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :         return ((uint64_t)(p[0]) + ((uint64_t)(p[1]) &lt;&lt; 8) +
+<span class="lineNum">     123 </span>            :             ((uint64_t)(p[2]) &lt;&lt; 16) + ((uint64_t)(p[3]) &lt;&lt; 24) +
+<span class="lineNum">     124 </span>            :             ((uint64_t)(p[4]) &lt;&lt; 32) + ((uint64_t)(p[5]) &lt;&lt; 40) +
+<span class="lineNum">     125 </span>            :             ((uint64_t)(p[6]) &lt;&lt; 48) + ((uint64_t)(p[7]) &lt;&lt; 56));
+<span class="lineNum">     126 </span>            : }
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : static INLINE void
+<span class="lineNum">     129 </span>            : le64enc(void *pp, uint64_t x)
+<span class="lineNum">     130 </span>            : {
+<span class="lineNum">     131 </span>            :         uint8_t * p = (uint8_t *)pp;
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            :         p[0] = x &amp; 0xff;
+<span class="lineNum">     134 </span>            :         p[1] = (x &gt;&gt; 8) &amp; 0xff;
+<span class="lineNum">     135 </span>            :         p[2] = (x &gt;&gt; 16) &amp; 0xff;
+<span class="lineNum">     136 </span>            :         p[3] = (x &gt;&gt; 24) &amp; 0xff;
+<span class="lineNum">     137 </span>            :         p[4] = (x &gt;&gt; 32) &amp; 0xff;
+<span class="lineNum">     138 </span>            :         p[5] = (x &gt;&gt; 40) &amp; 0xff;
+<span class="lineNum">     139 </span>            :         p[6] = (x &gt;&gt; 48) &amp; 0xff;
+<span class="lineNum">     140 </span>            :         p[7] = (x &gt;&gt; 56) &amp; 0xff;
+<span class="lineNum">     141 </span>            : }
+<span class="lineNum">     142 </span>            : #endif /* !HAVE_SYS_ENDIAN_H */
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : #endif /* !_SYSENDIAN_H_ */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

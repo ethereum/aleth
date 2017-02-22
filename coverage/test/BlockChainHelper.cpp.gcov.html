@@ -1,0 +1,669 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/BlockChainHelper.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">test</a> - BlockChainHelper.cpp<span style="font-size: 80%;"> (source / <a href="BlockChainHelper.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">250</td>
+            <td class="headerCovTableEntry">333</td>
+            <td class="headerCovTableEntryMed">75.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntryMed">83.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file BlockChainHelper.cpp
+<span class="lineNum">      18 </span>            :  * @author Dimitry Khokhlov &lt;dimitry@ethdev.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;libdevcore/TransientDirectory.h&gt;
+<span class="lineNum">      23 </span>            : #include &lt;libethereum/Block.h&gt;
+<span class="lineNum">      24 </span>            : #include &lt;libethereum/BlockChain.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libethereum/TransactionQueue.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libethereum/GenesisInfo.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libethashseal/GenesisInfo.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;test/BlockChainHelper.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      30 </span>            : using namespace std;
+<span class="lineNum">      31 </span>            : using namespace json_spirit;
+<span class="lineNum">      32 </span>            : using namespace dev;
+<span class="lineNum">      33 </span>            : using namespace dev::eth;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : namespace dev
+<span class="lineNum">      36 </span>            : {
+<span class="lineNum">      37 </span>            : namespace test
+<a name="38"><span class="lineNum">      38 </span>            : {</a>
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">       2201 : TestTransaction::TestTransaction(mObject const&amp; _o):</span>
+<span class="lineNum">      41 </span><span class="lineCov">       6603 :         m_jsonTransaction(_o)</span>
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span><span class="lineCov">       2201 :         ImportTest::importTransaction(_o, m_transaction); //check that json structure is valid</span>
+<a name="44"><span class="lineNum">      44 </span><span class="lineCov">       2201 : }</span></a>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span><span class="lineCov">     129285 : TestBlock::TestBlock()</span>
+<span class="lineNum">      47 </span>            : {
+<span class="lineNum">      48 </span><span class="lineCov">      14365 :         m_dirty = false;</span>
+<a name="49"><span class="lineNum">      49 </span><span class="lineCov">      14365 : }</span></a>
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineCov">       3091 : TestBlock::TestBlock(mObject const&amp; _blockObj, mObject const&amp; _stateObj):</span>
+<span class="lineNum">      52 </span><span class="lineCov">       3091 :         TestBlock()</span>
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span><span class="lineCov">       9273 :         m_tempDirState = std::unique_ptr&lt;TransientDirectory&gt;(new TransientDirectory());</span>
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span><span class="lineCov">      21637 :         m_state = std::unique_ptr&lt;State&gt;(new State(0, OverlayDB(State::openDB(m_tempDirState.get()-&gt;path(), h256{}, WithExisting::Kill)), BaseState::Empty));</span>
+<span class="lineNum">      57 </span><span class="lineCov">       6182 :         ImportTest::importState(_stateObj, *m_state.get());</span>
+<span class="lineNum">      58 </span><span class="lineCov">       6182 :         m_state.get()-&gt;commit(State::CommitBehaviour::KeepEmptyAccounts);</span>
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span><span class="lineCov">       6182 :         json_spirit::mObject state = _stateObj;</span>
+<span class="lineNum">      61 </span><span class="lineCov">       3091 :         dev::test::replaceLLLinState(state);</span>
+<span class="lineNum">      62 </span><span class="lineCov">      21637 :         m_accountMap = jsonToAccountMap(json_spirit::write_string(json_spirit::mValue(state), false));</span>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">       6834 :         m_blockHeader = constructBlock(_blockObj, _stateObj.size() ? m_state.get()-&gt;rootHash() : h256{});</span>
+<span class="lineNum">      65 </span><span class="lineCov">       3091 :         recalcBlockHeaderBytes();</span>
+<a name="66"><span class="lineNum">      66 </span><span class="lineCov">       3091 : }</span></a>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">       5566 : TestBlock::TestBlock(std::string const&amp; _blockRLP):</span>
+<span class="lineNum">      69 </span><span class="lineCov">       5820 :         TestBlock()</span>
+<span class="lineNum">      70 </span>            : {
+<span class="lineNum">      71 </span><span class="lineCov">      16618 :         m_bytes = importByteArray(_blockRLP);</span>
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span><span class="lineCov">      10954 :         RLP root(m_bytes);</span>
+<span class="lineNum">      74 </span><span class="lineCov">      11026 :         m_blockHeader = BlockHeader(m_bytes);</span>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">       5344 :         m_transactionQueue.clear();</span>
+<span class="lineNum">      77 </span><span class="lineCov">      10688 :         m_testTransactions.clear();</span>
+<span class="lineNum">      78 </span><span class="lineCov">      29729 :         for (auto const&amp; tr: root[1])</span>
+<span class="lineNum">      79 </span>            :         {
+<span class="lineNum">      80 </span><span class="lineCov">       9144 :                 Transaction tx(tr.data(), CheckTransaction::Everything);</span>
+<span class="lineNum">      81 </span><span class="lineCov">       9114 :                 TestTransaction testTx(tx);</span>
+<span class="lineNum">      82 </span><span class="lineCov">      13671 :                 m_transactionQueue.import(tx.rlp());</span>
+<span class="lineNum">      83 </span><span class="lineCov">       4557 :                 m_testTransactions.push_back(testTx);</span>
+<span class="lineNum">      84 </span>            :         }
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">      16767 :         for (auto const&amp; uRLP: root[2])</span>
+<span class="lineNum">      87 </span>            :         {
+<span class="lineNum">      88 </span><span class="lineCov">        554 :                 BlockHeader uBl(uRLP.data(), HeaderData);</span>
+<span class="lineNum">      89 </span><span class="lineCov">        554 :                 TestBlock uncle;</span>
+<span class="lineNum">      90 </span><span class="lineCov">        277 :                 uncle.setBlockHeader(uBl);</span>
+<span class="lineNum">      91 </span><span class="lineCov">        277 :                 m_uncles.push_back(uncle);</span>
+<span class="lineNum">      92 </span>            :         }
+<a name="93"><span class="lineNum">      93 </span><span class="lineCov">       5312 : }</span></a>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineCov">       6516 : TestBlock::TestBlock(TestBlock const&amp; _original)</span>
+<span class="lineNum">      96 </span>            : {
+<span class="lineNum">      97 </span><span class="lineCov">        724 :         populateFrom(_original);</span>
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">        724 : }</span></a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">       2580 : TestBlock&amp; TestBlock::operator=(TestBlock const&amp; _original)</span>
+<span class="lineNum">     101 </span>            : {
+<span class="lineNum">     102 </span><span class="lineCov">       7657 :         populateFrom(_original);</span>
+<span class="lineNum">     103 </span><span class="lineCov">       2580 :         return *this;</span>
+<a name="104"><span class="lineNum">     104 </span>            : }</a>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 : void TestBlock::setState(State const&amp; _state)</span>
+<span class="lineNum">     107 </span>            : {
+<span class="lineNum">     108 </span><span class="lineCov">       2455 :         copyStateFrom(_state);</span>
+<a name="109"><span class="lineNum">     109 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">       2188 : void TestBlock::addTransaction(TestTransaction const&amp; _tr)</span>
+<span class="lineNum">     112 </span>            : {
+<span class="lineNum">     113 </span>            :         try
+<span class="lineNum">     114 </span>            :         {
+<span class="lineNum">     115 </span><span class="lineCov">       2188 :                 m_testTransactions.push_back(_tr);</span>
+<span class="lineNum">     116 </span><span class="lineCov">       6564 :                 if (m_transactionQueue.import(_tr.transaction().rlp()) != ImportResult::Success)</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :                         cnote &lt;&lt; TestOutputHelper::testName() + &quot;Test block failed importing transaction\n&quot;;</span>
+<span class="lineNum">     118 </span>            :         }
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     120 </span>            :         {
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(TestOutputHelper::testName() + &quot;Failed transaction constructor with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">     122 </span>            :         }
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :         catch (exception const&amp; _e)</span>
+<span class="lineNum">     124 </span>            :         {
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :                 cnote &lt;&lt; _e.what();</span>
+<span class="lineNum">     126 </span>            :         }
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span><span class="lineCov">       2188 :         recalcBlockHeaderBytes();</span>
+<a name="129"><span class="lineNum">     129 </span><span class="lineCov">       2188 : }</span></a>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">         76 : void TestBlock::addUncle(TestBlock const&amp; _uncle)</span>
+<span class="lineNum">     132 </span>            : {
+<span class="lineNum">     133 </span><span class="lineCov">         76 :         m_uncles.push_back(_uncle);</span>
+<span class="lineNum">     134 </span><span class="lineCov">         76 :         recalcBlockHeaderBytes();</span>
+<a name="135"><span class="lineNum">     135 </span><span class="lineCov">         76 : }</span></a>
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 : void TestBlock::setUncles(vector&lt;TestBlock&gt; const&amp; _uncles)</span>
+<span class="lineNum">     138 </span>            : {
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :         m_uncles.clear();</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :         m_uncles = _uncles;</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :         recalcBlockHeaderBytes();</span>
+<a name="142"><span class="lineNum">     142 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineCov">         16 : void TestBlock::premineUpdate(BlockHeader&amp; _blockInfo)</span>
+<span class="lineNum">     145 </span>            : {
+<span class="lineNum">     146 </span>            :         //alter blockheader with defined fields before actual mining
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineCov">         80 :         if (m_premineUpdate.count(&quot;parentHash&quot;) &gt; 0)</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :                 _blockInfo.setParentHash(m_blockHeader.parentHash());</span>
+<span class="lineNum">     150 </span><span class="lineCov">         80 :         if (m_premineUpdate.count(&quot;coinbase&quot;) &gt; 0)</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :                 _blockInfo.setAuthor(m_blockHeader.author());</span>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineCov">        160 :         if (m_premineUpdate.count(&quot;uncleHash&quot;) &gt; 0 || m_premineUpdate.count(&quot;stateRoot&quot;) &gt; 0 ||</span>
+<span class="lineNum">     154 </span><span class="lineCov">        144 :                 m_premineUpdate.count(&quot;transactionsTrie&quot;) &gt; 0 || m_premineUpdate.count(&quot;receiptTrie&quot;) &gt; 0)</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :                 _blockInfo.setRoots(m_premineUpdate.count(&quot;transactionsTrie&quot;) &gt; 0 ? m_blockHeader.transactionsRoot() : _blockInfo.transactionsRoot(),</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :                                                 m_premineUpdate.count(&quot;receiptTrie&quot;) &gt; 0 ? m_blockHeader.receiptsRoot() : _blockInfo.receiptsRoot(),</span>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :                                                 m_premineUpdate.count(&quot;uncleHash&quot;) &gt; 0 ? m_blockHeader.sha3Uncles() : _blockInfo.sha3Uncles(),</span>
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :                                                 m_premineUpdate.count(&quot;stateRoot&quot;) &gt; 0 ? m_blockHeader.stateRoot() : _blockInfo.stateRoot());</span>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineCov">         80 :         if (m_premineUpdate.count(&quot;bloom&quot;) &gt; 0)</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :                 _blockInfo.setLogBloom(m_blockHeader.logBloom());</span>
+<span class="lineNum">     162 </span><span class="lineCov">         80 :         if (m_premineUpdate.count(&quot;difficulty&quot;) &gt; 0)</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :                 _blockInfo.setDifficulty(m_blockHeader.difficulty());</span>
+<span class="lineNum">     164 </span><span class="lineCov">         80 :         if (m_premineUpdate.count(&quot;number&quot;) &gt; 0)</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :                 _blockInfo.setNumber(m_blockHeader.number());</span>
+<span class="lineNum">     166 </span><span class="lineCov">         80 :         if (m_premineUpdate.count(&quot;gasLimit&quot;) &gt; 0)</span>
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :                 _blockInfo.setGasLimit(m_blockHeader.gasLimit());</span>
+<span class="lineNum">     168 </span><span class="lineCov">         80 :         if (m_premineUpdate.count(&quot;gasUsed&quot;) &gt; 0)</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :                 _blockInfo.setGasUsed(m_blockHeader.gasUsed());</span>
+<span class="lineNum">     170 </span><span class="lineCov">         80 :         if (m_premineUpdate.count(&quot;timestamp&quot;) &gt; 0)</span>
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 :                 _blockInfo.setTimestamp(m_blockHeader.timestamp());</span>
+<span class="lineNum">     172 </span><span class="lineCov">         80 :         if (m_premineUpdate.count(&quot;extraData&quot;) &gt; 0)</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :                 _blockInfo.setExtraData(m_blockHeader.extraData());</span>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span><span class="lineCov">         16 :         m_premineHeader = _blockInfo; //needed for check that any altered fields are altered in mined block as well</span>
+<a name="176"><span class="lineNum">     176 </span><span class="lineCov">         16 : }</span></a>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span><span class="lineCov">         16 : void TestBlock::mine(TestBlockChain const&amp; _bc)</span>
+<span class="lineNum">     179 </span>            : {
+<span class="lineNum">     180 </span><span class="lineCov">         16 :         TestBlock const&amp; genesisBlock = _bc.testGenesis();</span>
+<span class="lineNum">     181 </span><span class="lineCov">         32 :         OverlayDB const&amp; genesisDB = genesisBlock.state().db();</span>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineCov">         16 :         BlockChain const&amp; blockchain = _bc.interface();</span>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span><span class="lineCov">         32 :         Block block = blockchain.genesisBlock(genesisDB);</span>
+<span class="lineNum">     186 </span><span class="lineCov">         16 :         block.setAuthor(genesisBlock.beneficiary());</span>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :         //set some header data before mining from original blockheader
+<span class="lineNum">     189 </span><span class="lineCov">         16 :         BlockHeader&amp; blockInfo = *const_cast&lt;BlockHeader*&gt;(&amp;block.info());</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            :         try
+<span class="lineNum">     192 </span>            :         {
+<span class="lineNum">     193 </span><span class="lineCov">         32 :                 ZeroGasPricer gp;</span>
+<span class="lineNum">     194 </span><span class="lineCov">         16 :                 block.sync(blockchain);  //sync block with blockchain</span>
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span><span class="lineCov">         16 :                 premineUpdate(blockInfo);</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineCov">         64 :                 size_t transactionsOnImport = m_transactionQueue.topTransactions(100).size();</span>
+<span class="lineNum">     199 </span><span class="lineCov">         32 :                 block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here</span>
+<span class="lineNum">     200 </span><span class="lineCov">         64 :                 if (transactionsOnImport &gt;  m_transactionQueue.topTransactions(100).size())</span>
+<span class="lineNum">     201 </span><span class="lineCov">          1 :                         cnote &lt;&lt; &quot;Dropped invalid Transactions when mining!&quot;;</span>
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span><span class="lineCov">         16 :                 dev::eth::mine(block, blockchain, blockchain.sealEngine());</span>
+<span class="lineNum">     204 </span><span class="lineCov">         32 :                 blockchain.sealEngine()-&gt;verify(JustSeal, block.info());</span>
+<span class="lineNum">     205 </span>            :         }
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     207 </span>            :         {
+<span class="lineNum">     208 </span><span class="lineNoCov">          0 :                 cnote &lt;&lt; TestOutputHelper::testName() + &quot;block sync or mining did throw an exception: &quot; &lt;&lt; diagnostic_information(_e);</span>
+<span class="lineNum">     209 </span>            :                 return;
+<span class="lineNum">     210 </span>            :         }
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     212 </span>            :         {
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :                 cnote &lt;&lt; TestOutputHelper::testName() + &quot;block sync or mining did throw an exception: &quot; &lt;&lt; _e.what();</span>
+<span class="lineNum">     214 </span>            :                 return;
+<span class="lineNum">     215 </span>            :         }
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span><span class="lineCov">         64 :         size_t validTransactions = m_transactionQueue.topTransactions(100).size();</span>
+<span class="lineNum">     218 </span><span class="lineCov">         32 :         m_receipts = RLPStream(validTransactions);</span>
+<span class="lineNum">     219 </span><span class="lineCov">         28 :         for (size_t i = 0; i &lt; validTransactions; i++)</span>
+<span class="lineNum">     220 </span>            :         {
+<span class="lineNum">     221 </span><span class="lineCov">         36 :                 const dev::bytes receipt = block.receipt(i).rlp();</span>
+<span class="lineNum">     222 </span><span class="lineCov">         24 :                 m_receipts.appendRaw(receipt);</span>
+<span class="lineNum">     223 </span>            :         }
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span><span class="lineCov">         32 :         m_blockHeader = BlockHeader(block.blockData());         // NOTE no longer checked at this point in new API. looks like it was unimportant anyway</span>
+<span class="lineNum">     226 </span><span class="lineCov">         32 :         cnote &lt;&lt; &quot;Mined TrRoot: &quot; &lt;&lt; m_blockHeader.transactionsRoot();</span>
+<span class="lineNum">     227 </span><span class="lineCov">         16 :         copyStateFrom(block.state());</span>
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            :         //Invalid uncles are dropped when mining. but we restore the hash to produce block with invalid uncles (for later test when importing to blockchain)
+<span class="lineNum">     230 </span><span class="lineCov">         32 :         if (m_uncles.size())</span>
+<span class="lineNum">     231 </span>            :         {
+<span class="lineNum">     232 </span>            :                 //Fill info with uncles
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :                 RLPStream uncleStream;</span>
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :                 uncleStream.appendList(m_uncles.size());</span>
+<span class="lineNum">     235 </span><span class="lineNoCov">          0 :                 for (unsigned i = 0; i &lt; m_uncles.size(); ++i)</span>
+<span class="lineNum">     236 </span>            :                 {
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 :                         RLPStream uncleRlp;</span>
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :                         m_uncles[i].blockHeader().streamRLP(uncleRlp);</span>
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :                         uncleStream.appendRaw(uncleRlp.out());</span>
+<span class="lineNum">     240 </span>            :                 }
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :                 m_blockHeader.setSha3Uncles(sha3(uncleStream.out()));</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :                 updateNonce(_bc);</span>
+<span class="lineNum">     244 </span>            :         }
+<span class="lineNum">     245 </span>            :         else
+<span class="lineNum">     246 </span><span class="lineCov">         16 :                 recalcBlockHeaderBytes();</span>
+<a name="247"><span class="lineNum">     247 </span>            : }</a>
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span><span class="lineCov">          1 : void TestBlock::setBlockHeader(BlockHeader const&amp; _header)</span>
+<span class="lineNum">     250 </span>            : {
+<span class="lineNum">     251 </span><span class="lineCov">        278 :         m_blockHeader = _header;</span>
+<span class="lineNum">     252 </span><span class="lineCov">        278 :         recalcBlockHeaderBytes();</span>
+<span class="lineNum">     253 </span><span class="lineCov">          1 : }</span>
+<a name="254"><span class="lineNum">     254 </span>            : </a>
+<span class="lineNum">     255 </span>            : ///Test Block Private
+<span class="lineNum">     256 </span><span class="lineCov">       3091 : BlockHeader TestBlock::constructBlock(mObject const&amp; _o, h256 const&amp; _stateRoot)</span>
+<span class="lineNum">     257 </span>            : {
+<span class="lineNum">     258 </span><span class="lineCov">       3091 :         BlockHeader ret;</span>
+<span class="lineNum">     259 </span>            :         try
+<span class="lineNum">     260 </span>            :         {
+<span class="lineNum">     261 </span><span class="lineCov">       6182 :                 const dev::bytes c_blockRLP = createBlockRLPFromFields(_o, _stateRoot);</span>
+<span class="lineNum">     262 </span><span class="lineCov">       6182 :                 ret = BlockHeader(c_blockRLP, HeaderData);</span>
+<span class="lineNum">     263 </span>            : //              cdebug &lt;&lt; &quot;Block constructed of hash&quot; &lt;&lt; ret.hash() &lt;&lt; &quot;(without:&quot; &lt;&lt; ret.hash(WithoutSeal) &lt;&lt; &quot;)&quot;;
+<span class="lineNum">     264 </span>            :         }
+<span class="lineNum">     265 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     266 </span>            :         {
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :                 cnote &lt;&lt; TestOutputHelper::testName() + &quot;block population did throw an exception: &quot; &lt;&lt; diagnostic_information(_e);</span>
+<span class="lineNum">     268 </span>            :         }
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     270 </span>            :         {
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(TestOutputHelper::testName() + &quot;Failed block population with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">     272 </span>            :         }
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :         catch(...)</span>
+<span class="lineNum">     274 </span>            :         {
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(TestOutputHelper::testName() + &quot;block population did throw an unknown exception\n&quot;);</span>
+<span class="lineNum">     276 </span>            :         }
+<span class="lineNum">     277 </span><span class="lineCov">       3091 :         return ret;</span>
+<a name="278"><span class="lineNum">     278 </span>            : }</a>
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span><span class="lineCov">       3091 : dev::bytes TestBlock::createBlockRLPFromFields(mObject const&amp; _tObj, h256 const&amp; _stateRoot)</span>
+<span class="lineNum">     281 </span>            : {
+<span class="lineNum">     282 </span><span class="lineCov">       6182 :         RLPStream rlpStream;</span>
+<span class="lineNum">     283 </span><span class="lineCov">      15455 :         rlpStream.appendList(_tObj.count(&quot;hash&quot;) &gt; 0 ? (_tObj.size() - 1) : _tObj.size());</span>
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span><span class="lineCov">      15455 :         if (_tObj.count(&quot;parentHash&quot;))</span>
+<span class="lineNum">     286 </span><span class="lineCov">      15455 :                 rlpStream &lt;&lt; importByteArray(_tObj.at(&quot;parentHash&quot;).get_str());</span>
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span><span class="lineCov">      15455 :         if (_tObj.count(&quot;uncleHash&quot;))</span>
+<span class="lineNum">     289 </span><span class="lineCov">      15455 :                 rlpStream &lt;&lt; importByteArray(_tObj.at(&quot;uncleHash&quot;).get_str());</span>
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span><span class="lineCov">      15455 :         if (_tObj.count(&quot;coinbase&quot;))</span>
+<span class="lineNum">     292 </span><span class="lineCov">      15455 :                 rlpStream &lt;&lt; importByteArray(_tObj.at(&quot;coinbase&quot;).get_str());</span>
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span><span class="lineCov">       3091 :         if (_stateRoot)</span>
+<span class="lineNum">     295 </span>            :                 rlpStream &lt;&lt; _stateRoot;
+<span class="lineNum">     296 </span><span class="lineCov">      12195 :         else if (_tObj.count(&quot;stateRoot&quot;))</span>
+<span class="lineNum">     297 </span><span class="lineCov">      12195 :                 rlpStream &lt;&lt; importByteArray(_tObj.at(&quot;stateRoot&quot;).get_str());</span>
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span><span class="lineCov">      15455 :         if (_tObj.count(&quot;transactionsTrie&quot;))</span>
+<span class="lineNum">     300 </span><span class="lineCov">      15455 :                 rlpStream &lt;&lt; importByteArray(_tObj.at(&quot;transactionsTrie&quot;).get_str());</span>
+<span class="lineNum">     301 </span>            : 
+<span class="lineNum">     302 </span><span class="lineCov">      15455 :         if (_tObj.count(&quot;receiptTrie&quot;))</span>
+<span class="lineNum">     303 </span><span class="lineCov">      15455 :                 rlpStream &lt;&lt; importByteArray(_tObj.at(&quot;receiptTrie&quot;).get_str());</span>
+<span class="lineNum">     304 </span>            : 
+<span class="lineNum">     305 </span><span class="lineCov">      15455 :         if (_tObj.count(&quot;bloom&quot;))</span>
+<span class="lineNum">     306 </span><span class="lineCov">      15455 :                 rlpStream &lt;&lt; importByteArray(_tObj.at(&quot;bloom&quot;).get_str());</span>
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span><span class="lineCov">      15455 :         if (_tObj.count(&quot;difficulty&quot;))</span>
+<span class="lineNum">     309 </span><span class="lineCov">      12364 :                 rlpStream &lt;&lt; bigint(_tObj.at(&quot;difficulty&quot;).get_str());</span>
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span><span class="lineCov">      15455 :         if (_tObj.count(&quot;number&quot;))</span>
+<span class="lineNum">     312 </span><span class="lineCov">      12364 :                 rlpStream &lt;&lt; bigint(_tObj.at(&quot;number&quot;).get_str());</span>
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span><span class="lineCov">      15455 :         if (_tObj.count(&quot;gasLimit&quot;))</span>
+<span class="lineNum">     315 </span><span class="lineCov">      12364 :                 rlpStream &lt;&lt; bigint(_tObj.at(&quot;gasLimit&quot;).get_str());</span>
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span><span class="lineCov">      15455 :         if (_tObj.count(&quot;gasUsed&quot;))</span>
+<span class="lineNum">     318 </span><span class="lineCov">      12364 :                 rlpStream &lt;&lt; bigint(_tObj.at(&quot;gasUsed&quot;).get_str());</span>
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span><span class="lineCov">      15455 :         if (_tObj.count(&quot;timestamp&quot;))</span>
+<span class="lineNum">     321 </span><span class="lineCov">      12364 :                 rlpStream &lt;&lt; bigint(_tObj.at(&quot;timestamp&quot;).get_str());</span>
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span><span class="lineCov">      15455 :         if (_tObj.count(&quot;extraData&quot;))</span>
+<span class="lineNum">     324 </span><span class="lineCov">      15455 :                 rlpStream &lt;&lt; fromHex(_tObj.at(&quot;extraData&quot;).get_str());</span>
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span><span class="lineCov">      15455 :         if (_tObj.count(&quot;mixHash&quot;))</span>
+<span class="lineNum">     327 </span><span class="lineCov">      15455 :                 rlpStream &lt;&lt; importByteArray(_tObj.at(&quot;mixHash&quot;).get_str());</span>
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span><span class="lineCov">      15455 :         if (_tObj.count(&quot;nonce&quot;))</span>
+<span class="lineNum">     330 </span><span class="lineCov">      15455 :                 rlpStream &lt;&lt; importByteArray(_tObj.at(&quot;nonce&quot;).get_str());</span>
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span><span class="lineCov">       6182 :         return rlpStream.out();</span>
+<a name="333"><span class="lineNum">     333 </span>            : }</a>
+<span class="lineNum">     334 </span>            : 
+<span class="lineNum">     335 </span><span class="lineCov">          1 : void TestBlock::updateNonce(TestBlockChain const&amp; _bc)</span>
+<span class="lineNum">     336 </span>            : {
+<span class="lineNum">     337 </span><span class="lineCov">          2 :         if (((BlockHeader)m_blockHeader).difficulty() == 0)</span>
+<span class="lineNum">     338 </span><span class="lineNoCov">          0 :                 BOOST_TEST_MESSAGE(&quot;Trying to mine a block with 0 difficulty! &quot; + TestOutputHelper::testName());</span>
+<span class="lineNum">     339 </span>            :         else
+<span class="lineNum">     340 </span>            :         {
+<span class="lineNum">     341 </span>            :                 //do not verify blockheader for validity here
+<span class="lineNum">     342 </span><span class="lineCov">          2 :                 dev::eth::mine(m_blockHeader, _bc.interface().sealEngine(), false);</span>
+<span class="lineNum">     343 </span>            :         }
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span><span class="lineCov">          1 :         recalcBlockHeaderBytes();</span>
+<a name="346"><span class="lineNum">     346 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span><span class="lineCov">       4954 : void TestBlock::verify(TestBlockChain const&amp; _bc) const</span>
+<span class="lineNum">     349 </span>            : {
+<span class="lineNum">     350 </span><span class="lineCov">       4954 :         if (m_dirty) //TestBlock have incorrect blockheader for testing purposes</span>
+<span class="lineNum">     351 </span>            :                 return;
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span>            :         try
+<span class="lineNum">     354 </span>            :         {
+<span class="lineNum">     355 </span><span class="lineCov">      14211 :                 _bc.interface().sealEngine()-&gt;verify(CheckNothingNew, m_blockHeader, BlockHeader(), &amp;m_bytes);</span>
+<span class="lineNum">     356 </span>            :         }
+<span class="lineNum">     357 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     358 </span>            :         {
+<span class="lineNum">     359 </span><span class="lineNoCov">          0 :                 u256 daoHardfork = _bc.interface().sealEngine()-&gt;chainParams().u256Param(&quot;daoHardforkBlock&quot;);</span>
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :                 if ((m_blockHeader.number() &gt;= daoHardfork &amp;&amp; m_blockHeader.number() &lt;= daoHardfork + 9) || m_blockHeader.number() == 0)</span>
+<span class="lineNum">     361 </span>            :                 {
+<span class="lineNum">     362 </span><span class="lineNoCov">          0 :                         string exWhat { _e.what() };</span>
+<span class="lineNum">     363 </span><span class="lineNoCov">          0 :                         string exExpect = &quot;InvalidTransactionsRoot&quot;;</span>
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :                         BOOST_REQUIRE_MESSAGE(exWhat.find(exExpect) != string::npos, TestOutputHelper::testName() + &quot;block import expected another exeption: &quot; + exExpect);</span>
+<span class="lineNum">     365 </span>            :                 }
+<span class="lineNum">     366 </span>            :                 else
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 :                         BOOST_ERROR(TestOutputHelper::testName() + toString(m_blockHeader.number()) + &quot; BlockHeader Verification failed: &quot; &lt;&lt;  boost::current_exception_diagnostic_information());</span>
+<span class="lineNum">     368 </span>            :         }
+<span class="lineNum">     369 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     370 </span>            :         {
+<span class="lineNum">     371 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(TestOutputHelper::testName() + &quot;BlockHeader Verification failed: &quot; &lt;&lt;  boost::current_exception_diagnostic_information());</span>
+<span class="lineNum">     372 </span>            :         }
+<span class="lineNum">     373 </span>            : }
+<a name="374"><span class="lineNum">     374 </span>            : </a>
+<span class="lineNum">     375 </span>            : //Form bytestream of a block with [header transactions uncles]
+<span class="lineNum">     376 </span><span class="lineCov">       5650 : void TestBlock::recalcBlockHeaderBytes()</span>
+<span class="lineNum">     377 </span>            : {
+<span class="lineNum">     378 </span><span class="lineCov">      11300 :         Transactions txList;</span>
+<span class="lineNum">     379 </span><span class="lineCov">      42058 :         for (auto const&amp; txi: m_transactionQueue.topTransactions(std::numeric_limits&lt;unsigned&gt;::max()))</span>
+<span class="lineNum">     380 </span><span class="lineCov">       2508 :                 txList.push_back(txi);</span>
+<span class="lineNum">     381 </span><span class="lineCov">      11300 :         RLPStream txStream;</span>
+<span class="lineNum">     382 </span><span class="lineCov">      11300 :         txStream.appendList(txList.size());</span>
+<span class="lineNum">     383 </span><span class="lineCov">      18824 :         for (unsigned i = 0; i &lt; txList.size(); ++i)</span>
+<span class="lineNum">     384 </span>            :         {
+<span class="lineNum">     385 </span><span class="lineCov">       5016 :                 RLPStream txrlp;</span>
+<span class="lineNum">     386 </span><span class="lineCov">       5016 :                 txList[i].streamRLP(txrlp);</span>
+<span class="lineNum">     387 </span><span class="lineCov">       5016 :                 txStream.appendRaw(txrlp.out());</span>
+<span class="lineNum">     388 </span>            :         }
+<span class="lineNum">     389 </span>            : 
+<span class="lineNum">     390 </span><span class="lineCov">      11300 :         RLPStream uncleStream;</span>
+<span class="lineNum">     391 </span><span class="lineCov">      11300 :         uncleStream.appendList(m_uncles.size());</span>
+<span class="lineNum">     392 </span><span class="lineCov">      11579 :         for (unsigned i = 0; i &lt; m_uncles.size(); ++i)</span>
+<span class="lineNum">     393 </span>            :         {
+<span class="lineNum">     394 </span><span class="lineCov">        186 :                 RLPStream uncleRlp;</span>
+<span class="lineNum">     395 </span><span class="lineCov">        279 :                 m_uncles[i].blockHeader().streamRLP(uncleRlp);</span>
+<span class="lineNum">     396 </span><span class="lineCov">        186 :                 uncleStream.appendRaw(uncleRlp.out());</span>
+<span class="lineNum">     397 </span>            :         }
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span><span class="lineCov">      11300 :         RLPStream blHeaderStream;</span>
+<span class="lineNum">     400 </span><span class="lineCov">       5650 :         m_blockHeader.streamRLP(blHeaderStream, WithSeal);</span>
+<span class="lineNum">     401 </span>            : 
+<span class="lineNum">     402 </span><span class="lineCov">      11300 :         RLPStream ret(3);</span>
+<span class="lineNum">     403 </span><span class="lineCov">      11300 :         ret.appendRaw(blHeaderStream.out()); //block header</span>
+<span class="lineNum">     404 </span><span class="lineCov">      11300 :         ret.appendRaw(txStream.out());           //transactions</span>
+<span class="lineNum">     405 </span><span class="lineCov">      11300 :         ret.appendRaw(uncleStream.out());        //uncles</span>
+<span class="lineNum">     406 </span><span class="lineCov">       5650 :         m_bytes = ret.out();</span>
+<a name="407"><span class="lineNum">     407 </span><span class="lineCov">       5650 : }</span></a>
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span><span class="lineCov">       6444 : void TestBlock::copyStateFrom(State const&amp; _state)</span>
+<span class="lineNum">     410 </span>            : {
+<span class="lineNum">     411 </span>            :         //WEIRD WAY TO COPY STATE AS COPY CONSTRUCTOR FOR STATE NOT IMPLEMENTED CORRECTLY (they would share the same DB)
+<span class="lineNum">     412 </span><span class="lineCov">       6444 :         m_tempDirState.reset(new TransientDirectory());</span>
+<span class="lineNum">     413 </span><span class="lineCov">      32220 :         m_state.reset(new State(0, OverlayDB(State::openDB(m_tempDirState.get()-&gt;path(), h256{}, WithExisting::Kill)), BaseState::Empty));</span>
+<span class="lineNum">     414 </span><span class="lineCov">      12888 :         json_spirit::mObject obj = fillJsonWithState(_state);</span>
+<span class="lineNum">     415 </span><span class="lineCov">      12888 :         ImportTest::importState(obj, *m_state.get());</span>
+<a name="416"><span class="lineNum">     416 </span><span class="lineCov">       6444 : }</span></a>
+<span class="lineNum">     417 </span>            : 
+<span class="lineNum">     418 </span><span class="lineNoCov">          0 : void TestBlock::clearState()</span>
+<span class="lineNum">     419 </span>            : {
+<span class="lineNum">     420 </span><span class="lineNoCov">          0 :         m_state.reset(0);</span>
+<span class="lineNum">     421 </span><span class="lineNoCov">          0 :         m_tempDirState.reset(0);</span>
+<span class="lineNum">     422 </span><span class="lineNoCov">          0 :         for (size_t i = 0; i &lt; m_uncles.size(); i++)</span>
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 :                 m_uncles.at(i).clearState();</span>
+<a name="424"><span class="lineNum">     424 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     425 </span>            : 
+<span class="lineNum">     426 </span><span class="lineCov">       8381 : void TestBlock::populateFrom(TestBlock const&amp; _original)</span>
+<span class="lineNum">     427 </span>            : {
+<span class="lineNum">     428 </span>            :         try
+<span class="lineNum">     429 </span>            :         {
+<span class="lineNum">     430 </span><span class="lineCov">       8381 :                 copyStateFrom(_original.state()); //copy state if it is defined in _original</span>
+<span class="lineNum">     431 </span>            :         }
+<span class="lineNum">     432 </span><span class="lineCov">       8816 :         catch (BlockStateUndefined const&amp; _ex)</span>
+<span class="lineNum">     433 </span>            :         {
+<span class="lineNum">     434 </span><span class="lineCov">       4408 :                 if (g_logVerbosity &gt; 6)</span>
+<span class="lineNum">     435 </span><span class="lineNoCov">          0 :                         cnote &lt;&lt; _ex.what() &lt;&lt; &quot;copying block with null state&quot;;</span>
+<span class="lineNum">     436 </span>            :         }
+<span class="lineNum">     437 </span><span class="lineCov">       8381 :         m_testTransactions = _original.testTransactions();</span>
+<span class="lineNum">     438 </span><span class="lineCov">       8381 :         m_transactionQueue.clear();</span>
+<span class="lineNum">     439 </span><span class="lineCov">       8381 :         TransactionQueue const&amp; trQueue = _original.transactionQueue();</span>
+<span class="lineNum">     440 </span><span class="lineCov">      63227 :         for (auto const&amp; txi: trQueue.topTransactions(std::numeric_limits&lt;unsigned&gt;::max()))</span>
+<span class="lineNum">     441 </span><span class="lineCov">      13680 :                 m_transactionQueue.import(txi.rlp());</span>
+<span class="lineNum">     442 </span>            : 
+<span class="lineNum">     443 </span><span class="lineCov">       8381 :         m_uncles = _original.uncles();</span>
+<span class="lineNum">     444 </span><span class="lineCov">       8381 :         m_blockHeader = _original.blockHeader();</span>
+<span class="lineNum">     445 </span><span class="lineCov">       8381 :         m_bytes = _original.bytes();</span>
+<span class="lineNum">     446 </span><span class="lineCov">      16762 :         m_accountMap = _original.accountMap();</span>
+<span class="lineNum">     447 </span><span class="lineCov">       8381 :         m_dirty = false;</span>
+<a name="448"><span class="lineNum">     448 </span><span class="lineCov">       8381 : }</span></a>
+<span class="lineNum">     449 </span>            : 
+<span class="lineNum">     450 </span><span class="lineCov">       3870 : TestBlockChain::TestBlockChain(TestBlock const&amp; _genesisBlock)</span>
+<span class="lineNum">     451 </span>            : {
+<span class="lineNum">     452 </span><span class="lineCov">       1290 :         reset(_genesisBlock);</span>
+<a name="453"><span class="lineNum">     453 </span><span class="lineCov">       1290 : }</span></a>
+<span class="lineNum">     454 </span>            : 
+<span class="lineNum">     455 </span><span class="lineCov">       1290 : void TestBlockChain::reset(TestBlock const&amp; _genesisBlock)</span>
+<span class="lineNum">     456 </span>            : {
+<span class="lineNum">     457 </span><span class="lineCov">       1290 :         m_tempDirBlockchain.reset(new TransientDirectory);</span>
+<span class="lineNum">     458 </span><span class="lineCov">       3870 :         ChainParams p = ChainParams(genesisInfo(TestBlockChain::s_sealEngineNetwork), _genesisBlock.bytes(), _genesisBlock.accountMap());</span>
+<span class="lineNum">     459 </span>            : 
+<span class="lineNum">     460 </span><span class="lineCov">       6450 :         m_blockChain.reset(new BlockChain(p, m_tempDirBlockchain.get()-&gt;path(), WithExisting::Kill));</span>
+<span class="lineNum">     461 </span><span class="lineCov">       3870 :         if (!m_blockChain-&gt;isKnown(BlockHeader::headerHashFromBlock(_genesisBlock.bytes())))</span>
+<span class="lineNum">     462 </span>            :         {
+<span class="lineNum">     463 </span><span class="lineNoCov">          0 :                 cdebug &lt;&lt; &quot;Not known:&quot; &lt;&lt; BlockHeader::headerHashFromBlock(_genesisBlock.bytes()) &lt;&lt; BlockHeader(p.genesisBlock()).hash();</span>
+<span class="lineNum">     464 </span><span class="lineNoCov">          0 :                 cdebug &lt;&lt; &quot;Genesis block not known!&quot;;</span>
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :                 cdebug &lt;&lt; &quot;This should never happen.&quot;;</span>
+<span class="lineNum">     466 </span><span class="lineNoCov">          0 :                 assert(false);</span>
+<span class="lineNum">     467 </span>            :         }
+<span class="lineNum">     468 </span><span class="lineCov">       3870 :         m_lastBlock = m_genesisBlock = _genesisBlock;</span>
+<a name="469"><span class="lineNum">     469 </span><span class="lineCov">       1290 : }</span></a>
+<span class="lineNum">     470 </span>            : 
+<span class="lineNum">     471 </span><span class="lineCov">       4954 : bool TestBlockChain::addBlock(TestBlock const&amp; _block)</span>
+<span class="lineNum">     472 </span>            : {
+<span class="lineNum">     473 </span>            :         while (true)
+<span class="lineNum">     474 </span>            :         {
+<span class="lineNum">     475 </span>            :                 try
+<span class="lineNum">     476 </span>            :                 {
+<span class="lineNum">     477 </span><span class="lineCov">       4954 :                         _block.verify(*this); //check that block header match TestBlock contents</span>
+<span class="lineNum">     478 </span><span class="lineCov">      19816 :                         m_blockChain.get()-&gt;import(_block.bytes(), m_genesisBlock.state().db());</span>
+<span class="lineNum">     479 </span><span class="lineCov">       4737 :                         break;</span>
+<span class="lineNum">     480 </span>            :                 }
+<span class="lineNum">     481 </span><span class="lineNoCov">          0 :                 catch (FutureTime)</span>
+<span class="lineNum">     482 </span>            :                 {
+<span class="lineNum">     483 </span><span class="lineNoCov">          0 :                         this_thread::sleep_for(chrono::milliseconds(100));</span>
+<span class="lineNum">     484 </span>            :                         break;
+<span class="lineNum">     485 </span>            :                 }
+<span class="lineNum">     486 </span>            :         }
+<span class="lineNum">     487 </span>            : 
+<span class="lineNum">     488 </span>            :         //Imported and best
+<span class="lineNum">     489 </span><span class="lineCov">      18948 :         if (_block.bytes() == m_blockChain.get()-&gt;block())</span>
+<span class="lineNum">     490 </span>            :         {
+<span class="lineNum">     491 </span><span class="lineCov">       4910 :                 m_lastBlock = _block;</span>
+<span class="lineNum">     492 </span>            : 
+<span class="lineNum">     493 </span>            :                 //overwrite state in case _block had no State defined (e.x. created from RLP)
+<span class="lineNum">     494 </span><span class="lineCov">       4910 :                 OverlayDB const&amp; genesisDB = m_genesisBlock.state().db();           </span>
+<span class="lineNum">     495 </span><span class="lineCov">       7365 :                 Block block = (m_blockChain.get()-&gt;genesisBlock(genesisDB));</span>
+<span class="lineNum">     496 </span><span class="lineCov">       4910 :                 block.sync(*m_blockChain.get());</span>
+<span class="lineNum">     497 </span>            : 
+<span class="lineNum">     498 </span>            :                 //BOOST_REQUIRE(m_lastBlock.blockHeader().hash() == BlockHeader(block.blockData()).hash());
+<span class="lineNum">     499 </span><span class="lineCov">       4910 :                 m_lastBlock.setState(block.fromPending(10000));</span>
+<span class="lineNum">     500 </span>            :                 return true;
+<span class="lineNum">     501 </span>            :         }
+<span class="lineNum">     502 </span>            : 
+<span class="lineNum">     503 </span>            :         return false;
+<a name="504"><span class="lineNum">     504 </span>            : }</a>
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span><span class="lineNoCov">          0 : vector&lt;TestBlock&gt; TestBlockChain::syncUncles(vector&lt;TestBlock&gt; const&amp; uncles)</span>
+<span class="lineNum">     507 </span>            : {       
+<span class="lineNum">     508 </span><span class="lineNoCov">          0 :         vector&lt;TestBlock&gt; validUncles;</span>
+<span class="lineNum">     509 </span><span class="lineNoCov">          0 :         if (uncles.size() == 0)</span>
+<span class="lineNum">     510 </span>            :                 return validUncles;
+<span class="lineNum">     511 </span>            : 
+<span class="lineNum">     512 </span><span class="lineNoCov">          0 :         BlockQueue uncleBlockQueue;</span>
+<span class="lineNum">     513 </span><span class="lineNoCov">          0 :         BlockChain&amp; blockchain = *m_blockChain.get();</span>
+<span class="lineNum">     514 </span><span class="lineNoCov">          0 :         uncleBlockQueue.setChain(blockchain);</span>
+<span class="lineNum">     515 </span>            : 
+<span class="lineNum">     516 </span><span class="lineNoCov">          0 :         for (size_t i = 0; i &lt; uncles.size(); i++)</span>
+<span class="lineNum">     517 </span>            :         {
+<span class="lineNum">     518 </span>            :                 try
+<span class="lineNum">     519 </span>            :                 {
+<span class="lineNum">     520 </span><span class="lineNoCov">          0 :                         uncleBlockQueue.import(&amp;uncles.at(i).bytes(), false);</span>
+<span class="lineNum">     521 </span><span class="lineNoCov">          0 :                         this_thread::sleep_for(chrono::seconds(1)); // wait until block is verified</span>
+<span class="lineNum">     522 </span><span class="lineNoCov">          0 :                         validUncles.push_back(uncles.at(i));</span>
+<span class="lineNum">     523 </span>            :                 }
+<span class="lineNum">     524 </span><span class="lineNoCov">          0 :                 catch(...)</span>
+<span class="lineNum">     525 </span>            :                 {
+<span class="lineNum">     526 </span><span class="lineNoCov">          0 :                         cnote &lt;&lt; &quot;error in importing uncle! This produces an invalid block (May be by purpose for testing).&quot;;</span>
+<span class="lineNum">     527 </span>            :                 }
+<span class="lineNum">     528 </span>            :         }
+<span class="lineNum">     529 </span>            : 
+<span class="lineNum">     530 </span><span class="lineNoCov">          0 :         blockchain.sync(uncleBlockQueue, m_genesisBlock.state().db(), (unsigned)4);</span>
+<span class="lineNum">     531 </span>            :         return validUncles;
+<a name="532"><span class="lineNum">     532 </span>            : }</a>
+<span class="lineNum">     533 </span>            : 
+<span class="lineNum">     534 </span><span class="lineCov">         32 : TestTransaction TestTransaction::defaultTransaction(u256 const&amp; _nonce, u256 const&amp; _gasPrice, u256 const&amp; _gasLimit, bytes const&amp; _data)</span>
+<span class="lineNum">     535 </span>            : {
+<span class="lineNum">     536 </span><span class="lineCov">         64 :         json_spirit::mObject txObj;</span>
+<span class="lineNum">     537 </span><span class="lineCov">        224 :         txObj[&quot;data&quot;] = toHex(_data);</span>
+<span class="lineNum">     538 </span><span class="lineCov">        224 :         txObj[&quot;gasLimit&quot;] = toString(_gasLimit);</span>
+<span class="lineNum">     539 </span><span class="lineCov">        224 :         txObj[&quot;gasPrice&quot;] = toString(_gasPrice);</span>
+<span class="lineNum">     540 </span><span class="lineCov">        224 :         txObj[&quot;nonce&quot;] = toString(_nonce);</span>
+<span class="lineNum">     541 </span><span class="lineCov">        160 :         txObj[&quot;secretKey&quot;] = &quot;45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8&quot;;</span>
+<span class="lineNum">     542 </span><span class="lineCov">        160 :         txObj[&quot;to&quot;] = &quot;095e7baea6a6c7c4c2dfeb977efac326af552d87&quot;;</span>
+<span class="lineNum">     543 </span><span class="lineCov">        128 :         txObj[&quot;value&quot;] = &quot;100&quot;;</span>
+<span class="lineNum">     544 </span>            : 
+<span class="lineNum">     545 </span><span class="lineCov">         64 :         return TestTransaction(txObj);</span>
+<a name="546"><span class="lineNum">     546 </span>            : }</a>
+<span class="lineNum">     547 </span>            : 
+<span class="lineNum">     548 </span><span class="lineNoCov">          0 : AccountMap TestBlockChain::defaultAccountMap()</span>
+<span class="lineNum">     549 </span>            : {
+<span class="lineNum">     550 </span><span class="lineNoCov">          0 :         AccountMap ret;</span>
+<span class="lineNum">     551 </span><span class="lineNoCov">          0 :         ret[Address(&quot;a94f5374fce5edbc8e2a8697c15331677e6ebf0b&quot;)] = Account(0, 10000000000);</span>
+<span class="lineNum">     552 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="553"><span class="lineNum">     553 </span>            : }</a>
+<span class="lineNum">     554 </span>            : 
+<span class="lineNum">     555 </span><span class="lineCov">         13 : json_spirit::mObject TestBlockChain::defaultGenesisBlockJson()</span>
+<span class="lineNum">     556 </span>            : {
+<span class="lineNum">     557 </span><span class="lineCov">         13 :         json_spirit::mObject blockObj;</span>
+<span class="lineNum">     558 </span><span class="lineCov">         65 :         blockObj[&quot;bloom&quot;] = &quot;00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000&quot;;</span>
+<span class="lineNum">     559 </span><span class="lineCov">         65 :         blockObj[&quot;coinbase&quot;] = &quot;0x8888f1f195afa192cfee860698584c030f4c9db1&quot;;</span>
+<span class="lineNum">     560 </span><span class="lineCov">         65 :         blockObj[&quot;difficulty&quot;] = &quot;131072&quot;;</span>
+<span class="lineNum">     561 </span><span class="lineCov">         65 :         blockObj[&quot;extraData&quot;] = &quot;0x42&quot;;</span>
+<span class="lineNum">     562 </span><span class="lineCov">         65 :         blockObj[&quot;gasLimit&quot;] = &quot;3141592&quot;;</span>
+<span class="lineNum">     563 </span><span class="lineCov">         65 :         blockObj[&quot;gasUsed&quot;] = &quot;0&quot;;</span>
+<span class="lineNum">     564 </span><span class="lineCov">         65 :         blockObj[&quot;mixHash&quot;] = &quot;0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421&quot;;</span>
+<span class="lineNum">     565 </span><span class="lineCov">         65 :         blockObj[&quot;nonce&quot;] = &quot;0x0102030405060708&quot;;</span>
+<span class="lineNum">     566 </span><span class="lineCov">         65 :         blockObj[&quot;number&quot;] = &quot;0&quot;;</span>
+<span class="lineNum">     567 </span><span class="lineCov">         65 :         blockObj[&quot;parentHash&quot;] = &quot;0x0000000000000000000000000000000000000000000000000000000000000000&quot;;</span>
+<span class="lineNum">     568 </span><span class="lineCov">         65 :         blockObj[&quot;receiptTrie&quot;] = &quot;0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421&quot;;</span>
+<span class="lineNum">     569 </span><span class="lineCov">         65 :         blockObj[&quot;stateRoot&quot;] = &quot;0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a&quot;;</span>
+<span class="lineNum">     570 </span><span class="lineCov">         65 :         blockObj[&quot;timestamp&quot;] = &quot;0x54c98c81&quot;;</span>
+<span class="lineNum">     571 </span><span class="lineCov">         65 :         blockObj[&quot;transactionsTrie&quot;] = &quot;0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421&quot;;</span>
+<span class="lineNum">     572 </span><span class="lineCov">         65 :         blockObj[&quot;uncleHash&quot;] = &quot;0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347&quot;;</span>
+<span class="lineNum">     573 </span><span class="lineCov">         13 :         return blockObj;</span>
+<a name="574"><span class="lineNum">     574 </span>            : }</a>
+<span class="lineNum">     575 </span>            : 
+<span class="lineNum">     576 </span><span class="lineCov">         13 : TestBlock TestBlockChain::defaultGenesisBlock(u256 const&amp; _gasLimit)</span>
+<span class="lineNum">     577 </span>            : {
+<span class="lineNum">     578 </span><span class="lineCov">         26 :         json_spirit::mObject blockObj = defaultGenesisBlockJson();</span>
+<span class="lineNum">     579 </span><span class="lineCov">         91 :         blockObj[&quot;gasLimit&quot;] = toString(_gasLimit);</span>
+<span class="lineNum">     580 </span>            : 
+<span class="lineNum">     581 </span><span class="lineCov">         26 :         json_spirit::mObject accountObj;</span>
+<span class="lineNum">     582 </span><span class="lineCov">         65 :         accountObj[&quot;balance&quot;] = &quot;10000000000&quot;;</span>
+<span class="lineNum">     583 </span><span class="lineCov">         65 :         accountObj[&quot;nonce&quot;] = &quot;1&quot;;                                  //=1for nonce too low exception check</span>
+<span class="lineNum">     584 </span><span class="lineCov">         65 :         accountObj[&quot;code&quot;] = &quot;&quot;;</span>
+<span class="lineNum">     585 </span><span class="lineCov">         91 :         accountObj[&quot;storage&quot;] = json_spirit::mObject();</span>
+<span class="lineNum">     586 </span>            : 
+<span class="lineNum">     587 </span><span class="lineCov">         26 :         json_spirit::mObject accountMapObj;</span>
+<span class="lineNum">     588 </span><span class="lineCov">         65 :         accountMapObj[&quot;a94f5374fce5edbc8e2a8697c15331677e6ebf0b&quot;] = accountObj;</span>
+<span class="lineNum">     589 </span>            : 
+<span class="lineNum">     590 </span><span class="lineCov">         26 :         return TestBlock(blockObj, accountMapObj);</span>
+<a name="591"><span class="lineNum">     591 </span>            : }</a>
+<span class="lineNum">     592 </span>            : 
+<span class="lineNum">     593 </span><span class="lineCov">          3 : }}</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

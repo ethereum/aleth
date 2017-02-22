@@ -1,0 +1,157 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/x86_64-linux-gnu/bits/poll2.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/x86_64-linux-gnu/bits</a> - poll2.h<span style="font-size: 80%;"> (source / <a href="poll2.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* Checking macros for poll functions.</a>
+<span class="lineNum">       2 </span>            :    Copyright (C) 2012-2016 Free Software Foundation, Inc.
+<span class="lineNum">       3 </span>            :    This file is part of the GNU C Library.
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    The GNU C Library is free software; you can redistribute it and/or
+<span class="lineNum">       6 </span>            :    modify it under the terms of the GNU Lesser General Public
+<span class="lineNum">       7 </span>            :    License as published by the Free Software Foundation; either
+<span class="lineNum">       8 </span>            :    version 2.1 of the License, or (at your option) any later version.
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            :    The GNU C Library is distributed in the hope that it will be useful,
+<span class="lineNum">      11 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      12 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+<span class="lineNum">      13 </span>            :    Lesser General Public License for more details.
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            :    You should have received a copy of the GNU Lesser General Public
+<span class="lineNum">      16 </span>            :    License along with the GNU C Library; if not, see
+<span class="lineNum">      17 </span>            :    &lt;http://www.gnu.org/licenses/&gt;.  */
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #ifndef _SYS_POLL_H
+<span class="lineNum">      20 </span>            : # error &quot;Never include &lt;bits/poll2.h&gt; directly; use &lt;sys/poll.h&gt; instead.&quot;
+<span class="lineNum">      21 </span>            : #endif
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : __BEGIN_DECLS
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : extern int __REDIRECT (__poll_alias, (struct pollfd *__fds, nfds_t __nfds,
+<span class="lineNum">      27 </span>            :                                       int __timeout), poll);
+<span class="lineNum">      28 </span>            : extern int __poll_chk (struct pollfd *__fds, nfds_t __nfds, int __timeout,
+<span class="lineNum">      29 </span>            :                        __SIZE_TYPE__ __fdslen);
+<span class="lineNum">      30 </span>            : extern int __REDIRECT (__poll_chk_warn, (struct pollfd *__fds, nfds_t __nfds,
+<span class="lineNum">      31 </span>            :                                          int __timeout, __SIZE_TYPE__ __fdslen),
+<span class="lineNum">      32 </span>            :                        __poll_chk)
+<span class="lineNum">      33 </span>            :   __warnattr (&quot;poll called with fds buffer too small file nfds entries&quot;);
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : __fortify_function int
+<span class="lineNum">      36 </span>            : poll (struct pollfd *__fds, nfds_t __nfds, int __timeout)
+<span class="lineNum">      37 </span>            : {
+<span class="lineNum">      38 </span>            :   if (__bos (__fds) != (__SIZE_TYPE__) -1)
+<span class="lineNum">      39 </span>            :     {
+<span class="lineNum">      40 </span>            :       if (! __builtin_constant_p (__nfds))
+<span class="lineNum">      41 </span>            :         return __poll_chk (__fds, __nfds, __timeout, __bos (__fds));
+<span class="lineNum">      42 </span>            :       else if (__bos (__fds) / sizeof (*__fds) &lt; __nfds)
+<span class="lineNum">      43 </span>            :         return __poll_chk_warn (__fds, __nfds, __timeout, __bos (__fds));
+<span class="lineNum">      44 </span>            :     }
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span><span class="lineCov">         29 :   return __poll_alias (__fds, __nfds, __timeout);</span>
+<span class="lineNum">      47 </span>            : }
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : #ifdef __USE_GNU
+<span class="lineNum">      51 </span>            : extern int __REDIRECT (__ppoll_alias, (struct pollfd *__fds, nfds_t __nfds,
+<span class="lineNum">      52 </span>            :                                        const struct timespec *__timeout,
+<span class="lineNum">      53 </span>            :                                        const __sigset_t *__ss), ppoll);
+<span class="lineNum">      54 </span>            : extern int __ppoll_chk (struct pollfd *__fds, nfds_t __nfds,
+<span class="lineNum">      55 </span>            :                         const struct timespec *__timeout,
+<span class="lineNum">      56 </span>            :                         const __sigset_t *__ss, __SIZE_TYPE__ __fdslen);
+<span class="lineNum">      57 </span>            : extern int __REDIRECT (__ppoll_chk_warn, (struct pollfd *__fds, nfds_t __nfds,
+<span class="lineNum">      58 </span>            :                                           const struct timespec *__timeout,
+<span class="lineNum">      59 </span>            :                                           const __sigset_t *__ss,
+<span class="lineNum">      60 </span>            :                                           __SIZE_TYPE__ __fdslen),
+<span class="lineNum">      61 </span>            :                        __ppoll_chk)
+<span class="lineNum">      62 </span>            :   __warnattr (&quot;ppoll called with fds buffer too small file nfds entries&quot;);
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : __fortify_function int
+<span class="lineNum">      65 </span>            : ppoll (struct pollfd *__fds, nfds_t __nfds, const struct timespec *__timeout,
+<span class="lineNum">      66 </span>            :        const __sigset_t *__ss)
+<span class="lineNum">      67 </span>            : {
+<span class="lineNum">      68 </span>            :   if (__bos (__fds) != (__SIZE_TYPE__) -1)
+<span class="lineNum">      69 </span>            :     {
+<span class="lineNum">      70 </span>            :       if (! __builtin_constant_p (__nfds))
+<span class="lineNum">      71 </span>            :         return __ppoll_chk (__fds, __nfds, __timeout, __ss, __bos (__fds));
+<span class="lineNum">      72 </span>            :       else if (__bos (__fds) / sizeof (*__fds) &lt; __nfds)
+<span class="lineNum">      73 </span>            :         return __ppoll_chk_warn (__fds, __nfds, __timeout, __ss,
+<span class="lineNum">      74 </span>            :                                  __bos (__fds));
+<span class="lineNum">      75 </span>            :     }
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :   return __ppoll_alias (__fds, __nfds, __timeout, __ss);
+<span class="lineNum">      78 </span>            : }
+<span class="lineNum">      79 </span>            : #endif
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : __END_DECLS
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

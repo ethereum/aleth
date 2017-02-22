@@ -1,0 +1,352 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/spirit/home/classic/core/composite/epsilon.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/spirit/home/classic/core/composite</a> - epsilon.hpp<span style="font-size: 80%;"> (source / <a href="epsilon.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryMed">75.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*=============================================================================</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 1998-2003 Joel de Guzman
+<span class="lineNum">       3 </span>            :     Copyright (c) 2002-2003 Martin Wille
+<span class="lineNum">       4 </span>            :     http://spirit.sourceforge.net/
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            :   Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       7 </span>            :   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            : =============================================================================*/
+<span class="lineNum">       9 </span>            : #ifndef BOOST_SPIRIT_EPSILON_HPP
+<span class="lineNum">      10 </span>            : #define BOOST_SPIRIT_EPSILON_HPP
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : ////////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      13 </span>            : #include &lt;boost/spirit/home/classic/namespace.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/spirit/home/classic/core/parser.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/spirit/home/classic/meta/parser_traits.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/spirit/home/classic/core/composite/composite.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/spirit/home/classic/core/composite/no_actions.hpp&gt;
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : ////////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      20 </span>            : namespace boost { namespace spirit {
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      25 </span>            : //
+<span class="lineNum">      26 </span>            : //  condition_parser class
+<span class="lineNum">      27 </span>            : //
+<span class="lineNum">      28 </span>            : //      handles expresions of the form
+<span class="lineNum">      29 </span>            : //
+<span class="lineNum">      30 </span>            : //          epsilon_p(cond)
+<span class="lineNum">      31 </span>            : //
+<span class="lineNum">      32 </span>            : //      where cond is a function or a functor that returns a value suitable
+<span class="lineNum">      33 </span>            : //      to be used in boolean context. The expression returns a parser that
+<span class="lineNum">      34 </span>            : //      returns an empty match when the condition evaluates to true.
+<span class="lineNum">      35 </span>            : //
+<span class="lineNum">      36 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      37 </span>            :     template &lt;typename CondT, bool positive_ = true&gt;
+<span class="lineNum">      38 </span>            :     struct condition_parser : parser&lt;condition_parser&lt;CondT, positive_&gt; &gt;
+<span class="lineNum">      39 </span>            :     {
+<span class="lineNum">      40 </span>            :         typedef condition_parser&lt;CondT, positive_&gt; self_t;
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            :         // not explicit! (needed for implementation of if_p et al.)
+<span class="lineNum">      43 </span>            :         condition_parser(CondT const&amp; cond_) : cond(cond_) {}
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">      46 </span>            :         typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">      47 </span>            :         parse(ScannerT const&amp; scan) const
+<span class="lineNum">      48 </span>            :         {
+<span class="lineNum">      49 </span>            :             if (positive_ == bool(cond())) // allow cond to return int
+<span class="lineNum">      50 </span>            :                 return scan.empty_match();
+<span class="lineNum">      51 </span>            :             else
+<span class="lineNum">      52 </span>            :                 return scan.no_match();
+<span class="lineNum">      53 </span>            :         }
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :         condition_parser&lt;CondT, !positive_&gt;
+<span class="lineNum">      56 </span>            :         negate() const
+<span class="lineNum">      57 </span>            :         { return condition_parser&lt;CondT, !positive_&gt;(cond); }
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            :     private:
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            :         CondT cond;
+<span class="lineNum">      62 </span>            :     };
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, == 1310) || \
+<span class="lineNum">      65 </span>            :     BOOST_WORKAROUND(BOOST_MSVC, == 1400) || \
+<span class="lineNum">      66 </span>            :     BOOST_WORKAROUND(__SUNPRO_CC, &lt;= 0x580)
+<span class="lineNum">      67 </span>            : // VC 7.1, VC8 and Sun CC &lt;= 5.8 do not support general
+<span class="lineNum">      68 </span>            : // expressions of non-type template parameters in instantiations
+<span class="lineNum">      69 </span>            :     template &lt;typename CondT&gt;
+<span class="lineNum">      70 </span>            :     inline condition_parser&lt;CondT, false&gt;
+<span class="lineNum">      71 </span>            :     operator~(condition_parser&lt;CondT, true&gt; const&amp; p)
+<span class="lineNum">      72 </span>            :     { return p.negate(); }
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :     template &lt;typename CondT&gt;
+<span class="lineNum">      75 </span>            :     inline condition_parser&lt;CondT, true&gt;
+<span class="lineNum">      76 </span>            :     operator~(condition_parser&lt;CondT, false&gt; const&amp; p)
+<span class="lineNum">      77 </span>            :     { return p.negate(); }
+<span class="lineNum">      78 </span>            : #else // BOOST_WORKAROUND(BOOST_MSVC, == 1310) || == 1400
+<span class="lineNum">      79 </span>            :     template &lt;typename CondT, bool positive&gt;
+<span class="lineNum">      80 </span>            :     inline condition_parser&lt;CondT, !positive&gt;
+<span class="lineNum">      81 </span>            :     operator~(condition_parser&lt;CondT, positive&gt; const&amp; p)
+<span class="lineNum">      82 </span>            :     { return p.negate(); }
+<span class="lineNum">      83 </span>            : #endif // BOOST_WORKAROUND(BOOST_MSVC, == 1310) || == 1400
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      86 </span>            : //
+<span class="lineNum">      87 </span>            : //  empty_match_parser class
+<span class="lineNum">      88 </span>            : //
+<span class="lineNum">      89 </span>            : //      handles expressions of the form
+<span class="lineNum">      90 </span>            : //          epsilon_p(subject)
+<span class="lineNum">      91 </span>            : //      where subject is a parser. The expresion returns a composite
+<span class="lineNum">      92 </span>            : //      parser that returns an empty match if the subject parser matches.
+<span class="lineNum">      93 </span>            : //
+<span class="lineNum">      94 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      95 </span>            :     struct empty_match_parser_gen;
+<span class="lineNum">      96 </span>            :     struct negated_empty_match_parser_gen;
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            :     template &lt;typename SubjectT&gt;
+<span class="lineNum">      99 </span>            :     struct negated_empty_match_parser; // Forward declaration
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :     template&lt;typename SubjectT&gt;
+<span class="lineNum">     102 </span>            :     struct empty_match_parser
+<span class="lineNum">     103 </span>            :     : unary&lt;SubjectT, parser&lt;empty_match_parser&lt;SubjectT&gt; &gt; &gt;
+<span class="lineNum">     104 </span>            :     {
+<span class="lineNum">     105 </span>            :         typedef empty_match_parser&lt;SubjectT&gt;        self_t;
+<span class="lineNum">     106 </span>            :         typedef unary&lt;SubjectT, parser&lt;self_t&gt; &gt;    base_t;
+<span class="lineNum">     107 </span>            :         typedef unary_parser_category               parser_category_t;
+<span class="lineNum">     108 </span>            :         typedef empty_match_parser_gen              parser_genererator_t;
+<span class="lineNum">     109 </span>            :         typedef self_t embed_t;
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            :         explicit empty_match_parser(SubjectT const&amp; p) : base_t(p) {}
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">     114 </span>            :         struct result
+<span class="lineNum">     115 </span>            :         { typedef typename match_result&lt;ScannerT, nil_t&gt;::type type; };
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">     118 </span>            :         typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">     119 </span>            :         parse(ScannerT const&amp; scan) const
+<span class="lineNum">     120 </span>            :         {
+<span class="lineNum">     121 </span>            :             typename ScannerT::iterator_t save(scan.first);
+<span class="lineNum">     122 </span>            :             
+<span class="lineNum">     123 </span>            :             typedef typename no_actions_scanner&lt;ScannerT&gt;::policies_t
+<span class="lineNum">     124 </span>            :                 policies_t;
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            :             bool matches = this-&gt;subject().parse(
+<span class="lineNum">     127 </span>            :                 scan.change_policies(policies_t(scan)));
+<span class="lineNum">     128 </span>            :             if (matches)
+<span class="lineNum">     129 </span>            :             {
+<span class="lineNum">     130 </span>            :                 scan.first = save; // reset the position
+<span class="lineNum">     131 </span>            :                 return scan.empty_match();
+<span class="lineNum">     132 </span>            :             }
+<span class="lineNum">     133 </span>            :             else
+<span class="lineNum">     134 </span>            :             {
+<span class="lineNum">     135 </span>            :                 return scan.no_match();
+<span class="lineNum">     136 </span>            :             }
+<span class="lineNum">     137 </span>            :         }
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :         negated_empty_match_parser&lt;SubjectT&gt;
+<span class="lineNum">     140 </span>            :         negate() const
+<span class="lineNum">     141 </span>            :         { return negated_empty_match_parser&lt;SubjectT&gt;(this-&gt;subject()); }
+<span class="lineNum">     142 </span>            :     };
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            :     template&lt;typename SubjectT&gt;
+<span class="lineNum">     145 </span>            :     struct negated_empty_match_parser
+<span class="lineNum">     146 </span>            :     : public unary&lt;SubjectT, parser&lt;negated_empty_match_parser&lt;SubjectT&gt; &gt; &gt;
+<span class="lineNum">     147 </span>            :     {
+<span class="lineNum">     148 </span>            :         typedef negated_empty_match_parser&lt;SubjectT&gt;    self_t;
+<span class="lineNum">     149 </span>            :         typedef unary&lt;SubjectT, parser&lt;self_t&gt; &gt;        base_t;
+<span class="lineNum">     150 </span>            :         typedef unary_parser_category                   parser_category_t;
+<span class="lineNum">     151 </span>            :         typedef negated_empty_match_parser_gen          parser_genererator_t;
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :         explicit negated_empty_match_parser(SubjectT const&amp; p) : base_t(p) {}
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">     156 </span>            :         struct result
+<span class="lineNum">     157 </span>            :         { typedef typename match_result&lt;ScannerT, nil_t&gt;::type type; };
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">     160 </span>            :         typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">     161 </span>            :         parse(ScannerT const&amp; scan) const
+<span class="lineNum">     162 </span>            :         {
+<span class="lineNum">     163 </span>            :             typename ScannerT::iterator_t save(scan.first);
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :             typedef typename no_actions_scanner&lt;ScannerT&gt;::policies_t
+<span class="lineNum">     166 </span>            :                 policies_t;
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :             bool matches = this-&gt;subject().parse(
+<span class="lineNum">     169 </span>            :                 scan.change_policies(policies_t(scan)));
+<span class="lineNum">     170 </span>            :             if (!matches)
+<span class="lineNum">     171 </span>            :             {
+<span class="lineNum">     172 </span>            :                 scan.first = save; // reset the position
+<span class="lineNum">     173 </span>            :                 return scan.empty_match();
+<span class="lineNum">     174 </span>            :             }
+<span class="lineNum">     175 </span>            :             else
+<span class="lineNum">     176 </span>            :             {
+<span class="lineNum">     177 </span>            :                 return scan.no_match();
+<span class="lineNum">     178 </span>            :             }
+<span class="lineNum">     179 </span>            :         }
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            :         empty_match_parser&lt;SubjectT&gt;
+<span class="lineNum">     182 </span>            :         negate() const
+<span class="lineNum">     183 </span>            :         { return empty_match_parser&lt;SubjectT&gt;(this-&gt;subject()); }
+<span class="lineNum">     184 </span>            :     };
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :     struct empty_match_parser_gen
+<span class="lineNum">     187 </span>            :     {
+<span class="lineNum">     188 </span>            :         template &lt;typename SubjectT&gt;
+<span class="lineNum">     189 </span>            :         struct result
+<span class="lineNum">     190 </span>            :         { typedef empty_match_parser&lt;SubjectT&gt; type; };
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :         template &lt;typename SubjectT&gt;
+<span class="lineNum">     193 </span>            :         static empty_match_parser&lt;SubjectT&gt;
+<span class="lineNum">     194 </span>            :         generate(parser&lt;SubjectT&gt; const&amp; subject)
+<span class="lineNum">     195 </span>            :         { return empty_match_parser&lt;SubjectT&gt;(subject.derived()); }
+<span class="lineNum">     196 </span>            :     };
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :     struct negated_empty_match_parser_gen
+<span class="lineNum">     199 </span>            :     {
+<span class="lineNum">     200 </span>            :         template &lt;typename SubjectT&gt;
+<span class="lineNum">     201 </span>            :         struct result
+<span class="lineNum">     202 </span>            :         { typedef negated_empty_match_parser&lt;SubjectT&gt; type; };
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            :         template &lt;typename SubjectT&gt;
+<span class="lineNum">     205 </span>            :         static negated_empty_match_parser&lt;SubjectT&gt;
+<span class="lineNum">     206 </span>            :         generate(parser&lt;SubjectT&gt; const&amp; subject)
+<span class="lineNum">     207 </span>            :         { return negated_empty_match_parser&lt;SubjectT&gt;(subject.derived()); }
+<span class="lineNum">     208 </span>            :     };
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :     //////////////////////////////
+<span class="lineNum">     211 </span>            :     template &lt;typename SubjectT&gt;
+<span class="lineNum">     212 </span>            :     inline negated_empty_match_parser&lt;SubjectT&gt;
+<span class="lineNum">     213 </span>            :     operator~(empty_match_parser&lt;SubjectT&gt; const&amp; p)
+<span class="lineNum">     214 </span>            :     { return p.negate(); }
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            :     template &lt;typename SubjectT&gt;
+<span class="lineNum">     217 </span>            :     inline empty_match_parser&lt;SubjectT&gt;
+<span class="lineNum">     218 </span>            :     operator~(negated_empty_match_parser&lt;SubjectT&gt; const&amp; p)
+<span class="lineNum">     219 </span>            :     { return p.negate(); }
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     222 </span>            : //
+<span class="lineNum">     223 </span>            : //  epsilon_ parser and parser generator class
+<span class="lineNum">     224 </span>            : //
+<span class="lineNum">     225 </span>            : //      Operates as primitive parser that always matches an empty sequence.
+<span class="lineNum">     226 </span>            : //
+<span class="lineNum">     227 </span>            : //      Also operates as a parser generator. According to the type of the
+<span class="lineNum">     228 </span>            : //      argument an instance of empty_match_parser&lt;&gt; (when the argument is
+<span class="lineNum">     229 </span>            : //      a parser) or condition_parser&lt;&gt; (when the argument is not a parser)
+<span class="lineNum">     230 </span>            : //      is returned by operator().
+<span class="lineNum">     231 </span>            : //
+<span class="lineNum">     232 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     233 </span>            :     namespace impl
+<span class="lineNum">     234 </span>            :     {
+<span class="lineNum">     235 </span>            :         template &lt;typename SubjectT&gt;
+<span class="lineNum">     236 </span>            :         struct epsilon_selector
+<span class="lineNum">     237 </span>            :         {
+<span class="lineNum">     238 </span>            :             typedef typename as_parser&lt;SubjectT&gt;::type subject_t;
+<span class="lineNum">     239 </span>            :             typedef typename
+<span class="lineNum">     240 </span>            :                 mpl::if_&lt;
+<span class="lineNum">     241 </span>            :                     is_parser&lt;subject_t&gt;
+<span class="lineNum">     242 </span>            :                     ,empty_match_parser&lt;subject_t&gt;
+<span class="lineNum">     243 </span>            :                     ,condition_parser&lt;subject_t&gt;
+<span class="lineNum">     244 </span>            :                 &gt;::type type;
+<span class="lineNum">     245 </span>            :         };
+<span class="lineNum">     246 </span>            :     }
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :     struct epsilon_parser : public parser&lt;epsilon_parser&gt;
+<span class="lineNum">     249 </span>            :     {
+<span class="lineNum">     250 </span>            :         typedef epsilon_parser self_t;
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span><span class="lineCov">        122 :         epsilon_parser() {}</span>
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            :         template &lt;typename ScannerT&gt;
+<span class="lineNum">     255 </span>            :         typename parser_result&lt;self_t, ScannerT&gt;::type
+<span class="lineNum">     256 </span>            :         parse(ScannerT const&amp; scan) const
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :         { return scan.empty_match(); }</span>
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            :         template &lt;typename SubjectT&gt;
+<span class="lineNum">     260 </span>            :         typename impl::epsilon_selector&lt;SubjectT&gt;::type
+<span class="lineNum">     261 </span>            :         operator()(SubjectT const&amp; subject) const
+<span class="lineNum">     262 </span>            :         {
+<span class="lineNum">     263 </span>            :             typedef typename impl::epsilon_selector&lt;SubjectT&gt;::type result_t;
+<span class="lineNum">     264 </span>            :             return result_t(subject);
+<span class="lineNum">     265 </span>            :         }
+<span class="lineNum">     266 </span>            :     };
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span><span class="lineCov">         61 :     epsilon_parser const epsilon_p = epsilon_parser();</span>
+<span class="lineNum">     269 </span><span class="lineCov">         61 :     epsilon_parser const eps_p = epsilon_parser();</span>
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">     272 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_END
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            : }} // namespace BOOST_SPIRIT_CLASSIC_NS
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

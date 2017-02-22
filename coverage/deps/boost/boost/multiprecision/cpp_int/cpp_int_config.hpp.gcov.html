@@ -1,0 +1,239 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/multiprecision/cpp_int/cpp_int_config.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/multiprecision/cpp_int</a> - cpp_int_config.hpp<span style="font-size: 80%;"> (source / <a href="cpp_int_config.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : ///////////////////////////////////////////////////////////////</a>
+<span class="lineNum">       2 </span>            : //  Copyright 2012 John Maddock. Distributed under the Boost
+<span class="lineNum">       3 </span>            : //  Software License, Version 1.0. (See accompanying file
+<span class="lineNum">       4 </span>            : //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : #ifndef BOOST_MP_CPP_INT_CORE_HPP
+<span class="lineNum">       7 </span>            : #define BOOST_MP_CPP_INT_CORE_HPP
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : #include &lt;boost/integer.hpp&gt;
+<span class="lineNum">      10 </span>            : #include &lt;boost/integer_traits.hpp&gt;
+<span class="lineNum">      11 </span>            : #include &lt;boost/mpl/if.hpp&gt;
+<span class="lineNum">      12 </span>            : #include &lt;boost/mpl/int.hpp&gt;
+<span class="lineNum">      13 </span>            : #include &lt;boost/static_assert.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/assert.hpp&gt;
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : namespace boost{ namespace multiprecision{
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : namespace detail{
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : //
+<span class="lineNum">      21 </span>            : // These traits calculate the largest type in the list
+<span class="lineNum">      22 </span>            : // [unsigned] boost::long_long_type, long, int, which has the specified number
+<span class="lineNum">      23 </span>            : // of bits.  Note that intN_t and boost::int_t&lt;N&gt; find the first
+<span class="lineNum">      24 </span>            : // member of the above list, not the last.  We want the last in the
+<span class="lineNum">      25 </span>            : // list to ensure that mixed arithmetic operations are as efficient
+<span class="lineNum">      26 </span>            : // as possible.
+<span class="lineNum">      27 </span>            : //
+<span class="lineNum">      28 </span>            : template &lt;unsigned N&gt;
+<span class="lineNum">      29 </span>            : struct largest_signed_type
+<span class="lineNum">      30 </span>            : {
+<span class="lineNum">      31 </span>            :    typedef typename mpl::if_c&lt;
+<span class="lineNum">      32 </span>            :       1 + std::numeric_limits&lt;boost::long_long_type&gt;::digits == N,
+<span class="lineNum">      33 </span>            :       boost::long_long_type,
+<span class="lineNum">      34 </span>            :       typename mpl::if_c&lt;
+<span class="lineNum">      35 </span>            :          1 + std::numeric_limits&lt;long&gt;::digits == N,
+<span class="lineNum">      36 </span>            :          long,
+<span class="lineNum">      37 </span>            :          typename mpl::if_c&lt;
+<span class="lineNum">      38 </span>            :             1 + std::numeric_limits&lt;int&gt;::digits == N,
+<span class="lineNum">      39 </span>            :             int,
+<span class="lineNum">      40 </span>            :             typename boost::int_t&lt;N&gt;::exact
+<span class="lineNum">      41 </span>            :          &gt;::type
+<span class="lineNum">      42 </span>            :       &gt;::type
+<span class="lineNum">      43 </span>            :    &gt;::type type;
+<span class="lineNum">      44 </span>            : };
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : template &lt;unsigned N&gt;
+<span class="lineNum">      47 </span>            : struct largest_unsigned_type
+<span class="lineNum">      48 </span>            : {
+<span class="lineNum">      49 </span>            :    typedef typename mpl::if_c&lt;
+<span class="lineNum">      50 </span>            :       std::numeric_limits&lt;boost::ulong_long_type&gt;::digits == N,
+<span class="lineNum">      51 </span>            :       boost::ulong_long_type,
+<span class="lineNum">      52 </span>            :       typename mpl::if_c&lt;
+<span class="lineNum">      53 </span>            :          std::numeric_limits&lt;unsigned long&gt;::digits == N,
+<span class="lineNum">      54 </span>            :          unsigned long,
+<span class="lineNum">      55 </span>            :          typename mpl::if_c&lt;
+<span class="lineNum">      56 </span>            :             std::numeric_limits&lt;unsigned int&gt;::digits == N,
+<span class="lineNum">      57 </span>            :             unsigned int,
+<span class="lineNum">      58 </span>            :             typename boost::uint_t&lt;N&gt;::exact
+<span class="lineNum">      59 </span>            :          &gt;::type
+<span class="lineNum">      60 </span>            :       &gt;::type
+<span class="lineNum">      61 </span>            :    &gt;::type type;
+<span class="lineNum">      62 </span>            : };
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : } // namespace detail
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : #if defined(BOOST_HAS_INT128)
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : typedef detail::largest_unsigned_type&lt;64&gt;::type limb_type;
+<span class="lineNum">      69 </span>            : typedef detail::largest_signed_type&lt;64&gt;::type signed_limb_type;
+<span class="lineNum">      70 </span>            : typedef boost::uint128_type double_limb_type;
+<span class="lineNum">      71 </span>            : typedef boost::int128_type signed_double_limb_type;
+<span class="lineNum">      72 </span>            : static const limb_type max_block_10 = 1000000000000000000uLL;
+<span class="lineNum">      73 </span>            : static const limb_type digits_per_block_10 = 18;
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : inline limb_type block_multiplier(unsigned count)
+<span class="lineNum">      76 </span>            : {
+<span class="lineNum">      77 </span>            :    static const limb_type values[digits_per_block_10]
+<span class="lineNum">      78 </span>            :       = { 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 10000000000, 100000000000, 1000000000000, 10000000000000, 100000000000000, 1000000000000000, 10000000000000000, 100000000000000000, 1000000000000000000 };
+<span class="lineNum">      79 </span><span class="lineCov">      73206 :    BOOST_ASSERT(count &lt; digits_per_block_10);</span>
+<span class="lineNum">      80 </span><span class="lineCov">      73206 :    return values[count];</span>
+<span class="lineNum">      81 </span>            : }
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : // Can't do formatted IO on an __int128
+<span class="lineNum">      84 </span>            : #define BOOST_MP_NO_DOUBLE_LIMB_TYPE_IO
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            : // Need to specialise integer_traits for __int128 as it's not a normal native type:
+<span class="lineNum">      87 </span>            : } // namespace multiprecision
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : template&lt;&gt;
+<span class="lineNum">      90 </span>            : class integer_traits&lt;multiprecision::double_limb_type&gt;
+<span class="lineNum">      91 </span>            :   : public std::numeric_limits&lt;multiprecision::double_limb_type&gt;,
+<span class="lineNum">      92 </span>            :     public detail::integer_traits_base&lt;multiprecision::double_limb_type, 0, ~static_cast&lt;multiprecision::double_limb_type&gt;(0)&gt;
+<span class="lineNum">      93 </span>            : { };
+<span class="lineNum">      94 </span>            : template&lt;&gt;
+<span class="lineNum">      95 </span>            : class integer_traits&lt;multiprecision::signed_double_limb_type&gt;
+<span class="lineNum">      96 </span>            :   : public std::numeric_limits&lt;multiprecision::signed_double_limb_type&gt;,
+<span class="lineNum">      97 </span>            :     public detail::integer_traits_base&lt;multiprecision::signed_double_limb_type, static_cast&lt;multiprecision::signed_double_limb_type&gt;((static_cast&lt;multiprecision::double_limb_type&gt;(1) &lt;&lt; 127)), static_cast&lt;multiprecision::signed_double_limb_type&gt;(((~static_cast&lt;multiprecision::double_limb_type&gt;(0)) &gt;&gt; 1))&gt;
+<span class="lineNum">      98 </span>            : { };
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : namespace multiprecision{
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : #else
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            : typedef detail::largest_unsigned_type&lt;32&gt;::type limb_type;
+<span class="lineNum">     105 </span>            : typedef detail::largest_signed_type&lt;32&gt;::type signed_limb_type;
+<span class="lineNum">     106 </span>            : typedef detail::largest_unsigned_type&lt;64&gt;::type double_limb_type;
+<span class="lineNum">     107 </span>            : typedef detail::largest_signed_type&lt;64&gt;::type signed_double_limb_type;
+<span class="lineNum">     108 </span>            : static const limb_type max_block_10 = 1000000000;
+<span class="lineNum">     109 </span>            : static const limb_type digits_per_block_10 = 9;
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            : inline limb_type block_multiplier(unsigned count)
+<span class="lineNum">     112 </span>            : {
+<span class="lineNum">     113 </span>            :    static const limb_type values[digits_per_block_10]
+<span class="lineNum">     114 </span>            :       = { 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 };
+<span class="lineNum">     115 </span>            :    BOOST_ASSERT(count &lt; digits_per_block_10);
+<span class="lineNum">     116 </span>            :    return values[count];
+<span class="lineNum">     117 </span>            : }
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : #endif
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            : static const unsigned bits_per_limb = sizeof(limb_type) * CHAR_BIT;
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : template &lt;class T&gt;
+<span class="lineNum">     124 </span>            : inline void minmax(const T&amp; a, const T&amp; b, T&amp; aa, T&amp; bb)
+<span class="lineNum">     125 </span>            : {
+<span class="lineNum">     126 </span><span class="lineCov">   28819474 :    if(a &lt; b)</span>
+<span class="lineNum">     127 </span>            :    {
+<span class="lineNum">     128 </span>            :       aa = a;
+<span class="lineNum">     129 </span>            :       bb = b;
+<span class="lineNum">     130 </span>            :    }
+<span class="lineNum">     131 </span>            :    else
+<span class="lineNum">     132 </span>            :    {
+<span class="lineNum">     133 </span><span class="lineCov">   21055066 :       aa = b;</span>
+<span class="lineNum">     134 </span><span class="lineCov">   21055066 :       bb = a;</span>
+<span class="lineNum">     135 </span>            :    }
+<span class="lineNum">     136 </span>            : }
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            : enum cpp_integer_type
+<span class="lineNum">     139 </span>            : {
+<span class="lineNum">     140 </span>            :    signed_magnitude = 1,
+<span class="lineNum">     141 </span>            :    unsigned_magnitude = 0,
+<span class="lineNum">     142 </span>            :    signed_packed = 3,
+<span class="lineNum">     143 </span>            :    unsigned_packed = 2
+<span class="lineNum">     144 </span>            : };
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            : enum cpp_int_check_type
+<span class="lineNum">     147 </span>            : {
+<span class="lineNum">     148 </span>            :    checked = 1,
+<span class="lineNum">     149 </span>            :    unchecked = 0
+<span class="lineNum">     150 </span>            : };
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            : }}
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            : //
+<span class="lineNum">     155 </span>            : // Figure out whether to support user-defined-literals or not:
+<span class="lineNum">     156 </span>            : //
+<span class="lineNum">     157 </span>            : #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) &amp;&amp; !defined(BOOST_NO_CXX11_USER_DEFINED_LITERALS) \
+<span class="lineNum">     158 </span>            :       &amp;&amp; !defined(BOOST_NO_CXX11_CONSTEXPR)
+<span class="lineNum">     159 </span>            : #  define BOOST_MP_USER_DEFINED_LITERALS
+<span class="lineNum">     160 </span>            : #endif
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            : #endif // BOOST_MP_CPP_INT_CORE_HPP
+<span class="lineNum">     163 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

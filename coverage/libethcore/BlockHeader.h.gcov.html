@@ -1,0 +1,279 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethcore/BlockHeader.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethcore</a> - BlockHeader.h<span style="font-size: 80%;"> (source / <a href="BlockHeader.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">44</td>
+            <td class="headerCovTableEntry">55</td>
+            <td class="headerCovTableEntryMed">80.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntryLo">70.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file BlockHeader.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libdevcore/RLP.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libdevcore/SHA3.h&gt;
+<span class="lineNum">      28 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;ChainOperationParams.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;Exceptions.h&quot;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace dev
+<span class="lineNum">      33 </span>            : {
+<span class="lineNum">      34 </span>            : namespace eth
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : enum IncludeSeal
+<span class="lineNum">      38 </span>            : {
+<span class="lineNum">      39 </span>            :         WithoutSeal = 0,
+<span class="lineNum">      40 </span>            :         WithSeal = 1,
+<span class="lineNum">      41 </span>            :         OnlySeal = 2
+<span class="lineNum">      42 </span>            : };
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : enum Strictness
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span>            :         CheckEverything,
+<span class="lineNum">      47 </span>            :         JustSeal,
+<span class="lineNum">      48 </span>            :         QuickNonce,
+<span class="lineNum">      49 </span>            :         IgnoreSeal,
+<span class="lineNum">      50 </span>            :         CheckNothingNew
+<span class="lineNum">      51 </span>            : };
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : // TODO: for implementing soon.
+<span class="lineNum">      54 </span>            : /*enum Check
+<span class="lineNum">      55 </span>            : {
+<span class="lineNum">      56 </span>            :         CheckBasic,
+<span class="lineNum">      57 </span>            :         CheckExtended,
+<span class="lineNum">      58 </span>            :         CheckBlock,
+<span class="lineNum">      59 </span>            :         CheckParent,
+<span class="lineNum">      60 </span>            :         CheckSeal,
+<span class="lineNum">      61 </span>            :         CheckSealQuickly,
+<span class="lineNum">      62 </span>            :         CheckAll = CheckBasic | CheckExtended | CheckBlock | CheckParent | CheckSeal,
+<span class="lineNum">      63 </span>            : };
+<span class="lineNum">      64 </span>            : using Checks = FlagSet&lt;Check&gt;;*/
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : enum BlockDataType
+<span class="lineNum">      67 </span>            : {
+<span class="lineNum">      68 </span>            :         HeaderData,
+<span class="lineNum">      69 </span>            :         BlockData
+<a name="70"><span class="lineNum">      70 </span>            : };</a>
+<a name="71"><span class="lineNum">      71 </span>            : </a>
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 : DEV_SIMPLE_EXCEPTION(NoHashRecorded);</span>
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 : DEV_SIMPLE_EXCEPTION(GenesisBlockCannotBeCalculated);</span>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : /** @brief Encapsulation of a block header.
+<span class="lineNum">      76 </span>            :  * Class to contain all of a block header's data. It is able to parse a block header and populate
+<span class="lineNum">      77 </span>            :  * from some given RLP block serialisation with the static fromHeader(), through the method
+<span class="lineNum">      78 </span>            :  * populate(). This will not conduct any verification above basic formating. In this case extra
+<span class="lineNum">      79 </span>            :  * verification can be performed through verify().
+<span class="lineNum">      80 </span>            :  *
+<span class="lineNum">      81 </span>            :  * The object may also be populated from an entire block through the explicit
+<span class="lineNum">      82 </span>            :  * constructor BlockHeader(bytesConstRef) and manually with the populate() method. These will
+<span class="lineNum">      83 </span>            :  * conduct verification of the header against the other information in the block.
+<span class="lineNum">      84 </span>            :  *
+<span class="lineNum">      85 </span>            :  * The object may be populated with a template given a parent BlockHeader object with the
+<span class="lineNum">      86 </span>            :  * populateFromParent() method. The genesis block info may be retrieved with genesis() and the
+<span class="lineNum">      87 </span>            :  * corresponding RLP block created with createGenesisBlock().
+<span class="lineNum">      88 </span>            :  *
+<span class="lineNum">      89 </span>            :  * To determine the header hash without the nonce (for sealing), the method hash(WithoutNonce) is
+<span class="lineNum">      90 </span>            :  * provided.
+<span class="lineNum">      91 </span>            :  *
+<span class="lineNum">      92 </span>            :  * The default constructor creates an empty object, which can be tested against with the boolean
+<a name="93"><span class="lineNum">      93 </span>            :  * conversion operator.</a>
+<span class="lineNum">      94 </span>            :  */
+<span class="lineNum">      95 </span><span class="lineCov">    1234924 : class BlockHeader</span>
+<span class="lineNum">      96 </span>            : {
+<span class="lineNum">      97 </span>            :         friend class BlockChain;
+<span class="lineNum">      98 </span>            : public:
+<span class="lineNum">      99 </span>            :         static const unsigned BasicFields = 13;
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :         BlockHeader();
+<span class="lineNum">     102 </span>            :         explicit BlockHeader(bytesConstRef _data, BlockDataType _bdt = BlockData, h256 const&amp; _hashWith = h256());
+<span class="lineNum">     103 </span><span class="lineCov">      80873 :         explicit BlockHeader(bytes const&amp; _data, BlockDataType _bdt = BlockData, h256 const&amp; _hashWith = h256()): BlockHeader(&amp;_data, _bdt, _hashWith) {}</span>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineCov">       1290 :         static h256 headerHashFromBlock(bytes const&amp; _block) { return headerHashFromBlock(&amp;_block); }</span>
+<span class="lineNum">     106 </span>            :         static h256 headerHashFromBlock(bytesConstRef _block);
+<span class="lineNum">     107 </span>            :         static RLP extractHeader(bytesConstRef _block);
+<span class="lineNum">     108 </span>            : 
+<a name="109"><span class="lineNum">     109 </span><span class="lineCov">      89752 :         explicit operator bool() const { return m_timestamp != Invalid256; }</span></a>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">      20236 :         bool operator==(BlockHeader const&amp; _cmp) const</span>
+<span class="lineNum">     112 </span>            :         {
+<span class="lineNum">     113 </span><span class="lineCov">      47907 :                 return m_parentHash == _cmp.parentHash() &amp;&amp;</span>
+<span class="lineNum">     114 </span><span class="lineCov">      21696 :                         m_sha3Uncles == _cmp.sha3Uncles() &amp;&amp;</span>
+<span class="lineNum">     115 </span><span class="lineCov">      18930 :                         m_author == _cmp.author() &amp;&amp;</span>
+<span class="lineNum">     116 </span><span class="lineCov">      15832 :                         m_stateRoot == _cmp.stateRoot() &amp;&amp;</span>
+<span class="lineNum">     117 </span><span class="lineCov">      15828 :                         m_transactionsRoot == _cmp.transactionsRoot() &amp;&amp;</span>
+<span class="lineNum">     118 </span><span class="lineCov">      15828 :                         m_receiptsRoot == _cmp.receiptsRoot() &amp;&amp;</span>
+<span class="lineNum">     119 </span><span class="lineCov">      15828 :                         m_logBloom == _cmp.logBloom() &amp;&amp;</span>
+<span class="lineNum">     120 </span><span class="lineCov">      15828 :                         m_difficulty == _cmp.difficulty() &amp;&amp;</span>
+<span class="lineNum">     121 </span><span class="lineCov">      15828 :                         m_number == _cmp.number() &amp;&amp;</span>
+<span class="lineNum">     122 </span><span class="lineCov">      15828 :                         m_gasLimit == _cmp.gasLimit() &amp;&amp;</span>
+<span class="lineNum">     123 </span><span class="lineCov">      15828 :                         m_gasUsed == _cmp.gasUsed() &amp;&amp;</span>
+<span class="lineNum">     124 </span><span class="lineCov">      36064 :                         m_timestamp == _cmp.timestamp() &amp;&amp;</span>
+<span class="lineNum">     125 </span><span class="lineCov">      25512 :                         m_extraData == _cmp.extraData();</span>
+<span class="lineNum">     126 </span>            :         }
+<span class="lineNum">     127 </span><span class="lineCov">          1 :         bool operator!=(BlockHeader const&amp; _cmp) const { return !operator==(_cmp); }</span>
+<a name="128"><span class="lineNum">     128 </span>            : </a>
+<span class="lineNum">     129 </span>            :         void clear();
+<span class="lineNum">     130 </span><span class="lineCov">     290432 :         void noteDirty() const { m_hashWithout = m_hash = h256(); }</span>
+<span class="lineNum">     131 </span>            :         void populateFromParent(BlockHeader const&amp; parent);
+<span class="lineNum">     132 </span>            : 
+<a name="133"><span class="lineNum">     133 </span>            :         // TODO: pull out into abstract class Verifier.</a>
+<span class="lineNum">     134 </span>            :         void verify(Strictness _s = CheckEverything, BlockHeader const&amp; _parent = BlockHeader(), bytesConstRef _block = bytesConstRef()) const;
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :         void verify(Strictness _s, bytesConstRef _block) const { verify(_s, BlockHeader(), _block); }</span>
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :         h256 hash(IncludeSeal _i = WithSeal) const;
+<span class="lineNum">     138 </span>            :         void streamRLP(RLPStream&amp; _s, IncludeSeal _i = WithSeal) const;
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span><span class="lineCov">         18 :         void setParentHash(h256 const&amp; _v) { m_parentHash = _v; noteDirty(); }</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :         void setSha3Uncles(h256 const&amp; _v) { m_sha3Uncles = _v; noteDirty(); }</span>
+<a name="142"><span class="lineNum">     142 </span><span class="lineCov">      62428 :         void setTimestamp(u256 const&amp; _v) { m_timestamp = _v; noteDirty(); }</span></a>
+<span class="lineNum">     143 </span><span class="lineCov">      19905 :         void setAuthor(Address const&amp; _v) { m_author = _v; noteDirty(); }</span>
+<span class="lineNum">     144 </span><span class="lineCov">         18 :         void setRoots(h256 const&amp; _t, h256 const&amp; _r, h256 const&amp; _u, h256 const&amp; _s) { m_transactionsRoot = _t; m_receiptsRoot = _r; m_stateRoot = _s; m_sha3Uncles = _u; noteDirty(); }</span>
+<span class="lineNum">     145 </span><span class="lineCov">         36 :         void setGasUsed(u256 const&amp; _v) { m_gasUsed = _v; noteDirty(); }</span>
+<span class="lineNum">     146 </span><span class="lineCov">      23462 :         void setNumber(u256 const&amp; _v) { m_number = _v; noteDirty(); }</span>
+<span class="lineNum">     147 </span><span class="lineCov">      49626 :         void setGasLimit(u256 const&amp; _v) { m_gasLimit = _v; noteDirty(); }</span>
+<span class="lineNum">     148 </span><span class="lineCov">         18 :         void setExtraData(bytes const&amp; _v) { m_extraData = _v; noteDirty(); }</span>
+<a name="149"><span class="lineNum">     149 </span><span class="lineCov">         18 :         void setLogBloom(LogBloom const&amp; _v) { m_logBloom = _v; noteDirty(); }</span></a>
+<span class="lineNum">     150 </span><span class="lineCov">      72274 :         void setDifficulty(u256 const&amp; _v) { m_difficulty = _v; noteDirty(); }</span>
+<span class="lineNum">     151 </span><span class="lineCov">        180 :         template &lt;class T&gt; void setSeal(unsigned _offset, T const&amp; _value) { if (m_seal.size() &lt;= _offset) m_seal.resize(_offset + 1); m_seal[_offset] = rlp(_value); noteDirty(); }</span>
+<span class="lineNum">     152 </span><span class="lineCov">          2 :         template &lt;class T&gt; void setSeal(T const&amp; _value) { setSeal(0, _value); }</span>
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span><span class="lineCov">      20235 :         h256 const&amp; parentHash() const { return m_parentHash; }</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :         h256 const&amp; sha3Uncles() const { return m_sha3Uncles; }</span>
+<span class="lineNum">     156 </span><span class="lineCov">      66967 :         u256 const&amp; timestamp() const { return m_timestamp; }</span>
+<span class="lineNum">     157 </span><span class="lineCov">       5138 :         Address const&amp; author() const { return m_author; }</span>
+<span class="lineNum">     158 </span><span class="lineCov">      22361 :         h256 const&amp; stateRoot() const { return m_stateRoot; }</span>
+<span class="lineNum">     159 </span><span class="lineCov">         16 :         h256 const&amp; transactionsRoot() const { return m_transactionsRoot; }</span>
+<span class="lineNum">     160 </span><span class="lineCov">          1 :         h256 const&amp; receiptsRoot() const { return m_receiptsRoot; }</span>
+<span class="lineNum">     161 </span><span class="lineCov">      24709 :         u256 const&amp; gasUsed() const { return m_gasUsed; }</span>
+<span class="lineNum">     162 </span><span class="lineCov">      46493 :         u256 const&amp; number() const { return m_number; }</span>
+<span class="lineNum">     163 </span><span class="lineCov">          2 :         u256 const&amp; gasLimit() const { return m_gasLimit; }</span>
+<span class="lineNum">     164 </span><span class="lineCov">      15687 :         bytes const&amp; extraData() const { return m_extraData; }</span>
+<a name="165"><span class="lineNum">     165 </span><span class="lineNoCov">          0 :         LogBloom const&amp; logBloom() const { return m_logBloom; }</span></a>
+<span class="lineNum">     166 </span><span class="lineCov">      41402 :         u256 const&amp; difficulty() const { return m_difficulty; }</span>
+<span class="lineNum">     167 </span><span class="lineCov">     189470 :         template &lt;class T&gt; T seal(unsigned _offset = 0) const { T ret; if (_offset &lt; m_seal.size()) ret = RLP(m_seal[_offset]).convert&lt;T&gt;(RLP::VeryStrict); return ret; }</span>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            : private:
+<span class="lineNum">     170 </span>            :         void populate(RLP const&amp; _header);
+<span class="lineNum">     171 </span>            :         void streamRLPFields(RLPStream&amp; _s) const;
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :         h256 m_parentHash;
+<span class="lineNum">     174 </span>            :         h256 m_sha3Uncles;
+<span class="lineNum">     175 </span>            :         h256 m_stateRoot;
+<span class="lineNum">     176 </span>            :         h256 m_transactionsRoot;
+<span class="lineNum">     177 </span>            :         h256 m_receiptsRoot;
+<span class="lineNum">     178 </span>            :         LogBloom m_logBloom;
+<span class="lineNum">     179 </span>            :         u256 m_number;
+<span class="lineNum">     180 </span>            :         u256 m_gasLimit;
+<span class="lineNum">     181 </span>            :         u256 m_gasUsed;
+<span class="lineNum">     182 </span>            :         bytes m_extraData;
+<span class="lineNum">     183 </span>            :         u256 m_timestamp = Invalid256;
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :         Address m_author;
+<span class="lineNum">     186 </span>            :         u256 m_difficulty;
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :         std::vector&lt;bytes&gt; m_seal;                ///&lt; Additional (RLP-encoded) header fields.
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            :         mutable h256 m_hash;                    ///&lt; (Memoised) SHA3 hash of the block header with seal.
+<span class="lineNum">     191 </span>            :         mutable h256 m_hashWithout;             ///&lt; (Memoised) SHA3 hash of the block header without seal.
+<a name="192"><span class="lineNum">     192 </span>            : };</a>
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 : inline std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, BlockHeader const&amp; _bi)</span>
+<span class="lineNum">     195 </span>            : {
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :         _out &lt;&lt; _bi.hash(WithoutSeal) &lt;&lt; &quot; &quot; &lt;&lt; _bi.parentHash() &lt;&lt; &quot; &quot; &lt;&lt; _bi.sha3Uncles() &lt;&lt; &quot; &quot; &lt;&lt; _bi.author() &lt;&lt; &quot; &quot; &lt;&lt; _bi.stateRoot() &lt;&lt; &quot; &quot; &lt;&lt; _bi.transactionsRoot() &lt;&lt; &quot; &quot; &lt;&lt;</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :                         _bi.receiptsRoot() &lt;&lt; &quot; &quot; &lt;&lt; _bi.logBloom() &lt;&lt; &quot; &quot; &lt;&lt; _bi.difficulty() &lt;&lt; &quot; &quot; &lt;&lt; _bi.number() &lt;&lt; &quot; &quot; &lt;&lt; _bi.gasLimit() &lt;&lt; &quot; &quot; &lt;&lt;</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :                         _bi.gasUsed() &lt;&lt; &quot; &quot; &lt;&lt; _bi.timestamp();</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :         return _out;</span>
+<span class="lineNum">     200 </span>            : }
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            : }
+<span class="lineNum">     203 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

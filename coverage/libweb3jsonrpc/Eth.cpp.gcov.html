@@ -1,0 +1,808 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libweb3jsonrpc/Eth.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libweb3jsonrpc</a> - Eth.cpp<span style="font-size: 80%;"> (source / <a href="Eth.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">281</td>
+            <td class="headerCovTableEntryLo">5.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">54</td>
+            <td class="headerCovTableEntryLo">9.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Eth.cpp
+<span class="lineNum">      18 </span>            :  * @authors:
+<span class="lineNum">      19 </span>            :  *   Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      20 </span>            :  *   Marek Kotewicz &lt;marek@ethdev.com&gt;
+<span class="lineNum">      21 </span>            :  * @date 2014
+<span class="lineNum">      22 </span>            :  */
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;csignal&gt;
+<span class="lineNum">      25 </span>            : #include &lt;jsonrpccpp/common/exception.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libdevcore/CommonData.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libevmcore/Instruction.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libethereum/Client.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libethashseal/EthashClient.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libwebthree/WebThree.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libethcore/CommonJS.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libweb3jsonrpc/JsonHelper.h&gt;
+<span class="lineNum">      33 </span>            : #include &quot;Eth.h&quot;
+<span class="lineNum">      34 </span>            : #include &quot;AccountHolder.h&quot;
+<span class="lineNum">      35 </span>            : #include &quot;JsonHelper.h&quot;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : using namespace std;
+<span class="lineNum">      38 </span>            : using namespace jsonrpc;
+<span class="lineNum">      39 </span>            : using namespace dev;
+<span class="lineNum">      40 </span>            : using namespace eth;
+<span class="lineNum">      41 </span>            : using namespace shh;
+<span class="lineNum">      42 </span>            : using namespace dev::rpc;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : #if ETH_DEBUG
+<span class="lineNum">      45 </span>            : const unsigned dev::SensibleHttpThreads = 1;
+<span class="lineNum">      46 </span>            : #else
+<span class="lineNum">      47 </span>            : const unsigned dev::SensibleHttpThreads = 4;
+<span class="lineNum">      48 </span>            : #endif
+<a name="49"><span class="lineNum">      49 </span>            : const unsigned dev::SensibleHttpPort = 8545;</a>
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineCov">          1 : Eth::Eth(eth::Interface&amp; _eth, eth::AccountHolder&amp; _ethAccounts):</span>
+<span class="lineNum">      52 </span>            :         m_eth(_eth),
+<span class="lineNum">      53 </span><span class="lineCov">          1 :         m_ethAccounts(_ethAccounts)</span>
+<span class="lineNum">      54 </span>            : {
+<a name="55"><span class="lineNum">      55 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 : string Eth::eth_protocolVersion()</span>
+<span class="lineNum">      58 </span>            : {
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :         return toJS(eth::c_protocolVersion);</span>
+<a name="60"><span class="lineNum">      60 </span>            : }</a>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 : string Eth::eth_coinbase()</span>
+<span class="lineNum">      63 </span>            : {
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :         return toJS(client()-&gt;author());</span>
+<a name="65"><span class="lineNum">      65 </span>            : }</a>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 : string Eth::eth_hashrate()</span>
+<span class="lineNum">      68 </span>            : {
+<span class="lineNum">      69 </span>            :         try
+<span class="lineNum">      70 </span>            :         {
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :                 return toJS(asEthashClient(client())-&gt;hashrate());</span>
+<span class="lineNum">      72 </span>            :         }
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :         catch (InvalidSealEngine&amp;)</span>
+<span class="lineNum">      74 </span>            :         {
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">      76 </span>            :         }
+<a name="77"><span class="lineNum">      77 </span>            : }</a>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 : bool Eth::eth_mining()</span>
+<span class="lineNum">      80 </span>            : {
+<span class="lineNum">      81 </span>            :         try
+<span class="lineNum">      82 </span>            :         {
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :                 return asEthashClient(client())-&gt;isMining();</span>
+<span class="lineNum">      84 </span>            :         }
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :         catch (InvalidSealEngine&amp;)</span>
+<span class="lineNum">      86 </span>            :         {
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">      88 </span>            :         }
+<a name="89"><span class="lineNum">      89 </span>            : }</a>
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 : string Eth::eth_gasPrice()</span>
+<span class="lineNum">      92 </span>            : {
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :         return toJS(client()-&gt;gasBidPrice());</span>
+<a name="94"><span class="lineNum">      94 </span>            : }</a>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_accounts()</span>
+<span class="lineNum">      97 </span>            : {
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :         return toJson(m_ethAccounts.allAccounts());</span>
+<a name="99"><span class="lineNum">      99 </span>            : }</a>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 : string Eth::eth_blockNumber()</span>
+<span class="lineNum">     102 </span>            : {
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :         return toJS(client()-&gt;number());</span>
+<span class="lineNum">     104 </span>            : }
+<a name="105"><span class="lineNum">     105 </span>            : </a>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 : string Eth::eth_getBalance(string const&amp; _address, string const&amp; _blockNumber)</span>
+<span class="lineNum">     108 </span>            : {
+<span class="lineNum">     109 </span>            :         try
+<span class="lineNum">     110 </span>            :         {
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :                 return toJS(client()-&gt;balanceAt(jsToAddress(_address), jsToBlockNumber(_blockNumber)));</span>
+<span class="lineNum">     112 </span>            :         }
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     114 </span>            :         {
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     116 </span>            :         }
+<a name="117"><span class="lineNum">     117 </span>            : }</a>
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 : string Eth::eth_getStorageAt(string const&amp; _address, string const&amp; _position, string const&amp; _blockNumber)</span>
+<span class="lineNum">     120 </span>            : {
+<span class="lineNum">     121 </span>            :         try
+<span class="lineNum">     122 </span>            :         {
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :                 return toJS(toCompactBigEndian(client()-&gt;stateAt(jsToAddress(_address), jsToU256(_position), jsToBlockNumber(_blockNumber)), 32));</span>
+<span class="lineNum">     124 </span>            :         }
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     126 </span>            :         {
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     128 </span>            :         }
+<a name="129"><span class="lineNum">     129 </span>            : }</a>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 : string Eth::eth_getStorageRoot(string const&amp; _address, string const&amp; _blockNumber)</span>
+<span class="lineNum">     132 </span>            : {
+<span class="lineNum">     133 </span>            :         try
+<span class="lineNum">     134 </span>            :         {
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :                 return toString(client()-&gt;stateRootAt(jsToAddress(_address), jsToBlockNumber(_blockNumber)));</span>
+<span class="lineNum">     136 </span>            :         }
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     138 </span>            :         {
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     140 </span>            :         }
+<a name="141"><span class="lineNum">     141 </span>            : }</a>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 : string Eth::eth_pendingTransactions()</span>
+<span class="lineNum">     144 </span>            : {
+<span class="lineNum">     145 </span>            :         //Return list of transaction that being sent by local accounts
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :         Transactions ours;</span>
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :         for (Transaction const&amp; pending:client()-&gt;pending())</span>
+<span class="lineNum">     148 </span>            :         {
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :                 for (Address const&amp; account:m_ethAccounts.allAccounts())</span>
+<span class="lineNum">     150 </span>            :                 {
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :                         if (pending.sender() == account)</span>
+<span class="lineNum">     152 </span>            :                         {
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :                                 ours.push_back(pending);</span>
+<span class="lineNum">     154 </span>            :                                 break;
+<span class="lineNum">     155 </span>            :                         }
+<span class="lineNum">     156 </span>            :                 }
+<span class="lineNum">     157 </span>            :         }
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :         return toJS(ours);</span>
+<a name="160"><span class="lineNum">     160 </span>            : }</a>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 : string Eth::eth_getTransactionCount(string const&amp; _address, string const&amp; _blockNumber)</span>
+<span class="lineNum">     163 </span>            : {
+<span class="lineNum">     164 </span>            :         try
+<span class="lineNum">     165 </span>            :         {
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :                 return toJS(client()-&gt;countAt(jsToAddress(_address), jsToBlockNumber(_blockNumber)));</span>
+<span class="lineNum">     167 </span>            :         }
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     169 </span>            :         {
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     171 </span>            :         }
+<a name="172"><span class="lineNum">     172 </span>            : }</a>
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getBlockTransactionCountByHash(string const&amp; _blockHash)</span>
+<span class="lineNum">     175 </span>            : {
+<span class="lineNum">     176 </span>            :         try
+<span class="lineNum">     177 </span>            :         {
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :                 h256 blockHash = jsToFixed&lt;32&gt;(_blockHash);</span>
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :                 if (!client()-&gt;isKnown(blockHash))</span>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :                         return Json::Value(Json::nullValue);</span>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :                 return toJS(client()-&gt;transactionCount(blockHash));</span>
+<span class="lineNum">     183 </span>            :         }
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     185 </span>            :         {
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     187 </span>            :         }
+<a name="188"><span class="lineNum">     188 </span>            : }</a>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getBlockTransactionCountByNumber(string const&amp; _blockNumber)</span>
+<span class="lineNum">     191 </span>            : {
+<span class="lineNum">     192 </span>            :         try
+<span class="lineNum">     193 </span>            :         {
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :                 BlockNumber blockNumber = jsToBlockNumber(_blockNumber);</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :                 if (!client()-&gt;isKnown(blockNumber))</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :                         return Json::Value(Json::nullValue);</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :                 return toJS(client()-&gt;transactionCount(jsToBlockNumber(_blockNumber)));</span>
+<span class="lineNum">     199 </span>            :         }
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     201 </span>            :         {
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     203 </span>            :         }
+<a name="204"><span class="lineNum">     204 </span>            : }</a>
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getUncleCountByBlockHash(string const&amp; _blockHash)</span>
+<span class="lineNum">     207 </span>            : {
+<span class="lineNum">     208 </span>            :         try
+<span class="lineNum">     209 </span>            :         {
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :                 h256 blockHash = jsToFixed&lt;32&gt;(_blockHash);</span>
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :                 if (!client()-&gt;isKnown(blockHash))</span>
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :                         return Json::Value(Json::nullValue);</span>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :                 return toJS(client()-&gt;uncleCount(blockHash));</span>
+<span class="lineNum">     215 </span>            :         }
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     217 </span>            :         {
+<span class="lineNum">     218 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     219 </span>            :         }
+<a name="220"><span class="lineNum">     220 </span>            : }</a>
+<span class="lineNum">     221 </span>            : 
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getUncleCountByBlockNumber(string const&amp; _blockNumber)</span>
+<span class="lineNum">     223 </span>            : {
+<span class="lineNum">     224 </span>            :         try
+<span class="lineNum">     225 </span>            :         {
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :                 BlockNumber blockNumber = jsToBlockNumber(_blockNumber);</span>
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :                 if (!client()-&gt;isKnown(blockNumber))</span>
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :                         return Json::Value(Json::nullValue);</span>
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :                 return toJS(client()-&gt;uncleCount(blockNumber));</span>
+<span class="lineNum">     231 </span>            :         }
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     233 </span>            :         {
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     235 </span>            :         }
+<a name="236"><span class="lineNum">     236 </span>            : }</a>
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 : string Eth::eth_getCode(string const&amp; _address, string const&amp; _blockNumber)</span>
+<span class="lineNum">     239 </span>            : {
+<span class="lineNum">     240 </span>            :         try
+<span class="lineNum">     241 </span>            :         {
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :                 return toJS(client()-&gt;codeAt(jsToAddress(_address), jsToBlockNumber(_blockNumber)));</span>
+<span class="lineNum">     243 </span>            :         }
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     245 </span>            :         {
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     247 </span>            :         }
+<a name="248"><span class="lineNum">     248 </span>            : }</a>
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span><span class="lineCov">          7 : void Eth::setTransactionDefaults(TransactionSkeleton&amp; _t)</span>
+<span class="lineNum">     251 </span>            : {
+<span class="lineNum">     252 </span><span class="lineCov">         14 :         if (!_t.from)</span>
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :                 _t.from = m_ethAccounts.defaultTransactAccount();</span>
+<a name="254"><span class="lineNum">     254 </span><span class="lineCov">          7 : }</span></a>
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span><span class="lineCov">          7 : string Eth::eth_sendTransaction(Json::Value const&amp; _json)</span>
+<span class="lineNum">     257 </span>            : {
+<span class="lineNum">     258 </span>            :         try
+<span class="lineNum">     259 </span>            :         {
+<span class="lineNum">     260 </span><span class="lineCov">         12 :                 TransactionSkeleton t = toTransactionSkeleton(_json);</span>
+<span class="lineNum">     261 </span><span class="lineCov">          7 :                 setTransactionDefaults(t);</span>
+<span class="lineNum">     262 </span><span class="lineCov">          7 :                 TransactionNotification n = m_ethAccounts.authenticate(t);</span>
+<span class="lineNum">     263 </span><span class="lineCov">          7 :                 switch (n.r)</span>
+<span class="lineNum">     264 </span>            :                 {
+<span class="lineNum">     265 </span>            :                 case TransactionRepercussion::Success:
+<span class="lineNum">     266 </span><span class="lineCov">          4 :                         return toJS(n.hash);</span>
+<span class="lineNum">     267 </span>            :                 case TransactionRepercussion::ProxySuccess:
+<span class="lineNum">     268 </span><span class="lineNoCov">          0 :                         return toJS(n.hash);// TODO: give back something more useful than an empty hash.</span>
+<span class="lineNum">     269 </span>            :                 case TransactionRepercussion::UnknownAccount:
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(JsonRpcException(&quot;Account unknown.&quot;));</span>
+<span class="lineNum">     271 </span>            :                 case TransactionRepercussion::Locked:
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(JsonRpcException(&quot;Account is locked.&quot;));</span>
+<span class="lineNum">     273 </span>            :                 case TransactionRepercussion::Refused:
+<span class="lineNum">     274 </span><span class="lineCov">         20 :                         BOOST_THROW_EXCEPTION(JsonRpcException(&quot;Transaction rejected by user.&quot;));</span>
+<span class="lineNum">     275 </span>            :                 case TransactionRepercussion::Unknown:
+<span class="lineNum">     276 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(JsonRpcException(&quot;Unknown reason.&quot;));</span>
+<span class="lineNum">     277 </span>            :                 }
+<span class="lineNum">     278 </span>            :         }
+<span class="lineNum">     279 </span><span class="lineCov">         10 :         catch (JsonRpcException&amp;)</span>
+<span class="lineNum">     280 </span>            :         {
+<span class="lineNum">     281 </span><span class="lineCov">          5 :                 throw;</span>
+<span class="lineNum">     282 </span>            :         }
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     284 </span>            :         {
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     286 </span>            :         }
+<span class="lineNum">     287 </span><span class="lineNoCov">          0 :         BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     288 </span>            :         return string();
+<a name="289"><span class="lineNum">     289 </span>            : }</a>
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span><span class="lineNoCov">          0 : string Eth::eth_signTransaction(Json::Value const&amp; _json)</span>
+<span class="lineNum">     292 </span>            : {
+<span class="lineNum">     293 </span>            :         try
+<span class="lineNum">     294 </span>            :         {
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :                 TransactionSkeleton t = toTransactionSkeleton(_json);</span>
+<span class="lineNum">     296 </span><span class="lineNoCov">          0 :                 setTransactionDefaults(t);</span>
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :                 TransactionNotification n = m_ethAccounts.authenticate(t);</span>
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :                 switch (n.r)</span>
+<span class="lineNum">     299 </span>            :                 {
+<span class="lineNum">     300 </span>            :                 case TransactionRepercussion::Success:
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :                         return toJS(n.hash);</span>
+<span class="lineNum">     302 </span>            :                 case TransactionRepercussion::ProxySuccess:
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :                         return toJS(n.hash);// TODO: give back something more useful than an empty hash.</span>
+<span class="lineNum">     304 </span>            :                 default:
+<span class="lineNum">     305 </span>            :                         // TODO: provide more useful information in the exception.
+<span class="lineNum">     306 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     307 </span>            :                 }
+<span class="lineNum">     308 </span>            :         }
+<span class="lineNum">     309 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     310 </span>            :         {
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     312 </span>            :         }
+<a name="313"><span class="lineNum">     313 </span>            : }</a>
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_inspectTransaction(std::string const&amp; _rlp)</span>
+<span class="lineNum">     316 </span>            : {
+<span class="lineNum">     317 </span>            :         try
+<span class="lineNum">     318 </span>            :         {
+<span class="lineNum">     319 </span><span class="lineNoCov">          0 :                 return toJson(Transaction(jsToBytes(_rlp, OnFailed::Throw), CheckTransaction::Everything));</span>
+<span class="lineNum">     320 </span>            :         }
+<span class="lineNum">     321 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     322 </span>            :         {
+<span class="lineNum">     323 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     324 </span>            :         }
+<a name="325"><span class="lineNum">     325 </span>            : }</a>
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span><span class="lineNoCov">          0 : string Eth::eth_sendRawTransaction(std::string const&amp; _rlp)</span>
+<span class="lineNum">     328 </span>            : {
+<span class="lineNum">     329 </span>            :         try
+<span class="lineNum">     330 </span>            :         {
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 :                 if (client()-&gt;injectTransaction(jsToBytes(_rlp, OnFailed::Throw)) == ImportResult::Success)</span>
+<span class="lineNum">     332 </span>            :                 {
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :                         Transaction tx(jsToBytes(_rlp, OnFailed::Throw), CheckTransaction::None);</span>
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :                         return toJS(tx.sha3());</span>
+<span class="lineNum">     335 </span>            :                 }
+<span class="lineNum">     336 </span>            :                 else
+<span class="lineNum">     337 </span><span class="lineNoCov">          0 :                         return toJS(h256());</span>
+<span class="lineNum">     338 </span>            :         }
+<span class="lineNum">     339 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     340 </span>            :         {
+<span class="lineNum">     341 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     342 </span>            :         }
+<a name="343"><span class="lineNum">     343 </span>            : }</a>
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 : string Eth::eth_call(Json::Value const&amp; _json, string const&amp; _blockNumber)</span>
+<span class="lineNum">     346 </span>            : {
+<span class="lineNum">     347 </span>            :         try
+<span class="lineNum">     348 </span>            :         {
+<span class="lineNum">     349 </span><span class="lineNoCov">          0 :                 TransactionSkeleton t = toTransactionSkeleton(_json);</span>
+<span class="lineNum">     350 </span><span class="lineNoCov">          0 :                 setTransactionDefaults(t);</span>
+<span class="lineNum">     351 </span><span class="lineNoCov">          0 :                 ExecutionResult er = client()-&gt;call(t.from, t.value, t.to, t.data, t.gas, t.gasPrice, jsToBlockNumber(_blockNumber), FudgeFactor::Lenient);</span>
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :                 return toJS(er.output);</span>
+<span class="lineNum">     353 </span>            :         }
+<span class="lineNum">     354 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     355 </span>            :         {
+<span class="lineNum">     356 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     357 </span>            :         }
+<a name="358"><span class="lineNum">     358 </span>            : }</a>
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 : string Eth::eth_estimateGas(Json::Value const&amp; _json)</span>
+<span class="lineNum">     361 </span>            : {
+<span class="lineNum">     362 </span>            :         try
+<span class="lineNum">     363 </span>            :         {
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :                 TransactionSkeleton t = toTransactionSkeleton(_json);</span>
+<span class="lineNum">     365 </span><span class="lineNoCov">          0 :                 setTransactionDefaults(t);</span>
+<span class="lineNum">     366 </span><span class="lineNoCov">          0 :                 return toJS(client()-&gt;estimateGas(t.from, t.value, t.to, t.data, t.gas, t.gasPrice, PendingBlock).first);</span>
+<span class="lineNum">     367 </span>            :         }
+<span class="lineNum">     368 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     369 </span>            :         {
+<span class="lineNum">     370 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     371 </span>            :         }
+<a name="372"><span class="lineNum">     372 </span>            : }</a>
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 : bool Eth::eth_flush()</span>
+<span class="lineNum">     375 </span>            : {
+<span class="lineNum">     376 </span><span class="lineNoCov">          0 :         client()-&gt;flushTransactions();</span>
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 :         return true;</span>
+<a name="378"><span class="lineNum">     378 </span>            : }</a>
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getBlockByHash(string const&amp; _blockHash, bool _includeTransactions)</span>
+<span class="lineNum">     381 </span>            : {
+<span class="lineNum">     382 </span>            :         try
+<span class="lineNum">     383 </span>            :         {
+<span class="lineNum">     384 </span><span class="lineNoCov">          0 :                 h256 h = jsToFixed&lt;32&gt;(_blockHash);</span>
+<span class="lineNum">     385 </span><span class="lineNoCov">          0 :                 if (!client()-&gt;isKnown(h))</span>
+<span class="lineNum">     386 </span><span class="lineNoCov">          0 :                         return Json::Value(Json::nullValue);</span>
+<span class="lineNum">     387 </span>            : 
+<span class="lineNum">     388 </span><span class="lineNoCov">          0 :                 if (_includeTransactions)</span>
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :                         return toJson(client()-&gt;blockInfo(h), client()-&gt;blockDetails(h), client()-&gt;uncleHashes(h), client()-&gt;transactions(h), client()-&gt;sealEngine());</span>
+<span class="lineNum">     390 </span>            :                 else
+<span class="lineNum">     391 </span><span class="lineNoCov">          0 :                         return toJson(client()-&gt;blockInfo(h), client()-&gt;blockDetails(h), client()-&gt;uncleHashes(h), client()-&gt;transactionHashes(h), client()-&gt;sealEngine());</span>
+<span class="lineNum">     392 </span>            :         }
+<span class="lineNum">     393 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     394 </span>            :         {
+<span class="lineNum">     395 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     396 </span>            :         }
+<a name="397"><span class="lineNum">     397 </span>            : }</a>
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getBlockByNumber(string const&amp; _blockNumber, bool _includeTransactions)</span>
+<span class="lineNum">     400 </span>            : {
+<span class="lineNum">     401 </span>            :         try
+<span class="lineNum">     402 </span>            :         {
+<span class="lineNum">     403 </span><span class="lineNoCov">          0 :                 BlockNumber h = jsToBlockNumber(_blockNumber);</span>
+<span class="lineNum">     404 </span><span class="lineNoCov">          0 :                 if (!client()-&gt;isKnown(h))</span>
+<span class="lineNum">     405 </span><span class="lineNoCov">          0 :                         return Json::Value(Json::nullValue);</span>
+<span class="lineNum">     406 </span>            : 
+<span class="lineNum">     407 </span><span class="lineNoCov">          0 :                 if (_includeTransactions)</span>
+<span class="lineNum">     408 </span><span class="lineNoCov">          0 :                         return toJson(client()-&gt;blockInfo(h), client()-&gt;blockDetails(h), client()-&gt;uncleHashes(h), client()-&gt;transactions(h), client()-&gt;sealEngine());</span>
+<span class="lineNum">     409 </span>            :                 else
+<span class="lineNum">     410 </span><span class="lineNoCov">          0 :                         return toJson(client()-&gt;blockInfo(h), client()-&gt;blockDetails(h), client()-&gt;uncleHashes(h), client()-&gt;transactionHashes(h), client()-&gt;sealEngine());</span>
+<span class="lineNum">     411 </span>            :         }
+<span class="lineNum">     412 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     413 </span>            :         {
+<span class="lineNum">     414 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     415 </span>            :         }
+<a name="416"><span class="lineNum">     416 </span>            : }</a>
+<span class="lineNum">     417 </span>            : 
+<span class="lineNum">     418 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getTransactionByHash(string const&amp; _transactionHash)</span>
+<span class="lineNum">     419 </span>            : {
+<span class="lineNum">     420 </span>            :         try
+<span class="lineNum">     421 </span>            :         {
+<span class="lineNum">     422 </span><span class="lineNoCov">          0 :                 h256 h = jsToFixed&lt;32&gt;(_transactionHash);</span>
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 :                 if (!client()-&gt;isKnownTransaction(h))</span>
+<span class="lineNum">     424 </span><span class="lineNoCov">          0 :                         return Json::Value(Json::nullValue);</span>
+<span class="lineNum">     425 </span>            : 
+<span class="lineNum">     426 </span><span class="lineNoCov">          0 :                 return toJson(client()-&gt;localisedTransaction(h));</span>
+<span class="lineNum">     427 </span>            :         }
+<span class="lineNum">     428 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     429 </span>            :         {
+<span class="lineNum">     430 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     431 </span>            :         }
+<a name="432"><span class="lineNum">     432 </span>            : }</a>
+<span class="lineNum">     433 </span>            : 
+<span class="lineNum">     434 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getTransactionByBlockHashAndIndex(string const&amp; _blockHash, string const&amp; _transactionIndex)</span>
+<span class="lineNum">     435 </span>            : {
+<span class="lineNum">     436 </span>            :         try
+<span class="lineNum">     437 </span>            :         {
+<span class="lineNum">     438 </span><span class="lineNoCov">          0 :                 h256 bh = jsToFixed&lt;32&gt;(_blockHash);</span>
+<span class="lineNum">     439 </span><span class="lineNoCov">          0 :                 unsigned ti = jsToInt(_transactionIndex);</span>
+<span class="lineNum">     440 </span><span class="lineNoCov">          0 :                 if (!client()-&gt;isKnownTransaction(bh, ti))</span>
+<span class="lineNum">     441 </span><span class="lineNoCov">          0 :                         return Json::Value(Json::nullValue);</span>
+<span class="lineNum">     442 </span>            : 
+<span class="lineNum">     443 </span><span class="lineNoCov">          0 :                 return toJson(client()-&gt;localisedTransaction(bh, ti));</span>
+<span class="lineNum">     444 </span>            :         }
+<span class="lineNum">     445 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     446 </span>            :         {
+<span class="lineNum">     447 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     448 </span>            :         }
+<a name="449"><span class="lineNum">     449 </span>            : }</a>
+<span class="lineNum">     450 </span>            : 
+<span class="lineNum">     451 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getTransactionByBlockNumberAndIndex(string const&amp; _blockNumber, string const&amp; _transactionIndex)</span>
+<span class="lineNum">     452 </span>            : {
+<span class="lineNum">     453 </span>            :         try
+<span class="lineNum">     454 </span>            :         {
+<span class="lineNum">     455 </span><span class="lineNoCov">          0 :                 BlockNumber bn = jsToBlockNumber(_blockNumber);</span>
+<span class="lineNum">     456 </span><span class="lineNoCov">          0 :                 h256 bh = client()-&gt;hashFromNumber(bn);</span>
+<span class="lineNum">     457 </span><span class="lineNoCov">          0 :                 unsigned ti = jsToInt(_transactionIndex);</span>
+<span class="lineNum">     458 </span><span class="lineNoCov">          0 :                 if (!client()-&gt;isKnownTransaction(bh, ti))</span>
+<span class="lineNum">     459 </span><span class="lineNoCov">          0 :                         return Json::Value(Json::nullValue);</span>
+<span class="lineNum">     460 </span>            : 
+<span class="lineNum">     461 </span><span class="lineNoCov">          0 :                 return toJson(client()-&gt;localisedTransaction(bh, ti));</span>
+<span class="lineNum">     462 </span>            :         }
+<span class="lineNum">     463 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     464 </span>            :         {
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     466 </span>            :         }
+<a name="467"><span class="lineNum">     467 </span>            : }</a>
+<span class="lineNum">     468 </span>            : 
+<span class="lineNum">     469 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getTransactionReceipt(string const&amp; _transactionHash)</span>
+<span class="lineNum">     470 </span>            : {
+<span class="lineNum">     471 </span>            :         try
+<span class="lineNum">     472 </span>            :         {
+<span class="lineNum">     473 </span><span class="lineNoCov">          0 :                 h256 h = jsToFixed&lt;32&gt;(_transactionHash);</span>
+<span class="lineNum">     474 </span><span class="lineNoCov">          0 :                 if (!client()-&gt;isKnownTransaction(h))</span>
+<span class="lineNum">     475 </span><span class="lineNoCov">          0 :                         return Json::Value(Json::nullValue);</span>
+<span class="lineNum">     476 </span>            : 
+<span class="lineNum">     477 </span><span class="lineNoCov">          0 :                 return toJson(client()-&gt;localisedTransactionReceipt(h));</span>
+<span class="lineNum">     478 </span>            :         }
+<span class="lineNum">     479 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     480 </span>            :         {
+<span class="lineNum">     481 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     482 </span>            :         }
+<a name="483"><span class="lineNum">     483 </span>            : }</a>
+<span class="lineNum">     484 </span>            : 
+<span class="lineNum">     485 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getUncleByBlockHashAndIndex(string const&amp; _blockHash, string const&amp; _uncleIndex)</span>
+<span class="lineNum">     486 </span>            : {
+<span class="lineNum">     487 </span>            :         try
+<span class="lineNum">     488 </span>            :         {
+<span class="lineNum">     489 </span><span class="lineNoCov">          0 :                 return toJson(client()-&gt;uncle(jsToFixed&lt;32&gt;(_blockHash), jsToInt(_uncleIndex)), client()-&gt;sealEngine());</span>
+<span class="lineNum">     490 </span>            :         }
+<span class="lineNum">     491 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     492 </span>            :         {
+<span class="lineNum">     493 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     494 </span>            :         }
+<a name="495"><span class="lineNum">     495 </span>            : }</a>
+<span class="lineNum">     496 </span>            : 
+<span class="lineNum">     497 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getUncleByBlockNumberAndIndex(string const&amp; _blockNumber, string const&amp; _uncleIndex)</span>
+<span class="lineNum">     498 </span>            : {
+<span class="lineNum">     499 </span>            :         try
+<span class="lineNum">     500 </span>            :         {
+<span class="lineNum">     501 </span><span class="lineNoCov">          0 :                 return toJson(client()-&gt;uncle(jsToBlockNumber(_blockNumber), jsToInt(_uncleIndex)), client()-&gt;sealEngine());</span>
+<span class="lineNum">     502 </span>            :         }
+<span class="lineNum">     503 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     504 </span>            :         {
+<span class="lineNum">     505 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     506 </span>            :         }
+<a name="507"><span class="lineNum">     507 </span>            : }</a>
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span><span class="lineNoCov">          0 : string Eth::eth_newFilter(Json::Value const&amp; _json)</span>
+<span class="lineNum">     510 </span>            : {
+<span class="lineNum">     511 </span>            :         try
+<span class="lineNum">     512 </span>            :         {
+<span class="lineNum">     513 </span><span class="lineNoCov">          0 :                 return toJS(client()-&gt;installWatch(toLogFilter(_json, *client())));</span>
+<span class="lineNum">     514 </span>            :         }
+<span class="lineNum">     515 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     516 </span>            :         {
+<span class="lineNum">     517 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     518 </span>            :         }
+<a name="519"><span class="lineNum">     519 </span>            : }</a>
+<span class="lineNum">     520 </span>            : 
+<span class="lineNum">     521 </span><span class="lineNoCov">          0 : string Eth::eth_newFilterEx(Json::Value const&amp; _json)</span>
+<span class="lineNum">     522 </span>            : {
+<span class="lineNum">     523 </span>            :         try
+<span class="lineNum">     524 </span>            :         {
+<span class="lineNum">     525 </span><span class="lineNoCov">          0 :                 return toJS(client()-&gt;installWatch(toLogFilter(_json)));</span>
+<span class="lineNum">     526 </span>            :         }
+<span class="lineNum">     527 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     528 </span>            :         {
+<span class="lineNum">     529 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     530 </span>            :         }
+<a name="531"><span class="lineNum">     531 </span>            : }</a>
+<span class="lineNum">     532 </span>            : 
+<span class="lineNum">     533 </span><span class="lineNoCov">          0 : string Eth::eth_newBlockFilter()</span>
+<span class="lineNum">     534 </span>            : {
+<span class="lineNum">     535 </span><span class="lineNoCov">          0 :         h256 filter = dev::eth::ChainChangedFilter;</span>
+<span class="lineNum">     536 </span><span class="lineNoCov">          0 :         return toJS(client()-&gt;installWatch(filter));</span>
+<a name="537"><span class="lineNum">     537 </span>            : }</a>
+<span class="lineNum">     538 </span>            : 
+<span class="lineNum">     539 </span><span class="lineNoCov">          0 : string Eth::eth_newPendingTransactionFilter()</span>
+<span class="lineNum">     540 </span>            : {
+<span class="lineNum">     541 </span><span class="lineNoCov">          0 :         h256 filter = dev::eth::PendingChangedFilter;</span>
+<span class="lineNum">     542 </span><span class="lineNoCov">          0 :         return toJS(client()-&gt;installWatch(filter));</span>
+<a name="543"><span class="lineNum">     543 </span>            : }</a>
+<span class="lineNum">     544 </span>            : 
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 : bool Eth::eth_uninstallFilter(string const&amp; _filterId)</span>
+<span class="lineNum">     546 </span>            : {
+<span class="lineNum">     547 </span>            :         try
+<span class="lineNum">     548 </span>            :         {
+<span class="lineNum">     549 </span><span class="lineNoCov">          0 :                 return client()-&gt;uninstallWatch(jsToInt(_filterId));</span>
+<span class="lineNum">     550 </span>            :         }
+<span class="lineNum">     551 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     552 </span>            :         {
+<span class="lineNum">     553 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     554 </span>            :         }
+<a name="555"><span class="lineNum">     555 </span>            : }</a>
+<span class="lineNum">     556 </span>            : 
+<span class="lineNum">     557 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getFilterChanges(string const&amp; _filterId)</span>
+<span class="lineNum">     558 </span>            : {
+<span class="lineNum">     559 </span>            :         try
+<span class="lineNum">     560 </span>            :         {
+<span class="lineNum">     561 </span><span class="lineNoCov">          0 :                 int id = jsToInt(_filterId);</span>
+<span class="lineNum">     562 </span><span class="lineNoCov">          0 :                 auto entries = client()-&gt;checkWatch(id);</span>
+<span class="lineNum">     563 </span>            : //              if (entries.size())
+<span class="lineNum">     564 </span>            : //                      cnote &lt;&lt; &quot;FIRING WATCH&quot; &lt;&lt; id &lt;&lt; entries.size();
+<span class="lineNum">     565 </span><span class="lineNoCov">          0 :                 return toJson(entries);</span>
+<span class="lineNum">     566 </span>            :         }
+<span class="lineNum">     567 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     568 </span>            :         {
+<span class="lineNum">     569 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     570 </span>            :         }
+<a name="571"><span class="lineNum">     571 </span>            : }</a>
+<span class="lineNum">     572 </span>            : 
+<span class="lineNum">     573 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getFilterChangesEx(string const&amp; _filterId)</span>
+<span class="lineNum">     574 </span>            : {
+<span class="lineNum">     575 </span>            :         try
+<span class="lineNum">     576 </span>            :         {
+<span class="lineNum">     577 </span><span class="lineNoCov">          0 :                 int id = jsToInt(_filterId);</span>
+<span class="lineNum">     578 </span><span class="lineNoCov">          0 :                 auto entries = client()-&gt;checkWatch(id);</span>
+<span class="lineNum">     579 </span>            : //              if (entries.size())
+<span class="lineNum">     580 </span>            : //                      cnote &lt;&lt; &quot;FIRING WATCH&quot; &lt;&lt; id &lt;&lt; entries.size();
+<span class="lineNum">     581 </span><span class="lineNoCov">          0 :                 return toJsonByBlock(entries);</span>
+<span class="lineNum">     582 </span>            :         }
+<span class="lineNum">     583 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     584 </span>            :         {
+<span class="lineNum">     585 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     586 </span>            :         }
+<a name="587"><span class="lineNum">     587 </span>            : }</a>
+<span class="lineNum">     588 </span>            : 
+<span class="lineNum">     589 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getFilterLogs(string const&amp; _filterId)</span>
+<span class="lineNum">     590 </span>            : {
+<span class="lineNum">     591 </span>            :         try
+<span class="lineNum">     592 </span>            :         {
+<span class="lineNum">     593 </span><span class="lineNoCov">          0 :                 return toJson(client()-&gt;logs(jsToInt(_filterId)));</span>
+<span class="lineNum">     594 </span>            :         }
+<span class="lineNum">     595 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     596 </span>            :         {
+<span class="lineNum">     597 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     598 </span>            :         }
+<a name="599"><span class="lineNum">     599 </span>            : }</a>
+<span class="lineNum">     600 </span>            : 
+<span class="lineNum">     601 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getFilterLogsEx(string const&amp; _filterId)</span>
+<span class="lineNum">     602 </span>            : {
+<span class="lineNum">     603 </span>            :         try
+<span class="lineNum">     604 </span>            :         {
+<span class="lineNum">     605 </span><span class="lineNoCov">          0 :                 return toJsonByBlock(client()-&gt;logs(jsToInt(_filterId)));</span>
+<span class="lineNum">     606 </span>            :         }
+<span class="lineNum">     607 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     608 </span>            :         {
+<span class="lineNum">     609 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     610 </span>            :         }
+<a name="611"><span class="lineNum">     611 </span>            : }</a>
+<span class="lineNum">     612 </span>            : 
+<span class="lineNum">     613 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getLogs(Json::Value const&amp; _json)</span>
+<span class="lineNum">     614 </span>            : {
+<span class="lineNum">     615 </span>            :         try
+<span class="lineNum">     616 </span>            :         {
+<span class="lineNum">     617 </span><span class="lineNoCov">          0 :                 return toJson(client()-&gt;logs(toLogFilter(_json, *client())));</span>
+<span class="lineNum">     618 </span>            :         }
+<span class="lineNum">     619 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     620 </span>            :         {
+<span class="lineNum">     621 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     622 </span>            :         }
+<a name="623"><span class="lineNum">     623 </span>            : }</a>
+<span class="lineNum">     624 </span>            : 
+<span class="lineNum">     625 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getLogsEx(Json::Value const&amp; _json)</span>
+<span class="lineNum">     626 </span>            : {
+<span class="lineNum">     627 </span>            :         try
+<span class="lineNum">     628 </span>            :         {
+<span class="lineNum">     629 </span><span class="lineNoCov">          0 :                 return toJsonByBlock(client()-&gt;logs(toLogFilter(_json)));</span>
+<span class="lineNum">     630 </span>            :         }
+<span class="lineNum">     631 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     632 </span>            :         {
+<span class="lineNum">     633 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     634 </span>            :         }
+<a name="635"><span class="lineNum">     635 </span>            : }</a>
+<span class="lineNum">     636 </span>            : 
+<span class="lineNum">     637 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_getWork()</span>
+<span class="lineNum">     638 </span>            : {
+<span class="lineNum">     639 </span>            :         try
+<span class="lineNum">     640 </span>            :         {
+<span class="lineNum">     641 </span><span class="lineNoCov">          0 :                 Json::Value ret(Json::arrayValue);</span>
+<span class="lineNum">     642 </span><span class="lineNoCov">          0 :                 auto r = asEthashClient(client())-&gt;getEthashWork();</span>
+<span class="lineNum">     643 </span><span class="lineNoCov">          0 :                 ret.append(toJS(get&lt;0&gt;(r)));</span>
+<span class="lineNum">     644 </span><span class="lineNoCov">          0 :                 ret.append(toJS(get&lt;1&gt;(r)));</span>
+<span class="lineNum">     645 </span><span class="lineNoCov">          0 :                 ret.append(toJS(get&lt;2&gt;(r)));</span>
+<span class="lineNum">     646 </span><span class="lineNoCov">          0 :                 return ret;</span>
+<span class="lineNum">     647 </span>            :         }
+<span class="lineNum">     648 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     649 </span>            :         {
+<span class="lineNum">     650 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     651 </span>            :         }
+<a name="652"><span class="lineNum">     652 </span>            : }</a>
+<span class="lineNum">     653 </span>            : 
+<span class="lineNum">     654 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_syncing()</span>
+<span class="lineNum">     655 </span>            : {
+<span class="lineNum">     656 </span><span class="lineNoCov">          0 :         dev::eth::SyncStatus sync = client()-&gt;syncStatus();</span>
+<span class="lineNum">     657 </span><span class="lineNoCov">          0 :         if (sync.state == SyncState::Idle || !sync.majorSyncing)</span>
+<span class="lineNum">     658 </span><span class="lineNoCov">          0 :                 return Json::Value(false);</span>
+<span class="lineNum">     659 </span>            : 
+<span class="lineNum">     660 </span><span class="lineNoCov">          0 :         Json::Value info(Json::objectValue);</span>
+<span class="lineNum">     661 </span><span class="lineNoCov">          0 :         info[&quot;startingBlock&quot;] = sync.startBlockNumber;</span>
+<span class="lineNum">     662 </span><span class="lineNoCov">          0 :         info[&quot;highestBlock&quot;] = sync.highestBlockNumber;</span>
+<span class="lineNum">     663 </span><span class="lineNoCov">          0 :         info[&quot;currentBlock&quot;] = sync.currentBlockNumber;</span>
+<span class="lineNum">     664 </span><span class="lineNoCov">          0 :         return info;</span>
+<a name="665"><span class="lineNum">     665 </span>            : }</a>
+<span class="lineNum">     666 </span>            : 
+<span class="lineNum">     667 </span><span class="lineNoCov">          0 : bool Eth::eth_submitWork(string const&amp; _nonce, string const&amp;, string const&amp; _mixHash)</span>
+<span class="lineNum">     668 </span>            : {
+<span class="lineNum">     669 </span>            :         try
+<span class="lineNum">     670 </span>            :         {
+<span class="lineNum">     671 </span><span class="lineNoCov">          0 :                 return asEthashClient(client())-&gt;submitEthashWork(jsToFixed&lt;32&gt;(_mixHash), jsToFixed&lt;Nonce::size&gt;(_nonce));</span>
+<span class="lineNum">     672 </span>            :         }
+<span class="lineNum">     673 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     674 </span>            :         {
+<span class="lineNum">     675 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     676 </span>            :         }
+<a name="677"><span class="lineNum">     677 </span>            : }</a>
+<span class="lineNum">     678 </span>            : 
+<span class="lineNum">     679 </span><span class="lineNoCov">          0 : bool Eth::eth_submitHashrate(string const&amp; _hashes, string const&amp; _id)</span>
+<span class="lineNum">     680 </span>            : {
+<span class="lineNum">     681 </span>            :         try
+<span class="lineNum">     682 </span>            :         {
+<span class="lineNum">     683 </span><span class="lineNoCov">          0 :                 asEthashClient(client())-&gt;submitExternalHashrate(jsToInt&lt;32&gt;(_hashes), jsToFixed&lt;32&gt;(_id));</span>
+<span class="lineNum">     684 </span><span class="lineNoCov">          0 :                 return true;</span>
+<span class="lineNum">     685 </span>            :         }
+<span class="lineNum">     686 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     687 </span>            :         {
+<span class="lineNum">     688 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     689 </span>            :         }
+<a name="690"><span class="lineNum">     690 </span>            : }</a>
+<span class="lineNum">     691 </span>            : 
+<span class="lineNum">     692 </span><span class="lineNoCov">          0 : string Eth::eth_register(string const&amp; _address)</span>
+<span class="lineNum">     693 </span>            : {
+<span class="lineNum">     694 </span>            :         try
+<span class="lineNum">     695 </span>            :         {
+<span class="lineNum">     696 </span><span class="lineNoCov">          0 :                 return toJS(m_ethAccounts.addProxyAccount(jsToAddress(_address)));</span>
+<span class="lineNum">     697 </span>            :         }
+<span class="lineNum">     698 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     699 </span>            :         {
+<span class="lineNum">     700 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     701 </span>            :         }
+<a name="702"><span class="lineNum">     702 </span>            : }</a>
+<span class="lineNum">     703 </span>            : 
+<span class="lineNum">     704 </span><span class="lineNoCov">          0 : bool Eth::eth_unregister(string const&amp; _accountId)</span>
+<span class="lineNum">     705 </span>            : {
+<span class="lineNum">     706 </span>            :         try
+<span class="lineNum">     707 </span>            :         {
+<span class="lineNum">     708 </span><span class="lineNoCov">          0 :                 return m_ethAccounts.removeProxyAccount(jsToInt(_accountId));</span>
+<span class="lineNum">     709 </span>            :         }
+<span class="lineNum">     710 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     711 </span>            :         {
+<span class="lineNum">     712 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span>
+<span class="lineNum">     713 </span>            :         }
+<a name="714"><span class="lineNum">     714 </span>            : }</a>
+<span class="lineNum">     715 </span>            : 
+<span class="lineNum">     716 </span><span class="lineNoCov">          0 : Json::Value Eth::eth_fetchQueuedTransactions(string const&amp; _accountId)</span>
+<span class="lineNum">     717 </span>            : {
+<span class="lineNum">     718 </span>            :         try
+<span class="lineNum">     719 </span>            :         {
+<span class="lineNum">     720 </span><span class="lineNoCov">          0 :                 auto id = jsToInt(_accountId);</span>
+<span class="lineNum">     721 </span><span class="lineNoCov">          0 :                 Json::Value ret(Json::arrayValue);</span>
+<span class="lineNum">     722 </span>            :                 // TODO: throw an error on no account with given id
+<span class="lineNum">     723 </span><span class="lineNoCov">          0 :                 for (TransactionSkeleton const&amp; t: m_ethAccounts.queuedTransactions(id))</span>
+<span class="lineNum">     724 </span><span class="lineNoCov">          0 :                         ret.append(toJson(t));</span>
+<span class="lineNum">     725 </span><span class="lineNoCov">          0 :                 m_ethAccounts.clearQueue(id);</span>
+<span class="lineNum">     726 </span><span class="lineNoCov">          0 :                 return ret;</span>
+<span class="lineNum">     727 </span>            :         }
+<span class="lineNum">     728 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     729 </span>            :         {
+<a name="730"><span class="lineNum">     730 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));</span></a>
+<span class="lineNum">     731 </span>            :         }
+<span class="lineNum">     732 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

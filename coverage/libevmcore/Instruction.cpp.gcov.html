@@ -1,0 +1,454 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libevmcore/Instruction.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libevmcore</a> - Instruction.cpp<span style="font-size: 80%;"> (source / <a href="Instruction.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">34</td>
+            <td class="headerCovTableEntryLo">23.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryLo">42.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Instruction.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;Instruction.h&quot;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;functional&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libdevcore/CommonIO.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libdevcore/Log.h&gt;
+<span class="lineNum">      28 </span>            : using namespace std;
+<span class="lineNum">      29 </span>            : using namespace dev;
+<span class="lineNum">      30 </span>            : using namespace dev::eth;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span><span class="lineCov">        146 : const std::map&lt;std::string,  Instruction&gt; dev::eth::c_instructions =</span>
+<span class="lineNum">      33 </span>            : {
+<span class="lineNum">      34 </span>            :         { &quot;STOP&quot;, Instruction::STOP },
+<span class="lineNum">      35 </span>            :         { &quot;ADD&quot;, Instruction::ADD },
+<span class="lineNum">      36 </span>            :         { &quot;SUB&quot;, Instruction::SUB },
+<span class="lineNum">      37 </span>            :         { &quot;MUL&quot;, Instruction::MUL },
+<span class="lineNum">      38 </span>            :         { &quot;DIV&quot;, Instruction::DIV },
+<span class="lineNum">      39 </span>            :         { &quot;SDIV&quot;, Instruction::SDIV },
+<span class="lineNum">      40 </span>            :         { &quot;MOD&quot;, Instruction::MOD },
+<span class="lineNum">      41 </span>            :         { &quot;SMOD&quot;, Instruction::SMOD },
+<span class="lineNum">      42 </span>            :         { &quot;EXP&quot;, Instruction::EXP },
+<span class="lineNum">      43 </span>            :         { &quot;BNOT&quot;, Instruction::NOT },
+<span class="lineNum">      44 </span>            :         { &quot;LT&quot;, Instruction::LT },
+<span class="lineNum">      45 </span>            :         { &quot;GT&quot;, Instruction::GT },
+<span class="lineNum">      46 </span>            :         { &quot;SLT&quot;, Instruction::SLT },
+<span class="lineNum">      47 </span>            :         { &quot;SGT&quot;, Instruction::SGT },
+<span class="lineNum">      48 </span>            :         { &quot;EQ&quot;, Instruction::EQ },
+<span class="lineNum">      49 </span>            :         { &quot;NOT&quot;, Instruction::ISZERO },
+<span class="lineNum">      50 </span>            :         { &quot;AND&quot;, Instruction::AND },
+<span class="lineNum">      51 </span>            :         { &quot;OR&quot;, Instruction::OR },
+<span class="lineNum">      52 </span>            :         { &quot;XOR&quot;, Instruction::XOR },
+<span class="lineNum">      53 </span>            :         { &quot;BYTE&quot;, Instruction::BYTE },
+<span class="lineNum">      54 </span>            :         { &quot;ADDMOD&quot;, Instruction::ADDMOD },
+<span class="lineNum">      55 </span>            :         { &quot;MULMOD&quot;, Instruction::MULMOD },
+<span class="lineNum">      56 </span>            :         { &quot;SIGNEXTEND&quot;, Instruction::SIGNEXTEND },
+<span class="lineNum">      57 </span>            :         { &quot;SHA3&quot;, Instruction::SHA3 },
+<span class="lineNum">      58 </span>            :         { &quot;ADDRESS&quot;, Instruction::ADDRESS },
+<span class="lineNum">      59 </span>            :         { &quot;BALANCE&quot;, Instruction::BALANCE },
+<span class="lineNum">      60 </span>            :         { &quot;ORIGIN&quot;, Instruction::ORIGIN },
+<span class="lineNum">      61 </span>            :         { &quot;CALLER&quot;, Instruction::CALLER },
+<span class="lineNum">      62 </span>            :         { &quot;CALLVALUE&quot;, Instruction::CALLVALUE },
+<span class="lineNum">      63 </span>            :         { &quot;CALLDATALOAD&quot;, Instruction::CALLDATALOAD },
+<span class="lineNum">      64 </span>            :         { &quot;CALLDATASIZE&quot;, Instruction::CALLDATASIZE },
+<span class="lineNum">      65 </span>            :         { &quot;CALLDATACOPY&quot;, Instruction::CALLDATACOPY },
+<span class="lineNum">      66 </span>            :         { &quot;CODESIZE&quot;, Instruction::CODESIZE },
+<span class="lineNum">      67 </span>            :         { &quot;CODECOPY&quot;, Instruction::CODECOPY },
+<span class="lineNum">      68 </span>            :         { &quot;GASPRICE&quot;, Instruction::GASPRICE },
+<span class="lineNum">      69 </span>            :         { &quot;EXTCODESIZE&quot;, Instruction::EXTCODESIZE },
+<span class="lineNum">      70 </span>            :         { &quot;EXTCODECOPY&quot;, Instruction::EXTCODECOPY },
+<span class="lineNum">      71 </span>            :         { &quot;BLOCKHASH&quot;, Instruction::BLOCKHASH },
+<span class="lineNum">      72 </span>            :         { &quot;COINBASE&quot;, Instruction::COINBASE },
+<span class="lineNum">      73 </span>            :         { &quot;TIMESTAMP&quot;, Instruction::TIMESTAMP },
+<span class="lineNum">      74 </span>            :         { &quot;NUMBER&quot;, Instruction::NUMBER },
+<span class="lineNum">      75 </span>            :         { &quot;DIFFICULTY&quot;, Instruction::DIFFICULTY },
+<span class="lineNum">      76 </span>            :         { &quot;GASLIMIT&quot;, Instruction::GASLIMIT },
+<span class="lineNum">      77 </span>            :         { &quot;JUMPTO&quot;, Instruction::JUMPTO },
+<span class="lineNum">      78 </span>            :         { &quot;JUMPIF&quot;, Instruction::JUMPTO },
+<span class="lineNum">      79 </span>            :         { &quot;JUMPSUB&quot;, Instruction::JUMPSUB },
+<span class="lineNum">      80 </span>            :         { &quot;JUMPV&quot;, Instruction::JUMPV },
+<span class="lineNum">      81 </span>            :         { &quot;JUMPSUBV&quot;, Instruction::JUMPSUBV },
+<span class="lineNum">      82 </span>            :         { &quot;RETURNSUB&quot;, Instruction::RETURNSUB },
+<span class="lineNum">      83 </span>            :         { &quot;POP&quot;, Instruction::POP },
+<span class="lineNum">      84 </span>            :         { &quot;MLOAD&quot;, Instruction::MLOAD },
+<span class="lineNum">      85 </span>            :         { &quot;MSTORE&quot;, Instruction::MSTORE },
+<span class="lineNum">      86 </span>            :         { &quot;MSTORE8&quot;, Instruction::MSTORE8 },
+<span class="lineNum">      87 </span>            :         { &quot;SLOAD&quot;, Instruction::SLOAD },
+<span class="lineNum">      88 </span>            :         { &quot;SSTORE&quot;, Instruction::SSTORE },
+<span class="lineNum">      89 </span>            :         { &quot;JUMP&quot;, Instruction::JUMP },
+<span class="lineNum">      90 </span>            :         { &quot;JUMPI&quot;, Instruction::JUMPI },
+<span class="lineNum">      91 </span>            :         { &quot;PC&quot;, Instruction::PC },
+<span class="lineNum">      92 </span>            :         { &quot;MSIZE&quot;, Instruction::MSIZE },
+<span class="lineNum">      93 </span>            :         { &quot;GAS&quot;, Instruction::GAS },
+<span class="lineNum">      94 </span>            :         { &quot;BEGIN&quot;, Instruction::JUMPDEST },
+<span class="lineNum">      95 </span>            :         { &quot;JUMPDEST&quot;, Instruction::JUMPDEST },
+<span class="lineNum">      96 </span>            :         { &quot;BEGINDATA&quot;, Instruction::BEGINDATA },
+<span class="lineNum">      97 </span>            :         { &quot;BEGINSUB&quot;, Instruction::BEGINSUB },
+<span class="lineNum">      98 </span>            :         { &quot;PUSH1&quot;, Instruction::PUSH1 },
+<span class="lineNum">      99 </span>            :         { &quot;PUSH2&quot;, Instruction::PUSH2 },
+<span class="lineNum">     100 </span>            :         { &quot;PUSH3&quot;, Instruction::PUSH3 },
+<span class="lineNum">     101 </span>            :         { &quot;PUSH4&quot;, Instruction::PUSH4 },
+<span class="lineNum">     102 </span>            :         { &quot;PUSH5&quot;, Instruction::PUSH5 },
+<span class="lineNum">     103 </span>            :         { &quot;PUSH6&quot;, Instruction::PUSH6 },
+<span class="lineNum">     104 </span>            :         { &quot;PUSH7&quot;, Instruction::PUSH7 },
+<span class="lineNum">     105 </span>            :         { &quot;PUSH8&quot;, Instruction::PUSH8 },
+<span class="lineNum">     106 </span>            :         { &quot;PUSH9&quot;, Instruction::PUSH9 },
+<span class="lineNum">     107 </span>            :         { &quot;PUSH10&quot;, Instruction::PUSH10 },
+<span class="lineNum">     108 </span>            :         { &quot;PUSH11&quot;, Instruction::PUSH11 },
+<span class="lineNum">     109 </span>            :         { &quot;PUSH12&quot;, Instruction::PUSH12 },
+<span class="lineNum">     110 </span>            :         { &quot;PUSH13&quot;, Instruction::PUSH13 },
+<span class="lineNum">     111 </span>            :         { &quot;PUSH14&quot;, Instruction::PUSH14 },
+<span class="lineNum">     112 </span>            :         { &quot;PUSH15&quot;, Instruction::PUSH15 },
+<span class="lineNum">     113 </span>            :         { &quot;PUSH16&quot;, Instruction::PUSH16 },
+<span class="lineNum">     114 </span>            :         { &quot;PUSH17&quot;, Instruction::PUSH17 },
+<span class="lineNum">     115 </span>            :         { &quot;PUSH18&quot;, Instruction::PUSH18 },
+<span class="lineNum">     116 </span>            :         { &quot;PUSH19&quot;, Instruction::PUSH19 },
+<span class="lineNum">     117 </span>            :         { &quot;PUSH20&quot;, Instruction::PUSH20 },
+<span class="lineNum">     118 </span>            :         { &quot;PUSH21&quot;, Instruction::PUSH21 },
+<span class="lineNum">     119 </span>            :         { &quot;PUSH22&quot;, Instruction::PUSH22 },
+<span class="lineNum">     120 </span>            :         { &quot;PUSH23&quot;, Instruction::PUSH23 },
+<span class="lineNum">     121 </span>            :         { &quot;PUSH24&quot;, Instruction::PUSH24 },
+<span class="lineNum">     122 </span>            :         { &quot;PUSH25&quot;, Instruction::PUSH25 },
+<span class="lineNum">     123 </span>            :         { &quot;PUSH26&quot;, Instruction::PUSH26 },
+<span class="lineNum">     124 </span>            :         { &quot;PUSH27&quot;, Instruction::PUSH27 },
+<span class="lineNum">     125 </span>            :         { &quot;PUSH28&quot;, Instruction::PUSH28 },
+<span class="lineNum">     126 </span>            :         { &quot;PUSH29&quot;, Instruction::PUSH29 },
+<span class="lineNum">     127 </span>            :         { &quot;PUSH30&quot;, Instruction::PUSH30 },
+<span class="lineNum">     128 </span>            :         { &quot;PUSH31&quot;, Instruction::PUSH31 },
+<span class="lineNum">     129 </span>            :         { &quot;PUSH32&quot;, Instruction::PUSH32 },
+<span class="lineNum">     130 </span>            :         { &quot;DUP1&quot;, Instruction::DUP1 },
+<span class="lineNum">     131 </span>            :         { &quot;DUP2&quot;, Instruction::DUP2 },
+<span class="lineNum">     132 </span>            :         { &quot;DUP3&quot;, Instruction::DUP3 },
+<span class="lineNum">     133 </span>            :         { &quot;DUP4&quot;, Instruction::DUP4 },
+<span class="lineNum">     134 </span>            :         { &quot;DUP5&quot;, Instruction::DUP5 },
+<span class="lineNum">     135 </span>            :         { &quot;DUP6&quot;, Instruction::DUP6 },
+<span class="lineNum">     136 </span>            :         { &quot;DUP7&quot;, Instruction::DUP7 },
+<span class="lineNum">     137 </span>            :         { &quot;DUP8&quot;, Instruction::DUP8 },
+<span class="lineNum">     138 </span>            :         { &quot;DUP9&quot;, Instruction::DUP9 },
+<span class="lineNum">     139 </span>            :         { &quot;DUP10&quot;, Instruction::DUP10 },
+<span class="lineNum">     140 </span>            :         { &quot;DUP11&quot;, Instruction::DUP11 },
+<span class="lineNum">     141 </span>            :         { &quot;DUP12&quot;, Instruction::DUP12 },
+<span class="lineNum">     142 </span>            :         { &quot;DUP13&quot;, Instruction::DUP13 },
+<span class="lineNum">     143 </span>            :         { &quot;DUP14&quot;, Instruction::DUP14 },
+<span class="lineNum">     144 </span>            :         { &quot;DUP15&quot;, Instruction::DUP15 },
+<span class="lineNum">     145 </span>            :         { &quot;DUP16&quot;, Instruction::DUP16 },
+<span class="lineNum">     146 </span>            :         { &quot;SWAP1&quot;, Instruction::SWAP1 },
+<span class="lineNum">     147 </span>            :         { &quot;SWAP2&quot;, Instruction::SWAP2 },
+<span class="lineNum">     148 </span>            :         { &quot;SWAP3&quot;, Instruction::SWAP3 },
+<span class="lineNum">     149 </span>            :         { &quot;SWAP4&quot;, Instruction::SWAP4 },
+<span class="lineNum">     150 </span>            :         { &quot;SWAP5&quot;, Instruction::SWAP5 },
+<span class="lineNum">     151 </span>            :         { &quot;SWAP6&quot;, Instruction::SWAP6 },
+<span class="lineNum">     152 </span>            :         { &quot;SWAP7&quot;, Instruction::SWAP7 },
+<span class="lineNum">     153 </span>            :         { &quot;SWAP8&quot;, Instruction::SWAP8 },
+<span class="lineNum">     154 </span>            :         { &quot;SWAP9&quot;, Instruction::SWAP9 },
+<span class="lineNum">     155 </span>            :         { &quot;SWAP10&quot;, Instruction::SWAP10 },
+<span class="lineNum">     156 </span>            :         { &quot;SWAP11&quot;, Instruction::SWAP11 },
+<span class="lineNum">     157 </span>            :         { &quot;SWAP12&quot;, Instruction::SWAP12 },
+<span class="lineNum">     158 </span>            :         { &quot;SWAP13&quot;, Instruction::SWAP13 },
+<span class="lineNum">     159 </span>            :         { &quot;SWAP14&quot;, Instruction::SWAP14 },
+<span class="lineNum">     160 </span>            :         { &quot;SWAP15&quot;, Instruction::SWAP15 },
+<span class="lineNum">     161 </span>            :         { &quot;SWAP16&quot;, Instruction::SWAP16 },
+<span class="lineNum">     162 </span>            :         { &quot;LOG0&quot;, Instruction::LOG0 },
+<span class="lineNum">     163 </span>            :         { &quot;LOG1&quot;, Instruction::LOG1 },
+<span class="lineNum">     164 </span>            :         { &quot;LOG2&quot;, Instruction::LOG2 },
+<span class="lineNum">     165 </span>            :         { &quot;LOG3&quot;, Instruction::LOG3 },
+<span class="lineNum">     166 </span>            :         { &quot;LOG4&quot;, Instruction::LOG4 },
+<span class="lineNum">     167 </span>            :         { &quot;CREATE&quot;, Instruction::CREATE },
+<span class="lineNum">     168 </span>            :         { &quot;CALL&quot;, Instruction::CALL },
+<span class="lineNum">     169 </span>            :         { &quot;CALLCODE&quot;, Instruction::CALLCODE },
+<span class="lineNum">     170 </span>            :         { &quot;RETURN&quot;, Instruction::RETURN },
+<span class="lineNum">     171 </span>            :         { &quot;DELEGATECALL&quot;, Instruction::DELEGATECALL },
+<span class="lineNum">     172 </span>            :         { &quot;SUICIDE&quot;, Instruction::SUICIDE },
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            :         // these are generated by the interpreter - should never be in user code
+<span class="lineNum">     175 </span>            :         { &quot;PUSHC&quot;, Instruction::PUSHC },
+<span class="lineNum">     176 </span>            :         { &quot;JUMPC&quot;, Instruction::JUMPC },
+<span class="lineNum">     177 </span>            :         { &quot;JUMPCI&quot;, Instruction::JUMPCI }
+<span class="lineNum">     178 </span>            : };
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">        572 : static const std::map&lt;Instruction,  InstructionInfo&gt; c_instructionInfo =</span>
+<span class="lineNum">     181 </span>            : { //                                               Add,  Args,  Ret,  SideEffects, GasPriceTier
+<span class="lineNum">     182 </span>            :         { Instruction::STOP,         { &quot;STOP&quot;,           0,     0,    0,  true,        Tier::Zero } },
+<span class="lineNum">     183 </span>            :         { Instruction::ADD,          { &quot;ADD&quot;,            0,     2,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     184 </span>            :         { Instruction::SUB,          { &quot;SUB&quot;,            0,     2,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     185 </span>            :         { Instruction::MUL,          { &quot;MUL&quot;,            0,     2,    1,  false,       Tier::Low } },
+<span class="lineNum">     186 </span>            :         { Instruction::DIV,          { &quot;DIV&quot;,            0,     2,    1,  false,       Tier::Low } },
+<span class="lineNum">     187 </span>            :         { Instruction::SDIV,         { &quot;SDIV&quot;,           0,     2,    1,  false,       Tier::Low } },
+<span class="lineNum">     188 </span>            :         { Instruction::MOD,          { &quot;MOD&quot;,            0,     2,    1,  false,       Tier::Low } },
+<span class="lineNum">     189 </span>            :         { Instruction::SMOD,         { &quot;SMOD&quot;,           0,     2,    1,  false,       Tier::Low } },
+<span class="lineNum">     190 </span>            :         { Instruction::EXP,          { &quot;EXP&quot;,            0,     2,    1,  false,       Tier::Special } },
+<span class="lineNum">     191 </span>            :         { Instruction::NOT,          { &quot;NOT&quot;,            0,     1,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     192 </span>            :         { Instruction::LT,           { &quot;LT&quot;,             0,     2,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     193 </span>            :         { Instruction::GT,           { &quot;GT&quot;,             0,     2,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     194 </span>            :         { Instruction::SLT,          { &quot;SLT&quot;,            0,     2,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     195 </span>            :         { Instruction::SGT,          { &quot;SGT&quot;,            0,     2,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     196 </span>            :         { Instruction::EQ,           { &quot;EQ&quot;,             0,     2,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     197 </span>            :         { Instruction::ISZERO,       { &quot;ISZERO&quot;,         0,     1,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     198 </span>            :         { Instruction::AND,          { &quot;AND&quot;,            0,     2,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     199 </span>            :         { Instruction::OR,           { &quot;OR&quot;,             0,     2,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     200 </span>            :         { Instruction::XOR,          { &quot;XOR&quot;,            0,     2,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     201 </span>            :         { Instruction::BYTE,         { &quot;BYTE&quot;,           0,     2,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     202 </span>            :         { Instruction::ADDMOD,       { &quot;ADDMOD&quot;,         0,     3,    1,  false,       Tier::Mid } },
+<span class="lineNum">     203 </span>            :         { Instruction::MULMOD,       { &quot;MULMOD&quot;,         0,     3,    1,  false,       Tier::Mid } },
+<span class="lineNum">     204 </span>            :         { Instruction::SIGNEXTEND,   { &quot;SIGNEXTEND&quot;,     0,     2,    1,  false,       Tier::Low } },
+<span class="lineNum">     205 </span>            :         { Instruction::SHA3,         { &quot;SHA3&quot;,           0,     2,    1,  false,       Tier::Special } },
+<span class="lineNum">     206 </span>            :         { Instruction::ADDRESS,      { &quot;ADDRESS&quot;,        0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     207 </span>            :         { Instruction::BALANCE,      { &quot;BALANCE&quot;,        0,     1,    1,  false,       Tier::Special } },
+<span class="lineNum">     208 </span>            :         { Instruction::ORIGIN,       { &quot;ORIGIN&quot;,         0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     209 </span>            :         { Instruction::CALLER,       { &quot;CALLER&quot;,         0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     210 </span>            :         { Instruction::CALLVALUE,    { &quot;CALLVALUE&quot;,      0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     211 </span>            :         { Instruction::CALLDATALOAD, { &quot;CALLDATALOAD&quot;,   0,     1,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     212 </span>            :         { Instruction::CALLDATASIZE, { &quot;CALLDATASIZE&quot;,   0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     213 </span>            :         { Instruction::CALLDATACOPY, { &quot;CALLDATACOPY&quot;,   0,     3,    0,  true,        Tier::VeryLow } },
+<span class="lineNum">     214 </span>            :         { Instruction::CODESIZE,     { &quot;CODESIZE&quot;,       0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     215 </span>            :         { Instruction::CODECOPY,     { &quot;CODECOPY&quot;,       0,     3,    0,  true,        Tier::VeryLow } },
+<span class="lineNum">     216 </span>            :         { Instruction::GASPRICE,     { &quot;GASPRICE&quot;,       0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     217 </span>            :         { Instruction::EXTCODESIZE,  { &quot;EXTCODESIZE&quot;,    0,     1,    1,  false,       Tier::Special } },
+<span class="lineNum">     218 </span>            :         { Instruction::EXTCODECOPY,  { &quot;EXTCODECOPY&quot;,    0,     4,    0,  true,        Tier::Special } },
+<span class="lineNum">     219 </span>            :         { Instruction::BLOCKHASH,    { &quot;BLOCKHASH&quot;,      0,     1,    1,  false,       Tier::Ext } },
+<span class="lineNum">     220 </span>            :         { Instruction::COINBASE,     { &quot;COINBASE&quot;,       0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     221 </span>            :         { Instruction::TIMESTAMP,    { &quot;TIMESTAMP&quot;,      0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     222 </span>            :         { Instruction::NUMBER,       { &quot;NUMBER&quot;,         0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     223 </span>            :         { Instruction::DIFFICULTY,   { &quot;DIFFICULTY&quot;,     0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     224 </span>            :         { Instruction::GASLIMIT,     { &quot;GASLIMIT&quot;,       0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     225 </span>            :         { Instruction::JUMPTO,       { &quot;JUMPTO&quot;,         4,     1,    0,  true,        Tier::VeryLow } },
+<span class="lineNum">     226 </span>            :         { Instruction::JUMPIF,       { &quot;JUMPIF&quot;,         4,     2,    0,  true,        Tier::Low } },
+<span class="lineNum">     227 </span>            :         { Instruction::JUMPV,        { &quot;JUMPV&quot;,          4,     1,    0,  true,        Tier::Mid } },
+<span class="lineNum">     228 </span>            :         { Instruction::JUMPSUB,      { &quot;JUMPSUB&quot;,        4,     1,    0,  true,        Tier::Low } },
+<span class="lineNum">     229 </span>            :         { Instruction::JUMPSUBV,     { &quot;JUMPSUBV&quot;,       4,     1,    0,  true,        Tier::Mid } },
+<span class="lineNum">     230 </span>            :         { Instruction::RETURNSUB,    { &quot;RETURNSUB&quot;,      0,     1,    0,  true,        Tier::Mid } },
+<span class="lineNum">     231 </span>            :         { Instruction::POP,          { &quot;POP&quot;,            0,     1,    0,  false,       Tier::Base } },
+<span class="lineNum">     232 </span>            :         { Instruction::MLOAD,        { &quot;MLOAD&quot;,          0,     1,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     233 </span>            :         { Instruction::MSTORE,       { &quot;MSTORE&quot;,         0,     2,    0,  true,        Tier::VeryLow } },
+<span class="lineNum">     234 </span>            :         { Instruction::MSTORE8,      { &quot;MSTORE8&quot;,        0,     2,    0,  true,        Tier::VeryLow } },
+<span class="lineNum">     235 </span>            :         { Instruction::SLOAD,        { &quot;SLOAD&quot;,          0,     1,    1,  false,       Tier::Special } },
+<span class="lineNum">     236 </span>            :         { Instruction::SSTORE,       { &quot;SSTORE&quot;,         0,     2,    0,  true,        Tier::Special } },
+<span class="lineNum">     237 </span>            :         { Instruction::JUMP,         { &quot;JUMP&quot;,           0,     1,    0,  true,        Tier::Mid } },
+<span class="lineNum">     238 </span>            :         { Instruction::JUMPI,        { &quot;JUMPI&quot;,          0,     2,    0,  true,        Tier::High } },
+<span class="lineNum">     239 </span>            :         { Instruction::PC,           { &quot;PC&quot;,             0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     240 </span>            :         { Instruction::MSIZE,        { &quot;MSIZE&quot;,          0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     241 </span>            :         { Instruction::GAS,          { &quot;GAS&quot;,            0,     0,    1,  false,       Tier::Base } },
+<span class="lineNum">     242 </span>            :         { Instruction::JUMPDEST,     { &quot;JUMPDEST&quot;,       0,     0,    0,  true,        Tier::Special } },
+<span class="lineNum">     243 </span>            :         { Instruction::BEGINDATA,    { &quot;BEGINDATA&quot;,      0,     0,    0,  true,        Tier::Special } },
+<span class="lineNum">     244 </span>            :         { Instruction::BEGINSUB,     { &quot;BEGINSUB&quot;,       0,     0,    0,  true,        Tier::Special } },
+<span class="lineNum">     245 </span>            :         { Instruction::PUSH1,        { &quot;PUSH1&quot;,          1,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     246 </span>            :         { Instruction::PUSH2,        { &quot;PUSH2&quot;,          2,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     247 </span>            :         { Instruction::PUSH3,        { &quot;PUSH3&quot;,          3,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     248 </span>            :         { Instruction::PUSH4,        { &quot;PUSH4&quot;,          4,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     249 </span>            :         { Instruction::PUSH5,        { &quot;PUSH5&quot;,          5,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     250 </span>            :         { Instruction::PUSH6,        { &quot;PUSH6&quot;,          6,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     251 </span>            :         { Instruction::PUSH7,        { &quot;PUSH7&quot;,          7,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     252 </span>            :         { Instruction::PUSH8,        { &quot;PUSH8&quot;,          8,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     253 </span>            :         { Instruction::PUSH9,        { &quot;PUSH9&quot;,          9,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     254 </span>            :         { Instruction::PUSH10,       { &quot;PUSH10&quot;,        10,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     255 </span>            :         { Instruction::PUSH11,       { &quot;PUSH11&quot;,        11,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     256 </span>            :         { Instruction::PUSH12,       { &quot;PUSH12&quot;,        12,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     257 </span>            :         { Instruction::PUSH13,       { &quot;PUSH13&quot;,        13,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     258 </span>            :         { Instruction::PUSH14,       { &quot;PUSH14&quot;,        14,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     259 </span>            :         { Instruction::PUSH15,       { &quot;PUSH15&quot;,        15,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     260 </span>            :         { Instruction::PUSH16,       { &quot;PUSH16&quot;,        16,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     261 </span>            :         { Instruction::PUSH17,       { &quot;PUSH17&quot;,        17,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     262 </span>            :         { Instruction::PUSH18,       { &quot;PUSH18&quot;,        18,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     263 </span>            :         { Instruction::PUSH19,       { &quot;PUSH19&quot;,        19,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     264 </span>            :         { Instruction::PUSH20,       { &quot;PUSH20&quot;,        20,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     265 </span>            :         { Instruction::PUSH21,       { &quot;PUSH21&quot;,        21,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     266 </span>            :         { Instruction::PUSH22,       { &quot;PUSH22&quot;,        22,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     267 </span>            :         { Instruction::PUSH23,       { &quot;PUSH23&quot;,        23,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     268 </span>            :         { Instruction::PUSH24,       { &quot;PUSH24&quot;,        24,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     269 </span>            :         { Instruction::PUSH25,       { &quot;PUSH25&quot;,        25,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     270 </span>            :         { Instruction::PUSH26,       { &quot;PUSH26&quot;,        26,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     271 </span>            :         { Instruction::PUSH27,       { &quot;PUSH27&quot;,        27,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     272 </span>            :         { Instruction::PUSH28,       { &quot;PUSH28&quot;,        28,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     273 </span>            :         { Instruction::PUSH29,       { &quot;PUSH29&quot;,        29,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     274 </span>            :         { Instruction::PUSH30,       { &quot;PUSH30&quot;,        30,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     275 </span>            :         { Instruction::PUSH31,       { &quot;PUSH31&quot;,        31,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     276 </span>            :         { Instruction::PUSH32,       { &quot;PUSH32&quot;,        32,     0,    1,  false,       Tier::VeryLow } },
+<span class="lineNum">     277 </span>            :         { Instruction::DUP1,         { &quot;DUP1&quot;,           0,     1,    2,  false,       Tier::VeryLow } },
+<span class="lineNum">     278 </span>            :         { Instruction::DUP2,         { &quot;DUP2&quot;,           0,     2,    3,  false,       Tier::VeryLow } },
+<span class="lineNum">     279 </span>            :         { Instruction::DUP3,         { &quot;DUP3&quot;,           0,     3,    4,  false,       Tier::VeryLow } },
+<span class="lineNum">     280 </span>            :         { Instruction::DUP4,         { &quot;DUP4&quot;,           0,     4,    5,  false,       Tier::VeryLow } },
+<span class="lineNum">     281 </span>            :         { Instruction::DUP5,         { &quot;DUP5&quot;,           0,     5,    6,  false,       Tier::VeryLow } },
+<span class="lineNum">     282 </span>            :         { Instruction::DUP6,         { &quot;DUP6&quot;,           0,     6,    7,  false,       Tier::VeryLow } },
+<span class="lineNum">     283 </span>            :         { Instruction::DUP7,         { &quot;DUP7&quot;,           0,     7,    8,  false,       Tier::VeryLow } },
+<span class="lineNum">     284 </span>            :         { Instruction::DUP8,         { &quot;DUP8&quot;,           0,     8,    9,  false,       Tier::VeryLow } },
+<span class="lineNum">     285 </span>            :         { Instruction::DUP9,         { &quot;DUP9&quot;,           0,     9,    10,  false,      Tier::VeryLow } },
+<span class="lineNum">     286 </span>            :         { Instruction::DUP10,        { &quot;DUP10&quot;,          0,    10,    11,  false,      Tier::VeryLow } },
+<span class="lineNum">     287 </span>            :         { Instruction::DUP11,        { &quot;DUP11&quot;,          0,    11,    12,  false,      Tier::VeryLow } },
+<span class="lineNum">     288 </span>            :         { Instruction::DUP12,        { &quot;DUP12&quot;,          0,    12,    13,  false,      Tier::VeryLow } },
+<span class="lineNum">     289 </span>            :         { Instruction::DUP13,        { &quot;DUP13&quot;,          0,    13,    14,  false,      Tier::VeryLow } },
+<span class="lineNum">     290 </span>            :         { Instruction::DUP14,        { &quot;DUP14&quot;,          0,    14,    15,  false,      Tier::VeryLow } },
+<span class="lineNum">     291 </span>            :         { Instruction::DUP15,        { &quot;DUP15&quot;,          0,    15,    16,  false,      Tier::VeryLow } },
+<span class="lineNum">     292 </span>            :         { Instruction::DUP16,        { &quot;DUP16&quot;,          0,    16,    17,  false,      Tier::VeryLow } },
+<span class="lineNum">     293 </span>            :         { Instruction::SWAP1,        { &quot;SWAP1&quot;,          0,     2,     2,  false,      Tier::VeryLow } },
+<span class="lineNum">     294 </span>            :         { Instruction::SWAP2,        { &quot;SWAP2&quot;,          0,     3,     3,  false,      Tier::VeryLow } },
+<span class="lineNum">     295 </span>            :         { Instruction::SWAP3,        { &quot;SWAP3&quot;,          0,     4,     4,  false,      Tier::VeryLow } },
+<span class="lineNum">     296 </span>            :         { Instruction::SWAP4,        { &quot;SWAP4&quot;,          0,     5,     5,  false,      Tier::VeryLow } },
+<span class="lineNum">     297 </span>            :         { Instruction::SWAP5,        { &quot;SWAP5&quot;,          0,     6,     6,  false,      Tier::VeryLow } },
+<span class="lineNum">     298 </span>            :         { Instruction::SWAP6,        { &quot;SWAP6&quot;,          0,     7,     7,  false,      Tier::VeryLow } },
+<span class="lineNum">     299 </span>            :         { Instruction::SWAP7,        { &quot;SWAP7&quot;,          0,     8,     8,  false,      Tier::VeryLow } },
+<span class="lineNum">     300 </span>            :         { Instruction::SWAP8,        { &quot;SWAP8&quot;,          0,     9,     9,  false,      Tier::VeryLow } },
+<span class="lineNum">     301 </span>            :         { Instruction::SWAP9,        { &quot;SWAP9&quot;,          0,    10,    10,  false,      Tier::VeryLow } },
+<span class="lineNum">     302 </span>            :         { Instruction::SWAP10,       { &quot;SWAP10&quot;,         0,    11,    11,  false,      Tier::VeryLow } },
+<span class="lineNum">     303 </span>            :         { Instruction::SWAP11,       { &quot;SWAP11&quot;,         0,    12,    12,  false,      Tier::VeryLow } },
+<span class="lineNum">     304 </span>            :         { Instruction::SWAP12,       { &quot;SWAP12&quot;,         0,    13,    13,  false,      Tier::VeryLow } },
+<span class="lineNum">     305 </span>            :         { Instruction::SWAP13,       { &quot;SWAP13&quot;,         0,    14,    14,  false,      Tier::VeryLow } },
+<span class="lineNum">     306 </span>            :         { Instruction::SWAP14,       { &quot;SWAP14&quot;,         0,    15,    15,  false,      Tier::VeryLow } },
+<span class="lineNum">     307 </span>            :         { Instruction::SWAP15,       { &quot;SWAP15&quot;,         0,    16,    16,  false,      Tier::VeryLow } },
+<span class="lineNum">     308 </span>            :         { Instruction::SWAP16,       { &quot;SWAP16&quot;,         0,    17,    17,  false,      Tier::VeryLow } },
+<span class="lineNum">     309 </span>            :         { Instruction::LOG0,         { &quot;LOG0&quot;,           0,     2,     0,  true,       Tier::Special } },
+<span class="lineNum">     310 </span>            :         { Instruction::LOG1,         { &quot;LOG1&quot;,           0,     3,     0,  true,       Tier::Special } },
+<span class="lineNum">     311 </span>            :         { Instruction::LOG2,         { &quot;LOG2&quot;,           0,     4,     0,  true,       Tier::Special } },
+<span class="lineNum">     312 </span>            :         { Instruction::LOG3,         { &quot;LOG3&quot;,           0,     5,     0,  true,       Tier::Special } },
+<span class="lineNum">     313 </span>            :         { Instruction::LOG4,         { &quot;LOG4&quot;,           0,     6,     0,  true,       Tier::Special } },
+<span class="lineNum">     314 </span>            :         { Instruction::CREATE,       { &quot;CREATE&quot;,         0,     3,     1,  true,       Tier::Special } },
+<span class="lineNum">     315 </span>            :         { Instruction::CALL,         { &quot;CALL&quot;,           0,     7,     1,  true,       Tier::Special } },
+<span class="lineNum">     316 </span>            :         { Instruction::CALLCODE,     { &quot;CALLCODE&quot;,       0,     7,     1,  true,       Tier::Special } },
+<span class="lineNum">     317 </span>            :         { Instruction::RETURN,       { &quot;RETURN&quot;,         0,     2,     0,  true,       Tier::Zero } },
+<span class="lineNum">     318 </span>            :         { Instruction::DELEGATECALL,{ &quot;DELEGATECALL&quot;,    0,     6,     1,  true,       Tier::Special } },
+<span class="lineNum">     319 </span>            :         { Instruction::SUICIDE,      { &quot;SUICIDE&quot;,        0,     1,     0,  true,       Tier::Special } },
+<span class="lineNum">     320 </span>            :  
+<span class="lineNum">     321 </span>            :         // these are generated by the interpreter - should never be in user code
+<span class="lineNum">     322 </span>            :         { Instruction::PUSHC,        { &quot;PUSHC&quot;,          2,     0 ,    1,   false,     Tier::VeryLow } },
+<span class="lineNum">     323 </span>            :         { Instruction::JUMPC,        { &quot;JUMPC&quot;,          0,     1,     0,   true,      Tier::Mid } },
+<span class="lineNum">     324 </span>            :         { Instruction::JUMPCI,       { &quot;JUMPCI&quot;,         0,     1,     0,   true,      Tier::High } },
+<span class="lineNum">     325 </span>            :         { Instruction::STOP,         { &quot;BAD&quot;,            0,     0,     0,   true,      Tier::Zero } },
+<span class="lineNum">     326 </span>            : }; 
+<span class="lineNum">     327 </span>            :  
+<span class="lineNum">     328 </span><span class="lineNoCov">          0 : void dev::eth::eachInstruction( </span>
+<span class="lineNum">     329 </span>            :         bytes const&amp; _mem, 
+<span class="lineNum">     330 </span>            :         function&lt;void(Instruction,u256 const&amp;)&gt; const&amp; _onInstruction
+<span class="lineNum">     331 </span>            : )
+<span class="lineNum">     332 </span>            : {
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :         for (auto it = _mem.begin(); it &lt; _mem.end(); ++it)</span>
+<span class="lineNum">     334 </span>            :         {
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :                 Instruction instr = Instruction(*it);</span>
+<span class="lineNum">     336 </span><span class="lineNoCov">          0 :                 size_t additional = 0;</span>
+<span class="lineNum">     337 </span><span class="lineNoCov">          0 :                 if (isValidInstruction(instr))</span>
+<span class="lineNum">     338 </span><span class="lineNoCov">          0 :                 additional = instructionInfo(instr).additional;</span>
+<span class="lineNum">     339 </span><span class="lineNoCov">          0 :                 u256 data;</span>
+<span class="lineNum">     340 </span><span class="lineNoCov">          0 :                 for (size_t i = 0; i &lt; additional; ++i)</span>
+<span class="lineNum">     341 </span>            :                 {
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 :                         data &lt;&lt;= 8;</span>
+<span class="lineNum">     343 </span><span class="lineNoCov">          0 :                         if (++it &lt; _mem.end())</span>
+<span class="lineNum">     344 </span><span class="lineNoCov">          0 :                                 data |= *it;</span>
+<span class="lineNum">     345 </span>            :                 }
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :                 _onInstruction(instr, data);</span>
+<span class="lineNum">     347 </span>            :         }
+<a name="348"><span class="lineNum">     348 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span><span class="lineNoCov">          0 : string dev::eth::disassemble(bytes const&amp; _mem)</span>
+<span class="lineNum">     351 </span>            : {
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :         stringstream ret;</span>
+<span class="lineNum">     353 </span><span class="lineNoCov">          0 :         eachInstruction(_mem, [&amp;](Instruction _instr, u256 const&amp; _data) {</span>
+<span class="lineNum">     354 </span><span class="lineNoCov">          0 :                 if (!isValidInstruction(_instr))</span>
+<span class="lineNum">     355 </span><span class="lineNoCov">          0 :                         ret &lt;&lt; &quot;0x&quot; &lt;&lt; hex &lt;&lt; int(_instr) &lt;&lt; &quot; &quot;;</span>
+<span class="lineNum">     356 </span>            :                 else
+<span class="lineNum">     357 </span>            :                 {
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :                         InstructionInfo info = instructionInfo(_instr);</span>
+<span class="lineNum">     359 </span><span class="lineNoCov">          0 :                         ret &lt;&lt; info.name &lt;&lt; &quot; &quot;;</span>
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :                         if (info.additional)</span>
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :                                 ret &lt;&lt; &quot;0x&quot; &lt;&lt; hex &lt;&lt; _data &lt;&lt; &quot; &quot;;</span>
+<span class="lineNum">     362 </span>            :                 }
+<span class="lineNum">     363 </span><span class="lineNoCov">          0 :         });</span>
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :         return ret.str();</span>
+<span class="lineNum">     365 </span>            : }
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span><span class="lineCov">        272 : InstructionInfo dev::eth::instructionInfo(Instruction _inst)</span>
+<span class="lineNum">     368 </span>            : {
+<span class="lineNum">     369 </span><span class="lineCov">        272 :         auto it = c_instructionInfo.find(_inst);</span>
+<span class="lineNum">     370 </span><span class="lineCov">        272 :         if (it != c_instructionInfo.end())</span>
+<span class="lineNum">     371 </span><span class="lineCov">        149 :                 return it-&gt;second;</span>
+<span class="lineNum">     372 </span><span class="lineCov">        246 :         return InstructionInfo({{}, 0, 0, 0, false, Tier::Invalid});</span>
+<span class="lineNum">     373 </span>            : }
+<span class="lineNum">     374 </span>            : 
+<span class="lineNum">     375 </span><span class="lineNoCov">          0 : bool dev::eth::isValidInstruction(Instruction _inst)</span>
+<a name="376"><span class="lineNum">     376 </span>            : {</a>
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 :         return !!c_instructionInfo.count(_inst);</span>
+<span class="lineNum">     378 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

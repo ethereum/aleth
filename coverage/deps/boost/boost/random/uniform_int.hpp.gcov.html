@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/random/uniform_int.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/random</a> - uniform_int.hpp<span style="font-size: 80%;"> (source / <a href="uniform_int.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* boost random/uniform_int.hpp header file</a>
+<span class="lineNum">       2 </span>            :  *
+<span class="lineNum">       3 </span>            :  * Copyright Jens Maurer 2000-2001
+<span class="lineNum">       4 </span>            :  * Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">       5 </span>            :  * accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       6 </span>            :  * http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       7 </span>            :  *
+<span class="lineNum">       8 </span>            :  * See http://www.boost.org for most recent version including documentation.
+<span class="lineNum">       9 </span>            :  *
+<span class="lineNum">      10 </span>            :  * $Id$
+<span class="lineNum">      11 </span>            :  *
+<span class="lineNum">      12 </span>            :  * Revision history
+<span class="lineNum">      13 </span>            :  *  2001-04-08  added min&lt;max assertion (N. Becker)
+<span class="lineNum">      14 </span>            :  *  2001-02-18  moved to individual header files
+<span class="lineNum">      15 </span>            :  */
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : #ifndef BOOST_RANDOM_UNIFORM_INT_HPP
+<span class="lineNum">      18 </span>            : #define BOOST_RANDOM_UNIFORM_INT_HPP
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #include &lt;boost/assert.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/random/uniform_int_distribution.hpp&gt;
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : namespace boost {
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /**
+<span class="lineNum">      26 </span>            :  * The distribution function uniform_int models a \random_distribution.
+<span class="lineNum">      27 </span>            :  * On each invocation, it returns a random integer value uniformly
+<span class="lineNum">      28 </span>            :  * distributed in the set of integer numbers {min, min+1, min+2, ..., max}.
+<span class="lineNum">      29 </span>            :  *
+<span class="lineNum">      30 </span>            :  * The template parameter IntType shall denote an integer-like value type.
+<span class="lineNum">      31 </span>            :  *
+<span class="lineNum">      32 </span>            :  * This class is deprecated.  Please use @c uniform_int_distribution in
+<span class="lineNum">      33 </span>            :  * new code.
+<span class="lineNum">      34 </span>            :  */
+<span class="lineNum">      35 </span>            : template&lt;class IntType = int&gt;
+<span class="lineNum">      36 </span>            : class uniform_int : public random::uniform_int_distribution&lt;IntType&gt;
+<span class="lineNum">      37 </span>            : {
+<span class="lineNum">      38 </span>            :     typedef random::uniform_int_distribution&lt;IntType&gt; base_type;
+<span class="lineNum">      39 </span>            : public:
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            :     class param_type : public base_type::param_type
+<span class="lineNum">      42 </span>            :     {
+<span class="lineNum">      43 </span>            :     public:
+<span class="lineNum">      44 </span>            :         typedef uniform_int distribution_type;
+<span class="lineNum">      45 </span>            :         /**
+<span class="lineNum">      46 </span>            :          * Constructs the parameters of a uniform_int distribution.
+<span class="lineNum">      47 </span>            :          *
+<span class="lineNum">      48 </span>            :          * Requires: min &lt;= max
+<span class="lineNum">      49 </span>            :          */
+<span class="lineNum">      50 </span>            :         explicit param_type(IntType min_arg = 0, IntType max_arg = 9)
+<span class="lineNum">      51 </span>            :           : base_type::param_type(min_arg, max_arg)
+<span class="lineNum">      52 </span>            :         {}
+<span class="lineNum">      53 </span>            :     };
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :     /**
+<span class="lineNum">      56 </span>            :      * Constructs a uniform_int object. @c min and @c max are
+<span class="lineNum">      57 </span>            :      * the parameters of the distribution.
+<span class="lineNum">      58 </span>            :      *
+<span class="lineNum">      59 </span>            :      * Requires: min &lt;= max
+<span class="lineNum">      60 </span>            :      */
+<span class="lineNum">      61 </span>            :     explicit uniform_int(IntType min_arg = 0, IntType max_arg = 9)
+<span class="lineNum">      62 </span><span class="lineCov">          2 :       : base_type(min_arg, max_arg)</span>
+<span class="lineNum">      63 </span>            :     {}
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            :     /** Constructs a uniform_int distribution from its parameters. */
+<span class="lineNum">      66 </span>            :     explicit uniform_int(const param_type&amp; parm)
+<span class="lineNum">      67 </span>            :       : base_type(parm)
+<span class="lineNum">      68 </span>            :     {}
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            :     /** Returns the parameters of the distribution */
+<span class="lineNum">      71 </span>            :     param_type param() const { return param_type(this-&gt;a(), this-&gt;b()); }
+<span class="lineNum">      72 </span>            :     /** Sets the parameters of the distribution. */
+<span class="lineNum">      73 </span>            :     void param(const param_type&amp; parm) { this-&gt;base_type::param(parm); }
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            :     // Codergear seems to have trouble with a using declaration here
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :     template&lt;class Engine&gt;
+<span class="lineNum">      78 </span>            :     IntType operator()(Engine&amp; eng) const
+<span class="lineNum">      79 </span>            :     {
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :         return static_cast&lt;const base_type&amp;&gt;(*this)(eng);</span>
+<span class="lineNum">      81 </span>            :     }
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :     template&lt;class Engine&gt;
+<span class="lineNum">      84 </span>            :     IntType operator()(Engine&amp; eng, const param_type&amp; parm) const
+<span class="lineNum">      85 </span>            :     {
+<span class="lineNum">      86 </span>            :         return static_cast&lt;const base_type&amp;&gt;(*this)(eng, parm);
+<span class="lineNum">      87 </span>            :     }
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :     template&lt;class Engine&gt;
+<span class="lineNum">      90 </span>            :     IntType operator()(Engine&amp; eng, IntType n) const
+<span class="lineNum">      91 </span>            :     {
+<span class="lineNum">      92 </span>            :         BOOST_ASSERT(n &gt; 0);
+<span class="lineNum">      93 </span>            :         return static_cast&lt;const base_type&amp;&gt;(*this)(eng, param_type(0, n - 1));
+<span class="lineNum">      94 </span>            :     }
+<span class="lineNum">      95 </span>            : };
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : } // namespace boost
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : #endif // BOOST_RANDOM_UNIFORM_INT_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

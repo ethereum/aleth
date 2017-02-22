@@ -1,0 +1,271 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/utils/class_properties.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/utils</a> - class_properties.hpp<span style="font-size: 80%;"> (source / <a href="class_properties.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">13</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryMed">76.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : simple facility that mimmic notion of read-only read-write
+<span class="lineNum">      13 </span>            : //  properties in C++ classes. Original idea by Henrik Ravn.
+<span class="lineNum">      14 </span>            : // ***************************************************************************
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #ifndef BOOST_TEST_UTILS_CLASS_PROPERTIES_HPP
+<span class="lineNum">      17 </span>            : #define BOOST_TEST_UTILS_CLASS_PROPERTIES_HPP
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : // Boost.Test
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/detail/config.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : // Boost
+<span class="lineNum">      23 </span>            : #if !BOOST_WORKAROUND(__IBMCPP__, BOOST_TESTED_AT(600))
+<span class="lineNum">      24 </span>            : #include &lt;boost/preprocessor/seq/for_each.hpp&gt;
+<span class="lineNum">      25 </span>            : #endif
+<span class="lineNum">      26 </span>            : #include &lt;boost/call_traits.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/type_traits/add_pointer.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/type_traits/add_const.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/utility/addressof.hpp&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : // STL
+<span class="lineNum">      32 </span>            : #include &lt;iosfwd&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : namespace boost {
+<span class="lineNum">      39 </span>            : namespace unit_test {
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : // ************************************************************************** //
+<span class="lineNum">      42 </span>            : // **************                 class_property               ************** //
+<span class="lineNum">      43 </span>            : // ************************************************************************** //
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : template&lt;class PropertyType&gt;
+<span class="lineNum">      46 </span><span class="lineCov">       4300 : class class_property {</span>
+<span class="lineNum">      47 </span>            : protected:
+<span class="lineNum">      48 </span>            :     typedef typename call_traits&lt;PropertyType&gt;::const_reference     read_access_t;
+<span class="lineNum">      49 </span>            :     typedef typename call_traits&lt;PropertyType&gt;::param_type          write_param_t;
+<span class="lineNum">      50 </span>            :     typedef typename add_pointer&lt;typename add_const&lt;PropertyType&gt;::type&gt;::type address_res_t;
+<span class="lineNum">      51 </span>            : public:
+<span class="lineNum">      52 </span>            :     // Constructor
+<span class="lineNum">      53 </span><span class="lineCov">       8762 :                     class_property() : value( PropertyType() ) {}</span>
+<span class="lineNum">      54 </span>            :     explicit        class_property( write_param_t init_value )
+<span class="lineNum">      55 </span><span class="lineCov">     307293 :     : value( init_value ) {}</span>
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :     // Access methods
+<span class="lineNum">      58 </span><span class="lineCov">       2064 :     operator        read_access_t() const   { return value; }</span>
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :     read_access_t   get() const             { return value; }</span>
+<span class="lineNum">      60 </span><span class="lineCov">       1276 :     bool            operator!() const       { return !value; }</span>
+<span class="lineNum">      61 </span>            :     address_res_t   operator&amp;() const       { return &amp;value; }
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            :     // Data members
+<span class="lineNum">      64 </span>            : #ifndef BOOST_TEST_NO_PROTECTED_USING
+<span class="lineNum">      65 </span>            : protected:
+<span class="lineNum">      66 </span>            : #endif
+<span class="lineNum">      67 </span>            :     PropertyType        value;
+<span class="lineNum">      68 </span>            : };
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : #ifdef BOOST_CLASSIC_IOSTREAMS
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : template&lt;class PropertyType&gt;
+<span class="lineNum">      75 </span>            : inline std::ostream&amp;
+<span class="lineNum">      76 </span>            : operator&lt;&lt;( std::ostream&amp; os, class_property&lt;PropertyType&gt; const&amp; p )
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : #else
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : template&lt;typename CharT1, typename Tr,class PropertyType&gt;
+<span class="lineNum">      81 </span>            : inline std::basic_ostream&lt;CharT1,Tr&gt;&amp;
+<span class="lineNum">      82 </span>            : operator&lt;&lt;( std::basic_ostream&lt;CharT1,Tr&gt;&amp; os, class_property&lt;PropertyType&gt; const&amp; p )
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : #endif
+<span class="lineNum">      85 </span>            : {
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :     return os &lt;&lt; p.get();</span>
+<span class="lineNum">      87 </span>            : }
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : #define DEFINE_PROPERTY_FREE_BINARY_OPERATOR( op )                              \
+<span class="lineNum">      92 </span>            : template&lt;class PropertyType&gt;                                                    \
+<span class="lineNum">      93 </span>            : inline bool                                                                     \
+<span class="lineNum">      94 </span>            : operator op( PropertyType const&amp; lhs, class_property&lt;PropertyType&gt; const&amp; rhs ) \
+<span class="lineNum">      95 </span>            : {                                                                               \
+<span class="lineNum">      96 </span>            :     return lhs op rhs.get();                                                    \
+<span class="lineNum">      97 </span>            : }                                                                               \
+<span class="lineNum">      98 </span>            : template&lt;class PropertyType&gt;                                                    \
+<span class="lineNum">      99 </span>            : inline bool                                                                     \
+<span class="lineNum">     100 </span>            : operator op( class_property&lt;PropertyType&gt; const&amp; lhs, PropertyType const&amp; rhs ) \
+<span class="lineNum">     101 </span>            : {                                                                               \
+<span class="lineNum">     102 </span>            :     return lhs.get() op rhs;                                                    \
+<span class="lineNum">     103 </span>            : }                                                                               \
+<span class="lineNum">     104 </span>            : template&lt;class PropertyType&gt;                                                    \
+<span class="lineNum">     105 </span>            : inline bool                                                                     \
+<span class="lineNum">     106 </span>            : operator op( class_property&lt;PropertyType&gt; const&amp; lhs,                           \
+<span class="lineNum">     107 </span>            :              class_property&lt;PropertyType&gt; const&amp; rhs )                          \
+<span class="lineNum">     108 </span>            : {                                                                               \
+<span class="lineNum">     109 </span>            :     return lhs.get() op rhs.get();                                              \
+<span class="lineNum">     110 </span>            : }                                                                               \
+<span class="lineNum">     111 </span>            : /**/
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span><span class="lineCov">       3817 : DEFINE_PROPERTY_FREE_BINARY_OPERATOR( == )</span>
+<span class="lineNum">     114 </span><span class="lineCov">        366 : DEFINE_PROPERTY_FREE_BINARY_OPERATOR( != )</span>
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            : #undef DEFINE_PROPERTY_FREE_BINARY_OPERATOR
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : // ************************************************************************** //
+<span class="lineNum">     119 </span>            : // **************               readonly_property              ************** //
+<span class="lineNum">     120 </span>            : // ************************************************************************** //
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : template&lt;class PropertyType&gt;
+<span class="lineNum">     123 </span><span class="lineCov">       2826 : class readonly_property : public class_property&lt;PropertyType&gt; {</span>
+<span class="lineNum">     124 </span>            :     typedef class_property&lt;PropertyType&gt;         base_prop;
+<span class="lineNum">     125 </span>            :     typedef typename base_prop::address_res_t    arrow_res_t;
+<span class="lineNum">     126 </span>            : protected:
+<span class="lineNum">     127 </span>            :     typedef typename base_prop::write_param_t    write_param_t;
+<span class="lineNum">     128 </span>            : public:
+<span class="lineNum">     129 </span>            :     // Constructor
+<span class="lineNum">     130 </span><span class="lineCov">      10914 :                     readonly_property() {}</span>
+<span class="lineNum">     131 </span><span class="lineCov">     608650 :     explicit        readonly_property( write_param_t init_value ) : base_prop( init_value ) {}</span>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            :     // access methods
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :     arrow_res_t     operator-&gt;() const      { return boost::addressof( base_prop::value ); }</span>
+<span class="lineNum">     135 </span>            : };
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : #if BOOST_WORKAROUND(__IBMCPP__, BOOST_TESTED_AT(600))
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            : #define BOOST_READONLY_PROPERTY( property_type, friends ) boost::unit_test::readwrite_property&lt;property_type &gt;
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            : #else
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : #define BOOST_READONLY_PROPERTY_DECLARE_FRIEND(r, data, elem) friend class elem;
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : #define BOOST_READONLY_PROPERTY( property_type, friends )                           \
+<span class="lineNum">     148 </span>            : class BOOST_JOIN( readonly_property, __LINE__ )                                     \
+<span class="lineNum">     149 </span>            : : public boost::unit_test::readonly_property&lt;property_type &gt; {                      \
+<span class="lineNum">     150 </span>            :     typedef boost::unit_test::readonly_property&lt;property_type &gt; base_prop;          \
+<span class="lineNum">     151 </span>            :     BOOST_PP_SEQ_FOR_EACH( BOOST_READONLY_PROPERTY_DECLARE_FRIEND, ' ', friends )   \
+<span class="lineNum">     152 </span>            :     typedef base_prop::write_param_t  write_param_t;                                \
+<span class="lineNum">     153 </span>            : public:                                                                             \
+<span class="lineNum">     154 </span>            :                 BOOST_JOIN( readonly_property, __LINE__ )() {}                      \
+<span class="lineNum">     155 </span>            :     explicit    BOOST_JOIN( readonly_property, __LINE__ )( write_param_t init_v  )  \
+<span class="lineNum">     156 </span>            :     : base_prop( init_v ) {}                                                        \
+<span class="lineNum">     157 </span>            : }                                                                                   \
+<span class="lineNum">     158 </span>            : /**/
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            : #endif
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            : // ************************************************************************** //
+<span class="lineNum">     163 </span>            : // **************              readwrite_property              ************** //
+<span class="lineNum">     164 </span>            : // ************************************************************************** //
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            : template&lt;class PropertyType&gt;
+<span class="lineNum">     167 </span><span class="lineCov">       2944 : class readwrite_property : public class_property&lt;PropertyType&gt; {</span>
+<span class="lineNum">     168 </span>            :     typedef class_property&lt;PropertyType&gt;                base_prop;
+<span class="lineNum">     169 </span>            :     typedef typename add_pointer&lt;PropertyType&gt;::type    arrow_res_t;
+<span class="lineNum">     170 </span>            :     typedef typename base_prop::address_res_t           const_arrow_res_t;
+<span class="lineNum">     171 </span>            :     typedef typename base_prop::write_param_t           write_param_t;
+<span class="lineNum">     172 </span>            : public:
+<span class="lineNum">     173 </span><span class="lineCov">       2204 :                     readwrite_property() : base_prop() {}</span>
+<span class="lineNum">     174 </span><span class="lineCov">       4582 :     explicit        readwrite_property( write_param_t init_value ) : base_prop( init_value ) {}</span>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            :     // access methods
+<span class="lineNum">     177 </span>            :     void            set( write_param_t v )  { base_prop::value = v; }
+<span class="lineNum">     178 </span>            :     arrow_res_t     operator-&gt;()            { return boost::addressof( base_prop::value ); }
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :     const_arrow_res_t operator-&gt;() const    { return boost::addressof( base_prop::value ); }</span>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            : #ifndef BOOST_TEST_NO_PROTECTED_USING
+<span class="lineNum">     182 </span>            :     using           base_prop::value;
+<span class="lineNum">     183 </span>            : #endif
+<span class="lineNum">     184 </span>            : };
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            : } // unit_test
+<span class="lineNum">     189 </span>            : } // namespace boost
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : #undef BOOST_TEST_NO_PROTECTED_USING
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            : #endif // BOOST_TEST_UTILS_CLASS_PROPERTIES_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

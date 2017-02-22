@@ -1,0 +1,637 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/functional/hash/hash.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/functional/hash</a> - hash.hpp<span style="font-size: 80%;"> (source / <a href="hash.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : </a>
+<span class="lineNum">       2 </span>            : // Copyright 2005-2014 Daniel James.
+<span class="lineNum">       3 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       4 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  Based on Peter Dimov's proposal
+<span class="lineNum">       7 </span>            : //  http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2005/n1756.pdf
+<span class="lineNum">       8 </span>            : //  issue 6.18. 
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  This also contains public domain code from MurmurHash. From the
+<span class="lineNum">      11 </span>            : //  MurmurHash header:
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : // MurmurHash3 was written by Austin Appleby, and is placed in the public
+<span class="lineNum">      14 </span>            : // domain. The author hereby disclaims copyright to this source code.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #if !defined(BOOST_FUNCTIONAL_HASH_HASH_HPP)
+<span class="lineNum">      17 </span>            : #define BOOST_FUNCTIONAL_HASH_HASH_HPP
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #include &lt;boost/functional/hash/hash_fwd.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;functional&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/functional/hash/detail/hash_float.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;string&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/limits.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/type_traits/is_enum.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/type_traits/is_integral.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/utility/enable_if.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/cstdint.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
+<span class="lineNum">      30 </span>            : #include &lt;boost/type_traits/is_pointer.hpp&gt;
+<span class="lineNum">      31 </span>            : #endif
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #if !defined(BOOST_NO_CXX11_HDR_TYPEINDEX)
+<span class="lineNum">      34 </span>            : #include &lt;typeindex&gt;
+<span class="lineNum">      35 </span>            : #endif
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : #if defined(BOOST_MSVC)
+<span class="lineNum">      38 </span>            : #pragma warning(push)
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : #if BOOST_MSVC &gt;= 1400
+<span class="lineNum">      41 </span>            : #pragma warning(disable:6295) // Ill-defined for-loop : 'unsigned int' values
+<span class="lineNum">      42 </span>            :                               // are always of range '0' to '4294967295'.
+<span class="lineNum">      43 </span>            :                               // Loop executes infinitely.
+<span class="lineNum">      44 </span>            : #endif
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : #endif
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : #if BOOST_WORKAROUND(__GNUC__, &lt; 3) \
+<span class="lineNum">      49 </span>            :     &amp;&amp; !defined(__SGI_STL_PORT) &amp;&amp; !defined(_STLPORT_VERSION)
+<span class="lineNum">      50 </span>            : #define BOOST_HASH_CHAR_TRAITS string_char_traits
+<span class="lineNum">      51 </span>            : #else
+<span class="lineNum">      52 </span>            : #define BOOST_HASH_CHAR_TRAITS char_traits
+<span class="lineNum">      53 </span>            : #endif
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : #if defined(_MSC_VER)
+<span class="lineNum">      56 </span>            : #   define BOOST_FUNCTIONAL_HASH_ROTL32(x, r) _rotl(x,r)
+<span class="lineNum">      57 </span>            : #else
+<span class="lineNum">      58 </span>            : #   define BOOST_FUNCTIONAL_HASH_ROTL32(x, r) (x &lt;&lt; r) | (x &gt;&gt; (32 - r))
+<span class="lineNum">      59 </span>            : #endif
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : namespace boost
+<span class="lineNum">      62 </span>            : {
+<span class="lineNum">      63 </span>            :     namespace hash_detail
+<span class="lineNum">      64 </span>            :     {
+<span class="lineNum">      65 </span>            :         struct enable_hash_value { typedef std::size_t type; };
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :         template &lt;typename T&gt; struct basic_numbers {};
+<span class="lineNum">      68 </span>            :         template &lt;typename T&gt; struct long_numbers;
+<span class="lineNum">      69 </span>            :         template &lt;typename T&gt; struct ulong_numbers;
+<span class="lineNum">      70 </span>            :         template &lt;typename T&gt; struct float_numbers {};
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :         template &lt;&gt; struct basic_numbers&lt;bool&gt; :
+<span class="lineNum">      73 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">      74 </span>            :         template &lt;&gt; struct basic_numbers&lt;char&gt; :
+<span class="lineNum">      75 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">      76 </span>            :         template &lt;&gt; struct basic_numbers&lt;unsigned char&gt; :
+<span class="lineNum">      77 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">      78 </span>            :         template &lt;&gt; struct basic_numbers&lt;signed char&gt; :
+<span class="lineNum">      79 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">      80 </span>            :         template &lt;&gt; struct basic_numbers&lt;short&gt; :
+<span class="lineNum">      81 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">      82 </span>            :         template &lt;&gt; struct basic_numbers&lt;unsigned short&gt; :
+<span class="lineNum">      83 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">      84 </span>            :         template &lt;&gt; struct basic_numbers&lt;int&gt; :
+<span class="lineNum">      85 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">      86 </span>            :         template &lt;&gt; struct basic_numbers&lt;unsigned int&gt; :
+<span class="lineNum">      87 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">      88 </span>            :         template &lt;&gt; struct basic_numbers&lt;long&gt; :
+<span class="lineNum">      89 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">      90 </span>            :         template &lt;&gt; struct basic_numbers&lt;unsigned long&gt; :
+<span class="lineNum">      91 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : #if !defined(BOOST_NO_INTRINSIC_WCHAR_T)
+<span class="lineNum">      94 </span>            :         template &lt;&gt; struct basic_numbers&lt;wchar_t&gt; :
+<span class="lineNum">      95 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">      96 </span>            : #endif
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            :         // long_numbers is defined like this to allow for separate
+<span class="lineNum">      99 </span>            :         // specialization for long_long and int128_type, in case
+<span class="lineNum">     100 </span>            :         // they conflict.
+<span class="lineNum">     101 </span>            :         template &lt;typename T&gt; struct long_numbers2 {};
+<span class="lineNum">     102 </span>            :         template &lt;typename T&gt; struct ulong_numbers2 {};
+<span class="lineNum">     103 </span>            :         template &lt;typename T&gt; struct long_numbers : long_numbers2&lt;T&gt; {};
+<span class="lineNum">     104 </span>            :         template &lt;typename T&gt; struct ulong_numbers : ulong_numbers2&lt;T&gt; {};
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : #if !defined(BOOST_NO_LONG_LONG)
+<span class="lineNum">     107 </span>            :         template &lt;&gt; struct long_numbers&lt;boost::long_long_type&gt; :
+<span class="lineNum">     108 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">     109 </span>            :         template &lt;&gt; struct ulong_numbers&lt;boost::ulong_long_type&gt; :
+<span class="lineNum">     110 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">     111 </span>            : #endif
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            : #if defined(BOOST_HAS_INT128)
+<span class="lineNum">     114 </span>            :         template &lt;&gt; struct long_numbers2&lt;boost::int128_type&gt; :
+<span class="lineNum">     115 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">     116 </span>            :         template &lt;&gt; struct ulong_numbers2&lt;boost::uint128_type&gt; :
+<span class="lineNum">     117 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">     118 </span>            : #endif
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            :         template &lt;&gt; struct float_numbers&lt;float&gt; :
+<span class="lineNum">     121 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">     122 </span>            :         template &lt;&gt; struct float_numbers&lt;double&gt; :
+<span class="lineNum">     123 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">     124 </span>            :         template &lt;&gt; struct float_numbers&lt;long double&gt; :
+<span class="lineNum">     125 </span>            :             boost::hash_detail::enable_hash_value {};
+<span class="lineNum">     126 </span>            :     }
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            :     template &lt;typename T&gt;
+<span class="lineNum">     129 </span>            :     typename boost::hash_detail::basic_numbers&lt;T&gt;::type hash_value(T);
+<span class="lineNum">     130 </span>            :     template &lt;typename T&gt;
+<span class="lineNum">     131 </span>            :     typename boost::hash_detail::long_numbers&lt;T&gt;::type hash_value(T);
+<span class="lineNum">     132 </span>            :     template &lt;typename T&gt;
+<span class="lineNum">     133 </span>            :     typename boost::hash_detail::ulong_numbers&lt;T&gt;::type hash_value(T);
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            :     template &lt;typename T&gt;
+<span class="lineNum">     136 </span>            :     typename boost::enable_if&lt;boost::is_enum&lt;T&gt;, std::size_t&gt;::type
+<span class="lineNum">     137 </span>            :         hash_value(T);
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : #if !BOOST_WORKAROUND(__DMC__, &lt;= 0x848)
+<span class="lineNum">     140 </span>            :     template &lt;class T&gt; std::size_t hash_value(T* const&amp;);
+<span class="lineNum">     141 </span>            : #else
+<span class="lineNum">     142 </span>            :     template &lt;class T&gt; std::size_t hash_value(T*);
+<span class="lineNum">     143 </span>            : #endif
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : #if !defined(BOOST_NO_FUNCTION_TEMPLATE_ORDERING)
+<span class="lineNum">     146 </span>            :     template&lt; class T, unsigned N &gt;
+<span class="lineNum">     147 </span>            :     std::size_t hash_value(const T (&amp;x)[N]);
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            :     template&lt; class T, unsigned N &gt;
+<span class="lineNum">     150 </span>            :     std::size_t hash_value(T (&amp;x)[N]);
+<span class="lineNum">     151 </span>            : #endif
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :     template &lt;class Ch, class A&gt;
+<span class="lineNum">     154 </span>            :     std::size_t hash_value(
+<span class="lineNum">     155 </span>            :         std::basic_string&lt;Ch, std::BOOST_HASH_CHAR_TRAITS&lt;Ch&gt;, A&gt; const&amp;);
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            :     template &lt;typename T&gt;
+<span class="lineNum">     158 </span>            :     typename boost::hash_detail::float_numbers&lt;T&gt;::type hash_value(T);
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            : #if !defined(BOOST_NO_CXX11_HDR_TYPEINDEX)
+<span class="lineNum">     161 </span>            :     std::size_t hash_value(std::type_index);
+<span class="lineNum">     162 </span>            : #endif
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :     // Implementation
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :     namespace hash_detail
+<span class="lineNum">     167 </span>            :     {
+<span class="lineNum">     168 </span>            :         template &lt;class T&gt;
+<span class="lineNum">     169 </span>            :         inline std::size_t hash_value_signed(T val)
+<span class="lineNum">     170 </span>            :         {
+<span class="lineNum">     171 </span>            :              const unsigned int size_t_bits = std::numeric_limits&lt;std::size_t&gt;::digits;
+<span class="lineNum">     172 </span>            :              // ceiling(std::numeric_limits&lt;T&gt;::digits / size_t_bits) - 1
+<span class="lineNum">     173 </span>            :              const int length = (std::numeric_limits&lt;T&gt;::digits - 1)
+<span class="lineNum">     174 </span>            :                  / static_cast&lt;int&gt;(size_t_bits);
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            :              std::size_t seed = 0;
+<span class="lineNum">     177 </span>            :              T positive = val &lt; 0 ? -1 - val : val;
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :              // Hopefully, this loop can be unrolled.
+<span class="lineNum">     180 </span>            :              for(unsigned int i = length * size_t_bits; i &gt; 0; i -= size_t_bits)
+<span class="lineNum">     181 </span>            :              {
+<span class="lineNum">     182 </span>            :                  seed ^= (std::size_t) (positive &gt;&gt; i) + (seed&lt;&lt;6) + (seed&gt;&gt;2);
+<span class="lineNum">     183 </span>            :              }
+<span class="lineNum">     184 </span>            :              seed ^= (std::size_t) val + (seed&lt;&lt;6) + (seed&gt;&gt;2);
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :              return seed;
+<span class="lineNum">     187 </span>            :         }
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            :         template &lt;class T&gt;
+<span class="lineNum">     190 </span>            :         inline std::size_t hash_value_unsigned(T val)
+<span class="lineNum">     191 </span>            :         {
+<span class="lineNum">     192 </span><span class="lineCov">    1166847 :              const unsigned int size_t_bits = std::numeric_limits&lt;std::size_t&gt;::digits;</span>
+<span class="lineNum">     193 </span>            :              // ceiling(std::numeric_limits&lt;T&gt;::digits / size_t_bits) - 1
+<span class="lineNum">     194 </span>            :              const int length = (std::numeric_limits&lt;T&gt;::digits - 1)
+<span class="lineNum">     195 </span><span class="lineCov">    1166847 :                  / static_cast&lt;int&gt;(size_t_bits);</span>
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span><span class="lineCov">    1166847 :              std::size_t seed = 0;</span>
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            :              // Hopefully, this loop can be unrolled.
+<span class="lineNum">     200 </span><span class="lineCov">    1166847 :              for(unsigned int i = length * size_t_bits; i &gt; 0; i -= size_t_bits)</span>
+<span class="lineNum">     201 </span>            :              {
+<span class="lineNum">     202 </span>            :                  seed ^= (std::size_t) (val &gt;&gt; i) + (seed&lt;&lt;6) + (seed&gt;&gt;2);
+<span class="lineNum">     203 </span>            :              }
+<span class="lineNum">     204 </span><span class="lineCov">    1166847 :              seed ^= (std::size_t) val + (seed&lt;&lt;6) + (seed&gt;&gt;2);</span>
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            :              return seed;
+<span class="lineNum">     207 </span>            :         }
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            :         template &lt;typename SizeT&gt;
+<span class="lineNum">     210 </span>            :         inline void hash_combine_impl(SizeT&amp; seed, SizeT value)
+<span class="lineNum">     211 </span>            :         {
+<span class="lineNum">     212 </span>            :             seed ^= value + 0x9e3779b9 + (seed&lt;&lt;6) + (seed&gt;&gt;2);
+<span class="lineNum">     213 </span>            :         }
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            :         inline void hash_combine_impl(boost::uint32_t&amp; h1,
+<span class="lineNum">     216 </span>            :                 boost::uint32_t k1)
+<span class="lineNum">     217 </span>            :         {
+<span class="lineNum">     218 </span>            :             const uint32_t c1 = 0xcc9e2d51;
+<span class="lineNum">     219 </span>            :             const uint32_t c2 = 0x1b873593;
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            :             k1 *= c1;
+<span class="lineNum">     222 </span>            :             k1 = BOOST_FUNCTIONAL_HASH_ROTL32(k1,15);
+<span class="lineNum">     223 </span>            :             k1 *= c2;
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span>            :             h1 ^= k1;
+<span class="lineNum">     226 </span>            :             h1 = BOOST_FUNCTIONAL_HASH_ROTL32(h1,13);
+<span class="lineNum">     227 </span>            :             h1 = h1*5+0xe6546b64;
+<span class="lineNum">     228 </span>            :         }
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            : // Don't define 64-bit hash combine on platforms without 64 bit integers,
+<span class="lineNum">     232 </span>            : // and also not for 32-bit gcc as it warns about the 64-bit constant.
+<span class="lineNum">     233 </span>            : #if !defined(BOOST_NO_INT64_T) &amp;&amp; \
+<span class="lineNum">     234 </span>            :         !(defined(__GNUC__) &amp;&amp; ULONG_MAX == 0xffffffff)
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            :         inline void hash_combine_impl(boost::uint64_t&amp; h,
+<span class="lineNum">     237 </span>            :                 boost::uint64_t k)
+<span class="lineNum">     238 </span>            :         {
+<span class="lineNum">     239 </span><span class="lineCov">  114125799 :             const boost::uint64_t m = UINT64_C(0xc6a4a7935bd1e995);</span>
+<span class="lineNum">     240 </span><span class="lineCov">  114125799 :             const int r = 47;</span>
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span><span class="lineCov">  114125799 :             k *= m;</span>
+<span class="lineNum">     243 </span><span class="lineCov">  114125799 :             k ^= k &gt;&gt; r;</span>
+<span class="lineNum">     244 </span><span class="lineCov">  114125799 :             k *= m;</span>
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span><span class="lineCov">  114125799 :             h ^= k;</span>
+<span class="lineNum">     247 </span><span class="lineCov">  114125799 :             h *= m;</span>
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            :             // Completely arbitrary number, to prevent 0's
+<span class="lineNum">     250 </span>            :             // from hashing to 0.
+<span class="lineNum">     251 </span><span class="lineCov">  114125799 :             h += 0xe6546b64;</span>
+<span class="lineNum">     252 </span>            :         }
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            : #endif // BOOST_NO_INT64_T
+<span class="lineNum">     255 </span>            :     }
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            :     template &lt;typename T&gt;
+<span class="lineNum">     258 </span>            :     typename boost::hash_detail::basic_numbers&lt;T&gt;::type hash_value(T v)
+<span class="lineNum">     259 </span>            :     {
+<span class="lineNum">     260 </span><span class="lineCov">   88484884 :         return static_cast&lt;std::size_t&gt;(v);</span>
+<span class="lineNum">     261 </span>            :     }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            :     template &lt;typename T&gt;
+<span class="lineNum">     264 </span>            :     typename boost::hash_detail::long_numbers&lt;T&gt;::type hash_value(T v)
+<span class="lineNum">     265 </span>            :     {
+<span class="lineNum">     266 </span>            :         return hash_detail::hash_value_signed(v);
+<span class="lineNum">     267 </span>            :     }
+<span class="lineNum">     268 </span>            : 
+<span class="lineNum">     269 </span>            :     template &lt;typename T&gt;
+<span class="lineNum">     270 </span>            :     typename boost::hash_detail::ulong_numbers&lt;T&gt;::type hash_value(T v)
+<span class="lineNum">     271 </span>            :     {
+<span class="lineNum">     272 </span><span class="lineCov">    1166847 :         return hash_detail::hash_value_unsigned(v);</span>
+<span class="lineNum">     273 </span>            :     }
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            :     template &lt;typename T&gt;
+<span class="lineNum">     276 </span>            :     typename boost::enable_if&lt;boost::is_enum&lt;T&gt;, std::size_t&gt;::type
+<span class="lineNum">     277 </span>            :         hash_value(T v)
+<span class="lineNum">     278 </span>            :     {
+<span class="lineNum">     279 </span>            :         return static_cast&lt;std::size_t&gt;(v);
+<span class="lineNum">     280 </span>            :     }
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span>            :     // Implementation by Alberto Barbati and Dave Harris.
+<span class="lineNum">     283 </span>            : #if !BOOST_WORKAROUND(__DMC__, &lt;= 0x848)
+<span class="lineNum">     284 </span>            :     template &lt;class T&gt; std::size_t hash_value(T* const&amp; v)
+<span class="lineNum">     285 </span>            : #else
+<span class="lineNum">     286 </span>            :     template &lt;class T&gt; std::size_t hash_value(T* v)
+<span class="lineNum">     287 </span>            : #endif
+<span class="lineNum">     288 </span>            :     {
+<span class="lineNum">     289 </span>            : #if defined(__VMS) &amp;&amp; __INITIAL_POINTER_SIZE == 64
+<span class="lineNum">     290 </span>            :     // for some reason ptrdiff_t on OpenVMS compiler with
+<span class="lineNum">     291 </span>            :     // 64 bit is not 64 bit !!!
+<span class="lineNum">     292 </span>            :         std::size_t x = static_cast&lt;std::size_t&gt;(
+<span class="lineNum">     293 </span>            :            reinterpret_cast&lt;long long int&gt;(v));
+<span class="lineNum">     294 </span>            : #else
+<span class="lineNum">     295 </span>            :         std::size_t x = static_cast&lt;std::size_t&gt;(
+<span class="lineNum">     296 </span>            :            reinterpret_cast&lt;std::ptrdiff_t&gt;(v));
+<span class="lineNum">     297 </span>            : #endif
+<span class="lineNum">     298 </span>            :         return x + (x &gt;&gt; 3);
+<span class="lineNum">     299 </span>            :     }
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span>            : #if defined(BOOST_MSVC)
+<span class="lineNum">     302 </span>            : #pragma warning(push)
+<span class="lineNum">     303 </span>            : #if BOOST_MSVC &lt;= 1400
+<span class="lineNum">     304 </span>            : #pragma warning(disable:4267) // 'argument' : conversion from 'size_t' to
+<span class="lineNum">     305 </span>            :                               // 'unsigned int', possible loss of data
+<span class="lineNum">     306 </span>            :                               // A misguided attempt to detect 64-bit
+<span class="lineNum">     307 </span>            :                               // incompatability.
+<span class="lineNum">     308 </span>            : #endif
+<span class="lineNum">     309 </span>            : #endif
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            :     template &lt;class T&gt;
+<span class="lineNum">     312 </span>            :     inline void hash_combine(std::size_t&amp; seed, T const&amp; v)
+<span class="lineNum">     313 </span>            :     {
+<span class="lineNum">     314 </span>            :         boost::hash&lt;T&gt; hasher;
+<span class="lineNum">     315 </span><span class="lineCov">  342377397 :         return boost::hash_detail::hash_combine_impl(seed, hasher(v));</span>
+<span class="lineNum">     316 </span>            :     }
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            : #if defined(BOOST_MSVC)
+<span class="lineNum">     319 </span>            : #pragma warning(pop)
+<span class="lineNum">     320 </span>            : #endif
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span>            :     template &lt;class It&gt;
+<span class="lineNum">     323 </span>            :     inline std::size_t hash_range(It first, It last)
+<span class="lineNum">     324 </span>            :     {
+<span class="lineNum">     325 </span>            :         std::size_t seed = 0;
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span><span class="lineCov">  239911732 :         for(; first != last; ++first)</span>
+<span class="lineNum">     328 </span>            :         {
+<span class="lineNum">     329 </span><span class="lineCov">  228251598 :             hash_combine(seed, *first);</span>
+<span class="lineNum">     330 </span>            :         }
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span>            :         return seed;
+<span class="lineNum">     333 </span>            :     }
+<span class="lineNum">     334 </span>            : 
+<span class="lineNum">     335 </span>            :     template &lt;class It&gt;
+<span class="lineNum">     336 </span>            :     inline void hash_range(std::size_t&amp; seed, It first, It last)
+<span class="lineNum">     337 </span>            :     {
+<span class="lineNum">     338 </span>            :         for(; first != last; ++first)
+<span class="lineNum">     339 </span>            :         {
+<span class="lineNum">     340 </span>            :             hash_combine(seed, *first);
+<span class="lineNum">     341 </span>            :         }
+<span class="lineNum">     342 </span>            :     }
+<span class="lineNum">     343 </span>            : 
+<span class="lineNum">     344 </span>            : #if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x551))
+<span class="lineNum">     345 </span>            :     template &lt;class T&gt;
+<span class="lineNum">     346 </span>            :     inline std::size_t hash_range(T* first, T* last)
+<span class="lineNum">     347 </span>            :     {
+<span class="lineNum">     348 </span>            :         std::size_t seed = 0;
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span>            :         for(; first != last; ++first)
+<span class="lineNum">     351 </span>            :         {
+<span class="lineNum">     352 </span>            :             boost::hash&lt;T&gt; hasher;
+<span class="lineNum">     353 </span>            :             seed ^= hasher(*first) + 0x9e3779b9 + (seed&lt;&lt;6) + (seed&gt;&gt;2);
+<span class="lineNum">     354 </span>            :         }
+<span class="lineNum">     355 </span>            : 
+<span class="lineNum">     356 </span>            :         return seed;
+<span class="lineNum">     357 </span>            :     }
+<span class="lineNum">     358 </span>            : 
+<span class="lineNum">     359 </span>            :     template &lt;class T&gt;
+<span class="lineNum">     360 </span>            :     inline void hash_range(std::size_t&amp; seed, T* first, T* last)
+<span class="lineNum">     361 </span>            :     {
+<span class="lineNum">     362 </span>            :         for(; first != last; ++first)
+<span class="lineNum">     363 </span>            :         {
+<span class="lineNum">     364 </span>            :             boost::hash&lt;T&gt; hasher;
+<span class="lineNum">     365 </span>            :             seed ^= hasher(*first) + 0x9e3779b9 + (seed&lt;&lt;6) + (seed&gt;&gt;2);
+<span class="lineNum">     366 </span>            :         }
+<span class="lineNum">     367 </span>            :     }
+<span class="lineNum">     368 </span>            : #endif
+<span class="lineNum">     369 </span>            : 
+<span class="lineNum">     370 </span>            : #if !defined(BOOST_NO_FUNCTION_TEMPLATE_ORDERING)
+<span class="lineNum">     371 </span>            :     template&lt; class T, unsigned N &gt;
+<span class="lineNum">     372 </span>            :     inline std::size_t hash_value(const T (&amp;x)[N])
+<span class="lineNum">     373 </span>            :     {
+<span class="lineNum">     374 </span>            :         return hash_range(x, x + N);
+<span class="lineNum">     375 </span>            :     }
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span>            :     template&lt; class T, unsigned N &gt;
+<span class="lineNum">     378 </span>            :     inline std::size_t hash_value(T (&amp;x)[N])
+<span class="lineNum">     379 </span>            :     {
+<span class="lineNum">     380 </span>            :         return hash_range(x, x + N);
+<span class="lineNum">     381 </span>            :     }
+<span class="lineNum">     382 </span>            : #endif
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span>            :     template &lt;class Ch, class A&gt;
+<span class="lineNum">     385 </span>            :     inline std::size_t hash_value(
+<span class="lineNum">     386 </span>            :         std::basic_string&lt;Ch, std::BOOST_HASH_CHAR_TRAITS&lt;Ch&gt;, A&gt; const&amp; v)
+<span class="lineNum">     387 </span>            :     {
+<span class="lineNum">     388 </span>            :         return hash_range(v.begin(), v.end());
+<span class="lineNum">     389 </span>            :     }
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span>            :     template &lt;typename T&gt;
+<span class="lineNum">     392 </span>            :     typename boost::hash_detail::float_numbers&lt;T&gt;::type hash_value(T v)
+<span class="lineNum">     393 </span>            :     {
+<span class="lineNum">     394 </span>            :         return boost::hash_detail::float_hash_value(v);
+<span class="lineNum">     395 </span>            :     }
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span>            : #if !defined(BOOST_NO_CXX11_HDR_TYPEINDEX)
+<span class="lineNum">     398 </span>            :     inline std::size_t hash_value(std::type_index v)
+<span class="lineNum">     399 </span>            :     {
+<span class="lineNum">     400 </span>            :         return v.hash_code();
+<span class="lineNum">     401 </span>            :     }
+<span class="lineNum">     402 </span>            : #endif
+<span class="lineNum">     403 </span>            : 
+<span class="lineNum">     404 </span>            :     //
+<span class="lineNum">     405 </span>            :     // boost::hash
+<span class="lineNum">     406 </span>            :     //
+<span class="lineNum">     407 </span>            :     
+<span class="lineNum">     408 </span>            :     // Define the specializations required by the standard. The general purpose
+<span class="lineNum">     409 </span>            :     // boost::hash is defined later in extensions.hpp if
+<span class="lineNum">     410 </span>            :     // BOOST_HASH_NO_EXTENSIONS is not defined.
+<span class="lineNum">     411 </span>            :     
+<span class="lineNum">     412 </span>            :     // BOOST_HASH_SPECIALIZE - define a specialization for a type which is
+<span class="lineNum">     413 </span>            :     // passed by copy.
+<span class="lineNum">     414 </span>            :     //
+<span class="lineNum">     415 </span>            :     // BOOST_HASH_SPECIALIZE_REF - define a specialization for a type which is
+<span class="lineNum">     416 </span>            :     // passed by const reference.
+<span class="lineNum">     417 </span>            :     //
+<span class="lineNum">     418 </span>            :     // These are undefined later.
+<span class="lineNum">     419 </span>            : 
+<span class="lineNum">     420 </span>            : #define BOOST_HASH_SPECIALIZE(type) \
+<span class="lineNum">     421 </span>            :     template &lt;&gt; struct hash&lt;type&gt; \
+<span class="lineNum">     422 </span>            :          : public std::unary_function&lt;type, std::size_t&gt; \
+<span class="lineNum">     423 </span>            :     { \
+<span class="lineNum">     424 </span>            :         std::size_t operator()(type v) const \
+<span class="lineNum">     425 </span>            :         { \
+<span class="lineNum">     426 </span>            :             return boost::hash_value(v); \
+<span class="lineNum">     427 </span>            :         } \
+<span class="lineNum">     428 </span>            :     };
+<span class="lineNum">     429 </span>            : 
+<span class="lineNum">     430 </span>            : #define BOOST_HASH_SPECIALIZE_REF(type) \
+<span class="lineNum">     431 </span>            :     template &lt;&gt; struct hash&lt;type&gt; \
+<span class="lineNum">     432 </span>            :          : public std::unary_function&lt;type, std::size_t&gt; \
+<span class="lineNum">     433 </span>            :     { \
+<span class="lineNum">     434 </span>            :         std::size_t operator()(type const&amp; v) const \
+<span class="lineNum">     435 </span>            :         { \
+<span class="lineNum">     436 </span>            :             return boost::hash_value(v); \
+<span class="lineNum">     437 </span>            :         } \
+<span class="lineNum">     438 </span>            :     };
+<span class="lineNum">     439 </span>            : 
+<span class="lineNum">     440 </span>            :     BOOST_HASH_SPECIALIZE(bool)
+<span class="lineNum">     441 </span>            :     BOOST_HASH_SPECIALIZE(char)
+<span class="lineNum">     442 </span>            :     BOOST_HASH_SPECIALIZE(signed char)
+<span class="lineNum">     443 </span><span class="lineCov">   88484884 :     BOOST_HASH_SPECIALIZE(unsigned char)</span>
+<span class="lineNum">     444 </span>            : #if !defined(BOOST_NO_INTRINSIC_WCHAR_T)
+<span class="lineNum">     445 </span>            :     BOOST_HASH_SPECIALIZE(wchar_t)
+<span class="lineNum">     446 </span>            : #endif
+<span class="lineNum">     447 </span>            :     BOOST_HASH_SPECIALIZE(short)
+<span class="lineNum">     448 </span>            :     BOOST_HASH_SPECIALIZE(unsigned short)
+<span class="lineNum">     449 </span>            :     BOOST_HASH_SPECIALIZE(int)
+<span class="lineNum">     450 </span>            :     BOOST_HASH_SPECIALIZE(unsigned int)
+<span class="lineNum">     451 </span>            :     BOOST_HASH_SPECIALIZE(long)
+<span class="lineNum">     452 </span><span class="lineCov">   24474068 :     BOOST_HASH_SPECIALIZE(unsigned long)</span>
+<span class="lineNum">     453 </span>            : 
+<span class="lineNum">     454 </span>            :     BOOST_HASH_SPECIALIZE(float)
+<span class="lineNum">     455 </span>            :     BOOST_HASH_SPECIALIZE(double)
+<span class="lineNum">     456 </span>            :     BOOST_HASH_SPECIALIZE(long double)
+<span class="lineNum">     457 </span>            : 
+<span class="lineNum">     458 </span>            :     BOOST_HASH_SPECIALIZE_REF(std::string)
+<span class="lineNum">     459 </span>            : #if !defined(BOOST_NO_STD_WSTRING) &amp;&amp; !defined(BOOST_NO_INTRINSIC_WCHAR_T)
+<span class="lineNum">     460 </span>            :     BOOST_HASH_SPECIALIZE_REF(std::wstring)
+<span class="lineNum">     461 </span>            : #endif
+<span class="lineNum">     462 </span>            : 
+<span class="lineNum">     463 </span>            : #if !defined(BOOST_NO_LONG_LONG)
+<span class="lineNum">     464 </span>            :     BOOST_HASH_SPECIALIZE(boost::long_long_type)
+<span class="lineNum">     465 </span><span class="lineCov">    1166847 :     BOOST_HASH_SPECIALIZE(boost::ulong_long_type)</span>
+<span class="lineNum">     466 </span>            : #endif
+<span class="lineNum">     467 </span>            : 
+<span class="lineNum">     468 </span>            : #if defined(BOOST_HAS_INT128)
+<span class="lineNum">     469 </span>            :     BOOST_HASH_SPECIALIZE(boost::int128_type)
+<span class="lineNum">     470 </span>            :     BOOST_HASH_SPECIALIZE(boost::uint128_type)
+<span class="lineNum">     471 </span>            : #endif
+<span class="lineNum">     472 </span>            : 
+<span class="lineNum">     473 </span>            : #if !defined(BOOST_NO_CXX11_HDR_TYPEINDEX)
+<span class="lineNum">     474 </span>            :     BOOST_HASH_SPECIALIZE(std::type_index)
+<span class="lineNum">     475 </span>            : #endif
+<span class="lineNum">     476 </span>            : 
+<span class="lineNum">     477 </span>            : #undef BOOST_HASH_SPECIALIZE
+<span class="lineNum">     478 </span>            : #undef BOOST_HASH_SPECIALIZE_REF
+<span class="lineNum">     479 </span>            : 
+<span class="lineNum">     480 </span>            : // Specializing boost::hash for pointers.
+<span class="lineNum">     481 </span>            : 
+<span class="lineNum">     482 </span>            : #if !defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span>            :     template &lt;class T&gt;
+<span class="lineNum">     485 </span>            :     struct hash&lt;T*&gt;
+<span class="lineNum">     486 </span>            :         : public std::unary_function&lt;T*, std::size_t&gt;
+<span class="lineNum">     487 </span>            :     {
+<span class="lineNum">     488 </span>            :         std::size_t operator()(T* v) const
+<span class="lineNum">     489 </span>            :         {
+<span class="lineNum">     490 </span>            : #if !BOOST_WORKAROUND(__SUNPRO_CC, &lt;= 0x590)
+<span class="lineNum">     491 </span>            :             return boost::hash_value(v);
+<span class="lineNum">     492 </span>            : #else
+<span class="lineNum">     493 </span>            :             std::size_t x = static_cast&lt;std::size_t&gt;(
+<span class="lineNum">     494 </span>            :                 reinterpret_cast&lt;std::ptrdiff_t&gt;(v));
+<span class="lineNum">     495 </span>            : 
+<span class="lineNum">     496 </span>            :             return x + (x &gt;&gt; 3);
+<span class="lineNum">     497 </span>            : #endif
+<span class="lineNum">     498 </span>            :         }
+<span class="lineNum">     499 </span>            :     };
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span>            : #else
+<span class="lineNum">     502 </span>            : 
+<span class="lineNum">     503 </span>            :     // For compilers without partial specialization, we define a
+<span class="lineNum">     504 </span>            :     // boost::hash for all remaining types. But hash_impl is only defined
+<span class="lineNum">     505 </span>            :     // for pointers in 'extensions.hpp' - so when BOOST_HASH_NO_EXTENSIONS
+<span class="lineNum">     506 </span>            :     // is defined there will still be a compile error for types not supported
+<span class="lineNum">     507 </span>            :     // in the standard.
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            :     namespace hash_detail
+<span class="lineNum">     510 </span>            :     {
+<span class="lineNum">     511 </span>            :         template &lt;bool IsPointer&gt;
+<span class="lineNum">     512 </span>            :         struct hash_impl;
+<span class="lineNum">     513 </span>            : 
+<span class="lineNum">     514 </span>            :         template &lt;&gt;
+<span class="lineNum">     515 </span>            :         struct hash_impl&lt;true&gt;
+<span class="lineNum">     516 </span>            :         {
+<span class="lineNum">     517 </span>            :             template &lt;class T&gt;
+<span class="lineNum">     518 </span>            :             struct inner
+<span class="lineNum">     519 </span>            :                 : public std::unary_function&lt;T, std::size_t&gt;
+<span class="lineNum">     520 </span>            :             {
+<span class="lineNum">     521 </span>            :                 std::size_t operator()(T val) const
+<span class="lineNum">     522 </span>            :                 {
+<span class="lineNum">     523 </span>            : #if !BOOST_WORKAROUND(__SUNPRO_CC, &lt;= 590)
+<span class="lineNum">     524 </span>            :                     return boost::hash_value(val);
+<span class="lineNum">     525 </span>            : #else
+<span class="lineNum">     526 </span>            :                     std::size_t x = static_cast&lt;std::size_t&gt;(
+<span class="lineNum">     527 </span>            :                         reinterpret_cast&lt;std::ptrdiff_t&gt;(val));
+<span class="lineNum">     528 </span>            : 
+<span class="lineNum">     529 </span>            :                     return x + (x &gt;&gt; 3);
+<span class="lineNum">     530 </span>            : #endif
+<span class="lineNum">     531 </span>            :                 }
+<span class="lineNum">     532 </span>            :             };
+<span class="lineNum">     533 </span>            :         };
+<span class="lineNum">     534 </span>            :     }
+<span class="lineNum">     535 </span>            : 
+<span class="lineNum">     536 </span>            :     template &lt;class T&gt; struct hash
+<span class="lineNum">     537 </span>            :         : public boost::hash_detail::hash_impl&lt;boost::is_pointer&lt;T&gt;::value&gt;
+<span class="lineNum">     538 </span>            :             ::BOOST_NESTED_TEMPLATE inner&lt;T&gt;
+<span class="lineNum">     539 </span>            :     {
+<span class="lineNum">     540 </span>            :     };
+<span class="lineNum">     541 </span>            : 
+<span class="lineNum">     542 </span>            : #endif
+<span class="lineNum">     543 </span>            : }
+<span class="lineNum">     544 </span>            : 
+<span class="lineNum">     545 </span>            : #undef BOOST_HASH_CHAR_TRAITS
+<span class="lineNum">     546 </span>            : #undef BOOST_FUNCTIONAL_HASH_ROTL32
+<span class="lineNum">     547 </span>            : 
+<span class="lineNum">     548 </span>            : #if defined(BOOST_MSVC)
+<span class="lineNum">     549 </span>            : #pragma warning(pop)
+<span class="lineNum">     550 </span>            : #endif
+<span class="lineNum">     551 </span>            : 
+<span class="lineNum">     552 </span>            : #endif // BOOST_FUNCTIONAL_HASH_HASH_HPP
+<span class="lineNum">     553 </span>            : 
+<span class="lineNum">     554 </span>            : // Include this outside of the include guards in case the file is included
+<span class="lineNum">     555 </span>            : // twice - once with BOOST_HASH_NO_EXTENSIONS defined, and then with it
+<span class="lineNum">     556 </span>            : // undefined.
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span>            : #if !defined(BOOST_HASH_NO_EXTENSIONS) \
+<span class="lineNum">     559 </span>            :     &amp;&amp; !defined(BOOST_FUNCTIONAL_HASH_EXTENSIONS_HPP)
+<span class="lineNum">     560 </span>            : #include &lt;boost/functional/hash/extensions.hpp&gt;
+<span class="lineNum">     561 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

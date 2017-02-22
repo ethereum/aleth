@@ -1,0 +1,398 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - utils/secp256k1/scalar_impl.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">utils/secp256k1</a> - scalar_impl.h<span style="font-size: 80%;"> (source / <a href="scalar_impl.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">144</td>
+            <td class="headerCovTableEntry">144</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /**********************************************************************</a>
+<span class="lineNum">       2 </span>            :  * Copyright (c) 2014 Pieter Wuille                                   *
+<span class="lineNum">       3 </span>            :  * Distributed under the MIT software license, see the accompanying   *
+<span class="lineNum">       4 </span>            :  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+<span class="lineNum">       5 </span>            :  **********************************************************************/
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #ifndef _SECP256K1_SCALAR_IMPL_H_
+<span class="lineNum">       8 </span>            : #define _SECP256K1_SCALAR_IMPL_H_
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #include &lt;string.h&gt;
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #include &quot;group.h&quot;
+<span class="lineNum">      13 </span>            : #include &quot;scalar.h&quot;
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #if defined HAVE_CONFIG_H
+<span class="lineNum">      16 </span>            : #include &quot;libsecp256k1-config.h&quot;
+<span class="lineNum">      17 </span>            : #endif
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #if defined(USE_SCALAR_4X64)
+<span class="lineNum">      20 </span>            : #include &quot;scalar_4x64_impl.h&quot;
+<span class="lineNum">      21 </span>            : #elif defined(USE_SCALAR_8X32)
+<span class="lineNum">      22 </span>            : #include &quot;scalar_8x32_impl.h&quot;
+<span class="lineNum">      23 </span>            : #else
+<span class="lineNum">      24 </span>            : #error &quot;Please select scalar implementation&quot;
+<span class="lineNum">      25 </span>            : #endif
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #ifndef USE_NUM_NONE
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : /** secp256k1 curve order, see secp256k1_ecdsa_const_order_as_fe in ecdsa_impl.h */
+<span class="lineNum">      30 </span>            : static void secp256k1_scalar_order_get_num(secp256k1_num_t *r) {
+<span class="lineNum">      31 </span>            :     static const unsigned char order[32] = {
+<span class="lineNum">      32 </span>            :         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+<span class="lineNum">      33 </span>            :         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
+<span class="lineNum">      34 </span>            :         0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
+<span class="lineNum">      35 </span>            :         0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x41
+<span class="lineNum">      36 </span>            :     };
+<span class="lineNum">      37 </span><span class="lineCov">      32006 :     secp256k1_num_set_bin(r, order, 32);</span>
+<span class="lineNum">      38 </span>            : }
+<a name="39"><span class="lineNum">      39 </span>            : #endif</a>
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span><span class="lineCov">       1952 : static void secp256k1_scalar_inverse(secp256k1_scalar_t *r, const secp256k1_scalar_t *x) {</span>
+<span class="lineNum">      42 </span>            :     secp256k1_scalar_t *t;
+<span class="lineNum">      43 </span>            :     int i;
+<span class="lineNum">      44 </span>            :     /* First compute x ^ (2^N - 1) for some values of N. */
+<span class="lineNum">      45 </span>            :     secp256k1_scalar_t x2, x3, x4, x6, x7, x8, x15, x30, x60, x120, x127;
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span><span class="lineCov">       1952 :     secp256k1_scalar_sqr(&amp;x2,  x);</span>
+<span class="lineNum">      48 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(&amp;x2, &amp;x2,  x);</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">       1952 :     secp256k1_scalar_sqr(&amp;x3, &amp;x2);</span>
+<span class="lineNum">      51 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(&amp;x3, &amp;x3,  x);</span>
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineCov">       1952 :     secp256k1_scalar_sqr(&amp;x4, &amp;x3);</span>
+<span class="lineNum">      54 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(&amp;x4, &amp;x4,  x);</span>
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span><span class="lineCov">       1952 :     secp256k1_scalar_sqr(&amp;x6, &amp;x4);</span>
+<span class="lineNum">      57 </span><span class="lineCov">       1952 :     secp256k1_scalar_sqr(&amp;x6, &amp;x6);</span>
+<span class="lineNum">      58 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(&amp;x6, &amp;x6, &amp;x2);</span>
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span><span class="lineCov">       1952 :     secp256k1_scalar_sqr(&amp;x7, &amp;x6);</span>
+<span class="lineNum">      61 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(&amp;x7, &amp;x7,  x);</span>
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineCov">       1952 :     secp256k1_scalar_sqr(&amp;x8, &amp;x7);</span>
+<span class="lineNum">      64 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(&amp;x8, &amp;x8,  x);</span>
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span><span class="lineCov">       1953 :     secp256k1_scalar_sqr(&amp;x15, &amp;x8);</span>
+<span class="lineNum">      67 </span><span class="lineCov">      13664 :     for (i = 0; i &lt; 6; i++) {</span>
+<span class="lineNum">      68 </span><span class="lineCov">      11711 :         secp256k1_scalar_sqr(&amp;x15, &amp;x15);</span>
+<span class="lineNum">      69 </span>            :     }
+<span class="lineNum">      70 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(&amp;x15, &amp;x15, &amp;x7);</span>
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span><span class="lineCov">       1952 :     secp256k1_scalar_sqr(&amp;x30, &amp;x15);</span>
+<span class="lineNum">      73 </span><span class="lineCov">      29276 :     for (i = 0; i &lt; 14; i++) {</span>
+<span class="lineNum">      74 </span><span class="lineCov">      27324 :         secp256k1_scalar_sqr(&amp;x30, &amp;x30);</span>
+<span class="lineNum">      75 </span>            :     }
+<span class="lineNum">      76 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(&amp;x30, &amp;x30, &amp;x15);</span>
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span><span class="lineCov">       1952 :     secp256k1_scalar_sqr(&amp;x60, &amp;x30);</span>
+<span class="lineNum">      79 </span><span class="lineCov">      58554 :     for (i = 0; i &lt; 29; i++) {</span>
+<span class="lineNum">      80 </span><span class="lineCov">      56602 :         secp256k1_scalar_sqr(&amp;x60, &amp;x60);</span>
+<span class="lineNum">      81 </span>            :     }
+<span class="lineNum">      82 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(&amp;x60, &amp;x60, &amp;x30);</span>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span><span class="lineCov">       1953 :     secp256k1_scalar_sqr(&amp;x120, &amp;x60);</span>
+<span class="lineNum">      85 </span><span class="lineCov">     117103 :     for (i = 0; i &lt; 59; i++) {</span>
+<span class="lineNum">      86 </span><span class="lineCov">     115150 :         secp256k1_scalar_sqr(&amp;x120, &amp;x120);</span>
+<span class="lineNum">      87 </span>            :     }
+<span class="lineNum">      88 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(&amp;x120, &amp;x120, &amp;x60);</span>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineCov">       1952 :     secp256k1_scalar_sqr(&amp;x127, &amp;x120);</span>
+<span class="lineNum">      91 </span><span class="lineCov">      13664 :     for (i = 0; i &lt; 6; i++) {</span>
+<span class="lineNum">      92 </span><span class="lineCov">      11712 :         secp256k1_scalar_sqr(&amp;x127, &amp;x127);</span>
+<span class="lineNum">      93 </span>            :     }
+<span class="lineNum">      94 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(&amp;x127, &amp;x127, &amp;x7);</span>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            :     /* Then accumulate the final result (t starts at x127). */
+<span class="lineNum">      97 </span><span class="lineCov">       1952 :     t = &amp;x127;</span>
+<span class="lineNum">      98 </span><span class="lineCov">       5856 :     for (i = 0; i &lt; 2; i++) { /* 0 */</span>
+<span class="lineNum">      99 </span><span class="lineCov">       3904 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     100 </span>            :     }
+<span class="lineNum">     101 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     102 </span><span class="lineCov">       9760 :     for (i = 0; i &lt; 4; i++) { /* 0 */</span>
+<span class="lineNum">     103 </span><span class="lineCov">       7808 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     104 </span>            :     }
+<span class="lineNum">     105 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x3); /* 111 */</span>
+<span class="lineNum">     106 </span><span class="lineCov">       5856 :     for (i = 0; i &lt; 2; i++) { /* 0 */</span>
+<span class="lineNum">     107 </span><span class="lineCov">       3904 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     108 </span>            :     }
+<span class="lineNum">     109 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     110 </span><span class="lineCov">       5856 :     for (i = 0; i &lt; 2; i++) { /* 0 */</span>
+<span class="lineNum">     111 </span><span class="lineCov">       3904 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     112 </span>            :     }
+<span class="lineNum">     113 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     114 </span><span class="lineCov">       5856 :     for (i = 0; i &lt; 2; i++) { /* 0 */</span>
+<span class="lineNum">     115 </span><span class="lineCov">       3904 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     116 </span>            :     }
+<span class="lineNum">     117 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     118 </span><span class="lineCov">       9760 :     for (i = 0; i &lt; 4; i++) { /* 0 */</span>
+<span class="lineNum">     119 </span><span class="lineCov">       7808 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     120 </span>            :     }
+<span class="lineNum">     121 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x3); /* 111 */</span>
+<span class="lineNum">     122 </span><span class="lineCov">       7808 :     for (i = 0; i &lt; 3; i++) { /* 0 */</span>
+<span class="lineNum">     123 </span><span class="lineCov">       5856 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     124 </span>            :     }
+<span class="lineNum">     125 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x2); /* 11 */</span>
+<span class="lineNum">     126 </span><span class="lineCov">       9760 :     for (i = 0; i &lt; 4; i++) { /* 0 */</span>
+<span class="lineNum">     127 </span><span class="lineCov">       7808 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     128 </span>            :     }
+<span class="lineNum">     129 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x3); /* 111 */</span>
+<span class="lineNum">     130 </span><span class="lineCov">      11712 :     for (i = 0; i &lt; 5; i++) { /* 00 */</span>
+<span class="lineNum">     131 </span><span class="lineCov">       9760 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     132 </span>            :     }
+<span class="lineNum">     133 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x3); /* 111 */</span>
+<span class="lineNum">     134 </span><span class="lineCov">       9760 :     for (i = 0; i &lt; 4; i++) { /* 00 */</span>
+<span class="lineNum">     135 </span><span class="lineCov">       7808 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     136 </span>            :     }
+<span class="lineNum">     137 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x2); /* 11 */</span>
+<span class="lineNum">     138 </span><span class="lineCov">       5856 :     for (i = 0; i &lt; 2; i++) { /* 0 */</span>
+<span class="lineNum">     139 </span><span class="lineCov">       3904 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     140 </span>            :     }
+<span class="lineNum">     141 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     142 </span><span class="lineCov">       5856 :     for (i = 0; i &lt; 2; i++) { /* 0 */</span>
+<span class="lineNum">     143 </span><span class="lineCov">       3904 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     144 </span>            :     }
+<span class="lineNum">     145 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     146 </span><span class="lineCov">      11712 :     for (i = 0; i &lt; 5; i++) { /* 0 */</span>
+<span class="lineNum">     147 </span><span class="lineCov">       9760 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     148 </span>            :     }
+<span class="lineNum">     149 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x4); /* 1111 */</span>
+<span class="lineNum">     150 </span><span class="lineCov">       5856 :     for (i = 0; i &lt; 2; i++) { /* 0 */</span>
+<span class="lineNum">     151 </span><span class="lineCov">       3904 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     152 </span>            :     }
+<span class="lineNum">     153 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     154 </span><span class="lineCov">       7808 :     for (i = 0; i &lt; 3; i++) { /* 00 */</span>
+<span class="lineNum">     155 </span><span class="lineCov">       5856 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     156 </span>            :     }
+<span class="lineNum">     157 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     158 </span><span class="lineCov">       9760 :     for (i = 0; i &lt; 4; i++) { /* 000 */</span>
+<span class="lineNum">     159 </span><span class="lineCov">       7808 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     160 </span>            :     }
+<span class="lineNum">     161 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     162 </span><span class="lineCov">       5856 :     for (i = 0; i &lt; 2; i++) { /* 0 */</span>
+<span class="lineNum">     163 </span><span class="lineCov">       3904 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     164 </span>            :     }
+<span class="lineNum">     165 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     166 </span><span class="lineCov">      21472 :     for (i = 0; i &lt; 10; i++) { /* 0000000 */</span>
+<span class="lineNum">     167 </span><span class="lineCov">      19520 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     168 </span>            :     }
+<span class="lineNum">     169 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x3); /* 111 */</span>
+<span class="lineNum">     170 </span><span class="lineCov">       9760 :     for (i = 0; i &lt; 4; i++) { /* 0 */</span>
+<span class="lineNum">     171 </span><span class="lineCov">       7808 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     172 </span>            :     }
+<span class="lineNum">     173 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x3); /* 111 */</span>
+<span class="lineNum">     174 </span><span class="lineCov">      19520 :     for (i = 0; i &lt; 9; i++) { /* 0 */</span>
+<span class="lineNum">     175 </span><span class="lineCov">      17568 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     176 </span>            :     }
+<span class="lineNum">     177 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x8); /* 11111111 */</span>
+<span class="lineNum">     178 </span><span class="lineCov">       5856 :     for (i = 0; i &lt; 2; i++) { /* 0 */</span>
+<span class="lineNum">     179 </span><span class="lineCov">       3904 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     180 </span>            :     }
+<span class="lineNum">     181 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     182 </span><span class="lineCov">       7808 :     for (i = 0; i &lt; 3; i++) { /* 00 */</span>
+<span class="lineNum">     183 </span><span class="lineCov">       5856 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     184 </span>            :     }
+<span class="lineNum">     185 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     186 </span><span class="lineCov">       7808 :     for (i = 0; i &lt; 3; i++) { /* 00 */</span>
+<span class="lineNum">     187 </span><span class="lineCov">       5856 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     188 </span>            :     }
+<span class="lineNum">     189 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     190 </span><span class="lineCov">      11712 :     for (i = 0; i &lt; 5; i++) { /* 0 */</span>
+<span class="lineNum">     191 </span><span class="lineCov">       9760 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     192 </span>            :     }
+<span class="lineNum">     193 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x4); /* 1111 */</span>
+<span class="lineNum">     194 </span><span class="lineCov">       5856 :     for (i = 0; i &lt; 2; i++) { /* 0 */</span>
+<span class="lineNum">     195 </span><span class="lineCov">       3904 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     196 </span>            :     }
+<span class="lineNum">     197 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     198 </span><span class="lineCov">      11712 :     for (i = 0; i &lt; 5; i++) { /* 000 */</span>
+<span class="lineNum">     199 </span><span class="lineCov">       9760 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     200 </span>            :     }
+<span class="lineNum">     201 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x2); /* 11 */</span>
+<span class="lineNum">     202 </span><span class="lineCov">       9760 :     for (i = 0; i &lt; 4; i++) { /* 00 */</span>
+<span class="lineNum">     203 </span><span class="lineCov">       7808 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     204 </span>            :     }
+<span class="lineNum">     205 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x2); /* 11 */</span>
+<span class="lineNum">     206 </span><span class="lineCov">       5856 :     for (i = 0; i &lt; 2; i++) { /* 0 */</span>
+<span class="lineNum">     207 </span><span class="lineCov">       3904 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     208 </span>            :     }
+<span class="lineNum">     209 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     210 </span><span class="lineCov">      17568 :     for (i = 0; i &lt; 8; i++) { /* 000000 */</span>
+<span class="lineNum">     211 </span><span class="lineCov">      15616 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     212 </span>            :     }
+<span class="lineNum">     213 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x2); /* 11 */</span>
+<span class="lineNum">     214 </span><span class="lineCov">       7808 :     for (i = 0; i &lt; 3; i++) { /* 0 */</span>
+<span class="lineNum">     215 </span><span class="lineCov">       5856 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     216 </span>            :     }
+<span class="lineNum">     217 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, &amp;x2); /* 11 */</span>
+<span class="lineNum">     218 </span><span class="lineCov">       7808 :     for (i = 0; i &lt; 3; i++) { /* 00 */</span>
+<span class="lineNum">     219 </span><span class="lineCov">       5856 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     220 </span>            :     }
+<span class="lineNum">     221 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     222 </span><span class="lineCov">      13664 :     for (i = 0; i &lt; 6; i++) { /* 00000 */</span>
+<span class="lineNum">     223 </span><span class="lineCov">      11712 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     224 </span>            :     }
+<span class="lineNum">     225 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(t, t, x); /* 1 */</span>
+<span class="lineNum">     226 </span><span class="lineCov">      17568 :     for (i = 0; i &lt; 8; i++) { /* 00 */</span>
+<span class="lineNum">     227 </span><span class="lineCov">      15616 :         secp256k1_scalar_sqr(t, t);</span>
+<span class="lineNum">     228 </span>            :     }
+<span class="lineNum">     229 </span><span class="lineCov">       1952 :     secp256k1_scalar_mul(r, t, &amp;x6); /* 111111 */</span>
+<a name="230"><span class="lineNum">     230 </span><span class="lineCov">       1952 : }</span></a>
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span><span class="lineCov">      32006 : static void secp256k1_scalar_inverse_var(secp256k1_scalar_t *r, const secp256k1_scalar_t *x) {</span>
+<span class="lineNum">     233 </span>            : #if defined(USE_SCALAR_INV_BUILTIN)
+<span class="lineNum">     234 </span>            :     secp256k1_scalar_inverse(r, x);
+<span class="lineNum">     235 </span>            : #elif defined(USE_SCALAR_INV_NUM)
+<span class="lineNum">     236 </span>            :     unsigned char b[32];
+<span class="lineNum">     237 </span>            :     secp256k1_num_t n, m;
+<span class="lineNum">     238 </span><span class="lineCov">      32006 :     secp256k1_scalar_get_b32(b, x);</span>
+<span class="lineNum">     239 </span><span class="lineCov">      32006 :     secp256k1_num_set_bin(&amp;n, b, 32);</span>
+<span class="lineNum">     240 </span><span class="lineCov">      32006 :     secp256k1_scalar_order_get_num(&amp;m);</span>
+<span class="lineNum">     241 </span><span class="lineCov">      32006 :     secp256k1_num_mod_inverse(&amp;n, &amp;n, &amp;m);</span>
+<span class="lineNum">     242 </span><span class="lineCov">      32006 :     secp256k1_num_get_bin(b, 32, &amp;n);</span>
+<span class="lineNum">     243 </span><span class="lineCov">      32006 :     secp256k1_scalar_set_b32(r, b, NULL);</span>
+<span class="lineNum">     244 </span>            : #else
+<span class="lineNum">     245 </span>            : #error &quot;Please select scalar inverse implementation&quot;
+<span class="lineNum">     246 </span>            : #endif
+<span class="lineNum">     247 </span><span class="lineCov">      32006 : }</span>
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            : #ifdef USE_ENDOMORPHISM
+<span class="lineNum">     250 </span>            : /**
+<span class="lineNum">     251 </span>            :  * The Secp256k1 curve has an endomorphism, where lambda * (x, y) = (beta * x, y), where
+<span class="lineNum">     252 </span>            :  * lambda is {0x53,0x63,0xad,0x4c,0xc0,0x5c,0x30,0xe0,0xa5,0x26,0x1c,0x02,0x88,0x12,0x64,0x5a,
+<span class="lineNum">     253 </span>            :  *            0x12,0x2e,0x22,0xea,0x20,0x81,0x66,0x78,0xdf,0x02,0x96,0x7c,0x1b,0x23,0xbd,0x72}
+<span class="lineNum">     254 </span>            :  *
+<span class="lineNum">     255 </span>            :  * &quot;Guide to Elliptic Curve Cryptography&quot; (Hankerson, Menezes, Vanstone) gives an algorithm
+<span class="lineNum">     256 </span>            :  * (algorithm 3.74) to find k1 and k2 given k, such that k1 + k2 * lambda == k mod n, and k1
+<span class="lineNum">     257 </span>            :  * and k2 have a small size.
+<span class="lineNum">     258 </span>            :  * It relies on constants a1, b1, a2, b2. These constants for the value of lambda above are:
+<span class="lineNum">     259 </span>            :  *
+<span class="lineNum">     260 </span>            :  * - a1 =      {0x30,0x86,0xd2,0x21,0xa7,0xd4,0x6b,0xcd,0xe8,0x6c,0x90,0xe4,0x92,0x84,0xeb,0x15}
+<span class="lineNum">     261 </span>            :  * - b1 =     -{0xe4,0x43,0x7e,0xd6,0x01,0x0e,0x88,0x28,0x6f,0x54,0x7f,0xa9,0x0a,0xbf,0xe4,0xc3}
+<span class="lineNum">     262 </span>            :  * - a2 = {0x01,0x14,0xca,0x50,0xf7,0xa8,0xe2,0xf3,0xf6,0x57,0xc1,0x10,0x8d,0x9d,0x44,0xcf,0xd8}
+<span class="lineNum">     263 </span>            :  * - b2 =      {0x30,0x86,0xd2,0x21,0xa7,0xd4,0x6b,0xcd,0xe8,0x6c,0x90,0xe4,0x92,0x84,0xeb,0x15}
+<span class="lineNum">     264 </span>            :  *
+<span class="lineNum">     265 </span>            :  * The algorithm then computes c1 = round(b1 * k / n) and c2 = round(b2 * k / n), and gives
+<span class="lineNum">     266 </span>            :  * k1 = k - (c1*a1 + c2*a2) and k2 = -(c1*b1 + c2*b2). Instead, we use modular arithmetic, and
+<span class="lineNum">     267 </span>            :  * compute k1 as k - k2 * lambda, avoiding the need for constants a1 and a2.
+<span class="lineNum">     268 </span>            :  *
+<span class="lineNum">     269 </span>            :  * g1, g2 are precomputed constants used to replace division with a rounded multiplication
+<span class="lineNum">     270 </span>            :  * when decomposing the scalar for an endomorphism-based point multiplication.
+<span class="lineNum">     271 </span>            :  *
+<span class="lineNum">     272 </span>            :  * The possibility of using precomputed estimates is mentioned in &quot;Guide to Elliptic Curve
+<span class="lineNum">     273 </span>            :  * Cryptography&quot; (Hankerson, Menezes, Vanstone) in section 3.5.
+<span class="lineNum">     274 </span>            :  *
+<span class="lineNum">     275 </span>            :  * The derivation is described in the paper &quot;Efficient Software Implementation of Public-Key
+<span class="lineNum">     276 </span>            :  * Cryptography on Sensor Networks Using the MSP430X Microcontroller&quot; (Gouvea, Oliveira, Lopez),
+<span class="lineNum">     277 </span>            :  * Section 4.3 (here we use a somewhat higher-precision estimate):
+<span class="lineNum">     278 </span>            :  * d = a1*b2 - b1*a2
+<span class="lineNum">     279 </span>            :  * g1 = round((2^272)*b2/d)
+<span class="lineNum">     280 </span>            :  * g2 = round((2^272)*b1/d)
+<span class="lineNum">     281 </span>            :  *
+<span class="lineNum">     282 </span>            :  * (Note that 'd' is also equal to the curve order here because [a1,b1] and [a2,b2] are found
+<span class="lineNum">     283 </span>            :  * as outputs of the Extended Euclidean Algorithm on inputs 'order' and 'lambda').
+<span class="lineNum">     284 </span>            :  *
+<span class="lineNum">     285 </span>            :  * The function below splits a in r1 and r2, such that r1 + lambda * r2 == a (mod order).
+<span class="lineNum">     286 </span>            :  */
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            : static void secp256k1_scalar_split_lambda_var(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a) {
+<span class="lineNum">     289 </span>            :     secp256k1_scalar_t c1, c2;
+<span class="lineNum">     290 </span>            :     static const secp256k1_scalar_t minus_lambda = SECP256K1_SCALAR_CONST(
+<span class="lineNum">     291 </span>            :         0xAC9C52B3UL, 0x3FA3CF1FUL, 0x5AD9E3FDUL, 0x77ED9BA4UL,
+<span class="lineNum">     292 </span>            :         0xA880B9FCUL, 0x8EC739C2UL, 0xE0CFC810UL, 0xB51283CFUL
+<span class="lineNum">     293 </span>            :     );
+<span class="lineNum">     294 </span>            :     static const secp256k1_scalar_t minus_b1 = SECP256K1_SCALAR_CONST(
+<span class="lineNum">     295 </span>            :         0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00000000UL,
+<span class="lineNum">     296 </span>            :         0xE4437ED6UL, 0x010E8828UL, 0x6F547FA9UL, 0x0ABFE4C3UL
+<span class="lineNum">     297 </span>            :     );
+<span class="lineNum">     298 </span>            :     static const secp256k1_scalar_t minus_b2 = SECP256K1_SCALAR_CONST(
+<span class="lineNum">     299 </span>            :         0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFEUL,
+<span class="lineNum">     300 </span>            :         0x8A280AC5UL, 0x0774346DUL, 0xD765CDA8UL, 0x3DB1562CUL
+<span class="lineNum">     301 </span>            :     );
+<span class="lineNum">     302 </span>            :     static const secp256k1_scalar_t g1 = SECP256K1_SCALAR_CONST(
+<span class="lineNum">     303 </span>            :         0x00000000UL, 0x00000000UL, 0x00000000UL, 0x00003086UL,
+<span class="lineNum">     304 </span>            :         0xD221A7D4UL, 0x6BCDE86CUL, 0x90E49284UL, 0xEB153DABUL
+<span class="lineNum">     305 </span>            :     );
+<span class="lineNum">     306 </span>            :     static const secp256k1_scalar_t g2 = SECP256K1_SCALAR_CONST(
+<span class="lineNum">     307 </span>            :         0x00000000UL, 0x00000000UL, 0x00000000UL, 0x0000E443UL,
+<span class="lineNum">     308 </span>            :         0x7ED6010EUL, 0x88286F54UL, 0x7FA90ABFUL, 0xE4C42212UL
+<span class="lineNum">     309 </span>            :     );
+<span class="lineNum">     310 </span>            :     VERIFY_CHECK(r1 != a);
+<span class="lineNum">     311 </span>            :     VERIFY_CHECK(r2 != a);
+<span class="lineNum">     312 </span>            :     secp256k1_scalar_mul_shift_var(&amp;c1, a, &amp;g1, 272);
+<span class="lineNum">     313 </span>            :     secp256k1_scalar_mul_shift_var(&amp;c2, a, &amp;g2, 272);
+<span class="lineNum">     314 </span>            :     secp256k1_scalar_mul(&amp;c1, &amp;c1, &amp;minus_b1);
+<span class="lineNum">     315 </span>            :     secp256k1_scalar_mul(&amp;c2, &amp;c2, &amp;minus_b2);
+<span class="lineNum">     316 </span>            :     secp256k1_scalar_add(r2, &amp;c1, &amp;c2);
+<span class="lineNum">     317 </span>            :     secp256k1_scalar_mul(r1, r2, &amp;minus_lambda);
+<span class="lineNum">     318 </span>            :     secp256k1_scalar_add(r1, r1, a);
+<span class="lineNum">     319 </span>            : }
+<span class="lineNum">     320 </span>            : #endif
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

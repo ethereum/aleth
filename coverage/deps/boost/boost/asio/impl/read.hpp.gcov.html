@@ -1,0 +1,831 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/impl/read.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/impl</a> - read.hpp<span style="font-size: 80%;"> (source / <a href="read.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntryMed">81.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // impl/read.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_IMPL_READ_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_IMPL_READ_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/asio/buffer.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/asio/completion_condition.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/asio/detail/array_fwd.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/asio/detail/base_from_completion_cond.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/asio/detail/bind_handler.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/detail/consuming_buffers.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/detail/dependent_type.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/asio/detail/handler_alloc_helpers.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/asio/detail/handler_cont_helpers.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/asio/detail/handler_invoke_helpers.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/asio/detail/handler_type_requirements.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/asio/detail/throw_error.hpp&gt;
+<span class="lineNum">      31 </span>            : #include &lt;boost/asio/error.hpp&gt;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : namespace boost {
+<span class="lineNum">      36 </span>            : namespace asio {
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : template &lt;typename SyncReadStream, typename MutableBufferSequence,
+<span class="lineNum">      39 </span>            :     typename CompletionCondition&gt;
+<span class="lineNum">      40 </span>            : std::size_t read(SyncReadStream&amp; s, const MutableBufferSequence&amp; buffers,
+<span class="lineNum">      41 </span>            :     CompletionCondition completion_condition, boost::system::error_code&amp; ec)
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span>            :   ec = boost::system::error_code();
+<span class="lineNum">      44 </span>            :   boost::asio::detail::consuming_buffers&lt;
+<span class="lineNum">      45 </span>            :     mutable_buffer, MutableBufferSequence&gt; tmp(buffers);
+<span class="lineNum">      46 </span>            :   std::size_t total_transferred = 0;
+<span class="lineNum">      47 </span>            :   tmp.prepare(detail::adapt_completion_condition_result(
+<span class="lineNum">      48 </span>            :         completion_condition(ec, total_transferred)));
+<span class="lineNum">      49 </span>            :   while (tmp.begin() != tmp.end())
+<span class="lineNum">      50 </span>            :   {
+<span class="lineNum">      51 </span>            :     std::size_t bytes_transferred = s.read_some(tmp, ec);
+<span class="lineNum">      52 </span>            :     tmp.consume(bytes_transferred);
+<span class="lineNum">      53 </span>            :     total_transferred += bytes_transferred;
+<span class="lineNum">      54 </span>            :     tmp.prepare(detail::adapt_completion_condition_result(
+<span class="lineNum">      55 </span>            :           completion_condition(ec, total_transferred)));
+<span class="lineNum">      56 </span>            :   }
+<span class="lineNum">      57 </span>            :   return total_transferred;
+<span class="lineNum">      58 </span>            : }
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : template &lt;typename SyncReadStream, typename MutableBufferSequence&gt;
+<span class="lineNum">      61 </span>            : inline std::size_t read(SyncReadStream&amp; s, const MutableBufferSequence&amp; buffers)
+<span class="lineNum">      62 </span>            : {
+<span class="lineNum">      63 </span>            :   boost::system::error_code ec;
+<span class="lineNum">      64 </span>            :   std::size_t bytes_transferred = read(s, buffers, transfer_all(), ec);
+<span class="lineNum">      65 </span>            :   boost::asio::detail::throw_error(ec, &quot;read&quot;);
+<span class="lineNum">      66 </span>            :   return bytes_transferred;
+<span class="lineNum">      67 </span>            : }
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : template &lt;typename SyncReadStream, typename MutableBufferSequence&gt;
+<span class="lineNum">      70 </span>            : inline std::size_t read(SyncReadStream&amp; s, const MutableBufferSequence&amp; buffers,
+<span class="lineNum">      71 </span>            :     boost::system::error_code&amp; ec)
+<span class="lineNum">      72 </span>            : {
+<span class="lineNum">      73 </span>            :   return read(s, buffers, transfer_all(), ec);
+<span class="lineNum">      74 </span>            : }
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : template &lt;typename SyncReadStream, typename MutableBufferSequence,
+<span class="lineNum">      77 </span>            :     typename CompletionCondition&gt;
+<span class="lineNum">      78 </span>            : inline std::size_t read(SyncReadStream&amp; s, const MutableBufferSequence&amp; buffers,
+<span class="lineNum">      79 </span>            :     CompletionCondition completion_condition)
+<span class="lineNum">      80 </span>            : {
+<span class="lineNum">      81 </span>            :   boost::system::error_code ec;
+<span class="lineNum">      82 </span>            :   std::size_t bytes_transferred = read(s, buffers, completion_condition, ec);
+<span class="lineNum">      83 </span>            :   boost::asio::detail::throw_error(ec, &quot;read&quot;);
+<span class="lineNum">      84 </span>            :   return bytes_transferred;
+<span class="lineNum">      85 </span>            : }
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : #if !defined(BOOST_ASIO_NO_IOSTREAM)
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : template &lt;typename SyncReadStream, typename Allocator,
+<span class="lineNum">      90 </span>            :     typename CompletionCondition&gt;
+<span class="lineNum">      91 </span>            : std::size_t read(SyncReadStream&amp; s,
+<span class="lineNum">      92 </span>            :     boost::asio::basic_streambuf&lt;Allocator&gt;&amp; b,
+<span class="lineNum">      93 </span>            :     CompletionCondition completion_condition, boost::system::error_code&amp; ec)
+<span class="lineNum">      94 </span>            : {
+<span class="lineNum">      95 </span>            :   ec = boost::system::error_code();
+<span class="lineNum">      96 </span>            :   std::size_t total_transferred = 0;
+<span class="lineNum">      97 </span>            :   std::size_t max_size = detail::adapt_completion_condition_result(
+<span class="lineNum">      98 </span>            :         completion_condition(ec, total_transferred));
+<span class="lineNum">      99 </span>            :   std::size_t bytes_available = read_size_helper(b, max_size);
+<span class="lineNum">     100 </span>            :   while (bytes_available &gt; 0)
+<span class="lineNum">     101 </span>            :   {
+<span class="lineNum">     102 </span>            :     std::size_t bytes_transferred = s.read_some(b.prepare(bytes_available), ec);
+<span class="lineNum">     103 </span>            :     b.commit(bytes_transferred);
+<span class="lineNum">     104 </span>            :     total_transferred += bytes_transferred;
+<span class="lineNum">     105 </span>            :     max_size = detail::adapt_completion_condition_result(
+<span class="lineNum">     106 </span>            :           completion_condition(ec, total_transferred));
+<span class="lineNum">     107 </span>            :     bytes_available = read_size_helper(b, max_size);
+<span class="lineNum">     108 </span>            :   }
+<span class="lineNum">     109 </span>            :   return total_transferred;
+<span class="lineNum">     110 </span>            : }
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            : template &lt;typename SyncReadStream, typename Allocator&gt;
+<span class="lineNum">     113 </span>            : inline std::size_t read(SyncReadStream&amp; s,
+<span class="lineNum">     114 </span>            :     boost::asio::basic_streambuf&lt;Allocator&gt;&amp; b)
+<span class="lineNum">     115 </span>            : {
+<span class="lineNum">     116 </span>            :   boost::system::error_code ec;
+<span class="lineNum">     117 </span>            :   std::size_t bytes_transferred = read(s, b, transfer_all(), ec);
+<span class="lineNum">     118 </span>            :   boost::asio::detail::throw_error(ec, &quot;read&quot;);
+<span class="lineNum">     119 </span>            :   return bytes_transferred;
+<span class="lineNum">     120 </span>            : }
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : template &lt;typename SyncReadStream, typename Allocator&gt;
+<span class="lineNum">     123 </span>            : inline std::size_t read(SyncReadStream&amp; s,
+<span class="lineNum">     124 </span>            :     boost::asio::basic_streambuf&lt;Allocator&gt;&amp; b,
+<span class="lineNum">     125 </span>            :     boost::system::error_code&amp; ec)
+<span class="lineNum">     126 </span>            : {
+<span class="lineNum">     127 </span>            :   return read(s, b, transfer_all(), ec);
+<span class="lineNum">     128 </span>            : }
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : template &lt;typename SyncReadStream, typename Allocator,
+<span class="lineNum">     131 </span>            :     typename CompletionCondition&gt;
+<span class="lineNum">     132 </span>            : inline std::size_t read(SyncReadStream&amp; s,
+<span class="lineNum">     133 </span>            :     boost::asio::basic_streambuf&lt;Allocator&gt;&amp; b,
+<span class="lineNum">     134 </span>            :     CompletionCondition completion_condition)
+<span class="lineNum">     135 </span>            : {
+<span class="lineNum">     136 </span>            :   boost::system::error_code ec;
+<span class="lineNum">     137 </span>            :   std::size_t bytes_transferred = read(s, b, completion_condition, ec);
+<span class="lineNum">     138 </span>            :   boost::asio::detail::throw_error(ec, &quot;read&quot;);
+<span class="lineNum">     139 </span>            :   return bytes_transferred;
+<span class="lineNum">     140 </span>            : }
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span>            : #endif // !defined(BOOST_ASIO_NO_IOSTREAM)
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : namespace detail
+<span class="lineNum">     145 </span>            : {
+<span class="lineNum">     146 </span>            :   template &lt;typename AsyncReadStream, typename MutableBufferSequence,
+<span class="lineNum">     147 </span>            :       typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     148 </span>            :   class read_op
+<span class="lineNum">     149 </span>            :     : detail::base_from_completion_cond&lt;CompletionCondition&gt;
+<span class="lineNum">     150 </span>            :   {
+<span class="lineNum">     151 </span>            :   public:
+<span class="lineNum">     152 </span>            :     read_op(AsyncReadStream&amp; stream, const MutableBufferSequence&amp; buffers,
+<span class="lineNum">     153 </span>            :         CompletionCondition completion_condition, ReadHandler&amp; handler)
+<span class="lineNum">     154 </span>            :       : detail::base_from_completion_cond&lt;
+<span class="lineNum">     155 </span>            :           CompletionCondition&gt;(completion_condition),
+<span class="lineNum">     156 </span>            :         stream_(stream),
+<span class="lineNum">     157 </span>            :         buffers_(buffers),
+<span class="lineNum">     158 </span>            :         start_(0),
+<span class="lineNum">     159 </span>            :         total_transferred_(0),
+<span class="lineNum">     160 </span>            :         handler_(BOOST_ASIO_MOVE_CAST(ReadHandler)(handler))
+<span class="lineNum">     161 </span>            :     {
+<span class="lineNum">     162 </span>            :     }
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            : #if defined(BOOST_ASIO_HAS_MOVE)
+<span class="lineNum">     165 </span>            :     read_op(const read_op&amp; other)
+<span class="lineNum">     166 </span>            :       : detail::base_from_completion_cond&lt;CompletionCondition&gt;(other),
+<span class="lineNum">     167 </span>            :         stream_(other.stream_),
+<span class="lineNum">     168 </span>            :         buffers_(other.buffers_),
+<span class="lineNum">     169 </span>            :         start_(other.start_),
+<span class="lineNum">     170 </span>            :         total_transferred_(other.total_transferred_),
+<span class="lineNum">     171 </span>            :         handler_(other.handler_)
+<span class="lineNum">     172 </span>            :     {
+<span class="lineNum">     173 </span>            :     }
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :     read_op(read_op&amp;&amp; other)
+<span class="lineNum">     176 </span>            :       : detail::base_from_completion_cond&lt;CompletionCondition&gt;(other),
+<span class="lineNum">     177 </span>            :         stream_(other.stream_),
+<span class="lineNum">     178 </span>            :         buffers_(other.buffers_),
+<span class="lineNum">     179 </span>            :         start_(other.start_),
+<span class="lineNum">     180 </span>            :         total_transferred_(other.total_transferred_),
+<span class="lineNum">     181 </span>            :         handler_(BOOST_ASIO_MOVE_CAST(ReadHandler)(other.handler_))
+<span class="lineNum">     182 </span>            :     {
+<span class="lineNum">     183 </span>            :     }
+<span class="lineNum">     184 </span>            : #endif // defined(BOOST_ASIO_HAS_MOVE)
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :     void operator()(const boost::system::error_code&amp; ec,
+<span class="lineNum">     187 </span>            :         std::size_t bytes_transferred, int start = 0)
+<span class="lineNum">     188 </span>            :     {
+<span class="lineNum">     189 </span>            :       switch (start_ = start)
+<span class="lineNum">     190 </span>            :       {
+<span class="lineNum">     191 </span>            :         case 1:
+<span class="lineNum">     192 </span>            :         buffers_.prepare(this-&gt;check_for_completion(ec, total_transferred_));
+<span class="lineNum">     193 </span>            :         for (;;)
+<span class="lineNum">     194 </span>            :         {
+<span class="lineNum">     195 </span>            :           stream_.async_read_some(buffers_,
+<span class="lineNum">     196 </span>            :               BOOST_ASIO_MOVE_CAST(read_op)(*this));
+<span class="lineNum">     197 </span>            :           return; default:
+<span class="lineNum">     198 </span>            :           total_transferred_ += bytes_transferred;
+<span class="lineNum">     199 </span>            :           buffers_.consume(bytes_transferred);
+<span class="lineNum">     200 </span>            :           buffers_.prepare(this-&gt;check_for_completion(ec, total_transferred_));
+<span class="lineNum">     201 </span>            :           if ((!ec &amp;&amp; bytes_transferred == 0)
+<span class="lineNum">     202 </span>            :               || buffers_.begin() == buffers_.end())
+<span class="lineNum">     203 </span>            :             break;
+<span class="lineNum">     204 </span>            :         }
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            :         handler_(ec, static_cast&lt;const std::size_t&amp;&gt;(total_transferred_));
+<span class="lineNum">     207 </span>            :       }
+<span class="lineNum">     208 </span>            :     }
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :   //private:
+<span class="lineNum">     211 </span>            :     AsyncReadStream&amp; stream_;
+<span class="lineNum">     212 </span>            :     boost::asio::detail::consuming_buffers&lt;
+<span class="lineNum">     213 </span>            :       mutable_buffer, MutableBufferSequence&gt; buffers_;
+<span class="lineNum">     214 </span>            :     int start_;
+<span class="lineNum">     215 </span>            :     std::size_t total_transferred_;
+<span class="lineNum">     216 </span>            :     ReadHandler handler_;
+<span class="lineNum">     217 </span>            :   };
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            :   template &lt;typename AsyncReadStream,
+<span class="lineNum">     220 </span>            :       typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     221 </span><span class="lineCov">       2920 :   class read_op&lt;AsyncReadStream, boost::asio::mutable_buffers_1,</span>
+<span class="lineNum">     222 </span>            :       CompletionCondition, ReadHandler&gt;
+<span class="lineNum">     223 </span>            :     : detail::base_from_completion_cond&lt;CompletionCondition&gt;
+<span class="lineNum">     224 </span>            :   {
+<span class="lineNum">     225 </span>            :   public:
+<span class="lineNum">     226 </span>            :     read_op(AsyncReadStream&amp; stream,
+<span class="lineNum">     227 </span>            :         const boost::asio::mutable_buffers_1&amp; buffers,
+<span class="lineNum">     228 </span>            :         CompletionCondition completion_condition, ReadHandler&amp; handler)
+<span class="lineNum">     229 </span>            :       : detail::base_from_completion_cond&lt;
+<span class="lineNum">     230 </span>            :           CompletionCondition&gt;(completion_condition),
+<span class="lineNum">     231 </span>            :         stream_(stream),
+<span class="lineNum">     232 </span>            :         buffer_(buffers),
+<span class="lineNum">     233 </span>            :         start_(0),
+<span class="lineNum">     234 </span>            :         total_transferred_(0),
+<span class="lineNum">     235 </span><span class="lineCov">        730 :         handler_(BOOST_ASIO_MOVE_CAST(ReadHandler)(handler))</span>
+<span class="lineNum">     236 </span>            :     {
+<span class="lineNum">     237 </span>            :     }
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            : #if defined(BOOST_ASIO_HAS_MOVE)
+<span class="lineNum">     240 </span>            :     read_op(const read_op&amp; other)
+<span class="lineNum">     241 </span>            :       : detail::base_from_completion_cond&lt;CompletionCondition&gt;(other),
+<span class="lineNum">     242 </span>            :         stream_(other.stream_),
+<span class="lineNum">     243 </span>            :         buffer_(other.buffer_),
+<span class="lineNum">     244 </span>            :         start_(other.start_),
+<span class="lineNum">     245 </span>            :         total_transferred_(other.total_transferred_),
+<span class="lineNum">     246 </span>            :         handler_(other.handler_)
+<span class="lineNum">     247 </span>            :     {
+<a name="248"><span class="lineNum">     248 </span>            :     }</a>
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span><span class="lineCov">        372 :     read_op(read_op&amp;&amp; other)</span>
+<span class="lineNum">     251 </span>            :       : detail::base_from_completion_cond&lt;CompletionCondition&gt;(other),
+<span class="lineNum">     252 </span>            :         stream_(other.stream_),
+<span class="lineNum">     253 </span>            :         buffer_(other.buffer_),
+<span class="lineNum">     254 </span>            :         start_(other.start_),
+<span class="lineNum">     255 </span>            :         total_transferred_(other.total_transferred_),
+<span class="lineNum">     256 </span><span class="lineCov">       2190 :         handler_(BOOST_ASIO_MOVE_CAST(ReadHandler)(other.handler_))</span>
+<span class="lineNum">     257 </span>            :     {
+<span class="lineNum">     258 </span><span class="lineCov">        372 :     }</span>
+<a name="259"><span class="lineNum">     259 </span>            : #endif // defined(BOOST_ASIO_HAS_MOVE)</a>
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span><span class="lineCov">        768 :     void operator()(const boost::system::error_code&amp; ec,</span>
+<span class="lineNum">     262 </span>            :         std::size_t bytes_transferred, int start = 0)
+<span class="lineNum">     263 </span>            :     {
+<span class="lineNum">     264 </span><span class="lineCov">        768 :       std::size_t n = 0;</span>
+<span class="lineNum">     265 </span><span class="lineCov">        768 :       switch (start_ = start)</span>
+<span class="lineNum">     266 </span>            :       {
+<span class="lineNum">     267 </span>            :         case 1:
+<span class="lineNum">     268 </span><span class="lineCov">        768 :         n = this-&gt;check_for_completion(ec, total_transferred_);</span>
+<span class="lineNum">     269 </span>            :         for (;;)
+<span class="lineNum">     270 </span>            :         {
+<span class="lineNum">     271 </span><span class="lineCov">        768 :           stream_.async_read_some(</span>
+<span class="lineNum">     272 </span><span class="lineCov">        768 :               boost::asio::buffer(buffer_ + total_transferred_, n),</span>
+<span class="lineNum">     273 </span>            :               BOOST_ASIO_MOVE_CAST(read_op)(*this));
+<span class="lineNum">     274 </span><span class="lineCov">        384 :           return; default:</span>
+<span class="lineNum">     275 </span><span class="lineCov">        384 :           total_transferred_ += bytes_transferred;</span>
+<span class="lineNum">     276 </span><span class="lineCov">       1524 :           if ((!ec &amp;&amp; bytes_transferred == 0)</span>
+<span class="lineNum">     277 </span><span class="lineCov">        384 :               || (n = this-&gt;check_for_completion(ec, total_transferred_)) == 0</span>
+<span class="lineNum">     278 </span><span class="lineCov">        744 :               || total_transferred_ == boost::asio::buffer_size(buffer_))</span>
+<span class="lineNum">     279 </span>            :             break;
+<span class="lineNum">     280 </span>            :         }
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span><span class="lineCov">        384 :         handler_(ec, static_cast&lt;const std::size_t&amp;&gt;(total_transferred_));</span>
+<span class="lineNum">     283 </span>            :       }
+<span class="lineNum">     284 </span>            :     }
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            :   //private:
+<span class="lineNum">     287 </span>            :     AsyncReadStream&amp; stream_;
+<span class="lineNum">     288 </span>            :     boost::asio::mutable_buffer buffer_;
+<span class="lineNum">     289 </span>            :     int start_;
+<span class="lineNum">     290 </span>            :     std::size_t total_transferred_;
+<span class="lineNum">     291 </span>            :     ReadHandler handler_;
+<span class="lineNum">     292 </span>            :   };
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            :   template &lt;typename AsyncReadStream, typename Elem,
+<span class="lineNum">     295 </span>            :       typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     296 </span>            :   class read_op&lt;AsyncReadStream, boost::array&lt;Elem, 2&gt;,
+<span class="lineNum">     297 </span>            :       CompletionCondition, ReadHandler&gt;
+<span class="lineNum">     298 </span>            :     : detail::base_from_completion_cond&lt;CompletionCondition&gt;
+<span class="lineNum">     299 </span>            :   {
+<span class="lineNum">     300 </span>            :   public:
+<span class="lineNum">     301 </span>            :     read_op(AsyncReadStream&amp; stream, const boost::array&lt;Elem, 2&gt;&amp; buffers,
+<span class="lineNum">     302 </span>            :         CompletionCondition completion_condition, ReadHandler&amp; handler)
+<span class="lineNum">     303 </span>            :       : detail::base_from_completion_cond&lt;
+<span class="lineNum">     304 </span>            :           CompletionCondition&gt;(completion_condition),
+<span class="lineNum">     305 </span>            :         stream_(stream),
+<span class="lineNum">     306 </span>            :         buffers_(buffers),
+<span class="lineNum">     307 </span>            :         start_(0),
+<span class="lineNum">     308 </span>            :         total_transferred_(0),
+<span class="lineNum">     309 </span>            :         handler_(BOOST_ASIO_MOVE_CAST(ReadHandler)(handler))
+<span class="lineNum">     310 </span>            :     {
+<span class="lineNum">     311 </span>            :     }
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            : #if defined(BOOST_ASIO_HAS_MOVE)
+<span class="lineNum">     314 </span>            :     read_op(const read_op&amp; other)
+<span class="lineNum">     315 </span>            :       : detail::base_from_completion_cond&lt;CompletionCondition&gt;(other),
+<span class="lineNum">     316 </span>            :         stream_(other.stream_),
+<span class="lineNum">     317 </span>            :         buffers_(other.buffers_),
+<span class="lineNum">     318 </span>            :         start_(other.start_),
+<span class="lineNum">     319 </span>            :         total_transferred_(other.total_transferred_),
+<span class="lineNum">     320 </span>            :         handler_(other.handler_)
+<span class="lineNum">     321 </span>            :     {
+<span class="lineNum">     322 </span>            :     }
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span>            :     read_op(read_op&amp;&amp; other)
+<span class="lineNum">     325 </span>            :       : detail::base_from_completion_cond&lt;CompletionCondition&gt;(other),
+<span class="lineNum">     326 </span>            :         stream_(other.stream_),
+<span class="lineNum">     327 </span>            :         buffers_(other.buffers_),
+<span class="lineNum">     328 </span>            :         start_(other.start_),
+<span class="lineNum">     329 </span>            :         total_transferred_(other.total_transferred_),
+<span class="lineNum">     330 </span>            :         handler_(BOOST_ASIO_MOVE_CAST(ReadHandler)(other.handler_))
+<span class="lineNum">     331 </span>            :     {
+<span class="lineNum">     332 </span>            :     }
+<span class="lineNum">     333 </span>            : #endif // defined(BOOST_ASIO_HAS_MOVE)
+<span class="lineNum">     334 </span>            : 
+<span class="lineNum">     335 </span>            :     void operator()(const boost::system::error_code&amp; ec,
+<span class="lineNum">     336 </span>            :         std::size_t bytes_transferred, int start = 0)
+<span class="lineNum">     337 </span>            :     {
+<span class="lineNum">     338 </span>            :       typename boost::asio::detail::dependent_type&lt;Elem,
+<span class="lineNum">     339 </span>            :           boost::array&lt;boost::asio::mutable_buffer, 2&gt; &gt;::type bufs = {{
+<span class="lineNum">     340 </span>            :         boost::asio::mutable_buffer(buffers_[0]),
+<span class="lineNum">     341 </span>            :         boost::asio::mutable_buffer(buffers_[1]) }};
+<span class="lineNum">     342 </span>            :       std::size_t buffer_size0 = boost::asio::buffer_size(bufs[0]);
+<span class="lineNum">     343 </span>            :       std::size_t buffer_size1 = boost::asio::buffer_size(bufs[1]);
+<span class="lineNum">     344 </span>            :       std::size_t n = 0;
+<span class="lineNum">     345 </span>            :       switch (start_ = start)
+<span class="lineNum">     346 </span>            :       {
+<span class="lineNum">     347 </span>            :         case 1:
+<span class="lineNum">     348 </span>            :         n = this-&gt;check_for_completion(ec, total_transferred_);
+<span class="lineNum">     349 </span>            :         for (;;)
+<span class="lineNum">     350 </span>            :         {
+<span class="lineNum">     351 </span>            :           bufs[0] = boost::asio::buffer(bufs[0] + total_transferred_, n);
+<span class="lineNum">     352 </span>            :           bufs[1] = boost::asio::buffer(
+<span class="lineNum">     353 </span>            :               bufs[1] + (total_transferred_ &lt; buffer_size0
+<span class="lineNum">     354 </span>            :                 ? 0 : total_transferred_ - buffer_size0),
+<span class="lineNum">     355 </span>            :               n - boost::asio::buffer_size(bufs[0]));
+<span class="lineNum">     356 </span>            :           stream_.async_read_some(bufs, BOOST_ASIO_MOVE_CAST(read_op)(*this));
+<span class="lineNum">     357 </span>            :           return; default:
+<span class="lineNum">     358 </span>            :           total_transferred_ += bytes_transferred;
+<span class="lineNum">     359 </span>            :           if ((!ec &amp;&amp; bytes_transferred == 0)
+<span class="lineNum">     360 </span>            :               || (n = this-&gt;check_for_completion(ec, total_transferred_)) == 0
+<span class="lineNum">     361 </span>            :               || total_transferred_ == buffer_size0 + buffer_size1)
+<span class="lineNum">     362 </span>            :             break;
+<span class="lineNum">     363 </span>            :         }
+<span class="lineNum">     364 </span>            : 
+<span class="lineNum">     365 </span>            :         handler_(ec, static_cast&lt;const std::size_t&amp;&gt;(total_transferred_));
+<span class="lineNum">     366 </span>            :       }
+<span class="lineNum">     367 </span>            :     }
+<span class="lineNum">     368 </span>            : 
+<span class="lineNum">     369 </span>            :   //private:
+<span class="lineNum">     370 </span>            :     AsyncReadStream&amp; stream_;
+<span class="lineNum">     371 </span>            :     boost::array&lt;Elem, 2&gt; buffers_;
+<span class="lineNum">     372 </span>            :     int start_;
+<span class="lineNum">     373 </span>            :     std::size_t total_transferred_;
+<span class="lineNum">     374 </span>            :     ReadHandler handler_;
+<span class="lineNum">     375 </span>            :   };
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span>            : #if defined(BOOST_ASIO_HAS_STD_ARRAY)
+<span class="lineNum">     378 </span>            : 
+<span class="lineNum">     379 </span>            :   template &lt;typename AsyncReadStream, typename Elem,
+<span class="lineNum">     380 </span>            :       typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     381 </span>            :   class read_op&lt;AsyncReadStream, std::array&lt;Elem, 2&gt;,
+<span class="lineNum">     382 </span>            :       CompletionCondition, ReadHandler&gt;
+<span class="lineNum">     383 </span>            :     : detail::base_from_completion_cond&lt;CompletionCondition&gt;
+<span class="lineNum">     384 </span>            :   {
+<span class="lineNum">     385 </span>            :   public:
+<span class="lineNum">     386 </span>            :     read_op(AsyncReadStream&amp; stream, const std::array&lt;Elem, 2&gt;&amp; buffers,
+<span class="lineNum">     387 </span>            :         CompletionCondition completion_condition, ReadHandler&amp; handler)
+<span class="lineNum">     388 </span>            :       : detail::base_from_completion_cond&lt;
+<span class="lineNum">     389 </span>            :           CompletionCondition&gt;(completion_condition),
+<span class="lineNum">     390 </span>            :         stream_(stream),
+<span class="lineNum">     391 </span>            :         buffers_(buffers),
+<span class="lineNum">     392 </span>            :         start_(0),
+<span class="lineNum">     393 </span>            :         total_transferred_(0),
+<span class="lineNum">     394 </span>            :         handler_(BOOST_ASIO_MOVE_CAST(ReadHandler)(handler))
+<span class="lineNum">     395 </span>            :     {
+<span class="lineNum">     396 </span>            :     }
+<span class="lineNum">     397 </span>            : 
+<span class="lineNum">     398 </span>            : #if defined(BOOST_ASIO_HAS_MOVE)
+<span class="lineNum">     399 </span>            :     read_op(const read_op&amp; other)
+<span class="lineNum">     400 </span>            :       : detail::base_from_completion_cond&lt;CompletionCondition&gt;(other),
+<span class="lineNum">     401 </span>            :         stream_(other.stream_),
+<span class="lineNum">     402 </span>            :         buffers_(other.buffers_),
+<span class="lineNum">     403 </span>            :         start_(other.start_),
+<span class="lineNum">     404 </span>            :         total_transferred_(other.total_transferred_),
+<span class="lineNum">     405 </span>            :         handler_(other.handler_)
+<span class="lineNum">     406 </span>            :     {
+<span class="lineNum">     407 </span>            :     }
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span>            :     read_op(read_op&amp;&amp; other)
+<span class="lineNum">     410 </span>            :       : detail::base_from_completion_cond&lt;CompletionCondition&gt;(other),
+<span class="lineNum">     411 </span>            :         stream_(other.stream_),
+<span class="lineNum">     412 </span>            :         buffers_(other.buffers_),
+<span class="lineNum">     413 </span>            :         start_(other.start_),
+<span class="lineNum">     414 </span>            :         total_transferred_(other.total_transferred_),
+<span class="lineNum">     415 </span>            :         handler_(BOOST_ASIO_MOVE_CAST(ReadHandler)(other.handler_))
+<span class="lineNum">     416 </span>            :     {
+<span class="lineNum">     417 </span>            :     }
+<span class="lineNum">     418 </span>            : #endif // defined(BOOST_ASIO_HAS_MOVE)
+<span class="lineNum">     419 </span>            : 
+<span class="lineNum">     420 </span>            :     void operator()(const boost::system::error_code&amp; ec,
+<span class="lineNum">     421 </span>            :         std::size_t bytes_transferred, int start = 0)
+<span class="lineNum">     422 </span>            :     {
+<span class="lineNum">     423 </span>            :       typename boost::asio::detail::dependent_type&lt;Elem,
+<span class="lineNum">     424 </span>            :           std::array&lt;boost::asio::mutable_buffer, 2&gt; &gt;::type bufs = {{
+<span class="lineNum">     425 </span>            :         boost::asio::mutable_buffer(buffers_[0]),
+<span class="lineNum">     426 </span>            :         boost::asio::mutable_buffer(buffers_[1]) }};
+<span class="lineNum">     427 </span>            :       std::size_t buffer_size0 = boost::asio::buffer_size(bufs[0]);
+<span class="lineNum">     428 </span>            :       std::size_t buffer_size1 = boost::asio::buffer_size(bufs[1]);
+<span class="lineNum">     429 </span>            :       std::size_t n = 0;
+<span class="lineNum">     430 </span>            :       switch (start_ = start)
+<span class="lineNum">     431 </span>            :       {
+<span class="lineNum">     432 </span>            :         case 1:
+<span class="lineNum">     433 </span>            :         n = this-&gt;check_for_completion(ec, total_transferred_);
+<span class="lineNum">     434 </span>            :         for (;;)
+<span class="lineNum">     435 </span>            :         {
+<span class="lineNum">     436 </span>            :           bufs[0] = boost::asio::buffer(bufs[0] + total_transferred_, n);
+<span class="lineNum">     437 </span>            :           bufs[1] = boost::asio::buffer(
+<span class="lineNum">     438 </span>            :               bufs[1] + (total_transferred_ &lt; buffer_size0
+<span class="lineNum">     439 </span>            :                 ? 0 : total_transferred_ - buffer_size0),
+<span class="lineNum">     440 </span>            :               n - boost::asio::buffer_size(bufs[0]));
+<span class="lineNum">     441 </span>            :           stream_.async_read_some(bufs, BOOST_ASIO_MOVE_CAST(read_op)(*this));
+<span class="lineNum">     442 </span>            :           return; default:
+<span class="lineNum">     443 </span>            :           total_transferred_ += bytes_transferred;
+<span class="lineNum">     444 </span>            :           if ((!ec &amp;&amp; bytes_transferred == 0)
+<span class="lineNum">     445 </span>            :               || (n = this-&gt;check_for_completion(ec, total_transferred_)) == 0
+<span class="lineNum">     446 </span>            :               || total_transferred_ == buffer_size0 + buffer_size1)
+<span class="lineNum">     447 </span>            :             break;
+<span class="lineNum">     448 </span>            :         }
+<span class="lineNum">     449 </span>            : 
+<span class="lineNum">     450 </span>            :         handler_(ec, static_cast&lt;const std::size_t&amp;&gt;(total_transferred_));
+<span class="lineNum">     451 </span>            :       }
+<span class="lineNum">     452 </span>            :     }
+<span class="lineNum">     453 </span>            : 
+<span class="lineNum">     454 </span>            :   //private:
+<span class="lineNum">     455 </span>            :     AsyncReadStream&amp; stream_;
+<span class="lineNum">     456 </span>            :     std::array&lt;Elem, 2&gt; buffers_;
+<span class="lineNum">     457 </span>            :     int start_;
+<span class="lineNum">     458 </span>            :     std::size_t total_transferred_;
+<span class="lineNum">     459 </span>            :     ReadHandler handler_;
+<span class="lineNum">     460 </span>            :   };
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span>            : #endif // defined(BOOST_ASIO_HAS_STD_ARRAY)
+<span class="lineNum">     463 </span>            : 
+<span class="lineNum">     464 </span>            :   template &lt;typename AsyncReadStream, typename MutableBufferSequence,
+<span class="lineNum">     465 </span>            :       typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     466 </span>            :   inline void* asio_handler_allocate(std::size_t size,
+<span class="lineNum">     467 </span>            :       read_op&lt;AsyncReadStream, MutableBufferSequence,
+<span class="lineNum">     468 </span>            :         CompletionCondition, ReadHandler&gt;* this_handler)
+<span class="lineNum">     469 </span>            :   {
+<span class="lineNum">     470 </span><span class="lineCov">        384 :     return boost_asio_handler_alloc_helpers::allocate(</span>
+<span class="lineNum">     471 </span><span class="lineCov">        768 :         size, this_handler-&gt;handler_);</span>
+<span class="lineNum">     472 </span>            :   }
+<span class="lineNum">     473 </span>            : 
+<span class="lineNum">     474 </span>            :   template &lt;typename AsyncReadStream, typename MutableBufferSequence,
+<span class="lineNum">     475 </span>            :       typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     476 </span>            :   inline void asio_handler_deallocate(void* pointer, std::size_t size,
+<span class="lineNum">     477 </span>            :       read_op&lt;AsyncReadStream, MutableBufferSequence,
+<span class="lineNum">     478 </span>            :         CompletionCondition, ReadHandler&gt;* this_handler)
+<span class="lineNum">     479 </span>            :   {
+<span class="lineNum">     480 </span><span class="lineCov">        768 :     boost_asio_handler_alloc_helpers::deallocate(</span>
+<span class="lineNum">     481 </span>            :         pointer, size, this_handler-&gt;handler_);
+<span class="lineNum">     482 </span>            :   }
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span>            :   template &lt;typename AsyncReadStream, typename MutableBufferSequence,
+<span class="lineNum">     485 </span>            :       typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     486 </span>            :   inline bool asio_handler_is_continuation(
+<span class="lineNum">     487 </span>            :       read_op&lt;AsyncReadStream, MutableBufferSequence,
+<span class="lineNum">     488 </span>            :         CompletionCondition, ReadHandler&gt;* this_handler)
+<span class="lineNum">     489 </span>            :   {
+<span class="lineNum">     490 </span><span class="lineCov">        384 :     return this_handler-&gt;start_ == 0 ? true</span>
+<span class="lineNum">     491 </span><span class="lineCov">        384 :       : boost_asio_handler_cont_helpers::is_continuation(</span>
+<span class="lineNum">     492 </span><span class="lineCov">        768 :           this_handler-&gt;handler_);</span>
+<span class="lineNum">     493 </span>            :   }
+<span class="lineNum">     494 </span>            : 
+<span class="lineNum">     495 </span>            :   template &lt;typename Function, typename AsyncReadStream,
+<span class="lineNum">     496 </span>            :       typename MutableBufferSequence, typename CompletionCondition,
+<span class="lineNum">     497 </span>            :       typename ReadHandler&gt;
+<span class="lineNum">     498 </span>            :   inline void asio_handler_invoke(Function&amp; function,
+<span class="lineNum">     499 </span>            :       read_op&lt;AsyncReadStream, MutableBufferSequence,
+<span class="lineNum">     500 </span>            :         CompletionCondition, ReadHandler&gt;* this_handler)
+<span class="lineNum">     501 </span>            :   {
+<span class="lineNum">     502 </span><span class="lineCov">        768 :     boost_asio_handler_invoke_helpers::invoke(</span>
+<span class="lineNum">     503 </span>            :         function, this_handler-&gt;handler_);
+<span class="lineNum">     504 </span>            :   }
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span>            :   template &lt;typename Function, typename AsyncReadStream,
+<span class="lineNum">     507 </span>            :       typename MutableBufferSequence, typename CompletionCondition,
+<span class="lineNum">     508 </span>            :       typename ReadHandler&gt;
+<span class="lineNum">     509 </span>            :   inline void asio_handler_invoke(const Function&amp; function,
+<span class="lineNum">     510 </span>            :       read_op&lt;AsyncReadStream, MutableBufferSequence,
+<span class="lineNum">     511 </span>            :         CompletionCondition, ReadHandler&gt;* this_handler)
+<span class="lineNum">     512 </span>            :   {
+<span class="lineNum">     513 </span>            :     boost_asio_handler_invoke_helpers::invoke(
+<span class="lineNum">     514 </span>            :         function, this_handler-&gt;handler_);
+<span class="lineNum">     515 </span>            :   }
+<span class="lineNum">     516 </span>            : } // namespace detail
+<span class="lineNum">     517 </span>            : 
+<span class="lineNum">     518 </span>            : template &lt;typename AsyncReadStream, typename MutableBufferSequence,
+<span class="lineNum">     519 </span>            :     typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     520 </span>            : inline BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,
+<span class="lineNum">     521 </span>            :     void (boost::system::error_code, std::size_t))
+<span class="lineNum">     522 </span>            : async_read(AsyncReadStream&amp; s, const MutableBufferSequence&amp; buffers,
+<span class="lineNum">     523 </span>            :     CompletionCondition completion_condition,
+<span class="lineNum">     524 </span>            :     BOOST_ASIO_MOVE_ARG(ReadHandler) handler)
+<span class="lineNum">     525 </span>            : {
+<span class="lineNum">     526 </span>            :   // If you get an error on the following line it means that your handler does
+<span class="lineNum">     527 </span>            :   // not meet the documented type requirements for a ReadHandler.
+<span class="lineNum">     528 </span>            :   BOOST_ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
+<span class="lineNum">     529 </span>            : 
+<span class="lineNum">     530 </span>            :   detail::async_result_init&lt;
+<span class="lineNum">     531 </span>            :     ReadHandler, void (boost::system::error_code, std::size_t)&gt; init(
+<span class="lineNum">     532 </span>            :       BOOST_ASIO_MOVE_CAST(ReadHandler)(handler));
+<span class="lineNum">     533 </span>            : 
+<span class="lineNum">     534 </span>            :   detail::read_op&lt;AsyncReadStream, MutableBufferSequence,
+<span class="lineNum">     535 </span>            :     CompletionCondition, BOOST_ASIO_HANDLER_TYPE(
+<span class="lineNum">     536 </span>            :       ReadHandler, void (boost::system::error_code, std::size_t))&gt;(
+<span class="lineNum">     537 </span>            :         s, buffers, completion_condition, init.handler)(
+<span class="lineNum">     538 </span>            :           boost::system::error_code(), 0, 1);
+<span class="lineNum">     539 </span>            : 
+<span class="lineNum">     540 </span>            :   return init.result.get();
+<span class="lineNum">     541 </span>            : }
+<span class="lineNum">     542 </span>            : 
+<span class="lineNum">     543 </span>            : template &lt;typename AsyncReadStream, typename MutableBufferSequence,
+<span class="lineNum">     544 </span>            :     typename ReadHandler&gt;
+<a name="545"><span class="lineNum">     545 </span>            : inline BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,</a>
+<span class="lineNum">     546 </span>            :     void (boost::system::error_code, std::size_t))
+<span class="lineNum">     547 </span><span class="lineCov">        384 : async_read(AsyncReadStream&amp; s, const MutableBufferSequence&amp; buffers,</span>
+<span class="lineNum">     548 </span>            :     BOOST_ASIO_MOVE_ARG(ReadHandler) handler)
+<span class="lineNum">     549 </span>            : {
+<span class="lineNum">     550 </span>            :   // If you get an error on the following line it means that your handler does
+<span class="lineNum">     551 </span>            :   // not meet the documented type requirements for a ReadHandler.
+<span class="lineNum">     552 </span>            :   BOOST_ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
+<span class="lineNum">     553 </span>            : 
+<span class="lineNum">     554 </span>            :   detail::async_result_init&lt;
+<span class="lineNum">     555 </span>            :     ReadHandler, void (boost::system::error_code, std::size_t)&gt; init(
+<span class="lineNum">     556 </span><span class="lineCov">        768 :       BOOST_ASIO_MOVE_CAST(ReadHandler)(handler));</span>
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span><span class="lineCov">        384 :   detail::read_op&lt;AsyncReadStream, MutableBufferSequence,</span>
+<span class="lineNum">     559 </span>            :     detail::transfer_all_t, BOOST_ASIO_HANDLER_TYPE(
+<span class="lineNum">     560 </span>            :       ReadHandler, void (boost::system::error_code, std::size_t))&gt;(
+<span class="lineNum">     561 </span><span class="lineCov">       1152 :         s, buffers, transfer_all(), init.handler)(</span>
+<span class="lineNum">     562 </span>            :           boost::system::error_code(), 0, 1);
+<span class="lineNum">     563 </span>            : 
+<span class="lineNum">     564 </span><span class="lineCov">        768 :   return init.result.get();</span>
+<span class="lineNum">     565 </span>            : }
+<span class="lineNum">     566 </span>            : 
+<span class="lineNum">     567 </span>            : #if !defined(BOOST_ASIO_NO_IOSTREAM)
+<span class="lineNum">     568 </span>            : 
+<span class="lineNum">     569 </span>            : namespace detail
+<span class="lineNum">     570 </span>            : {
+<span class="lineNum">     571 </span>            :   template &lt;typename AsyncReadStream, typename Allocator,
+<span class="lineNum">     572 </span>            :       typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     573 </span>            :   class read_streambuf_op
+<span class="lineNum">     574 </span>            :     : detail::base_from_completion_cond&lt;CompletionCondition&gt;
+<span class="lineNum">     575 </span>            :   {
+<span class="lineNum">     576 </span>            :   public:
+<span class="lineNum">     577 </span>            :     read_streambuf_op(AsyncReadStream&amp; stream,
+<span class="lineNum">     578 </span>            :         basic_streambuf&lt;Allocator&gt;&amp; streambuf,
+<span class="lineNum">     579 </span>            :         CompletionCondition completion_condition, ReadHandler&amp; handler)
+<span class="lineNum">     580 </span>            :       : detail::base_from_completion_cond&lt;
+<span class="lineNum">     581 </span>            :           CompletionCondition&gt;(completion_condition),
+<span class="lineNum">     582 </span>            :         stream_(stream),
+<span class="lineNum">     583 </span>            :         streambuf_(streambuf),
+<span class="lineNum">     584 </span>            :         start_(0),
+<span class="lineNum">     585 </span>            :         total_transferred_(0),
+<span class="lineNum">     586 </span>            :         handler_(BOOST_ASIO_MOVE_CAST(ReadHandler)(handler))
+<span class="lineNum">     587 </span>            :     {
+<span class="lineNum">     588 </span>            :     }
+<span class="lineNum">     589 </span>            : 
+<span class="lineNum">     590 </span>            : #if defined(BOOST_ASIO_HAS_MOVE)
+<span class="lineNum">     591 </span>            :     read_streambuf_op(const read_streambuf_op&amp; other)
+<span class="lineNum">     592 </span>            :       : detail::base_from_completion_cond&lt;CompletionCondition&gt;(other),
+<span class="lineNum">     593 </span>            :         stream_(other.stream_),
+<span class="lineNum">     594 </span>            :         streambuf_(other.streambuf_),
+<span class="lineNum">     595 </span>            :         start_(other.start_),
+<span class="lineNum">     596 </span>            :         total_transferred_(other.total_transferred_),
+<span class="lineNum">     597 </span>            :         handler_(other.handler_)
+<span class="lineNum">     598 </span>            :     {
+<span class="lineNum">     599 </span>            :     }
+<span class="lineNum">     600 </span>            : 
+<span class="lineNum">     601 </span>            :     read_streambuf_op(read_streambuf_op&amp;&amp; other)
+<span class="lineNum">     602 </span>            :       : detail::base_from_completion_cond&lt;CompletionCondition&gt;(other),
+<span class="lineNum">     603 </span>            :         stream_(other.stream_),
+<span class="lineNum">     604 </span>            :         streambuf_(other.streambuf_),
+<span class="lineNum">     605 </span>            :         start_(other.start_),
+<span class="lineNum">     606 </span>            :         total_transferred_(other.total_transferred_),
+<span class="lineNum">     607 </span>            :         handler_(BOOST_ASIO_MOVE_CAST(ReadHandler)(other.handler_))
+<span class="lineNum">     608 </span>            :     {
+<span class="lineNum">     609 </span>            :     }
+<span class="lineNum">     610 </span>            : #endif // defined(BOOST_ASIO_HAS_MOVE)
+<span class="lineNum">     611 </span>            : 
+<span class="lineNum">     612 </span>            :     void operator()(const boost::system::error_code&amp; ec,
+<span class="lineNum">     613 </span>            :         std::size_t bytes_transferred, int start = 0)
+<span class="lineNum">     614 </span>            :     {
+<span class="lineNum">     615 </span>            :       std::size_t max_size, bytes_available;
+<span class="lineNum">     616 </span>            :       switch (start_ = start)
+<span class="lineNum">     617 </span>            :       {
+<span class="lineNum">     618 </span>            :         case 1:
+<span class="lineNum">     619 </span>            :         max_size = this-&gt;check_for_completion(ec, total_transferred_);
+<span class="lineNum">     620 </span>            :         bytes_available = read_size_helper(streambuf_, max_size);
+<span class="lineNum">     621 </span>            :         for (;;)
+<span class="lineNum">     622 </span>            :         {
+<span class="lineNum">     623 </span>            :           stream_.async_read_some(streambuf_.prepare(bytes_available),
+<span class="lineNum">     624 </span>            :               BOOST_ASIO_MOVE_CAST(read_streambuf_op)(*this));
+<span class="lineNum">     625 </span>            :           return; default:
+<span class="lineNum">     626 </span>            :           total_transferred_ += bytes_transferred;
+<span class="lineNum">     627 </span>            :           streambuf_.commit(bytes_transferred);
+<span class="lineNum">     628 </span>            :           max_size = this-&gt;check_for_completion(ec, total_transferred_);
+<span class="lineNum">     629 </span>            :           bytes_available = read_size_helper(streambuf_, max_size);
+<span class="lineNum">     630 </span>            :           if ((!ec &amp;&amp; bytes_transferred == 0) || bytes_available == 0)
+<span class="lineNum">     631 </span>            :             break;
+<span class="lineNum">     632 </span>            :         }
+<span class="lineNum">     633 </span>            : 
+<span class="lineNum">     634 </span>            :         handler_(ec, static_cast&lt;const std::size_t&amp;&gt;(total_transferred_));
+<span class="lineNum">     635 </span>            :       }
+<span class="lineNum">     636 </span>            :     }
+<span class="lineNum">     637 </span>            : 
+<span class="lineNum">     638 </span>            :   //private:
+<span class="lineNum">     639 </span>            :     AsyncReadStream&amp; stream_;
+<span class="lineNum">     640 </span>            :     boost::asio::basic_streambuf&lt;Allocator&gt;&amp; streambuf_;
+<span class="lineNum">     641 </span>            :     int start_;
+<span class="lineNum">     642 </span>            :     std::size_t total_transferred_;
+<span class="lineNum">     643 </span>            :     ReadHandler handler_;
+<span class="lineNum">     644 </span>            :   };
+<span class="lineNum">     645 </span>            : 
+<span class="lineNum">     646 </span>            :   template &lt;typename AsyncReadStream, typename Allocator,
+<span class="lineNum">     647 </span>            :       typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     648 </span>            :   inline void* asio_handler_allocate(std::size_t size,
+<span class="lineNum">     649 </span>            :       read_streambuf_op&lt;AsyncReadStream, Allocator,
+<span class="lineNum">     650 </span>            :         CompletionCondition, ReadHandler&gt;* this_handler)
+<span class="lineNum">     651 </span>            :   {
+<span class="lineNum">     652 </span>            :     return boost_asio_handler_alloc_helpers::allocate(
+<span class="lineNum">     653 </span>            :         size, this_handler-&gt;handler_);
+<span class="lineNum">     654 </span>            :   }
+<span class="lineNum">     655 </span>            : 
+<span class="lineNum">     656 </span>            :   template &lt;typename AsyncReadStream, typename Allocator,
+<span class="lineNum">     657 </span>            :       typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     658 </span>            :   inline void asio_handler_deallocate(void* pointer, std::size_t size,
+<span class="lineNum">     659 </span>            :       read_streambuf_op&lt;AsyncReadStream, Allocator,
+<span class="lineNum">     660 </span>            :         CompletionCondition, ReadHandler&gt;* this_handler)
+<span class="lineNum">     661 </span>            :   {
+<span class="lineNum">     662 </span>            :     boost_asio_handler_alloc_helpers::deallocate(
+<span class="lineNum">     663 </span>            :         pointer, size, this_handler-&gt;handler_);
+<span class="lineNum">     664 </span>            :   }
+<span class="lineNum">     665 </span>            : 
+<span class="lineNum">     666 </span>            :   template &lt;typename AsyncReadStream, typename Allocator,
+<span class="lineNum">     667 </span>            :       typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     668 </span>            :   inline bool asio_handler_is_continuation(
+<span class="lineNum">     669 </span>            :       read_streambuf_op&lt;AsyncReadStream, Allocator,
+<span class="lineNum">     670 </span>            :         CompletionCondition, ReadHandler&gt;* this_handler)
+<span class="lineNum">     671 </span>            :   {
+<span class="lineNum">     672 </span>            :     return this_handler-&gt;start_ == 0 ? true
+<span class="lineNum">     673 </span>            :       : boost_asio_handler_cont_helpers::is_continuation(
+<span class="lineNum">     674 </span>            :           this_handler-&gt;handler_);
+<span class="lineNum">     675 </span>            :   }
+<span class="lineNum">     676 </span>            : 
+<span class="lineNum">     677 </span>            :   template &lt;typename Function, typename AsyncReadStream,
+<span class="lineNum">     678 </span>            :       typename Allocator, typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     679 </span>            :   inline void asio_handler_invoke(Function&amp; function,
+<span class="lineNum">     680 </span>            :       read_streambuf_op&lt;AsyncReadStream, Allocator,
+<span class="lineNum">     681 </span>            :         CompletionCondition, ReadHandler&gt;* this_handler)
+<span class="lineNum">     682 </span>            :   {
+<span class="lineNum">     683 </span>            :     boost_asio_handler_invoke_helpers::invoke(
+<span class="lineNum">     684 </span>            :         function, this_handler-&gt;handler_);
+<span class="lineNum">     685 </span>            :   }
+<span class="lineNum">     686 </span>            : 
+<span class="lineNum">     687 </span>            :   template &lt;typename Function, typename AsyncReadStream,
+<span class="lineNum">     688 </span>            :       typename Allocator, typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     689 </span>            :   inline void asio_handler_invoke(const Function&amp; function,
+<span class="lineNum">     690 </span>            :       read_streambuf_op&lt;AsyncReadStream, Allocator,
+<span class="lineNum">     691 </span>            :         CompletionCondition, ReadHandler&gt;* this_handler)
+<span class="lineNum">     692 </span>            :   {
+<span class="lineNum">     693 </span>            :     boost_asio_handler_invoke_helpers::invoke(
+<span class="lineNum">     694 </span>            :         function, this_handler-&gt;handler_);
+<span class="lineNum">     695 </span>            :   }
+<span class="lineNum">     696 </span>            : } // namespace detail
+<span class="lineNum">     697 </span>            : 
+<span class="lineNum">     698 </span>            : template &lt;typename AsyncReadStream, typename Allocator,
+<span class="lineNum">     699 </span>            :     typename CompletionCondition, typename ReadHandler&gt;
+<span class="lineNum">     700 </span>            : inline BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,
+<span class="lineNum">     701 </span>            :     void (boost::system::error_code, std::size_t))
+<span class="lineNum">     702 </span>            : async_read(AsyncReadStream&amp; s,
+<span class="lineNum">     703 </span>            :     boost::asio::basic_streambuf&lt;Allocator&gt;&amp; b,
+<span class="lineNum">     704 </span>            :     CompletionCondition completion_condition,
+<span class="lineNum">     705 </span>            :     BOOST_ASIO_MOVE_ARG(ReadHandler) handler)
+<span class="lineNum">     706 </span>            : {
+<span class="lineNum">     707 </span>            :   // If you get an error on the following line it means that your handler does
+<span class="lineNum">     708 </span>            :   // not meet the documented type requirements for a ReadHandler.
+<span class="lineNum">     709 </span>            :   BOOST_ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
+<span class="lineNum">     710 </span>            : 
+<span class="lineNum">     711 </span>            :   detail::async_result_init&lt;
+<span class="lineNum">     712 </span>            :     ReadHandler, void (boost::system::error_code, std::size_t)&gt; init(
+<span class="lineNum">     713 </span>            :       BOOST_ASIO_MOVE_CAST(ReadHandler)(handler));
+<span class="lineNum">     714 </span>            : 
+<span class="lineNum">     715 </span>            :   detail::read_streambuf_op&lt;AsyncReadStream, Allocator,
+<span class="lineNum">     716 </span>            :     CompletionCondition, BOOST_ASIO_HANDLER_TYPE(
+<span class="lineNum">     717 </span>            :       ReadHandler, void (boost::system::error_code, std::size_t))&gt;(
+<span class="lineNum">     718 </span>            :         s, b, completion_condition, init.handler)(
+<span class="lineNum">     719 </span>            :           boost::system::error_code(), 0, 1);
+<span class="lineNum">     720 </span>            : 
+<span class="lineNum">     721 </span>            :   return init.result.get();
+<span class="lineNum">     722 </span>            : }
+<span class="lineNum">     723 </span>            : 
+<span class="lineNum">     724 </span>            : template &lt;typename AsyncReadStream, typename Allocator, typename ReadHandler&gt;
+<span class="lineNum">     725 </span>            : inline BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,
+<span class="lineNum">     726 </span>            :     void (boost::system::error_code, std::size_t))
+<span class="lineNum">     727 </span>            : async_read(AsyncReadStream&amp; s,
+<span class="lineNum">     728 </span>            :     boost::asio::basic_streambuf&lt;Allocator&gt;&amp; b,
+<span class="lineNum">     729 </span>            :     BOOST_ASIO_MOVE_ARG(ReadHandler) handler)
+<span class="lineNum">     730 </span>            : {
+<span class="lineNum">     731 </span>            :   // If you get an error on the following line it means that your handler does
+<span class="lineNum">     732 </span>            :   // not meet the documented type requirements for a ReadHandler.
+<span class="lineNum">     733 </span>            :   BOOST_ASIO_READ_HANDLER_CHECK(ReadHandler, handler) type_check;
+<span class="lineNum">     734 </span>            : 
+<span class="lineNum">     735 </span>            :   detail::async_result_init&lt;
+<span class="lineNum">     736 </span>            :     ReadHandler, void (boost::system::error_code, std::size_t)&gt; init(
+<span class="lineNum">     737 </span>            :       BOOST_ASIO_MOVE_CAST(ReadHandler)(handler));
+<span class="lineNum">     738 </span>            : 
+<span class="lineNum">     739 </span>            :   detail::read_streambuf_op&lt;AsyncReadStream, Allocator,
+<span class="lineNum">     740 </span>            :     detail::transfer_all_t, BOOST_ASIO_HANDLER_TYPE(
+<span class="lineNum">     741 </span>            :       ReadHandler, void (boost::system::error_code, std::size_t))&gt;(
+<span class="lineNum">     742 </span>            :         s, b, transfer_all(), init.handler)(
+<span class="lineNum">     743 </span>            :           boost::system::error_code(), 0, 1);
+<span class="lineNum">     744 </span>            : 
+<span class="lineNum">     745 </span>            :   return init.result.get();
+<span class="lineNum">     746 </span>            : }
+<span class="lineNum">     747 </span>            : 
+<span class="lineNum">     748 </span>            : #endif // !defined(BOOST_ASIO_NO_IOSTREAM)
+<span class="lineNum">     749 </span>            : 
+<span class="lineNum">     750 </span>            : } // namespace asio
+<span class="lineNum">     751 </span>            : } // namespace boost
+<span class="lineNum">     752 </span>            : 
+<span class="lineNum">     753 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     754 </span>            : 
+<span class="lineNum">     755 </span>            : #endif // BOOST_ASIO_IMPL_READ_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

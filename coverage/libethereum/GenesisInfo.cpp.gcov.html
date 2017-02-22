@@ -1,0 +1,397 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/GenesisInfo.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - GenesisInfo.cpp<span style="font-size: 80%;"> (source / <a href="GenesisInfo.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :                 This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :                 cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :                 it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :                 the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :                 (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :                 cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :                 but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :                 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :                 GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :                 You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :                 along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file GenesisInfo.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;libdevcrypto/Common.h&gt;
+<span class="lineNum">      23 </span>            : #include &lt;json_spirit/JsonSpiritHeaders.h&gt;
+<span class="lineNum">      24 </span>            : #include &quot;GenesisInfo.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : using namespace dev;
+<span class="lineNum">      27 </span>            : using namespace eth;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span><span class="lineCov">          3 : std::string const dev::eth::c_genesisInfoTestBasicAuthority =</span>
+<span class="lineNum">      30 </span>            : R&quot;E(
+<span class="lineNum">      31 </span>            : {
+<span class="lineNum">      32 </span>            :         &quot;sealEngine&quot;: &quot;BasicAuthority&quot;,
+<span class="lineNum">      33 </span>            :         &quot;params&quot;: {
+<span class="lineNum">      34 </span>            :                 &quot;accountStartNonce&quot;: &quot;0x00&quot;,
+<span class="lineNum">      35 </span>            :                 &quot;maximumExtraDataSize&quot;: &quot;0x20&quot;,
+<span class="lineNum">      36 </span>            :                 &quot;minGasLimit&quot;: &quot;0x1388&quot;,
+<span class="lineNum">      37 </span>            :                 &quot;maxGasLimit&quot;: &quot;0x7fffffffffffffff&quot;,
+<span class="lineNum">      38 </span>            :                 &quot;gasLimitBoundDivisor&quot;: &quot;0x0400&quot;,
+<span class="lineNum">      39 </span>            :                 &quot;minimumDifficulty&quot;: &quot;0x020000&quot;,
+<span class="lineNum">      40 </span>            :                 &quot;difficultyBoundDivisor&quot;: &quot;0x0800&quot;,
+<span class="lineNum">      41 </span>            :                 &quot;durationLimit&quot;: &quot;0x0d&quot;,
+<span class="lineNum">      42 </span>            :                 &quot;blockReward&quot;: &quot;0x4563918244F40000&quot;,
+<span class="lineNum">      43 </span>            :                 &quot;registrar&quot; : &quot;0xc6d9d2cd449a754c494264e1809c50e34d64562b&quot;,
+<span class="lineNum">      44 </span>            :                 &quot;networkID&quot; : &quot;0x1&quot;
+<span class="lineNum">      45 </span>            :         },
+<span class="lineNum">      46 </span>            :         &quot;genesis&quot;: {
+<span class="lineNum">      47 </span>            :                 &quot;nonce&quot;: &quot;0x0000000000000042&quot;,
+<span class="lineNum">      48 </span>            :                 &quot;difficulty&quot;: &quot;0x400000000&quot;,
+<span class="lineNum">      49 </span>            :                 &quot;mixHash&quot;: &quot;0x0000000000000000000000000000000000000000000000000000000000000000&quot;,
+<span class="lineNum">      50 </span>            :                 &quot;author&quot;: &quot;0x0000000000000000000000000000000000000000&quot;,
+<span class="lineNum">      51 </span>            :                 &quot;timestamp&quot;: &quot;0x00&quot;,
+<span class="lineNum">      52 </span>            :                 &quot;parentHash&quot;: &quot;0x0000000000000000000000000000000000000000000000000000000000000000&quot;,
+<span class="lineNum">      53 </span>            :                 &quot;extraData&quot;: &quot;0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa&quot;,
+<span class="lineNum">      54 </span>            :                 &quot;gasLimit&quot;: &quot;0x2fefd8&quot;
+<span class="lineNum">      55 </span>            :         },
+<span class="lineNum">      56 </span>            :         &quot;accounts&quot;: {
+<span class="lineNum">      57 </span>            :                 &quot;0000000000000000000000000000000000000001&quot;: { &quot;wei&quot;: &quot;1&quot;, &quot;precompiled&quot;: { &quot;name&quot;: &quot;ecrecover&quot;, &quot;linear&quot;: { &quot;base&quot;: 3000, &quot;word&quot;: 0 } } },
+<span class="lineNum">      58 </span>            :                 &quot;0000000000000000000000000000000000000002&quot;: { &quot;wei&quot;: &quot;1&quot;, &quot;precompiled&quot;: { &quot;name&quot;: &quot;sha256&quot;, &quot;linear&quot;: { &quot;base&quot;: 60, &quot;word&quot;: 12 } } },
+<span class="lineNum">      59 </span>            :                 &quot;0000000000000000000000000000000000000003&quot;: { &quot;wei&quot;: &quot;1&quot;, &quot;precompiled&quot;: { &quot;name&quot;: &quot;ripemd160&quot;, &quot;linear&quot;: { &quot;base&quot;: 600, &quot;word&quot;: 120 } } },
+<span class="lineNum">      60 </span>            :                 &quot;0000000000000000000000000000000000000004&quot;: { &quot;wei&quot;: &quot;1&quot;, &quot;precompiled&quot;: { &quot;name&quot;: &quot;identity&quot;, &quot;linear&quot;: { &quot;base&quot;: 15, &quot;word&quot;: 3 } } },
+<span class="lineNum">      61 </span>            :                 &quot;00c9b024c2efc853ecabb8be2fb1d16ce8174ab1&quot;: { &quot;wei&quot;: &quot;1606938044258990275541962092341162602522202993782792835301376&quot; }
+<span class="lineNum">      62 </span>            :         }
+<span class="lineNum">      63 </span>            : }
+<span class="lineNum">      64 </span>            : )E&quot;;
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span><span class="lineCov">          3 : static std::string const c_childDaos =</span>
+<span class="lineNum">      67 </span>            : R&quot;E(
+<span class="lineNum">      68 </span>            : {
+<span class="lineNum">      69 </span>            : &quot;accounts&quot;: [
+<span class="lineNum">      70 </span>            :         {
+<span class="lineNum">      71 </span>            :                 &quot;address&quot;:&quot;0xd4fe7bc31cedb7bfb8a345f31e668033056b2728&quot;,
+<span class="lineNum">      72 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xb3fb0e5aba0e20e5c49d252dfd30e102b171a425&quot;
+<span class="lineNum">      73 </span>            :         },
+<span class="lineNum">      74 </span>            :         {
+<span class="lineNum">      75 </span>            :                 &quot;address&quot;:&quot;0x2c19c7f9ae8b751e37aeb2d93a699722395ae18f&quot;,
+<span class="lineNum">      76 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xecd135fa4f61a655311e86238c92adcd779555d2&quot;
+<span class="lineNum">      77 </span>            :         },
+<span class="lineNum">      78 </span>            :         {
+<span class="lineNum">      79 </span>            :                 &quot;address&quot;:&quot;0x1975bd06d486162d5dc297798dfc41edd5d160a7&quot;,
+<span class="lineNum">      80 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xa3acf3a1e16b1d7c315e23510fdd7847b48234f6&quot;
+<span class="lineNum">      81 </span>            :         },
+<span class="lineNum">      82 </span>            :         {
+<span class="lineNum">      83 </span>            :                 &quot;address&quot;:&quot;0x319f70bab6845585f412ec7724b744fec6095c85&quot;,
+<span class="lineNum">      84 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x06706dd3f2c9abf0a21ddcc6941d9b86f0596936&quot;
+<span class="lineNum">      85 </span>            :         },
+<span class="lineNum">      86 </span>            :         {
+<span class="lineNum">      87 </span>            :                 &quot;address&quot;:&quot;0x5c8536898fbb74fc7445814902fd08422eac56d0&quot;,
+<span class="lineNum">      88 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x6966ab0d485353095148a2155858910e0965b6f9&quot;
+<span class="lineNum">      89 </span>            :         },
+<span class="lineNum">      90 </span>            :         {
+<span class="lineNum">      91 </span>            :                 &quot;address&quot;:&quot;0x779543a0491a837ca36ce8c635d6154e3c4911a6&quot;,
+<span class="lineNum">      92 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x2a5ed960395e2a49b1c758cef4aa15213cfd874c&quot;
+<span class="lineNum">      93 </span>            :         },
+<span class="lineNum">      94 </span>            :         {
+<span class="lineNum">      95 </span>            :                 &quot;address&quot;:&quot;0x5c6e67ccd5849c0d29219c4f95f1a7a93b3f5dc5&quot;,
+<span class="lineNum">      96 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x9c50426be05db97f5d64fc54bf89eff947f0a321&quot;
+<span class="lineNum">      97 </span>            :         },
+<span class="lineNum">      98 </span>            :         {
+<span class="lineNum">      99 </span>            :                 &quot;address&quot;:&quot;0x200450f06520bdd6c527622a273333384d870efb&quot;,
+<span class="lineNum">     100 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xbe8539bfe837b67d1282b2b1d61c3f723966f049&quot;
+<span class="lineNum">     101 </span>            :         },
+<span class="lineNum">     102 </span>            :         {
+<span class="lineNum">     103 </span>            :                 &quot;address&quot;:&quot;0x6b0c4d41ba9ab8d8cfb5d379c69a612f2ced8ecb&quot;,
+<span class="lineNum">     104 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xf1385fb24aad0cd7432824085e42aff90886fef5&quot;
+<span class="lineNum">     105 </span>            :         },
+<span class="lineNum">     106 </span>            :         {
+<span class="lineNum">     107 </span>            :                 &quot;address&quot;:&quot;0xd1ac8b1ef1b69ff51d1d401a476e7e612414f091&quot;,
+<span class="lineNum">     108 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x8163e7fb499e90f8544ea62bbf80d21cd26d9efd&quot;
+<span class="lineNum">     109 </span>            :         },
+<span class="lineNum">     110 </span>            :         {
+<span class="lineNum">     111 </span>            :                 &quot;address&quot;:&quot;0x51e0ddd9998364a2eb38588679f0d2c42653e4a6&quot;,
+<span class="lineNum">     112 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x627a0a960c079c21c34f7612d5d230e01b4ad4c7&quot;
+<span class="lineNum">     113 </span>            :         },
+<span class="lineNum">     114 </span>            :         {
+<span class="lineNum">     115 </span>            :                 &quot;address&quot;:&quot;0xf0b1aa0eb660754448a7937c022e30aa692fe0c5&quot;,
+<span class="lineNum">     116 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x24c4d950dfd4dd1902bbed3508144a54542bba94&quot;
+<span class="lineNum">     117 </span>            :         },
+<span class="lineNum">     118 </span>            :         {
+<span class="lineNum">     119 </span>            :                 &quot;address&quot;:&quot;0x9f27daea7aca0aa0446220b98d028715e3bc803d&quot;,
+<span class="lineNum">     120 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xa5dc5acd6a7968a4554d89d65e59b7fd3bff0f90&quot;
+<span class="lineNum">     121 </span>            :         },
+<span class="lineNum">     122 </span>            :         {
+<span class="lineNum">     123 </span>            :                 &quot;address&quot;:&quot;0xd9aef3a1e38a39c16b31d1ace71bca8ef58d315b&quot;,
+<span class="lineNum">     124 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x63ed5a272de2f6d968408b4acb9024f4cc208ebf&quot;
+<span class="lineNum">     125 </span>            :         },
+<span class="lineNum">     126 </span>            :         {
+<span class="lineNum">     127 </span>            :                 &quot;address&quot;:&quot;0x6f6704e5a10332af6672e50b3d9754dc460dfa4d&quot;,
+<span class="lineNum">     128 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x77ca7b50b6cd7e2f3fa008e24ab793fd56cb15f6&quot;
+<span class="lineNum">     129 </span>            :         },
+<span class="lineNum">     130 </span>            :         {
+<span class="lineNum">     131 </span>            :                 &quot;address&quot;:&quot;0x492ea3bb0f3315521c31f273e565b868fc090f17&quot;,
+<span class="lineNum">     132 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x0ff30d6de14a8224aa97b78aea5388d1c51c1f00&quot;
+<span class="lineNum">     133 </span>            :         },
+<span class="lineNum">     134 </span>            :         {
+<span class="lineNum">     135 </span>            :                 &quot;address&quot;:&quot;0x9ea779f907f0b315b364b0cfc39a0fde5b02a416&quot;,
+<span class="lineNum">     136 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xceaeb481747ca6c540a000c1f3641f8cef161fa7&quot;
+<span class="lineNum">     137 </span>            :         },
+<span class="lineNum">     138 </span>            :         {
+<span class="lineNum">     139 </span>            :                 &quot;address&quot;:&quot;0xcc34673c6c40e791051898567a1222daf90be287&quot;,
+<span class="lineNum">     140 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x579a80d909f346fbfb1189493f521d7f48d52238&quot;
+<span class="lineNum">     141 </span>            :         },
+<span class="lineNum">     142 </span>            :         {
+<span class="lineNum">     143 </span>            :                 &quot;address&quot;:&quot;0xe308bd1ac5fda103967359b2712dd89deffb7973&quot;,
+<span class="lineNum">     144 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x4cb31628079fb14e4bc3cd5e30c2f7489b00960c&quot;
+<span class="lineNum">     145 </span>            :         },
+<span class="lineNum">     146 </span>            :         {
+<span class="lineNum">     147 </span>            :                 &quot;address&quot;:&quot;0xac1ecab32727358dba8962a0f3b261731aad9723&quot;,
+<span class="lineNum">     148 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x4fd6ace747f06ece9c49699c7cabc62d02211f75&quot;
+<span class="lineNum">     149 </span>            :         },
+<span class="lineNum">     150 </span>            :         {
+<span class="lineNum">     151 </span>            :                 &quot;address&quot;:&quot;0x440c59b325d2997a134c2c7c60a8c61611212bad&quot;,
+<span class="lineNum">     152 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x4486a3d68fac6967006d7a517b889fd3f98c102b&quot;
+<span class="lineNum">     153 </span>            :         },
+<span class="lineNum">     154 </span>            :         {
+<span class="lineNum">     155 </span>            :                 &quot;address&quot;:&quot;0x9c15b54878ba618f494b38f0ae7443db6af648ba&quot;,
+<span class="lineNum">     156 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x27b137a85656544b1ccb5a0f2e561a5703c6a68f&quot;
+<span class="lineNum">     157 </span>            :         },
+<span class="lineNum">     158 </span>            :         {
+<span class="lineNum">     159 </span>            :                 &quot;address&quot;:&quot;0x21c7fdb9ed8d291d79ffd82eb2c4356ec0d81241&quot;,
+<span class="lineNum">     160 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x23b75c2f6791eef49c69684db4c6c1f93bf49a50&quot;
+<span class="lineNum">     161 </span>            :         },
+<span class="lineNum">     162 </span>            :         {
+<span class="lineNum">     163 </span>            :                 &quot;address&quot;:&quot;0x1ca6abd14d30affe533b24d7a21bff4c2d5e1f3b&quot;,
+<span class="lineNum">     164 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xb9637156d330c0d605a791f1c31ba5890582fe1c&quot;
+<span class="lineNum">     165 </span>            :         },
+<span class="lineNum">     166 </span>            :         {
+<span class="lineNum">     167 </span>            :                 &quot;address&quot;:&quot;0x6131c42fa982e56929107413a9d526fd99405560&quot;,
+<span class="lineNum">     168 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x1591fc0f688c81fbeb17f5426a162a7024d430c2&quot;
+<span class="lineNum">     169 </span>            :         },
+<span class="lineNum">     170 </span>            :         {
+<span class="lineNum">     171 </span>            :                 &quot;address&quot;:&quot;0x542a9515200d14b68e934e9830d91645a980dd7a&quot;,
+<span class="lineNum">     172 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xc4bbd073882dd2add2424cf47d35213405b01324&quot;
+<span class="lineNum">     173 </span>            :         },
+<span class="lineNum">     174 </span>            :         {
+<span class="lineNum">     175 </span>            :                 &quot;address&quot;:&quot;0x782495b7b3355efb2833d56ecb34dc22ad7dfcc4&quot;,
+<span class="lineNum">     176 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x58b95c9a9d5d26825e70a82b6adb139d3fd829eb&quot;
+<span class="lineNum">     177 </span>            :         },
+<span class="lineNum">     178 </span>            :         {
+<span class="lineNum">     179 </span>            :                 &quot;address&quot;:&quot;0x3ba4d81db016dc2890c81f3acec2454bff5aada5&quot;,
+<span class="lineNum">     180 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xb52042c8ca3f8aa246fa79c3feaa3d959347c0ab&quot;
+<span class="lineNum">     181 </span>            :         },
+<span class="lineNum">     182 </span>            :         {
+<span class="lineNum">     183 </span>            :                 &quot;address&quot;:&quot;0xe4ae1efdfc53b73893af49113d8694a057b9c0d1&quot;,
+<span class="lineNum">     184 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x3c02a7bc0391e86d91b7d144e61c2c01a25a79c5&quot;
+<span class="lineNum">     185 </span>            :         },
+<span class="lineNum">     186 </span>            :         {
+<span class="lineNum">     187 </span>            :                 &quot;address&quot;:&quot;0x0737a6b837f97f46ebade41b9bc3e1c509c85c53&quot;,
+<span class="lineNum">     188 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x97f43a37f595ab5dd318fb46e7a155eae057317a&quot;
+<span class="lineNum">     189 </span>            :         },
+<span class="lineNum">     190 </span>            :         {
+<span class="lineNum">     191 </span>            :                 &quot;address&quot;:&quot;0x52c5317c848ba20c7504cb2c8052abd1fde29d03&quot;,
+<span class="lineNum">     192 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x4863226780fe7c0356454236d3b1c8792785748d&quot;
+<span class="lineNum">     193 </span>            :         },
+<span class="lineNum">     194 </span>            :         {
+<span class="lineNum">     195 </span>            :                 &quot;address&quot;:&quot;0x5d2b2e6fcbe3b11d26b525e085ff818dae332479&quot;,
+<span class="lineNum">     196 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x5f9f3392e9f62f63b8eac0beb55541fc8627f42c&quot;
+<span class="lineNum">     197 </span>            :         },
+<span class="lineNum">     198 </span>            :         {
+<span class="lineNum">     199 </span>            :                 &quot;address&quot;:&quot;0x057b56736d32b86616a10f619859c6cd6f59092a&quot;,
+<span class="lineNum">     200 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x9aa008f65de0b923a2a4f02012ad034a5e2e2192&quot;
+<span class="lineNum">     201 </span>            :         },
+<span class="lineNum">     202 </span>            :         {
+<span class="lineNum">     203 </span>            :                 &quot;address&quot;:&quot;0x304a554a310c7e546dfe434669c62820b7d83490&quot;,
+<span class="lineNum">     204 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x914d1b8b43e92723e64fd0a06f5bdb8dd9b10c79&quot;
+<span class="lineNum">     205 </span>            :         },
+<span class="lineNum">     206 </span>            :         {
+<span class="lineNum">     207 </span>            :                 &quot;address&quot;:&quot;0x4deb0033bb26bc534b197e61d19e0733e5679784&quot;,
+<span class="lineNum">     208 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x07f5c1e1bc2c93e0402f23341973a0e043f7bf8a&quot;
+<span class="lineNum">     209 </span>            :         },
+<span class="lineNum">     210 </span>            :         {
+<span class="lineNum">     211 </span>            :                 &quot;address&quot;:&quot;0x35a051a0010aba705c9008d7a7eff6fb88f6ea7b&quot;,
+<span class="lineNum">     212 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x4fa802324e929786dbda3b8820dc7834e9134a2a&quot;
+<span class="lineNum">     213 </span>            :         },
+<span class="lineNum">     214 </span>            :         {
+<span class="lineNum">     215 </span>            :                 &quot;address&quot;:&quot;0x9da397b9e80755301a3b32173283a91c0ef6c87e&quot;,
+<span class="lineNum">     216 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x8d9edb3054ce5c5774a420ac37ebae0ac02343c6&quot;
+<span class="lineNum">     217 </span>            :         },
+<span class="lineNum">     218 </span>            :         {
+<span class="lineNum">     219 </span>            :                 &quot;address&quot;:&quot;0x0101f3be8ebb4bbd39a2e3b9a3639d4259832fd9&quot;,
+<span class="lineNum">     220 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x5dc28b15dffed94048d73806ce4b7a4612a1d48f&quot;
+<span class="lineNum">     221 </span>            :         },
+<span class="lineNum">     222 </span>            :         {
+<span class="lineNum">     223 </span>            :                 &quot;address&quot;:&quot;0xbcf899e6c7d9d5a215ab1e3444c86806fa854c76&quot;,
+<span class="lineNum">     224 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x12e626b0eebfe86a56d633b9864e389b45dcb260&quot;
+<span class="lineNum">     225 </span>            :         },
+<span class="lineNum">     226 </span>            :         {
+<span class="lineNum">     227 </span>            :                 &quot;address&quot;:&quot;0xa2f1ccba9395d7fcb155bba8bc92db9bafaeade7&quot;,
+<span class="lineNum">     228 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xec8e57756626fdc07c63ad2eafbd28d08e7b0ca5&quot;
+<span class="lineNum">     229 </span>            :         },
+<span class="lineNum">     230 </span>            :         {
+<span class="lineNum">     231 </span>            :                 &quot;address&quot;:&quot;0xd164b088bd9108b60d0ca3751da4bceb207b0782&quot;,
+<span class="lineNum">     232 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x6231b6d0d5e77fe001c2a460bd9584fee60d409b&quot;
+<span class="lineNum">     233 </span>            :         },
+<span class="lineNum">     234 </span>            :         {
+<span class="lineNum">     235 </span>            :                 &quot;address&quot;:&quot;0x1cba23d343a983e9b5cfd19496b9a9701ada385f&quot;,
+<span class="lineNum">     236 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xa82f360a8d3455c5c41366975bde739c37bfeb8a&quot;
+<span class="lineNum">     237 </span>            :         },
+<span class="lineNum">     238 </span>            :         {
+<span class="lineNum">     239 </span>            :                 &quot;address&quot;:&quot;0x9fcd2deaff372a39cc679d5c5e4de7bafb0b1339&quot;,
+<span class="lineNum">     240 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x005f5cee7a43331d5a3d3eec71305925a62f34b6&quot;
+<span class="lineNum">     241 </span>            :         },
+<span class="lineNum">     242 </span>            :         {
+<span class="lineNum">     243 </span>            :                 &quot;address&quot;:&quot;0x0e0da70933f4c7849fc0d203f5d1d43b9ae4532d&quot;,
+<span class="lineNum">     244 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xd131637d5275fd1a68a3200f4ad25c71a2a9522e&quot;
+<span class="lineNum">     245 </span>            :         },
+<span class="lineNum">     246 </span>            :         {
+<span class="lineNum">     247 </span>            :                 &quot;address&quot;:&quot;0xbc07118b9ac290e4622f5e77a0853539789effbe&quot;,
+<span class="lineNum">     248 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x47e7aa56d6bdf3f36be34619660de61275420af8&quot;
+<span class="lineNum">     249 </span>            :         },
+<span class="lineNum">     250 </span>            :         {
+<span class="lineNum">     251 </span>            :                 &quot;address&quot;:&quot;0xacd87e28b0c9d1254e868b81cba4cc20d9a32225&quot;,
+<span class="lineNum">     252 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xadf80daec7ba8dcf15392f1ac611fff65d94f880&quot;
+<span class="lineNum">     253 </span>            :         },
+<span class="lineNum">     254 </span>            :         {
+<span class="lineNum">     255 </span>            :                 &quot;address&quot;:&quot;0x5524c55fb03cf21f549444ccbecb664d0acad706&quot;,
+<span class="lineNum">     256 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x40b803a9abce16f50f36a77ba41180eb90023925&quot;
+<span class="lineNum">     257 </span>            :         },
+<span class="lineNum">     258 </span>            :         {
+<span class="lineNum">     259 </span>            :                 &quot;address&quot;:&quot;0xfe24cdd8648121a43a7c86d289be4dd2951ed49f&quot;,
+<span class="lineNum">     260 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x17802f43a0137c506ba92291391a8a8f207f487d&quot;
+<span class="lineNum">     261 </span>            :         },
+<span class="lineNum">     262 </span>            :         {
+<span class="lineNum">     263 </span>            :                 &quot;address&quot;:&quot;0x253488078a4edf4d6f42f113d1e62836a942cf1a&quot;,
+<span class="lineNum">     264 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x86af3e9626fce1957c82e88cbf04ddf3a2ed7915&quot;
+<span class="lineNum">     265 </span>            :         },
+<span class="lineNum">     266 </span>            :         {
+<span class="lineNum">     267 </span>            :                 &quot;address&quot;:&quot;0xb136707642a4ea12fb4bae820f03d2562ebff487&quot;,
+<span class="lineNum">     268 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xdbe9b615a3ae8709af8b93336ce9b477e4ac0940&quot;
+<span class="lineNum">     269 </span>            :         },
+<span class="lineNum">     270 </span>            :         {
+<span class="lineNum">     271 </span>            :                 &quot;address&quot;:&quot;0xf14c14075d6c4ed84b86798af0956deef67365b5&quot;,
+<span class="lineNum">     272 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xca544e5c4687d109611d0f8f928b53a25af72448&quot;
+<span class="lineNum">     273 </span>            :         },
+<span class="lineNum">     274 </span>            :         {
+<span class="lineNum">     275 </span>            :                 &quot;address&quot;:&quot;0xaeeb8ff27288bdabc0fa5ebb731b6f409507516c&quot;,
+<span class="lineNum">     276 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xcbb9d3703e651b0d496cdefb8b92c25aeb2171f7&quot;
+<span class="lineNum">     277 </span>            :         },
+<span class="lineNum">     278 </span>            :         {
+<span class="lineNum">     279 </span>            :                 &quot;address&quot;:&quot;0x6d87578288b6cb5549d5076a207456a1f6a63dc0&quot;,
+<span class="lineNum">     280 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xb2c6f0dfbb716ac562e2d85d6cb2f8d5ee87603e&quot;
+<span class="lineNum">     281 </span>            :         },
+<span class="lineNum">     282 </span>            :         {
+<span class="lineNum">     283 </span>            :                 &quot;address&quot;:&quot;0xaccc230e8a6e5be9160b8cdf2864dd2a001c28b6&quot;,
+<span class="lineNum">     284 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x2b3455ec7fedf16e646268bf88846bd7a2319bb2&quot;
+<span class="lineNum">     285 </span>            :         },
+<span class="lineNum">     286 </span>            :         {
+<span class="lineNum">     287 </span>            :                 &quot;address&quot;:&quot;0x4613f3bca5c44ea06337a9e439fbc6d42e501d0a&quot;,
+<span class="lineNum">     288 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xd343b217de44030afaa275f54d31a9317c7f441e&quot;
+<span class="lineNum">     289 </span>            :         },
+<span class="lineNum">     290 </span>            :         {
+<span class="lineNum">     291 </span>            :                 &quot;address&quot;:&quot;0x84ef4b2357079cd7a7c69fd7a37cd0609a679106&quot;,
+<span class="lineNum">     292 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0xda2fef9e4a3230988ff17df2165440f37e8b1708&quot;
+<span class="lineNum">     293 </span>            :         },
+<span class="lineNum">     294 </span>            :         {
+<span class="lineNum">     295 </span>            :                 &quot;address&quot;:&quot;0xf4c64518ea10f995918a454158c6b61407ea345c&quot;,
+<span class="lineNum">     296 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x7602b46df5390e432ef1c307d4f2c9ff6d65cc97&quot;
+<span class="lineNum">     297 </span>            :         },
+<span class="lineNum">     298 </span>            :         {
+<span class="lineNum">     299 </span>            :                 &quot;address&quot;:&quot;0xbb9bc244d798123fde783fcc1c72d3bb8c189413&quot;,
+<span class="lineNum">     300 </span>            :                 &quot;extraBalanceAccount&quot;:&quot;0x807640a13483f8ac783c557fcdf27be11ea4ac7a&quot;
+<span class="lineNum">     301 </span>            :         }]
+<a name="302"><span class="lineNum">     302 </span>            : })E&quot;;</a>
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span><span class="lineCov">         36 : dev::Addresses dev::eth::childDaos()</span>
+<span class="lineNum">     305 </span>            : {
+<span class="lineNum">     306 </span><span class="lineCov">         36 :         Addresses daos;</span>
+<span class="lineNum">     307 </span><span class="lineCov">         72 :         json_spirit::mValue val;</span>
+<span class="lineNum">     308 </span><span class="lineCov">         36 :         json_spirit::read_string(c_childDaos, val);</span>
+<span class="lineNum">     309 </span><span class="lineCov">        108 :         json_spirit::mObject obj = val.get_obj();</span>
+<span class="lineNum">     310 </span><span class="lineCov">        144 :         for(auto const&amp; items: obj)</span>
+<span class="lineNum">     311 </span>            :         {
+<span class="lineNum">     312 </span><span class="lineCov">         72 :                 json_spirit::mArray array = items.second.get_array();</span>
+<span class="lineNum">     313 </span><span class="lineCov">       6408 :                 for (auto account: array)</span>
+<span class="lineNum">     314 </span>            :                 {
+<span class="lineNum">     315 </span><span class="lineCov">       8352 :                         daos.push_back(Address(account.get_obj()[&quot;address&quot;].get_str()));</span>
+<span class="lineNum">     316 </span><span class="lineCov">      10440 :                         daos.push_back(Address(account.get_obj()[&quot;extraBalanceAccount&quot;].get_str()));</span>
+<span class="lineNum">     317 </span>            :                 }
+<a name="318"><span class="lineNum">     318 </span>            :         }</a>
+<span class="lineNum">     319 </span><span class="lineCov">         36 :         return daos;</span>
+<span class="lineNum">     320 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     321 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/results_reporter.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test</a> - results_reporter.hpp<span style="font-size: 80%;"> (source / <a href="results_reporter.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : /// @file
+<span class="lineNum">       9 </span>            : /// @brief defines testing result reporter interfaces
+<span class="lineNum">      10 </span>            : ///
+<span class="lineNum">      11 </span>            : /// This file defines interfaces that are responsible for results reporting. Interface is presented in a form of
+<span class="lineNum">      12 </span>            : /// free standing function implemented in namespace result_reporter
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_RESULTS_REPORTER_HPP_021205GER
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_RESULTS_REPORTER_HPP_021205GER
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/detail/global_typedef.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/detail/fwd_decl.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : // STL
+<span class="lineNum">      23 </span>            : #include &lt;iosfwd&gt;   // for std::ostream&amp;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace boost {
+<span class="lineNum">      30 </span>            : namespace unit_test {
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : /// Namespace for results reporter interfaces
+<span class="lineNum">      33 </span>            : namespace results_reporter {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : // ************************************************************************** //
+<span class="lineNum">      36 </span>            : /// @brief Results report formatter interface
+<span class="lineNum">      37 </span>            : ///
+<span class="lineNum">      38 </span>            : /// This is abstract interface for the report formatter used by results reporter routines.
+<span class="lineNum">      39 </span>            : /// You can define a custom formatter by implementing this interface and setting the formatter using set_format function.
+<span class="lineNum">      40 </span>            : /// This is usually done during test module initialization
+<span class="lineNum">      41 </span>            : // ************************************************************************** //
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span><span class="lineCov">          2 : class BOOST_TEST_DECL format {</span>
+<span class="lineNum">      44 </span>            : public:
+<span class="lineNum">      45 </span>            :     // Destructor
+<span class="lineNum">      46 </span><span class="lineCov">          2 :     virtual ~format() {}</span>
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            :     virtual void    results_report_start( std::ostream&amp; ostr ) = 0;
+<span class="lineNum">      49 </span>            :     virtual void    results_report_finish( std::ostream&amp; ostr ) = 0;
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            :     virtual void    test_unit_report_start( test_unit const&amp;, std::ostream&amp; ostr ) = 0;
+<span class="lineNum">      52 </span>            :     virtual void    test_unit_report_finish( test_unit const&amp;, std::ostream&amp; ostr ) = 0;
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            :     virtual void    do_confirmation_report( test_unit const&amp;, std::ostream&amp; ostr ) = 0;
+<span class="lineNum">      55 </span>            : };
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : // ************************************************************************** //
+<span class="lineNum">      58 </span>            : /// @name report configuration
+<span class="lineNum">      59 </span>            : // ************************************************************************** //
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : /// Sets reporting level
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : /// There are only four possible levels for results report:
+<span class="lineNum">      64 </span>            : /// - confirmation report (boost::unit_test::CONFIRMATION_REPORT). This report level only produces short confirmation
+<span class="lineNum">      65 </span>            : ///   message about test module pass/fail status
+<span class="lineNum">      66 </span>            : /// - short report (boost::unit_test::SHORT_REPORT). This report level produces short summary report for failed/passed
+<span class="lineNum">      67 </span>            : ///   assertions and test units.
+<span class="lineNum">      68 </span>            : /// - detailed report (boost::unit_test::DETAILED_REPORT). This report level produces detailed report per test unit for
+<span class="lineNum">      69 </span>            : ///   passed/failed assertions and uncaught exceptions
+<span class="lineNum">      70 </span>            : /// - no report (boost::unit_test::NO_REPORT). This report level produces no results report. This is used for test modules
+<span class="lineNum">      71 </span>            : ///   running as part of some kind of continues integration framework
+<span class="lineNum">      72 </span>            : /// @param[in] l report level
+<span class="lineNum">      73 </span>            : BOOST_TEST_DECL void    set_level( report_level l );
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : /// Sets output stream for results reporting
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : /// By default std::cerr is used. Use this function to set a different stream. The framework
+<span class="lineNum">      78 </span>            : /// refers to the stream by reference, so you need to make sure the stream object lifetime exceeds the testing main scope.
+<span class="lineNum">      79 </span>            : BOOST_TEST_DECL void    set_stream( std::ostream&amp; );
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : /// Sets one of the predefined formats
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : /// The framework implements two results report formats:
+<span class="lineNum">      84 </span>            : /// - plain human readable format (boost::unit_test::OF_CLF)
+<span class="lineNum">      85 </span>            : /// - XML format (boost::unit_test::OF_XML)
+<span class="lineNum">      86 </span>            : /// @param[in] of one of the presefined enumeration values for output formats
+<span class="lineNum">      87 </span>            : BOOST_TEST_DECL void    set_format( output_format of );
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : /// Sets custom report formatter
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : /// The framework takes ownership of the pointer passed as an argument. So this should be a pointer to
+<span class="lineNum">      92 </span>            : /// a heap allocated object
+<span class="lineNum">      93 </span>            : /// @param[in] f pointer to heap allocated instance of custom report formatter class
+<span class="lineNum">      94 </span>            : BOOST_TEST_DECL void    set_format( results_reporter::format* f );
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : /// @brief Access to configured results reporter stream
+<span class="lineNum">      97 </span>            : ///
+<span class="lineNum">      98 </span>            : /// Use this stream to report additional information abut test module execution
+<span class="lineNum">      99 </span>            : BOOST_TEST_DECL std::ostream&amp; get_stream();
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : /// @}
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : // ************************************************************************** //
+<span class="lineNum">     104 </span>            : // **************               report initiation              ************** //
+<span class="lineNum">     105 </span>            : // ************************************************************************** //
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : BOOST_TEST_DECL void    make_report( report_level l = INV_REPORT_LEVEL, test_unit_id = INV_TEST_UNIT_ID );
+<span class="lineNum">     108 </span>            : inline void             confirmation_report( test_unit_id id = INV_TEST_UNIT_ID )
+<span class="lineNum">     109 </span>            : { make_report( CONFIRMATION_REPORT, id ); }
+<span class="lineNum">     110 </span>            : inline void             short_report( test_unit_id id = INV_TEST_UNIT_ID )
+<span class="lineNum">     111 </span>            : { make_report( SHORT_REPORT, id ); }
+<span class="lineNum">     112 </span>            : inline void             detailed_report( test_unit_id id = INV_TEST_UNIT_ID )
+<span class="lineNum">     113 </span>            : { make_report( DETAILED_REPORT, id ); }
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : } // namespace results_reporter
+<span class="lineNum">     116 </span>            : } // namespace unit_test
+<span class="lineNum">     117 </span>            : } // namespace boost
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            : #endif // BOOST_TEST_RESULTS_REPORTER_HPP_021205GER
+<span class="lineNum">     122 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

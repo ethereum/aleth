@@ -1,0 +1,154 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/detail/impl/epoll_reactor.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/detail/impl</a> - epoll_reactor.hpp<span style="font-size: 80%;"> (source / <a href="epoll_reactor.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntryMed">88.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // detail/impl/epoll_reactor.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DETAIL_IMPL_EPOLL_REACTOR_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DETAIL_IMPL_EPOLL_REACTOR_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #if defined(BOOST_ASIO_HAS_EPOLL)
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : namespace boost {
+<span class="lineNum">      23 </span>            : namespace asio {
+<span class="lineNum">      24 </span>            : namespace detail {
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : template &lt;typename Time_Traits&gt;
+<span class="lineNum">      27 </span>            : void epoll_reactor::add_timer_queue(timer_queue&lt;Time_Traits&gt;&amp; queue)
+<span class="lineNum">      28 </span>            : {
+<span class="lineNum">      29 </span><span class="lineCov">         40 :   do_add_timer_queue(queue);</span>
+<span class="lineNum">      30 </span>            : }
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : template &lt;typename Time_Traits&gt;
+<span class="lineNum">      33 </span>            : void epoll_reactor::remove_timer_queue(timer_queue&lt;Time_Traits&gt;&amp; queue)
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span><span class="lineCov">         20 :   do_remove_timer_queue(queue);</span>
+<span class="lineNum">      36 </span>            : }
+<a name="37"><span class="lineNum">      37 </span>            : </a>
+<span class="lineNum">      38 </span>            : template &lt;typename Time_Traits&gt;
+<span class="lineNum">      39 </span><span class="lineCov">        802 : void epoll_reactor::schedule_timer(timer_queue&lt;Time_Traits&gt;&amp; queue,</span>
+<span class="lineNum">      40 </span>            :     const typename Time_Traits::time_type&amp; time,
+<span class="lineNum">      41 </span>            :     typename timer_queue&lt;Time_Traits&gt;::per_timer_data&amp; timer, wait_op* op)
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span><span class="lineCov">       2406 :   mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">        802 :   if (shutdown_)</span>
+<span class="lineNum">      46 </span>            :   {
+<span class="lineNum">      47 </span><span class="lineNoCov">          0 :     io_service_.post_immediate_completion(op, false);</span>
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">      49 </span>            :   }
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineCov">        802 :   bool earliest = queue.enqueue_timer(time, timer, op);</span>
+<span class="lineNum">      52 </span><span class="lineCov">       1604 :   io_service_.work_started();</span>
+<span class="lineNum">      53 </span><span class="lineCov">        802 :   if (earliest)</span>
+<span class="lineNum">      54 </span><span class="lineCov">        202 :     update_timeout();</span>
+<span class="lineNum">      55 </span>            : }
+<a name="56"><span class="lineNum">      56 </span>            : </a>
+<span class="lineNum">      57 </span>            : template &lt;typename Time_Traits&gt;
+<span class="lineNum">      58 </span><span class="lineCov">        802 : std::size_t epoll_reactor::cancel_timer(timer_queue&lt;Time_Traits&gt;&amp; queue,</span>
+<span class="lineNum">      59 </span>            :     typename timer_queue&lt;Time_Traits&gt;::per_timer_data&amp; timer,
+<span class="lineNum">      60 </span>            :     std::size_t max_cancelled)
+<span class="lineNum">      61 </span>            : {
+<span class="lineNum">      62 </span><span class="lineCov">       2406 :   mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">      63 </span><span class="lineCov">       1604 :   op_queue&lt;operation&gt; ops;</span>
+<span class="lineNum">      64 </span><span class="lineCov">        802 :   std::size_t n = queue.cancel_timer(timer, ops, max_cancelled);</span>
+<span class="lineNum">      65 </span><span class="lineCov">        802 :   lock.unlock();</span>
+<span class="lineNum">      66 </span><span class="lineCov">        802 :   io_service_.post_deferred_completions(ops);</span>
+<span class="lineNum">      67 </span><span class="lineCov">        802 :   return n;</span>
+<span class="lineNum">      68 </span>            : }
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : } // namespace detail
+<span class="lineNum">      71 </span>            : } // namespace asio
+<span class="lineNum">      72 </span>            : } // namespace boost
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : #endif // defined(BOOST_ASIO_HAS_EPOLL)
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : #endif // BOOST_ASIO_DETAIL_IMPL_EPOLL_REACTOR_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

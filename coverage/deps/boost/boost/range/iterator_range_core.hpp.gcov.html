@@ -1,0 +1,959 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/range/iterator_range_core.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/range</a> - iterator_range_core.hpp<span style="font-size: 80%;"> (source / <a href="iterator_range_core.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Boost.Range library</a>
+<span class="lineNum">       2 </span>            : //
+<span class="lineNum">       3 </span>            : //  Copyright Neil Groves &amp; Thorsten Ottosen &amp; Pavol Droba 2003-2004.
+<span class="lineNum">       4 </span>            : //  Use, modification and distribution is subject to the Boost Software
+<span class="lineNum">       5 </span>            : //  License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       6 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : // For more information, see http://www.boost.org/libs/range/
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : // Credits:
+<span class="lineNum">      11 </span>            : // 'michel' reported Trac 9072 which included a patch for allowing references
+<span class="lineNum">      12 </span>            : // to function types.
+<span class="lineNum">      13 </span>            : //
+<span class="lineNum">      14 </span>            : #ifndef BOOST_RANGE_ITERATOR_RANGE_CORE_HPP_INCLUDED
+<span class="lineNum">      15 </span>            : #define BOOST_RANGE_ITERATOR_RANGE_CORE_HPP_INCLUDED
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : #include &lt;boost/config.hpp&gt; // Define __STL_CONFIG_H, if appropriate.
+<span class="lineNum">      18 </span>            : #include &lt;boost/detail/workaround.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1500))
+<span class="lineNum">      21 </span>            :     #pragma warning( push )
+<span class="lineNum">      22 </span>            :     #pragma warning( disable : 4996 )
+<span class="lineNum">      23 </span>            : #endif
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;boost/assert.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/iterator/iterator_traits.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/iterator/iterator_facade.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/mpl/if.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/mpl/not.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/mpl/or.hpp&gt;
+<span class="lineNum">      31 </span>            : #include &lt;boost/type_traits/is_abstract.hpp&gt;
+<span class="lineNum">      32 </span>            : #include &lt;boost/type_traits/is_array.hpp&gt;
+<span class="lineNum">      33 </span>            : #include &lt;boost/type_traits/is_base_and_derived.hpp&gt;
+<span class="lineNum">      34 </span>            : #include &lt;boost/type_traits/is_convertible.hpp&gt;
+<span class="lineNum">      35 </span>            : #include &lt;boost/type_traits/is_function.hpp&gt;
+<span class="lineNum">      36 </span>            : #include &lt;boost/type_traits/is_pointer.hpp&gt;
+<span class="lineNum">      37 </span>            : #include &lt;boost/type_traits/is_same.hpp&gt;
+<span class="lineNum">      38 </span>            : #include &lt;boost/range/functions.hpp&gt;
+<span class="lineNum">      39 </span>            : #include &lt;boost/range/iterator.hpp&gt;
+<span class="lineNum">      40 </span>            : #include &lt;boost/range/difference_type.hpp&gt;
+<span class="lineNum">      41 </span>            : #include &lt;boost/range/has_range_iterator.hpp&gt;
+<span class="lineNum">      42 </span>            : #include &lt;boost/range/algorithm/equal.hpp&gt;
+<span class="lineNum">      43 </span>            : #include &lt;boost/range/detail/safe_bool.hpp&gt;
+<span class="lineNum">      44 </span>            : #include &lt;boost/utility/enable_if.hpp&gt;
+<span class="lineNum">      45 </span>            : #include &lt;iterator&gt;
+<span class="lineNum">      46 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      47 </span>            : #include &lt;cstddef&gt;
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : /*! \file
+<span class="lineNum">      50 </span>            :     Defines the \c iterator_class and related functions.
+<span class="lineNum">      51 </span>            :     \c iterator_range is a simple wrapper of iterator pair idiom. It provides
+<span class="lineNum">      52 </span>            :     a rich subset of Container interface.
+<span class="lineNum">      53 </span>            : */
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : namespace boost
+<span class="lineNum">      57 </span>            : {
+<span class="lineNum">      58 </span>            :     namespace iterator_range_detail
+<span class="lineNum">      59 </span>            :     {
+<span class="lineNum">      60 </span>            :         //
+<span class="lineNum">      61 </span>            :         // The functions adl_begin and adl_end are implemented in a separate
+<span class="lineNum">      62 </span>            :         // class for gcc-2.9x
+<span class="lineNum">      63 </span>            :         //
+<span class="lineNum">      64 </span>            :         template&lt;class IteratorT&gt;
+<span class="lineNum">      65 </span>            :         struct iterator_range_impl {
+<span class="lineNum">      66 </span>            :             template&lt; class ForwardRange &gt;
+<span class="lineNum">      67 </span>            :             static IteratorT adl_begin( ForwardRange&amp; r )
+<span class="lineNum">      68 </span>            :             {
+<span class="lineNum">      69 </span><span class="lineCov">         66 :                 return IteratorT( boost::begin( r ) );</span>
+<span class="lineNum">      70 </span>            :             }
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :             template&lt; class ForwardRange &gt;
+<span class="lineNum">      73 </span>            :             static IteratorT adl_end( ForwardRange&amp; r )
+<span class="lineNum">      74 </span>            :             {
+<span class="lineNum">      75 </span><span class="lineCov">         66 :                 return IteratorT( boost::end( r ) );</span>
+<span class="lineNum">      76 </span>            :             }
+<span class="lineNum">      77 </span>            :         };
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :         template&lt; class Left, class Right &gt;
+<span class="lineNum">      80 </span>            :         inline bool less_than( const Left&amp; l, const Right&amp; r )
+<span class="lineNum">      81 </span>            :         {
+<span class="lineNum">      82 </span>            :             return std::lexicographical_compare( boost::begin(l),
+<span class="lineNum">      83 </span>            :                                                  boost::end(l),
+<span class="lineNum">      84 </span>            :                                                  boost::begin(r),
+<span class="lineNum">      85 </span>            :                                                  boost::end(r) );
+<span class="lineNum">      86 </span>            :         }
+<span class="lineNum">      87 </span>            :         
+<span class="lineNum">      88 </span>            :         template&lt; class Left, class Right &gt;
+<span class="lineNum">      89 </span>            :         inline bool greater_than( const Left&amp; l, const Right&amp; r )
+<span class="lineNum">      90 </span>            :         {
+<span class="lineNum">      91 </span>            :             return iterator_range_detail::less_than(r,l);
+<span class="lineNum">      92 </span>            :         }
+<span class="lineNum">      93 </span>            :         
+<span class="lineNum">      94 </span>            :         template&lt; class Left, class Right &gt;
+<span class="lineNum">      95 </span>            :         inline bool less_or_equal_than( const Left&amp; l, const Right&amp; r )
+<span class="lineNum">      96 </span>            :         {
+<span class="lineNum">      97 </span>            :             return !iterator_range_detail::less_than(r,l);
+<span class="lineNum">      98 </span>            :         }
+<span class="lineNum">      99 </span>            :         
+<span class="lineNum">     100 </span>            :         template&lt; class Left, class Right &gt;
+<span class="lineNum">     101 </span>            :         inline bool greater_or_equal_than( const Left&amp; l, const Right&amp; r )
+<span class="lineNum">     102 </span>            :         {
+<span class="lineNum">     103 </span>            :             return !iterator_range_detail::less_than(l,r);
+<span class="lineNum">     104 </span>            :         }
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            :         // This version is maintained since it is used in other boost libraries
+<span class="lineNum">     107 </span>            :         // such as Boost.Assign
+<span class="lineNum">     108 </span>            :         template&lt; class Left, class Right &gt;
+<span class="lineNum">     109 </span>            :         inline bool equal(const Left&amp; l, const Right&amp; r)
+<span class="lineNum">     110 </span>            :         {
+<span class="lineNum">     111 </span>            :             return boost::equal(l, r);
+<span class="lineNum">     112 </span>            :         }
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            : struct range_tag
+<span class="lineNum">     115 </span>            : {
+<span class="lineNum">     116 </span>            : };
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : struct const_range_tag
+<span class="lineNum">     119 </span>            : {
+<span class="lineNum">     120 </span>            : };
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : struct iterator_range_tag
+<span class="lineNum">     123 </span>            : {
+<span class="lineNum">     124 </span>            : };
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : typedef char (&amp;incrementable_t)[1];
+<span class="lineNum">     127 </span>            : typedef char (&amp;bidirectional_t)[2];
+<span class="lineNum">     128 </span>            : typedef char (&amp;random_access_t)[3];
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : incrementable_t test_traversal_tag(boost::incrementable_traversal_tag);
+<span class="lineNum">     131 </span>            : bidirectional_t test_traversal_tag(boost::bidirectional_traversal_tag);
+<span class="lineNum">     132 </span>            : random_access_t test_traversal_tag(boost::random_access_traversal_tag);
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            : template&lt;std::size_t S&gt;
+<span class="lineNum">     135 </span>            : struct pure_iterator_traversal_impl
+<span class="lineNum">     136 </span>            : {
+<span class="lineNum">     137 </span>            :     typedef boost::incrementable_traversal_tag type;
+<span class="lineNum">     138 </span>            : };
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : template&lt;&gt;
+<span class="lineNum">     141 </span>            : struct pure_iterator_traversal_impl&lt;sizeof(bidirectional_t)&gt;
+<span class="lineNum">     142 </span>            : {
+<span class="lineNum">     143 </span>            :     typedef boost::bidirectional_traversal_tag type;
+<span class="lineNum">     144 </span>            : };
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            : template&lt;&gt;
+<span class="lineNum">     147 </span>            : struct pure_iterator_traversal_impl&lt;sizeof(random_access_t)&gt;
+<span class="lineNum">     148 </span>            : {
+<span class="lineNum">     149 </span>            :     typedef boost::random_access_traversal_tag type;
+<span class="lineNum">     150 </span>            : };
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            : template&lt;typename IteratorT&gt;
+<span class="lineNum">     153 </span>            : struct pure_iterator_traversal
+<span class="lineNum">     154 </span>            : {
+<span class="lineNum">     155 </span>            :     typedef
+<span class="lineNum">     156 </span>            :         BOOST_DEDUCED_TYPENAME iterator_traversal&lt;IteratorT&gt;::type
+<span class="lineNum">     157 </span>            :     traversal_t;
+<span class="lineNum">     158 </span>            :     BOOST_STATIC_CONSTANT(
+<span class="lineNum">     159 </span>            :         std::size_t,
+<span class="lineNum">     160 </span>            :         traversal_i = sizeof(iterator_range_detail::test_traversal_tag((traversal_t())))
+<span class="lineNum">     161 </span>            :     );
+<span class="lineNum">     162 </span>            :     typedef
+<span class="lineNum">     163 </span>            :         BOOST_DEDUCED_TYPENAME pure_iterator_traversal_impl&lt;traversal_i&gt;::type
+<span class="lineNum">     164 </span>            :     type;
+<span class="lineNum">     165 </span>            : };
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            : template&lt;class IteratorT, class TraversalTag&gt;
+<span class="lineNum">     168 </span>            : class iterator_range_base
+<span class="lineNum">     169 </span>            :     : public iterator_range_tag
+<span class="lineNum">     170 </span>            : {
+<span class="lineNum">     171 </span>            :     typedef range_detail::safe_bool&lt;
+<span class="lineNum">     172 </span>            :                 IteratorT iterator_range_base&lt;IteratorT, TraversalTag&gt;::*
+<span class="lineNum">     173 </span>            :     &gt; safe_bool_t;
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :     typedef iterator_range_base&lt;IteratorT, TraversalTag&gt; type;
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            : protected:
+<span class="lineNum">     178 </span>            :     typedef iterator_range_impl&lt;IteratorT&gt; impl;
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            : public:
+<span class="lineNum">     181 </span>            :     typedef BOOST_DEDUCED_TYPENAME
+<span class="lineNum">     182 </span>            :         safe_bool_t::unspecified_bool_type unspecified_bool_type;
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            :     typedef BOOST_DEDUCED_TYPENAME
+<span class="lineNum">     185 </span>            :         iterator_value&lt;IteratorT&gt;::type value_type;
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :     typedef BOOST_DEDUCED_TYPENAME
+<span class="lineNum">     188 </span>            :         iterator_difference&lt;IteratorT&gt;::type difference_type;
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            :     typedef std::size_t size_type; // note: must be unsigned
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :     // Needed because value-type is the same for
+<span class="lineNum">     193 </span>            :     // const and non-const iterators
+<span class="lineNum">     194 </span>            :     typedef BOOST_DEDUCED_TYPENAME
+<span class="lineNum">     195 </span>            :                 iterator_reference&lt;IteratorT&gt;::type reference;
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :     //! const_iterator type
+<span class="lineNum">     198 </span>            :     /*!
+<span class="lineNum">     199 </span>            :         There is no distinction between const_iterator and iterator.
+<span class="lineNum">     200 </span>            :         These typedefs are provides to fulfill container interface
+<span class="lineNum">     201 </span>            :     */
+<span class="lineNum">     202 </span>            :     typedef IteratorT const_iterator;
+<span class="lineNum">     203 </span>            :     //! iterator type
+<span class="lineNum">     204 </span>            :     typedef IteratorT iterator;
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            : protected:
+<span class="lineNum">     207 </span>            :     iterator_range_base()
+<span class="lineNum">     208 </span>            :         : m_Begin()
+<span class="lineNum">     209 </span><span class="lineCov">          3 :         , m_End()</span>
+<span class="lineNum">     210 </span>            :     {
+<span class="lineNum">     211 </span>            :     }
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            :     template&lt;class Iterator&gt;
+<span class="lineNum">     214 </span>            :     iterator_range_base(Iterator Begin, Iterator End)
+<span class="lineNum">     215 </span>            :         : m_Begin(Begin)
+<span class="lineNum">     216 </span><span class="lineCov">        204 :         , m_End(End)</span>
+<span class="lineNum">     217 </span>            :     {
+<span class="lineNum">     218 </span>            :     }
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            : public:
+<span class="lineNum">     221 </span>            :     IteratorT begin() const
+<span class="lineNum">     222 </span>            :     {
+<span class="lineNum">     223 </span>            :         return m_Begin;
+<span class="lineNum">     224 </span>            :     }
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            :     IteratorT end() const
+<span class="lineNum">     227 </span>            :     {
+<span class="lineNum">     228 </span>            :         return m_End;
+<span class="lineNum">     229 </span>            :     }
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :     bool empty() const
+<span class="lineNum">     232 </span>            :     {
+<span class="lineNum">     233 </span><span class="lineCov">        140 :         return m_Begin == m_End;</span>
+<span class="lineNum">     234 </span>            :     }
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            :     operator unspecified_bool_type() const
+<span class="lineNum">     237 </span>            :     {
+<span class="lineNum">     238 </span>            :         return safe_bool_t::to_unspecified_bool(
+<span class="lineNum">     239 </span><span class="lineCov">        210 :                     m_Begin != m_End, &amp;iterator_range_base::m_Begin);</span>
+<span class="lineNum">     240 </span>            :     }
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            :     bool operator!() const
+<span class="lineNum">     243 </span>            :     {
+<span class="lineNum">     244 </span>            :         return empty();
+<span class="lineNum">     245 </span>            :     }
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            :     bool equal(const iterator_range_base&amp; r) const
+<span class="lineNum">     248 </span>            :     {
+<span class="lineNum">     249 </span>            :         return m_Begin == r.m_Begin &amp;&amp; m_End == r.m_End;
+<span class="lineNum">     250 </span>            :     }
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            :    reference front() const
+<span class="lineNum">     253 </span>            :    {
+<span class="lineNum">     254 </span>            :        BOOST_ASSERT(!empty());
+<span class="lineNum">     255 </span>            :        return *m_Begin;
+<span class="lineNum">     256 </span>            :    }
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            :    void drop_front()
+<span class="lineNum">     259 </span>            :    {
+<span class="lineNum">     260 </span>            :        BOOST_ASSERT(!empty());
+<span class="lineNum">     261 </span>            :        ++m_Begin;
+<span class="lineNum">     262 </span>            :    }
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            :    void drop_front(difference_type n)
+<span class="lineNum">     265 </span>            :    {
+<span class="lineNum">     266 </span>            :        BOOST_ASSERT(n &gt;= difference_type());
+<span class="lineNum">     267 </span>            :        std::advance(this-&gt;m_Begin, n);
+<span class="lineNum">     268 </span>            :    }
+<span class="lineNum">     269 </span>            :    
+<span class="lineNum">     270 </span>            :    // Deprecated
+<span class="lineNum">     271 </span>            :    void pop_front() { drop_front(); }
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span>            : protected:
+<span class="lineNum">     274 </span>            :     template&lt;class Iterator&gt;
+<span class="lineNum">     275 </span>            :     void assign(Iterator first, Iterator last)
+<span class="lineNum">     276 </span>            :     {
+<span class="lineNum">     277 </span><span class="lineCov">         56 :         m_Begin = first;</span>
+<span class="lineNum">     278 </span><span class="lineCov">         56 :         m_End = last;</span>
+<span class="lineNum">     279 </span>            :     }
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span>            :     template&lt;class SinglePassRange&gt;
+<span class="lineNum">     282 </span>            :     void assign(const SinglePassRange&amp; r)
+<span class="lineNum">     283 </span>            :     {
+<span class="lineNum">     284 </span>            :         m_Begin = impl::adl_begin(r);
+<span class="lineNum">     285 </span>            :         m_End = impl::adl_end(r);
+<span class="lineNum">     286 </span>            :     }
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            :     template&lt;class SinglePassRange&gt;
+<span class="lineNum">     289 </span>            :     void assign(SinglePassRange&amp; r)
+<span class="lineNum">     290 </span>            :     {
+<span class="lineNum">     291 </span>            :         m_Begin = impl::adl_begin(r);
+<span class="lineNum">     292 </span>            :         m_End = impl::adl_end(r);
+<span class="lineNum">     293 </span>            :     }
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span>            :     IteratorT m_Begin;
+<span class="lineNum">     296 </span>            :     IteratorT m_End;
+<span class="lineNum">     297 </span>            : };
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span>            : template&lt;class IteratorT&gt;
+<span class="lineNum">     300 </span>            : class iterator_range_base&lt;IteratorT, bidirectional_traversal_tag&gt;
+<span class="lineNum">     301 </span>            :         : public iterator_range_base&lt;IteratorT, incrementable_traversal_tag&gt;
+<span class="lineNum">     302 </span>            : {
+<span class="lineNum">     303 </span>            :     typedef iterator_range_base&lt;IteratorT, incrementable_traversal_tag&gt; base_type;
+<span class="lineNum">     304 </span>            : 
+<span class="lineNum">     305 </span>            : protected:
+<span class="lineNum">     306 </span>            :     iterator_range_base()
+<span class="lineNum">     307 </span><span class="lineCov">          2 :     {</span>
+<span class="lineNum">     308 </span>            :     }
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            :     template&lt;class Iterator&gt;
+<span class="lineNum">     311 </span>            :     iterator_range_base(Iterator first, Iterator last)
+<span class="lineNum">     312 </span><span class="lineCov">        408 :         : base_type(first, last)</span>
+<span class="lineNum">     313 </span>            :     {
+<span class="lineNum">     314 </span>            :     }
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span>            : public:
+<span class="lineNum">     317 </span>            :     typedef BOOST_DEDUCED_TYPENAME base_type::difference_type difference_type;
+<span class="lineNum">     318 </span>            :     typedef BOOST_DEDUCED_TYPENAME base_type::reference reference;
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span>            :     reference back() const
+<span class="lineNum">     321 </span>            :     {
+<span class="lineNum">     322 </span>            :         BOOST_ASSERT(!this-&gt;empty());
+<span class="lineNum">     323 </span>            :         return *boost::prior(this-&gt;m_End);
+<span class="lineNum">     324 </span>            :     }
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span>            :     void drop_back()
+<span class="lineNum">     327 </span>            :     {
+<span class="lineNum">     328 </span>            :         BOOST_ASSERT(!this-&gt;empty());
+<span class="lineNum">     329 </span>            :         --this-&gt;m_End;
+<span class="lineNum">     330 </span>            :     }
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span>            :     void drop_back(difference_type n)
+<span class="lineNum">     333 </span>            :     {
+<span class="lineNum">     334 </span>            :         BOOST_ASSERT(n &gt;= difference_type());
+<span class="lineNum">     335 </span>            :         std::advance(this-&gt;m_End, -n);
+<span class="lineNum">     336 </span>            :     }
+<span class="lineNum">     337 </span>            :     
+<span class="lineNum">     338 </span>            :     // Deprecated
+<span class="lineNum">     339 </span>            :     void pop_back() { drop_back(); }
+<span class="lineNum">     340 </span>            : };
+<span class="lineNum">     341 </span>            : 
+<span class="lineNum">     342 </span>            : template&lt;class IteratorT&gt;
+<span class="lineNum">     343 </span>            : class iterator_range_base&lt;IteratorT, random_access_traversal_tag&gt;
+<span class="lineNum">     344 </span>            :         : public iterator_range_base&lt;IteratorT, bidirectional_traversal_tag&gt;
+<span class="lineNum">     345 </span>            : {
+<span class="lineNum">     346 </span>            :     typedef iterator_range_base&lt;
+<span class="lineNum">     347 </span>            :                 IteratorT, bidirectional_traversal_tag&gt; base_type;
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span>            : public:
+<span class="lineNum">     350 </span>            :     typedef BOOST_DEDUCED_TYPENAME
+<span class="lineNum">     351 </span>            :         boost::mpl::if_&lt;
+<span class="lineNum">     352 </span>            :             boost::mpl::or_&lt;
+<span class="lineNum">     353 </span>            :                 boost::is_abstract&lt;
+<span class="lineNum">     354 </span>            :                     BOOST_DEDUCED_TYPENAME base_type::value_type
+<span class="lineNum">     355 </span>            :                 &gt;,
+<span class="lineNum">     356 </span>            :                 boost::is_array&lt;
+<span class="lineNum">     357 </span>            :                     BOOST_DEDUCED_TYPENAME base_type::value_type
+<span class="lineNum">     358 </span>            :                 &gt;,
+<span class="lineNum">     359 </span>            :                 boost::is_function&lt;
+<span class="lineNum">     360 </span>            :                     BOOST_DEDUCED_TYPENAME base_type::value_type
+<span class="lineNum">     361 </span>            :                 &gt;
+<span class="lineNum">     362 </span>            :             &gt;,
+<span class="lineNum">     363 </span>            :             BOOST_DEDUCED_TYPENAME base_type::reference,
+<span class="lineNum">     364 </span>            :             BOOST_DEDUCED_TYPENAME base_type::value_type
+<span class="lineNum">     365 </span>            :         &gt;::type abstract_value_type;
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span>            :     // Rationale:
+<span class="lineNum">     368 </span>            :     // typedef these here to reduce verbiage in the implementation of this
+<span class="lineNum">     369 </span>            :     // type.
+<span class="lineNum">     370 </span>            :     typedef BOOST_DEDUCED_TYPENAME base_type::difference_type difference_type;
+<span class="lineNum">     371 </span>            :     typedef BOOST_DEDUCED_TYPENAME base_type::size_type size_type;
+<span class="lineNum">     372 </span>            :     typedef BOOST_DEDUCED_TYPENAME base_type::reference reference;
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span>            : protected:
+<span class="lineNum">     375 </span>            :     iterator_range_base()
+<span class="lineNum">     376 </span><span class="lineCov">          2 :     {</span>
+<span class="lineNum">     377 </span>            :     }
+<span class="lineNum">     378 </span>            : 
+<span class="lineNum">     379 </span>            :     template&lt;class Iterator&gt;
+<span class="lineNum">     380 </span>            :     iterator_range_base(Iterator first, Iterator last)
+<span class="lineNum">     381 </span><span class="lineCov">        408 :         : base_type(first, last)</span>
+<span class="lineNum">     382 </span>            :     {
+<span class="lineNum">     383 </span>            :     }
+<span class="lineNum">     384 </span>            : 
+<span class="lineNum">     385 </span>            : public:
+<span class="lineNum">     386 </span>            :     reference operator[](difference_type at) const
+<span class="lineNum">     387 </span>            :     {
+<span class="lineNum">     388 </span>            :         BOOST_ASSERT(at &gt;= 0);
+<span class="lineNum">     389 </span>            :         BOOST_ASSERT(static_cast&lt;typename base_type::size_type&gt;(at) &lt; size());
+<span class="lineNum">     390 </span>            :         return this-&gt;m_Begin[at];
+<span class="lineNum">     391 </span>            :     }
+<span class="lineNum">     392 </span>            : 
+<span class="lineNum">     393 </span>            :     //
+<span class="lineNum">     394 </span>            :     // When storing transform iterators, operator[]()
+<span class="lineNum">     395 </span>            :     // fails because it returns by reference. Therefore
+<span class="lineNum">     396 </span>            :     // operator()() is provided for these cases.
+<span class="lineNum">     397 </span>            :     //
+<span class="lineNum">     398 </span>            :     abstract_value_type operator()(difference_type at) const
+<span class="lineNum">     399 </span>            :     {
+<span class="lineNum">     400 </span>            :         BOOST_ASSERT(at &gt;= 0);
+<span class="lineNum">     401 </span>            :         BOOST_ASSERT(static_cast&lt;typename base_type::size_type&gt;(at) &lt; size());
+<span class="lineNum">     402 </span>            :         return this-&gt;m_Begin[at];
+<span class="lineNum">     403 </span>            :     }
+<span class="lineNum">     404 </span>            : 
+<span class="lineNum">     405 </span>            :     BOOST_DEDUCED_TYPENAME base_type::size_type size() const
+<span class="lineNum">     406 </span>            :     {
+<span class="lineNum">     407 </span>            :         return this-&gt;m_End - this-&gt;m_Begin;
+<span class="lineNum">     408 </span>            :     }
+<span class="lineNum">     409 </span>            : };
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span>            :     }
+<span class="lineNum">     412 </span>            : 
+<span class="lineNum">     413 </span>            : //  iterator range template class -----------------------------------------//
+<span class="lineNum">     414 </span>            : 
+<span class="lineNum">     415 </span>            :         //! iterator_range class
+<span class="lineNum">     416 </span>            :         /*!
+<span class="lineNum">     417 </span>            :             An \c iterator_range delimits a range in a sequence by beginning and ending iterators.
+<span class="lineNum">     418 </span>            :             An iterator_range can be passed to an algorithm which requires a sequence as an input.
+<span class="lineNum">     419 </span>            :             For example, the \c toupper() function may be used most frequently on strings,
+<span class="lineNum">     420 </span>            :             but can also be used on iterator_ranges:
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span>            :             \code
+<span class="lineNum">     423 </span>            :                 boost::tolower( find( s, &quot;UPPERCASE STRING&quot; ) );
+<span class="lineNum">     424 </span>            :             \endcode
+<span class="lineNum">     425 </span>            : 
+<span class="lineNum">     426 </span>            :             Many algorithms working with sequences take a pair of iterators,
+<span class="lineNum">     427 </span>            :             delimiting a working range, as an arguments. The \c iterator_range class is an
+<span class="lineNum">     428 </span>            :             encapsulation of a range identified by a pair of iterators.
+<span class="lineNum">     429 </span>            :             It provides a collection interface,
+<span class="lineNum">     430 </span>            :             so it is possible to pass an instance to an algorithm requiring a collection as an input.
+<span class="lineNum">     431 </span>            :         */
+<span class="lineNum">     432 </span>            :         template&lt;class IteratorT&gt;
+<span class="lineNum">     433 </span>            :         class iterator_range
+<span class="lineNum">     434 </span>            :             : public iterator_range_detail::iterator_range_base&lt;
+<span class="lineNum">     435 </span>            :                     IteratorT,
+<span class="lineNum">     436 </span>            :                     BOOST_DEDUCED_TYPENAME iterator_range_detail::pure_iterator_traversal&lt;IteratorT&gt;::type
+<span class="lineNum">     437 </span>            :                 &gt;
+<span class="lineNum">     438 </span>            :         {
+<span class="lineNum">     439 </span>            :             typedef iterator_range_detail::iterator_range_base&lt;
+<span class="lineNum">     440 </span>            :                     IteratorT,
+<span class="lineNum">     441 </span>            :                     BOOST_DEDUCED_TYPENAME iterator_range_detail::pure_iterator_traversal&lt;IteratorT&gt;::type
+<span class="lineNum">     442 </span>            :             &gt; base_type;
+<span class="lineNum">     443 </span>            : 
+<span class="lineNum">     444 </span>            :             template&lt;class Source&gt;
+<span class="lineNum">     445 </span>            :             struct is_compatible_range_
+<span class="lineNum">     446 </span>            :               : is_convertible&lt;
+<span class="lineNum">     447 </span>            :                     BOOST_DEDUCED_TYPENAME mpl::eval_if&lt;
+<span class="lineNum">     448 </span>            :                         has_range_iterator&lt;Source&gt;,
+<span class="lineNum">     449 </span>            :                         range_iterator&lt;Source&gt;,
+<span class="lineNum">     450 </span>            :                         mpl::identity&lt;void&gt;
+<span class="lineNum">     451 </span>            :                     &gt;::type,
+<span class="lineNum">     452 </span>            :                     BOOST_DEDUCED_TYPENAME base_type::iterator
+<span class="lineNum">     453 </span>            :                 &gt;
+<span class="lineNum">     454 </span>            :             {
+<span class="lineNum">     455 </span>            :             };
+<span class="lineNum">     456 </span>            : 
+<span class="lineNum">     457 </span>            :             template&lt;class Source&gt;
+<span class="lineNum">     458 </span>            :             struct is_compatible_range
+<span class="lineNum">     459 </span>            :                 : mpl::and_&lt;
+<span class="lineNum">     460 </span>            :                     mpl::not_&lt;
+<span class="lineNum">     461 </span>            :                         is_convertible&lt;
+<span class="lineNum">     462 </span>            :                             Source,
+<span class="lineNum">     463 </span>            :                             BOOST_DEDUCED_TYPENAME base_type::iterator
+<span class="lineNum">     464 </span>            :                         &gt;
+<span class="lineNum">     465 </span>            :                     &gt;,
+<span class="lineNum">     466 </span>            :                     is_compatible_range_&lt;Source&gt;
+<span class="lineNum">     467 </span>            :                 &gt;
+<span class="lineNum">     468 </span>            :             {
+<span class="lineNum">     469 </span>            :             };
+<span class="lineNum">     470 </span>            : 
+<span class="lineNum">     471 </span>            :         protected:
+<span class="lineNum">     472 </span>            :             typedef iterator_range_detail::iterator_range_impl&lt;IteratorT&gt; impl;
+<span class="lineNum">     473 </span>            : 
+<span class="lineNum">     474 </span>            :         public:
+<span class="lineNum">     475 </span>            :             typedef iterator_range&lt;IteratorT&gt; type;
+<span class="lineNum">     476 </span>            : 
+<span class="lineNum">     477 </span>            :             iterator_range()
+<span class="lineNum">     478 </span><span class="lineCov">          2 :             {</span>
+<span class="lineNum">     479 </span>            :             }
+<span class="lineNum">     480 </span>            : 
+<span class="lineNum">     481 </span>            :             template&lt;class Iterator&gt;
+<span class="lineNum">     482 </span>            :             iterator_range(Iterator first, Iterator last)
+<span class="lineNum">     483 </span><span class="lineCov">        276 :                 : base_type(first, last)</span>
+<span class="lineNum">     484 </span>            :             {
+<span class="lineNum">     485 </span>            :             }
+<span class="lineNum">     486 </span>            : 
+<span class="lineNum">     487 </span>            :             template&lt;class SinglePassRange&gt;
+<span class="lineNum">     488 </span>            :             iterator_range(
+<span class="lineNum">     489 </span>            :                 const SinglePassRange&amp; r,
+<span class="lineNum">     490 </span>            :                 BOOST_DEDUCED_TYPENAME ::boost::enable_if&lt;
+<span class="lineNum">     491 </span>            :                     is_compatible_range&lt;const SinglePassRange&gt;
+<span class="lineNum">     492 </span>            :                 &gt;::type* = 0
+<span class="lineNum">     493 </span>            :             )
+<span class="lineNum">     494 </span>            :                 : base_type(impl::adl_begin(r), impl::adl_end(r))
+<span class="lineNum">     495 </span>            :             {
+<span class="lineNum">     496 </span>            :             }
+<span class="lineNum">     497 </span>            : 
+<span class="lineNum">     498 </span>            :             template&lt;class SinglePassRange&gt;
+<span class="lineNum">     499 </span>            :             iterator_range(
+<span class="lineNum">     500 </span>            :                 SinglePassRange&amp; r,
+<span class="lineNum">     501 </span>            :                 BOOST_DEDUCED_TYPENAME ::boost::enable_if&lt;
+<span class="lineNum">     502 </span>            :                     is_compatible_range&lt;SinglePassRange&gt;
+<span class="lineNum">     503 </span>            :                 &gt;::type* = 0
+<span class="lineNum">     504 </span>            :             )
+<span class="lineNum">     505 </span>            :                 : base_type(impl::adl_begin(r), impl::adl_end(r))
+<span class="lineNum">     506 </span>            :             {
+<span class="lineNum">     507 </span>            :             }
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            :             template&lt;class SinglePassRange&gt;
+<span class="lineNum">     510 </span>            :             iterator_range(const SinglePassRange&amp; r,
+<span class="lineNum">     511 </span>            :                            iterator_range_detail::const_range_tag)
+<span class="lineNum">     512 </span><span class="lineNoCov">          0 :                 : base_type(impl::adl_begin(r), impl::adl_end(r))</span>
+<span class="lineNum">     513 </span>            :             {
+<span class="lineNum">     514 </span>            :             }
+<span class="lineNum">     515 </span>            : 
+<span class="lineNum">     516 </span>            :             template&lt;class SinglePassRange&gt;
+<span class="lineNum">     517 </span>            :             iterator_range(SinglePassRange&amp; r,
+<span class="lineNum">     518 </span>            :                            iterator_range_detail::range_tag)
+<span class="lineNum">     519 </span><span class="lineCov">        198 :                 : base_type(impl::adl_begin(r), impl::adl_end(r))</span>
+<span class="lineNum">     520 </span>            :             {
+<span class="lineNum">     521 </span>            :             }
+<span class="lineNum">     522 </span>            : 
+<span class="lineNum">     523 </span>            :             template&lt;class Iterator&gt;
+<span class="lineNum">     524 </span>            :             iterator_range&amp; operator=(const iterator_range&lt;Iterator&gt;&amp; other)
+<span class="lineNum">     525 </span>            :             {
+<span class="lineNum">     526 </span>            :                 this-&gt;assign(other.begin(), other.end());
+<span class="lineNum">     527 </span>            :                 return *this;
+<span class="lineNum">     528 </span>            :             }
+<span class="lineNum">     529 </span>            : 
+<span class="lineNum">     530 </span>            :             template&lt;class Iterator&gt;
+<span class="lineNum">     531 </span>            :             iterator_range&amp; operator=(iterator_range&lt;Iterator&gt;&amp; other)
+<span class="lineNum">     532 </span>            :             {
+<span class="lineNum">     533 </span><span class="lineCov">        112 :                 this-&gt;assign(other.begin(), other.end());</span>
+<span class="lineNum">     534 </span>            :                 return *this;
+<span class="lineNum">     535 </span>            :             }
+<span class="lineNum">     536 </span>            : 
+<span class="lineNum">     537 </span>            :             template&lt;class SinglePassRange&gt;
+<span class="lineNum">     538 </span>            :             iterator_range&amp; operator=(SinglePassRange&amp; r)
+<span class="lineNum">     539 </span>            :             {
+<span class="lineNum">     540 </span>            :                 this-&gt;assign(r);
+<span class="lineNum">     541 </span>            :                 return *this;
+<span class="lineNum">     542 </span>            :             }
+<span class="lineNum">     543 </span>            : 
+<span class="lineNum">     544 </span>            :             template&lt;class SinglePassRange&gt;
+<span class="lineNum">     545 </span>            :             iterator_range&amp; operator=(const SinglePassRange&amp; r)
+<span class="lineNum">     546 </span>            :             {
+<span class="lineNum">     547 </span>            :                 this-&gt;assign(r);
+<span class="lineNum">     548 </span>            :                 return *this;
+<span class="lineNum">     549 </span>            :             }
+<span class="lineNum">     550 </span>            : 
+<span class="lineNum">     551 </span>            :             iterator_range&amp; advance_begin(
+<span class="lineNum">     552 </span>            :                 BOOST_DEDUCED_TYPENAME base_type::difference_type n)
+<span class="lineNum">     553 </span>            :             {
+<span class="lineNum">     554 </span>            :                 std::advance(this-&gt;m_Begin, n);
+<span class="lineNum">     555 </span>            :                 return *this;
+<span class="lineNum">     556 </span>            :             }
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span>            :             iterator_range&amp; advance_end(
+<span class="lineNum">     559 </span>            :                 BOOST_DEDUCED_TYPENAME base_type::difference_type n)
+<span class="lineNum">     560 </span>            :             {
+<span class="lineNum">     561 </span>            :                 std::advance(this-&gt;m_End, n);
+<span class="lineNum">     562 </span>            :                 return *this;
+<span class="lineNum">     563 </span>            :             }
+<span class="lineNum">     564 </span>            : 
+<span class="lineNum">     565 </span>            :         protected:
+<span class="lineNum">     566 </span>            :             //
+<span class="lineNum">     567 </span>            :             // Allow subclasses an easy way to access the
+<span class="lineNum">     568 </span>            :             // base type
+<span class="lineNum">     569 </span>            :             //
+<span class="lineNum">     570 </span>            :             typedef iterator_range iterator_range_;
+<span class="lineNum">     571 </span>            :         };
+<span class="lineNum">     572 </span>            : 
+<span class="lineNum">     573 </span>            : //  iterator range free-standing operators ---------------------------//
+<span class="lineNum">     574 </span>            : 
+<span class="lineNum">     575 </span>            :         /////////////////////////////////////////////////////////////////////
+<span class="lineNum">     576 </span>            :         // comparison operators
+<span class="lineNum">     577 </span>            :         /////////////////////////////////////////////////////////////////////
+<span class="lineNum">     578 </span>            : 
+<span class="lineNum">     579 </span>            :         template&lt; class IteratorT, class ForwardRange &gt;
+<span class="lineNum">     580 </span>            :         inline BOOST_DEDUCED_TYPENAME boost::enable_if&lt;
+<span class="lineNum">     581 </span>            :             mpl::not_&lt;is_base_and_derived&lt;iterator_range_detail::iterator_range_tag, ForwardRange&gt; &gt;,
+<span class="lineNum">     582 </span>            :             bool
+<span class="lineNum">     583 </span>            :         &gt;::type
+<span class="lineNum">     584 </span>            :         operator==( const ForwardRange&amp; l, const iterator_range&lt;IteratorT&gt;&amp; r )
+<span class="lineNum">     585 </span>            :         {
+<span class="lineNum">     586 </span>            :             return boost::equal( l, r );
+<span class="lineNum">     587 </span>            :         }
+<span class="lineNum">     588 </span>            : 
+<span class="lineNum">     589 </span>            :         template&lt; class IteratorT, class ForwardRange &gt;
+<span class="lineNum">     590 </span>            :         inline BOOST_DEDUCED_TYPENAME boost::enable_if&lt;
+<span class="lineNum">     591 </span>            :             mpl::not_&lt;boost::is_base_and_derived&lt;iterator_range_detail::iterator_range_tag, ForwardRange&gt; &gt;,
+<span class="lineNum">     592 </span>            :             bool
+<span class="lineNum">     593 </span>            :         &gt;::type
+<span class="lineNum">     594 </span>            :         operator!=( const ForwardRange&amp; l, const iterator_range&lt;IteratorT&gt;&amp; r )
+<span class="lineNum">     595 </span>            :         {
+<span class="lineNum">     596 </span>            :             return !boost::equal( l, r );
+<span class="lineNum">     597 </span>            :         }
+<span class="lineNum">     598 </span>            : 
+<span class="lineNum">     599 </span>            :         template&lt; class IteratorT, class ForwardRange &gt;
+<span class="lineNum">     600 </span>            :         inline BOOST_DEDUCED_TYPENAME boost::enable_if&lt;
+<span class="lineNum">     601 </span>            :             mpl::not_&lt;boost::is_base_and_derived&lt;iterator_range_detail::iterator_range_tag, ForwardRange&gt; &gt;,
+<span class="lineNum">     602 </span>            :             bool
+<span class="lineNum">     603 </span>            :         &gt;::type
+<span class="lineNum">     604 </span>            :         operator&lt;( const ForwardRange&amp; l, const iterator_range&lt;IteratorT&gt;&amp; r )
+<span class="lineNum">     605 </span>            :         {
+<span class="lineNum">     606 </span>            :             return iterator_range_detail::less_than( l, r );
+<span class="lineNum">     607 </span>            :         }
+<span class="lineNum">     608 </span>            :         
+<span class="lineNum">     609 </span>            :         template&lt; class IteratorT, class ForwardRange &gt;
+<span class="lineNum">     610 </span>            :         inline BOOST_DEDUCED_TYPENAME boost::enable_if&lt;
+<span class="lineNum">     611 </span>            :             mpl::not_&lt;boost::is_base_and_derived&lt;iterator_range_detail::iterator_range_tag, ForwardRange&gt; &gt;,
+<span class="lineNum">     612 </span>            :             bool
+<span class="lineNum">     613 </span>            :         &gt;::type
+<span class="lineNum">     614 </span>            :         operator&lt;=( const ForwardRange&amp; l, const iterator_range&lt;IteratorT&gt;&amp; r )
+<span class="lineNum">     615 </span>            :         {
+<span class="lineNum">     616 </span>            :             return iterator_range_detail::less_or_equal_than( l, r );
+<span class="lineNum">     617 </span>            :         }
+<span class="lineNum">     618 </span>            :         
+<span class="lineNum">     619 </span>            :         template&lt; class IteratorT, class ForwardRange &gt;
+<span class="lineNum">     620 </span>            :         inline BOOST_DEDUCED_TYPENAME boost::enable_if&lt;
+<span class="lineNum">     621 </span>            :             mpl::not_&lt;boost::is_base_and_derived&lt;iterator_range_detail::iterator_range_tag, ForwardRange&gt; &gt;,
+<span class="lineNum">     622 </span>            :             bool
+<span class="lineNum">     623 </span>            :         &gt;::type
+<span class="lineNum">     624 </span>            :         operator&gt;( const ForwardRange&amp; l, const iterator_range&lt;IteratorT&gt;&amp; r )
+<span class="lineNum">     625 </span>            :         {
+<span class="lineNum">     626 </span>            :             return iterator_range_detail::greater_than( l, r );
+<span class="lineNum">     627 </span>            :         }
+<span class="lineNum">     628 </span>            :         
+<span class="lineNum">     629 </span>            :         template&lt; class IteratorT, class ForwardRange &gt;
+<span class="lineNum">     630 </span>            :         inline BOOST_DEDUCED_TYPENAME boost::enable_if&lt;
+<span class="lineNum">     631 </span>            :             mpl::not_&lt;boost::is_base_and_derived&lt;iterator_range_detail::iterator_range_tag, ForwardRange&gt; &gt;,
+<span class="lineNum">     632 </span>            :             bool
+<span class="lineNum">     633 </span>            :         &gt;::type
+<span class="lineNum">     634 </span>            :         operator&gt;=( const ForwardRange&amp; l, const iterator_range&lt;IteratorT&gt;&amp; r )
+<span class="lineNum">     635 </span>            :         {
+<span class="lineNum">     636 </span>            :             return iterator_range_detail::greater_or_equal_than( l, r );
+<span class="lineNum">     637 </span>            :         }
+<span class="lineNum">     638 </span>            : 
+<span class="lineNum">     639 </span>            : #ifdef BOOST_NO_FUNCTION_TEMPLATE_ORDERING
+<span class="lineNum">     640 </span>            : #else
+<span class="lineNum">     641 </span>            :         template&lt; class Iterator1T, class Iterator2T &gt;
+<span class="lineNum">     642 </span>            :         inline bool
+<span class="lineNum">     643 </span>            :         operator==( const iterator_range&lt;Iterator1T&gt;&amp; l, const iterator_range&lt;Iterator2T&gt;&amp; r )
+<span class="lineNum">     644 </span>            :         {
+<span class="lineNum">     645 </span><span class="lineNoCov">          0 :             return boost::equal( l, r );</span>
+<span class="lineNum">     646 </span>            :         }
+<span class="lineNum">     647 </span>            : 
+<span class="lineNum">     648 </span>            :         template&lt; class IteratorT, class ForwardRange &gt;
+<span class="lineNum">     649 </span>            :         inline BOOST_DEDUCED_TYPENAME boost::enable_if&lt;
+<span class="lineNum">     650 </span>            :             mpl::not_&lt;boost::is_base_and_derived&lt;iterator_range_detail::iterator_range_tag, ForwardRange&gt; &gt;,
+<span class="lineNum">     651 </span>            :             bool
+<span class="lineNum">     652 </span>            :         &gt;::type
+<span class="lineNum">     653 </span>            :         operator==( const iterator_range&lt;IteratorT&gt;&amp; l, const ForwardRange&amp; r )
+<span class="lineNum">     654 </span>            :         {
+<span class="lineNum">     655 </span>            :             return boost::equal( l, r );
+<span class="lineNum">     656 </span>            :         }
+<span class="lineNum">     657 </span>            : 
+<span class="lineNum">     658 </span>            : 
+<span class="lineNum">     659 </span>            :         template&lt; class Iterator1T, class Iterator2T &gt;
+<span class="lineNum">     660 </span>            :         inline bool
+<span class="lineNum">     661 </span>            :         operator!=( const iterator_range&lt;Iterator1T&gt;&amp; l, const iterator_range&lt;Iterator2T&gt;&amp; r )
+<span class="lineNum">     662 </span>            :         {
+<span class="lineNum">     663 </span>            :             return !boost::equal( l, r );
+<span class="lineNum">     664 </span>            :         }
+<span class="lineNum">     665 </span>            : 
+<span class="lineNum">     666 </span>            :         template&lt; class IteratorT, class ForwardRange &gt;
+<span class="lineNum">     667 </span>            :         inline BOOST_DEDUCED_TYPENAME boost::enable_if&lt;
+<span class="lineNum">     668 </span>            :             mpl::not_&lt;boost::is_base_and_derived&lt;iterator_range_detail::iterator_range_tag, ForwardRange&gt; &gt;,
+<span class="lineNum">     669 </span>            :             bool
+<span class="lineNum">     670 </span>            :         &gt;::type
+<span class="lineNum">     671 </span>            :         operator!=( const iterator_range&lt;IteratorT&gt;&amp; l, const ForwardRange&amp; r )
+<span class="lineNum">     672 </span>            :         {
+<span class="lineNum">     673 </span>            :             return !boost::equal( l, r );
+<span class="lineNum">     674 </span>            :         }
+<span class="lineNum">     675 </span>            : 
+<span class="lineNum">     676 </span>            : 
+<span class="lineNum">     677 </span>            :         template&lt; class Iterator1T, class Iterator2T &gt;
+<span class="lineNum">     678 </span>            :         inline bool
+<span class="lineNum">     679 </span>            :         operator&lt;( const iterator_range&lt;Iterator1T&gt;&amp; l, const iterator_range&lt;Iterator2T&gt;&amp; r )
+<span class="lineNum">     680 </span>            :         {
+<span class="lineNum">     681 </span>            :             return iterator_range_detail::less_than( l, r );
+<span class="lineNum">     682 </span>            :         }
+<span class="lineNum">     683 </span>            : 
+<span class="lineNum">     684 </span>            :         template&lt; class IteratorT, class ForwardRange &gt;
+<span class="lineNum">     685 </span>            :         inline BOOST_DEDUCED_TYPENAME boost::enable_if&lt;
+<span class="lineNum">     686 </span>            :             mpl::not_&lt;boost::is_base_and_derived&lt;iterator_range_detail::iterator_range_tag, ForwardRange&gt; &gt;,
+<span class="lineNum">     687 </span>            :             bool
+<span class="lineNum">     688 </span>            :         &gt;::type
+<span class="lineNum">     689 </span>            :         operator&lt;( const iterator_range&lt;IteratorT&gt;&amp; l, const ForwardRange&amp; r )
+<span class="lineNum">     690 </span>            :         {
+<span class="lineNum">     691 </span>            :             return iterator_range_detail::less_than( l, r );
+<span class="lineNum">     692 </span>            :         }
+<span class="lineNum">     693 </span>            :         
+<span class="lineNum">     694 </span>            :         template&lt; class Iterator1T, class Iterator2T &gt;
+<span class="lineNum">     695 </span>            :         inline bool
+<span class="lineNum">     696 </span>            :         operator&lt;=( const iterator_range&lt;Iterator1T&gt;&amp; l, const iterator_range&lt;Iterator2T&gt;&amp; r )
+<span class="lineNum">     697 </span>            :         {
+<span class="lineNum">     698 </span>            :             return iterator_range_detail::less_or_equal_than( l, r );
+<span class="lineNum">     699 </span>            :         }
+<span class="lineNum">     700 </span>            :         
+<span class="lineNum">     701 </span>            :         template&lt; class IteratorT, class ForwardRange &gt;
+<span class="lineNum">     702 </span>            :         inline BOOST_DEDUCED_TYPENAME boost::enable_if&lt;
+<span class="lineNum">     703 </span>            :             mpl::not_&lt;boost::is_base_and_derived&lt;iterator_range_detail::iterator_range_tag, ForwardRange&gt; &gt;,
+<span class="lineNum">     704 </span>            :             bool
+<span class="lineNum">     705 </span>            :         &gt;::type
+<span class="lineNum">     706 </span>            :         operator&lt;=( const iterator_range&lt;IteratorT&gt;&amp; l, const ForwardRange&amp; r )
+<span class="lineNum">     707 </span>            :         {
+<span class="lineNum">     708 </span>            :             return iterator_range_detail::less_or_equal_than( l, r );
+<span class="lineNum">     709 </span>            :         }
+<span class="lineNum">     710 </span>            :         
+<span class="lineNum">     711 </span>            :         template&lt; class Iterator1T, class Iterator2T &gt;
+<span class="lineNum">     712 </span>            :         inline bool
+<span class="lineNum">     713 </span>            :         operator&gt;( const iterator_range&lt;Iterator1T&gt;&amp; l, const iterator_range&lt;Iterator2T&gt;&amp; r )
+<span class="lineNum">     714 </span>            :         {
+<span class="lineNum">     715 </span>            :             return iterator_range_detail::greater_than( l, r );
+<span class="lineNum">     716 </span>            :         }
+<span class="lineNum">     717 </span>            :         
+<span class="lineNum">     718 </span>            :         template&lt; class IteratorT, class ForwardRange &gt;
+<span class="lineNum">     719 </span>            :         inline BOOST_DEDUCED_TYPENAME boost::enable_if&lt;
+<span class="lineNum">     720 </span>            :             mpl::not_&lt;boost::is_base_and_derived&lt;iterator_range_detail::iterator_range_tag, ForwardRange&gt; &gt;,
+<span class="lineNum">     721 </span>            :             bool
+<span class="lineNum">     722 </span>            :         &gt;::type
+<span class="lineNum">     723 </span>            :         operator&gt;( const iterator_range&lt;IteratorT&gt;&amp; l, const ForwardRange&amp; r )
+<span class="lineNum">     724 </span>            :         {
+<span class="lineNum">     725 </span>            :             return iterator_range_detail::greater_than( l, r );
+<span class="lineNum">     726 </span>            :         }
+<span class="lineNum">     727 </span>            :         
+<span class="lineNum">     728 </span>            :         template&lt; class Iterator1T, class Iterator2T &gt;
+<span class="lineNum">     729 </span>            :         inline bool
+<span class="lineNum">     730 </span>            :         operator&gt;=( const iterator_range&lt;Iterator1T&gt;&amp; l, const iterator_range&lt;Iterator2T&gt;&amp; r )
+<span class="lineNum">     731 </span>            :         {
+<span class="lineNum">     732 </span>            :             return iterator_range_detail::greater_or_equal_than( l, r );
+<span class="lineNum">     733 </span>            :         }
+<span class="lineNum">     734 </span>            :         
+<span class="lineNum">     735 </span>            :         template&lt; class IteratorT, class ForwardRange &gt;
+<span class="lineNum">     736 </span>            :         inline BOOST_DEDUCED_TYPENAME boost::enable_if&lt;
+<span class="lineNum">     737 </span>            :             mpl::not_&lt;boost::is_base_and_derived&lt;iterator_range_detail::iterator_range_tag, ForwardRange&gt; &gt;,
+<span class="lineNum">     738 </span>            :             bool
+<span class="lineNum">     739 </span>            :         &gt;::type
+<span class="lineNum">     740 </span>            :         operator&gt;=( const iterator_range&lt;IteratorT&gt;&amp; l, const ForwardRange&amp; r )
+<span class="lineNum">     741 </span>            :         {
+<span class="lineNum">     742 </span>            :             return iterator_range_detail::greater_or_equal_than( l, r );
+<span class="lineNum">     743 </span>            :         }
+<span class="lineNum">     744 </span>            : 
+<span class="lineNum">     745 </span>            : #endif // BOOST_NO_FUNCTION_TEMPLATE_ORDERING
+<span class="lineNum">     746 </span>            : 
+<span class="lineNum">     747 </span>            : //  iterator range utilities -----------------------------------------//
+<span class="lineNum">     748 </span>            : 
+<span class="lineNum">     749 </span>            :         //! iterator_range construct helper
+<span class="lineNum">     750 </span>            :         /*!
+<span class="lineNum">     751 </span>            :             Construct an \c iterator_range from a pair of iterators
+<span class="lineNum">     752 </span>            : 
+<span class="lineNum">     753 </span>            :             \param Begin A begin iterator
+<span class="lineNum">     754 </span>            :             \param End An end iterator
+<span class="lineNum">     755 </span>            :             \return iterator_range object
+<span class="lineNum">     756 </span>            :         */
+<span class="lineNum">     757 </span>            :         template&lt; typename IteratorT &gt;
+<span class="lineNum">     758 </span>            :         inline iterator_range&lt; IteratorT &gt;
+<span class="lineNum">     759 </span>            :         make_iterator_range( IteratorT Begin, IteratorT End )
+<span class="lineNum">     760 </span>            :         {
+<span class="lineNum">     761 </span>            :             return iterator_range&lt;IteratorT&gt;( Begin, End );
+<span class="lineNum">     762 </span>            :         }
+<span class="lineNum">     763 </span>            : 
+<span class="lineNum">     764 </span>            :         template&lt;typename IteratorT, typename IntegerT&gt;
+<span class="lineNum">     765 </span>            :         inline iterator_range&lt;IteratorT&gt;
+<span class="lineNum">     766 </span>            :         make_iterator_range_n(IteratorT first, IntegerT n)
+<span class="lineNum">     767 </span>            :         {
+<span class="lineNum">     768 </span>            :             return iterator_range&lt;IteratorT&gt;(first, boost::next(first, n));
+<span class="lineNum">     769 </span>            :         }
+<span class="lineNum">     770 </span>            : 
+<span class="lineNum">     771 </span>            : #ifdef BOOST_NO_FUNCTION_TEMPLATE_ORDERING
+<span class="lineNum">     772 </span>            : 
+<span class="lineNum">     773 </span>            :         template&lt; typename Range &gt;
+<span class="lineNum">     774 </span>            :         inline iterator_range&lt; BOOST_DEDUCED_TYPENAME range_iterator&lt;Range&gt;::type &gt;
+<span class="lineNum">     775 </span>            :         make_iterator_range( Range&amp; r )
+<span class="lineNum">     776 </span>            :         {
+<span class="lineNum">     777 </span>            :             return iterator_range&lt; BOOST_DEDUCED_TYPENAME range_iterator&lt;Range&gt;::type &gt;
+<span class="lineNum">     778 </span>            :                 ( boost::begin( r ), boost::end( r ) );
+<span class="lineNum">     779 </span>            :         }
+<span class="lineNum">     780 </span>            : 
+<span class="lineNum">     781 </span>            : #else
+<span class="lineNum">     782 </span>            :         //! iterator_range construct helper
+<span class="lineNum">     783 </span>            :         /*!
+<span class="lineNum">     784 </span>            :             Construct an \c iterator_range from a \c Range containing the begin
+<span class="lineNum">     785 </span>            :             and end iterators.
+<span class="lineNum">     786 </span>            :         */
+<span class="lineNum">     787 </span>            :         template&lt; class ForwardRange &gt;
+<span class="lineNum">     788 </span>            :         inline iterator_range&lt; BOOST_DEDUCED_TYPENAME range_iterator&lt;ForwardRange&gt;::type &gt;
+<span class="lineNum">     789 </span>            :         make_iterator_range( ForwardRange&amp; r )
+<span class="lineNum">     790 </span>            :         {
+<span class="lineNum">     791 </span>            :            return iterator_range&lt; BOOST_DEDUCED_TYPENAME range_iterator&lt;ForwardRange&gt;::type &gt;
+<span class="lineNum">     792 </span><span class="lineCov">         66 :                 ( r, iterator_range_detail::range_tag() );</span>
+<span class="lineNum">     793 </span>            :         }
+<span class="lineNum">     794 </span>            : 
+<span class="lineNum">     795 </span>            :         template&lt; class ForwardRange &gt;
+<span class="lineNum">     796 </span>            :         inline iterator_range&lt; BOOST_DEDUCED_TYPENAME range_iterator&lt;const ForwardRange&gt;::type &gt;
+<span class="lineNum">     797 </span>            :         make_iterator_range( const ForwardRange&amp; r )
+<span class="lineNum">     798 </span>            :         {
+<span class="lineNum">     799 </span>            :            return iterator_range&lt; BOOST_DEDUCED_TYPENAME range_iterator&lt;const ForwardRange&gt;::type &gt;
+<span class="lineNum">     800 </span><span class="lineNoCov">          0 :                 ( r, iterator_range_detail::const_range_tag() );</span>
+<span class="lineNum">     801 </span>            :         }
+<span class="lineNum">     802 </span>            : 
+<span class="lineNum">     803 </span>            : #endif // BOOST_NO_FUNCTION_TEMPLATE_ORDERING
+<span class="lineNum">     804 </span>            : 
+<span class="lineNum">     805 </span>            :         namespace iterator_range_detail
+<span class="lineNum">     806 </span>            :         {
+<span class="lineNum">     807 </span>            :             template&lt; class Range &gt;
+<span class="lineNum">     808 </span>            :             inline iterator_range&lt; BOOST_DEDUCED_TYPENAME range_iterator&lt;Range&gt;::type &gt;
+<span class="lineNum">     809 </span>            :             make_range_impl( Range&amp; r,
+<span class="lineNum">     810 </span>            :                              BOOST_DEDUCED_TYPENAME range_difference&lt;Range&gt;::type advance_begin,
+<span class="lineNum">     811 </span>            :                              BOOST_DEDUCED_TYPENAME range_difference&lt;Range&gt;::type advance_end )
+<span class="lineNum">     812 </span>            :             {
+<span class="lineNum">     813 </span>            :                 //
+<span class="lineNum">     814 </span>            :                 // Not worth the effort
+<span class="lineNum">     815 </span>            :                 //
+<span class="lineNum">     816 </span>            :                 //if( advance_begin == 0 &amp;&amp; advance_end == 0 )
+<span class="lineNum">     817 </span>            :                 //    return make_iterator_range( r );
+<span class="lineNum">     818 </span>            :                 //
+<span class="lineNum">     819 </span>            : 
+<span class="lineNum">     820 </span>            :                 BOOST_DEDUCED_TYPENAME range_iterator&lt;Range&gt;::type
+<span class="lineNum">     821 </span>            :                     new_begin = boost::begin( r ),
+<span class="lineNum">     822 </span>            :                     new_end   = boost::end( r );
+<span class="lineNum">     823 </span>            :                 std::advance( new_begin, advance_begin );
+<span class="lineNum">     824 </span>            :                 std::advance( new_end, advance_end );
+<span class="lineNum">     825 </span>            :                 return make_iterator_range( new_begin, new_end );
+<span class="lineNum">     826 </span>            :             }
+<span class="lineNum">     827 </span>            :         }
+<span class="lineNum">     828 </span>            : 
+<span class="lineNum">     829 </span>            : #ifdef BOOST_NO_FUNCTION_TEMPLATE_ORDERING
+<span class="lineNum">     830 </span>            : 
+<span class="lineNum">     831 </span>            :         template&lt; class Range &gt;
+<span class="lineNum">     832 </span>            :         inline iterator_range&lt; BOOST_DEDUCED_TYPENAME range_iterator&lt;Range&gt;::type &gt;
+<span class="lineNum">     833 </span>            :         make_iterator_range( Range&amp; r,
+<span class="lineNum">     834 </span>            :                     BOOST_DEDUCED_TYPENAME range_difference&lt;Range&gt;::type advance_begin,
+<span class="lineNum">     835 </span>            :                     BOOST_DEDUCED_TYPENAME range_difference&lt;Range&gt;::type advance_end )
+<span class="lineNum">     836 </span>            :         {
+<span class="lineNum">     837 </span>            :             return iterator_range_detail::make_range_impl( r, advance_begin, advance_end );
+<span class="lineNum">     838 </span>            :         }
+<span class="lineNum">     839 </span>            : 
+<span class="lineNum">     840 </span>            : #else
+<span class="lineNum">     841 </span>            : 
+<span class="lineNum">     842 </span>            :         template&lt; class Range &gt;
+<span class="lineNum">     843 </span>            :         inline iterator_range&lt; BOOST_DEDUCED_TYPENAME range_iterator&lt;Range&gt;::type &gt;
+<span class="lineNum">     844 </span>            :         make_iterator_range( Range&amp; r,
+<span class="lineNum">     845 </span>            :                     BOOST_DEDUCED_TYPENAME range_difference&lt;Range&gt;::type advance_begin,
+<span class="lineNum">     846 </span>            :                     BOOST_DEDUCED_TYPENAME range_difference&lt;Range&gt;::type advance_end )
+<span class="lineNum">     847 </span>            :         {
+<span class="lineNum">     848 </span>            :             return iterator_range_detail::make_range_impl( r, advance_begin, advance_end );
+<span class="lineNum">     849 </span>            :         }
+<span class="lineNum">     850 </span>            : 
+<span class="lineNum">     851 </span>            :         template&lt; class Range &gt;
+<span class="lineNum">     852 </span>            :         inline iterator_range&lt; BOOST_DEDUCED_TYPENAME range_iterator&lt;const Range&gt;::type &gt;
+<span class="lineNum">     853 </span>            :         make_iterator_range( const Range&amp; r,
+<span class="lineNum">     854 </span>            :                     BOOST_DEDUCED_TYPENAME range_difference&lt;Range&gt;::type advance_begin,
+<span class="lineNum">     855 </span>            :                     BOOST_DEDUCED_TYPENAME range_difference&lt;Range&gt;::type advance_end )
+<span class="lineNum">     856 </span>            :         {
+<span class="lineNum">     857 </span>            :             return iterator_range_detail::make_range_impl( r, advance_begin, advance_end );
+<span class="lineNum">     858 </span>            :         }
+<span class="lineNum">     859 </span>            : 
+<span class="lineNum">     860 </span>            : #endif // BOOST_NO_FUNCTION_TEMPLATE_ORDERING
+<span class="lineNum">     861 </span>            : 
+<span class="lineNum">     862 </span>            :         //! copy a range into a sequence
+<span class="lineNum">     863 </span>            :         /*!
+<span class="lineNum">     864 </span>            :             Construct a new sequence of the specified type from the elements
+<span class="lineNum">     865 </span>            :             in the given range
+<span class="lineNum">     866 </span>            : 
+<span class="lineNum">     867 </span>            :             \param Range An input range
+<span class="lineNum">     868 </span>            :             \return New sequence
+<span class="lineNum">     869 </span>            :         */
+<span class="lineNum">     870 </span>            :         template&lt; typename SeqT, typename Range &gt;
+<span class="lineNum">     871 </span>            :         inline SeqT copy_range( const Range&amp; r )
+<span class="lineNum">     872 </span>            :         {
+<span class="lineNum">     873 </span><span class="lineCov">         15 :             return SeqT( boost::begin( r ), boost::end( r ) );</span>
+<span class="lineNum">     874 </span>            :         }
+<span class="lineNum">     875 </span>            : 
+<span class="lineNum">     876 </span>            : } // namespace 'boost'
+<span class="lineNum">     877 </span>            : 
+<span class="lineNum">     878 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1500))
+<span class="lineNum">     879 </span>            :     #pragma warning( pop )
+<span class="lineNum">     880 </span>            : #endif
+<span class="lineNum">     881 </span>            : 
+<span class="lineNum">     882 </span>            : #endif
+<span class="lineNum">     883 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

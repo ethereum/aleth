@@ -1,0 +1,923 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/math/policies/error_handling.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/math/policies</a> - error_handling.hpp<span style="font-size: 80%;"> (source / <a href="error_handling.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">55</td>
+            <td class="headerCovTableEntryLo">10.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  Copyright John Maddock 2007.</a>
+<span class="lineNum">       2 </span>            : //  Copyright Paul A. Bristow 2007.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : //  Use, modification and distribution are subject to the
+<span class="lineNum">       5 </span>            : //  Boost Software License, Version 1.0. (See accompanying file
+<span class="lineNum">       6 </span>            : //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       7 </span>            : 
+<span class="lineNum">       8 </span>            : #ifndef BOOST_MATH_POLICY_ERROR_HANDLING_HPP
+<span class="lineNum">       9 </span>            : #define BOOST_MATH_POLICY_ERROR_HANDLING_HPP
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #include &lt;stdexcept&gt;
+<span class="lineNum">      12 </span>            : #include &lt;iomanip&gt;
+<span class="lineNum">      13 </span>            : #include &lt;string&gt;
+<span class="lineNum">      14 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      15 </span>            : #include &lt;typeinfo&gt;
+<span class="lineNum">      16 </span>            : #include &lt;cerrno&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/config/no_tr1/complex.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/config/no_tr1/cmath.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;stdexcept&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/math/tools/config.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/math/policies/policy.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/math/tools/precision.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/throw_exception.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/cstdint.hpp&gt;
+<span class="lineNum">      25 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">      26 </span>            : #  pragma warning(push) // Quiet warnings in boost/format.hpp
+<span class="lineNum">      27 </span>            : #  pragma warning(disable: 4996) // _SCL_SECURE_NO_DEPRECATE
+<span class="lineNum">      28 </span>            : #  pragma warning(disable: 4512) // assignment operator could not be generated.
+<span class="lineNum">      29 </span>            : #  pragma warning(disable: 4127) // conditional expression is constant
+<span class="lineNum">      30 </span>            : // And warnings in error handling:
+<span class="lineNum">      31 </span>            : #  pragma warning(disable: 4702) // unreachable code.
+<span class="lineNum">      32 </span>            : // Note that this only occurs when the compiler can deduce code is unreachable,
+<span class="lineNum">      33 </span>            : // for example when policy macros are used to ignore errors rather than throw.
+<span class="lineNum">      34 </span>            : #endif
+<span class="lineNum">      35 </span>            : #include &lt;sstream&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : namespace boost{ namespace math{
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : class evaluation_error : public std::runtime_error
+<span class="lineNum">      40 </span>            : {
+<span class="lineNum">      41 </span>            : public:
+<span class="lineNum">      42 </span>            :    evaluation_error(const std::string&amp; s) : std::runtime_error(s){}
+<span class="lineNum">      43 </span>            : };
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : class rounding_error : public std::runtime_error
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span>            : public:
+<span class="lineNum">      48 </span>            :    rounding_error(const std::string&amp; s) : std::runtime_error(s){}
+<span class="lineNum">      49 </span>            : };
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : namespace policies{
+<span class="lineNum">      52 </span>            : //
+<span class="lineNum">      53 </span>            : // Forward declarations of user error handlers,
+<span class="lineNum">      54 </span>            : // it's up to the user to provide the definition of these:
+<span class="lineNum">      55 </span>            : //
+<span class="lineNum">      56 </span>            : template &lt;class T&gt;
+<span class="lineNum">      57 </span>            : T user_domain_error(const char* function, const char* message, const T&amp; val);
+<span class="lineNum">      58 </span>            : template &lt;class T&gt;
+<span class="lineNum">      59 </span>            : T user_pole_error(const char* function, const char* message, const T&amp; val);
+<span class="lineNum">      60 </span>            : template &lt;class T&gt;
+<span class="lineNum">      61 </span>            : T user_overflow_error(const char* function, const char* message, const T&amp; val);
+<span class="lineNum">      62 </span>            : template &lt;class T&gt;
+<span class="lineNum">      63 </span>            : T user_underflow_error(const char* function, const char* message, const T&amp; val);
+<span class="lineNum">      64 </span>            : template &lt;class T&gt;
+<span class="lineNum">      65 </span>            : T user_denorm_error(const char* function, const char* message, const T&amp; val);
+<span class="lineNum">      66 </span>            : template &lt;class T&gt;
+<span class="lineNum">      67 </span>            : T user_evaluation_error(const char* function, const char* message, const T&amp; val);
+<span class="lineNum">      68 </span>            : template &lt;class T, class TargetType&gt;
+<span class="lineNum">      69 </span>            : T user_rounding_error(const char* function, const char* message, const T&amp; val, const TargetType&amp; t);
+<span class="lineNum">      70 </span>            : template &lt;class T&gt;
+<span class="lineNum">      71 </span>            : T user_indeterminate_result_error(const char* function, const char* message, const T&amp; val);
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : namespace detail
+<span class="lineNum">      74 </span>            : {
+<a name="75"><span class="lineNum">      75 </span>            : </a>
+<span class="lineNum">      76 </span>            : template &lt;class T&gt;
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 : std::string prec_format(const T&amp; val)</span>
+<span class="lineNum">      78 </span>            : {
+<span class="lineNum">      79 </span>            :    typedef typename boost::math::policies::precision&lt;T, boost::math::policies::policy&lt;&gt; &gt;::type prec_type;
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :    std::stringstream ss;</span>
+<span class="lineNum">      81 </span>            :    if(prec_type::value)
+<span class="lineNum">      82 </span>            :    {
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :       int prec = 2 + (prec_type::value * 30103UL) / 100000UL;</span>
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :       ss &lt;&lt; std::setprecision(prec);</span>
+<span class="lineNum">      85 </span>            :    }
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :    ss &lt;&lt; val;</span>
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :    return ss.str();</span>
+<a name="88"><span class="lineNum">      88 </span>            : }</a>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 : inline void replace_all_in_string(std::string&amp; result, const char* what, const char* with)</span>
+<span class="lineNum">      91 </span>            : {
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :    std::string::size_type pos = 0;</span>
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :    std::string::size_type slen = std::strlen(what);</span>
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :    std::string::size_type rlen = std::strlen(with);</span>
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :    while((pos = result.find(what, pos)) != std::string::npos)</span>
+<span class="lineNum">      96 </span>            :    {
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :       result.replace(pos, slen, with);</span>
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :       pos += rlen;</span>
+<span class="lineNum">      99 </span>            :    }
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : template &lt;class T&gt;
+<span class="lineNum">     103 </span>            : inline const char* name_of()
+<span class="lineNum">     104 </span>            : {
+<span class="lineNum">     105 </span>            : #ifndef BOOST_NO_RTTI
+<span class="lineNum">     106 </span>            :    return typeid(T).name();
+<span class="lineNum">     107 </span>            : #else
+<span class="lineNum">     108 </span>            :    return &quot;unknown&quot;;
+<span class="lineNum">     109 </span>            : #endif
+<span class="lineNum">     110 </span>            : }
+<span class="lineNum">     111 </span>            : template &lt;&gt; inline const char* name_of&lt;float&gt;(){ return &quot;float&quot;; }
+<span class="lineNum">     112 </span>            : template &lt;&gt; inline const char* name_of&lt;double&gt;(){ return &quot;double&quot;; }
+<span class="lineNum">     113 </span>            : template &lt;&gt; inline const char* name_of&lt;long double&gt;(){ return &quot;long double&quot;; }
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : #ifdef BOOST_MATH_USE_FLOAT128
+<span class="lineNum">     116 </span>            : template &lt;&gt;
+<span class="lineNum">     117 </span>            : inline const char* name_of&lt;BOOST_MATH_FLOAT128_TYPE&gt;()
+<span class="lineNum">     118 </span>            : {
+<span class="lineNum">     119 </span>            :    return &quot;__float128&quot;;
+<span class="lineNum">     120 </span>            : }
+<span class="lineNum">     121 </span>            : #endif
+<a name="122"><span class="lineNum">     122 </span>            : </a>
+<span class="lineNum">     123 </span>            : template &lt;class E, class T&gt;
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 : void raise_error(const char* pfunction, const char* message)</span>
+<span class="lineNum">     125 </span>            : {
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :   if(pfunction == 0)</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :      pfunction = &quot;Unknown function operating on type %1%&quot;;</span>
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :   if(message == 0)</span>
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :      message = &quot;Cause unknown&quot;;</span>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :   std::string function(pfunction);</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :   std::string msg(&quot;Error in function &quot;);</span>
+<span class="lineNum">     133 </span>            : #ifndef BOOST_NO_RTTI
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :   replace_all_in_string(function, &quot;%1%&quot;, boost::math::policies::detail::name_of&lt;T&gt;());</span>
+<span class="lineNum">     135 </span>            : #else
+<span class="lineNum">     136 </span>            :   replace_all_in_string(function, &quot;%1%&quot;, &quot;Unknown&quot;);
+<span class="lineNum">     137 </span>            : #endif
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :   msg += function;</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :   msg += &quot;: &quot;;</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :   msg += message;</span>
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :   E e(msg);</span>
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :   boost::throw_exception(e);</span>
+<span class="lineNum">     144 </span>            : }
+<a name="145"><span class="lineNum">     145 </span>            : </a>
+<span class="lineNum">     146 </span>            : template &lt;class E, class T&gt;
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 : void raise_error(const char* pfunction, const char* pmessage, const T&amp; val)</span>
+<span class="lineNum">     148 </span>            : {
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :   if(pfunction == 0)</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :      pfunction = &quot;Unknown function operating on type %1%&quot;;</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :   if(pmessage == 0)</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :      pmessage = &quot;Cause unknown: error caused by bad argument with value %1%&quot;;</span>
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :   std::string function(pfunction);</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :   std::string message(pmessage);</span>
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :   std::string msg(&quot;Error in function &quot;);</span>
+<span class="lineNum">     157 </span>            : #ifndef BOOST_NO_RTTI
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :   replace_all_in_string(function, &quot;%1%&quot;, boost::math::policies::detail::name_of&lt;T&gt;());</span>
+<span class="lineNum">     159 </span>            : #else
+<span class="lineNum">     160 </span>            :   replace_all_in_string(function, &quot;%1%&quot;, &quot;Unknown&quot;);
+<span class="lineNum">     161 </span>            : #endif
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :   msg += function;</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :   msg += &quot;: &quot;;</span>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :   std::string sval = prec_format(val);</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :   replace_all_in_string(message, &quot;%1%&quot;, sval.c_str());</span>
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :   msg += message;</span>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :   E e(msg);</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :   boost::throw_exception(e);</span>
+<span class="lineNum">     171 </span>            : }
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            : template &lt;class T&gt;
+<span class="lineNum">     174 </span>            : inline T raise_domain_error(
+<span class="lineNum">     175 </span>            :            const char* function,
+<span class="lineNum">     176 </span>            :            const char* message,
+<span class="lineNum">     177 </span>            :            const T&amp; val,
+<span class="lineNum">     178 </span>            :            const ::boost::math::policies::domain_error&lt; ::boost::math::policies::throw_on_error&gt;&amp;)
+<span class="lineNum">     179 </span>            : {
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :    raise_error&lt;std::domain_error, T&gt;(function, message, val);</span>
+<span class="lineNum">     181 </span>            :    // we never get here:
+<span class="lineNum">     182 </span>            :    return std::numeric_limits&lt;T&gt;::quiet_NaN();
+<span class="lineNum">     183 </span>            : }
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            : template &lt;class T&gt;
+<span class="lineNum">     186 </span>            : inline BOOST_MATH_CONSTEXPR T raise_domain_error(
+<span class="lineNum">     187 </span>            :            const char* ,
+<span class="lineNum">     188 </span>            :            const char* ,
+<span class="lineNum">     189 </span>            :            const T&amp; ,
+<span class="lineNum">     190 </span>            :            const ::boost::math::policies::domain_error&lt; ::boost::math::policies::ignore_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     191 </span>            : {
+<span class="lineNum">     192 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     193 </span>            :    // to be ignored so here we go anyway:
+<span class="lineNum">     194 </span>            :    return std::numeric_limits&lt;T&gt;::quiet_NaN();
+<span class="lineNum">     195 </span>            : }
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            : template &lt;class T&gt;
+<span class="lineNum">     198 </span>            : inline T raise_domain_error(
+<span class="lineNum">     199 </span>            :            const char* ,
+<span class="lineNum">     200 </span>            :            const char* ,
+<span class="lineNum">     201 </span>            :            const T&amp; ,
+<span class="lineNum">     202 </span>            :            const ::boost::math::policies::domain_error&lt; ::boost::math::policies::errno_on_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     203 </span>            : {
+<span class="lineNum">     204 </span>            :    errno = EDOM;
+<span class="lineNum">     205 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     206 </span>            :    // to be silent so here we go anyway:
+<span class="lineNum">     207 </span>            :    return std::numeric_limits&lt;T&gt;::quiet_NaN();
+<span class="lineNum">     208 </span>            : }
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            : template &lt;class T&gt;
+<span class="lineNum">     211 </span>            : inline T raise_domain_error(
+<span class="lineNum">     212 </span>            :            const char* function,
+<span class="lineNum">     213 </span>            :            const char* message,
+<span class="lineNum">     214 </span>            :            const T&amp; val,
+<span class="lineNum">     215 </span>            :            const  ::boost::math::policies::domain_error&lt; ::boost::math::policies::user_error&gt;&amp;)
+<span class="lineNum">     216 </span>            : {
+<span class="lineNum">     217 </span>            :    return user_domain_error(function, message, val);
+<span class="lineNum">     218 </span>            : }
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            : template &lt;class T&gt;
+<span class="lineNum">     221 </span>            : inline T raise_pole_error(
+<span class="lineNum">     222 </span>            :            const char* function,
+<span class="lineNum">     223 </span>            :            const char* message,
+<span class="lineNum">     224 </span>            :            const T&amp; val,
+<span class="lineNum">     225 </span>            :            const  ::boost::math::policies::pole_error&lt; ::boost::math::policies::throw_on_error&gt;&amp;)
+<span class="lineNum">     226 </span>            : {
+<span class="lineNum">     227 </span>            :    return boost::math::policies::detail::raise_domain_error(function, message, val,  ::boost::math::policies::domain_error&lt; ::boost::math::policies::throw_on_error&gt;());
+<span class="lineNum">     228 </span>            : }
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            : template &lt;class T&gt;
+<span class="lineNum">     231 </span>            : inline BOOST_MATH_CONSTEXPR T raise_pole_error(
+<span class="lineNum">     232 </span>            :            const char* function,
+<span class="lineNum">     233 </span>            :            const char* message,
+<span class="lineNum">     234 </span>            :            const T&amp; val,
+<span class="lineNum">     235 </span>            :            const  ::boost::math::policies::pole_error&lt; ::boost::math::policies::ignore_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     236 </span>            : {
+<span class="lineNum">     237 </span>            :    return  ::boost::math::policies::detail::raise_domain_error(function, message, val,  ::boost::math::policies::domain_error&lt; ::boost::math::policies::ignore_error&gt;());
+<span class="lineNum">     238 </span>            : }
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            : template &lt;class T&gt;
+<span class="lineNum">     241 </span>            : inline BOOST_MATH_CONSTEXPR T raise_pole_error(
+<span class="lineNum">     242 </span>            :            const char* function,
+<span class="lineNum">     243 </span>            :            const char* message,
+<span class="lineNum">     244 </span>            :            const T&amp; val,
+<span class="lineNum">     245 </span>            :            const  ::boost::math::policies::pole_error&lt; ::boost::math::policies::errno_on_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     246 </span>            : {
+<span class="lineNum">     247 </span>            :    return  ::boost::math::policies::detail::raise_domain_error(function, message, val,  ::boost::math::policies::domain_error&lt; ::boost::math::policies::errno_on_error&gt;());
+<span class="lineNum">     248 </span>            : }
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            : template &lt;class T&gt;
+<span class="lineNum">     251 </span>            : inline T raise_pole_error(
+<span class="lineNum">     252 </span>            :            const char* function,
+<span class="lineNum">     253 </span>            :            const char* message,
+<span class="lineNum">     254 </span>            :            const T&amp; val,
+<span class="lineNum">     255 </span>            :            const  ::boost::math::policies::pole_error&lt; ::boost::math::policies::user_error&gt;&amp;)
+<span class="lineNum">     256 </span>            : {
+<span class="lineNum">     257 </span>            :    return user_pole_error(function, message, val);
+<span class="lineNum">     258 </span>            : }
+<span class="lineNum">     259 </span>            : 
+<a name="260"><span class="lineNum">     260 </span>            : </a>
+<span class="lineNum">     261 </span>            : template &lt;class T&gt;
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 : inline T raise_overflow_error(</span>
+<span class="lineNum">     263 </span>            :            const char* function,
+<span class="lineNum">     264 </span>            :            const char* message,
+<span class="lineNum">     265 </span>            :            const  ::boost::math::policies::overflow_error&lt; ::boost::math::policies::throw_on_error&gt;&amp;)
+<span class="lineNum">     266 </span>            : {
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :    raise_error&lt;std::overflow_error, T&gt;(function, message ? message : &quot;numeric overflow&quot;);</span>
+<span class="lineNum">     268 </span>            :    // We should never get here:
+<span class="lineNum">     269 </span>            :    return std::numeric_limits&lt;T&gt;::has_infinity ? std::numeric_limits&lt;T&gt;::infinity() : boost::math::tools::max_value&lt;T&gt;();
+<span class="lineNum">     270 </span>            : }
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            : template &lt;class T&gt;
+<span class="lineNum">     273 </span>            : inline T raise_overflow_error(
+<span class="lineNum">     274 </span>            :            const char* function,
+<span class="lineNum">     275 </span>            :            const char* message,
+<span class="lineNum">     276 </span>            :            const T&amp; val,
+<span class="lineNum">     277 </span>            :            const ::boost::math::policies::overflow_error&lt; ::boost::math::policies::throw_on_error&gt;&amp;)
+<span class="lineNum">     278 </span>            : {
+<span class="lineNum">     279 </span>            :    raise_error&lt;std::overflow_error, T&gt;(function, message ? message : &quot;numeric overflow&quot;, val);
+<span class="lineNum">     280 </span>            :    // We should never get here:
+<span class="lineNum">     281 </span>            :    return std::numeric_limits&lt;T&gt;::has_infinity ? std::numeric_limits&lt;T&gt;::infinity() : boost::math::tools::max_value&lt;T&gt;();
+<span class="lineNum">     282 </span>            : }
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            : template &lt;class T&gt;
+<span class="lineNum">     285 </span>            : inline BOOST_MATH_CONSTEXPR T raise_overflow_error(
+<span class="lineNum">     286 </span>            :            const char* ,
+<span class="lineNum">     287 </span>            :            const char* ,
+<span class="lineNum">     288 </span>            :            const  ::boost::math::policies::overflow_error&lt; ::boost::math::policies::ignore_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     289 </span>            : {
+<span class="lineNum">     290 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     291 </span>            :    // to be ignored so here we go anyway:
+<span class="lineNum">     292 </span>            :    return std::numeric_limits&lt;T&gt;::has_infinity ? std::numeric_limits&lt;T&gt;::infinity() : boost::math::tools::max_value&lt;T&gt;();
+<span class="lineNum">     293 </span>            : }
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span>            : template &lt;class T&gt;
+<span class="lineNum">     296 </span>            : inline BOOST_MATH_CONSTEXPR T raise_overflow_error(
+<span class="lineNum">     297 </span>            :            const char* ,
+<span class="lineNum">     298 </span>            :            const char* ,
+<span class="lineNum">     299 </span>            :            const T&amp;,
+<span class="lineNum">     300 </span>            :            const  ::boost::math::policies::overflow_error&lt; ::boost::math::policies::ignore_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     301 </span>            : {
+<span class="lineNum">     302 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     303 </span>            :    // to be ignored so here we go anyway:
+<span class="lineNum">     304 </span>            :    return std::numeric_limits&lt;T&gt;::has_infinity ? std::numeric_limits&lt;T&gt;::infinity() : boost::math::tools::max_value&lt;T&gt;();
+<span class="lineNum">     305 </span>            : }
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            : template &lt;class T&gt;
+<span class="lineNum">     308 </span>            : inline T raise_overflow_error(
+<span class="lineNum">     309 </span>            :            const char* ,
+<span class="lineNum">     310 </span>            :            const char* ,
+<span class="lineNum">     311 </span>            :            const  ::boost::math::policies::overflow_error&lt; ::boost::math::policies::errno_on_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     312 </span>            : {
+<span class="lineNum">     313 </span>            :    errno = ERANGE;
+<span class="lineNum">     314 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     315 </span>            :    // to be silent so here we go anyway:
+<span class="lineNum">     316 </span>            :    return std::numeric_limits&lt;T&gt;::has_infinity ? std::numeric_limits&lt;T&gt;::infinity() : boost::math::tools::max_value&lt;T&gt;();
+<span class="lineNum">     317 </span>            : }
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            : template &lt;class T&gt;
+<span class="lineNum">     320 </span>            : inline T raise_overflow_error(
+<span class="lineNum">     321 </span>            :            const char* ,
+<span class="lineNum">     322 </span>            :            const char* ,
+<span class="lineNum">     323 </span>            :            const T&amp;,
+<span class="lineNum">     324 </span>            :            const  ::boost::math::policies::overflow_error&lt; ::boost::math::policies::errno_on_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     325 </span>            : {
+<span class="lineNum">     326 </span>            :    errno = ERANGE;
+<span class="lineNum">     327 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     328 </span>            :    // to be silent so here we go anyway:
+<span class="lineNum">     329 </span>            :    return std::numeric_limits&lt;T&gt;::has_infinity ? std::numeric_limits&lt;T&gt;::infinity() : boost::math::tools::max_value&lt;T&gt;();
+<span class="lineNum">     330 </span>            : }
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span>            : template &lt;class T&gt;
+<span class="lineNum">     333 </span>            : inline T raise_overflow_error(
+<span class="lineNum">     334 </span>            :            const char* function,
+<span class="lineNum">     335 </span>            :            const char* message,
+<span class="lineNum">     336 </span>            :            const  ::boost::math::policies::overflow_error&lt; ::boost::math::policies::user_error&gt;&amp;)
+<span class="lineNum">     337 </span>            : {
+<span class="lineNum">     338 </span>            :    return user_overflow_error(function, message, std::numeric_limits&lt;T&gt;::infinity());
+<span class="lineNum">     339 </span>            : }
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span>            : template &lt;class T&gt;
+<span class="lineNum">     342 </span>            : inline T raise_overflow_error(
+<span class="lineNum">     343 </span>            :            const char* function,
+<span class="lineNum">     344 </span>            :            const char* message,
+<span class="lineNum">     345 </span>            :            const T&amp; val,
+<span class="lineNum">     346 </span>            :            const  ::boost::math::policies::overflow_error&lt; ::boost::math::policies::user_error&gt;&amp;)
+<span class="lineNum">     347 </span>            : {
+<span class="lineNum">     348 </span>            :    std::string m(message ? message : &quot;&quot;);
+<span class="lineNum">     349 </span>            :    std::string sval = prec_format(val);
+<span class="lineNum">     350 </span>            :    replace_all_in_string(m, &quot;%1%&quot;, sval.c_str());
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span>            :    return user_overflow_error(function, m.c_str(), std::numeric_limits&lt;T&gt;::infinity());
+<span class="lineNum">     353 </span>            : }
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span>            : template &lt;class T&gt;
+<span class="lineNum">     356 </span>            : inline T raise_underflow_error(
+<span class="lineNum">     357 </span>            :            const char* function,
+<span class="lineNum">     358 </span>            :            const char* message,
+<span class="lineNum">     359 </span>            :            const  ::boost::math::policies::underflow_error&lt; ::boost::math::policies::throw_on_error&gt;&amp;)
+<span class="lineNum">     360 </span>            : {
+<span class="lineNum">     361 </span>            :    raise_error&lt;std::underflow_error, T&gt;(function, message ? message : &quot;numeric underflow&quot;);
+<span class="lineNum">     362 </span>            :    // We should never get here:
+<span class="lineNum">     363 </span>            :    return 0;
+<span class="lineNum">     364 </span>            : }
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span>            : template &lt;class T&gt;
+<span class="lineNum">     367 </span>            : inline BOOST_MATH_CONSTEXPR T raise_underflow_error(
+<span class="lineNum">     368 </span>            :            const char* ,
+<span class="lineNum">     369 </span>            :            const char* ,
+<span class="lineNum">     370 </span>            :            const  ::boost::math::policies::underflow_error&lt; ::boost::math::policies::ignore_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     371 </span>            : {
+<span class="lineNum">     372 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     373 </span>            :    // to be ignored so here we go anyway:
+<span class="lineNum">     374 </span>            :    return T(0);
+<span class="lineNum">     375 </span>            : }
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span>            : template &lt;class T&gt;
+<span class="lineNum">     378 </span>            : inline T raise_underflow_error(
+<span class="lineNum">     379 </span>            :            const char* /* function */,
+<span class="lineNum">     380 </span>            :            const char* /* message */,
+<span class="lineNum">     381 </span>            :            const  ::boost::math::policies::underflow_error&lt; ::boost::math::policies::errno_on_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     382 </span>            : {
+<span class="lineNum">     383 </span>            :    errno = ERANGE;
+<span class="lineNum">     384 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     385 </span>            :    // to be silent so here we go anyway:
+<span class="lineNum">     386 </span>            :    return T(0);
+<span class="lineNum">     387 </span>            : }
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span>            : template &lt;class T&gt;
+<span class="lineNum">     390 </span>            : inline T raise_underflow_error(
+<span class="lineNum">     391 </span>            :            const char* function,
+<span class="lineNum">     392 </span>            :            const char* message,
+<span class="lineNum">     393 </span>            :            const  ::boost::math::policies::underflow_error&lt; ::boost::math::policies::user_error&gt;&amp;)
+<span class="lineNum">     394 </span>            : {
+<span class="lineNum">     395 </span>            :    return user_underflow_error(function, message, T(0));
+<span class="lineNum">     396 </span>            : }
+<span class="lineNum">     397 </span>            : 
+<span class="lineNum">     398 </span>            : template &lt;class T&gt;
+<span class="lineNum">     399 </span>            : inline T raise_denorm_error(
+<span class="lineNum">     400 </span>            :            const char* function,
+<span class="lineNum">     401 </span>            :            const char* message,
+<span class="lineNum">     402 </span>            :            const T&amp; /* val */,
+<span class="lineNum">     403 </span>            :            const  ::boost::math::policies::denorm_error&lt; ::boost::math::policies::throw_on_error&gt;&amp;)
+<span class="lineNum">     404 </span>            : {
+<span class="lineNum">     405 </span>            :    raise_error&lt;std::underflow_error, T&gt;(function, message ? message : &quot;denormalised result&quot;);
+<span class="lineNum">     406 </span>            :    // we never get here:
+<span class="lineNum">     407 </span>            :    return T(0);
+<span class="lineNum">     408 </span>            : }
+<span class="lineNum">     409 </span>            : 
+<span class="lineNum">     410 </span>            : template &lt;class T&gt;
+<span class="lineNum">     411 </span>            : inline BOOST_MATH_CONSTEXPR T raise_denorm_error(
+<span class="lineNum">     412 </span>            :            const char* ,
+<span class="lineNum">     413 </span>            :            const char* ,
+<span class="lineNum">     414 </span>            :            const T&amp;  val,
+<span class="lineNum">     415 </span>            :            const  ::boost::math::policies::denorm_error&lt; ::boost::math::policies::ignore_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     416 </span>            : {
+<span class="lineNum">     417 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     418 </span>            :    // to be ignored so here we go anyway:
+<span class="lineNum">     419 </span>            :    return val;
+<span class="lineNum">     420 </span>            : }
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span>            : template &lt;class T&gt;
+<span class="lineNum">     423 </span>            : inline T raise_denorm_error(
+<span class="lineNum">     424 </span>            :            const char* ,
+<span class="lineNum">     425 </span>            :            const char* ,
+<span class="lineNum">     426 </span>            :            const T&amp; val,
+<span class="lineNum">     427 </span>            :            const  ::boost::math::policies::denorm_error&lt; ::boost::math::policies::errno_on_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     428 </span>            : {
+<span class="lineNum">     429 </span>            :    errno = ERANGE;
+<span class="lineNum">     430 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     431 </span>            :    // to be silent so here we go anyway:
+<span class="lineNum">     432 </span>            :    return val;
+<span class="lineNum">     433 </span>            : }
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span>            : template &lt;class T&gt;
+<span class="lineNum">     436 </span>            : inline T raise_denorm_error(
+<span class="lineNum">     437 </span>            :            const char* function,
+<span class="lineNum">     438 </span>            :            const char* message,
+<span class="lineNum">     439 </span>            :            const T&amp; val,
+<span class="lineNum">     440 </span>            :            const  ::boost::math::policies::denorm_error&lt; ::boost::math::policies::user_error&gt;&amp;)
+<span class="lineNum">     441 </span>            : {
+<span class="lineNum">     442 </span>            :    return user_denorm_error(function, message, val);
+<span class="lineNum">     443 </span>            : }
+<span class="lineNum">     444 </span>            : 
+<span class="lineNum">     445 </span>            : template &lt;class T&gt;
+<span class="lineNum">     446 </span>            : inline T raise_evaluation_error(
+<span class="lineNum">     447 </span>            :            const char* function,
+<span class="lineNum">     448 </span>            :            const char* message,
+<span class="lineNum">     449 </span>            :            const T&amp; val,
+<span class="lineNum">     450 </span>            :            const  ::boost::math::policies::evaluation_error&lt; ::boost::math::policies::throw_on_error&gt;&amp;)
+<span class="lineNum">     451 </span>            : {
+<span class="lineNum">     452 </span>            :    raise_error&lt;boost::math::evaluation_error, T&gt;(function, message, val);
+<span class="lineNum">     453 </span>            :    // we never get here:
+<span class="lineNum">     454 </span>            :    return T(0);
+<span class="lineNum">     455 </span>            : }
+<span class="lineNum">     456 </span>            : 
+<span class="lineNum">     457 </span>            : template &lt;class T&gt;
+<span class="lineNum">     458 </span>            : inline BOOST_MATH_CONSTEXPR T raise_evaluation_error(
+<span class="lineNum">     459 </span>            :            const char* ,
+<span class="lineNum">     460 </span>            :            const char* ,
+<span class="lineNum">     461 </span>            :            const T&amp; val,
+<span class="lineNum">     462 </span>            :            const  ::boost::math::policies::evaluation_error&lt; ::boost::math::policies::ignore_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     463 </span>            : {
+<span class="lineNum">     464 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     465 </span>            :    // to be ignored so here we go anyway:
+<span class="lineNum">     466 </span>            :    return val;
+<span class="lineNum">     467 </span>            : }
+<span class="lineNum">     468 </span>            : 
+<span class="lineNum">     469 </span>            : template &lt;class T&gt;
+<span class="lineNum">     470 </span>            : inline T raise_evaluation_error(
+<span class="lineNum">     471 </span>            :            const char* ,
+<span class="lineNum">     472 </span>            :            const char* ,
+<span class="lineNum">     473 </span>            :            const T&amp; val,
+<span class="lineNum">     474 </span>            :            const  ::boost::math::policies::evaluation_error&lt; ::boost::math::policies::errno_on_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     475 </span>            : {
+<span class="lineNum">     476 </span>            :    errno = EDOM;
+<span class="lineNum">     477 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     478 </span>            :    // to be silent so here we go anyway:
+<span class="lineNum">     479 </span>            :    return val;
+<span class="lineNum">     480 </span>            : }
+<span class="lineNum">     481 </span>            : 
+<span class="lineNum">     482 </span>            : template &lt;class T&gt;
+<span class="lineNum">     483 </span>            : inline T raise_evaluation_error(
+<span class="lineNum">     484 </span>            :            const char* function,
+<span class="lineNum">     485 </span>            :            const char* message,
+<span class="lineNum">     486 </span>            :            const T&amp; val,
+<span class="lineNum">     487 </span>            :            const  ::boost::math::policies::evaluation_error&lt; ::boost::math::policies::user_error&gt;&amp;)
+<span class="lineNum">     488 </span>            : {
+<span class="lineNum">     489 </span>            :    return user_evaluation_error(function, message, val);
+<span class="lineNum">     490 </span>            : }
+<span class="lineNum">     491 </span>            : 
+<span class="lineNum">     492 </span>            : template &lt;class T, class TargetType&gt;
+<span class="lineNum">     493 </span>            : inline TargetType raise_rounding_error(
+<span class="lineNum">     494 </span>            :            const char* function,
+<span class="lineNum">     495 </span>            :            const char* message,
+<span class="lineNum">     496 </span>            :            const T&amp; val,
+<span class="lineNum">     497 </span>            :            const TargetType&amp;,
+<span class="lineNum">     498 </span>            :            const  ::boost::math::policies::rounding_error&lt; ::boost::math::policies::throw_on_error&gt;&amp;)
+<span class="lineNum">     499 </span>            : {
+<span class="lineNum">     500 </span>            :    raise_error&lt;boost::math::rounding_error, T&gt;(function, message, val);
+<span class="lineNum">     501 </span>            :    // we never get here:
+<span class="lineNum">     502 </span>            :    return TargetType(0);
+<span class="lineNum">     503 </span>            : }
+<span class="lineNum">     504 </span>            : 
+<span class="lineNum">     505 </span>            : template &lt;class T, class TargetType&gt;
+<span class="lineNum">     506 </span>            : inline BOOST_MATH_CONSTEXPR TargetType raise_rounding_error(
+<span class="lineNum">     507 </span>            :            const char* ,
+<span class="lineNum">     508 </span>            :            const char* ,
+<span class="lineNum">     509 </span>            :            const T&amp; val,
+<span class="lineNum">     510 </span>            :            const TargetType&amp;,
+<span class="lineNum">     511 </span>            :            const  ::boost::math::policies::rounding_error&lt; ::boost::math::policies::ignore_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     512 </span>            : {
+<span class="lineNum">     513 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     514 </span>            :    // to be ignored so here we go anyway:
+<span class="lineNum">     515 </span>            :    BOOST_STATIC_ASSERT(std::numeric_limits&lt;TargetType&gt;::is_specialized);
+<span class="lineNum">     516 </span>            :    return  val &gt; 0 ? (std::numeric_limits&lt;TargetType&gt;::max)() : (std::numeric_limits&lt;TargetType&gt;::is_integer ? (std::numeric_limits&lt;TargetType&gt;::min)() : -(std::numeric_limits&lt;TargetType&gt;::max)());
+<span class="lineNum">     517 </span>            : }
+<span class="lineNum">     518 </span>            : 
+<span class="lineNum">     519 </span>            : template &lt;class T, class TargetType&gt;
+<span class="lineNum">     520 </span>            : inline TargetType raise_rounding_error(
+<span class="lineNum">     521 </span>            :            const char* ,
+<span class="lineNum">     522 </span>            :            const char* ,
+<span class="lineNum">     523 </span>            :            const T&amp; val,
+<span class="lineNum">     524 </span>            :            const TargetType&amp;,
+<span class="lineNum">     525 </span>            :            const  ::boost::math::policies::rounding_error&lt; ::boost::math::policies::errno_on_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     526 </span>            : {
+<span class="lineNum">     527 </span>            :    errno = ERANGE;
+<span class="lineNum">     528 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     529 </span>            :    // to be silent so here we go anyway:
+<span class="lineNum">     530 </span>            :    BOOST_STATIC_ASSERT(std::numeric_limits&lt;TargetType&gt;::is_specialized);
+<span class="lineNum">     531 </span>            :    return  val &gt; 0 ? (std::numeric_limits&lt;TargetType&gt;::max)() : (std::numeric_limits&lt;TargetType&gt;::is_integer ? (std::numeric_limits&lt;TargetType&gt;::min)() : -(std::numeric_limits&lt;TargetType&gt;::max)());
+<span class="lineNum">     532 </span>            : }
+<span class="lineNum">     533 </span>            : 
+<span class="lineNum">     534 </span>            : template &lt;class T&gt;
+<span class="lineNum">     535 </span>            : inline T raise_rounding_error(
+<span class="lineNum">     536 </span>            :            const char* ,
+<span class="lineNum">     537 </span>            :            const char* ,
+<span class="lineNum">     538 </span>            :            const T&amp; val,
+<span class="lineNum">     539 </span>            :            const T&amp;,
+<span class="lineNum">     540 </span>            :            const  ::boost::math::policies::rounding_error&lt; ::boost::math::policies::errno_on_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     541 </span>            : {
+<span class="lineNum">     542 </span>            :    errno = ERANGE;
+<span class="lineNum">     543 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     544 </span>            :    // to be silent so here we go anyway:
+<span class="lineNum">     545 </span>            :    return  val &gt; 0 ? boost::math::tools::max_value&lt;T&gt;() : -boost::math::tools::max_value&lt;T&gt;();
+<span class="lineNum">     546 </span>            : }
+<span class="lineNum">     547 </span>            : 
+<span class="lineNum">     548 </span>            : template &lt;class T, class TargetType&gt;
+<span class="lineNum">     549 </span>            : inline TargetType raise_rounding_error(
+<span class="lineNum">     550 </span>            :            const char* function,
+<span class="lineNum">     551 </span>            :            const char* message,
+<span class="lineNum">     552 </span>            :            const T&amp; val,
+<span class="lineNum">     553 </span>            :            const TargetType&amp; t,
+<span class="lineNum">     554 </span>            :            const  ::boost::math::policies::rounding_error&lt; ::boost::math::policies::user_error&gt;&amp;)
+<span class="lineNum">     555 </span>            : {
+<span class="lineNum">     556 </span>            :    return user_rounding_error(function, message, val, t);
+<span class="lineNum">     557 </span>            : }
+<span class="lineNum">     558 </span>            : 
+<span class="lineNum">     559 </span>            : template &lt;class T, class R&gt;
+<span class="lineNum">     560 </span>            : inline T raise_indeterminate_result_error(
+<span class="lineNum">     561 </span>            :            const char* function,
+<span class="lineNum">     562 </span>            :            const char* message,
+<span class="lineNum">     563 </span>            :            const T&amp; val,
+<span class="lineNum">     564 </span>            :            const R&amp; ,
+<span class="lineNum">     565 </span>            :            const ::boost::math::policies::indeterminate_result_error&lt; ::boost::math::policies::throw_on_error&gt;&amp;)
+<span class="lineNum">     566 </span>            : {
+<span class="lineNum">     567 </span>            :    raise_error&lt;std::domain_error, T&gt;(function, message, val);
+<span class="lineNum">     568 </span>            :    // we never get here:
+<span class="lineNum">     569 </span>            :    return std::numeric_limits&lt;T&gt;::quiet_NaN();
+<span class="lineNum">     570 </span>            : }
+<span class="lineNum">     571 </span>            : 
+<span class="lineNum">     572 </span>            : template &lt;class T, class R&gt;
+<span class="lineNum">     573 </span>            : inline BOOST_MATH_CONSTEXPR T raise_indeterminate_result_error(
+<span class="lineNum">     574 </span>            :            const char* ,
+<span class="lineNum">     575 </span>            :            const char* ,
+<span class="lineNum">     576 </span>            :            const T&amp; ,
+<span class="lineNum">     577 </span>            :            const R&amp; result,
+<span class="lineNum">     578 </span>            :            const ::boost::math::policies::indeterminate_result_error&lt; ::boost::math::policies::ignore_error&gt;&amp;) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     579 </span>            : {
+<span class="lineNum">     580 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     581 </span>            :    // to be ignored so here we go anyway:
+<span class="lineNum">     582 </span>            :    return result;
+<span class="lineNum">     583 </span>            : }
+<span class="lineNum">     584 </span>            : 
+<span class="lineNum">     585 </span>            : template &lt;class T, class R&gt;
+<span class="lineNum">     586 </span>            : inline T raise_indeterminate_result_error(
+<span class="lineNum">     587 </span>            :            const char* ,
+<span class="lineNum">     588 </span>            :            const char* ,
+<span class="lineNum">     589 </span>            :            const T&amp; ,
+<span class="lineNum">     590 </span>            :            const R&amp; result,
+<span class="lineNum">     591 </span>            :            const ::boost::math::policies::indeterminate_result_error&lt; ::boost::math::policies::errno_on_error&gt;&amp;)
+<span class="lineNum">     592 </span>            : {
+<span class="lineNum">     593 </span>            :    errno = EDOM;
+<span class="lineNum">     594 </span>            :    // This may or may not do the right thing, but the user asked for the error
+<span class="lineNum">     595 </span>            :    // to be silent so here we go anyway:
+<span class="lineNum">     596 </span>            :    return result;
+<span class="lineNum">     597 </span>            : }
+<span class="lineNum">     598 </span>            : 
+<span class="lineNum">     599 </span>            : template &lt;class T, class R&gt;
+<span class="lineNum">     600 </span>            : inline T raise_indeterminate_result_error(
+<span class="lineNum">     601 </span>            :            const char* function,
+<span class="lineNum">     602 </span>            :            const char* message,
+<span class="lineNum">     603 </span>            :            const T&amp; val,
+<span class="lineNum">     604 </span>            :            const R&amp; ,
+<span class="lineNum">     605 </span>            :            const ::boost::math::policies::indeterminate_result_error&lt; ::boost::math::policies::user_error&gt;&amp;)
+<span class="lineNum">     606 </span>            : {
+<span class="lineNum">     607 </span>            :    return user_indeterminate_result_error(function, message, val);
+<span class="lineNum">     608 </span>            : }
+<span class="lineNum">     609 </span>            : 
+<span class="lineNum">     610 </span>            : }  // namespace detail
+<span class="lineNum">     611 </span>            : 
+<span class="lineNum">     612 </span>            : template &lt;class T, class Policy&gt;
+<span class="lineNum">     613 </span>            : inline BOOST_MATH_CONSTEXPR T raise_domain_error(const char* function, const char* message, const T&amp; val, const Policy&amp;) BOOST_NOEXCEPT_IF(is_noexcept_error_policy&lt;Policy&gt;::value &amp;&amp; BOOST_MATH_IS_FLOAT(T))
+<span class="lineNum">     614 </span>            : {
+<span class="lineNum">     615 </span>            :    typedef typename Policy::domain_error_type policy_type;
+<span class="lineNum">     616 </span>            :    return detail::raise_domain_error(
+<span class="lineNum">     617 </span>            :       function, message ? message : &quot;Domain Error evaluating function at %1%&quot;,
+<span class="lineNum">     618 </span><span class="lineNoCov">          0 :       val, policy_type());</span>
+<span class="lineNum">     619 </span>            : }
+<span class="lineNum">     620 </span>            : 
+<span class="lineNum">     621 </span>            : template &lt;class T, class Policy&gt;
+<span class="lineNum">     622 </span>            : inline BOOST_MATH_CONSTEXPR T raise_pole_error(const char* function, const char* message, const T&amp; val, const Policy&amp;) BOOST_NOEXCEPT_IF(is_noexcept_error_policy&lt;Policy&gt;::value &amp;&amp; BOOST_MATH_IS_FLOAT(T))
+<span class="lineNum">     623 </span>            : {
+<span class="lineNum">     624 </span>            :    typedef typename Policy::pole_error_type policy_type;
+<span class="lineNum">     625 </span>            :    return detail::raise_pole_error(
+<span class="lineNum">     626 </span>            :       function, message ? message : &quot;Evaluation of function at pole %1%&quot;,
+<span class="lineNum">     627 </span>            :       val, policy_type());
+<span class="lineNum">     628 </span>            : }
+<span class="lineNum">     629 </span>            : 
+<span class="lineNum">     630 </span>            : template &lt;class T, class Policy&gt;
+<span class="lineNum">     631 </span>            : inline BOOST_MATH_CONSTEXPR T raise_overflow_error(const char* function, const char* message, const Policy&amp;) BOOST_NOEXCEPT_IF(is_noexcept_error_policy&lt;Policy&gt;::value &amp;&amp; BOOST_MATH_IS_FLOAT(T))
+<span class="lineNum">     632 </span>            : {
+<span class="lineNum">     633 </span>            :    typedef typename Policy::overflow_error_type policy_type;
+<span class="lineNum">     634 </span>            :    return detail::raise_overflow_error&lt;T&gt;(
+<span class="lineNum">     635 </span>            :       function, message ? message : &quot;Overflow Error&quot;,
+<span class="lineNum">     636 </span><span class="lineNoCov">          0 :       policy_type());</span>
+<span class="lineNum">     637 </span>            : }
+<span class="lineNum">     638 </span>            : 
+<span class="lineNum">     639 </span>            : template &lt;class T, class Policy&gt;
+<span class="lineNum">     640 </span>            : inline BOOST_MATH_CONSTEXPR T raise_overflow_error(const char* function, const char* message, const T&amp; val, const Policy&amp;) BOOST_NOEXCEPT_IF(is_noexcept_error_policy&lt;Policy&gt;::value &amp;&amp; BOOST_MATH_IS_FLOAT(T))
+<span class="lineNum">     641 </span>            : {
+<span class="lineNum">     642 </span>            :    typedef typename Policy::overflow_error_type policy_type;
+<span class="lineNum">     643 </span>            :    return detail::raise_overflow_error(
+<span class="lineNum">     644 </span>            :       function, message ? message : &quot;Overflow evaluating function at %1%&quot;,
+<span class="lineNum">     645 </span>            :       val, policy_type());
+<span class="lineNum">     646 </span>            : }
+<span class="lineNum">     647 </span>            : 
+<span class="lineNum">     648 </span>            : template &lt;class T, class Policy&gt;
+<span class="lineNum">     649 </span>            : inline BOOST_MATH_CONSTEXPR T raise_underflow_error(const char* function, const char* message, const Policy&amp;) BOOST_NOEXCEPT_IF(is_noexcept_error_policy&lt;Policy&gt;::value &amp;&amp; BOOST_MATH_IS_FLOAT(T))
+<span class="lineNum">     650 </span>            : {
+<span class="lineNum">     651 </span>            :    typedef typename Policy::underflow_error_type policy_type;
+<span class="lineNum">     652 </span>            :    return detail::raise_underflow_error&lt;T&gt;(
+<span class="lineNum">     653 </span>            :       function, message ? message : &quot;Underflow Error&quot;,
+<span class="lineNum">     654 </span>            :       policy_type());
+<span class="lineNum">     655 </span>            : }
+<span class="lineNum">     656 </span>            : 
+<span class="lineNum">     657 </span>            : template &lt;class T, class Policy&gt;
+<span class="lineNum">     658 </span>            : inline BOOST_MATH_CONSTEXPR T raise_denorm_error(const char* function, const char* message, const T&amp; val, const Policy&amp;) BOOST_NOEXCEPT_IF(is_noexcept_error_policy&lt;Policy&gt;::value &amp;&amp; BOOST_MATH_IS_FLOAT(T))
+<span class="lineNum">     659 </span>            : {
+<span class="lineNum">     660 </span>            :    typedef typename Policy::denorm_error_type policy_type;
+<span class="lineNum">     661 </span>            :    return detail::raise_denorm_error&lt;T&gt;(
+<span class="lineNum">     662 </span>            :       function, message ? message : &quot;Denorm Error&quot;,
+<span class="lineNum">     663 </span>            :       val,
+<span class="lineNum">     664 </span>            :       policy_type());
+<span class="lineNum">     665 </span>            : }
+<span class="lineNum">     666 </span>            : 
+<span class="lineNum">     667 </span>            : template &lt;class T, class Policy&gt;
+<span class="lineNum">     668 </span>            : inline BOOST_MATH_CONSTEXPR T raise_evaluation_error(const char* function, const char* message, const T&amp; val, const Policy&amp;) BOOST_NOEXCEPT_IF(is_noexcept_error_policy&lt;Policy&gt;::value &amp;&amp; BOOST_MATH_IS_FLOAT(T))
+<span class="lineNum">     669 </span>            : {
+<span class="lineNum">     670 </span>            :    typedef typename Policy::evaluation_error_type policy_type;
+<span class="lineNum">     671 </span>            :    return detail::raise_evaluation_error(
+<span class="lineNum">     672 </span>            :       function, message ? message : &quot;Internal Evaluation Error, best value so far was %1%&quot;,
+<span class="lineNum">     673 </span>            :       val, policy_type());
+<span class="lineNum">     674 </span>            : }
+<span class="lineNum">     675 </span>            : 
+<span class="lineNum">     676 </span>            : template &lt;class T, class TargetType, class Policy&gt;
+<span class="lineNum">     677 </span>            : inline BOOST_MATH_CONSTEXPR TargetType raise_rounding_error(const char* function, const char* message, const T&amp; val, const TargetType&amp; t, const Policy&amp;) BOOST_NOEXCEPT_IF(is_noexcept_error_policy&lt;Policy&gt;::value &amp;&amp; BOOST_MATH_IS_FLOAT(T))
+<span class="lineNum">     678 </span>            : {
+<span class="lineNum">     679 </span>            :    typedef typename Policy::rounding_error_type policy_type;
+<span class="lineNum">     680 </span>            :    return detail::raise_rounding_error(
+<span class="lineNum">     681 </span>            :       function, message ? message : &quot;Value %1% can not be represented in the target integer type.&quot;,
+<span class="lineNum">     682 </span>            :       val, t, policy_type());
+<span class="lineNum">     683 </span>            : }
+<span class="lineNum">     684 </span>            : 
+<span class="lineNum">     685 </span>            : template &lt;class T, class R, class Policy&gt;
+<span class="lineNum">     686 </span>            : inline BOOST_MATH_CONSTEXPR T raise_indeterminate_result_error(const char* function, const char* message, const T&amp; val, const R&amp; result, const Policy&amp;) BOOST_NOEXCEPT_IF(is_noexcept_error_policy&lt;Policy&gt;::value &amp;&amp; BOOST_MATH_IS_FLOAT(T))
+<span class="lineNum">     687 </span>            : {
+<span class="lineNum">     688 </span>            :    typedef typename Policy::indeterminate_result_error_type policy_type;
+<span class="lineNum">     689 </span>            :    return detail::raise_indeterminate_result_error(
+<span class="lineNum">     690 </span>            :       function, message ? message : &quot;Indeterminate result with value %1%&quot;,
+<span class="lineNum">     691 </span>            :       val, result, policy_type());
+<span class="lineNum">     692 </span>            : }
+<span class="lineNum">     693 </span>            : 
+<span class="lineNum">     694 </span>            : //
+<span class="lineNum">     695 </span>            : // checked_narrowing_cast:
+<span class="lineNum">     696 </span>            : //
+<span class="lineNum">     697 </span>            : namespace detail
+<span class="lineNum">     698 </span>            : {
+<span class="lineNum">     699 </span>            : 
+<span class="lineNum">     700 </span>            : template &lt;class R, class T, class Policy&gt;
+<span class="lineNum">     701 </span>            : inline bool check_overflow(T val, R* result, const char* function, const Policy&amp; pol) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(R) &amp;&amp; BOOST_MATH_IS_FLOAT(T) &amp;&amp; (Policy::value != throw_on_error) &amp;&amp; (Policy::value != user_error))
+<span class="lineNum">     702 </span>            : {
+<span class="lineNum">     703 </span>            :    BOOST_MATH_STD_USING
+<span class="lineNum">     704 </span><span class="lineCov">         42 :    if(fabs(val) &gt; tools::max_value&lt;R&gt;())</span>
+<span class="lineNum">     705 </span>            :    {
+<span class="lineNum">     706 </span><span class="lineNoCov">          0 :       boost::math::policies::detail::raise_overflow_error&lt;R&gt;(function, 0, pol);</span>
+<span class="lineNum">     707 </span>            :       *result = static_cast&lt;R&gt;(val);
+<span class="lineNum">     708 </span>            :       return true;
+<span class="lineNum">     709 </span>            :    }
+<span class="lineNum">     710 </span>            :    return false;
+<span class="lineNum">     711 </span>            : }
+<span class="lineNum">     712 </span>            : template &lt;class R, class T, class Policy&gt;
+<span class="lineNum">     713 </span>            : inline bool check_overflow(std::complex&lt;T&gt; val, R* result, const char* function, const Policy&amp; pol) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(R) &amp;&amp; BOOST_MATH_IS_FLOAT(T) &amp;&amp; (Policy::value != throw_on_error) &amp;&amp; (Policy::value != user_error))
+<span class="lineNum">     714 </span>            : {
+<span class="lineNum">     715 </span>            :    typedef typename R::value_type r_type;
+<span class="lineNum">     716 </span>            :    r_type re, im;
+<span class="lineNum">     717 </span>            :    bool r = check_overflow&lt;r_type&gt;(val.real(), &amp;re, function, pol);
+<span class="lineNum">     718 </span>            :    r = check_overflow&lt;r_type&gt;(val.imag(), &amp;im, function, pol) || r;
+<span class="lineNum">     719 </span>            :    *result = R(re, im);
+<span class="lineNum">     720 </span>            :    return r;
+<span class="lineNum">     721 </span>            : }
+<span class="lineNum">     722 </span>            : template &lt;class R, class T, class Policy&gt;
+<span class="lineNum">     723 </span>            : inline bool check_underflow(T val, R* result, const char* function, const Policy&amp; pol) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(R) &amp;&amp; BOOST_MATH_IS_FLOAT(T) &amp;&amp; (Policy::value != throw_on_error) &amp;&amp; (Policy::value != user_error))
+<span class="lineNum">     724 </span>            : {
+<span class="lineNum">     725 </span>            :    if((val != 0) &amp;&amp; (static_cast&lt;R&gt;(val) == 0))
+<span class="lineNum">     726 </span>            :    {
+<span class="lineNum">     727 </span>            :       *result = static_cast&lt;R&gt;(boost::math::policies::detail::raise_underflow_error&lt;R&gt;(function, 0, pol));
+<span class="lineNum">     728 </span>            :       return true;
+<span class="lineNum">     729 </span>            :    }
+<span class="lineNum">     730 </span>            :    return false;
+<span class="lineNum">     731 </span>            : }
+<span class="lineNum">     732 </span>            : template &lt;class R, class T, class Policy&gt;
+<span class="lineNum">     733 </span>            : inline bool check_underflow(std::complex&lt;T&gt; val, R* result, const char* function, const Policy&amp; pol) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(R) &amp;&amp; BOOST_MATH_IS_FLOAT(T) &amp;&amp; (Policy::value != throw_on_error) &amp;&amp; (Policy::value != user_error))
+<span class="lineNum">     734 </span>            : {
+<span class="lineNum">     735 </span>            :    typedef typename R::value_type r_type;
+<span class="lineNum">     736 </span>            :    r_type re, im;
+<span class="lineNum">     737 </span>            :    bool r = check_underflow&lt;r_type&gt;(val.real(), &amp;re, function, pol);
+<span class="lineNum">     738 </span>            :    r = check_underflow&lt;r_type&gt;(val.imag(), &amp;im, function, pol) || r;
+<span class="lineNum">     739 </span>            :    *result = R(re, im);
+<span class="lineNum">     740 </span>            :    return r;
+<span class="lineNum">     741 </span>            : }
+<span class="lineNum">     742 </span>            : template &lt;class R, class T, class Policy&gt;
+<span class="lineNum">     743 </span>            : inline bool check_denorm(T val, R* result, const char* function, const Policy&amp; pol) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(R) &amp;&amp; BOOST_MATH_IS_FLOAT(T) &amp;&amp; (Policy::value != throw_on_error) &amp;&amp; (Policy::value != user_error))
+<span class="lineNum">     744 </span>            : {
+<span class="lineNum">     745 </span>            :    BOOST_MATH_STD_USING
+<span class="lineNum">     746 </span>            :    if((fabs(val) &lt; static_cast&lt;T&gt;(tools::min_value&lt;R&gt;())) &amp;&amp; (static_cast&lt;R&gt;(val) != 0))
+<span class="lineNum">     747 </span>            :    {
+<span class="lineNum">     748 </span>            :       *result = static_cast&lt;R&gt;(boost::math::policies::detail::raise_denorm_error&lt;R&gt;(function, 0, static_cast&lt;R&gt;(val), pol));
+<span class="lineNum">     749 </span>            :       return true;
+<span class="lineNum">     750 </span>            :    }
+<span class="lineNum">     751 </span>            :    return false;
+<span class="lineNum">     752 </span>            : }
+<span class="lineNum">     753 </span>            : template &lt;class R, class T, class Policy&gt;
+<span class="lineNum">     754 </span>            : inline bool check_denorm(std::complex&lt;T&gt; val, R* result, const char* function, const Policy&amp; pol) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(R) &amp;&amp; BOOST_MATH_IS_FLOAT(T) &amp;&amp; (Policy::value != throw_on_error) &amp;&amp; (Policy::value != user_error))
+<span class="lineNum">     755 </span>            : {
+<span class="lineNum">     756 </span>            :    typedef typename R::value_type r_type;
+<span class="lineNum">     757 </span>            :    r_type re, im;
+<span class="lineNum">     758 </span>            :    bool r = check_denorm&lt;r_type&gt;(val.real(), &amp;re, function, pol);
+<span class="lineNum">     759 </span>            :    r = check_denorm&lt;r_type&gt;(val.imag(), &amp;im, function, pol) || r;
+<span class="lineNum">     760 </span>            :    *result = R(re, im);
+<span class="lineNum">     761 </span>            :    return r;
+<span class="lineNum">     762 </span>            : }
+<span class="lineNum">     763 </span>            : 
+<span class="lineNum">     764 </span>            : // Default instantiations with ignore_error policy.
+<span class="lineNum">     765 </span>            : template &lt;class R, class T&gt;
+<span class="lineNum">     766 </span>            : inline BOOST_MATH_CONSTEXPR bool check_overflow(T /* val */, R* /* result */, const char* /* function */, const overflow_error&lt;ignore_error&gt;&amp;) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(R) &amp;&amp; BOOST_MATH_IS_FLOAT(T)) 
+<span class="lineNum">     767 </span>            : { return false; }
+<span class="lineNum">     768 </span>            : template &lt;class R, class T&gt;
+<span class="lineNum">     769 </span>            : inline BOOST_MATH_CONSTEXPR bool check_overflow(std::complex&lt;T&gt; /* val */, R* /* result */, const char* /* function */, const overflow_error&lt;ignore_error&gt;&amp;) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(R) &amp;&amp; BOOST_MATH_IS_FLOAT(T)) 
+<span class="lineNum">     770 </span>            : { return false; }
+<span class="lineNum">     771 </span>            : template &lt;class R, class T&gt;
+<span class="lineNum">     772 </span>            : inline BOOST_MATH_CONSTEXPR bool check_underflow(T /* val */, R* /* result */, const char* /* function */, const underflow_error&lt;ignore_error&gt;&amp;) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(R) &amp;&amp; BOOST_MATH_IS_FLOAT(T)) 
+<span class="lineNum">     773 </span>            : { return false; }
+<span class="lineNum">     774 </span>            : template &lt;class R, class T&gt;
+<span class="lineNum">     775 </span>            : inline BOOST_MATH_CONSTEXPR bool check_underflow(std::complex&lt;T&gt; /* val */, R* /* result */, const char* /* function */, const underflow_error&lt;ignore_error&gt;&amp;) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(R) &amp;&amp; BOOST_MATH_IS_FLOAT(T)) 
+<span class="lineNum">     776 </span>            : { return false; }
+<span class="lineNum">     777 </span>            : template &lt;class R, class T&gt;
+<span class="lineNum">     778 </span>            : inline BOOST_MATH_CONSTEXPR bool check_denorm(T /* val */, R* /* result*/, const char* /* function */, const denorm_error&lt;ignore_error&gt;&amp;) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(R) &amp;&amp; BOOST_MATH_IS_FLOAT(T)) 
+<span class="lineNum">     779 </span>            : { return false; }
+<span class="lineNum">     780 </span>            : template &lt;class R, class T&gt;
+<span class="lineNum">     781 </span>            : inline BOOST_MATH_CONSTEXPR bool check_denorm(std::complex&lt;T&gt; /* val */, R* /* result*/, const char* /* function */, const denorm_error&lt;ignore_error&gt;&amp;) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(R) &amp;&amp; BOOST_MATH_IS_FLOAT(T)) 
+<span class="lineNum">     782 </span>            : { return false; }
+<span class="lineNum">     783 </span>            : 
+<span class="lineNum">     784 </span>            : } // namespace detail
+<span class="lineNum">     785 </span>            : 
+<span class="lineNum">     786 </span>            : template &lt;class R, class Policy, class T&gt;
+<span class="lineNum">     787 </span>            : inline R checked_narrowing_cast(T val, const char* function) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(R) &amp;&amp; BOOST_MATH_IS_FLOAT(T) &amp;&amp; is_noexcept_error_policy&lt;Policy&gt;::value)
+<span class="lineNum">     788 </span>            : {
+<span class="lineNum">     789 </span>            :    typedef typename Policy::overflow_error_type overflow_type;
+<span class="lineNum">     790 </span>            :    typedef typename Policy::underflow_error_type underflow_type;
+<span class="lineNum">     791 </span>            :    typedef typename Policy::denorm_error_type denorm_type;
+<span class="lineNum">     792 </span>            :    //
+<span class="lineNum">     793 </span>            :    // Most of what follows will evaluate to a no-op:
+<span class="lineNum">     794 </span>            :    //
+<span class="lineNum">     795 </span><span class="lineCov">         42 :    R result = 0;</span>
+<span class="lineNum">     796 </span><span class="lineCov">         84 :    if(detail::check_overflow&lt;R&gt;(val, &amp;result, function, overflow_type()))</span>
+<span class="lineNum">     797 </span>            :       return result;
+<span class="lineNum">     798 </span><span class="lineCov">         42 :    if(detail::check_underflow&lt;R&gt;(val, &amp;result, function, underflow_type()))</span>
+<span class="lineNum">     799 </span>            :       return result;
+<span class="lineNum">     800 </span><span class="lineCov">         42 :    if(detail::check_denorm&lt;R&gt;(val, &amp;result, function, denorm_type()))</span>
+<span class="lineNum">     801 </span>            :       return result;
+<span class="lineNum">     802 </span>            : 
+<span class="lineNum">     803 </span><span class="lineCov">         35 :    return static_cast&lt;R&gt;(val);</span>
+<span class="lineNum">     804 </span>            : }
+<span class="lineNum">     805 </span>            : 
+<span class="lineNum">     806 </span>            : template &lt;class T, class Policy&gt;
+<span class="lineNum">     807 </span>            : inline void check_series_iterations(const char* function, boost::uintmax_t max_iter, const Policy&amp; pol) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(T) &amp;&amp; is_noexcept_error_policy&lt;Policy&gt;::value)
+<span class="lineNum">     808 </span>            : {
+<span class="lineNum">     809 </span>            :    if(max_iter &gt;= policies::get_max_series_iterations&lt;Policy&gt;())
+<span class="lineNum">     810 </span>            :       raise_evaluation_error&lt;T&gt;(
+<span class="lineNum">     811 </span>            :          function,
+<span class="lineNum">     812 </span>            :          &quot;Series evaluation exceeded %1% iterations, giving up now.&quot;, static_cast&lt;T&gt;(static_cast&lt;double&gt;(max_iter)), pol);
+<span class="lineNum">     813 </span>            : }
+<span class="lineNum">     814 </span>            : 
+<span class="lineNum">     815 </span>            : template &lt;class T, class Policy&gt;
+<span class="lineNum">     816 </span>            : inline void check_root_iterations(const char* function, boost::uintmax_t max_iter, const Policy&amp; pol) BOOST_NOEXCEPT_IF(BOOST_MATH_IS_FLOAT(T) &amp;&amp; is_noexcept_error_policy&lt;Policy&gt;::value)
+<span class="lineNum">     817 </span>            : {
+<span class="lineNum">     818 </span>            :    if(max_iter &gt;= policies::get_max_root_iterations&lt;Policy&gt;())
+<span class="lineNum">     819 </span>            :       raise_evaluation_error&lt;T&gt;(
+<span class="lineNum">     820 </span>            :          function,
+<span class="lineNum">     821 </span>            :          &quot;Root finding evaluation exceeded %1% iterations, giving up now.&quot;, static_cast&lt;T&gt;(static_cast&lt;double&gt;(max_iter)), pol);
+<span class="lineNum">     822 </span>            : }
+<span class="lineNum">     823 </span>            : 
+<span class="lineNum">     824 </span>            : } //namespace policies
+<span class="lineNum">     825 </span>            : 
+<span class="lineNum">     826 </span>            : namespace detail{
+<span class="lineNum">     827 </span>            : 
+<span class="lineNum">     828 </span>            : //
+<span class="lineNum">     829 </span>            : // Simple helper function to assist in returning a pair from a single value,
+<span class="lineNum">     830 </span>            : // that value usually comes from one of the error handlers above:
+<span class="lineNum">     831 </span>            : //
+<span class="lineNum">     832 </span>            : template &lt;class T&gt;
+<span class="lineNum">     833 </span>            : std::pair&lt;T, T&gt; pair_from_single(const T&amp; val) BOOST_MATH_NOEXCEPT(T)
+<span class="lineNum">     834 </span>            : {
+<span class="lineNum">     835 </span>            :    return std::make_pair(val, val);
+<span class="lineNum">     836 </span>            : }
+<span class="lineNum">     837 </span>            : 
+<span class="lineNum">     838 </span>            : }
+<span class="lineNum">     839 </span>            : 
+<span class="lineNum">     840 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">     841 </span>            : #  pragma warning(pop)
+<span class="lineNum">     842 </span>            : #endif
+<span class="lineNum">     843 </span>            : 
+<span class="lineNum">     844 </span>            : }} // namespaces boost/math
+<span class="lineNum">     845 </span>            : 
+<span class="lineNum">     846 </span>            : #endif // BOOST_MATH_POLICY_ERROR_HANDLING_HPP
+<span class="lineNum">     847 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

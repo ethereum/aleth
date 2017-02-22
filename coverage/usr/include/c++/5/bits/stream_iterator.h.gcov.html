@@ -1,0 +1,297 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/bits/stream_iterator.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5/bits</a> - stream_iterator.h<span style="font-size: 80%;"> (source / <a href="stream_iterator.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Stream iterators</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2001-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file bits/stream_iterator.h
+<span class="lineNum">      26 </span>            :  *  This is an internal header file, included by other library headers.
+<span class="lineNum">      27 </span>            :  *  Do not attempt to use it directly. @headername{iterator}
+<span class="lineNum">      28 </span>            :  */
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #ifndef _STREAM_ITERATOR_H
+<span class="lineNum">      31 </span>            : #define _STREAM_ITERATOR_H 1
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #pragma GCC system_header
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #include &lt;debug/debug.h&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      38 </span>            : {
+<span class="lineNum">      39 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            :   /**
+<span class="lineNum">      42 </span>            :    * @addtogroup iterators
+<span class="lineNum">      43 </span>            :    * @{
+<span class="lineNum">      44 </span>            :    */
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :   /// Provides input iterator semantics for streams.
+<span class="lineNum">      47 </span>            :   template&lt;typename _Tp, typename _CharT = char,
+<span class="lineNum">      48 </span>            :            typename _Traits = char_traits&lt;_CharT&gt;, typename _Dist = ptrdiff_t&gt;
+<span class="lineNum">      49 </span>            :     class istream_iterator
+<span class="lineNum">      50 </span>            :     : public iterator&lt;input_iterator_tag, _Tp, _Dist, const _Tp*, const _Tp&amp;&gt;
+<span class="lineNum">      51 </span>            :     {
+<span class="lineNum">      52 </span>            :     public:
+<span class="lineNum">      53 </span>            :       typedef _CharT                         char_type;
+<span class="lineNum">      54 </span>            :       typedef _Traits                        traits_type;
+<span class="lineNum">      55 </span>            :       typedef basic_istream&lt;_CharT, _Traits&gt; istream_type;
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :     private:
+<span class="lineNum">      58 </span>            :       istream_type*     _M_stream;
+<span class="lineNum">      59 </span>            :       _Tp               _M_value;
+<span class="lineNum">      60 </span>            :       bool              _M_ok;
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            :     public:
+<span class="lineNum">      63 </span>            :       ///  Construct end of input stream iterator.
+<span class="lineNum">      64 </span>            :       _GLIBCXX_CONSTEXPR istream_iterator()
+<span class="lineNum">      65 </span>            :       : _M_stream(0), _M_value(), _M_ok(false) {}
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :       ///  Construct start of input stream iterator.
+<span class="lineNum">      68 </span>            :       istream_iterator(istream_type&amp; __s)
+<span class="lineNum">      69 </span>            :       : _M_stream(&amp;__s)
+<span class="lineNum">      70 </span>            :       { _M_read(); }
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            :       istream_iterator(const istream_iterator&amp; __obj)
+<span class="lineNum">      73 </span>            :       : _M_stream(__obj._M_stream), _M_value(__obj._M_value),
+<span class="lineNum">      74 </span>            :         _M_ok(__obj._M_ok)
+<span class="lineNum">      75 </span>            :       { }
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :       const _Tp&amp;
+<span class="lineNum">      78 </span>            :       operator*() const
+<span class="lineNum">      79 </span>            :       {
+<span class="lineNum">      80 </span>            :         __glibcxx_requires_cond(_M_ok,
+<span class="lineNum">      81 </span>            :                                 _M_message(__gnu_debug::__msg_deref_istream)
+<span class="lineNum">      82 </span>            :                                 ._M_iterator(*this));
+<span class="lineNum">      83 </span>            :         return _M_value;
+<span class="lineNum">      84 </span>            :       }
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            :       const _Tp*
+<span class="lineNum">      87 </span>            :       operator-&gt;() const { return &amp;(operator*()); }
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :       istream_iterator&amp;
+<span class="lineNum">      90 </span>            :       operator++()
+<span class="lineNum">      91 </span>            :       {
+<span class="lineNum">      92 </span>            :         __glibcxx_requires_cond(_M_ok,
+<span class="lineNum">      93 </span>            :                                 _M_message(__gnu_debug::__msg_inc_istream)
+<span class="lineNum">      94 </span>            :                                 ._M_iterator(*this));
+<span class="lineNum">      95 </span>            :         _M_read();
+<span class="lineNum">      96 </span>            :         return *this;
+<span class="lineNum">      97 </span>            :       }
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :       istream_iterator
+<span class="lineNum">     100 </span>            :       operator++(int)
+<span class="lineNum">     101 </span>            :       {
+<span class="lineNum">     102 </span>            :         __glibcxx_requires_cond(_M_ok,
+<span class="lineNum">     103 </span>            :                                 _M_message(__gnu_debug::__msg_inc_istream)
+<span class="lineNum">     104 </span>            :                                 ._M_iterator(*this));
+<span class="lineNum">     105 </span>            :         istream_iterator __tmp = *this;
+<span class="lineNum">     106 </span>            :         _M_read();
+<span class="lineNum">     107 </span>            :         return __tmp;
+<span class="lineNum">     108 </span>            :       }
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            :       bool
+<span class="lineNum">     111 </span>            :       _M_equal(const istream_iterator&amp; __x) const
+<span class="lineNum">     112 </span>            :       { return (_M_ok == __x._M_ok) &amp;&amp; (!_M_ok || _M_stream == __x._M_stream); }
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :     private:
+<span class="lineNum">     115 </span>            :       void
+<span class="lineNum">     116 </span>            :       _M_read()
+<span class="lineNum">     117 </span>            :       {
+<span class="lineNum">     118 </span>            :         _M_ok = (_M_stream &amp;&amp; *_M_stream) ? true : false;
+<span class="lineNum">     119 </span>            :         if (_M_ok)
+<span class="lineNum">     120 </span>            :           {
+<span class="lineNum">     121 </span>            :             *_M_stream &gt;&gt; _M_value;
+<span class="lineNum">     122 </span>            :             _M_ok = *_M_stream ? true : false;
+<span class="lineNum">     123 </span>            :           }
+<span class="lineNum">     124 </span>            :       }
+<span class="lineNum">     125 </span>            :     };
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :   ///  Return true if x and y are both end or not end, or x and y are the same.
+<span class="lineNum">     128 </span>            :   template&lt;typename _Tp, typename _CharT, typename _Traits, typename _Dist&gt;
+<span class="lineNum">     129 </span>            :     inline bool
+<span class="lineNum">     130 </span>            :     operator==(const istream_iterator&lt;_Tp, _CharT, _Traits, _Dist&gt;&amp; __x,
+<span class="lineNum">     131 </span>            :                const istream_iterator&lt;_Tp, _CharT, _Traits, _Dist&gt;&amp; __y)
+<span class="lineNum">     132 </span>            :     { return __x._M_equal(__y); }
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            :   ///  Return false if x and y are both end or not end, or x and y are the same.
+<span class="lineNum">     135 </span>            :   template &lt;class _Tp, class _CharT, class _Traits, class _Dist&gt;
+<span class="lineNum">     136 </span>            :     inline bool
+<span class="lineNum">     137 </span>            :     operator!=(const istream_iterator&lt;_Tp, _CharT, _Traits, _Dist&gt;&amp; __x,
+<span class="lineNum">     138 </span>            :                const istream_iterator&lt;_Tp, _CharT, _Traits, _Dist&gt;&amp; __y)
+<span class="lineNum">     139 </span>            :     { return !__x._M_equal(__y); }
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            :   /**
+<span class="lineNum">     142 </span>            :    *  @brief  Provides output iterator semantics for streams.
+<span class="lineNum">     143 </span>            :    *
+<span class="lineNum">     144 </span>            :    *  This class provides an iterator to write to an ostream.  The type Tp is
+<span class="lineNum">     145 </span>            :    *  the only type written by this iterator and there must be an
+<span class="lineNum">     146 </span>            :    *  operator&lt;&lt;(Tp) defined.
+<span class="lineNum">     147 </span>            :    *
+<span class="lineNum">     148 </span>            :    *  @tparam  _Tp  The type to write to the ostream.
+<span class="lineNum">     149 </span>            :    *  @tparam  _CharT  The ostream char_type.
+<span class="lineNum">     150 </span>            :    *  @tparam  _Traits  The ostream char_traits.
+<span class="lineNum">     151 </span>            :   */
+<span class="lineNum">     152 </span>            :   template&lt;typename _Tp, typename _CharT = char,
+<span class="lineNum">     153 </span>            :            typename _Traits = char_traits&lt;_CharT&gt; &gt;
+<span class="lineNum">     154 </span>            :     class ostream_iterator
+<span class="lineNum">     155 </span>            :     : public iterator&lt;output_iterator_tag, void, void, void, void&gt;
+<span class="lineNum">     156 </span>            :     {
+<span class="lineNum">     157 </span>            :     public:
+<span class="lineNum">     158 </span>            :       //@{
+<span class="lineNum">     159 </span>            :       /// Public typedef
+<span class="lineNum">     160 </span>            :       typedef _CharT                         char_type;
+<span class="lineNum">     161 </span>            :       typedef _Traits                        traits_type;
+<span class="lineNum">     162 </span>            :       typedef basic_ostream&lt;_CharT, _Traits&gt; ostream_type;
+<span class="lineNum">     163 </span>            :       //@}
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :     private:
+<span class="lineNum">     166 </span>            :       ostream_type*     _M_stream;
+<span class="lineNum">     167 </span>            :       const _CharT*     _M_string;
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            :     public:
+<span class="lineNum">     170 </span>            :       /// Construct from an ostream.
+<span class="lineNum">     171 </span>            :       ostream_iterator(ostream_type&amp; __s) : _M_stream(&amp;__s), _M_string(0) {}
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :       /**
+<span class="lineNum">     174 </span>            :        *  Construct from an ostream.
+<span class="lineNum">     175 </span>            :        *
+<span class="lineNum">     176 </span>            :        *  The delimiter string @a c is written to the stream after every Tp
+<span class="lineNum">     177 </span>            :        *  written to the stream.  The delimiter is not copied, and thus must
+<span class="lineNum">     178 </span>            :        *  not be destroyed while this iterator is in use.
+<span class="lineNum">     179 </span>            :        *
+<span class="lineNum">     180 </span>            :        *  @param  __s  Underlying ostream to write to.
+<span class="lineNum">     181 </span>            :        *  @param  __c  CharT delimiter string to insert.
+<span class="lineNum">     182 </span>            :       */
+<span class="lineNum">     183 </span>            :       ostream_iterator(ostream_type&amp; __s, const _CharT* __c)
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :       : _M_stream(&amp;__s), _M_string(__c)  { }</span>
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :       /// Copy constructor.
+<span class="lineNum">     187 </span>            :       ostream_iterator(const ostream_iterator&amp; __obj)
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :       : _M_stream(__obj._M_stream), _M_string(__obj._M_string)  { }</span>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            :       /// Writes @a value to underlying ostream using operator&lt;&lt;.  If
+<a name="191"><span class="lineNum">     191 </span>            :       /// constructed with delimiter string, writes delimiter to ostream.</a>
+<span class="lineNum">     192 </span>            :       ostream_iterator&amp;
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :       operator=(const _Tp&amp; __value)</span>
+<span class="lineNum">     194 </span>            :       {
+<span class="lineNum">     195 </span>            :         __glibcxx_requires_cond(_M_stream != 0,
+<span class="lineNum">     196 </span>            :                                 _M_message(__gnu_debug::__msg_output_ostream)
+<span class="lineNum">     197 </span>            :                                 ._M_iterator(*this));
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :         *_M_stream &lt;&lt; __value;</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :         if (_M_string) *_M_stream &lt;&lt; _M_string;</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :         return *this;</span>
+<span class="lineNum">     201 </span>            :       }
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            :       ostream_iterator&amp;
+<span class="lineNum">     204 </span>            :       operator*()
+<span class="lineNum">     205 </span>            :       { return *this; }
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :       ostream_iterator&amp;
+<span class="lineNum">     208 </span>            :       operator++()
+<span class="lineNum">     209 </span>            :       { return *this; }
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :       ostream_iterator&amp;
+<span class="lineNum">     212 </span>            :       operator++(int)
+<span class="lineNum">     213 </span>            :       { return *this; }
+<span class="lineNum">     214 </span>            :     };
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            :   // @} group iterators
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     219 </span>            : } // namespace
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

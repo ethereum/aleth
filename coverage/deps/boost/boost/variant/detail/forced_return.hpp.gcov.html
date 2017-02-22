@@ -1,0 +1,140 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/variant/detail/forced_return.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/variant/detail</a> - forced_return.hpp<span style="font-size: 80%;"> (source / <a href="forced_return.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //-----------------------------------------------------------------------------</a>
+<span class="lineNum">       2 </span>            : // boost variant/detail/forced_return.hpp header file
+<span class="lineNum">       3 </span>            : // See http://www.boost.org for updates, documentation, and revision history.
+<span class="lineNum">       4 </span>            : //-----------------------------------------------------------------------------
+<span class="lineNum">       5 </span>            : //
+<span class="lineNum">       6 </span>            : // Copyright (c) 2003 Eric Friedman
+<span class="lineNum">       7 </span>            : // Copyright (c) 2015-2016 Antony Polukhin
+<span class="lineNum">       8 </span>            : //
+<span class="lineNum">       9 </span>            : // Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">      10 </span>            : // accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">      11 </span>            : // http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #ifndef BOOST_VARIANT_DETAIL_FORCED_RETURN_HPP
+<span class="lineNum">      14 </span>            : #define BOOST_VARIANT_DETAIL_FORCED_RETURN_HPP
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/variant/detail/generic_result_type.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/assert.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;cstdlib&gt; // std::abort
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">      23 </span>            : # pragma warning( push )
+<span class="lineNum">      24 </span>            : # pragma warning( disable : 4702 ) // unreachable code
+<span class="lineNum">      25 </span>            : #endif
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : namespace boost { namespace detail { namespace variant {
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : BOOST_NORETURN inline void forced_return_no_return() { // fixes `must return a value` warnings
+<span class="lineNum">      30 </span>            :     using namespace std;
+<span class="lineNum">      31 </span>            :     abort(); // some implementations have no std::abort
+<span class="lineNum">      32 </span>            : }
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : ///////////////////////////////////////////////////////////////////////////////
+<span class="lineNum">      36 </span>            : // (detail) function template forced_return
+<span class="lineNum">      37 </span>            : //
+<span class="lineNum">      38 </span>            : // Logical error to permit invocation at runtime, but (artificially) satisfies
+<span class="lineNum">      39 </span>            : // compile-time requirement of returning a result value.
+<span class="lineNum">      40 </span>            : //
+<span class="lineNum">      41 </span>            : template &lt;typename T&gt;
+<a name="42"><span class="lineNum">      42 </span>            : BOOST_NORETURN inline</a>
+<span class="lineNum">      43 </span>            :     BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(T)
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 : forced_return()</span>
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span>            :     // logical error: should never be here! (see above)
+<span class="lineNum">      47 </span><span class="lineNoCov">          0 :     BOOST_ASSERT(false);</span>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :     forced_return_no_return();
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : #ifdef BOOST_NO_NORETURN
+<span class="lineNum">      52 </span>            :     BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(T) (*dummy)() = 0;
+<span class="lineNum">      53 </span>            :     return dummy();
+<span class="lineNum">      54 </span>            : #endif
+<span class="lineNum">      55 </span>            : }
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : }}} // namespace boost::detail::variant
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : #ifdef BOOST_MSVC
+<span class="lineNum">      61 </span>            : # pragma warning( pop )
+<span class="lineNum">      62 </span>            : #endif
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : #endif // BOOST_VARIANT_DETAIL_FORCED_RETURN_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

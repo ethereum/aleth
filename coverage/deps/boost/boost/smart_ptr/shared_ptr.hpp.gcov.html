@@ -1,0 +1,1170 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/smart_ptr/shared_ptr.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/smart_ptr</a> - shared_ptr.hpp<span style="font-size: 80%;"> (source / <a href="shared_ptr.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">38</td>
+            <td class="headerCovTableEntry">44</td>
+            <td class="headerCovTableEntryMed">86.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">149</td>
+            <td class="headerCovTableEntry">949</td>
+            <td class="headerCovTableEntryLo">15.7 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef BOOST_SMART_PTR_SHARED_PTR_HPP_INCLUDED</a>
+<span class="lineNum">       2 </span>            : #define BOOST_SMART_PTR_SHARED_PTR_HPP_INCLUDED
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : //  shared_ptr.hpp
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : //  (C) Copyright Greg Colvin and Beman Dawes 1998, 1999.
+<span class="lineNum">       8 </span>            : //  Copyright (c) 2001-2008 Peter Dimov
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">      11 </span>            : //  accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">      12 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">      13 </span>            : //
+<span class="lineNum">      14 </span>            : //  See http://www.boost.org/libs/smart_ptr/shared_ptr.htm for documentation.
+<span class="lineNum">      15 </span>            : //
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : #include &lt;boost/config.hpp&gt;   // for broken compiler workarounds
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : // In order to avoid circular dependencies with Boost.TR1
+<span class="lineNum">      20 </span>            : // we make sure that our include of &lt;memory&gt; doesn't try to
+<span class="lineNum">      21 </span>            : // pull in the TR1 headers: that's why we use this header 
+<span class="lineNum">      22 </span>            : // rather than including &lt;memory&gt; directly:
+<span class="lineNum">      23 </span>            : #include &lt;boost/config/no_tr1/memory.hpp&gt;  // std::auto_ptr
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;boost/assert.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/checked_delete.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/throw_exception.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/smart_ptr/detail/shared_count.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/detail/workaround.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/smart_ptr/detail/sp_convertible.hpp&gt;
+<span class="lineNum">      31 </span>            : #include &lt;boost/smart_ptr/detail/sp_nullptr_t.hpp&gt;
+<span class="lineNum">      32 </span>            : #include &lt;boost/smart_ptr/detail/sp_disable_deprecated.hpp&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #if !defined(BOOST_SP_NO_ATOMIC_ACCESS)
+<span class="lineNum">      35 </span>            : #include &lt;boost/smart_ptr/detail/spinlock_pool.hpp&gt;
+<span class="lineNum">      36 </span>            : #endif
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #include &lt;algorithm&gt;            // for std::swap
+<span class="lineNum">      39 </span>            : #include &lt;functional&gt;           // for std::less
+<span class="lineNum">      40 </span>            : #include &lt;typeinfo&gt;             // for std::bad_cast
+<span class="lineNum">      41 </span>            : #include &lt;cstddef&gt;              // for std::size_t
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : #if !defined(BOOST_NO_IOSTREAM)
+<span class="lineNum">      44 </span>            : #if !defined(BOOST_NO_IOSFWD)
+<span class="lineNum">      45 </span>            : #include &lt;iosfwd&gt;               // for std::basic_ostream
+<span class="lineNum">      46 </span>            : #else
+<span class="lineNum">      47 </span>            : #include &lt;ostream&gt;
+<span class="lineNum">      48 </span>            : #endif
+<span class="lineNum">      49 </span>            : #endif
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : #if defined( BOOST_SP_DISABLE_DEPRECATED )
+<span class="lineNum">      52 </span>            : #pragma GCC diagnostic push
+<span class="lineNum">      53 </span>            : #pragma GCC diagnostic ignored &quot;-Wdeprecated-declarations&quot;
+<span class="lineNum">      54 </span>            : #endif
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : namespace boost
+<span class="lineNum">      57 </span>            : {
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : template&lt;class T&gt; class shared_ptr;
+<span class="lineNum">      60 </span>            : template&lt;class T&gt; class weak_ptr;
+<span class="lineNum">      61 </span>            : template&lt;class T&gt; class enable_shared_from_this;
+<span class="lineNum">      62 </span>            : class enable_shared_from_raw;
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            : namespace movelib
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :     template&lt; class T, class D &gt; class unique_ptr;
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : } // namespace movelib
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : namespace detail
+<span class="lineNum">      72 </span>            : {
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : // sp_element, element_type
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : template&lt; class T &gt; struct sp_element
+<span class="lineNum">      77 </span>            : {
+<span class="lineNum">      78 </span>            :     typedef T type;
+<span class="lineNum">      79 </span>            : };
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : #if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : template&lt; class T &gt; struct sp_element&lt; T[] &gt;
+<span class="lineNum">      84 </span>            : {
+<span class="lineNum">      85 </span>            :     typedef T type;
+<span class="lineNum">      86 </span>            : };
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : #if !defined( __BORLANDC__ ) || !BOOST_WORKAROUND( __BORLANDC__, &lt; 0x600 )
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : template&lt; class T, std::size_t N &gt; struct sp_element&lt; T[N] &gt;
+<span class="lineNum">      91 </span>            : {
+<span class="lineNum">      92 </span>            :     typedef T type;
+<span class="lineNum">      93 </span>            : };
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : #endif
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : #endif // !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : // sp_dereference, return type of operator*
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : template&lt; class T &gt; struct sp_dereference
+<span class="lineNum">     102 </span>            : {
+<span class="lineNum">     103 </span>            :     typedef T &amp; type;
+<span class="lineNum">     104 </span>            : };
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : template&lt;&gt; struct sp_dereference&lt; void &gt;
+<span class="lineNum">     107 </span>            : {
+<span class="lineNum">     108 </span>            :     typedef void type;
+<span class="lineNum">     109 </span>            : };
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            : #if !defined(BOOST_NO_CV_VOID_SPECIALIZATIONS)
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            : template&lt;&gt; struct sp_dereference&lt; void const &gt;
+<span class="lineNum">     114 </span>            : {
+<span class="lineNum">     115 </span>            :     typedef void type;
+<span class="lineNum">     116 </span>            : };
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : template&lt;&gt; struct sp_dereference&lt; void volatile &gt;
+<span class="lineNum">     119 </span>            : {
+<span class="lineNum">     120 </span>            :     typedef void type;
+<span class="lineNum">     121 </span>            : };
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : template&lt;&gt; struct sp_dereference&lt; void const volatile &gt;
+<span class="lineNum">     124 </span>            : {
+<span class="lineNum">     125 </span>            :     typedef void type;
+<span class="lineNum">     126 </span>            : };
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : #endif // !defined(BOOST_NO_CV_VOID_SPECIALIZATIONS)
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : #if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            : template&lt; class T &gt; struct sp_dereference&lt; T[] &gt;
+<span class="lineNum">     133 </span>            : {
+<span class="lineNum">     134 </span>            :     typedef void type;
+<span class="lineNum">     135 </span>            : };
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : #if !defined( __BORLANDC__ ) || !BOOST_WORKAROUND( __BORLANDC__, &lt; 0x600 )
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : template&lt; class T, std::size_t N &gt; struct sp_dereference&lt; T[N] &gt;
+<span class="lineNum">     140 </span>            : {
+<span class="lineNum">     141 </span>            :     typedef void type;
+<span class="lineNum">     142 </span>            : };
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : #endif
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            : #endif // !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            : // sp_member_access, return type of operator-&gt;
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            : template&lt; class T &gt; struct sp_member_access
+<span class="lineNum">     151 </span>            : {
+<span class="lineNum">     152 </span>            :     typedef T * type;
+<span class="lineNum">     153 </span>            : };
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            : #if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            : template&lt; class T &gt; struct sp_member_access&lt; T[] &gt;
+<span class="lineNum">     158 </span>            : {
+<span class="lineNum">     159 </span>            :     typedef void type;
+<span class="lineNum">     160 </span>            : };
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            : #if !defined( __BORLANDC__ ) || !BOOST_WORKAROUND( __BORLANDC__, &lt; 0x600 )
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            : template&lt; class T, std::size_t N &gt; struct sp_member_access&lt; T[N] &gt;
+<span class="lineNum">     165 </span>            : {
+<span class="lineNum">     166 </span>            :     typedef void type;
+<span class="lineNum">     167 </span>            : };
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            : #endif
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            : #endif // !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            : // sp_array_access, return type of operator[]
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            : template&lt; class T &gt; struct sp_array_access
+<span class="lineNum">     176 </span>            : {
+<span class="lineNum">     177 </span>            :     typedef void type;
+<span class="lineNum">     178 </span>            : };
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            : #if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            : template&lt; class T &gt; struct sp_array_access&lt; T[] &gt;
+<span class="lineNum">     183 </span>            : {
+<span class="lineNum">     184 </span>            :     typedef T &amp; type;
+<span class="lineNum">     185 </span>            : };
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            : #if !defined( __BORLANDC__ ) || !BOOST_WORKAROUND( __BORLANDC__, &lt; 0x600 )
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            : template&lt; class T, std::size_t N &gt; struct sp_array_access&lt; T[N] &gt;
+<span class="lineNum">     190 </span>            : {
+<span class="lineNum">     191 </span>            :     typedef T &amp; type;
+<span class="lineNum">     192 </span>            : };
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            : #endif
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span>            : #endif // !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            : // sp_extent, for operator[] index check
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            : template&lt; class T &gt; struct sp_extent
+<span class="lineNum">     201 </span>            : {
+<span class="lineNum">     202 </span>            :     enum _vt { value = 0 };
+<span class="lineNum">     203 </span>            : };
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span>            : #if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            : template&lt; class T, std::size_t N &gt; struct sp_extent&lt; T[N] &gt;
+<span class="lineNum">     208 </span>            : {
+<span class="lineNum">     209 </span>            :     enum _vt { value = N };
+<span class="lineNum">     210 </span>            : };
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            : #endif // !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : // enable_shared_from_this support
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            : template&lt; class X, class Y, class T &gt; inline void sp_enable_shared_from_this( boost::shared_ptr&lt;X&gt; const * ppx, Y const * py, boost::enable_shared_from_this&lt; T &gt; const * pe )
+<span class="lineNum">     217 </span>            : {
+<span class="lineNum">     218 </span><span class="lineCov">         75 :     if( pe != 0 )</span>
+<span class="lineNum">     219 </span>            :     {
+<span class="lineNum">     220 </span><span class="lineCov">         75 :         pe-&gt;_internal_accept_owner( ppx, const_cast&lt; Y* &gt;( py ) );</span>
+<span class="lineNum">     221 </span>            :     }
+<span class="lineNum">     222 </span>            : }
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            : template&lt; class X, class Y &gt; inline void sp_enable_shared_from_this( boost::shared_ptr&lt;X&gt; * ppx, Y const * py, boost::enable_shared_from_raw const * pe );
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            : #ifdef _MANAGED
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            : // Avoid C4793, ... causes native code generation
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            : struct sp_any_pointer
+<span class="lineNum">     231 </span>            : {
+<span class="lineNum">     232 </span>            :     template&lt;class T&gt; sp_any_pointer( T* ) {}
+<span class="lineNum">     233 </span>            : };
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            : inline void sp_enable_shared_from_this( sp_any_pointer, sp_any_pointer, sp_any_pointer )
+<span class="lineNum">     236 </span>            : {
+<span class="lineNum">     237 </span>            : }
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            : #else // _MANAGED
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            : inline void sp_enable_shared_from_this( ... )
+<span class="lineNum">     242 </span>            : {
+<span class="lineNum">     243 </span>            : }
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span>            : #endif // _MANAGED
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            : #if !defined( BOOST_NO_SFINAE ) &amp;&amp; !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION ) &amp;&amp; !defined( BOOST_NO_AUTO_PTR )
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            : // rvalue auto_ptr support based on a technique by Dave Abrahams
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            : template&lt; class T, class R &gt; struct sp_enable_if_auto_ptr
+<span class="lineNum">     252 </span>            : {
+<span class="lineNum">     253 </span>            : };
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            : template&lt; class T, class R &gt; struct sp_enable_if_auto_ptr&lt; std::auto_ptr&lt; T &gt;, R &gt;
+<span class="lineNum">     256 </span>            : {
+<span class="lineNum">     257 </span>            :     typedef R type;
+<span class="lineNum">     258 </span>            : }; 
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span>            : #endif
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span>            : // sp_assert_convertible
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            : template&lt; class Y, class T &gt; inline void sp_assert_convertible()
+<span class="lineNum">     265 </span>            : {
+<span class="lineNum">     266 </span>            : #if !defined( BOOST_SP_NO_SP_CONVERTIBLE )
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            :     // static_assert( sp_convertible&lt; Y, T &gt;::value );
+<span class="lineNum">     269 </span>            :     typedef char tmp[ sp_convertible&lt; Y, T &gt;::value? 1: -1 ];
+<span class="lineNum">     270 </span>            :     (void)sizeof( tmp );
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            : #else
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            :     T* p = static_cast&lt; Y* &gt;( 0 );
+<span class="lineNum">     275 </span>            :     (void)p;
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            : #endif
+<span class="lineNum">     278 </span>            : }
+<span class="lineNum">     279 </span>            : 
+<a name="280"><span class="lineNum">     280 </span>            : // pointer constructor helper</a>
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span><span class="lineCov">     611060 : template&lt; class T, class Y &gt; inline void sp_pointer_construct( boost::shared_ptr&lt; T &gt; * ppx, Y * p, boost::detail::shared_count &amp; pn )</span>
+<span class="lineNum">     283 </span>            : {
+<span class="lineNum">     284 </span><span class="lineCov">    1833180 :     boost::detail::shared_count( p ).swap( pn );</span>
+<span class="lineNum">     285 </span><span class="lineCov">        150 :     boost::detail::sp_enable_shared_from_this( ppx, p, p );</span>
+<span class="lineNum">     286 </span><span class="lineCov">     611060 : }</span>
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            : #if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            : template&lt; class T, class Y &gt; inline void sp_pointer_construct( boost::shared_ptr&lt; T[] &gt; * /*ppx*/, Y * p, boost::detail::shared_count &amp; pn )
+<span class="lineNum">     291 </span>            : {
+<span class="lineNum">     292 </span>            :     sp_assert_convertible&lt; Y[], T[] &gt;();
+<span class="lineNum">     293 </span>            :     boost::detail::shared_count( p, boost::checked_array_deleter&lt; T &gt;() ).swap( pn );
+<span class="lineNum">     294 </span>            : }
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            : template&lt; class T, std::size_t N, class Y &gt; inline void sp_pointer_construct( boost::shared_ptr&lt; T[N] &gt; * /*ppx*/, Y * p, boost::detail::shared_count &amp; pn )
+<span class="lineNum">     297 </span>            : {
+<span class="lineNum">     298 </span>            :     sp_assert_convertible&lt; Y[N], T[N] &gt;();
+<span class="lineNum">     299 </span>            :     boost::detail::shared_count( p, boost::checked_array_deleter&lt; T &gt;() ).swap( pn );
+<span class="lineNum">     300 </span>            : }
+<span class="lineNum">     301 </span>            : 
+<span class="lineNum">     302 </span>            : #endif // !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span>            : // deleter constructor helper
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span>            : template&lt; class T, class Y &gt; inline void sp_deleter_construct( boost::shared_ptr&lt; T &gt; * ppx, Y * p )
+<span class="lineNum">     307 </span>            : {
+<span class="lineNum">     308 </span>            :     boost::detail::sp_enable_shared_from_this( ppx, p, p );
+<span class="lineNum">     309 </span>            : }
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            : #if !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            : template&lt; class T, class Y &gt; inline void sp_deleter_construct( boost::shared_ptr&lt; T[] &gt; * /*ppx*/, Y * /*p*/ )
+<span class="lineNum">     314 </span>            : {
+<span class="lineNum">     315 </span>            :     sp_assert_convertible&lt; Y[], T[] &gt;();
+<span class="lineNum">     316 </span>            : }
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            : template&lt; class T, std::size_t N, class Y &gt; inline void sp_deleter_construct( boost::shared_ptr&lt; T[N] &gt; * /*ppx*/, Y * /*p*/ )
+<span class="lineNum">     319 </span>            : {
+<span class="lineNum">     320 </span>            :     sp_assert_convertible&lt; Y[N], T[N] &gt;();
+<span class="lineNum">     321 </span>            : }
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span>            : #endif // !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span>            : } // namespace detail
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span>            : //
+<span class="lineNum">     329 </span>            : //  shared_ptr
+<span class="lineNum">     330 </span>            : //
+<span class="lineNum">     331 </span>            : //  An enhanced relative of scoped_ptr with reference counted copy semantics.
+<span class="lineNum">     332 </span>            : //  The object pointed to is deleted when the last shared_ptr pointing to it
+<span class="lineNum">     333 </span>            : //  is destroyed or reset.
+<a name="334"><span class="lineNum">     334 </span>            : //</a>
+<span class="lineNum">     335 </span>            : 
+<span class="lineNum">     336 </span><span class="lineCov">    7276664 : template&lt;class T&gt; class shared_ptr</span>
+<span class="lineNum">     337 </span>            : {
+<span class="lineNum">     338 </span>            : private:
+<span class="lineNum">     339 </span>            : 
+<span class="lineNum">     340 </span>            :     // Borland 5.5.1 specific workaround
+<span class="lineNum">     341 </span>            :     typedef shared_ptr&lt;T&gt; this_type;
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span>            : public:
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span>            :     typedef typename boost::detail::sp_element&lt; T &gt;::type element_type;
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span><span class="lineCov">    1883574 :     shared_ptr() BOOST_NOEXCEPT : px( 0 ), pn() // never throws in 1.30+</span>
+<span class="lineNum">     348 </span>            :     {
+<span class="lineNum">     349 </span>            :     }
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span>            : #if !defined( BOOST_NO_CXX11_NULLPTR )
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span>            :     shared_ptr( boost::detail::sp_nullptr_t ) BOOST_NOEXCEPT : px( 0 ), pn() // never throws
+<span class="lineNum">     354 </span>            :     {
+<span class="lineNum">     355 </span>            :     }
+<span class="lineNum">     356 </span>            : 
+<span class="lineNum">     357 </span>            : #endif
+<a name="358"><span class="lineNum">     358 </span>            : </a>
+<span class="lineNum">     359 </span>            :     template&lt;class Y&gt;
+<span class="lineNum">     360 </span><span class="lineCov">    1222120 :     explicit shared_ptr( Y * p ): px( p ), pn() // Y must be complete</span>
+<span class="lineNum">     361 </span>            :     {
+<span class="lineNum">     362 </span><span class="lineCov">     611060 :         boost::detail::sp_pointer_construct( this, p, pn );</span>
+<span class="lineNum">     363 </span><span class="lineCov">     611060 :     }</span>
+<span class="lineNum">     364 </span>            : 
+<span class="lineNum">     365 </span>            :     //
+<span class="lineNum">     366 </span>            :     // Requirements: D's copy constructor must not throw
+<span class="lineNum">     367 </span>            :     //
+<span class="lineNum">     368 </span>            :     // shared_ptr will release p by calling d(p)
+<span class="lineNum">     369 </span>            :     //
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span><span class="lineCov">          3 :     template&lt;class Y, class D&gt; shared_ptr( Y * p, D d ): px( p ), pn( p, d )</span>
+<span class="lineNum">     372 </span>            :     {
+<span class="lineNum">     373 </span><span class="lineCov">          3 :         boost::detail::sp_deleter_construct( this, p );</span>
+<span class="lineNum">     374 </span>            :     }
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span>            : #if !defined( BOOST_NO_CXX11_NULLPTR )
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span>            :     template&lt;class D&gt; shared_ptr( boost::detail::sp_nullptr_t p, D d ): px( p ), pn( p, d )
+<span class="lineNum">     379 </span>            :     {
+<span class="lineNum">     380 </span>            :     }
+<span class="lineNum">     381 </span>            : 
+<span class="lineNum">     382 </span>            : #endif
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span>            :     // As above, but with allocator. A's copy constructor shall not throw.
+<span class="lineNum">     385 </span>            : 
+<span class="lineNum">     386 </span>            :     template&lt;class Y, class D, class A&gt; shared_ptr( Y * p, D d, A a ): px( p ), pn( p, d, a )
+<span class="lineNum">     387 </span>            :     {
+<span class="lineNum">     388 </span>            :         boost::detail::sp_deleter_construct( this, p );
+<span class="lineNum">     389 </span>            :     }
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span>            : #if !defined( BOOST_NO_CXX11_NULLPTR )
+<span class="lineNum">     392 </span>            : 
+<span class="lineNum">     393 </span>            :     template&lt;class D, class A&gt; shared_ptr( boost::detail::sp_nullptr_t p, D d, A a ): px( p ), pn( p, d, a )
+<span class="lineNum">     394 </span>            :     {
+<span class="lineNum">     395 </span>            :     }
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span>            : #endif
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span>            : //  generated copy constructor, destructor are fine...
+<span class="lineNum">     400 </span>            : 
+<span class="lineNum">     401 </span>            : #if !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
+<span class="lineNum">     402 </span>            : 
+<span class="lineNum">     403 </span>            : // ... except in C++0x, move disables the implicit copy
+<span class="lineNum">     404 </span>            : 
+<span class="lineNum">     405 </span><span class="lineCov">    2087048 :     shared_ptr( shared_ptr const &amp; r ) BOOST_NOEXCEPT : px( r.px ), pn( r.pn )</span>
+<span class="lineNum">     406 </span>            :     {
+<span class="lineNum">     407 </span>            :     }
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span>            : #endif
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span>            :     template&lt;class Y&gt;
+<span class="lineNum">     412 </span><span class="lineNoCov">          0 :     explicit shared_ptr( weak_ptr&lt;Y&gt; const &amp; r ): pn( r.pn ) // may throw</span>
+<span class="lineNum">     413 </span>            :     {
+<span class="lineNum">     414 </span>            :         boost::detail::sp_assert_convertible&lt; Y, T &gt;();
+<span class="lineNum">     415 </span>            : 
+<span class="lineNum">     416 </span>            :         // it is now safe to copy r.px, as pn(r.pn) did not throw
+<span class="lineNum">     417 </span><span class="lineNoCov">          0 :         px = r.px;</span>
+<span class="lineNum">     418 </span>            :     }
+<a name="419"><span class="lineNum">     419 </span>            : </a>
+<span class="lineNum">     420 </span>            :     template&lt;class Y&gt;
+<span class="lineNum">     421 </span><span class="lineCov">      48754 :     shared_ptr( weak_ptr&lt;Y&gt; const &amp; r, boost::detail::sp_nothrow_tag )</span>
+<span class="lineNum">     422 </span><span class="lineCov">      97508 :     BOOST_NOEXCEPT : px( 0 ), pn( r.pn, boost::detail::sp_nothrow_tag() )</span>
+<span class="lineNum">     423 </span>            :     {
+<span class="lineNum">     424 </span><span class="lineCov">      97508 :         if( !pn.empty() )</span>
+<span class="lineNum">     425 </span>            :         {
+<span class="lineNum">     426 </span><span class="lineCov">      48754 :             px = r.px;</span>
+<span class="lineNum">     427 </span>            :         }
+<span class="lineNum">     428 </span><span class="lineCov">      48754 :     }</span>
+<span class="lineNum">     429 </span>            : 
+<span class="lineNum">     430 </span>            :     template&lt;class Y&gt;
+<span class="lineNum">     431 </span>            : #if !defined( BOOST_SP_NO_SP_CONVERTIBLE )
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span>            :     shared_ptr( shared_ptr&lt;Y&gt; const &amp; r, typename boost::detail::sp_enable_if_convertible&lt;Y,T&gt;::type = boost::detail::sp_empty() )
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span>            : #else
+<span class="lineNum">     436 </span>            : 
+<span class="lineNum">     437 </span>            :     shared_ptr( shared_ptr&lt;Y&gt; const &amp; r )
+<span class="lineNum">     438 </span>            : 
+<span class="lineNum">     439 </span>            : #endif
+<span class="lineNum">     440 </span><span class="lineCov">    1122990 :     BOOST_NOEXCEPT : px( r.px ), pn( r.pn )</span>
+<span class="lineNum">     441 </span>            :     {
+<span class="lineNum">     442 </span>            :         boost::detail::sp_assert_convertible&lt; Y, T &gt;();
+<span class="lineNum">     443 </span>            :     }
+<span class="lineNum">     444 </span>            : 
+<span class="lineNum">     445 </span>            :     // aliasing
+<span class="lineNum">     446 </span>            :     template&lt; class Y &gt;
+<span class="lineNum">     447 </span><span class="lineCov">        150 :     shared_ptr( shared_ptr&lt;Y&gt; const &amp; r, element_type * p ) BOOST_NOEXCEPT : px( p ), pn( r.pn )</span>
+<span class="lineNum">     448 </span>            :     {
+<span class="lineNum">     449 </span>            :     }
+<span class="lineNum">     450 </span>            : 
+<span class="lineNum">     451 </span>            : #ifndef BOOST_NO_AUTO_PTR
+<span class="lineNum">     452 </span>            : 
+<span class="lineNum">     453 </span>            :     template&lt;class Y&gt;
+<span class="lineNum">     454 </span>            :     explicit shared_ptr( std::auto_ptr&lt;Y&gt; &amp; r ): px(r.get()), pn()
+<span class="lineNum">     455 </span>            :     {
+<span class="lineNum">     456 </span>            :         boost::detail::sp_assert_convertible&lt; Y, T &gt;();
+<span class="lineNum">     457 </span>            : 
+<span class="lineNum">     458 </span>            :         Y * tmp = r.get();
+<span class="lineNum">     459 </span>            :         pn = boost::detail::shared_count( r );
+<span class="lineNum">     460 </span>            : 
+<span class="lineNum">     461 </span>            :         boost::detail::sp_deleter_construct( this, tmp );
+<span class="lineNum">     462 </span>            :     }
+<span class="lineNum">     463 </span>            : 
+<span class="lineNum">     464 </span>            : #if !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
+<span class="lineNum">     465 </span>            : 
+<span class="lineNum">     466 </span>            :     template&lt;class Y&gt;
+<span class="lineNum">     467 </span>            :     shared_ptr( std::auto_ptr&lt;Y&gt; &amp;&amp; r ): px(r.get()), pn()
+<span class="lineNum">     468 </span>            :     {
+<span class="lineNum">     469 </span>            :         boost::detail::sp_assert_convertible&lt; Y, T &gt;();
+<span class="lineNum">     470 </span>            : 
+<span class="lineNum">     471 </span>            :         Y * tmp = r.get();
+<span class="lineNum">     472 </span>            :         pn = boost::detail::shared_count( r );
+<span class="lineNum">     473 </span>            : 
+<span class="lineNum">     474 </span>            :         boost::detail::sp_deleter_construct( this, tmp );
+<span class="lineNum">     475 </span>            :     }
+<span class="lineNum">     476 </span>            : 
+<span class="lineNum">     477 </span>            : #elif !defined( BOOST_NO_SFINAE ) &amp;&amp; !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">     478 </span>            : 
+<span class="lineNum">     479 </span>            :     template&lt;class Ap&gt;
+<span class="lineNum">     480 </span>            :     explicit shared_ptr( Ap r, typename boost::detail::sp_enable_if_auto_ptr&lt;Ap, int&gt;::type = 0 ): px( r.get() ), pn()
+<span class="lineNum">     481 </span>            :     {
+<span class="lineNum">     482 </span>            :         typedef typename Ap::element_type Y;
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span>            :         boost::detail::sp_assert_convertible&lt; Y, T &gt;();
+<span class="lineNum">     485 </span>            : 
+<span class="lineNum">     486 </span>            :         Y * tmp = r.get();
+<span class="lineNum">     487 </span>            :         pn = boost::detail::shared_count( r );
+<span class="lineNum">     488 </span>            : 
+<span class="lineNum">     489 </span>            :         boost::detail::sp_deleter_construct( this, tmp );
+<span class="lineNum">     490 </span>            :     }
+<span class="lineNum">     491 </span>            : 
+<span class="lineNum">     492 </span>            : #endif // BOOST_NO_SFINAE, BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
+<span class="lineNum">     493 </span>            : 
+<span class="lineNum">     494 </span>            : #endif // BOOST_NO_AUTO_PTR
+<span class="lineNum">     495 </span>            : 
+<span class="lineNum">     496 </span>            : #if !defined( BOOST_NO_CXX11_SMART_PTR ) &amp;&amp; !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
+<span class="lineNum">     497 </span>            : 
+<span class="lineNum">     498 </span>            :     template&lt; class Y, class D &gt;
+<span class="lineNum">     499 </span>            :     shared_ptr( std::unique_ptr&lt; Y, D &gt; &amp;&amp; r ): px( r.get() ), pn()
+<span class="lineNum">     500 </span>            :     {
+<span class="lineNum">     501 </span>            :         boost::detail::sp_assert_convertible&lt; Y, T &gt;();
+<span class="lineNum">     502 </span>            : 
+<span class="lineNum">     503 </span>            :         typename std::unique_ptr&lt; Y, D &gt;::pointer tmp = r.get();
+<span class="lineNum">     504 </span>            :         pn = boost::detail::shared_count( r );
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span>            :         boost::detail::sp_deleter_construct( this, tmp );
+<span class="lineNum">     507 </span>            :     }
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            : #endif
+<span class="lineNum">     510 </span>            : 
+<span class="lineNum">     511 </span>            :     template&lt; class Y, class D &gt;
+<span class="lineNum">     512 </span>            :     shared_ptr( boost::movelib::unique_ptr&lt; Y, D &gt; r ): px( r.get() ), pn()
+<span class="lineNum">     513 </span>            :     {
+<span class="lineNum">     514 </span>            :         boost::detail::sp_assert_convertible&lt; Y, T &gt;();
+<span class="lineNum">     515 </span>            : 
+<span class="lineNum">     516 </span>            :         typename boost::movelib::unique_ptr&lt; Y, D &gt;::pointer tmp = r.get();
+<span class="lineNum">     517 </span>            :         pn = boost::detail::shared_count( r );
+<span class="lineNum">     518 </span>            : 
+<span class="lineNum">     519 </span>            :         boost::detail::sp_deleter_construct( this, tmp );
+<span class="lineNum">     520 </span>            :     }
+<span class="lineNum">     521 </span>            : 
+<a name="522"><span class="lineNum">     522 </span>            :     // assignment</a>
+<span class="lineNum">     523 </span>            : 
+<span class="lineNum">     524 </span><span class="lineCov">     610821 :     shared_ptr &amp; operator=( shared_ptr const &amp; r ) BOOST_NOEXCEPT</span>
+<span class="lineNum">     525 </span>            :     {
+<span class="lineNum">     526 </span><span class="lineCov">    1832463 :         this_type(r).swap(*this);</span>
+<span class="lineNum">     527 </span><span class="lineCov">     610821 :         return *this;</span>
+<span class="lineNum">     528 </span>            :     }
+<span class="lineNum">     529 </span>            : 
+<span class="lineNum">     530 </span>            : #if !defined(BOOST_MSVC) || (BOOST_MSVC &gt;= 1400)
+<span class="lineNum">     531 </span>            : 
+<span class="lineNum">     532 </span>            :     template&lt;class Y&gt;
+<span class="lineNum">     533 </span>            :     shared_ptr &amp; operator=(shared_ptr&lt;Y&gt; const &amp; r) BOOST_NOEXCEPT
+<span class="lineNum">     534 </span>            :     {
+<span class="lineNum">     535 </span>            :         this_type(r).swap(*this);
+<span class="lineNum">     536 </span>            :         return *this;
+<span class="lineNum">     537 </span>            :     }
+<span class="lineNum">     538 </span>            : 
+<span class="lineNum">     539 </span>            : #endif
+<span class="lineNum">     540 </span>            : 
+<span class="lineNum">     541 </span>            : #ifndef BOOST_NO_AUTO_PTR
+<span class="lineNum">     542 </span>            : 
+<span class="lineNum">     543 </span>            :     template&lt;class Y&gt;
+<span class="lineNum">     544 </span>            :     shared_ptr &amp; operator=( std::auto_ptr&lt;Y&gt; &amp; r )
+<span class="lineNum">     545 </span>            :     {
+<span class="lineNum">     546 </span>            :         this_type( r ).swap( *this );
+<span class="lineNum">     547 </span>            :         return *this;
+<span class="lineNum">     548 </span>            :     }
+<span class="lineNum">     549 </span>            : 
+<span class="lineNum">     550 </span>            : #if !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
+<span class="lineNum">     551 </span>            : 
+<span class="lineNum">     552 </span>            :     template&lt;class Y&gt;
+<span class="lineNum">     553 </span>            :     shared_ptr &amp; operator=( std::auto_ptr&lt;Y&gt; &amp;&amp; r )
+<span class="lineNum">     554 </span>            :     {
+<span class="lineNum">     555 </span>            :         this_type( static_cast&lt; std::auto_ptr&lt;Y&gt; &amp;&amp; &gt;( r ) ).swap( *this );
+<span class="lineNum">     556 </span>            :         return *this;
+<span class="lineNum">     557 </span>            :     }
+<span class="lineNum">     558 </span>            : 
+<span class="lineNum">     559 </span>            : #elif !defined( BOOST_NO_SFINAE ) &amp;&amp; !defined( BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION )
+<span class="lineNum">     560 </span>            : 
+<span class="lineNum">     561 </span>            :     template&lt;class Ap&gt;
+<span class="lineNum">     562 </span>            :     typename boost::detail::sp_enable_if_auto_ptr&lt; Ap, shared_ptr &amp; &gt;::type operator=( Ap r )
+<span class="lineNum">     563 </span>            :     {
+<span class="lineNum">     564 </span>            :         this_type( r ).swap( *this );
+<span class="lineNum">     565 </span>            :         return *this;
+<span class="lineNum">     566 </span>            :     }
+<span class="lineNum">     567 </span>            : 
+<span class="lineNum">     568 </span>            : #endif // BOOST_NO_SFINAE, BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION
+<span class="lineNum">     569 </span>            : 
+<span class="lineNum">     570 </span>            : #endif // BOOST_NO_AUTO_PTR
+<span class="lineNum">     571 </span>            : 
+<span class="lineNum">     572 </span>            : #if !defined( BOOST_NO_CXX11_SMART_PTR ) &amp;&amp; !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
+<span class="lineNum">     573 </span>            : 
+<span class="lineNum">     574 </span>            :     template&lt;class Y, class D&gt;
+<span class="lineNum">     575 </span>            :     shared_ptr &amp; operator=( std::unique_ptr&lt;Y, D&gt; &amp;&amp; r )
+<span class="lineNum">     576 </span>            :     {
+<span class="lineNum">     577 </span>            :         this_type( static_cast&lt; std::unique_ptr&lt;Y, D&gt; &amp;&amp; &gt;( r ) ).swap(*this);
+<span class="lineNum">     578 </span>            :         return *this;
+<span class="lineNum">     579 </span>            :     }
+<span class="lineNum">     580 </span>            : 
+<span class="lineNum">     581 </span>            : #endif
+<span class="lineNum">     582 </span>            : 
+<span class="lineNum">     583 </span>            :     template&lt;class Y, class D&gt;
+<span class="lineNum">     584 </span>            :     shared_ptr &amp; operator=( boost::movelib::unique_ptr&lt;Y, D&gt; r )
+<span class="lineNum">     585 </span>            :     {
+<span class="lineNum">     586 </span>            :         // this_type( static_cast&lt; unique_ptr&lt;Y, D&gt; &amp;&amp; &gt;( r ) ).swap( *this );
+<span class="lineNum">     587 </span>            : 
+<span class="lineNum">     588 </span>            :         boost::detail::sp_assert_convertible&lt; Y, T &gt;();
+<span class="lineNum">     589 </span>            : 
+<span class="lineNum">     590 </span>            :         typename boost::movelib::unique_ptr&lt; Y, D &gt;::pointer p = r.get();
+<span class="lineNum">     591 </span>            : 
+<span class="lineNum">     592 </span>            :         shared_ptr tmp;
+<span class="lineNum">     593 </span>            : 
+<span class="lineNum">     594 </span>            :         tmp.px = p;
+<span class="lineNum">     595 </span>            :         tmp.pn = boost::detail::shared_count( r );
+<span class="lineNum">     596 </span>            : 
+<span class="lineNum">     597 </span>            :         boost::detail::sp_deleter_construct( &amp;tmp, p );
+<span class="lineNum">     598 </span>            : 
+<span class="lineNum">     599 </span>            :         tmp.swap( *this );
+<span class="lineNum">     600 </span>            : 
+<span class="lineNum">     601 </span>            :         return *this;
+<span class="lineNum">     602 </span>            :     }
+<span class="lineNum">     603 </span>            : 
+<span class="lineNum">     604 </span>            : // Move support
+<span class="lineNum">     605 </span>            : 
+<span class="lineNum">     606 </span>            : #if !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
+<span class="lineNum">     607 </span>            : 
+<span class="lineNum">     608 </span><span class="lineCov">       3057 :     shared_ptr( shared_ptr &amp;&amp; r ) BOOST_NOEXCEPT : px( r.px ), pn()</span>
+<span class="lineNum">     609 </span>            :     {
+<span class="lineNum">     610 </span><span class="lineCov">       3758 :         pn.swap( r.pn );</span>
+<span class="lineNum">     611 </span><span class="lineCov">       1879 :         r.px = 0;</span>
+<span class="lineNum">     612 </span>            :     }
+<span class="lineNum">     613 </span>            : 
+<span class="lineNum">     614 </span>            :     template&lt;class Y&gt;
+<span class="lineNum">     615 </span>            : #if !defined( BOOST_SP_NO_SP_CONVERTIBLE )
+<span class="lineNum">     616 </span>            : 
+<span class="lineNum">     617 </span>            :     shared_ptr( shared_ptr&lt;Y&gt; &amp;&amp; r, typename boost::detail::sp_enable_if_convertible&lt;Y,T&gt;::type = boost::detail::sp_empty() )
+<span class="lineNum">     618 </span>            : 
+<span class="lineNum">     619 </span>            : #else
+<span class="lineNum">     620 </span>            : 
+<span class="lineNum">     621 </span>            :     shared_ptr( shared_ptr&lt;Y&gt; &amp;&amp; r )
+<span class="lineNum">     622 </span>            : 
+<span class="lineNum">     623 </span>            : #endif
+<span class="lineNum">     624 </span>            :     BOOST_NOEXCEPT : px( r.px ), pn()
+<span class="lineNum">     625 </span>            :     {
+<span class="lineNum">     626 </span>            :         boost::detail::sp_assert_convertible&lt; Y, T &gt;();
+<span class="lineNum">     627 </span>            : 
+<span class="lineNum">     628 </span>            :         pn.swap( r.pn );
+<span class="lineNum">     629 </span>            :         r.px = 0;
+<span class="lineNum">     630 </span>            :     }
+<span class="lineNum">     631 </span>            : 
+<span class="lineNum">     632 </span>            :     shared_ptr &amp; operator=( shared_ptr &amp;&amp; r ) BOOST_NOEXCEPT
+<span class="lineNum">     633 </span>            :     {
+<span class="lineNum">     634 </span><span class="lineCov">       2103 :         this_type( static_cast&lt; shared_ptr &amp;&amp; &gt;( r ) ).swap( *this );</span>
+<span class="lineNum">     635 </span>            :         return *this;
+<span class="lineNum">     636 </span>            :     }
+<span class="lineNum">     637 </span>            : 
+<span class="lineNum">     638 </span>            :     template&lt;class Y&gt;
+<span class="lineNum">     639 </span>            :     shared_ptr &amp; operator=( shared_ptr&lt;Y&gt; &amp;&amp; r ) BOOST_NOEXCEPT
+<span class="lineNum">     640 </span>            :     {
+<span class="lineNum">     641 </span>            :         this_type( static_cast&lt; shared_ptr&lt;Y&gt; &amp;&amp; &gt;( r ) ).swap( *this );
+<span class="lineNum">     642 </span>            :         return *this;
+<span class="lineNum">     643 </span>            :     }
+<span class="lineNum">     644 </span>            : 
+<span class="lineNum">     645 </span>            :     // aliasing move
+<span class="lineNum">     646 </span>            :     template&lt;class Y&gt;
+<span class="lineNum">     647 </span>            :     shared_ptr( shared_ptr&lt;Y&gt; &amp;&amp; r, element_type * p ) BOOST_NOEXCEPT : px( p ), pn()
+<span class="lineNum">     648 </span>            :     {
+<span class="lineNum">     649 </span>            :         pn.swap( r.pn );
+<span class="lineNum">     650 </span>            :         r.px = 0;
+<span class="lineNum">     651 </span>            :     }
+<span class="lineNum">     652 </span>            : 
+<span class="lineNum">     653 </span>            : #endif
+<span class="lineNum">     654 </span>            : 
+<span class="lineNum">     655 </span>            : #if !defined( BOOST_NO_CXX11_NULLPTR )
+<span class="lineNum">     656 </span>            : 
+<span class="lineNum">     657 </span>            :     shared_ptr &amp; operator=( boost::detail::sp_nullptr_t ) BOOST_NOEXCEPT // never throws
+<span class="lineNum">     658 </span>            :     {
+<span class="lineNum">     659 </span>            :         this_type().swap(*this);
+<span class="lineNum">     660 </span>            :         return *this;
+<span class="lineNum">     661 </span>            :     }
+<span class="lineNum">     662 </span>            : 
+<span class="lineNum">     663 </span>            : #endif
+<span class="lineNum">     664 </span>            : 
+<span class="lineNum">     665 </span>            :     void reset() BOOST_NOEXCEPT // never throws in 1.30+
+<span class="lineNum">     666 </span>            :     {
+<span class="lineNum">     667 </span><span class="lineCov">      97720 :         this_type().swap(*this);</span>
+<a name="668"><span class="lineNum">     668 </span>            :     }</a>
+<span class="lineNum">     669 </span>            : 
+<span class="lineNum">     670 </span><span class="lineCov">          8 :     template&lt;class Y&gt; void reset( Y * p ) // Y must be complete</span>
+<span class="lineNum">     671 </span>            :     {
+<span class="lineNum">     672 </span><span class="lineCov">          8 :         BOOST_ASSERT( p == 0 || p != px ); // catch self-reset errors</span>
+<span class="lineNum">     673 </span><span class="lineCov">         24 :         this_type( p ).swap( *this );</span>
+<span class="lineNum">     674 </span><span class="lineCov">          8 :     }</span>
+<span class="lineNum">     675 </span>            : 
+<span class="lineNum">     676 </span>            :     template&lt;class Y, class D&gt; void reset( Y * p, D d )
+<span class="lineNum">     677 </span>            :     {
+<span class="lineNum">     678 </span>            :         this_type( p, d ).swap( *this );
+<span class="lineNum">     679 </span>            :     }
+<span class="lineNum">     680 </span>            : 
+<span class="lineNum">     681 </span>            :     template&lt;class Y, class D, class A&gt; void reset( Y * p, D d, A a )
+<span class="lineNum">     682 </span>            :     {
+<span class="lineNum">     683 </span>            :         this_type( p, d, a ).swap( *this );
+<span class="lineNum">     684 </span>            :     }
+<span class="lineNum">     685 </span>            : 
+<span class="lineNum">     686 </span>            :     template&lt;class Y&gt; void reset( shared_ptr&lt;Y&gt; const &amp; r, element_type * p )
+<span class="lineNum">     687 </span>            :     {
+<span class="lineNum">     688 </span>            :         this_type( r, p ).swap( *this );
+<span class="lineNum">     689 </span>            :     }
+<span class="lineNum">     690 </span>            : 
+<span class="lineNum">     691 </span>            : #if !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
+<span class="lineNum">     692 </span>            : 
+<span class="lineNum">     693 </span>            :     template&lt;class Y&gt; void reset( shared_ptr&lt;Y&gt; &amp;&amp; r, element_type * p )
+<span class="lineNum">     694 </span>            :     {
+<span class="lineNum">     695 </span>            :         this_type( static_cast&lt; shared_ptr&lt;Y&gt; &amp;&amp; &gt;( r ), p ).swap( *this );
+<span class="lineNum">     696 </span>            :     }
+<span class="lineNum">     697 </span>            : 
+<span class="lineNum">     698 </span>            : #endif
+<span class="lineNum">     699 </span>            : 
+<span class="lineNum">     700 </span>            :     // never throws (but has a BOOST_ASSERT in it, so not marked with BOOST_NOEXCEPT)
+<span class="lineNum">     701 </span>            :     typename boost::detail::sp_dereference&lt; T &gt;::type operator* () const
+<span class="lineNum">     702 </span>            :     {
+<span class="lineNum">     703 </span><span class="lineCov">     304951 :         BOOST_ASSERT( px != 0 );</span>
+<span class="lineNum">     704 </span>            :         return *px;
+<span class="lineNum">     705 </span>            :     }
+<span class="lineNum">     706 </span>            :     
+<span class="lineNum">     707 </span>            :     // never throws (but has a BOOST_ASSERT in it, so not marked with BOOST_NOEXCEPT)
+<span class="lineNum">     708 </span>            :     typename boost::detail::sp_member_access&lt; T &gt;::type operator-&gt; () const 
+<span class="lineNum">     709 </span>            :     {
+<span class="lineNum">     710 </span><span class="lineCov">    1841661 :         BOOST_ASSERT( px != 0 );</span>
+<span class="lineNum">     711 </span>            :         return px;
+<span class="lineNum">     712 </span>            :     }
+<span class="lineNum">     713 </span>            :     
+<span class="lineNum">     714 </span>            :     // never throws (but has a BOOST_ASSERT in it, so not marked with BOOST_NOEXCEPT)
+<span class="lineNum">     715 </span>            :     typename boost::detail::sp_array_access&lt; T &gt;::type operator[] ( std::ptrdiff_t i ) const
+<span class="lineNum">     716 </span>            :     {
+<span class="lineNum">     717 </span>            :         BOOST_ASSERT( px != 0 );
+<span class="lineNum">     718 </span>            :         BOOST_ASSERT( i &gt;= 0 &amp;&amp; ( i &lt; boost::detail::sp_extent&lt; T &gt;::value || boost::detail::sp_extent&lt; T &gt;::value == 0 ) );
+<span class="lineNum">     719 </span>            : 
+<span class="lineNum">     720 </span>            :         return static_cast&lt; typename boost::detail::sp_array_access&lt; T &gt;::type &gt;( px[ i ] );
+<a name="721"><span class="lineNum">     721 </span>            :     }</a>
+<span class="lineNum">     722 </span>            : 
+<span class="lineNum">     723 </span><span class="lineNoCov">          0 :     element_type * get() const BOOST_NOEXCEPT</span>
+<span class="lineNum">     724 </span>            :     {
+<span class="lineNum">     725 </span><span class="lineNoCov">          0 :         return px;</span>
+<span class="lineNum">     726 </span>            :     }
+<span class="lineNum">     727 </span>            : 
+<span class="lineNum">     728 </span>            : // implicit conversion to &quot;bool&quot;
+<span class="lineNum">     729 </span>            : #include &lt;boost/smart_ptr/detail/operator_bool.hpp&gt;
+<span class="lineNum">     730 </span>            : 
+<span class="lineNum">     731 </span>            :     bool unique() const BOOST_NOEXCEPT
+<span class="lineNum">     732 </span>            :     {
+<span class="lineNum">     733 </span>            :         return pn.unique();
+<span class="lineNum">     734 </span>            :     }
+<span class="lineNum">     735 </span>            : 
+<span class="lineNum">     736 </span>            :     long use_count() const BOOST_NOEXCEPT
+<span class="lineNum">     737 </span>            :     {
+<span class="lineNum">     738 </span>            :         return pn.use_count();
+<span class="lineNum">     739 </span>            :     }
+<span class="lineNum">     740 </span>            : 
+<span class="lineNum">     741 </span>            :     void swap( shared_ptr &amp; other ) BOOST_NOEXCEPT
+<span class="lineNum">     742 </span>            :     {
+<span class="lineNum">     743 </span><span class="lineCov">    1320780 :         std::swap(px, other.px);</span>
+<span class="lineNum">     744 </span><span class="lineCov">    1320780 :         pn.swap(other.pn);</span>
+<span class="lineNum">     745 </span>            :     }
+<span class="lineNum">     746 </span>            : 
+<span class="lineNum">     747 </span>            :     template&lt;class Y&gt; bool owner_before( shared_ptr&lt;Y&gt; const &amp; rhs ) const BOOST_NOEXCEPT
+<span class="lineNum">     748 </span>            :     {
+<span class="lineNum">     749 </span>            :         return pn &lt; rhs.pn;
+<span class="lineNum">     750 </span>            :     }
+<span class="lineNum">     751 </span>            : 
+<span class="lineNum">     752 </span>            :     template&lt;class Y&gt; bool owner_before( weak_ptr&lt;Y&gt; const &amp; rhs ) const BOOST_NOEXCEPT
+<span class="lineNum">     753 </span>            :     {
+<span class="lineNum">     754 </span>            :         return pn &lt; rhs.pn;
+<span class="lineNum">     755 </span>            :     }
+<span class="lineNum">     756 </span>            : 
+<span class="lineNum">     757 </span>            :     void * _internal_get_deleter( boost::detail::sp_typeinfo const &amp; ti ) const BOOST_NOEXCEPT
+<span class="lineNum">     758 </span>            :     {
+<span class="lineNum">     759 </span>            :         return pn.get_deleter( ti );
+<span class="lineNum">     760 </span>            :     }
+<span class="lineNum">     761 </span>            : 
+<span class="lineNum">     762 </span>            :     void * _internal_get_untyped_deleter() const BOOST_NOEXCEPT
+<span class="lineNum">     763 </span>            :     {
+<span class="lineNum">     764 </span><span class="lineNoCov">          0 :         return pn.get_untyped_deleter();</span>
+<span class="lineNum">     765 </span>            :     }
+<span class="lineNum">     766 </span>            : 
+<span class="lineNum">     767 </span>            :     bool _internal_equiv( shared_ptr const &amp; r ) const BOOST_NOEXCEPT
+<span class="lineNum">     768 </span>            :     {
+<span class="lineNum">     769 </span>            :         return px == r.px &amp;&amp; pn == r.pn;
+<span class="lineNum">     770 </span>            :     }
+<span class="lineNum">     771 </span>            : 
+<span class="lineNum">     772 </span>            : // Tasteless as this may seem, making all members public allows member templates
+<span class="lineNum">     773 </span>            : // to work in the absence of member template friends. (Matthew Langston)
+<span class="lineNum">     774 </span>            : 
+<span class="lineNum">     775 </span>            : #ifndef BOOST_NO_MEMBER_TEMPLATE_FRIENDS
+<span class="lineNum">     776 </span>            : 
+<span class="lineNum">     777 </span>            : private:
+<span class="lineNum">     778 </span>            : 
+<span class="lineNum">     779 </span>            :     template&lt;class Y&gt; friend class shared_ptr;
+<span class="lineNum">     780 </span>            :     template&lt;class Y&gt; friend class weak_ptr;
+<span class="lineNum">     781 </span>            : 
+<span class="lineNum">     782 </span>            : 
+<span class="lineNum">     783 </span>            : #endif
+<span class="lineNum">     784 </span>            : 
+<span class="lineNum">     785 </span>            :     element_type * px;                 // contained pointer
+<span class="lineNum">     786 </span>            :     boost::detail::shared_count pn;    // reference counter
+<span class="lineNum">     787 </span>            : 
+<span class="lineNum">     788 </span>            : };  // shared_ptr
+<span class="lineNum">     789 </span>            : 
+<span class="lineNum">     790 </span>            : template&lt;class T, class U&gt; inline bool operator==(shared_ptr&lt;T&gt; const &amp; a, shared_ptr&lt;U&gt; const &amp; b) BOOST_NOEXCEPT
+<span class="lineNum">     791 </span>            : {
+<span class="lineNum">     792 </span><span class="lineCov">       3245 :     return a.get() == b.get();</span>
+<span class="lineNum">     793 </span>            : }
+<span class="lineNum">     794 </span>            : 
+<span class="lineNum">     795 </span>            : template&lt;class T, class U&gt; inline bool operator!=(shared_ptr&lt;T&gt; const &amp; a, shared_ptr&lt;U&gt; const &amp; b) BOOST_NOEXCEPT
+<span class="lineNum">     796 </span>            : {
+<span class="lineNum">     797 </span>            :     return a.get() != b.get();
+<span class="lineNum">     798 </span>            : }
+<span class="lineNum">     799 </span>            : 
+<span class="lineNum">     800 </span>            : #if __GNUC__ == 2 &amp;&amp; __GNUC_MINOR__ &lt;= 96
+<span class="lineNum">     801 </span>            : 
+<span class="lineNum">     802 </span>            : // Resolve the ambiguity between our op!= and the one in rel_ops
+<span class="lineNum">     803 </span>            : 
+<span class="lineNum">     804 </span>            : template&lt;class T&gt; inline bool operator!=(shared_ptr&lt;T&gt; const &amp; a, shared_ptr&lt;T&gt; const &amp; b) BOOST_NOEXCEPT
+<span class="lineNum">     805 </span>            : {
+<span class="lineNum">     806 </span>            :     return a.get() != b.get();
+<span class="lineNum">     807 </span>            : }
+<span class="lineNum">     808 </span>            : 
+<span class="lineNum">     809 </span>            : #endif
+<span class="lineNum">     810 </span>            : 
+<span class="lineNum">     811 </span>            : #if !defined( BOOST_NO_CXX11_NULLPTR )
+<span class="lineNum">     812 </span>            : 
+<span class="lineNum">     813 </span>            : template&lt;class T&gt; inline bool operator==( shared_ptr&lt;T&gt; const &amp; p, boost::detail::sp_nullptr_t ) BOOST_NOEXCEPT
+<span class="lineNum">     814 </span>            : {
+<span class="lineNum">     815 </span>            :     return p.get() == 0;
+<span class="lineNum">     816 </span>            : }
+<span class="lineNum">     817 </span>            : 
+<span class="lineNum">     818 </span>            : template&lt;class T&gt; inline bool operator==( boost::detail::sp_nullptr_t, shared_ptr&lt;T&gt; const &amp; p ) BOOST_NOEXCEPT
+<span class="lineNum">     819 </span>            : {
+<span class="lineNum">     820 </span>            :     return p.get() == 0;
+<span class="lineNum">     821 </span>            : }
+<span class="lineNum">     822 </span>            : 
+<span class="lineNum">     823 </span>            : template&lt;class T&gt; inline bool operator!=( shared_ptr&lt;T&gt; const &amp; p, boost::detail::sp_nullptr_t ) BOOST_NOEXCEPT
+<span class="lineNum">     824 </span>            : {
+<span class="lineNum">     825 </span>            :     return p.get() != 0;
+<span class="lineNum">     826 </span>            : }
+<span class="lineNum">     827 </span>            : 
+<span class="lineNum">     828 </span>            : template&lt;class T&gt; inline bool operator!=( boost::detail::sp_nullptr_t, shared_ptr&lt;T&gt; const &amp; p ) BOOST_NOEXCEPT
+<span class="lineNum">     829 </span>            : {
+<span class="lineNum">     830 </span>            :     return p.get() != 0;
+<span class="lineNum">     831 </span>            : }
+<span class="lineNum">     832 </span>            : 
+<span class="lineNum">     833 </span>            : #endif
+<span class="lineNum">     834 </span>            : 
+<span class="lineNum">     835 </span>            : template&lt;class T, class U&gt; inline bool operator&lt;(shared_ptr&lt;T&gt; const &amp; a, shared_ptr&lt;U&gt; const &amp; b) BOOST_NOEXCEPT
+<span class="lineNum">     836 </span>            : {
+<span class="lineNum">     837 </span>            :     return a.owner_before( b );
+<span class="lineNum">     838 </span>            : }
+<span class="lineNum">     839 </span>            : 
+<span class="lineNum">     840 </span>            : template&lt;class T&gt; inline void swap(shared_ptr&lt;T&gt; &amp; a, shared_ptr&lt;T&gt; &amp; b) BOOST_NOEXCEPT
+<span class="lineNum">     841 </span>            : {
+<span class="lineNum">     842 </span>            :     a.swap(b);
+<span class="lineNum">     843 </span>            : }
+<span class="lineNum">     844 </span>            : 
+<span class="lineNum">     845 </span>            : template&lt;class T, class U&gt; shared_ptr&lt;T&gt; static_pointer_cast( shared_ptr&lt;U&gt; const &amp; r ) BOOST_NOEXCEPT
+<span class="lineNum">     846 </span>            : {
+<span class="lineNum">     847 </span>            :     (void) static_cast&lt; T* &gt;( static_cast&lt; U* &gt;( 0 ) );
+<span class="lineNum">     848 </span>            : 
+<span class="lineNum">     849 </span>            :     typedef typename shared_ptr&lt;T&gt;::element_type E;
+<span class="lineNum">     850 </span>            : 
+<span class="lineNum">     851 </span>            :     E * p = static_cast&lt; E* &gt;( r.get() );
+<span class="lineNum">     852 </span>            :     return shared_ptr&lt;T&gt;( r, p );
+<span class="lineNum">     853 </span>            : }
+<span class="lineNum">     854 </span>            : 
+<span class="lineNum">     855 </span>            : template&lt;class T, class U&gt; shared_ptr&lt;T&gt; const_pointer_cast( shared_ptr&lt;U&gt; const &amp; r ) BOOST_NOEXCEPT
+<span class="lineNum">     856 </span>            : {
+<span class="lineNum">     857 </span>            :     (void) const_cast&lt; T* &gt;( static_cast&lt; U* &gt;( 0 ) );
+<span class="lineNum">     858 </span>            : 
+<span class="lineNum">     859 </span>            :     typedef typename shared_ptr&lt;T&gt;::element_type E;
+<span class="lineNum">     860 </span>            : 
+<span class="lineNum">     861 </span>            :     E * p = const_cast&lt; E* &gt;( r.get() );
+<span class="lineNum">     862 </span>            :     return shared_ptr&lt;T&gt;( r, p );
+<span class="lineNum">     863 </span>            : }
+<span class="lineNum">     864 </span>            : 
+<span class="lineNum">     865 </span>            : template&lt;class T, class U&gt; shared_ptr&lt;T&gt; dynamic_pointer_cast( shared_ptr&lt;U&gt; const &amp; r ) BOOST_NOEXCEPT
+<span class="lineNum">     866 </span>            : {
+<span class="lineNum">     867 </span>            :     (void) dynamic_cast&lt; T* &gt;( static_cast&lt; U* &gt;( 0 ) );
+<span class="lineNum">     868 </span>            : 
+<span class="lineNum">     869 </span>            :     typedef typename shared_ptr&lt;T&gt;::element_type E;
+<span class="lineNum">     870 </span>            : 
+<span class="lineNum">     871 </span>            :     E * p = dynamic_cast&lt; E* &gt;( r.get() );
+<span class="lineNum">     872 </span>            :     return p? shared_ptr&lt;T&gt;( r, p ): shared_ptr&lt;T&gt;();
+<span class="lineNum">     873 </span>            : }
+<span class="lineNum">     874 </span>            : 
+<span class="lineNum">     875 </span>            : template&lt;class T, class U&gt; shared_ptr&lt;T&gt; reinterpret_pointer_cast( shared_ptr&lt;U&gt; const &amp; r ) BOOST_NOEXCEPT
+<span class="lineNum">     876 </span>            : {
+<span class="lineNum">     877 </span>            :     (void) reinterpret_cast&lt; T* &gt;( static_cast&lt; U* &gt;( 0 ) );
+<span class="lineNum">     878 </span>            : 
+<span class="lineNum">     879 </span>            :     typedef typename shared_ptr&lt;T&gt;::element_type E;
+<span class="lineNum">     880 </span>            : 
+<span class="lineNum">     881 </span>            :     E * p = reinterpret_cast&lt; E* &gt;( r.get() );
+<span class="lineNum">     882 </span>            :     return shared_ptr&lt;T&gt;( r, p );
+<span class="lineNum">     883 </span>            : }
+<span class="lineNum">     884 </span>            : 
+<span class="lineNum">     885 </span>            : // get_pointer() enables boost::mem_fn to recognize shared_ptr
+<span class="lineNum">     886 </span>            : 
+<span class="lineNum">     887 </span>            : template&lt;class T&gt; inline typename shared_ptr&lt;T&gt;::element_type * get_pointer(shared_ptr&lt;T&gt; const &amp; p) BOOST_NOEXCEPT
+<span class="lineNum">     888 </span>            : {
+<span class="lineNum">     889 </span><span class="lineNoCov">          0 :     return p.get();</span>
+<span class="lineNum">     890 </span>            : }
+<span class="lineNum">     891 </span>            : 
+<span class="lineNum">     892 </span>            : // operator&lt;&lt;
+<span class="lineNum">     893 </span>            : 
+<span class="lineNum">     894 </span>            : #if !defined(BOOST_NO_IOSTREAM)
+<span class="lineNum">     895 </span>            : 
+<span class="lineNum">     896 </span>            : #if defined(BOOST_NO_TEMPLATED_IOSTREAMS) || ( defined(__GNUC__) &amp;&amp;  (__GNUC__ &lt; 3) )
+<span class="lineNum">     897 </span>            : 
+<span class="lineNum">     898 </span>            : template&lt;class Y&gt; std::ostream &amp; operator&lt;&lt; (std::ostream &amp; os, shared_ptr&lt;Y&gt; const &amp; p)
+<span class="lineNum">     899 </span>            : {
+<span class="lineNum">     900 </span>            :     os &lt;&lt; p.get();
+<span class="lineNum">     901 </span>            :     return os;
+<span class="lineNum">     902 </span>            : }
+<span class="lineNum">     903 </span>            : 
+<span class="lineNum">     904 </span>            : #else
+<span class="lineNum">     905 </span>            : 
+<span class="lineNum">     906 </span>            : // in STLport's no-iostreams mode no iostream symbols can be used
+<span class="lineNum">     907 </span>            : #ifndef _STLP_NO_IOSTREAMS
+<span class="lineNum">     908 </span>            : 
+<span class="lineNum">     909 </span>            : # if defined(BOOST_MSVC) &amp;&amp; BOOST_WORKAROUND(BOOST_MSVC, &lt; 1300 &amp;&amp; __SGI_STL_PORT)
+<span class="lineNum">     910 </span>            : // MSVC6 has problems finding std::basic_ostream through the using declaration in namespace _STL
+<span class="lineNum">     911 </span>            : using std::basic_ostream;
+<span class="lineNum">     912 </span>            : template&lt;class E, class T, class Y&gt; basic_ostream&lt;E, T&gt; &amp; operator&lt;&lt; (basic_ostream&lt;E, T&gt; &amp; os, shared_ptr&lt;Y&gt; const &amp; p)
+<span class="lineNum">     913 </span>            : # else
+<span class="lineNum">     914 </span>            : template&lt;class E, class T, class Y&gt; std::basic_ostream&lt;E, T&gt; &amp; operator&lt;&lt; (std::basic_ostream&lt;E, T&gt; &amp; os, shared_ptr&lt;Y&gt; const &amp; p)
+<span class="lineNum">     915 </span>            : # endif
+<span class="lineNum">     916 </span>            : {
+<span class="lineNum">     917 </span>            :     os &lt;&lt; p.get();
+<span class="lineNum">     918 </span>            :     return os;
+<span class="lineNum">     919 </span>            : }
+<span class="lineNum">     920 </span>            : 
+<span class="lineNum">     921 </span>            : #endif // _STLP_NO_IOSTREAMS
+<span class="lineNum">     922 </span>            : 
+<span class="lineNum">     923 </span>            : #endif // __GNUC__ &lt; 3
+<span class="lineNum">     924 </span>            : 
+<span class="lineNum">     925 </span>            : #endif // !defined(BOOST_NO_IOSTREAM)
+<span class="lineNum">     926 </span>            : 
+<span class="lineNum">     927 </span>            : // get_deleter
+<span class="lineNum">     928 </span>            : 
+<span class="lineNum">     929 </span>            : namespace detail
+<span class="lineNum">     930 </span>            : {
+<span class="lineNum">     931 </span>            : 
+<span class="lineNum">     932 </span>            : #if ( defined(__GNUC__) &amp;&amp; BOOST_WORKAROUND(__GNUC__, &lt; 3) ) || \
+<span class="lineNum">     933 </span>            :     ( defined(__EDG_VERSION__) &amp;&amp; BOOST_WORKAROUND(__EDG_VERSION__, &lt;= 238) ) || \
+<span class="lineNum">     934 </span>            :     ( defined(__HP_aCC) &amp;&amp; BOOST_WORKAROUND(__HP_aCC, &lt;= 33500) )
+<span class="lineNum">     935 </span>            : 
+<span class="lineNum">     936 </span>            : // g++ 2.9x doesn't allow static_cast&lt;X const *&gt;(void *)
+<span class="lineNum">     937 </span>            : // apparently EDG 2.38 and HP aCC A.03.35 also don't accept it
+<span class="lineNum">     938 </span>            : 
+<span class="lineNum">     939 </span>            : template&lt;class D, class T&gt; D * basic_get_deleter(shared_ptr&lt;T&gt; const &amp; p)
+<span class="lineNum">     940 </span>            : {
+<span class="lineNum">     941 </span>            :     void const * q = p._internal_get_deleter(BOOST_SP_TYPEID(D));
+<span class="lineNum">     942 </span>            :     return const_cast&lt;D *&gt;(static_cast&lt;D const *&gt;(q));
+<span class="lineNum">     943 </span>            : }
+<span class="lineNum">     944 </span>            : 
+<span class="lineNum">     945 </span>            : #else
+<span class="lineNum">     946 </span>            : 
+<span class="lineNum">     947 </span>            : template&lt;class D, class T&gt; D * basic_get_deleter( shared_ptr&lt;T&gt; const &amp; p ) BOOST_NOEXCEPT
+<span class="lineNum">     948 </span>            : {
+<span class="lineNum">     949 </span>            :     return static_cast&lt;D *&gt;( p._internal_get_deleter(BOOST_SP_TYPEID(D)) );
+<span class="lineNum">     950 </span>            : }
+<span class="lineNum">     951 </span>            : 
+<span class="lineNum">     952 </span>            : #endif
+<span class="lineNum">     953 </span>            : 
+<span class="lineNum">     954 </span>            : class esft2_deleter_wrapper
+<span class="lineNum">     955 </span>            : {
+<span class="lineNum">     956 </span>            : private:
+<span class="lineNum">     957 </span>            : 
+<span class="lineNum">     958 </span>            :     shared_ptr&lt;void const volatile&gt; deleter_;
+<span class="lineNum">     959 </span>            : 
+<span class="lineNum">     960 </span>            : public:
+<span class="lineNum">     961 </span>            : 
+<span class="lineNum">     962 </span>            :     esft2_deleter_wrapper()
+<span class="lineNum">     963 </span>            :     {
+<span class="lineNum">     964 </span>            :     }
+<span class="lineNum">     965 </span>            : 
+<span class="lineNum">     966 </span>            :     template&lt; class T &gt; void set_deleter( shared_ptr&lt;T&gt; const &amp; deleter )
+<span class="lineNum">     967 </span>            :     {
+<span class="lineNum">     968 </span>            :         deleter_ = deleter;
+<span class="lineNum">     969 </span>            :     }
+<span class="lineNum">     970 </span>            : 
+<span class="lineNum">     971 </span>            :     template&lt;typename D&gt; D* get_deleter() const BOOST_NOEXCEPT
+<span class="lineNum">     972 </span>            :     {
+<span class="lineNum">     973 </span>            :         return boost::detail::basic_get_deleter&lt;D&gt;( deleter_ );
+<span class="lineNum">     974 </span>            :     }
+<span class="lineNum">     975 </span>            : 
+<span class="lineNum">     976 </span>            :     template&lt; class T&gt; void operator()( T* )
+<span class="lineNum">     977 </span>            :     {
+<span class="lineNum">     978 </span>            :         BOOST_ASSERT( deleter_.use_count() &lt;= 1 );
+<span class="lineNum">     979 </span>            :         deleter_.reset();
+<span class="lineNum">     980 </span>            :     }
+<span class="lineNum">     981 </span>            : };
+<span class="lineNum">     982 </span>            : 
+<span class="lineNum">     983 </span>            : } // namespace detail
+<span class="lineNum">     984 </span>            : 
+<span class="lineNum">     985 </span>            : template&lt;class D, class T&gt; D * get_deleter( shared_ptr&lt;T&gt; const &amp; p ) BOOST_NOEXCEPT
+<span class="lineNum">     986 </span>            : {
+<span class="lineNum">     987 </span>            :     D *del = boost::detail::basic_get_deleter&lt;D&gt;(p);
+<span class="lineNum">     988 </span>            : 
+<span class="lineNum">     989 </span>            :     if(del == 0)
+<span class="lineNum">     990 </span>            :     {
+<span class="lineNum">     991 </span>            :         boost::detail::esft2_deleter_wrapper *del_wrapper = boost::detail::basic_get_deleter&lt;boost::detail::esft2_deleter_wrapper&gt;(p);
+<span class="lineNum">     992 </span>            : // The following get_deleter method call is fully qualified because
+<span class="lineNum">     993 </span>            : // older versions of gcc (2.95, 3.2.3) fail to compile it when written del_wrapper-&gt;get_deleter&lt;D&gt;()
+<span class="lineNum">     994 </span>            :         if(del_wrapper) del = del_wrapper-&gt;::boost::detail::esft2_deleter_wrapper::get_deleter&lt;D&gt;();
+<span class="lineNum">     995 </span>            :     }
+<span class="lineNum">     996 </span>            : 
+<span class="lineNum">     997 </span>            :     return del;
+<span class="lineNum">     998 </span>            : }
+<span class="lineNum">     999 </span>            : 
+<span class="lineNum">    1000 </span>            : // atomic access
+<span class="lineNum">    1001 </span>            : 
+<span class="lineNum">    1002 </span>            : #if !defined(BOOST_SP_NO_ATOMIC_ACCESS)
+<span class="lineNum">    1003 </span>            : 
+<span class="lineNum">    1004 </span>            : template&lt;class T&gt; inline bool atomic_is_lock_free( shared_ptr&lt;T&gt; const * /*p*/ ) BOOST_NOEXCEPT
+<span class="lineNum">    1005 </span>            : {
+<span class="lineNum">    1006 </span>            :     return false;
+<span class="lineNum">    1007 </span>            : }
+<span class="lineNum">    1008 </span>            : 
+<span class="lineNum">    1009 </span>            : template&lt;class T&gt; shared_ptr&lt;T&gt; atomic_load( shared_ptr&lt;T&gt; const * p )
+<span class="lineNum">    1010 </span>            : {
+<span class="lineNum">    1011 </span>            :     boost::detail::spinlock_pool&lt;2&gt;::scoped_lock lock( p );
+<span class="lineNum">    1012 </span>            :     return *p;
+<span class="lineNum">    1013 </span>            : }
+<span class="lineNum">    1014 </span>            : 
+<span class="lineNum">    1015 </span>            : template&lt;class T&gt; inline shared_ptr&lt;T&gt; atomic_load_explicit( shared_ptr&lt;T&gt; const * p, /*memory_order mo*/ int )
+<span class="lineNum">    1016 </span>            : {
+<span class="lineNum">    1017 </span>            :     return atomic_load( p );
+<span class="lineNum">    1018 </span>            : }
+<span class="lineNum">    1019 </span>            : 
+<span class="lineNum">    1020 </span>            : template&lt;class T&gt; void atomic_store( shared_ptr&lt;T&gt; * p, shared_ptr&lt;T&gt; r )
+<span class="lineNum">    1021 </span>            : {
+<span class="lineNum">    1022 </span>            :     boost::detail::spinlock_pool&lt;2&gt;::scoped_lock lock( p );
+<span class="lineNum">    1023 </span>            :     p-&gt;swap( r );
+<span class="lineNum">    1024 </span>            : }
+<span class="lineNum">    1025 </span>            : 
+<span class="lineNum">    1026 </span>            : template&lt;class T&gt; inline void atomic_store_explicit( shared_ptr&lt;T&gt; * p, shared_ptr&lt;T&gt; r, /*memory_order mo*/ int )
+<span class="lineNum">    1027 </span>            : {
+<span class="lineNum">    1028 </span>            :     atomic_store( p, r ); // std::move( r )
+<span class="lineNum">    1029 </span>            : }
+<span class="lineNum">    1030 </span>            : 
+<span class="lineNum">    1031 </span>            : template&lt;class T&gt; shared_ptr&lt;T&gt; atomic_exchange( shared_ptr&lt;T&gt; * p, shared_ptr&lt;T&gt; r )
+<span class="lineNum">    1032 </span>            : {
+<span class="lineNum">    1033 </span>            :     boost::detail::spinlock &amp; sp = boost::detail::spinlock_pool&lt;2&gt;::spinlock_for( p );
+<span class="lineNum">    1034 </span>            : 
+<span class="lineNum">    1035 </span>            :     sp.lock();
+<span class="lineNum">    1036 </span>            :     p-&gt;swap( r );
+<span class="lineNum">    1037 </span>            :     sp.unlock();
+<span class="lineNum">    1038 </span>            : 
+<span class="lineNum">    1039 </span>            :     return r; // return std::move( r )
+<span class="lineNum">    1040 </span>            : }
+<span class="lineNum">    1041 </span>            : 
+<span class="lineNum">    1042 </span>            : template&lt;class T&gt; shared_ptr&lt;T&gt; atomic_exchange_explicit( shared_ptr&lt;T&gt; * p, shared_ptr&lt;T&gt; r, /*memory_order mo*/ int )
+<span class="lineNum">    1043 </span>            : {
+<span class="lineNum">    1044 </span>            :     return atomic_exchange( p, r ); // std::move( r )
+<span class="lineNum">    1045 </span>            : }
+<span class="lineNum">    1046 </span>            : 
+<span class="lineNum">    1047 </span>            : template&lt;class T&gt; bool atomic_compare_exchange( shared_ptr&lt;T&gt; * p, shared_ptr&lt;T&gt; * v, shared_ptr&lt;T&gt; w )
+<span class="lineNum">    1048 </span>            : {
+<span class="lineNum">    1049 </span>            :     boost::detail::spinlock &amp; sp = boost::detail::spinlock_pool&lt;2&gt;::spinlock_for( p );
+<span class="lineNum">    1050 </span>            : 
+<span class="lineNum">    1051 </span>            :     sp.lock();
+<span class="lineNum">    1052 </span>            : 
+<span class="lineNum">    1053 </span>            :     if( p-&gt;_internal_equiv( *v ) )
+<span class="lineNum">    1054 </span>            :     {
+<span class="lineNum">    1055 </span>            :         p-&gt;swap( w );
+<span class="lineNum">    1056 </span>            : 
+<span class="lineNum">    1057 </span>            :         sp.unlock();
+<span class="lineNum">    1058 </span>            : 
+<span class="lineNum">    1059 </span>            :         return true;
+<span class="lineNum">    1060 </span>            :     }
+<span class="lineNum">    1061 </span>            :     else
+<span class="lineNum">    1062 </span>            :     {
+<span class="lineNum">    1063 </span>            :         shared_ptr&lt;T&gt; tmp( *p );
+<span class="lineNum">    1064 </span>            : 
+<span class="lineNum">    1065 </span>            :         sp.unlock();
+<span class="lineNum">    1066 </span>            : 
+<span class="lineNum">    1067 </span>            :         tmp.swap( *v );
+<span class="lineNum">    1068 </span>            :         return false;
+<span class="lineNum">    1069 </span>            :     }
+<span class="lineNum">    1070 </span>            : }
+<span class="lineNum">    1071 </span>            : 
+<span class="lineNum">    1072 </span>            : template&lt;class T&gt; inline bool atomic_compare_exchange_explicit( shared_ptr&lt;T&gt; * p, shared_ptr&lt;T&gt; * v, shared_ptr&lt;T&gt; w, /*memory_order success*/ int, /*memory_order failure*/ int )
+<span class="lineNum">    1073 </span>            : {
+<span class="lineNum">    1074 </span>            :     return atomic_compare_exchange( p, v, w ); // std::move( w )
+<span class="lineNum">    1075 </span>            : }
+<span class="lineNum">    1076 </span>            : 
+<span class="lineNum">    1077 </span>            : #endif // !defined(BOOST_SP_NO_ATOMIC_ACCESS)
+<span class="lineNum">    1078 </span>            : 
+<span class="lineNum">    1079 </span>            : // hash_value
+<span class="lineNum">    1080 </span>            : 
+<span class="lineNum">    1081 </span>            : template&lt; class T &gt; struct hash;
+<span class="lineNum">    1082 </span>            : 
+<span class="lineNum">    1083 </span>            : template&lt; class T &gt; std::size_t hash_value( boost::shared_ptr&lt;T&gt; const &amp; p ) BOOST_NOEXCEPT
+<span class="lineNum">    1084 </span>            : {
+<span class="lineNum">    1085 </span>            :     return boost::hash&lt; typename boost::shared_ptr&lt;T&gt;::element_type* &gt;()( p.get() );
+<span class="lineNum">    1086 </span>            : }
+<span class="lineNum">    1087 </span>            : 
+<span class="lineNum">    1088 </span>            : } // namespace boost
+<span class="lineNum">    1089 </span>            : 
+<span class="lineNum">    1090 </span>            : #if defined( BOOST_SP_DISABLE_DEPRECATED )
+<span class="lineNum">    1091 </span>            : #pragma GCC diagnostic pop
+<span class="lineNum">    1092 </span>            : #endif
+<span class="lineNum">    1093 </span>            : 
+<span class="lineNum">    1094 </span>            : #endif  // #ifndef BOOST_SMART_PTR_SHARED_PTR_HPP_INCLUDED
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

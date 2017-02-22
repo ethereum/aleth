@@ -1,0 +1,278 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - utils/secp256k1/eckey_impl.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">utils/secp256k1</a> - eckey_impl.h<span style="font-size: 80%;"> (source / <a href="eckey_impl.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">80</td>
+            <td class="headerCovTableEntryLo">20.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryLo">28.6 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /**********************************************************************</a>
+<span class="lineNum">       2 </span>            :  * Copyright (c) 2013, 2014 Pieter Wuille                             *
+<span class="lineNum">       3 </span>            :  * Distributed under the MIT software license, see the accompanying   *
+<span class="lineNum">       4 </span>            :  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+<span class="lineNum">       5 </span>            :  **********************************************************************/
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #ifndef _SECP256K1_ECKEY_IMPL_H_
+<span class="lineNum">       8 </span>            : #define _SECP256K1_ECKEY_IMPL_H_
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #include &quot;eckey.h&quot;
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #include &quot;scalar.h&quot;
+<span class="lineNum">      13 </span>            : #include &quot;field.h&quot;
+<span class="lineNum">      14 </span>            : #include &quot;group.h&quot;
+<span class="lineNum">      15 </span>            : #include &quot;ecmult_gen.h&quot;
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span><span class="lineCov">          2 : static int secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned char *pub, int size) {</span>
+<span class="lineNum">      18 </span><span class="lineCov">          2 :     if (size == 33 &amp;&amp; (pub[0] == 0x02 || pub[0] == 0x03)) {</span>
+<span class="lineNum">      19 </span>            :         secp256k1_fe_t x;
+<span class="lineNum">      20 </span><span class="lineNoCov">          0 :         return secp256k1_fe_set_b32(&amp;x, pub+1) &amp;&amp; secp256k1_ge_set_xo_var(elem, &amp;x, pub[0] == 0x03);</span>
+<span class="lineNum">      21 </span><span class="lineCov">          2 :     } else if (size == 65 &amp;&amp; (pub[0] == 0x04 || pub[0] == 0x06 || pub[0] == 0x07)) {</span>
+<span class="lineNum">      22 </span>            :         secp256k1_fe_t x, y;
+<span class="lineNum">      23 </span><span class="lineCov">          2 :         if (!secp256k1_fe_set_b32(&amp;x, pub+1) || !secp256k1_fe_set_b32(&amp;y, pub+33)) {</span>
+<span class="lineNum">      24 </span>            :             return 0;
+<span class="lineNum">      25 </span>            :         }
+<span class="lineNum">      26 </span><span class="lineCov">          2 :         secp256k1_ge_set_xy(elem, &amp;x, &amp;y);</span>
+<span class="lineNum">      27 </span><span class="lineCov">          2 :         if ((pub[0] == 0x06 || pub[0] == 0x07) &amp;&amp; secp256k1_fe_is_odd(&amp;y) != (pub[0] == 0x07)) {</span>
+<span class="lineNum">      28 </span>            :             return 0;
+<span class="lineNum">      29 </span>            :         }
+<span class="lineNum">      30 </span><span class="lineCov">          2 :         return secp256k1_ge_is_valid_var(elem);</span>
+<span class="lineNum">      31 </span>            :     } else {
+<span class="lineNum">      32 </span>            :         return 0;
+<span class="lineNum">      33 </span>            :     }
+<span class="lineNum">      34 </span>            : }
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span><span class="lineCov">      32005 : static int secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char *pub, int *size, int compressed) {</span>
+<span class="lineNum">      37 </span><span class="lineCov">      32005 :     if (secp256k1_ge_is_infinity(elem)) {</span>
+<span class="lineNum">      38 </span>            :         return 0;
+<span class="lineNum">      39 </span>            :     }
+<span class="lineNum">      40 </span><span class="lineCov">      32005 :     secp256k1_fe_normalize_var(&amp;elem-&gt;x);</span>
+<span class="lineNum">      41 </span><span class="lineCov">      32005 :     secp256k1_fe_normalize_var(&amp;elem-&gt;y);</span>
+<span class="lineNum">      42 </span><span class="lineCov">      32005 :     secp256k1_fe_get_b32(&amp;pub[1], &amp;elem-&gt;x);</span>
+<span class="lineNum">      43 </span><span class="lineCov">      32005 :     if (compressed) {</span>
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :         *size = 33;</span>
+<span class="lineNum">      45 </span><span class="lineNoCov">          0 :         pub[0] = 0x02 | (secp256k1_fe_is_odd(&amp;elem-&gt;y) ? 0x01 : 0x00);</span>
+<span class="lineNum">      46 </span>            :     } else {
+<span class="lineNum">      47 </span><span class="lineCov">      32005 :         *size = 65;</span>
+<span class="lineNum">      48 </span><span class="lineCov">      32005 :         pub[0] = 0x04;</span>
+<span class="lineNum">      49 </span><span class="lineCov">      32005 :         secp256k1_fe_get_b32(&amp;pub[33], &amp;elem-&gt;y);</span>
+<span class="lineNum">      50 </span>            :     }
+<span class="lineNum">      51 </span>            :     return 1;
+<a name="52"><span class="lineNum">      52 </span>            : }</a>
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span><span class="lineNoCov">          0 : static int secp256k1_eckey_privkey_parse(secp256k1_scalar_t *key, const unsigned char *privkey, int privkeylen) {</span>
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :     unsigned char c[32] = {0};</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :     const unsigned char *end = privkey + privkeylen;</span>
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 :     int lenb = 0;</span>
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :     int len = 0;</span>
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :     int overflow = 0;</span>
+<span class="lineNum">      60 </span>            :     /* sequence header */
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :     if (end &lt; privkey+1 || *privkey != 0x30) {</span>
+<span class="lineNum">      62 </span>            :         return 0;
+<span class="lineNum">      63 </span>            :     }
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :     privkey++;</span>
+<span class="lineNum">      65 </span>            :     /* sequence length constructor */
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :     if (end &lt; privkey+1 || !(*privkey &amp; 0x80)) {</span>
+<span class="lineNum">      67 </span>            :         return 0;
+<span class="lineNum">      68 </span>            :     }
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :     lenb = *privkey &amp; ~0x80; privkey++;</span>
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :     if (lenb &lt; 1 || lenb &gt; 2) {</span>
+<span class="lineNum">      71 </span>            :         return 0;
+<span class="lineNum">      72 </span>            :     }
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :     if (end &lt; privkey+lenb) {</span>
+<span class="lineNum">      74 </span>            :         return 0;
+<span class="lineNum">      75 </span>            :     }
+<span class="lineNum">      76 </span>            :     /* sequence length */
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :     len = privkey[lenb-1] | (lenb &gt; 1 ? privkey[lenb-2] &lt;&lt; 8 : 0);</span>
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :     privkey += lenb;</span>
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :     if (end &lt; privkey+len) {</span>
+<span class="lineNum">      80 </span>            :         return 0;
+<span class="lineNum">      81 </span>            :     }
+<span class="lineNum">      82 </span>            :     /* sequence element 0: version number (=1) */
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :     if (end &lt; privkey+3 || privkey[0] != 0x02 || privkey[1] != 0x01 || privkey[2] != 0x01) {</span>
+<span class="lineNum">      84 </span>            :         return 0;
+<span class="lineNum">      85 </span>            :     }
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :     privkey += 3;</span>
+<span class="lineNum">      87 </span>            :     /* sequence element 1: octet string, up to 32 bytes */
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 :     if (end &lt; privkey+2 || privkey[0] != 0x04 || privkey[1] &gt; 0x20 || end &lt; privkey+2+privkey[1]) {</span>
+<span class="lineNum">      89 </span>            :         return 0;
+<span class="lineNum">      90 </span>            :     }
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :     memcpy(c + 32 - privkey[1], privkey + 2, privkey[1]);</span>
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :     secp256k1_scalar_set_b32(key, c, &amp;overflow);</span>
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :     memset(c, 0, 32);</span>
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :     return !overflow;</span>
+<a name="95"><span class="lineNum">      95 </span>            : }</a>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 : static int secp256k1_eckey_privkey_serialize(const secp256k1_ecmult_gen_context_t *ctx, unsigned char *privkey, int *privkeylen, const secp256k1_scalar_t *key, int compressed) {</span>
+<span class="lineNum">      98 </span>            :     secp256k1_gej_t rp;
+<span class="lineNum">      99 </span>            :     secp256k1_ge_t r;
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :     int pubkeylen = 0;</span>
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :     secp256k1_ecmult_gen(ctx, &amp;rp, key);</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :     secp256k1_ge_set_gej(&amp;r, &amp;rp);</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :     if (compressed) {</span>
+<span class="lineNum">     104 </span>            :         static const unsigned char begin[] = {
+<span class="lineNum">     105 </span>            :             0x30,0x81,0xD3,0x02,0x01,0x01,0x04,0x20
+<span class="lineNum">     106 </span>            :         };
+<span class="lineNum">     107 </span>            :         static const unsigned char middle[] = {
+<span class="lineNum">     108 </span>            :             0xA0,0x81,0x85,0x30,0x81,0x82,0x02,0x01,0x01,0x30,0x2C,0x06,0x07,0x2A,0x86,0x48,
+<span class="lineNum">     109 </span>            :             0xCE,0x3D,0x01,0x01,0x02,0x21,0x00,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+<span class="lineNum">     110 </span>            :             0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+<span class="lineNum">     111 </span>            :             0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F,0x30,0x06,0x04,0x01,0x00,0x04,0x01,0x07,0x04,
+<span class="lineNum">     112 </span>            :             0x21,0x02,0x79,0xBE,0x66,0x7E,0xF9,0xDC,0xBB,0xAC,0x55,0xA0,0x62,0x95,0xCE,0x87,
+<span class="lineNum">     113 </span>            :             0x0B,0x07,0x02,0x9B,0xFC,0xDB,0x2D,0xCE,0x28,0xD9,0x59,0xF2,0x81,0x5B,0x16,0xF8,
+<span class="lineNum">     114 </span>            :             0x17,0x98,0x02,0x21,0x00,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+<span class="lineNum">     115 </span>            :             0xFF,0xFF,0xFF,0xFF,0xFE,0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,0xBF,0xD2,0x5E,
+<span class="lineNum">     116 </span>            :             0x8C,0xD0,0x36,0x41,0x41,0x02,0x01,0x01,0xA1,0x24,0x03,0x22,0x00
+<span class="lineNum">     117 </span>            :         };
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :         unsigned char *ptr = privkey;</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :         memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :         secp256k1_scalar_get_b32(ptr, key); ptr += 32;</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :         if (!secp256k1_eckey_pubkey_serialize(&amp;r, ptr, &amp;pubkeylen, 1)) {</span>
+<span class="lineNum">     123 </span>            :             return 0;
+<span class="lineNum">     124 </span>            :         }
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :         ptr += pubkeylen;</span>
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :         *privkeylen = ptr - privkey;</span>
+<span class="lineNum">     127 </span>            :     } else {
+<span class="lineNum">     128 </span>            :         static const unsigned char begin[] = {
+<span class="lineNum">     129 </span>            :             0x30,0x82,0x01,0x13,0x02,0x01,0x01,0x04,0x20
+<span class="lineNum">     130 </span>            :         };
+<span class="lineNum">     131 </span>            :         static const unsigned char middle[] = {
+<span class="lineNum">     132 </span>            :             0xA0,0x81,0xA5,0x30,0x81,0xA2,0x02,0x01,0x01,0x30,0x2C,0x06,0x07,0x2A,0x86,0x48,
+<span class="lineNum">     133 </span>            :             0xCE,0x3D,0x01,0x01,0x02,0x21,0x00,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+<span class="lineNum">     134 </span>            :             0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+<span class="lineNum">     135 </span>            :             0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F,0x30,0x06,0x04,0x01,0x00,0x04,0x01,0x07,0x04,
+<span class="lineNum">     136 </span>            :             0x41,0x04,0x79,0xBE,0x66,0x7E,0xF9,0xDC,0xBB,0xAC,0x55,0xA0,0x62,0x95,0xCE,0x87,
+<span class="lineNum">     137 </span>            :             0x0B,0x07,0x02,0x9B,0xFC,0xDB,0x2D,0xCE,0x28,0xD9,0x59,0xF2,0x81,0x5B,0x16,0xF8,
+<span class="lineNum">     138 </span>            :             0x17,0x98,0x48,0x3A,0xDA,0x77,0x26,0xA3,0xC4,0x65,0x5D,0xA4,0xFB,0xFC,0x0E,0x11,
+<span class="lineNum">     139 </span>            :             0x08,0xA8,0xFD,0x17,0xB4,0x48,0xA6,0x85,0x54,0x19,0x9C,0x47,0xD0,0x8F,0xFB,0x10,
+<span class="lineNum">     140 </span>            :             0xD4,0xB8,0x02,0x21,0x00,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+<span class="lineNum">     141 </span>            :             0xFF,0xFF,0xFF,0xFF,0xFE,0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,0xBF,0xD2,0x5E,
+<span class="lineNum">     142 </span>            :             0x8C,0xD0,0x36,0x41,0x41,0x02,0x01,0x01,0xA1,0x44,0x03,0x42,0x00
+<span class="lineNum">     143 </span>            :         };
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :         unsigned char *ptr = privkey;</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :         memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);</span>
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :         secp256k1_scalar_get_b32(ptr, key); ptr += 32;</span>
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);</span>
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :         if (!secp256k1_eckey_pubkey_serialize(&amp;r, ptr, &amp;pubkeylen, 0)) {</span>
+<span class="lineNum">     149 </span>            :             return 0;
+<span class="lineNum">     150 </span>            :         }
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :         ptr += pubkeylen;</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :         *privkeylen = ptr - privkey;</span>
+<span class="lineNum">     153 </span>            :     }
+<span class="lineNum">     154 </span>            :     return 1;
+<span class="lineNum">     155 </span>            : }
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            : static int secp256k1_eckey_privkey_tweak_add(secp256k1_scalar_t *key, const secp256k1_scalar_t *tweak) {
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :     secp256k1_scalar_add(key, key, tweak);</span>
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :     if (secp256k1_scalar_is_zero(key)) {</span>
+<span class="lineNum">     160 </span>            :         return 0;
+<span class="lineNum">     161 </span>            :     }
+<span class="lineNum">     162 </span>            :     return 1;
+<span class="lineNum">     163 </span>            : }
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 : static int secp256k1_eckey_pubkey_tweak_add(const secp256k1_ecmult_context_t *ctx, secp256k1_ge_t *key, const secp256k1_scalar_t *tweak) {</span>
+<span class="lineNum">     166 </span>            :     secp256k1_gej_t pt;
+<span class="lineNum">     167 </span>            :     secp256k1_scalar_t one;
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :     secp256k1_gej_set_ge(&amp;pt, key);</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :     secp256k1_scalar_set_int(&amp;one, 1);</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :     secp256k1_ecmult(ctx, &amp;pt, &amp;pt, &amp;one, tweak);</span>
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :     if (secp256k1_gej_is_infinity(&amp;pt)) {</span>
+<span class="lineNum">     173 </span>            :         return 0;
+<span class="lineNum">     174 </span>            :     }
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :     secp256k1_ge_set_gej(key, &amp;pt);</span>
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :     return 1;</span>
+<a name="177"><span class="lineNum">     177 </span>            : }</a>
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 : static int secp256k1_eckey_privkey_tweak_mul(secp256k1_scalar_t *key, const secp256k1_scalar_t *tweak) {</span>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :     if (secp256k1_scalar_is_zero(tweak)) {</span>
+<span class="lineNum">     181 </span>            :         return 0;
+<span class="lineNum">     182 </span>            :     }
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :     secp256k1_scalar_mul(key, key, tweak);</span>
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :     return 1;</span>
+<span class="lineNum">     186 </span>            : }
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 : static int secp256k1_eckey_pubkey_tweak_mul(const secp256k1_ecmult_context_t *ctx, secp256k1_ge_t *key, const secp256k1_scalar_t *tweak) {</span>
+<span class="lineNum">     189 </span>            :     secp256k1_scalar_t zero;
+<span class="lineNum">     190 </span>            :     secp256k1_gej_t pt;
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :     if (secp256k1_scalar_is_zero(tweak)) {</span>
+<span class="lineNum">     192 </span>            :         return 0;
+<span class="lineNum">     193 </span>            :     }
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :     secp256k1_scalar_set_int(&amp;zero, 0);</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :     secp256k1_gej_set_ge(&amp;pt, key);</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :     secp256k1_ecmult(ctx, &amp;pt, &amp;pt, tweak, &amp;zero);</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :     secp256k1_ge_set_gej(key, &amp;pt);</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :     return 1;</span>
+<span class="lineNum">     200 </span>            : }
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

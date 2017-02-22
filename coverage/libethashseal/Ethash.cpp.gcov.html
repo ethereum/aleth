@@ -1,0 +1,361 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethashseal/Ethash.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethashseal</a> - Ethash.cpp<span style="font-size: 80%;"> (source / <a href="Ethash.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">125</td>
+            <td class="headerCovTableEntry">145</td>
+            <td class="headerCovTableEntryMed">86.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntryMed">75.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Ethash.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;Ethash.h&quot;
+<span class="lineNum">      23 </span>            : #include &lt;libethash/ethash.h&gt;
+<span class="lineNum">      24 </span>            : #include &lt;libethash/internal.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libethereum/Interface.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libethcore/ChainOperationParams.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libethcore/CommonJS.h&gt;
+<span class="lineNum">      28 </span>            : #include &quot;EthashCPUMiner.h&quot;
+<span class="lineNum">      29 </span>            : using namespace std;
+<span class="lineNum">      30 </span>            : using namespace dev;
+<a name="31"><span class="lineNum">      31 </span>            : using namespace eth;</a>
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span><span class="lineCov">        294 : void Ethash::init()</span>
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span><span class="lineCov">        297 :         ETH_REGISTER_SEAL_ENGINE(Ethash);</span>
+<a name="36"><span class="lineNum">      36 </span><span class="lineCov">        294 : }</span></a>
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span><span class="lineCov">      41484 : Ethash::Ethash()</span>
+<a name="39"><span class="lineNum">      39 </span>            : {</a>
+<span class="lineNum">      40 </span><span class="lineCov">      20742 :         map&lt;string, GenericFarm&lt;EthashProofOfWork&gt;::SealerDescriptor&gt; sealers;</span>
+<a name="41"><span class="lineNum">      41 </span><span class="lineCov">      62314 :         sealers[&quot;cpu&quot;] = GenericFarm&lt;EthashProofOfWork&gt;::SealerDescriptor{&amp;EthashCPUMiner::instances, [](GenericMiner&lt;EthashProofOfWork&gt;::ConstructionInfo ci){ return new EthashCPUMiner(ci); }};</span></a>
+<span class="lineNum">      42 </span><span class="lineCov">      20742 :         m_farm.setSealers(sealers);</span>
+<span class="lineNum">      43 </span><span class="lineCov">      31130 :         m_farm.onSolutionFound([=](EthashProofOfWork::Solution const&amp; sol)</span>
+<span class="lineNum">      44 </span>            :         {
+<span class="lineNum">      45 </span>            : //              cdebug &lt;&lt; m_farm.work().seedHash &lt;&lt; m_farm.work().headerHash &lt;&lt; sol.nonce &lt;&lt; EthashAux::eval(m_farm.work().seedHash, m_farm.work().headerHash, sol.nonce).value;
+<span class="lineNum">      46 </span><span class="lineCov">         85 :                 setMixHash(m_sealing, sol.mixHash);</span>
+<span class="lineNum">      47 </span><span class="lineCov">         34 :                 setNonce(m_sealing, sol.nonce);</span>
+<span class="lineNum">      48 </span><span class="lineCov">         17 :                 if (!quickVerifySeal(m_sealing))</span>
+<span class="lineNum">      49 </span>            :                         return false;
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineCov">         34 :                 if (m_onSealGenerated)</span>
+<span class="lineNum">      52 </span>            :                 {
+<span class="lineNum">      53 </span><span class="lineCov">         34 :                         RLPStream ret;</span>
+<span class="lineNum">      54 </span><span class="lineCov">         17 :                         m_sealing.streamRLP(ret);</span>
+<span class="lineNum">      55 </span><span class="lineCov">         51 :                         m_onSealGenerated(ret.out());</span>
+<span class="lineNum">      56 </span>            :                 }
+<span class="lineNum">      57 </span>            :                 return true;
+<span class="lineNum">      58 </span><span class="lineCov">      10371 :         });</span>
+<a name="59"><span class="lineNum">      59 </span><span class="lineCov">      10371 : }</span></a>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 : strings Ethash::sealers() const</span>
+<span class="lineNum">      62 </span>            : {
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :         return {&quot;cpu&quot;};</span>
+<a name="64"><span class="lineNum">      64 </span>            : }</a>
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span><span class="lineCov">         40 : h256 Ethash::seedHash(BlockHeader const&amp; _bi)</span>
+<span class="lineNum">      67 </span>            : {
+<span class="lineNum">      68 </span><span class="lineCov">      10812 :         return EthashAux::seedHash((unsigned)_bi.number());</span>
+<a name="69"><span class="lineNum">      69 </span>            : }</a>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 : StringHashMap Ethash::jsInfo(BlockHeader const&amp; _bi) const</span>
+<span class="lineNum">      72 </span>            : {
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :         return { { &quot;nonce&quot;, toJS(nonce(_bi)) }, { &quot;seedHash&quot;, toJS(seedHash(_bi)) }, { &quot;mixHash&quot;, toJS(mixHash(_bi)) }, { &quot;boundary&quot;, toJS(boundary(_bi)) }, { &quot;difficulty&quot;, toJS(_bi.difficulty()) } };</span>
+<span class="lineNum">      74 </span>            : }
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">      15492 : void Ethash::verify(Strictness _s, BlockHeader const&amp; _bi, BlockHeader const&amp; _parent, bytesConstRef _block) const</span>
+<span class="lineNum">      77 </span>            : {
+<span class="lineNum">      78 </span><span class="lineCov">      15492 :         SealEngineFace::verify(_s, _bi, _parent, _block);</span>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">      15438 :         if (_s != CheckNothingNew)</span>
+<span class="lineNum">      81 </span>            :         {
+<span class="lineNum">      82 </span><span class="lineCov">      64206 :                 if (_bi.difficulty() &lt; chainParams().u256Param(&quot;minimumDifficulty&quot;))</span>
+<span class="lineNum">      83 </span><span class="lineCov">        144 :                         BOOST_THROW_EXCEPTION(InvalidDifficulty() &lt;&lt; RequirementError(bigint(chainParams().u256Param(&quot;minimumDifficulty&quot;)), bigint(_bi.difficulty())) );</span>
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span><span class="lineCov">      53460 :                 if (_bi.gasLimit() &lt; chainParams().u256Param(&quot;minGasLimit&quot;))</span>
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(InvalidGasLimit() &lt;&lt; RequirementError(bigint(chainParams().u256Param(&quot;minGasLimit&quot;)), bigint(_bi.gasLimit())) );</span>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">      53460 :                 if (_bi.gasLimit() &gt; chainParams().u256Param(&quot;maxGasLimit&quot;))</span>
+<span class="lineNum">      89 </span><span class="lineCov">         16 :                         BOOST_THROW_EXCEPTION(InvalidGasLimit() &lt;&lt; RequirementError(bigint(chainParams().u256Param(&quot;maxGasLimit&quot;)), bigint(_bi.gasLimit())) );</span>
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span><span class="lineCov">      42748 :                 if (_bi.number() &amp;&amp; _bi.extraData().size() &gt; chainParams().maximumExtraDataSize)</span>
+<span class="lineNum">      92 </span><span class="lineCov">        170 :                         BOOST_THROW_EXCEPTION(ExtraDataTooBig() &lt;&lt; RequirementError(bigint(chainParams().maximumExtraDataSize), bigint(_bi.extraData().size())) &lt;&lt; errinfo_extraData(_bi.extraData()));</span>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span><span class="lineCov">      42724 :                 u256 daoHardfork = chainParams().u256Param(&quot;daoHardforkBlock&quot;);</span>
+<span class="lineNum">      95 </span><span class="lineCov">      42942 :                 if (daoHardfork != 0 &amp;&amp; daoHardfork + 9 &gt;= daoHardfork &amp;&amp; _bi.number() &gt;= daoHardfork &amp;&amp; _bi.number() &lt;= daoHardfork + 9)</span>
+<span class="lineNum">      96 </span><span class="lineCov">       1344 :                         if (_bi.extraData() != fromHex(&quot;0x64616f2d686172642d666f726b&quot;))</span>
+<span class="lineNum">      97 </span><span class="lineCov">         48 :                                 BOOST_THROW_EXCEPTION(ExtraDataIncorrect() &lt;&lt; errinfo_comment(&quot;Received block from the wrong fork (invalid extradata).&quot;));</span>
+<span class="lineNum">      98 </span>            :         }
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">      15412 :         if (_parent)</span>
+<span class="lineNum">     101 </span>            :         {
+<span class="lineNum">     102 </span>            :                 // Check difficulty is correct given the two timestamps.
+<span class="lineNum">     103 </span><span class="lineCov">       5279 :                 auto expected = calculateDifficulty(_bi, _parent);</span>
+<span class="lineNum">     104 </span><span class="lineCov">      10558 :                 auto difficulty = _bi.difficulty();</span>
+<span class="lineNum">     105 </span><span class="lineCov">       5279 :                 if (difficulty != expected)</span>
+<span class="lineNum">     106 </span><span class="lineCov">        108 :                         BOOST_THROW_EXCEPTION(InvalidDifficulty() &lt;&lt; RequirementError((bigint)expected, (bigint)difficulty));</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span><span class="lineCov">      10540 :                 auto gasLimit = _bi.gasLimit();</span>
+<span class="lineNum">     109 </span><span class="lineCov">      10540 :                 auto parentGasLimit = _parent.gasLimit();</span>
+<span class="lineNum">     110 </span><span class="lineCov">       5270 :                 if (</span>
+<span class="lineNum">     111 </span><span class="lineCov">      42160 :                         gasLimit &lt; chainParams().u256Param(&quot;minGasLimit&quot;) ||</span>
+<span class="lineNum">     112 </span><span class="lineCov">      36890 :                         gasLimit &gt; chainParams().u256Param(&quot;maxGasLimit&quot;) ||</span>
+<span class="lineNum">     113 </span><span class="lineCov">      42142 :                         gasLimit &lt;= parentGasLimit - parentGasLimit / chainParams().u256Param(&quot;gasLimitBoundDivisor&quot;) ||</span>
+<span class="lineNum">     114 </span><span class="lineCov">      31575 :                         gasLimit &gt;= parentGasLimit + parentGasLimit / chainParams().u256Param(&quot;gasLimitBoundDivisor&quot;))</span>
+<span class="lineNum">     115 </span><span class="lineCov">        435 :                         BOOST_THROW_EXCEPTION(</span>
+<span class="lineNum">     116 </span>            :                                 InvalidGasLimit()
+<span class="lineNum">     117 </span>            :                                 &lt;&lt; errinfo_min((bigint)((bigint)parentGasLimit - (bigint)(parentGasLimit / chainParams().u256Param(&quot;gasLimitBoundDivisor&quot;))))
+<span class="lineNum">     118 </span>            :                                 &lt;&lt; errinfo_got((bigint)gasLimit)
+<span class="lineNum">     119 </span>            :                                 &lt;&lt; errinfo_max((bigint)((bigint)parentGasLimit + parentGasLimit / chainParams().u256Param(&quot;gasLimitBoundDivisor&quot;)))
+<span class="lineNum">     120 </span><span class="lineCov">         15 :                         );</span>
+<span class="lineNum">     121 </span>            :         }
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            :         // check it hashes according to proof of work or that it's the genesis block.
+<span class="lineNum">     124 </span><span class="lineCov">      20764 :         if (_s == CheckEverything &amp;&amp; _bi.parentHash() &amp;&amp; !verifySeal(_bi))</span>
+<span class="lineNum">     125 </span>            :         {
+<span class="lineNum">     126 </span><span class="lineCov">         24 :                 InvalidBlockNonce ex;</span>
+<span class="lineNum">     127 </span><span class="lineCov">         60 :                 ex &lt;&lt; errinfo_nonce(nonce(_bi));</span>
+<span class="lineNum">     128 </span><span class="lineCov">         60 :                 ex &lt;&lt; errinfo_mixHash(mixHash(_bi));</span>
+<span class="lineNum">     129 </span><span class="lineCov">         60 :                 ex &lt;&lt; errinfo_seedHash(seedHash(_bi));</span>
+<span class="lineNum">     130 </span><span class="lineCov">         36 :                 EthashProofOfWork::Result er = EthashAux::eval(seedHash(_bi), _bi.hash(WithoutSeal), nonce(_bi));</span>
+<span class="lineNum">     131 </span><span class="lineCov">         60 :                 ex &lt;&lt; errinfo_ethashResult(make_tuple(er.value, er.mixHash));</span>
+<span class="lineNum">     132 </span><span class="lineCov">         60 :                 ex &lt;&lt; errinfo_hash256(_bi.hash(WithoutSeal));</span>
+<span class="lineNum">     133 </span><span class="lineCov">         48 :                 ex &lt;&lt; errinfo_difficulty(_bi.difficulty());</span>
+<span class="lineNum">     134 </span><span class="lineCov">         48 :                 ex &lt;&lt; errinfo_target(boundary(_bi));</span>
+<span class="lineNum">     135 </span><span class="lineCov">         12 :                 BOOST_THROW_EXCEPTION(ex);</span>
+<span class="lineNum">     136 </span>            :         }
+<span class="lineNum">     137 </span><span class="lineCov">      20399 :         else if (_s == QuickNonce &amp;&amp; _bi.parentHash() &amp;&amp; !quickVerifySeal(_bi))</span>
+<span class="lineNum">     138 </span>            :         {
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :                 InvalidBlockNonce ex;</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :                 ex &lt;&lt; errinfo_hash256(_bi.hash(WithoutSeal));</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :                 ex &lt;&lt; errinfo_difficulty(_bi.difficulty());</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :                 ex &lt;&lt; errinfo_nonce(nonce(_bi));</span>
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(ex);</span>
+<span class="lineNum">     144 </span>            :         }
+<span class="lineNum">     145 </span><span class="lineCov">      15360 : }</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">       4736 : void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase const&amp; _t, BlockHeader const&amp; _bi) const</span>
+<span class="lineNum">     148 </span>            : {
+<span class="lineNum">     149 </span><span class="lineCov">       4736 :         if (_ir &amp; ImportRequirements::TransactionSignatures)</span>
+<span class="lineNum">     150 </span>            :         {
+<span class="lineNum">     151 </span><span class="lineCov">      28386 :                 if (_bi.number() &gt;= chainParams().u256Param(&quot;homsteadForkBlock&quot;))</span>
+<span class="lineNum">     152 </span><span class="lineCov">       3147 :                         _t.checkLowS();</span>
+<span class="lineNum">     153 </span><span class="lineCov">      23625 :                 if (_bi.number() &gt;= chainParams().u256Param(&quot;EIP158ForkBlock&quot;))</span>
+<span class="lineNum">     154 </span>            :                 {
+<span class="lineNum">     155 </span><span class="lineCov">        460 :                         int chainID(chainParams().u256Param(&quot;chainID&quot;));</span>
+<span class="lineNum">     156 </span><span class="lineCov">         92 :                         _t.checkChainId(chainID);</span>
+<span class="lineNum">     157 </span>            :                 }
+<span class="lineNum">     158 </span>            :                 else
+<span class="lineNum">     159 </span><span class="lineCov">       4633 :                         _t.checkChainId(-4);</span>
+<span class="lineNum">     160 </span>            :         }
+<span class="lineNum">     161 </span>            :         // Unneeded as it's checked again in Executive. Keep it here since tests assume it's checked.
+<span class="lineNum">     162 </span><span class="lineCov">      42372 :         if (_ir &amp; ImportRequirements::TransactionBasic &amp;&amp; _t.gasRequired(evmSchedule(EnvInfo(_bi))) &gt; _t.gas())</span>
+<span class="lineNum">     163 </span><span class="lineCov">         39 :                 BOOST_THROW_EXCEPTION(OutOfGasIntrinsic());</span>
+<a name="164"><span class="lineNum">     164 </span><span class="lineCov">       4695 : }</span></a>
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span><span class="lineCov">      24813 : u256 Ethash::childGasLimit(BlockHeader const&amp; _bi, u256 const&amp; _gasFloorTarget) const</span>
+<span class="lineNum">     167 </span>            : {
+<span class="lineNum">     168 </span><span class="lineCov">      24813 :         u256 gasFloorTarget = _gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;</span>
+<span class="lineNum">     169 </span><span class="lineCov">      49626 :         u256 gasLimit = _bi.gasLimit();</span>
+<span class="lineNum">     170 </span><span class="lineCov">     124065 :         u256 boundDivisor = chainParams().u256Param(&quot;gasLimitBoundDivisor&quot;);</span>
+<span class="lineNum">     171 </span><span class="lineCov">      24813 :         if (gasLimit &lt; gasFloorTarget)</span>
+<span class="lineNum">     172 </span><span class="lineCov">        530 :                 return min&lt;u256&gt;(gasFloorTarget, gasLimit + gasLimit / boundDivisor - 1);</span>
+<span class="lineNum">     173 </span>            :         else
+<span class="lineNum">     174 </span><span class="lineCov">     197656 :                 return max&lt;u256&gt;(gasFloorTarget, gasLimit - gasLimit / boundDivisor + 1 + (_bi.gasUsed() * 6 / 5) / boundDivisor);</span>
+<a name="175"><span class="lineNum">     175 </span>            : }</a>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 : void Ethash::manuallySubmitWork(const h256&amp; _mixHash, Nonce _nonce)</span>
+<span class="lineNum">     178 </span>            : {
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :         m_farm.submitProof(EthashProofOfWork::Solution{_nonce, _mixHash}, nullptr);</span>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineCov">      35746 : u256 Ethash::calculateDifficulty(BlockHeader const&amp; _bi, BlockHeader const&amp; _parent) const</span>
+<span class="lineNum">     183 </span>            : {
+<span class="lineNum">     184 </span><span class="lineCov">      35746 :         const unsigned c_expDiffPeriod = 100000;</span>
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span><span class="lineCov">      71492 :         if (!_bi.number())</span>
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :                 throw GenesisBlockCannotBeCalculated();</span>
+<span class="lineNum">     188 </span><span class="lineCov">     178730 :         auto minimumDifficulty = chainParams().u256Param(&quot;minimumDifficulty&quot;);</span>
+<span class="lineNum">     189 </span><span class="lineCov">     142984 :         auto difficultyBoundDivisor = chainParams().u256Param(&quot;difficultyBoundDivisor&quot;);</span>
+<span class="lineNum">     190 </span><span class="lineCov">     142984 :         auto durationLimit = chainParams().u256Param(&quot;durationLimit&quot;);</span>
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span><span class="lineCov">      71492 :         bigint target;  // stick to a bigint for the target. Don't want to risk going negative.</span>
+<span class="lineNum">     193 </span><span class="lineCov">     178730 :         if (_bi.number() &lt; chainParams().u256Param(&quot;homsteadForkBlock&quot;))</span>
+<span class="lineNum">     194 </span>            :                 // Frontier-era difficulty adjustment
+<span class="lineNum">     195 </span><span class="lineCov">      52368 :                 target = _bi.timestamp() &gt;= _parent.timestamp() + durationLimit ? _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) : (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor));</span>
+<span class="lineNum">     196 </span>            :         else
+<span class="lineNum">     197 </span>            :                 // Homestead-era difficulty adjustment
+<span class="lineNum">     198 </span><span class="lineCov">     339810 :                 target = _parent.difficulty() + _parent.difficulty() / 2048 * max&lt;bigint&gt;(1 - (bigint(_bi.timestamp()) - _parent.timestamp()) / 10, -99);</span>
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span><span class="lineCov">      71492 :         bigint o = target;</span>
+<span class="lineNum">     201 </span><span class="lineCov">     107238 :         unsigned periodCount = unsigned(_parent.number() + 1) / c_expDiffPeriod;</span>
+<span class="lineNum">     202 </span><span class="lineCov">      35746 :         if (periodCount &gt; 1)</span>
+<span class="lineNum">     203 </span><span class="lineCov">      19664 :                 o += (bigint(1) &lt;&lt; (periodCount - 2));    // latter will eventually become huge, so ensure it's a bigint.</span>
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span><span class="lineCov">     142984 :         o = max&lt;bigint&gt;(minimumDifficulty, o);</span>
+<span class="lineNum">     206 </span><span class="lineCov">     214476 :         return u256(min&lt;bigint&gt;(o, std::numeric_limits&lt;u256&gt;::max()));</span>
+<a name="207"><span class="lineNum">     207 </span>            : }</a>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineCov">      24813 : void Ethash::populateFromParent(BlockHeader&amp; _bi, BlockHeader const&amp; _parent) const</span>
+<span class="lineNum">     210 </span>            : {
+<span class="lineNum">     211 </span><span class="lineCov">      24813 :         SealEngineFace::populateFromParent(_bi, _parent);</span>
+<span class="lineNum">     212 </span><span class="lineCov">      49626 :         _bi.setDifficulty(calculateDifficulty(_bi, _parent));</span>
+<span class="lineNum">     213 </span><span class="lineCov">      49626 :         _bi.setGasLimit(childGasLimit(_parent));</span>
+<a name="214"><span class="lineNum">     214 </span><span class="lineCov">      24813 : }</span></a>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineCov">      10426 : bool Ethash::quickVerifySeal(BlockHeader const&amp; _bi) const</span>
+<span class="lineNum">     217 </span>            : {
+<span class="lineNum">     218 </span><span class="lineCov">      20852 :         if (_bi.number() &gt;= ETHASH_EPOCH_LENGTH * 2048)</span>
+<span class="lineNum">     219 </span>            :                 return false;
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span><span class="lineCov">      10426 :         auto h = _bi.hash(WithoutSeal);</span>
+<span class="lineNum">     222 </span><span class="lineCov">      10417 :         auto m = mixHash(_bi);</span>
+<span class="lineNum">     223 </span><span class="lineCov">      10410 :         auto n = nonce(_bi);</span>
+<span class="lineNum">     224 </span><span class="lineCov">      10410 :         auto b = boundary(_bi);</span>
+<span class="lineNum">     225 </span><span class="lineCov">      20820 :         bool ret = !!ethash_quick_check_difficulty(</span>
+<span class="lineNum">     226 </span><span class="lineCov">      10410 :                 (ethash_h256_t const*)h.data(),</span>
+<span class="lineNum">     227 </span>            :                 (uint64_t)(u64)n,
+<span class="lineNum">     228 </span>            :                 (ethash_h256_t const*)m.data(),
+<span class="lineNum">     229 </span><span class="lineCov">      10410 :                 (ethash_h256_t const*)b.data());</span>
+<span class="lineNum">     230 </span>            :         return ret;
+<a name="231"><span class="lineNum">     231 </span>            : }</a>
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span><span class="lineCov">       5370 : bool Ethash::verifySeal(BlockHeader const&amp; _bi) const</span>
+<span class="lineNum">     234 </span>            : {
+<span class="lineNum">     235 </span><span class="lineCov">       5370 :         bool pre = quickVerifySeal(_bi);</span>
+<span class="lineNum">     236 </span>            : #if !ETH_DEBUG
+<span class="lineNum">     237 </span><span class="lineCov">       5354 :         if (!pre)</span>
+<span class="lineNum">     238 </span>            :         {
+<span class="lineNum">     239 </span><span class="lineCov">         12 :                 cwarn &lt;&lt; &quot;Fail on preVerify&quot;;</span>
+<span class="lineNum">     240 </span><span class="lineCov">         12 :                 return false;</span>
+<span class="lineNum">     241 </span>            :         }
+<span class="lineNum">     242 </span>            : #endif
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span><span class="lineCov">      10684 :         auto result = EthashAux::eval(seedHash(_bi), _bi.hash(WithoutSeal), nonce(_bi));</span>
+<span class="lineNum">     245 </span><span class="lineCov">      16026 :         bool slow = result.value &lt;= boundary(_bi) &amp;&amp; result.mixHash == mixHash(_bi);</span>
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            : #if ETH_DEBUG
+<span class="lineNum">     248 </span>            :         if (!pre &amp;&amp; slow)
+<span class="lineNum">     249 </span>            :         {
+<span class="lineNum">     250 </span>            :                 cwarn &lt;&lt; &quot;WARNING: evaluated result gives true whereas ethash_quick_check_difficulty gives false.&quot;;
+<span class="lineNum">     251 </span>            :                 cwarn &lt;&lt; &quot;headerHash:&quot; &lt;&lt; _bi.hash(WithoutSeal);
+<span class="lineNum">     252 </span>            :                 cwarn &lt;&lt; &quot;nonce:&quot; &lt;&lt; nonce(_bi);
+<span class="lineNum">     253 </span>            :                 cwarn &lt;&lt; &quot;mixHash:&quot; &lt;&lt; mixHash(_bi);
+<span class="lineNum">     254 </span>            :                 cwarn &lt;&lt; &quot;difficulty:&quot; &lt;&lt; _bi.difficulty();
+<span class="lineNum">     255 </span>            :                 cwarn &lt;&lt; &quot;boundary:&quot; &lt;&lt; boundary(_bi);
+<span class="lineNum">     256 </span>            :                 cwarn &lt;&lt; &quot;result.value:&quot; &lt;&lt; result.value;
+<span class="lineNum">     257 </span>            :                 cwarn &lt;&lt; &quot;result.mixHash:&quot; &lt;&lt; result.mixHash;
+<span class="lineNum">     258 </span>            :         }
+<span class="lineNum">     259 </span>            : #endif // ETH_DEBUG
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span><span class="lineCov">       5342 :         return slow;</span>
+<a name="262"><span class="lineNum">     262 </span>            : }</a>
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span><span class="lineCov">         17 : void Ethash::generateSeal(BlockHeader const&amp; _bi)</span>
+<span class="lineNum">     265 </span>            : {
+<span class="lineNum">     266 </span><span class="lineCov">         17 :         m_sealing = _bi;</span>
+<span class="lineNum">     267 </span><span class="lineCov">         17 :         m_farm.setWork(m_sealing);</span>
+<span class="lineNum">     268 </span><span class="lineCov">         17 :         m_farm.start(m_sealer);</span>
+<span class="lineNum">     269 </span><span class="lineCov">         17 :         m_farm.setWork(m_sealing);              // TODO: take out one before or one after...</span>
+<span class="lineNum">     270 </span><span class="lineCov">         85 :         bytes shouldPrecompute = option(&quot;precomputeDAG&quot;);</span>
+<span class="lineNum">     271 </span><span class="lineCov">         17 :         if (!shouldPrecompute.empty() &amp;&amp; shouldPrecompute[0] == 1)</span>
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :                 ensurePrecomputed((unsigned)_bi.number());</span>
+<a name="273"><span class="lineNum">     273 </span><span class="lineCov">         17 : }</span></a>
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 : bool Ethash::shouldSeal(Interface*)</span>
+<span class="lineNum">     276 </span>            : {
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :         return true;</span>
+<a name="278"><span class="lineNum">     278 </span>            : }</a>
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 : void Ethash::ensurePrecomputed(unsigned _number)</span>
+<span class="lineNum">     281 </span>            : {
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :         if (_number % ETHASH_EPOCH_LENGTH &gt; ETHASH_EPOCH_LENGTH * 9 / 10)</span>
+<a name="283"><span class="lineNum">     283 </span>            :                 // 90% of the way to the new epoch</a>
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :                 EthashAux::computeFull(EthashAux::seedHash(_number + ETHASH_EPOCH_LENGTH), true);</span>
+<span class="lineNum">     285 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

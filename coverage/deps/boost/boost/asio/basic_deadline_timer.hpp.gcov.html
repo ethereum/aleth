@@ -1,0 +1,596 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/basic_deadline_timer.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio</a> - basic_deadline_timer.hpp<span style="font-size: 80%;"> (source / <a href="basic_deadline_timer.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // basic_deadline_timer.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_BASIC_DEADLINE_TIMER_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_BASIC_DEADLINE_TIMER_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #if defined(BOOST_ASIO_HAS_BOOST_DATE_TIME) \
+<span class="lineNum">      21 </span>            :   || defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;cstddef&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/basic_io_object.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/deadline_timer_service.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/asio/detail/handler_type_requirements.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/asio/detail/throw_error.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/asio/error.hpp&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace boost {
+<span class="lineNum">      33 </span>            : namespace asio {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : /// Provides waitable timer functionality.
+<span class="lineNum">      36 </span>            : /**
+<span class="lineNum">      37 </span>            :  * The basic_deadline_timer class template provides the ability to perform a
+<span class="lineNum">      38 </span>            :  * blocking or asynchronous wait for a timer to expire.
+<span class="lineNum">      39 </span>            :  *
+<span class="lineNum">      40 </span>            :  * A deadline timer is always in one of two states: &quot;expired&quot; or &quot;not expired&quot;.
+<span class="lineNum">      41 </span>            :  * If the wait() or async_wait() function is called on an expired timer, the
+<span class="lineNum">      42 </span>            :  * wait operation will complete immediately.
+<span class="lineNum">      43 </span>            :  *
+<span class="lineNum">      44 </span>            :  * Most applications will use the boost::asio::deadline_timer typedef.
+<span class="lineNum">      45 </span>            :  *
+<span class="lineNum">      46 </span>            :  * @par Thread Safety
+<span class="lineNum">      47 </span>            :  * @e Distinct @e objects: Safe.@n
+<span class="lineNum">      48 </span>            :  * @e Shared @e objects: Unsafe.
+<span class="lineNum">      49 </span>            :  *
+<span class="lineNum">      50 </span>            :  * @par Examples
+<span class="lineNum">      51 </span>            :  * Performing a blocking wait:
+<span class="lineNum">      52 </span>            :  * @code
+<span class="lineNum">      53 </span>            :  * // Construct a timer without setting an expiry time.
+<span class="lineNum">      54 </span>            :  * boost::asio::deadline_timer timer(io_service);
+<span class="lineNum">      55 </span>            :  *
+<span class="lineNum">      56 </span>            :  * // Set an expiry time relative to now.
+<span class="lineNum">      57 </span>            :  * timer.expires_from_now(boost::posix_time::seconds(5));
+<span class="lineNum">      58 </span>            :  *
+<span class="lineNum">      59 </span>            :  * // Wait for the timer to expire.
+<span class="lineNum">      60 </span>            :  * timer.wait();
+<span class="lineNum">      61 </span>            :  * @endcode
+<span class="lineNum">      62 </span>            :  *
+<span class="lineNum">      63 </span>            :  * @par 
+<span class="lineNum">      64 </span>            :  * Performing an asynchronous wait:
+<span class="lineNum">      65 </span>            :  * @code
+<span class="lineNum">      66 </span>            :  * void handler(const boost::system::error_code&amp; error)
+<span class="lineNum">      67 </span>            :  * {
+<span class="lineNum">      68 </span>            :  *   if (!error)
+<span class="lineNum">      69 </span>            :  *   {
+<span class="lineNum">      70 </span>            :  *     // Timer expired.
+<span class="lineNum">      71 </span>            :  *   }
+<span class="lineNum">      72 </span>            :  * }
+<span class="lineNum">      73 </span>            :  *
+<span class="lineNum">      74 </span>            :  * ...
+<span class="lineNum">      75 </span>            :  *
+<span class="lineNum">      76 </span>            :  * // Construct a timer with an absolute expiry time.
+<span class="lineNum">      77 </span>            :  * boost::asio::deadline_timer timer(io_service,
+<span class="lineNum">      78 </span>            :  *     boost::posix_time::time_from_string(&quot;2005-12-07 23:59:59.000&quot;));
+<span class="lineNum">      79 </span>            :  *
+<span class="lineNum">      80 </span>            :  * // Start an asynchronous wait.
+<span class="lineNum">      81 </span>            :  * timer.async_wait(handler);
+<span class="lineNum">      82 </span>            :  * @endcode
+<span class="lineNum">      83 </span>            :  *
+<span class="lineNum">      84 </span>            :  * @par Changing an active deadline_timer's expiry time
+<span class="lineNum">      85 </span>            :  *
+<span class="lineNum">      86 </span>            :  * Changing the expiry time of a timer while there are pending asynchronous
+<span class="lineNum">      87 </span>            :  * waits causes those wait operations to be cancelled. To ensure that the action
+<span class="lineNum">      88 </span>            :  * associated with the timer is performed only once, use something like this:
+<span class="lineNum">      89 </span>            :  * used:
+<span class="lineNum">      90 </span>            :  *
+<span class="lineNum">      91 </span>            :  * @code
+<span class="lineNum">      92 </span>            :  * void on_some_event()
+<span class="lineNum">      93 </span>            :  * {
+<span class="lineNum">      94 </span>            :  *   if (my_timer.expires_from_now(seconds(5)) &gt; 0)
+<span class="lineNum">      95 </span>            :  *   {
+<span class="lineNum">      96 </span>            :  *     // We managed to cancel the timer. Start new asynchronous wait.
+<span class="lineNum">      97 </span>            :  *     my_timer.async_wait(on_timeout);
+<span class="lineNum">      98 </span>            :  *   }
+<span class="lineNum">      99 </span>            :  *   else
+<span class="lineNum">     100 </span>            :  *   {
+<span class="lineNum">     101 </span>            :  *     // Too late, timer has already expired!
+<span class="lineNum">     102 </span>            :  *   }
+<span class="lineNum">     103 </span>            :  * }
+<span class="lineNum">     104 </span>            :  *
+<span class="lineNum">     105 </span>            :  * void on_timeout(const boost::system::error_code&amp; e)
+<span class="lineNum">     106 </span>            :  * {
+<span class="lineNum">     107 </span>            :  *   if (e != boost::asio::error::operation_aborted)
+<span class="lineNum">     108 </span>            :  *   {
+<span class="lineNum">     109 </span>            :  *     // Timer was not cancelled, take necessary action.
+<span class="lineNum">     110 </span>            :  *   }
+<span class="lineNum">     111 </span>            :  * }
+<span class="lineNum">     112 </span>            :  * @endcode
+<span class="lineNum">     113 </span>            :  *
+<span class="lineNum">     114 </span>            :  * @li The boost::asio::basic_deadline_timer::expires_from_now() function
+<span class="lineNum">     115 </span>            :  * cancels any pending asynchronous waits, and returns the number of
+<span class="lineNum">     116 </span>            :  * asynchronous waits that were cancelled. If it returns 0 then you were too
+<span class="lineNum">     117 </span>            :  * late and the wait handler has already been executed, or will soon be
+<span class="lineNum">     118 </span>            :  * executed. If it returns 1 then the wait handler was successfully cancelled.
+<span class="lineNum">     119 </span>            :  *
+<span class="lineNum">     120 </span>            :  * @li If a wait handler is cancelled, the boost::system::error_code passed to
+<span class="lineNum">     121 </span>            :  * it contains the value boost::asio::error::operation_aborted.
+<span class="lineNum">     122 </span>            :  */
+<span class="lineNum">     123 </span>            : template &lt;typename Time,
+<span class="lineNum">     124 </span>            :     typename TimeTraits = boost::asio::time_traits&lt;Time&gt;,
+<span class="lineNum">     125 </span>            :     typename TimerService = deadline_timer_service&lt;Time, TimeTraits&gt; &gt;
+<span class="lineNum">     126 </span><span class="lineCov">        480 : class basic_deadline_timer</span>
+<span class="lineNum">     127 </span>            :   : public basic_io_object&lt;TimerService&gt;
+<span class="lineNum">     128 </span>            : {
+<span class="lineNum">     129 </span>            : public:
+<span class="lineNum">     130 </span>            :   /// The time traits type.
+<span class="lineNum">     131 </span>            :   typedef TimeTraits traits_type;
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            :   /// The time type.
+<span class="lineNum">     134 </span>            :   typedef typename traits_type::time_type time_type;
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            :   /// The duration type.
+<span class="lineNum">     137 </span>            :   typedef typename traits_type::duration_type duration_type;
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :   /// Constructor.
+<span class="lineNum">     140 </span>            :   /**
+<span class="lineNum">     141 </span>            :    * This constructor creates a timer without setting an expiry time. The
+<span class="lineNum">     142 </span>            :    * expires_at() or expires_from_now() functions must be called to set an
+<span class="lineNum">     143 </span>            :    * expiry time before the timer can be waited on.
+<span class="lineNum">     144 </span>            :    *
+<span class="lineNum">     145 </span>            :    * @param io_service The io_service object that the timer will use to dispatch
+<span class="lineNum">     146 </span>            :    * handlers for any asynchronous operations performed on the timer.
+<span class="lineNum">     147 </span>            :    */
+<span class="lineNum">     148 </span>            :   explicit basic_deadline_timer(boost::asio::io_service&amp; io_service)
+<span class="lineNum">     149 </span><span class="lineCov">        480 :     : basic_io_object&lt;TimerService&gt;(io_service)</span>
+<span class="lineNum">     150 </span>            :   {
+<span class="lineNum">     151 </span>            :   }
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :   /// Constructor to set a particular expiry time as an absolute time.
+<span class="lineNum">     154 </span>            :   /**
+<span class="lineNum">     155 </span>            :    * This constructor creates a timer and sets the expiry time.
+<span class="lineNum">     156 </span>            :    *
+<span class="lineNum">     157 </span>            :    * @param io_service The io_service object that the timer will use to dispatch
+<span class="lineNum">     158 </span>            :    * handlers for any asynchronous operations performed on the timer.
+<span class="lineNum">     159 </span>            :    *
+<span class="lineNum">     160 </span>            :    * @param expiry_time The expiry time to be used for the timer, expressed
+<span class="lineNum">     161 </span>            :    * as an absolute time.
+<span class="lineNum">     162 </span>            :    */
+<span class="lineNum">     163 </span>            :   basic_deadline_timer(boost::asio::io_service&amp; io_service,
+<span class="lineNum">     164 </span>            :       const time_type&amp; expiry_time)
+<span class="lineNum">     165 </span>            :     : basic_io_object&lt;TimerService&gt;(io_service)
+<span class="lineNum">     166 </span>            :   {
+<span class="lineNum">     167 </span>            :     boost::system::error_code ec;
+<span class="lineNum">     168 </span>            :     this-&gt;service.expires_at(this-&gt;implementation, expiry_time, ec);
+<span class="lineNum">     169 </span>            :     boost::asio::detail::throw_error(ec, &quot;expires_at&quot;);
+<span class="lineNum">     170 </span>            :   }
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :   /// Constructor to set a particular expiry time relative to now.
+<span class="lineNum">     173 </span>            :   /**
+<span class="lineNum">     174 </span>            :    * This constructor creates a timer and sets the expiry time.
+<span class="lineNum">     175 </span>            :    *
+<span class="lineNum">     176 </span>            :    * @param io_service The io_service object that the timer will use to dispatch
+<span class="lineNum">     177 </span>            :    * handlers for any asynchronous operations performed on the timer.
+<span class="lineNum">     178 </span>            :    *
+<span class="lineNum">     179 </span>            :    * @param expiry_time The expiry time to be used for the timer, relative to
+<span class="lineNum">     180 </span>            :    * now.
+<span class="lineNum">     181 </span>            :    */
+<span class="lineNum">     182 </span>            :   basic_deadline_timer(boost::asio::io_service&amp; io_service,
+<span class="lineNum">     183 </span>            :       const duration_type&amp; expiry_time)
+<span class="lineNum">     184 </span>            :     : basic_io_object&lt;TimerService&gt;(io_service)
+<span class="lineNum">     185 </span>            :   {
+<span class="lineNum">     186 </span>            :     boost::system::error_code ec;
+<span class="lineNum">     187 </span>            :     this-&gt;service.expires_from_now(this-&gt;implementation, expiry_time, ec);
+<span class="lineNum">     188 </span>            :     boost::asio::detail::throw_error(ec, &quot;expires_from_now&quot;);
+<span class="lineNum">     189 </span>            :   }
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span>            :   /// Cancel any asynchronous operations that are waiting on the timer.
+<span class="lineNum">     192 </span>            :   /**
+<span class="lineNum">     193 </span>            :    * This function forces the completion of any pending asynchronous wait
+<span class="lineNum">     194 </span>            :    * operations against the timer. The handler for each cancelled operation will
+<span class="lineNum">     195 </span>            :    * be invoked with the boost::asio::error::operation_aborted error code.
+<span class="lineNum">     196 </span>            :    *
+<span class="lineNum">     197 </span>            :    * Cancelling the timer does not change the expiry time.
+<span class="lineNum">     198 </span>            :    *
+<span class="lineNum">     199 </span>            :    * @return The number of asynchronous operations that were cancelled.
+<span class="lineNum">     200 </span>            :    *
+<span class="lineNum">     201 </span>            :    * @throws boost::system::system_error Thrown on failure.
+<span class="lineNum">     202 </span>            :    *
+<span class="lineNum">     203 </span>            :    * @note If the timer has already expired when cancel() is called, then the
+<span class="lineNum">     204 </span>            :    * handlers for asynchronous wait operations will:
+<span class="lineNum">     205 </span>            :    *
+<span class="lineNum">     206 </span>            :    * @li have already been invoked; or
+<span class="lineNum">     207 </span>            :    *
+<span class="lineNum">     208 </span>            :    * @li have been queued for invocation in the near future.
+<span class="lineNum">     209 </span>            :    *
+<span class="lineNum">     210 </span>            :    * These handlers can no longer be cancelled, and therefore are passed an
+<a name="211"><span class="lineNum">     211 </span>            :    * error code that indicates the successful completion of the wait operation.</a>
+<span class="lineNum">     212 </span>            :    */
+<span class="lineNum">     213 </span><span class="lineCov">        617 :   std::size_t cancel()</span>
+<span class="lineNum">     214 </span>            :   {
+<span class="lineNum">     215 </span><span class="lineCov">        617 :     boost::system::error_code ec;</span>
+<span class="lineNum">     216 </span><span class="lineCov">       1234 :     std::size_t s = this-&gt;service.cancel(this-&gt;implementation, ec);</span>
+<span class="lineNum">     217 </span><span class="lineCov">        617 :     boost::asio::detail::throw_error(ec, &quot;cancel&quot;);</span>
+<span class="lineNum">     218 </span><span class="lineCov">        617 :     return s;</span>
+<span class="lineNum">     219 </span>            :   }
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span>            :   /// Cancel any asynchronous operations that are waiting on the timer.
+<span class="lineNum">     222 </span>            :   /**
+<span class="lineNum">     223 </span>            :    * This function forces the completion of any pending asynchronous wait
+<span class="lineNum">     224 </span>            :    * operations against the timer. The handler for each cancelled operation will
+<span class="lineNum">     225 </span>            :    * be invoked with the boost::asio::error::operation_aborted error code.
+<span class="lineNum">     226 </span>            :    *
+<span class="lineNum">     227 </span>            :    * Cancelling the timer does not change the expiry time.
+<span class="lineNum">     228 </span>            :    *
+<span class="lineNum">     229 </span>            :    * @param ec Set to indicate what error occurred, if any.
+<span class="lineNum">     230 </span>            :    *
+<span class="lineNum">     231 </span>            :    * @return The number of asynchronous operations that were cancelled.
+<span class="lineNum">     232 </span>            :    *
+<span class="lineNum">     233 </span>            :    * @note If the timer has already expired when cancel() is called, then the
+<span class="lineNum">     234 </span>            :    * handlers for asynchronous wait operations will:
+<span class="lineNum">     235 </span>            :    *
+<span class="lineNum">     236 </span>            :    * @li have already been invoked; or
+<span class="lineNum">     237 </span>            :    *
+<span class="lineNum">     238 </span>            :    * @li have been queued for invocation in the near future.
+<span class="lineNum">     239 </span>            :    *
+<span class="lineNum">     240 </span>            :    * These handlers can no longer be cancelled, and therefore are passed an
+<span class="lineNum">     241 </span>            :    * error code that indicates the successful completion of the wait operation.
+<span class="lineNum">     242 </span>            :    */
+<span class="lineNum">     243 </span>            :   std::size_t cancel(boost::system::error_code&amp; ec)
+<span class="lineNum">     244 </span>            :   {
+<span class="lineNum">     245 </span>            :     return this-&gt;service.cancel(this-&gt;implementation, ec);
+<span class="lineNum">     246 </span>            :   }
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :   /// Cancels one asynchronous operation that is waiting on the timer.
+<span class="lineNum">     249 </span>            :   /**
+<span class="lineNum">     250 </span>            :    * This function forces the completion of one pending asynchronous wait
+<span class="lineNum">     251 </span>            :    * operation against the timer. Handlers are cancelled in FIFO order. The
+<span class="lineNum">     252 </span>            :    * handler for the cancelled operation will be invoked with the
+<span class="lineNum">     253 </span>            :    * boost::asio::error::operation_aborted error code.
+<span class="lineNum">     254 </span>            :    *
+<span class="lineNum">     255 </span>            :    * Cancelling the timer does not change the expiry time.
+<span class="lineNum">     256 </span>            :    *
+<span class="lineNum">     257 </span>            :    * @return The number of asynchronous operations that were cancelled. That is,
+<span class="lineNum">     258 </span>            :    * either 0 or 1.
+<span class="lineNum">     259 </span>            :    *
+<span class="lineNum">     260 </span>            :    * @throws boost::system::system_error Thrown on failure.
+<span class="lineNum">     261 </span>            :    *
+<span class="lineNum">     262 </span>            :    * @note If the timer has already expired when cancel_one() is called, then
+<span class="lineNum">     263 </span>            :    * the handlers for asynchronous wait operations will:
+<span class="lineNum">     264 </span>            :    *
+<span class="lineNum">     265 </span>            :    * @li have already been invoked; or
+<span class="lineNum">     266 </span>            :    *
+<span class="lineNum">     267 </span>            :    * @li have been queued for invocation in the near future.
+<span class="lineNum">     268 </span>            :    *
+<span class="lineNum">     269 </span>            :    * These handlers can no longer be cancelled, and therefore are passed an
+<span class="lineNum">     270 </span>            :    * error code that indicates the successful completion of the wait operation.
+<span class="lineNum">     271 </span>            :    */
+<span class="lineNum">     272 </span>            :   std::size_t cancel_one()
+<span class="lineNum">     273 </span>            :   {
+<span class="lineNum">     274 </span>            :     boost::system::error_code ec;
+<span class="lineNum">     275 </span>            :     std::size_t s = this-&gt;service.cancel_one(this-&gt;implementation, ec);
+<span class="lineNum">     276 </span>            :     boost::asio::detail::throw_error(ec, &quot;cancel_one&quot;);
+<span class="lineNum">     277 </span>            :     return s;
+<span class="lineNum">     278 </span>            :   }
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span>            :   /// Cancels one asynchronous operation that is waiting on the timer.
+<span class="lineNum">     281 </span>            :   /**
+<span class="lineNum">     282 </span>            :    * This function forces the completion of one pending asynchronous wait
+<span class="lineNum">     283 </span>            :    * operation against the timer. Handlers are cancelled in FIFO order. The
+<span class="lineNum">     284 </span>            :    * handler for the cancelled operation will be invoked with the
+<span class="lineNum">     285 </span>            :    * boost::asio::error::operation_aborted error code.
+<span class="lineNum">     286 </span>            :    *
+<span class="lineNum">     287 </span>            :    * Cancelling the timer does not change the expiry time.
+<span class="lineNum">     288 </span>            :    *
+<span class="lineNum">     289 </span>            :    * @param ec Set to indicate what error occurred, if any.
+<span class="lineNum">     290 </span>            :    *
+<span class="lineNum">     291 </span>            :    * @return The number of asynchronous operations that were cancelled. That is,
+<span class="lineNum">     292 </span>            :    * either 0 or 1.
+<span class="lineNum">     293 </span>            :    *
+<span class="lineNum">     294 </span>            :    * @note If the timer has already expired when cancel_one() is called, then
+<span class="lineNum">     295 </span>            :    * the handlers for asynchronous wait operations will:
+<span class="lineNum">     296 </span>            :    *
+<span class="lineNum">     297 </span>            :    * @li have already been invoked; or
+<span class="lineNum">     298 </span>            :    *
+<span class="lineNum">     299 </span>            :    * @li have been queued for invocation in the near future.
+<span class="lineNum">     300 </span>            :    *
+<span class="lineNum">     301 </span>            :    * These handlers can no longer be cancelled, and therefore are passed an
+<span class="lineNum">     302 </span>            :    * error code that indicates the successful completion of the wait operation.
+<span class="lineNum">     303 </span>            :    */
+<span class="lineNum">     304 </span>            :   std::size_t cancel_one(boost::system::error_code&amp; ec)
+<span class="lineNum">     305 </span>            :   {
+<span class="lineNum">     306 </span>            :     return this-&gt;service.cancel_one(this-&gt;implementation, ec);
+<span class="lineNum">     307 </span>            :   }
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span>            :   /// Get the timer's expiry time as an absolute time.
+<span class="lineNum">     310 </span>            :   /**
+<span class="lineNum">     311 </span>            :    * This function may be used to obtain the timer's current expiry time.
+<span class="lineNum">     312 </span>            :    * Whether the timer has expired or not does not affect this value.
+<span class="lineNum">     313 </span>            :    */
+<span class="lineNum">     314 </span>            :   time_type expires_at() const
+<span class="lineNum">     315 </span>            :   {
+<span class="lineNum">     316 </span>            :     return this-&gt;service.expires_at(this-&gt;implementation);
+<span class="lineNum">     317 </span>            :   }
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            :   /// Set the timer's expiry time as an absolute time.
+<span class="lineNum">     320 </span>            :   /**
+<span class="lineNum">     321 </span>            :    * This function sets the expiry time. Any pending asynchronous wait
+<span class="lineNum">     322 </span>            :    * operations will be cancelled. The handler for each cancelled operation will
+<span class="lineNum">     323 </span>            :    * be invoked with the boost::asio::error::operation_aborted error code.
+<span class="lineNum">     324 </span>            :    *
+<span class="lineNum">     325 </span>            :    * @param expiry_time The expiry time to be used for the timer.
+<span class="lineNum">     326 </span>            :    *
+<span class="lineNum">     327 </span>            :    * @return The number of asynchronous operations that were cancelled.
+<span class="lineNum">     328 </span>            :    *
+<span class="lineNum">     329 </span>            :    * @throws boost::system::system_error Thrown on failure.
+<span class="lineNum">     330 </span>            :    *
+<span class="lineNum">     331 </span>            :    * @note If the timer has already expired when expires_at() is called, then
+<span class="lineNum">     332 </span>            :    * the handlers for asynchronous wait operations will:
+<span class="lineNum">     333 </span>            :    *
+<span class="lineNum">     334 </span>            :    * @li have already been invoked; or
+<span class="lineNum">     335 </span>            :    *
+<span class="lineNum">     336 </span>            :    * @li have been queued for invocation in the near future.
+<span class="lineNum">     337 </span>            :    *
+<span class="lineNum">     338 </span>            :    * These handlers can no longer be cancelled, and therefore are passed an
+<span class="lineNum">     339 </span>            :    * error code that indicates the successful completion of the wait operation.
+<span class="lineNum">     340 </span>            :    */
+<span class="lineNum">     341 </span>            :   std::size_t expires_at(const time_type&amp; expiry_time)
+<span class="lineNum">     342 </span>            :   {
+<span class="lineNum">     343 </span>            :     boost::system::error_code ec;
+<span class="lineNum">     344 </span>            :     std::size_t s = this-&gt;service.expires_at(
+<span class="lineNum">     345 </span>            :         this-&gt;implementation, expiry_time, ec);
+<span class="lineNum">     346 </span>            :     boost::asio::detail::throw_error(ec, &quot;expires_at&quot;);
+<span class="lineNum">     347 </span>            :     return s;
+<span class="lineNum">     348 </span>            :   }
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span>            :   /// Set the timer's expiry time as an absolute time.
+<span class="lineNum">     351 </span>            :   /**
+<span class="lineNum">     352 </span>            :    * This function sets the expiry time. Any pending asynchronous wait
+<span class="lineNum">     353 </span>            :    * operations will be cancelled. The handler for each cancelled operation will
+<span class="lineNum">     354 </span>            :    * be invoked with the boost::asio::error::operation_aborted error code.
+<span class="lineNum">     355 </span>            :    *
+<span class="lineNum">     356 </span>            :    * @param expiry_time The expiry time to be used for the timer.
+<span class="lineNum">     357 </span>            :    *
+<span class="lineNum">     358 </span>            :    * @param ec Set to indicate what error occurred, if any.
+<span class="lineNum">     359 </span>            :    *
+<span class="lineNum">     360 </span>            :    * @return The number of asynchronous operations that were cancelled.
+<span class="lineNum">     361 </span>            :    *
+<span class="lineNum">     362 </span>            :    * @note If the timer has already expired when expires_at() is called, then
+<span class="lineNum">     363 </span>            :    * the handlers for asynchronous wait operations will:
+<span class="lineNum">     364 </span>            :    *
+<span class="lineNum">     365 </span>            :    * @li have already been invoked; or
+<span class="lineNum">     366 </span>            :    *
+<span class="lineNum">     367 </span>            :    * @li have been queued for invocation in the near future.
+<span class="lineNum">     368 </span>            :    *
+<span class="lineNum">     369 </span>            :    * These handlers can no longer be cancelled, and therefore are passed an
+<span class="lineNum">     370 </span>            :    * error code that indicates the successful completion of the wait operation.
+<span class="lineNum">     371 </span>            :    */
+<span class="lineNum">     372 </span>            :   std::size_t expires_at(const time_type&amp; expiry_time,
+<span class="lineNum">     373 </span>            :       boost::system::error_code&amp; ec)
+<span class="lineNum">     374 </span>            :   {
+<span class="lineNum">     375 </span>            :     return this-&gt;service.expires_at(this-&gt;implementation, expiry_time, ec);
+<span class="lineNum">     376 </span>            :   }
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span>            :   /// Get the timer's expiry time relative to now.
+<span class="lineNum">     379 </span>            :   /**
+<span class="lineNum">     380 </span>            :    * This function may be used to obtain the timer's current expiry time.
+<span class="lineNum">     381 </span>            :    * Whether the timer has expired or not does not affect this value.
+<span class="lineNum">     382 </span>            :    */
+<span class="lineNum">     383 </span>            :   duration_type expires_from_now() const
+<span class="lineNum">     384 </span>            :   {
+<span class="lineNum">     385 </span><span class="lineCov">       1520 :     return this-&gt;service.expires_from_now(this-&gt;implementation);</span>
+<span class="lineNum">     386 </span>            :   }
+<span class="lineNum">     387 </span>            : 
+<span class="lineNum">     388 </span>            :   /// Set the timer's expiry time relative to now.
+<span class="lineNum">     389 </span>            :   /**
+<span class="lineNum">     390 </span>            :    * This function sets the expiry time. Any pending asynchronous wait
+<span class="lineNum">     391 </span>            :    * operations will be cancelled. The handler for each cancelled operation will
+<span class="lineNum">     392 </span>            :    * be invoked with the boost::asio::error::operation_aborted error code.
+<span class="lineNum">     393 </span>            :    *
+<span class="lineNum">     394 </span>            :    * @param expiry_time The expiry time to be used for the timer.
+<span class="lineNum">     395 </span>            :    *
+<span class="lineNum">     396 </span>            :    * @return The number of asynchronous operations that were cancelled.
+<span class="lineNum">     397 </span>            :    *
+<span class="lineNum">     398 </span>            :    * @throws boost::system::system_error Thrown on failure.
+<span class="lineNum">     399 </span>            :    *
+<span class="lineNum">     400 </span>            :    * @note If the timer has already expired when expires_from_now() is called,
+<span class="lineNum">     401 </span>            :    * then the handlers for asynchronous wait operations will:
+<span class="lineNum">     402 </span>            :    *
+<span class="lineNum">     403 </span>            :    * @li have already been invoked; or
+<span class="lineNum">     404 </span>            :    *
+<span class="lineNum">     405 </span>            :    * @li have been queued for invocation in the near future.
+<span class="lineNum">     406 </span>            :    *
+<span class="lineNum">     407 </span>            :    * These handlers can no longer be cancelled, and therefore are passed an
+<a name="408"><span class="lineNum">     408 </span>            :    * error code that indicates the successful completion of the wait operation.</a>
+<span class="lineNum">     409 </span>            :    */
+<span class="lineNum">     410 </span><span class="lineCov">        802 :   std::size_t expires_from_now(const duration_type&amp; expiry_time)</span>
+<span class="lineNum">     411 </span>            :   {
+<span class="lineNum">     412 </span><span class="lineCov">        802 :     boost::system::error_code ec;</span>
+<span class="lineNum">     413 </span>            :     std::size_t s = this-&gt;service.expires_from_now(
+<span class="lineNum">     414 </span><span class="lineCov">       1604 :         this-&gt;implementation, expiry_time, ec);</span>
+<span class="lineNum">     415 </span><span class="lineCov">        802 :     boost::asio::detail::throw_error(ec, &quot;expires_from_now&quot;);</span>
+<span class="lineNum">     416 </span><span class="lineCov">        802 :     return s;</span>
+<span class="lineNum">     417 </span>            :   }
+<span class="lineNum">     418 </span>            : 
+<span class="lineNum">     419 </span>            :   /// Set the timer's expiry time relative to now.
+<span class="lineNum">     420 </span>            :   /**
+<span class="lineNum">     421 </span>            :    * This function sets the expiry time. Any pending asynchronous wait
+<span class="lineNum">     422 </span>            :    * operations will be cancelled. The handler for each cancelled operation will
+<span class="lineNum">     423 </span>            :    * be invoked with the boost::asio::error::operation_aborted error code.
+<span class="lineNum">     424 </span>            :    *
+<span class="lineNum">     425 </span>            :    * @param expiry_time The expiry time to be used for the timer.
+<span class="lineNum">     426 </span>            :    *
+<span class="lineNum">     427 </span>            :    * @param ec Set to indicate what error occurred, if any.
+<span class="lineNum">     428 </span>            :    *
+<span class="lineNum">     429 </span>            :    * @return The number of asynchronous operations that were cancelled.
+<span class="lineNum">     430 </span>            :    *
+<span class="lineNum">     431 </span>            :    * @note If the timer has already expired when expires_from_now() is called,
+<span class="lineNum">     432 </span>            :    * then the handlers for asynchronous wait operations will:
+<span class="lineNum">     433 </span>            :    *
+<span class="lineNum">     434 </span>            :    * @li have already been invoked; or
+<span class="lineNum">     435 </span>            :    *
+<span class="lineNum">     436 </span>            :    * @li have been queued for invocation in the near future.
+<span class="lineNum">     437 </span>            :    *
+<span class="lineNum">     438 </span>            :    * These handlers can no longer be cancelled, and therefore are passed an
+<span class="lineNum">     439 </span>            :    * error code that indicates the successful completion of the wait operation.
+<span class="lineNum">     440 </span>            :    */
+<span class="lineNum">     441 </span>            :   std::size_t expires_from_now(const duration_type&amp; expiry_time,
+<span class="lineNum">     442 </span>            :       boost::system::error_code&amp; ec)
+<span class="lineNum">     443 </span>            :   {
+<span class="lineNum">     444 </span>            :     return this-&gt;service.expires_from_now(
+<span class="lineNum">     445 </span>            :         this-&gt;implementation, expiry_time, ec);
+<span class="lineNum">     446 </span>            :   }
+<span class="lineNum">     447 </span>            : 
+<span class="lineNum">     448 </span>            :   /// Perform a blocking wait on the timer.
+<span class="lineNum">     449 </span>            :   /**
+<span class="lineNum">     450 </span>            :    * This function is used to wait for the timer to expire. This function
+<span class="lineNum">     451 </span>            :    * blocks and does not return until the timer has expired.
+<span class="lineNum">     452 </span>            :    *
+<a name="453"><span class="lineNum">     453 </span>            :    * @throws boost::system::system_error Thrown on failure.</a>
+<span class="lineNum">     454 </span>            :    */
+<span class="lineNum">     455 </span><span class="lineCov">        380 :   void wait()</span>
+<span class="lineNum">     456 </span>            :   {
+<span class="lineNum">     457 </span><span class="lineCov">        380 :     boost::system::error_code ec;</span>
+<span class="lineNum">     458 </span><span class="lineCov">        760 :     this-&gt;service.wait(this-&gt;implementation, ec);</span>
+<span class="lineNum">     459 </span><span class="lineCov">        380 :     boost::asio::detail::throw_error(ec, &quot;wait&quot;);</span>
+<span class="lineNum">     460 </span><span class="lineCov">        380 :   }</span>
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span>            :   /// Perform a blocking wait on the timer.
+<span class="lineNum">     463 </span>            :   /**
+<span class="lineNum">     464 </span>            :    * This function is used to wait for the timer to expire. This function
+<span class="lineNum">     465 </span>            :    * blocks and does not return until the timer has expired.
+<span class="lineNum">     466 </span>            :    *
+<span class="lineNum">     467 </span>            :    * @param ec Set to indicate what error occurred, if any.
+<span class="lineNum">     468 </span>            :    */
+<span class="lineNum">     469 </span>            :   void wait(boost::system::error_code&amp; ec)
+<span class="lineNum">     470 </span>            :   {
+<span class="lineNum">     471 </span>            :     this-&gt;service.wait(this-&gt;implementation, ec);
+<span class="lineNum">     472 </span>            :   }
+<span class="lineNum">     473 </span>            : 
+<span class="lineNum">     474 </span>            :   /// Start an asynchronous wait on the timer.
+<span class="lineNum">     475 </span>            :   /**
+<span class="lineNum">     476 </span>            :    * This function may be used to initiate an asynchronous wait against the
+<span class="lineNum">     477 </span>            :    * timer. It always returns immediately.
+<span class="lineNum">     478 </span>            :    *
+<span class="lineNum">     479 </span>            :    * For each call to async_wait(), the supplied handler will be called exactly
+<span class="lineNum">     480 </span>            :    * once. The handler will be called when:
+<span class="lineNum">     481 </span>            :    *
+<span class="lineNum">     482 </span>            :    * @li The timer has expired.
+<span class="lineNum">     483 </span>            :    *
+<span class="lineNum">     484 </span>            :    * @li The timer was cancelled, in which case the handler is passed the error
+<span class="lineNum">     485 </span>            :    * code boost::asio::error::operation_aborted.
+<span class="lineNum">     486 </span>            :    *
+<span class="lineNum">     487 </span>            :    * @param handler The handler to be called when the timer expires. Copies
+<span class="lineNum">     488 </span>            :    * will be made of the handler as required. The function signature of the
+<span class="lineNum">     489 </span>            :    * handler must be:
+<span class="lineNum">     490 </span>            :    * @code void handler(
+<span class="lineNum">     491 </span>            :    *   const boost::system::error_code&amp; error // Result of operation.
+<span class="lineNum">     492 </span>            :    * ); @endcode
+<span class="lineNum">     493 </span>            :    * Regardless of whether the asynchronous operation completes immediately or
+<span class="lineNum">     494 </span>            :    * not, the handler will not be invoked from within this function. Invocation
+<span class="lineNum">     495 </span>            :    * of the handler will be performed in a manner equivalent to using
+<span class="lineNum">     496 </span>            :    * boost::asio::io_service::post().
+<span class="lineNum">     497 </span>            :    */
+<span class="lineNum">     498 </span>            :   template &lt;typename WaitHandler&gt;
+<span class="lineNum">     499 </span>            :   BOOST_ASIO_INITFN_RESULT_TYPE(WaitHandler,
+<span class="lineNum">     500 </span>            :       void (boost::system::error_code))
+<span class="lineNum">     501 </span>            :   async_wait(BOOST_ASIO_MOVE_ARG(WaitHandler) handler)
+<span class="lineNum">     502 </span>            :   {
+<span class="lineNum">     503 </span>            :     // If you get an error on the following line it means that your handler does
+<span class="lineNum">     504 </span>            :     // not meet the documented type requirements for a WaitHandler.
+<span class="lineNum">     505 </span>            :     BOOST_ASIO_WAIT_HANDLER_CHECK(WaitHandler, handler) type_check;
+<span class="lineNum">     506 </span>            : 
+<span class="lineNum">     507 </span>            :     return this-&gt;service.async_wait(this-&gt;implementation,
+<span class="lineNum">     508 </span><span class="lineCov">       1010 :         BOOST_ASIO_MOVE_CAST(WaitHandler)(handler));</span>
+<span class="lineNum">     509 </span>            :   }
+<span class="lineNum">     510 </span>            : };
+<span class="lineNum">     511 </span>            : 
+<span class="lineNum">     512 </span>            : } // namespace asio
+<span class="lineNum">     513 </span>            : } // namespace boost
+<span class="lineNum">     514 </span>            : 
+<span class="lineNum">     515 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     516 </span>            : 
+<span class="lineNum">     517 </span>            : #endif // defined(BOOST_ASIO_HAS_BOOST_DATE_TIME)
+<span class="lineNum">     518 </span>            :        // || defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">     519 </span>            : 
+<span class="lineNum">     520 </span>            : #endif // BOOST_ASIO_BASIC_DEADLINE_TIMER_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

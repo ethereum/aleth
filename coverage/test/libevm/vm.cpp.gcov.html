@@ -1,0 +1,637 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libevm/vm.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libevm</a> - vm.cpp<span style="font-size: 80%;"> (source / <a href="vm.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">217</td>
+            <td class="headerCovTableEntry">334</td>
+            <td class="headerCovTableEntryLo">65.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">41</td>
+            <td class="headerCovTableEntry">48</td>
+            <td class="headerCovTableEntryMed">85.4 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file vm.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  * vm test functions.
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;boost/filesystem.hpp&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;libethereum/Executive.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libevm/VMFactory.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libevm/ExtVMFace.h&gt;
+<span class="lineNum">      28 </span>            : #include &quot;vm.h&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : using namespace std;
+<span class="lineNum">      31 </span>            : using namespace json_spirit;
+<span class="lineNum">      32 </span>            : using namespace dev;
+<span class="lineNum">      33 </span>            : using namespace dev::eth;
+<a name="34"><span class="lineNum">      34 </span>            : using namespace dev::test;</a>
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span><span class="lineCov">       1190 : FakeExtVM::FakeExtVM(EnvInfo const&amp; _envInfo, unsigned _depth):                     /// TODO: XXX: remove the default argument &amp; fix.</span>
+<span class="lineNum">      37 </span><span class="lineCov">      16660 :         ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, _depth)</span>
+<a name="38"><span class="lineNum">      38 </span><span class="lineCov">       1190 : {}</span></a>
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">          2 : h160 FakeExtVM::create(u256 _endowment, u256&amp; io_gas, bytesConstRef _init, OnOpFunc const&amp;)</span>
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span><span class="lineCov">         10 :         Address na = right160(sha3(rlpList(myAddress, get&lt;1&gt;(addresses[myAddress]))));</span>
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span><span class="lineCov">          8 :         Transaction t(_endowment, gasPrice, io_gas, _init.toBytes());</span>
+<span class="lineNum">      45 </span><span class="lineCov">          2 :         callcreates.push_back(t);</span>
+<span class="lineNum">      46 </span><span class="lineCov">          2 :         return na;</span>
+<a name="47"><span class="lineNum">      47 </span>            : }</a>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineCov">         17 : boost::optional&lt;eth::owning_bytes_ref&gt; FakeExtVM::call(CallParameters&amp; _p)</span>
+<span class="lineNum">      50 </span>            : {
+<span class="lineNum">      51 </span><span class="lineCov">         85 :         Transaction t(_p.valueTransfer, gasPrice, _p.gas, _p.receiveAddress, _p.data.toVector());</span>
+<span class="lineNum">      52 </span><span class="lineCov">         17 :         callcreates.push_back(t);</span>
+<span class="lineNum">      53 </span><span class="lineCov">         85 :         return eth::owning_bytes_ref{};  // Return empty output.</span>
+<a name="54"><span class="lineNum">      54 </span>            : }</a>
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 : void FakeExtVM::set(Address _a, u256 _myBalance, u256 _myNonce, map&lt;u256, u256&gt; const&amp; _storage, bytes const&amp; _code)</span>
+<span class="lineNum">      57 </span>            : {
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :         get&lt;0&gt;(addresses[_a]) = _myBalance;</span>
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :         get&lt;1&gt;(addresses[_a]) = _myNonce;</span>
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :         get&lt;2&gt;(addresses[_a]) = _storage;</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :         get&lt;3&gt;(addresses[_a]) = _code;</span>
+<a name="62"><span class="lineNum">      62 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 : void FakeExtVM::reset(u256 _myBalance, u256 _myNonce, map&lt;u256, u256&gt; const&amp; _storage)</span>
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :         callcreates.clear();</span>
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :         addresses.clear();</span>
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :         set(myAddress, _myBalance, _myNonce, _storage, get&lt;3&gt;(addresses[myAddress]));</span>
+<a name="69"><span class="lineNum">      69 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 : mObject FakeExtVM::exportEnv()</span>
+<span class="lineNum">      72 </span>            : {
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :         mObject ret;</span>
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :         ret[&quot;currentDifficulty&quot;] = toCompactHex(envInfo().difficulty(), HexPrefix::Add, 1);</span>
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :         ret[&quot;currentTimestamp&quot;] =  toCompactHex(envInfo().timestamp(), HexPrefix::Add, 1);</span>
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :         ret[&quot;currentCoinbase&quot;] = toString(envInfo().author());</span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :         ret[&quot;currentNumber&quot;] = toCompactHex(envInfo().number(), HexPrefix::Add, 1);</span>
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :         ret[&quot;currentGasLimit&quot;] = toCompactHex(envInfo().gasLimit(), HexPrefix::Add, 1);</span>
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="80"><span class="lineNum">      80 </span>            : }</a>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span><span class="lineCov">        659 : EnvInfo FakeExtVM::importEnv(mObject&amp; _o)</span>
+<span class="lineNum">      83 </span>            : {
+<span class="lineNum">      84 </span>            :         // cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
+<span class="lineNum">      85 </span><span class="lineCov">       2636 :         assert(_o.count(&quot;currentGasLimit&quot;) &gt; 0);</span>
+<span class="lineNum">      86 </span><span class="lineCov">       2636 :         assert(_o.count(&quot;currentDifficulty&quot;) &gt; 0);</span>
+<span class="lineNum">      87 </span><span class="lineCov">       2636 :         assert(_o.count(&quot;currentTimestamp&quot;) &gt; 0);</span>
+<span class="lineNum">      88 </span><span class="lineCov">       2636 :         assert(_o.count(&quot;currentCoinbase&quot;) &gt; 0);</span>
+<span class="lineNum">      89 </span><span class="lineCov">       2636 :         assert(_o.count(&quot;currentNumber&quot;) &gt; 0);</span>
+<span class="lineNum">      90 </span><span class="lineCov">       1977 :         auto gasLimit = toInt(_o[&quot;currentGasLimit&quot;]);</span>
+<span class="lineNum">      91 </span><span class="lineCov">        659 :         assert(gasLimit &lt;= std::numeric_limits&lt;int64_t&gt;::max());</span>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">        659 :         EnvInfo info;</span>
+<span class="lineNum">      94 </span><span class="lineCov">       1318 :         info.setGasLimit(gasLimit.convert_to&lt;int64_t&gt;());</span>
+<span class="lineNum">      95 </span><span class="lineCov">       2636 :         info.setDifficulty(toInt(_o[&quot;currentDifficulty&quot;]));</span>
+<span class="lineNum">      96 </span><span class="lineCov">       2636 :         info.setTimestamp(toInt(_o[&quot;currentTimestamp&quot;]));</span>
+<span class="lineNum">      97 </span><span class="lineCov">       2636 :         info.setAuthor(Address(_o[&quot;currentCoinbase&quot;].get_str()));</span>
+<span class="lineNum">      98 </span><span class="lineCov">       3295 :         info.setNumber(toInt(_o[&quot;currentNumber&quot;]));</span>
+<span class="lineNum">      99 </span><span class="lineCov">       2636 :         info.setLastHashes( lastHashes( info.number() ) );</span>
+<span class="lineNum">     100 </span><span class="lineCov">        659 :         return info;</span>
+<a name="101"><span class="lineNum">     101 </span>            : }</a>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">        531 : mObject FakeExtVM::exportState()</span>
+<span class="lineNum">     104 </span>            : {
+<span class="lineNum">     105 </span><span class="lineCov">        531 :         mObject ret;</span>
+<span class="lineNum">     106 </span><span class="lineCov">       2148 :         for (auto const&amp; a: addresses)</span>
+<span class="lineNum">     107 </span>            :         {
+<span class="lineNum">     108 </span><span class="lineCov">       1110 :                 mObject o;</span>
+<span class="lineNum">     109 </span><span class="lineCov">       4995 :                 o[&quot;balance&quot;] = toCompactHex(get&lt;0&gt;(a.second), HexPrefix::Add, 1);</span>
+<span class="lineNum">     110 </span><span class="lineCov">       4995 :                 o[&quot;nonce&quot;] = toCompactHex(get&lt;1&gt;(a.second), HexPrefix::Add, 1);</span>
+<span class="lineNum">     111 </span>            :                 {
+<span class="lineNum">     112 </span><span class="lineCov">       1110 :                         mObject store;</span>
+<span class="lineNum">     113 </span><span class="lineCov">       2847 :                         for (auto const&amp; s: get&lt;2&gt;(a.second))</span>
+<span class="lineNum">     114 </span><span class="lineCov">       4389 :                                 store[toCompactHex(s.first, HexPrefix::Add, 1)] = toCompactHex(s.second, HexPrefix::Add, 1);</span>
+<span class="lineNum">     115 </span><span class="lineCov">       2775 :                         o[&quot;storage&quot;] = store;</span>
+<span class="lineNum">     116 </span>            :                 }
+<span class="lineNum">     117 </span><span class="lineCov">       4440 :                 o[&quot;code&quot;] = toHex(get&lt;3&gt;(a.second), 2, HexPrefix::Add);</span>
+<span class="lineNum">     118 </span><span class="lineCov">       1665 :                 ret[toString(a.first)] = o;</span>
+<span class="lineNum">     119 </span>            :         }
+<span class="lineNum">     120 </span><span class="lineCov">        531 :         return ret;</span>
+<a name="121"><span class="lineNum">     121 </span>            : }</a>
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span><span class="lineCov">       1190 : void FakeExtVM::importState(mObject&amp; _object)</span>
+<span class="lineNum">     124 </span>            : {
+<span class="lineNum">     125 </span><span class="lineCov">       4816 :         for (auto const&amp; i: _object)</span>
+<span class="lineNum">     126 </span>            :         {
+<span class="lineNum">     127 </span><span class="lineCov">       3738 :                 mObject o = i.second.get_obj();</span>
+<span class="lineNum">     128 </span>            :                 // cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
+<span class="lineNum">     129 </span><span class="lineCov">       4984 :                 assert(o.count(&quot;balance&quot;) &gt; 0);</span>
+<span class="lineNum">     130 </span><span class="lineCov">       4984 :                 assert(o.count(&quot;nonce&quot;) &gt; 0);</span>
+<span class="lineNum">     131 </span><span class="lineCov">       4984 :                 assert(o.count(&quot;storage&quot;) &gt; 0);</span>
+<span class="lineNum">     132 </span><span class="lineCov">       4984 :                 assert(o.count(&quot;code&quot;) &gt; 0);</span>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">       1246 :                 auto&amp; a = addresses[Address(i.first)];</span>
+<span class="lineNum">     135 </span><span class="lineCov">       6230 :                 get&lt;0&gt;(a) = toInt(o[&quot;balance&quot;]);</span>
+<span class="lineNum">     136 </span><span class="lineCov">       6230 :                 get&lt;1&gt;(a) = toInt(o[&quot;nonce&quot;]);</span>
+<span class="lineNum">     137 </span><span class="lineCov">       8120 :                 for (auto const&amp; j: o[&quot;storage&quot;].get_obj())</span>
+<span class="lineNum">     138 </span><span class="lineCov">       3220 :                         get&lt;2&gt;(a)[toInt(j.first)] = toInt(j.second);</span>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span><span class="lineCov">       4984 :                 get&lt;3&gt;(a) = importCode(o);</span>
+<span class="lineNum">     141 </span>            :         }
+<a name="142"><span class="lineNum">     142 </span><span class="lineCov">       1190 : }</span></a>
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 : mObject FakeExtVM::exportExec()</span>
+<span class="lineNum">     145 </span>            : {
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :         mObject ret;</span>
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :         ret[&quot;address&quot;] = toString(myAddress);</span>
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :         ret[&quot;caller&quot;] = toString(caller);</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :         ret[&quot;origin&quot;] = toString(origin);</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :         ret[&quot;value&quot;] = toCompactHex(value, HexPrefix::Add, 1);</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :         ret[&quot;gasPrice&quot;] = toCompactHex(gasPrice, HexPrefix::Add, 1);</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :         ret[&quot;gas&quot;] = toCompactHex(execGas, HexPrefix::Add, 1);</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :         ret[&quot;data&quot;] = toHex(data, 2, HexPrefix::Add);</span>
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :         ret[&quot;code&quot;] = toHex(code, 2, HexPrefix::Add);</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="156"><span class="lineNum">     156 </span>            : }</a>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineCov">        659 : void FakeExtVM::importExec(mObject&amp; _o)</span>
+<span class="lineNum">     159 </span>            : {
+<span class="lineNum">     160 </span>            :         // cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
+<span class="lineNum">     161 </span><span class="lineCov">       2636 :         assert(_o.count(&quot;address&quot;)&gt; 0);</span>
+<span class="lineNum">     162 </span><span class="lineCov">       2636 :         assert(_o.count(&quot;caller&quot;) &gt; 0);</span>
+<span class="lineNum">     163 </span><span class="lineCov">       2636 :         assert(_o.count(&quot;origin&quot;) &gt; 0);</span>
+<span class="lineNum">     164 </span><span class="lineCov">       2636 :         assert(_o.count(&quot;value&quot;) &gt; 0);</span>
+<span class="lineNum">     165 </span><span class="lineCov">       2636 :         assert(_o.count(&quot;data&quot;) &gt; 0);</span>
+<span class="lineNum">     166 </span><span class="lineCov">       2636 :         assert(_o.count(&quot;gasPrice&quot;) &gt; 0);</span>
+<span class="lineNum">     167 </span><span class="lineCov">       2636 :         assert(_o.count(&quot;gas&quot;) &gt; 0);</span>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineCov">       1977 :         myAddress = Address(_o[&quot;address&quot;].get_str());</span>
+<span class="lineNum">     170 </span><span class="lineCov">       1977 :         caller = Address(_o[&quot;caller&quot;].get_str());</span>
+<span class="lineNum">     171 </span><span class="lineCov">       1977 :         origin = Address(_o[&quot;origin&quot;].get_str());</span>
+<span class="lineNum">     172 </span><span class="lineCov">       2636 :         value = toInt(_o[&quot;value&quot;]);</span>
+<span class="lineNum">     173 </span><span class="lineCov">       2636 :         gasPrice = toInt(_o[&quot;gasPrice&quot;]);</span>
+<span class="lineNum">     174 </span><span class="lineCov">       2636 :         gas = toInt(_o[&quot;gas&quot;]);</span>
+<span class="lineNum">     175 </span><span class="lineCov">       1318 :         execGas = gas;</span>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineCov">       1318 :         thisTxCode.clear();</span>
+<span class="lineNum">     178 </span><span class="lineCov">        659 :         code = thisTxCode;</span>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineCov">       1977 :         thisTxCode = importCode(_o);</span>
+<span class="lineNum">     181 </span><span class="lineCov">       1977 :         if (_o[&quot;code&quot;].type() != str_type &amp;&amp; _o[&quot;code&quot;].type() != array_type)</span>
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :                 code.clear();</span>
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span><span class="lineCov">       1318 :         thisTxData.clear();</span>
+<span class="lineNum">     185 </span><span class="lineCov">       1977 :         thisTxData = importData(_o);</span>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">       1318 :         data = &amp;thisTxData;</span>
+<a name="188"><span class="lineNum">     188 </span><span class="lineCov">        659 : }</span></a>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 : mArray FakeExtVM::exportCallCreates()</span>
+<span class="lineNum">     191 </span>            : {
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :         mArray ret;</span>
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :         for (Transaction const&amp; tx: callcreates)</span>
+<span class="lineNum">     194 </span>            :         {
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :                 mObject o;</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :                 o[&quot;destination&quot;] = tx.isCreation() ? &quot;&quot; : toString(tx.receiveAddress());</span>
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :                 o[&quot;gasLimit&quot;] = toCompactHex(tx.gas(), HexPrefix::Add, 1);</span>
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :                 o[&quot;value&quot;] = toCompactHex(tx.value(), HexPrefix::Add, 1);</span>
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :                 o[&quot;data&quot;] = toHex(tx.data(), 2, HexPrefix::Add);</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :                 ret.push_back(o);</span>
+<span class="lineNum">     201 </span>            :         }
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="203"><span class="lineNum">     203 </span>            : }</a>
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span><span class="lineCov">        531 : void FakeExtVM::importCallCreates(mArray&amp; _callcreates)</span>
+<span class="lineNum">     206 </span>            : {
+<span class="lineNum">     207 </span><span class="lineCov">       2143 :         for (mValue&amp; v: _callcreates)</span>
+<span class="lineNum">     208 </span>            :         {
+<span class="lineNum">     209 </span><span class="lineCov">         57 :                 auto tx = v.get_obj();</span>
+<span class="lineNum">     210 </span><span class="lineCov">         76 :                 assert(tx.count(&quot;data&quot;) &gt; 0);</span>
+<span class="lineNum">     211 </span><span class="lineCov">         76 :                 assert(tx.count(&quot;value&quot;) &gt; 0);</span>
+<span class="lineNum">     212 </span><span class="lineCov">         76 :                 assert(tx.count(&quot;destination&quot;) &gt; 0);</span>
+<span class="lineNum">     213 </span><span class="lineCov">         76 :                 assert(tx.count(&quot;gasLimit&quot;) &gt; 0);</span>
+<span class="lineNum">     214 </span><span class="lineCov">         76 :                 Transaction t = tx[&quot;destination&quot;].get_str().empty() ?</span>
+<span class="lineNum">     215 </span><span class="lineCov">         56 :                         Transaction(toInt(tx[&quot;value&quot;]), 0, toInt(tx[&quot;gasLimit&quot;]), fromHex(tx[&quot;data&quot;].get_str())) :</span>
+<span class="lineNum">     216 </span><span class="lineCov">        288 :                         Transaction(toInt(tx[&quot;value&quot;]), 0, toInt(tx[&quot;gasLimit&quot;]), Address(tx[&quot;destination&quot;].get_str()), fromHex(tx[&quot;data&quot;].get_str()));</span>
+<span class="lineNum">     217 </span><span class="lineCov">         19 :                 callcreates.push_back(t);</span>
+<span class="lineNum">     218 </span>            :         }
+<a name="219"><span class="lineNum">     219 </span><span class="lineCov">        531 : }</span></a>
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 : eth::OnOpFunc FakeExtVM::simpleTrace() const</span>
+<a name="222"><span class="lineNum">     222 </span>            : {</a>
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :         return [](uint64_t steps, uint64_t pc, eth::Instruction inst, bigint newMemSize, bigint gasCost, bigint gas, dev::eth::VM* voidVM, dev::eth::ExtVMFace const* voidExt)</span>
+<span class="lineNum">     225 </span>            :         {
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :                 FakeExtVM const&amp; ext = *static_cast&lt;FakeExtVM const*&gt;(voidExt);</span>
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :                 eth::VM&amp; vm = *voidVM;</span>
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :                 std::ostringstream o;</span>
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :                 o &lt;&lt; std::endl &lt;&lt; &quot;    STACK&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 :                 for (auto i: vm.stack())</span>
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :                         o &lt;&lt; (h256)i &lt;&lt; std::endl;</span>
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :                 o &lt;&lt; &quot;    MEMORY&quot; &lt;&lt; std::endl &lt;&lt; memDump(vm.memory());</span>
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :                 o &lt;&lt; &quot;    STORAGE&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span><span class="lineNoCov">          0 :                 for (auto const&amp; i: std::get&lt;2&gt;(ext.addresses.find(ext.myAddress)-&gt;second))</span>
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 :                         o &lt;&lt; std::showbase &lt;&lt; std::hex &lt;&lt; i.first &lt;&lt; &quot;: &quot; &lt;&lt; i.second &lt;&lt; std::endl;</span>
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :                 dev::LogOutputStream&lt;eth::VMTraceChannel, false&gt;() &lt;&lt; o.str();</span>
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :                 dev::LogOutputStream&lt;eth::VMTraceChannel, false&gt;() &lt;&lt; &quot; | &quot; &lt;&lt; std::dec &lt;&lt; ext.depth &lt;&lt; &quot; | &quot; &lt;&lt; ext.myAddress &lt;&lt; &quot; | #&quot; &lt;&lt; steps &lt;&lt; &quot; | &quot; &lt;&lt; std::hex &lt;&lt; std::setw(4) &lt;&lt; std::setfill('0') &lt;&lt; pc &lt;&lt; &quot; : &quot; &lt;&lt; instructionInfo(inst).name &lt;&lt; &quot; | &quot; &lt;&lt; std::dec &lt;&lt; gas &lt;&lt; &quot; | -&quot; &lt;&lt; std::dec &lt;&lt; gasCost &lt;&lt; &quot; | &quot; &lt;&lt; newMemSize &lt;&lt; &quot;x32&quot; &lt;&lt; &quot; ]&quot;;</span>
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            :                 /*creates json stack trace*/
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :                 if (eth::VMTraceChannel::verbosity &lt;= g_logVerbosity)</span>
+<span class="lineNum">     244 </span>            :                 {
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :                         Object o_step;</span>
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            :                         /*add the stack*/
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :                         Array a_stack;</span>
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :                         for (auto i: vm.stack())</span>
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :                                 a_stack.push_back((string)i);</span>
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :                         o_step.push_back(Pair( &quot;stack&quot;, a_stack ));</span>
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            :                         /*add the memory*/
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :                         Array a_mem;</span>
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :                         for(auto i: vm.memory())</span>
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :                                 a_mem.push_back(i);</span>
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :                         o_step.push_back(Pair(&quot;memory&quot;, a_mem));</span>
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            :                         /*add the storage*/
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :                         Object storage;</span>
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :                         for (auto const&amp; i: std::get&lt;2&gt;(ext.addresses.find(ext.myAddress)-&gt;second))</span>
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :                                 storage.push_back(Pair( (string)i.first , (string)i.second));</span>
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            :                         /*add all the other details*/
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :                         o_step.push_back(Pair(&quot;storage&quot;, storage));</span>
+<span class="lineNum">     268 </span><span class="lineNoCov">          0 :                         o_step.push_back(Pair(&quot;depth&quot;, to_string(ext.depth)));</span>
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :                         o_step.push_back(Pair(&quot;gas&quot;, (string)gas));</span>
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :                         o_step.push_back(Pair(&quot;address&quot;, toString(ext.myAddress )));</span>
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :                         o_step.push_back(Pair(&quot;step&quot;, steps ));</span>
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :                         o_step.push_back(Pair(&quot;pc&quot;, pc));</span>
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :                         o_step.push_back(Pair(&quot;opcode&quot;, instructionInfo(inst).name ));</span>
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            :                         /*append the JSON object to the log file*/
+<span class="lineNum">     276 </span><span class="lineNoCov">          0 :                         Value v(o_step);</span>
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :                         ofstream os( &quot;./stackTrace.json&quot;, ofstream::app);</span>
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :                         os &lt;&lt; write_string(v, true) &lt;&lt; &quot;,&quot;;</span>
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :                         os.close();</span>
+<span class="lineNum">     280 </span>            :                 }
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :         };</span>
+<span class="lineNum">     282 </span>            : }
+<span class="lineNum">     283 </span>            : 
+<a name="284"><span class="lineNum">     284 </span>            : namespace dev { namespace test {</a>
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span><span class="lineCov">         27 : void doVMTests(json_spirit::mValue&amp; _v, bool _fillin)</span>
+<span class="lineNum">     287 </span>            : {
+<span class="lineNum">     288 </span><span class="lineCov">        108 :         if (string(boost::unit_test::framework::current_test_case().p_name) != &quot;vmRandom&quot;)</span>
+<span class="lineNum">     289 </span><span class="lineCov">         10 :                 TestOutputHelper::initTest(_v);</span>
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span><span class="lineCov">        740 :         for (auto&amp; i: _v.get_obj())</span>
+<span class="lineNum">     292 </span>            :         {
+<span class="lineNum">     293 </span><span class="lineCov">       1977 :                 string testname = i.first;</span>
+<span class="lineNum">     294 </span><span class="lineCov">        659 :                 json_spirit::mObject&amp; o = i.second.get_obj();</span>
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span><span class="lineCov">        659 :                 if (!TestOutputHelper::passTest(o, testname))</span>
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :                         continue;</span>
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span><span class="lineCov">       7908 :                 BOOST_REQUIRE_MESSAGE(o.count(&quot;env&quot;) &gt; 0, testname + &quot;env not set!&quot;);</span>
+<span class="lineNum">     300 </span><span class="lineCov">       7908 :                 BOOST_REQUIRE_MESSAGE(o.count(&quot;pre&quot;) &gt; 0, testname + &quot;pre not set!&quot;);</span>
+<span class="lineNum">     301 </span><span class="lineCov">       7908 :                 BOOST_REQUIRE_MESSAGE(o.count(&quot;exec&quot;) &gt; 0, testname + &quot;exec not set!&quot;);</span>
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span><span class="lineCov">       2636 :                 eth::EnvInfo env = FakeExtVM::importEnv(o[&quot;env&quot;].get_obj());</span>
+<span class="lineNum">     304 </span><span class="lineCov">       1318 :                 FakeExtVM fev(env);</span>
+<span class="lineNum">     305 </span><span class="lineCov">       1977 :                 fev.importState(o[&quot;pre&quot;].get_obj());</span>
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span><span class="lineCov">        659 :                 if (_fillin)</span>
+<span class="lineNum">     308 </span><span class="lineNoCov">          0 :                         o[&quot;pre&quot;] = mValue(fev.exportState());</span>
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span><span class="lineCov">       2636 :                 fev.importExec(o[&quot;exec&quot;].get_obj());</span>
+<span class="lineNum">     311 </span><span class="lineCov">        659 :                 if (fev.code.empty())</span>
+<span class="lineNum">     312 </span>            :                 {
+<span class="lineNum">     313 </span><span class="lineCov">       1318 :                         fev.thisTxCode = get&lt;3&gt;(fev.addresses.at(fev.myAddress));</span>
+<span class="lineNum">     314 </span><span class="lineCov">        659 :                         fev.code = fev.thisTxCode;</span>
+<span class="lineNum">     315 </span>            :                 }
+<span class="lineNum">     316 </span><span class="lineCov">        659 :                 fev.codeHash = sha3(fev.code);</span>
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span><span class="lineCov">       1318 :                 owning_bytes_ref output;</span>
+<span class="lineNum">     319 </span><span class="lineCov">        659 :                 bool vmExceptionOccured = false;</span>
+<span class="lineNum">     320 </span>            :                 try
+<span class="lineNum">     321 </span>            :                 {
+<span class="lineNum">     322 </span><span class="lineCov">       1318 :                         auto vm = eth::VMFactory::create();</span>
+<span class="lineNum">     323 </span><span class="lineCov">       1318 :                         auto vmtrace = Options::get().vmtrace ? fev.simpleTrace() : OnOpFunc{};</span>
+<span class="lineNum">     324 </span>            :                         {
+<span class="lineNum">     325 </span><span class="lineCov">       1977 :                                 Listener::ExecTimeGuard guard{i.first};</span>
+<span class="lineNum">     326 </span><span class="lineCov">        659 :                                 auto gas = static_cast&lt;int64_t&gt;(fev.gas);</span>
+<span class="lineNum">     327 </span><span class="lineCov">       1721 :                                 output = vm-&gt;exec(fev.gas, fev, vmtrace);</span>
+<span class="lineNum">     328 </span><span class="lineCov">        531 :                                 gas -= static_cast&lt;int64_t&gt;(fev.gas);</span>
+<span class="lineNum">     329 </span><span class="lineCov">        531 :                                 guard.setGasUsed(gas);</span>
+<span class="lineNum">     330 </span>            :                         }
+<span class="lineNum">     331 </span>            :                 }
+<span class="lineNum">     332 </span><span class="lineCov">        256 :                 catch (VMException const&amp;)</span>
+<span class="lineNum">     333 </span>            :                 {
+<span class="lineNum">     334 </span><span class="lineCov">        128 :                         cnote &lt;&lt; &quot;    Safe VM Exception\n&quot;;</span>
+<span class="lineNum">     335 </span><span class="lineCov">        128 :                         vmExceptionOccured = true;</span>
+<span class="lineNum">     336 </span>            :                 }
+<span class="lineNum">     337 </span><span class="lineNoCov">          0 :                 catch (Exception const&amp; _e)</span>
+<span class="lineNum">     338 </span>            :                 {
+<span class="lineNum">     339 </span><span class="lineNoCov">          0 :                         cnote &lt;&lt; &quot;VM did throw an exception: &quot; &lt;&lt; diagnostic_information(_e);</span>
+<span class="lineNum">     340 </span><span class="lineNoCov">          0 :                         BOOST_ERROR(&quot;Failed VM Test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">     341 </span>            :                 }
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 :                 catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     343 </span>            :                 {
+<span class="lineNum">     344 </span><span class="lineNoCov">          0 :                         cnote &lt;&lt; &quot;VM did throw an exception: &quot; &lt;&lt; _e.what();</span>
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :                         BOOST_ERROR(&quot;Failed VM Test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">     346 </span>            :                 }
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            :                 // delete null entries in storage for the sake of comparison
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span><span class="lineCov">       2670 :                 for (auto  &amp;a: fev.addresses)</span>
+<span class="lineNum">     351 </span>            :                 {
+<span class="lineNum">     352 </span><span class="lineCov">       1386 :                         vector&lt;u256&gt; keystoDelete;</span>
+<span class="lineNum">     353 </span><span class="lineCov">       3612 :                         for (auto &amp;s: get&lt;2&gt;(a.second))</span>
+<span class="lineNum">     354 </span>            :                         {
+<span class="lineNum">     355 </span><span class="lineCov">       1680 :                                 if (s.second == 0)</span>
+<span class="lineNum">     356 </span><span class="lineCov">        194 :                                         keystoDelete.push_back(s.first);</span>
+<span class="lineNum">     357 </span>            :                         }
+<span class="lineNum">     358 </span><span class="lineCov">       3160 :                         for (auto const key: keystoDelete )</span>
+<span class="lineNum">     359 </span>            :                         {
+<span class="lineNum">     360 </span><span class="lineCov">        582 :                                 get&lt;2&gt;(a.second).erase(key);</span>
+<span class="lineNum">     361 </span>            :                         }
+<span class="lineNum">     362 </span>            :                 }
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span><span class="lineCov">        659 :                 if (_fillin)</span>
+<span class="lineNum">     365 </span>            :                 {
+<span class="lineNum">     366 </span><span class="lineNoCov">          0 :                         o[&quot;env&quot;] = mValue(fev.exportEnv());</span>
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 :                         o[&quot;exec&quot;] = mValue(fev.exportExec());</span>
+<span class="lineNum">     368 </span><span class="lineNoCov">          0 :                         if (!vmExceptionOccured)</span>
+<span class="lineNum">     369 </span>            :                         {
+<span class="lineNum">     370 </span><span class="lineNoCov">          0 :                                 o[&quot;post&quot;] = mValue(fev.exportState());</span>
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span><span class="lineNoCov">          0 :                                 if (o.count(&quot;expect&quot;) &gt; 0)</span>
+<span class="lineNum">     373 </span>            :                                 {
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 :                                         State postState(State::Null);</span>
+<span class="lineNum">     375 </span><span class="lineNoCov">          0 :                                         State expectState(State::Null);</span>
+<span class="lineNum">     376 </span><span class="lineNoCov">          0 :                                         AccountMaskMap expectStateMap;</span>
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 :                                         ImportTest::importState(o[&quot;post&quot;].get_obj(), postState);</span>
+<span class="lineNum">     378 </span><span class="lineNoCov">          0 :                                         ImportTest::importState(o[&quot;expect&quot;].get_obj(), expectState, expectStateMap);</span>
+<span class="lineNum">     379 </span><span class="lineNoCov">          0 :                                         ImportTest::compareStates(expectState, postState, expectStateMap, Options::get().checkstate ? WhenError::Throw : WhenError::DontThrow);</span>
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 :                                         o.erase(o.find(&quot;expect&quot;));</span>
+<span class="lineNum">     381 </span>            :                                 }
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 :                                 o[&quot;callcreates&quot;] = fev.exportCallCreates();</span>
+<span class="lineNum">     384 </span><span class="lineNoCov">          0 :                                 o[&quot;out&quot;] = output.size() &gt; 4096 ? &quot;#&quot; + toString(output.size()) : toHex(output, 2, HexPrefix::Add);</span>
+<span class="lineNum">     385 </span>            : 
+<span class="lineNum">     386 </span>            :                                 // compare expected output with post output
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 :                                 if (o.count(&quot;expectOut&quot;) &gt; 0)</span>
+<span class="lineNum">     388 </span>            :                                 {
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :                                         std::string warning = &quot;Check State: Error! Unexpected output: &quot; + o[&quot;out&quot;].get_str() + &quot; Expected: &quot; + o[&quot;expectOut&quot;].get_str();</span>
+<span class="lineNum">     390 </span><span class="lineNoCov">          0 :                                         if (Options::get().checkstate)</span>
+<span class="lineNum">     391 </span><span class="lineNoCov">          0 :                                                 BOOST_CHECK_MESSAGE(o[&quot;out&quot;].get_str() == o[&quot;expectOut&quot;].get_str(), warning);</span>
+<span class="lineNum">     392 </span>            :                                         else
+<span class="lineNum">     393 </span><span class="lineNoCov">          0 :                                                 BOOST_WARN_MESSAGE(o[&quot;out&quot;].get_str() == o[&quot;expectOut&quot;].get_str(), warning);</span>
+<span class="lineNum">     394 </span>            : 
+<span class="lineNum">     395 </span><span class="lineNoCov">          0 :                                         o.erase(o.find(&quot;expectOut&quot;));</span>
+<span class="lineNum">     396 </span>            :                                 }
+<span class="lineNum">     397 </span>            : 
+<span class="lineNum">     398 </span><span class="lineNoCov">          0 :                                 o[&quot;gas&quot;] = toCompactHex(fev.gas, HexPrefix::Add, 1);</span>
+<span class="lineNum">     399 </span><span class="lineNoCov">          0 :                                 o[&quot;logs&quot;] = exportLog(fev.sub.logs);</span>
+<span class="lineNum">     400 </span>            :                         }
+<span class="lineNum">     401 </span>            :                 }
+<span class="lineNum">     402 </span>            :                 else
+<span class="lineNum">     403 </span>            :                 {
+<span class="lineNum">     404 </span><span class="lineCov">       3295 :                         if (o.count(&quot;post&quot;) &gt; 0)   // No exceptions expected</span>
+<span class="lineNum">     405 </span>            :                         {
+<span class="lineNum">     406 </span><span class="lineCov">       4248 :                                 BOOST_CHECK(!vmExceptionOccured);</span>
+<span class="lineNum">     407 </span>            : 
+<span class="lineNum">     408 </span><span class="lineCov">       6372 :                                 BOOST_REQUIRE(o.count(&quot;post&quot;) &gt; 0);</span>
+<span class="lineNum">     409 </span><span class="lineCov">       6372 :                                 BOOST_REQUIRE(o.count(&quot;callcreates&quot;) &gt; 0);</span>
+<span class="lineNum">     410 </span><span class="lineCov">       6372 :                                 BOOST_REQUIRE(o.count(&quot;out&quot;) &gt; 0);</span>
+<span class="lineNum">     411 </span><span class="lineCov">       6372 :                                 BOOST_REQUIRE(o.count(&quot;gas&quot;) &gt; 0);</span>
+<span class="lineNum">     412 </span><span class="lineCov">       6372 :                                 BOOST_REQUIRE(o.count(&quot;logs&quot;) &gt; 0);</span>
+<span class="lineNum">     413 </span>            : 
+<span class="lineNum">     414 </span><span class="lineCov">       1593 :                                 dev::test::FakeExtVM test(eth::EnvInfo{});</span>
+<span class="lineNum">     415 </span><span class="lineCov">       1593 :                                 test.importState(o[&quot;post&quot;].get_obj());</span>
+<span class="lineNum">     416 </span><span class="lineCov">       1593 :                                 test.importCallCreates(o[&quot;callcreates&quot;].get_array());</span>
+<span class="lineNum">     417 </span><span class="lineCov">       2124 :                                 test.sub.logs = importLog(o[&quot;logs&quot;].get_array());</span>
+<span class="lineNum">     418 </span>            : 
+<span class="lineNum">     419 </span>            : 
+<span class="lineNum">     420 </span><span class="lineCov">        531 :                                 checkOutput(output, o);</span>
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span><span class="lineCov">       3717 :                                 BOOST_CHECK_EQUAL(toInt(o[&quot;gas&quot;]), fev.gas);</span>
+<span class="lineNum">     423 </span>            : 
+<span class="lineNum">     424 </span><span class="lineCov">       1062 :                                 State postState(State::Null);</span>
+<span class="lineNum">     425 </span><span class="lineCov">       1062 :                                 State expectState(State::Null);</span>
+<span class="lineNum">     426 </span><span class="lineCov">       1062 :                                 mObject mPostState = fev.exportState();</span>
+<span class="lineNum">     427 </span><span class="lineCov">        531 :                                 ImportTest::importState(mPostState, postState);</span>
+<span class="lineNum">     428 </span><span class="lineCov">       1593 :                                 ImportTest::importState(o[&quot;post&quot;].get_obj(), expectState);</span>
+<span class="lineNum">     429 </span><span class="lineCov">       1593 :                                 ImportTest::compareStates(expectState, postState);</span>
+<span class="lineNum">     430 </span>            : 
+<span class="lineNum">     431 </span>            :                                 //checkAddresses&lt;std::map&lt;Address, std::tuple&lt;u256, u256, std::map&lt;u256, u256&gt;, bytes&gt; &gt; &gt;(test.addresses, fev.addresses);
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span><span class="lineCov">        531 :                                 checkCallCreates(fev.callcreates, test.callcreates);</span>
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span><span class="lineCov">        531 :                                 checkLog(fev.sub.logs, test.sub.logs);</span>
+<span class="lineNum">     436 </span>            :                         }
+<span class="lineNum">     437 </span>            :                         else    // Exception expected
+<span class="lineNum">     438 </span><span class="lineCov">       1024 :                                 BOOST_CHECK(vmExceptionOccured);</span>
+<span class="lineNum">     439 </span>            :                 }
+<span class="lineNum">     440 </span>            :         }
+<span class="lineNum">     441 </span>            : 
+<span class="lineNum">     442 </span><span class="lineCov">         27 :         TestOutputHelper::finishTest();</span>
+<span class="lineNum">     443 </span><span class="lineCov">         27 : }</span>
+<span class="lineNum">     444 </span>            : 
+<span class="lineNum">     445 </span>            : } } // namespace close
+<span class="lineNum">     446 </span>            : 
+<a name="447"><span class="lineNum">     447 </span><span class="lineCov">          3 : BOOST_AUTO_TEST_SUITE(VMTests)</span></a>
+<span class="lineNum">     448 </span>            : 
+<span class="lineNum">     449 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(vmtests)</span>
+<span class="lineNum">     450 </span>            : {
+<span class="lineNum">     451 </span><span class="lineCov">         11 :         dev::test::executeTests(&quot;vmtests&quot;, &quot;/VMTests&quot;, &quot;/VMTestsFiller&quot;, dev::test::doVMTests);</span>
+<a name="452"><span class="lineNum">     452 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     453 </span>            : 
+<span class="lineNum">     454 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(vmArithmeticTest)</span>
+<span class="lineNum">     455 </span>            : {
+<span class="lineNum">     456 </span><span class="lineCov">         11 :         dev::test::executeTests(&quot;vmArithmeticTest&quot;, &quot;/VMTests&quot;, &quot;/VMTestsFiller&quot;, dev::test::doVMTests);</span>
+<a name="457"><span class="lineNum">     457 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     458 </span>            : 
+<span class="lineNum">     459 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperationTest)</span>
+<span class="lineNum">     460 </span>            : {
+<span class="lineNum">     461 </span><span class="lineCov">         11 :         dev::test::executeTests(&quot;vmBitwiseLogicOperationTest&quot;, &quot;/VMTests&quot;, &quot;/VMTestsFiller&quot;, dev::test::doVMTests);</span>
+<a name="462"><span class="lineNum">     462 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     463 </span>            : 
+<span class="lineNum">     464 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(vmSha3Test)</span>
+<span class="lineNum">     465 </span>            : {
+<span class="lineNum">     466 </span><span class="lineCov">         11 :         dev::test::executeTests(&quot;vmSha3Test&quot;, &quot;/VMTests&quot;, &quot;/VMTestsFiller&quot;, dev::test::doVMTests);</span>
+<a name="467"><span class="lineNum">     467 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     468 </span>            : 
+<span class="lineNum">     469 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(vmEnvironmentalInfoTest)</span>
+<span class="lineNum">     470 </span>            : {
+<span class="lineNum">     471 </span><span class="lineCov">         11 :         dev::test::executeTests(&quot;vmEnvironmentalInfoTest&quot;, &quot;/VMTests&quot;, &quot;/VMTestsFiller&quot;, dev::test::doVMTests);</span>
+<a name="472"><span class="lineNum">     472 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     473 </span>            : 
+<span class="lineNum">     474 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(vmBlockInfoTest)</span>
+<span class="lineNum">     475 </span>            : {
+<span class="lineNum">     476 </span><span class="lineCov">         11 :         dev::test::executeTests(&quot;vmBlockInfoTest&quot;, &quot;/VMTests&quot;, &quot;/VMTestsFiller&quot;, dev::test::doVMTests);</span>
+<a name="477"><span class="lineNum">     477 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     478 </span>            : 
+<span class="lineNum">     479 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(vmIOandFlowOperationsTest)</span>
+<span class="lineNum">     480 </span>            : {
+<span class="lineNum">     481 </span><span class="lineCov">         11 :         dev::test::executeTests(&quot;vmIOandFlowOperationsTest&quot;, &quot;/VMTests&quot;, &quot;/VMTestsFiller&quot;, dev::test::doVMTests);</span>
+<a name="482"><span class="lineNum">     482 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)</span>
+<span class="lineNum">     485 </span>            : {
+<span class="lineNum">     486 </span><span class="lineCov">         11 :         dev::test::executeTests(&quot;vmPushDupSwapTest&quot;, &quot;/VMTests&quot;, &quot;/VMTestsFiller&quot;, dev::test::doVMTests);</span>
+<a name="487"><span class="lineNum">     487 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     488 </span>            : 
+<span class="lineNum">     489 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(vmLogTest)</span>
+<span class="lineNum">     490 </span>            : {
+<span class="lineNum">     491 </span><span class="lineCov">         11 :         dev::test::executeTests(&quot;vmLogTest&quot;, &quot;/VMTests&quot;, &quot;/VMTestsFiller&quot;, dev::test::doVMTests);</span>
+<a name="492"><span class="lineNum">     492 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     493 </span>            : 
+<span class="lineNum">     494 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)</span>
+<span class="lineNum">     495 </span>            : {
+<span class="lineNum">     496 </span><span class="lineCov">         11 :         dev::test::executeTests(&quot;vmSystemOperationsTest&quot;, &quot;/VMTests&quot;, &quot;/VMTestsFiller&quot;, dev::test::doVMTests);</span>
+<a name="497"><span class="lineNum">     497 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     498 </span>            : 
+<span class="lineNum">     499 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(vmPerformanceTest)</span>
+<span class="lineNum">     500 </span>            : {
+<span class="lineNum">     501 </span><span class="lineCov">          1 :         if (test::Options::get().performance)</span>
+<span class="lineNum">     502 </span><span class="lineNoCov">          0 :                 dev::test::executeTests(&quot;vmPerformanceTest&quot;, &quot;/VMTests&quot;, &quot;/VMTestsFiller&quot;, dev::test::doVMTests);</span>
+<a name="503"><span class="lineNum">     503 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     504 </span>            : 
+<span class="lineNum">     505 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(vmInputLimitsTest)</span>
+<span class="lineNum">     506 </span>            : {
+<span class="lineNum">     507 </span><span class="lineCov">          1 :         if (test::Options::get().inputLimits)</span>
+<span class="lineNum">     508 </span><span class="lineNoCov">          0 :                 dev::test::executeTests(&quot;vmInputLimits&quot;, &quot;/VMTests&quot;, &quot;/VMTestsFiller&quot;, dev::test::doVMTests);</span>
+<a name="509"><span class="lineNum">     509 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     510 </span>            : 
+<span class="lineNum">     511 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(vmInputLimitsLightTest)</span>
+<span class="lineNum">     512 </span>            : {
+<span class="lineNum">     513 </span><span class="lineCov">          1 :         if (test::Options::get().inputLimits)</span>
+<span class="lineNum">     514 </span><span class="lineNoCov">          0 :                 dev::test::executeTests(&quot;vmInputLimitsLight&quot;, &quot;/VMTests&quot;, &quot;/VMTestsFiller&quot;, dev::test::doVMTests);</span>
+<a name="515"><span class="lineNum">     515 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     516 </span>            : 
+<span class="lineNum">     517 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(vmRandom)</span>
+<span class="lineNum">     518 </span>            : {
+<span class="lineNum">     519 </span><span class="lineCov">          1 :         test::Options::get(); // parse command line options, e.g. to enable JIT</span>
+<span class="lineNum">     520 </span>            : 
+<span class="lineNum">     521 </span><span class="lineCov">          2 :         string testPath = getTestPath();</span>
+<span class="lineNum">     522 </span><span class="lineCov">          1 :         testPath += &quot;/VMTests/RandomTests&quot;;</span>
+<span class="lineNum">     523 </span>            : 
+<span class="lineNum">     524 </span><span class="lineCov">          2 :         vector&lt;boost::filesystem::path&gt; testFiles;</span>
+<span class="lineNum">     525 </span><span class="lineCov">          3 :         boost::filesystem::directory_iterator iterator(testPath);</span>
+<span class="lineNum">     526 </span><span class="lineCov">         54 :         for(; iterator != boost::filesystem::directory_iterator(); ++iterator)</span>
+<span class="lineNum">     527 </span><span class="lineCov">        136 :                 if (boost::filesystem::is_regular_file(iterator-&gt;path()) &amp;&amp; iterator-&gt;path().extension() == &quot;.json&quot;)</span>
+<span class="lineNum">     528 </span><span class="lineCov">         34 :                         testFiles.push_back(iterator-&gt;path());</span>
+<span class="lineNum">     529 </span>            : 
+<span class="lineNum">     530 </span><span class="lineCov">          1 :         test::TestOutputHelper::initTest();</span>
+<span class="lineNum">     531 </span><span class="lineCov">          3 :         test::TestOutputHelper::setMaxTests(testFiles.size());</span>
+<span class="lineNum">     532 </span>            : 
+<span class="lineNum">     533 </span><span class="lineCov">         21 :         for (auto&amp; path: testFiles)</span>
+<span class="lineNum">     534 </span>            :         {
+<span class="lineNum">     535 </span>            :                 try
+<span class="lineNum">     536 </span>            :                 {
+<span class="lineNum">     537 </span><span class="lineCov">         34 :                         cnote &lt;&lt; &quot;TEST &quot; &lt;&lt; path.filename();</span>
+<span class="lineNum">     538 </span><span class="lineCov">         34 :                         json_spirit::mValue v;</span>
+<span class="lineNum">     539 </span><span class="lineCov">         68 :                         string s = asString(dev::contents(path.string()));</span>
+<span class="lineNum">     540 </span><span class="lineCov">        153 :                         BOOST_REQUIRE_MESSAGE(s.length() &gt; 0, &quot;Content of &quot; + path.string() + &quot; is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?&quot;);</span>
+<span class="lineNum">     541 </span><span class="lineCov">         17 :                         json_spirit::read_string(s, v);</span>
+<span class="lineNum">     542 </span><span class="lineCov">         34 :                         test::Listener::notifySuiteStarted(path.filename().string());</span>
+<span class="lineNum">     543 </span><span class="lineCov">         17 :                         doVMTests(v, false);</span>
+<span class="lineNum">     544 </span>            :                 }
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 :                 catch (Exception const&amp; _e)</span>
+<span class="lineNum">     546 </span>            :                 {
+<span class="lineNum">     547 </span><span class="lineNoCov">          0 :                         BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">     548 </span>            :                 }
+<span class="lineNum">     549 </span><span class="lineNoCov">          0 :                 catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     550 </span>            :                 {
+<span class="lineNum">     551 </span><span class="lineNoCov">          0 :                         BOOST_ERROR(&quot;Failed test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">     552 </span>            :                 }
+<span class="lineNum">     553 </span>            :         }
+<a name="554"><span class="lineNum">     554 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     555 </span>            : 
+<span class="lineNum">     556 </span><span class="lineCov">         25 : BOOST_AUTO_TEST_CASE(userDefinedFile)</span>
+<span class="lineNum">     557 </span>            : {
+<span class="lineNum">     558 </span><span class="lineCov">          2 :         dev::test::userDefinedTest(dev::test::doVMTests);</span>
+<a name="559"><span class="lineNum">     559 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     560 </span>            : 
+<span class="lineNum">     561 </span><span class="lineCov">          3 : BOOST_AUTO_TEST_SUITE_END()</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

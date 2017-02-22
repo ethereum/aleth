@@ -1,0 +1,178 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/throw_exception.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">deps/boost/boost</a> - throw_exception.hpp<span style="font-size: 80%;"> (source / <a href="throw_exception.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">95</td>
+            <td class="headerCovTableEntry">191</td>
+            <td class="headerCovTableEntryLo">49.7 %</td>
+          </tr>
+          <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef UUID_AA15E74A856F11E08B8D93F24824019B</a>
+<span class="lineNum">       2 </span>            : #define UUID_AA15E74A856F11E08B8D93F24824019B
+<span class="lineNum">       3 </span>            : #if (__GNUC__*100+__GNUC_MINOR__&gt;301) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">       4 </span>            : #pragma GCC system_header
+<span class="lineNum">       5 </span>            : #endif
+<span class="lineNum">       6 </span>            : #if defined(_MSC_VER) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">       7 </span>            : #pragma warning(push,1)
+<span class="lineNum">       8 </span>            : #endif
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : // MS compatible compilers support #pragma once
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1020)
+<span class="lineNum">      13 </span>            : # pragma once
+<span class="lineNum">      14 </span>            : #endif
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : //
+<span class="lineNum">      17 </span>            : //  boost/throw_exception.hpp
+<span class="lineNum">      18 </span>            : //
+<span class="lineNum">      19 </span>            : //  Copyright (c) 2002 Peter Dimov and Multi Media Ltd.
+<span class="lineNum">      20 </span>            : //  Copyright (c) 2008-2009 Emil Dotchevski and Reverge Studios, Inc.
+<span class="lineNum">      21 </span>            : //
+<span class="lineNum">      22 </span>            : //  Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">      23 </span>            : //  accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">      24 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">      25 </span>            : //
+<span class="lineNum">      26 </span>            : //  http://www.boost.org/libs/utility/throw_exception.html
+<span class="lineNum">      27 </span>            : //
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #include &lt;boost/detail/workaround.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      31 </span>            : #include &lt;exception&gt;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #if !defined( BOOST_EXCEPTION_DISABLE ) &amp;&amp; defined( __BORLANDC__ ) &amp;&amp; BOOST_WORKAROUND( __BORLANDC__, BOOST_TESTED_AT(0x593) )
+<span class="lineNum">      34 </span>            : # define BOOST_EXCEPTION_DISABLE
+<span class="lineNum">      35 </span>            : #endif
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : #if !defined( BOOST_EXCEPTION_DISABLE ) &amp;&amp; defined( BOOST_MSVC ) &amp;&amp; BOOST_WORKAROUND( BOOST_MSVC, &lt; 1310 )
+<span class="lineNum">      38 </span>            : # define BOOST_EXCEPTION_DISABLE
+<span class="lineNum">      39 </span>            : #endif
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : #if !defined( BOOST_EXCEPTION_DISABLE )
+<span class="lineNum">      42 </span>            : # include &lt;boost/exception/exception.hpp&gt;
+<span class="lineNum">      43 </span>            : #if !defined(BOOST_THROW_EXCEPTION_CURRENT_FUNCTION)
+<span class="lineNum">      44 </span>            : # include &lt;boost/current_function.hpp&gt;
+<span class="lineNum">      45 </span>            : # define BOOST_THROW_EXCEPTION_CURRENT_FUNCTION BOOST_CURRENT_FUNCTION
+<span class="lineNum">      46 </span>            : #endif
+<span class="lineNum">      47 </span>            : # define BOOST_THROW_EXCEPTION(x) ::boost::exception_detail::throw_exception_(x,BOOST_THROW_EXCEPTION_CURRENT_FUNCTION,__FILE__,__LINE__)
+<span class="lineNum">      48 </span>            : #else
+<span class="lineNum">      49 </span>            : # define BOOST_THROW_EXCEPTION(x) ::boost::throw_exception(x)
+<span class="lineNum">      50 </span>            : #endif
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : namespace boost
+<span class="lineNum">      53 </span>            : {
+<span class="lineNum">      54 </span>            : #ifdef BOOST_NO_EXCEPTIONS
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : void throw_exception( std::exception const &amp; e ); // user defined
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : #else
+<span class="lineNum">      59 </span>            : 
+<a name="60"><span class="lineNum">      60 </span>            : inline void throw_exception_assert_compatibility( std::exception const &amp; ) { }</a>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span><span class="lineCov">     381921 : template&lt;class E&gt; BOOST_NORETURN inline void throw_exception( E const &amp; e )</span>
+<span class="lineNum">      63 </span>            : {
+<span class="lineNum">      64 </span>            :     //All boost exceptions are required to derive from std::exception,
+<span class="lineNum">      65 </span>            :     //to ensure compatibility with BOOST_NO_EXCEPTIONS.
+<span class="lineNum">      66 </span><span class="lineCov">     381921 :     throw_exception_assert_compatibility(e);</span>
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : #ifndef BOOST_EXCEPTION_DISABLE
+<span class="lineNum">      69 </span><span class="lineCov">    1145791 :     throw enable_current_exception(enable_error_info(e));</span>
+<span class="lineNum">      70 </span>            : #else
+<span class="lineNum">      71 </span>            :     throw e;
+<span class="lineNum">      72 </span>            : #endif
+<span class="lineNum">      73 </span>            : }
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : #endif
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : #if !defined( BOOST_EXCEPTION_DISABLE )
+<span class="lineNum">      78 </span>            :     namespace
+<span class="lineNum">      79 </span>            :     exception_detail
+<span class="lineNum">      80 </span>            :     {
+<span class="lineNum">      81 </span>            :         template &lt;class E&gt;
+<a name="82"><span class="lineNum">      82 </span>            :         BOOST_NORETURN</a>
+<span class="lineNum">      83 </span>            :         void
+<span class="lineNum">      84 </span><span class="lineCov">     381912 :         throw_exception_( E const &amp; x, char const * current_function, char const * file, int line )</span>
+<span class="lineNum">      85 </span>            :         {
+<span class="lineNum">      86 </span><span class="lineCov">     381912 :             boost::throw_exception(</span>
+<span class="lineNum">      87 </span><span class="lineCov">     763824 :                 set_info(</span>
+<span class="lineNum">      88 </span><span class="lineCov">     763824 :                     set_info(</span>
+<span class="lineNum">      89 </span><span class="lineCov">    1527648 :                         set_info(</span>
+<span class="lineNum">      90 </span>            :                             enable_error_info(x),
+<span class="lineNum">      91 </span>            :                             throw_function(current_function)),
+<span class="lineNum">      92 </span>            :                         throw_file(file)),
+<span class="lineNum">      93 </span>            :                     throw_line(line)));
+<span class="lineNum">      94 </span>            :         }
+<span class="lineNum">      95 </span>            :     }
+<span class="lineNum">      96 </span>            : #endif
+<span class="lineNum">      97 </span>            : } // namespace boost
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : #if defined(_MSC_VER) &amp;&amp; !defined(BOOST_EXCEPTION_ENABLE_WARNINGS)
+<span class="lineNum">     100 </span>            : #pragma warning(pop)
+<span class="lineNum">     101 </span>            : #endif
+<span class="lineNum">     102 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

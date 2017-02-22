@@ -1,0 +1,703 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/impl/junit_log_formatter.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/impl</a> - junit_log_formatter.ipp<span style="font-size: 80%;"> (source / <a href="junit_log_formatter.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">261</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright 2016 Raffi Enficiaud.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : ///@file
+<span class="lineNum">       9 </span>            : ///@brief Contains the implementatoin of the Junit log formatter (OF_JUNIT)
+<span class="lineNum">      10 </span>            : // ***************************************************************************
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #ifndef BOOST_TEST_JUNIT_LOG_FORMATTER_IPP__
+<span class="lineNum">      13 </span>            : #define BOOST_TEST_JUNIT_LOG_FORMATTER_IPP__
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : // Boost.Test
+<span class="lineNum">      16 </span>            : #include &lt;boost/test/output/junit_log_formatter.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/test/execution_monitor.hpp&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/test/framework.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/tree/test_unit.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/utils/basic_cstring/io.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/test/utils/xml_printer.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/utils/string_cast.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/test/framework.hpp&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/tree/visitor.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/test/tree/test_case_counter.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/test/tree/traverse.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/test/results_collector.hpp&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #include &lt;boost/test/utils/algorithm.hpp&gt;
+<span class="lineNum">      31 </span>            : #include &lt;boost/test/utils/string_cast.hpp&gt;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : //#include &lt;boost/test/results_reporter.hpp&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : // Boost
+<span class="lineNum">      37 </span>            : #include &lt;boost/version.hpp&gt;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : // STL
+<span class="lineNum">      40 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      41 </span>            : #include &lt;fstream&gt;
+<span class="lineNum">      42 </span>            : #include &lt;set&gt;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : namespace boost {
+<span class="lineNum">      50 </span>            : namespace unit_test {
+<span class="lineNum">      51 </span>            : namespace output {
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : struct s_replace_chars {
+<span class="lineNum">      55 </span>            :   template &lt;class T&gt;
+<span class="lineNum">      56 </span>            :   void operator()(T&amp; to_replace)
+<span class="lineNum">      57 </span>            :   {
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :     if(to_replace == '/')</span>
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :       to_replace = '.';</span>
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :     else if(to_replace == ' ')</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :       to_replace = '_';</span>
+<span class="lineNum">      62 </span>            :   }
+<a name="63"><span class="lineNum">      63 </span>            : };</a>
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 : inline std::string tu_name_normalize(std::string full_name)</span>
+<span class="lineNum">      66 </span>            : {
+<span class="lineNum">      67 </span>            :   // maybe directly using normalize_test_case_name instead?
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :   std::for_each(full_name.begin(), full_name.end(), s_replace_chars());</span>
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :   return full_name;</span>
+<a name="70"><span class="lineNum">      70 </span>            : }</a>
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 : const_string file_basename(const_string filename) {</span>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :     const_string path_sep( &quot;\\/&quot; );</span>
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :     const_string::iterator it = unit_test::utils::find_last_of( filename.begin(), filename.end(),</span>
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :                                                                 path_sep.begin(), path_sep.end() );</span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :     if( it != filename.end() )</span>
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :         filename.trim_left( it + 1 );</span>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :     return filename;</span>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : }
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            : // ************************************************************************** //
+<span class="lineNum">      85 </span>            : // **************               junit_log_formatter              ************** //
+<span class="lineNum">      86 </span>            : // ************************************************************************** //
+<a name="87"><span class="lineNum">      87 </span>            : </a>
+<span class="lineNum">      88 </span>            : void
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 : junit_log_formatter::log_start( std::ostream&amp; ostr, counter_t test_cases_amount)</span>
+<span class="lineNum">      90 </span>            : {
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :     map_tests.clear();</span>
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :     list_path_to_root.clear();</span>
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :     root_id = INV_TEST_UNIT_ID;</span>
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">      95 </span>            : 
+<a name="96"><span class="lineNum">      96 </span>            : //____________________________________________________________________________//</a>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 : class junit_result_helper : public test_tree_visitor {</span>
+<span class="lineNum">      99 </span>            : public:
+<span class="lineNum">     100 </span>            :     explicit junit_result_helper(
+<span class="lineNum">     101 </span>            :         std::ostream&amp; stream,
+<span class="lineNum">     102 </span>            :         test_unit const&amp; ts,
+<span class="lineNum">     103 </span>            :         junit_log_formatter::map_trace_t const&amp; mt,
+<span class="lineNum">     104 </span>            :         bool display_build_info )
+<span class="lineNum">     105 </span>            :     : m_stream(stream)
+<span class="lineNum">     106 </span>            :     , m_ts( ts )
+<span class="lineNum">     107 </span>            :     , m_map_test( mt )
+<span class="lineNum">     108 </span>            :     , m_id( 0 )
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :     , m_display_build_info(display_build_info)</span>
+<a name="110"><span class="lineNum">     110 </span>            :     { }</a>
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :     void add_log_entry(std::string const&amp; entry_type,</span>
+<span class="lineNum">     113 </span>            :                        test_case const&amp; tc,
+<span class="lineNum">     114 </span>            :                        junit_impl::junit_log_helper::assertion_entry const&amp; log) const
+<span class="lineNum">     115 </span>            :     {
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :         m_stream</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot;&lt;&quot; &lt;&lt; entry_type</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot; message&quot; &lt;&lt; utils::attr_value() &lt;&lt; log.logentry_message</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot; type&quot; &lt;&lt; utils::attr_value() &lt;&lt; log.logentry_type</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot;&gt;&quot;;</span>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :         if(!log.output.empty()) {</span>
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :             m_stream &lt;&lt; utils::cdata() &lt;&lt; &quot;\n&quot; + log.output;</span>
+<span class="lineNum">     124 </span>            :         }
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :         m_stream &lt;&lt; &quot;&lt;/&quot; &lt;&lt; entry_type &lt;&lt; &quot;&gt;&quot;;</span>
+<a name="127"><span class="lineNum">     127 </span><span class="lineNoCov">          0 :     }</span></a>
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :     void    visit( test_case const&amp; tc )</span>
+<span class="lineNum">     130 </span>            :     {
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :         test_results const&amp; tr = results_collector.results( tc.p_id );</span>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :         junit_impl::junit_log_helper detailed_log;</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :         bool need_skipping_reason = false;</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :         bool skipped = false;</span>
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :         junit_log_formatter::map_trace_t::const_iterator it_element(m_map_test.find(tc.p_id));</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :         if( it_element != m_map_test.end() )</span>
+<span class="lineNum">     139 </span>            :         {
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :             detailed_log = it_element-&gt;second;</span>
+<span class="lineNum">     141 </span>            :         }
+<span class="lineNum">     142 </span>            :         else
+<span class="lineNum">     143 </span>            :         {
+<span class="lineNum">     144 </span>            :             need_skipping_reason = true;
+<span class="lineNum">     145 </span>            :         }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :         std::string classname;</span>
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :         test_unit_id id(tc.p_parent_id);</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :         while( id != m_ts.p_id ) {</span>
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :             test_unit const&amp; tu = boost::unit_test::framework::get( id, TUT_ANY );</span>
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :             if(need_skipping_reason)</span>
+<span class="lineNum">     153 </span>            :             {
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :                 test_results const&amp; tr_parent = results_collector.results( id );</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :                 if( tr_parent.p_skipped )</span>
+<span class="lineNum">     156 </span>            :                 {
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :                     skipped = true;</span>
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :                     detailed_log.system_out+= &quot;- disabled: &quot; + tu.full_name() + &quot;\n&quot;;</span>
+<span class="lineNum">     159 </span>            :                 }
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :                 junit_log_formatter::map_trace_t::const_iterator it_element_stack(m_map_test.find(id));</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :                 if( it_element_stack != m_map_test.end() )</span>
+<span class="lineNum">     162 </span>            :                 {
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :                     detailed_log.system_out+= &quot;- skipping decision: '&quot; + it_element_stack-&gt;second.system_out + &quot;'&quot;;</span>
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :                     detailed_log.system_out = &quot;SKIPPING decision stack:\n&quot; + detailed_log.system_out;</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :                     need_skipping_reason = false;</span>
+<span class="lineNum">     166 </span>            :                 }
+<span class="lineNum">     167 </span>            :             }
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :             classname = tu_name_normalize(tu.p_name) + &quot;.&quot; + classname;</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :             id = tu.p_parent_id;</span>
+<span class="lineNum">     171 </span>            :         }
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :         // removes the trailing dot
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :         if(!classname.empty() &amp;&amp; *classname.rbegin() == '.') {</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :             classname.erase(classname.size()-1);</span>
+<span class="lineNum">     176 </span>            :         }
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :         //
+<span class="lineNum">     179 </span>            :         // test case header
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            :         // total number of assertions
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :         m_stream &lt;&lt; &quot;&lt;testcase assertions&quot; &lt;&lt; utils::attr_value() &lt;&lt; tr.p_assertions_passed + tr.p_assertions_failed;</span>
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            :         // class name
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :         if(!classname.empty())</span>
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :             m_stream &lt;&lt; &quot; classname&quot; &lt;&lt; utils::attr_value() &lt;&lt; classname;</span>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :         // test case name and time taken
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :         m_stream</span>
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot; name&quot;      &lt;&lt; utils::attr_value() &lt;&lt; tu_name_normalize(tc.p_name)</span>
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot; time&quot;      &lt;&lt; utils::attr_value() &lt;&lt; double(tr.p_duration_microseconds) * 1E-6</span>
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot;&gt;&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :         if( tr.p_skipped || skipped ) {</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :             m_stream &lt;&lt; &quot;&lt;skipped/&gt;&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     196 </span>            :         }
+<span class="lineNum">     197 </span>            :         else {
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :           for(std::vector&lt; junit_impl::junit_log_helper::assertion_entry &gt;::const_iterator it(detailed_log.assertion_entries.begin());</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :               it != detailed_log.assertion_entries.end();</span>
+<span class="lineNum">     201 </span>            :               ++it)
+<span class="lineNum">     202 </span>            :           {
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :               if(it-&gt;log_entry == junit_impl::junit_log_helper::assertion_entry::log_entry_failure) {</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :                   add_log_entry(&quot;failure&quot;, tc, *it);</span>
+<span class="lineNum">     205 </span>            :               }
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :               else if(it-&gt;log_entry == junit_impl::junit_log_helper::assertion_entry::log_entry_error) {</span>
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :                   add_log_entry(&quot;error&quot;, tc, *it);</span>
+<span class="lineNum">     208 </span>            :               }
+<span class="lineNum">     209 </span>            :           }
+<span class="lineNum">     210 </span>            :         }
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            :         // system-out + all info/messages
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :         std::string system_out = detailed_log.system_out;</span>
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :         for(std::vector&lt; junit_impl::junit_log_helper::assertion_entry &gt;::const_iterator it(detailed_log.assertion_entries.begin());</span>
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :             it != detailed_log.assertion_entries.end();</span>
+<span class="lineNum">     216 </span>            :             ++it)
+<span class="lineNum">     217 </span>            :         {
+<span class="lineNum">     218 </span><span class="lineNoCov">          0 :             if(it-&gt;log_entry != junit_impl::junit_log_helper::assertion_entry::log_entry_info)</span>
+<span class="lineNum">     219 </span>            :                 continue;
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 :             system_out += it-&gt;output;</span>
+<span class="lineNum">     221 </span>            :         }
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :         if(!system_out.empty()) {</span>
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :             m_stream</span>
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :                 &lt;&lt; &quot;&lt;system-out&gt;&quot;</span>
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :                 &lt;&lt; utils::cdata() &lt;&lt; system_out</span>
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :                 &lt;&lt; &quot;&lt;/system-out&gt;&quot;</span>
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :                 &lt;&lt; std::endl;</span>
+<span class="lineNum">     229 </span>            :         }
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :         // system-err output + test case informations
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :         std::string system_err = detailed_log.system_err;</span>
+<span class="lineNum">     233 </span>            :         {
+<span class="lineNum">     234 </span>            :             // test case information (redundant but useful)
+<span class="lineNum">     235 </span><span class="lineNoCov">          0 :             std::ostringstream o;</span>
+<span class="lineNum">     236 </span><span class="lineNoCov">          0 :             o   &lt;&lt; &quot;Test case:&quot; &lt;&lt; std::endl</span>
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 :                 &lt;&lt; &quot;- name: &quot; &lt;&lt; tc.full_name() &lt;&lt; std::endl</span>
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :                 &lt;&lt; &quot;- description: '&quot; &lt;&lt; tc.p_description &lt;&lt; &quot;'&quot; &lt;&lt; std::endl</span>
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :                 &lt;&lt; &quot;- file: &quot; &lt;&lt; file_basename(tc.p_file_name) &lt;&lt; std::endl</span>
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :                 &lt;&lt; &quot;- line: &quot; &lt;&lt; tc.p_line_num &lt;&lt; std::endl</span>
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :                 ;</span>
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :             system_err = o.str() + system_err;</span>
+<span class="lineNum">     243 </span>            :         }
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :         m_stream</span>
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot;&lt;system-err&gt;&quot;</span>
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :             &lt;&lt; utils::cdata() &lt;&lt; system_err</span>
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 :             &lt;&lt; &quot;&lt;/system-err&gt;&quot;</span>
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :             &lt;&lt; std::endl;</span>
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :         m_stream &lt;&lt; &quot;&lt;/testcase&gt;&quot; &lt;&lt; std::endl;</span>
+<a name="251"><span class="lineNum">     251 </span><span class="lineNoCov">          0 :     }</span></a>
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :     bool    test_suite_start( test_suite const&amp; ts )</span>
+<span class="lineNum">     254 </span>            :     {
+<span class="lineNum">     255 </span>            :         // unique test suite, without s, nesting not supported in CI
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :         if( m_ts.p_id != ts.p_id )</span>
+<span class="lineNum">     257 </span>            :             return true;
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :         test_results const&amp; tr = results_collector.results( ts.p_id );</span>
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :         m_stream &lt;&lt; &quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :         m_stream &lt;&lt; &quot;&lt;testsuite&quot;;</span>
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :         m_stream</span>
+<span class="lineNum">     265 </span>            :           // &lt;&lt; &quot;disabled=\&quot;&quot; &lt;&lt; tr.p_test_cases_skipped &lt;&lt; &quot;\&quot; &quot;
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot; tests&quot;     &lt;&lt; utils::attr_value() &lt;&lt; tr.p_test_cases_passed</span>
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot; skipped&quot;   &lt;&lt; utils::attr_value() &lt;&lt; tr.p_test_cases_skipped</span>
+<span class="lineNum">     268 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot; errors&quot;    &lt;&lt; utils::attr_value() &lt;&lt; tr.p_test_cases_aborted</span>
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot; failures&quot;  &lt;&lt; utils::attr_value() &lt;&lt; tr.p_test_cases_failed</span>
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot; id&quot;        &lt;&lt; utils::attr_value() &lt;&lt; m_id++</span>
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot; name&quot;      &lt;&lt; utils::attr_value() &lt;&lt; tu_name_normalize(ts.p_name)</span>
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot; time&quot;      &lt;&lt; utils::attr_value() &lt;&lt; (tr.p_duration_microseconds * 1E-6)</span>
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot;&gt;&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 :         if(m_display_build_info)</span>
+<span class="lineNum">     276 </span>            :         {
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :             m_stream  &lt;&lt; &quot;&lt;properties&gt;&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :             m_stream  &lt;&lt; &quot;&lt;property name=\&quot;platform\&quot; value&quot; &lt;&lt; utils::attr_value() &lt;&lt; BOOST_PLATFORM &lt;&lt; std::endl;</span>
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :             m_stream  &lt;&lt; &quot;&lt;property name=\&quot;compiler\&quot; value&quot; &lt;&lt; utils::attr_value() &lt;&lt; BOOST_COMPILER &lt;&lt; std::endl;</span>
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 :             m_stream  &lt;&lt; &quot;&lt;property name=\&quot;stl\&quot; value&quot; &lt;&lt; utils::attr_value() &lt;&lt; BOOST_STDLIB &lt;&lt; std::endl;</span>
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :             std::ostringstream o;</span>
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :             o &lt;&lt; BOOST_VERSION/100000 &lt;&lt; &quot;.&quot; &lt;&lt; BOOST_VERSION/100 % 1000 &lt;&lt; &quot;.&quot; &lt;&lt; BOOST_VERSION % 100;</span>
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :             m_stream  &lt;&lt; &quot;&lt;property name=\&quot;boost\&quot; value&quot; &lt;&lt; utils::attr_value() &lt;&lt; o.str() &lt;&lt; std::endl;</span>
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :             m_stream  &lt;&lt; &quot;&lt;/properties&gt;&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     286 </span>            :         }
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            :         return true; // indicates that the children should also be parsed
+<a name="289"><span class="lineNum">     289 </span>            :     }</a>
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span><span class="lineNoCov">          0 :     virtual void    test_suite_finish( test_suite const&amp; ts )</span>
+<span class="lineNum">     292 </span>            :     {
+<span class="lineNum">     293 </span><span class="lineNoCov">          0 :         if( m_ts.p_id != ts.p_id )</span>
+<span class="lineNum">     294 </span>            :             return;
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :         m_stream &lt;&lt; &quot;&lt;/testsuite&gt;&quot;;</span>
+<span class="lineNum">     296 </span>            :     }
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            : private:
+<span class="lineNum">     299 </span>            :     // Data members
+<span class="lineNum">     300 </span>            :     std::ostream&amp; m_stream;
+<span class="lineNum">     301 </span>            :     test_unit const&amp; m_ts;
+<span class="lineNum">     302 </span>            :     junit_log_formatter::map_trace_t const&amp; m_map_test;
+<span class="lineNum">     303 </span>            :     size_t m_id;
+<span class="lineNum">     304 </span>            :     bool m_display_build_info;
+<span class="lineNum">     305 </span>            : };
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            : 
+<a name="308"><span class="lineNum">     308 </span>            : </a>
+<span class="lineNum">     309 </span>            : void
+<span class="lineNum">     310 </span><span class="lineNoCov">          0 : junit_log_formatter::log_finish( std::ostream&amp; ostr )</span>
+<span class="lineNum">     311 </span>            : {
+<span class="lineNum">     312 </span><span class="lineNoCov">          0 :     junit_result_helper ch( ostr, boost::unit_test::framework::get( root_id, TUT_SUITE ), map_tests, m_display_build_info );</span>
+<span class="lineNum">     313 </span><span class="lineNoCov">          0 :     traverse_test_tree( root_id, ch, true ); // last is to ignore disabled suite special handling</span>
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     316 </span>            : }
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            : //____________________________________________________________________________//
+<a name="319"><span class="lineNum">     319 </span>            : </a>
+<span class="lineNum">     320 </span>            : void
+<span class="lineNum">     321 </span><span class="lineNoCov">          0 : junit_log_formatter::log_build_info( std::ostream&amp; ostr )</span>
+<span class="lineNum">     322 </span>            : {
+<span class="lineNum">     323 </span><span class="lineNoCov">          0 :     m_display_build_info = true;</span>
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span>            : //____________________________________________________________________________//
+<a name="327"><span class="lineNum">     327 </span>            : </a>
+<span class="lineNum">     328 </span>            : void
+<span class="lineNum">     329 </span><span class="lineNoCov">          0 : junit_log_formatter::test_unit_start( std::ostream&amp; ostr, test_unit const&amp; tu )</span>
+<span class="lineNum">     330 </span>            : {
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 :     if(list_path_to_root.empty())</span>
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 :         root_id = tu.p_id;</span>
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :     list_path_to_root.push_back( tu.p_id );</span>
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :     map_tests.insert(std::make_pair(tu.p_id, junit_impl::junit_log_helper())); // current_test_case_id not working here</span>
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span>            : //____________________________________________________________________________//
+<a name="340"><span class="lineNum">     340 </span>            : </a>
+<span class="lineNum">     341 </span>            : void
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 : junit_log_formatter::test_unit_finish( std::ostream&amp; ostr, test_unit const&amp; tu, unsigned long elapsed )</span>
+<span class="lineNum">     343 </span>            : {
+<span class="lineNum">     344 </span>            :     // the time is already stored in the result_reporter
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :     assert( tu.p_id == list_path_to_root.back() );</span>
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :     list_path_to_root.pop_back();</span>
+<span class="lineNum">     347 </span><span class="lineNoCov">          0 : }</span>
+<a name="348"><span class="lineNum">     348 </span>            : </a>
+<span class="lineNum">     349 </span>            : void
+<span class="lineNum">     350 </span><span class="lineNoCov">          0 : junit_log_formatter::test_unit_aborted( std::ostream&amp; os, test_unit const&amp; tu )</span>
+<span class="lineNum">     351 </span>            : {
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :     assert( tu.p_id == list_path_to_root.back() );</span>
+<span class="lineNum">     353 </span>            :     //list_path_to_root.pop_back();
+<span class="lineNum">     354 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     355 </span>            : 
+<span class="lineNum">     356 </span>            : //____________________________________________________________________________//
+<a name="357"><span class="lineNum">     357 </span>            : </a>
+<span class="lineNum">     358 </span>            : void
+<span class="lineNum">     359 </span><span class="lineNoCov">          0 : junit_log_formatter::test_unit_skipped( std::ostream&amp; ostr, test_unit const&amp; tu, const_string reason )</span>
+<span class="lineNum">     360 </span>            : {
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :     if(tu.p_type == TUT_CASE)</span>
+<span class="lineNum">     362 </span>            :     {
+<span class="lineNum">     363 </span><span class="lineNoCov">          0 :         junit_impl::junit_log_helper&amp; v = map_tests[tu.p_id];</span>
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :         v.system_out.assign(reason.begin(), reason.end());</span>
+<span class="lineNum">     365 </span>            :     }
+<span class="lineNum">     366 </span>            :     else
+<span class="lineNum">     367 </span>            :     {
+<span class="lineNum">     368 </span><span class="lineNoCov">          0 :         junit_impl::junit_log_helper&amp; v = map_tests[tu.p_id];</span>
+<span class="lineNum">     369 </span><span class="lineNoCov">          0 :         v.system_out.assign(reason.begin(), reason.end());</span>
+<span class="lineNum">     370 </span>            :     }
+<span class="lineNum">     371 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     372 </span>            : 
+<span class="lineNum">     373 </span>            : //____________________________________________________________________________//
+<a name="374"><span class="lineNum">     374 </span>            : </a>
+<span class="lineNum">     375 </span>            : void
+<span class="lineNum">     376 </span><span class="lineNoCov">          0 : junit_log_formatter::log_exception_start( std::ostream&amp; ostr, log_checkpoint_data const&amp; checkpoint_data, execution_exception const&amp; ex )</span>
+<span class="lineNum">     377 </span>            : {
+<span class="lineNum">     378 </span><span class="lineNoCov">          0 :     std::ostringstream o;</span>
+<span class="lineNum">     379 </span><span class="lineNoCov">          0 :     execution_exception::location const&amp; loc = ex.where();</span>
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 :     m_is_last_assertion_or_error = false;</span>
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 :     if(!list_path_to_root.empty())</span>
+<span class="lineNum">     384 </span>            :     {
+<span class="lineNum">     385 </span><span class="lineNoCov">          0 :         junit_impl::junit_log_helper&amp; last_entry = map_tests[list_path_to_root.back()];</span>
+<span class="lineNum">     386 </span>            : 
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 :         junit_impl::junit_log_helper::assertion_entry entry;</span>
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :         entry.logentry_message = &quot;unexpected exception&quot;;</span>
+<span class="lineNum">     390 </span><span class="lineNoCov">          0 :         entry.log_entry = junit_impl::junit_log_helper::assertion_entry::log_entry_error;</span>
+<span class="lineNum">     391 </span>            : 
+<span class="lineNum">     392 </span><span class="lineNoCov">          0 :         switch(ex.code())</span>
+<span class="lineNum">     393 </span>            :         {
+<span class="lineNum">     394 </span>            :         case execution_exception::cpp_exception_error:
+<span class="lineNum">     395 </span>            :             entry.logentry_type = &quot;uncaught exception&quot;;
+<span class="lineNum">     396 </span>            :             break;
+<span class="lineNum">     397 </span>            :         case execution_exception::timeout_error:
+<span class="lineNum">     398 </span>            :             entry.logentry_type = &quot;execution timeout&quot;;
+<span class="lineNum">     399 </span>            :             break;
+<span class="lineNum">     400 </span>            :         case execution_exception::user_error:
+<span class="lineNum">     401 </span>            :             entry.logentry_type = &quot;user, assert() or CRT error&quot;;
+<span class="lineNum">     402 </span>            :             break;
+<span class="lineNum">     403 </span>            :         case execution_exception::user_fatal_error:
+<span class="lineNum">     404 </span>            :             // Looks like never used
+<span class="lineNum">     405 </span>            :             entry.logentry_type = &quot;user fatal error&quot;;
+<span class="lineNum">     406 </span>            :             break;
+<span class="lineNum">     407 </span>            :         case execution_exception::system_error:
+<span class="lineNum">     408 </span>            :             entry.logentry_type = &quot;system error&quot;;
+<span class="lineNum">     409 </span>            :             break;
+<span class="lineNum">     410 </span>            :         case execution_exception::system_fatal_error:
+<span class="lineNum">     411 </span>            :             entry.logentry_type = &quot;system fatal error&quot;;
+<span class="lineNum">     412 </span>            :             break;
+<span class="lineNum">     413 </span>            :         default:
+<span class="lineNum">     414 </span>            :             entry.logentry_type = &quot;no error&quot;; // not sure how to handle this one
+<span class="lineNum">     415 </span>            :             break;
+<span class="lineNum">     416 </span>            :         }
+<span class="lineNum">     417 </span>            : 
+<span class="lineNum">     418 </span><span class="lineNoCov">          0 :         o &lt;&lt; &quot;UNCAUGHT EXCEPTION:&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     419 </span><span class="lineNoCov">          0 :         if( !loc.m_function.is_empty() )</span>
+<span class="lineNum">     420 </span><span class="lineNoCov">          0 :             o &lt;&lt; &quot;- function: \&quot;&quot;   &lt;&lt; loc.m_function &lt;&lt; &quot;\&quot;&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span><span class="lineNoCov">          0 :         o &lt;&lt; &quot;- file: &quot; &lt;&lt; file_basename(loc.m_file_name) &lt;&lt; std::endl</span>
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot;- line: &quot; &lt;&lt; loc.m_line_num &lt;&lt; std::endl</span>
+<span class="lineNum">     424 </span><span class="lineNoCov">          0 :           &lt;&lt; std::endl;</span>
+<span class="lineNum">     425 </span>            : 
+<span class="lineNum">     426 </span><span class="lineNoCov">          0 :         o &lt;&lt; &quot;\nEXCEPTION STACK TRACE: --------------\n&quot; &lt;&lt; ex.what()</span>
+<span class="lineNum">     427 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot;\n-------------------------------------&quot;;</span>
+<span class="lineNum">     428 </span>            : 
+<span class="lineNum">     429 </span><span class="lineNoCov">          0 :         if( !checkpoint_data.m_file_name.is_empty() ) {</span>
+<span class="lineNum">     430 </span><span class="lineNoCov">          0 :             o &lt;&lt; std::endl &lt;&lt; std::endl</span>
+<span class="lineNum">     431 </span><span class="lineNoCov">          0 :               &lt;&lt; &quot;Last checkpoint:&quot; &lt;&lt; std::endl</span>
+<span class="lineNum">     432 </span><span class="lineNoCov">          0 :               &lt;&lt; &quot;- message: \&quot;&quot; &lt;&lt; checkpoint_data.m_message &lt;&lt; &quot;\&quot;&quot; &lt;&lt; std::endl</span>
+<span class="lineNum">     433 </span><span class="lineNoCov">          0 :               &lt;&lt; &quot;- file: &quot; &lt;&lt; file_basename(checkpoint_data.m_file_name) &lt;&lt; std::endl</span>
+<span class="lineNum">     434 </span><span class="lineNoCov">          0 :               &lt;&lt; &quot;- line: &quot; &lt;&lt; checkpoint_data.m_line_num &lt;&lt; std::endl</span>
+<span class="lineNum">     435 </span><span class="lineNoCov">          0 :             ;</span>
+<span class="lineNum">     436 </span>            :         }
+<span class="lineNum">     437 </span>            : 
+<span class="lineNum">     438 </span><span class="lineNoCov">          0 :         entry.output = o.str();</span>
+<span class="lineNum">     439 </span>            : 
+<span class="lineNum">     440 </span><span class="lineNoCov">          0 :         last_entry.assertion_entries.push_back(entry);</span>
+<span class="lineNum">     441 </span>            :     }
+<span class="lineNum">     442 </span>            : 
+<span class="lineNum">     443 </span>            :     // check what to do with this one
+<span class="lineNum">     444 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     445 </span>            : 
+<span class="lineNum">     446 </span>            : //____________________________________________________________________________//
+<a name="447"><span class="lineNum">     447 </span>            : </a>
+<span class="lineNum">     448 </span>            : void
+<span class="lineNum">     449 </span><span class="lineNoCov">          0 : junit_log_formatter::log_exception_finish( std::ostream&amp; ostr )</span>
+<span class="lineNum">     450 </span>            : {
+<span class="lineNum">     451 </span>            :     // sealing the last entry
+<span class="lineNum">     452 </span><span class="lineNoCov">          0 :     assert(!map_tests[list_path_to_root.back()].assertion_entries.back().sealed);</span>
+<span class="lineNum">     453 </span><span class="lineNoCov">          0 :     map_tests[list_path_to_root.back()].assertion_entries.back().sealed = true;</span>
+<span class="lineNum">     454 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     455 </span>            : 
+<span class="lineNum">     456 </span>            : //____________________________________________________________________________//
+<a name="457"><span class="lineNum">     457 </span>            : </a>
+<span class="lineNum">     458 </span>            : void
+<span class="lineNum">     459 </span><span class="lineNoCov">          0 : junit_log_formatter::log_entry_start( std::ostream&amp; ostr, log_entry_data const&amp; entry_data, log_entry_types let )</span>
+<span class="lineNum">     460 </span>            : {
+<span class="lineNum">     461 </span><span class="lineNoCov">          0 :     junit_impl::junit_log_helper&amp; last_entry = map_tests[list_path_to_root.back()];</span>
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 :     m_is_last_assertion_or_error = true;</span>
+<span class="lineNum">     463 </span><span class="lineNoCov">          0 :     switch(let)</span>
+<span class="lineNum">     464 </span>            :     {
+<span class="lineNum">     465 </span>            :       case unit_test_log_formatter::BOOST_UTL_ET_INFO:
+<span class="lineNum">     466 </span>            :       case unit_test_log_formatter::BOOST_UTL_ET_MESSAGE:
+<span class="lineNum">     467 </span>            :       case unit_test_log_formatter::BOOST_UTL_ET_WARNING:
+<span class="lineNum">     468 </span>            :       {
+<span class="lineNum">     469 </span><span class="lineNoCov">          0 :         std::ostringstream o;</span>
+<span class="lineNum">     470 </span>            : 
+<span class="lineNum">     471 </span><span class="lineNoCov">          0 :         junit_impl::junit_log_helper::assertion_entry entry;</span>
+<span class="lineNum">     472 </span><span class="lineNoCov">          0 :         entry.log_entry = junit_impl::junit_log_helper::assertion_entry::log_entry_info;</span>
+<span class="lineNum">     473 </span><span class="lineNoCov">          0 :         entry.logentry_message = &quot;info&quot;;</span>
+<span class="lineNum">     474 </span><span class="lineNoCov">          0 :         entry.logentry_type = &quot;message&quot;;</span>
+<span class="lineNum">     475 </span>            : 
+<span class="lineNum">     476 </span>            :         o &lt;&lt; (let == unit_test_log_formatter::BOOST_UTL_ET_WARNING ?
+<span class="lineNum">     477 </span>            :               &quot;WARNING:&quot; : (let == unit_test_log_formatter::BOOST_UTL_ET_MESSAGE ?
+<span class="lineNum">     478 </span><span class="lineNoCov">          0 :                             &quot;MESSAGE:&quot; : &quot;INFO:&quot;))</span>
+<span class="lineNum">     479 </span><span class="lineNoCov">          0 :              &lt;&lt; std::endl</span>
+<span class="lineNum">     480 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot;- file   : &quot; &lt;&lt; file_basename(entry_data.m_file_name) &lt;&lt; std::endl</span>
+<span class="lineNum">     481 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot;- line   : &quot; &lt;&lt; entry_data.m_line_num &lt;&lt; std::endl</span>
+<span class="lineNum">     482 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot;- message: &quot;; // no CR</span>
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span><span class="lineNoCov">          0 :         entry.output += o.str();</span>
+<span class="lineNum">     485 </span><span class="lineNoCov">          0 :         last_entry.assertion_entries.push_back(entry);</span>
+<span class="lineNum">     486 </span>            :         break;
+<span class="lineNum">     487 </span>            :       }
+<span class="lineNum">     488 </span>            :       default:
+<span class="lineNum">     489 </span>            :       case unit_test_log_formatter::BOOST_UTL_ET_ERROR:
+<span class="lineNum">     490 </span>            :       case unit_test_log_formatter::BOOST_UTL_ET_FATAL_ERROR:
+<span class="lineNum">     491 </span>            :       {
+<span class="lineNum">     492 </span><span class="lineNoCov">          0 :         std::ostringstream o;</span>
+<span class="lineNum">     493 </span><span class="lineNoCov">          0 :         junit_impl::junit_log_helper::assertion_entry entry;</span>
+<span class="lineNum">     494 </span><span class="lineNoCov">          0 :         entry.log_entry = junit_impl::junit_log_helper::assertion_entry::log_entry_failure;</span>
+<span class="lineNum">     495 </span><span class="lineNoCov">          0 :         entry.logentry_message = &quot;failure&quot;;</span>
+<span class="lineNum">     496 </span><span class="lineNoCov">          0 :         entry.logentry_type = (let == unit_test_log_formatter::BOOST_UTL_ET_ERROR ? &quot;assertion error&quot; : &quot;fatal error&quot;);</span>
+<span class="lineNum">     497 </span>            : 
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 :         o &lt;&lt; &quot;ASSERTION FAILURE:&quot; &lt;&lt; std::endl</span>
+<span class="lineNum">     499 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot;- file   : &quot; &lt;&lt; file_basename(entry_data.m_file_name) &lt;&lt; std::endl</span>
+<span class="lineNum">     500 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot;- line   : &quot; &lt;&lt; entry_data.m_line_num &lt;&lt; std::endl</span>
+<span class="lineNum">     501 </span><span class="lineNoCov">          0 :           &lt;&lt; &quot;- message: &quot; ; // no CR</span>
+<span class="lineNum">     502 </span>            : 
+<span class="lineNum">     503 </span><span class="lineNoCov">          0 :         entry.output += o.str();</span>
+<span class="lineNum">     504 </span><span class="lineNoCov">          0 :         last_entry.assertion_entries.push_back(entry);</span>
+<span class="lineNum">     505 </span>            :         break;
+<span class="lineNum">     506 </span>            :       }
+<span class="lineNum">     507 </span>            :     }
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     510 </span>            : 
+<span class="lineNum">     511 </span>            :       //____________________________________________________________________________//
+<span class="lineNum">     512 </span>            : 
+<span class="lineNum">     513 </span>            : 
+<span class="lineNum">     514 </span>            : 
+<span class="lineNum">     515 </span>            : //____________________________________________________________________________//
+<a name="516"><span class="lineNum">     516 </span>            : </a>
+<span class="lineNum">     517 </span>            : void
+<span class="lineNum">     518 </span><span class="lineNoCov">          0 : junit_log_formatter::log_entry_value( std::ostream&amp; ostr, const_string value )</span>
+<span class="lineNum">     519 </span>            : {
+<span class="lineNum">     520 </span><span class="lineNoCov">          0 :     assert(map_tests[list_path_to_root.back()].assertion_entries.empty() || !map_tests[list_path_to_root.back()].assertion_entries.back().sealed);</span>
+<span class="lineNum">     521 </span><span class="lineNoCov">          0 :     junit_impl::junit_log_helper&amp; last_entry = map_tests[list_path_to_root.back()];</span>
+<span class="lineNum">     522 </span><span class="lineNoCov">          0 :     std::ostringstream o;</span>
+<span class="lineNum">     523 </span><span class="lineNoCov">          0 :     utils::print_escaped_cdata( o, value );</span>
+<span class="lineNum">     524 </span>            : 
+<span class="lineNum">     525 </span><span class="lineNoCov">          0 :     if(!last_entry.assertion_entries.empty())</span>
+<span class="lineNum">     526 </span>            :     {
+<span class="lineNum">     527 </span><span class="lineNoCov">          0 :         junit_impl::junit_log_helper::assertion_entry&amp; log_entry = last_entry.assertion_entries.back();</span>
+<span class="lineNum">     528 </span><span class="lineNoCov">          0 :         log_entry.output += value;</span>
+<span class="lineNum">     529 </span>            :     }
+<span class="lineNum">     530 </span>            :     else
+<span class="lineNum">     531 </span>            :     {
+<span class="lineNum">     532 </span>            :         // this may be a message coming from another observer
+<span class="lineNum">     533 </span>            :         // the prefix is set in the log_entry_start
+<span class="lineNum">     534 </span><span class="lineNoCov">          0 :         last_entry.system_out += value;</span>
+<span class="lineNum">     535 </span>            :     }
+<span class="lineNum">     536 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     537 </span>            : 
+<span class="lineNum">     538 </span>            : //____________________________________________________________________________//
+<a name="539"><span class="lineNum">     539 </span>            : </a>
+<span class="lineNum">     540 </span>            : void
+<span class="lineNum">     541 </span><span class="lineNoCov">          0 : junit_log_formatter::log_entry_finish( std::ostream&amp; ostr )</span>
+<span class="lineNum">     542 </span>            : {
+<span class="lineNum">     543 </span><span class="lineNoCov">          0 :     assert(map_tests[list_path_to_root.back()].assertion_entries.empty() || !map_tests[list_path_to_root.back()].assertion_entries.back().sealed);</span>
+<span class="lineNum">     544 </span><span class="lineNoCov">          0 :     junit_impl::junit_log_helper&amp; last_entry = map_tests[list_path_to_root.back()];</span>
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 :     if(!last_entry.assertion_entries.empty()) {</span>
+<span class="lineNum">     546 </span><span class="lineNoCov">          0 :         junit_impl::junit_log_helper::assertion_entry&amp; log_entry = last_entry.assertion_entries.back();</span>
+<span class="lineNum">     547 </span><span class="lineNoCov">          0 :         log_entry.output += &quot;\n\n&quot;; // quote end, CR</span>
+<span class="lineNum">     548 </span><span class="lineNoCov">          0 :         log_entry.sealed = true;</span>
+<span class="lineNum">     549 </span>            :     }
+<span class="lineNum">     550 </span>            :     else {
+<span class="lineNum">     551 </span><span class="lineNoCov">          0 :         last_entry.system_out += &quot;\n\n&quot;; // quote end, CR</span>
+<span class="lineNum">     552 </span>            :     }
+<span class="lineNum">     553 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     554 </span>            : 
+<span class="lineNum">     555 </span>            : //____________________________________________________________________________//
+<a name="556"><span class="lineNum">     556 </span>            : </a>
+<span class="lineNum">     557 </span>            : void
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 : junit_log_formatter::entry_context_start( std::ostream&amp; ostr, log_level )</span>
+<span class="lineNum">     559 </span>            : {
+<span class="lineNum">     560 </span><span class="lineNoCov">          0 :     std::vector&lt; junit_impl::junit_log_helper::assertion_entry &gt; &amp;v_failure_or_error = map_tests[list_path_to_root.back()].assertion_entries;</span>
+<span class="lineNum">     561 </span><span class="lineNoCov">          0 :     assert(!v_failure_or_error.back().sealed);</span>
+<span class="lineNum">     562 </span>            : 
+<span class="lineNum">     563 </span><span class="lineNoCov">          0 :     if(m_is_last_assertion_or_error)</span>
+<span class="lineNum">     564 </span>            :     {
+<span class="lineNum">     565 </span><span class="lineNoCov">          0 :         v_failure_or_error.back().output += &quot;\n- context:\n&quot;;</span>
+<span class="lineNum">     566 </span>            :     }
+<span class="lineNum">     567 </span>            :     else
+<span class="lineNum">     568 </span>            :     {
+<span class="lineNum">     569 </span><span class="lineNoCov">          0 :         v_failure_or_error.back().output += &quot;\n\nCONTEXT:\n&quot;;</span>
+<span class="lineNum">     570 </span>            :     }
+<span class="lineNum">     571 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     572 </span>            : 
+<span class="lineNum">     573 </span>            : //____________________________________________________________________________//
+<a name="574"><span class="lineNum">     574 </span>            : </a>
+<span class="lineNum">     575 </span>            : void
+<span class="lineNum">     576 </span><span class="lineNoCov">          0 : junit_log_formatter::entry_context_finish( std::ostream&amp; ostr )</span>
+<span class="lineNum">     577 </span>            : {
+<span class="lineNum">     578 </span>            :     // no op, may be removed
+<span class="lineNum">     579 </span><span class="lineNoCov">          0 :     assert(!map_tests[list_path_to_root.back()].assertion_entries.back().sealed);</span>
+<span class="lineNum">     580 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     581 </span>            : 
+<span class="lineNum">     582 </span>            : //____________________________________________________________________________//
+<a name="583"><span class="lineNum">     583 </span>            : </a>
+<span class="lineNum">     584 </span>            : void
+<span class="lineNum">     585 </span><span class="lineNoCov">          0 : junit_log_formatter::log_entry_context( std::ostream&amp; ostr, const_string context_descr )</span>
+<span class="lineNum">     586 </span>            : {
+<span class="lineNum">     587 </span><span class="lineNoCov">          0 :     assert(!map_tests[list_path_to_root.back()].assertion_entries.back().sealed);</span>
+<span class="lineNum">     588 </span><span class="lineNoCov">          0 :     map_tests[list_path_to_root.back()].assertion_entries.back().output += (m_is_last_assertion_or_error ? &quot;  - '&quot;: &quot;- '&quot;) + std::string(context_descr.begin(), context_descr.end()) + &quot;'\n&quot;; // quote end</span>
+<span class="lineNum">     589 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     590 </span>            : 
+<span class="lineNum">     591 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     592 </span>            : 
+<a name="593"><span class="lineNum">     593 </span>            : </a>
+<span class="lineNum">     594 </span>            : std::string
+<span class="lineNum">     595 </span><span class="lineNoCov">          0 : junit_log_formatter::get_default_stream_description() const {</span>
+<a name="596"><span class="lineNum">     596 </span><span class="lineNoCov">          0 :     std::string name = framework::master_test_suite().p_name.value;</span></a>
+<a name="597"><span class="lineNum">     597 </span>            : </a>
+<span class="lineNum">     598 </span><span class="lineNoCov">          0 :     static const std::string to_replace[] =  { &quot; &quot;, &quot;\&quot;&quot;, &quot;/&quot;, &quot;\\&quot;, &quot;:&quot;};</span>
+<span class="lineNum">     599 </span><span class="lineNoCov">          0 :     static const std::string replacement[] = { &quot;_&quot;, &quot;_&quot; , &quot;_&quot;, &quot;_&quot; , &quot;_&quot;};</span>
+<span class="lineNum">     600 </span>            : 
+<span class="lineNum">     601 </span><span class="lineNoCov">          0 :     name = unit_test::utils::replace_all_occurrences_of(</span>
+<span class="lineNum">     602 </span>            :         name,
+<span class="lineNum">     603 </span>            :         to_replace, to_replace + sizeof(to_replace)/sizeof(to_replace[0]),
+<span class="lineNum">     604 </span><span class="lineNoCov">          0 :         replacement, replacement + sizeof(replacement)/sizeof(replacement[0]));</span>
+<span class="lineNum">     605 </span>            : 
+<span class="lineNum">     606 </span><span class="lineNoCov">          0 :     std::ifstream check_init((name + &quot;.xml&quot;).c_str());</span>
+<span class="lineNum">     607 </span><span class="lineNoCov">          0 :     if(!check_init)</span>
+<span class="lineNum">     608 </span><span class="lineNoCov">          0 :         return name + &quot;.xml&quot;;</span>
+<span class="lineNum">     609 </span>            : 
+<span class="lineNum">     610 </span><span class="lineNoCov">          0 :     int index = 0;</span>
+<span class="lineNum">     611 </span><span class="lineNoCov">          0 :     for(; index &lt; 100; index++) {</span>
+<span class="lineNum">     612 </span><span class="lineNoCov">          0 :       std::string candidate = name + &quot;_&quot; + utils::string_cast(index) + &quot;.xml&quot;;</span>
+<span class="lineNum">     613 </span><span class="lineNoCov">          0 :       std::ifstream file(candidate.c_str());</span>
+<span class="lineNum">     614 </span><span class="lineNoCov">          0 :       if(!file)</span>
+<span class="lineNum">     615 </span><span class="lineNoCov">          0 :           return candidate;</span>
+<span class="lineNum">     616 </span>            :     }
+<span class="lineNum">     617 </span>            : 
+<span class="lineNum">     618 </span><span class="lineNoCov">          0 :     return name + &quot;.xml&quot;;</span>
+<span class="lineNum">     619 </span>            : }
+<span class="lineNum">     620 </span>            : 
+<span class="lineNum">     621 </span>            : } // namespace output
+<span class="lineNum">     622 </span>            : } // namespace unit_test
+<span class="lineNum">     623 </span>            : } // namespace boost
+<span class="lineNum">     624 </span>            : 
+<span class="lineNum">     625 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     626 </span>            : 
+<span class="lineNum">     627 </span>            : #endif // BOOST_TEST_junit_log_formatter_IPP_020105GER
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

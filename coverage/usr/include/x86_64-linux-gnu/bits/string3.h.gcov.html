@@ -1,0 +1,233 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/x86_64-linux-gnu/bits/string3.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/x86_64-linux-gnu/bits</a> - string3.h<span style="font-size: 80%;"> (source / <a href="string3.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryMed">80.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* Copyright (C) 2004-2016 Free Software Foundation, Inc.</a>
+<span class="lineNum">       2 </span>            :    This file is part of the GNU C Library.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :    The GNU C Library is free software; you can redistribute it and/or
+<span class="lineNum">       5 </span>            :    modify it under the terms of the GNU Lesser General Public
+<span class="lineNum">       6 </span>            :    License as published by the Free Software Foundation; either
+<span class="lineNum">       7 </span>            :    version 2.1 of the License, or (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :    The GNU C Library is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+<span class="lineNum">      12 </span>            :    Lesser General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :    You should have received a copy of the GNU Lesser General Public
+<span class="lineNum">      15 </span>            :    License along with the GNU C Library; if not, see
+<span class="lineNum">      16 </span>            :    &lt;http://www.gnu.org/licenses/&gt;.  */
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #ifndef _STRING_H
+<span class="lineNum">      19 </span>            : # error &quot;Never use &lt;bits/string3.h&gt; directly; include &lt;string.h&gt; instead.&quot;
+<span class="lineNum">      20 </span>            : #endif
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #if !__GNUC_PREREQ (5,0)
+<span class="lineNum">      23 </span>            : __warndecl (__warn_memset_zero_len,
+<span class="lineNum">      24 </span>            :             &quot;memset used with constant zero length parameter; this could be due to transposed parameters&quot;);
+<span class="lineNum">      25 </span>            : #endif
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #ifndef __cplusplus
+<span class="lineNum">      28 </span>            : /* XXX This is temporarily.  We should not redefine any of the symbols
+<span class="lineNum">      29 </span>            :    and instead integrate the error checking into the original
+<span class="lineNum">      30 </span>            :    definitions.  */
+<span class="lineNum">      31 </span>            : # undef memcpy
+<span class="lineNum">      32 </span>            : # undef memmove
+<span class="lineNum">      33 </span>            : # undef memset
+<span class="lineNum">      34 </span>            : # undef strcat
+<span class="lineNum">      35 </span>            : # undef strcpy
+<span class="lineNum">      36 </span>            : # undef strncat
+<span class="lineNum">      37 </span>            : # undef strncpy
+<span class="lineNum">      38 </span>            : # ifdef __USE_GNU
+<span class="lineNum">      39 </span>            : #  undef mempcpy
+<span class="lineNum">      40 </span>            : #  undef stpcpy
+<span class="lineNum">      41 </span>            : # endif
+<span class="lineNum">      42 </span>            : # ifdef __USE_MISC
+<span class="lineNum">      43 </span>            : #  undef bcopy
+<span class="lineNum">      44 </span>            : #  undef bzero
+<span class="lineNum">      45 </span>            : # endif
+<span class="lineNum">      46 </span>            : #endif
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : __fortify_function void *
+<span class="lineNum">      50 </span>            : __NTH (memcpy (void *__restrict __dest, const void *__restrict __src,
+<span class="lineNum">      51 </span>            :                size_t __len))
+<span class="lineNum">      52 </span>            : {
+<span class="lineNum">      53 </span><span class="lineCov">   34877695 :   return __builtin___memcpy_chk (__dest, __src, __len, __bos0 (__dest));</span>
+<span class="lineNum">      54 </span>            : }
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : __fortify_function void *
+<span class="lineNum">      57 </span>            : __NTH (memmove (void *__dest, const void *__src, size_t __len))
+<span class="lineNum">      58 </span>            : {
+<span class="lineNum">      59 </span><span class="lineCov">  161639929 :   return __builtin___memmove_chk (__dest, __src, __len, __bos0 (__dest));</span>
+<span class="lineNum">      60 </span>            : }
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : #ifdef __USE_GNU
+<span class="lineNum">      63 </span>            : __fortify_function void *
+<span class="lineNum">      64 </span>            : __NTH (mempcpy (void *__restrict __dest, const void *__restrict __src,
+<span class="lineNum">      65 </span>            :                 size_t __len))
+<span class="lineNum">      66 </span>            : {
+<span class="lineNum">      67 </span>            :   return __builtin___mempcpy_chk (__dest, __src, __len, __bos0 (__dest));
+<span class="lineNum">      68 </span>            : }
+<span class="lineNum">      69 </span>            : #endif
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : /* The first two tests here help to catch a somewhat common problem
+<span class="lineNum">      73 </span>            :    where the second and third parameter are transposed.  This is
+<span class="lineNum">      74 </span>            :    especially problematic if the intended fill value is zero.  In this
+<span class="lineNum">      75 </span>            :    case no work is done at all.  We detect these problems by referring
+<span class="lineNum">      76 </span>            :    non-existing functions.  */
+<span class="lineNum">      77 </span>            : __fortify_function void *
+<span class="lineNum">      78 </span>            : __NTH (memset (void *__dest, int __ch, size_t __len))
+<span class="lineNum">      79 </span>            : {
+<span class="lineNum">      80 </span>            :   /* GCC-5.0 and newer implements these checks in the compiler, so we don't
+<span class="lineNum">      81 </span>            :      need them here.  */
+<span class="lineNum">      82 </span>            : #if !__GNUC_PREREQ (5,0)
+<span class="lineNum">      83 </span>            :   if (__builtin_constant_p (__len) &amp;&amp; __len == 0
+<span class="lineNum">      84 </span>            :       &amp;&amp; (!__builtin_constant_p (__ch) || __ch != 0))
+<span class="lineNum">      85 </span>            :     {
+<span class="lineNum">      86 </span>            :       __warn_memset_zero_len ();
+<span class="lineNum">      87 </span>            :       return __dest;
+<span class="lineNum">      88 </span>            :     }
+<span class="lineNum">      89 </span>            : #endif
+<span class="lineNum">      90 </span><span class="lineCov">  135208572 :   return __builtin___memset_chk (__dest, __ch, __len, __bos0 (__dest));</span>
+<span class="lineNum">      91 </span>            : }
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : #ifdef __USE_MISC
+<span class="lineNum">      94 </span>            : __fortify_function void
+<span class="lineNum">      95 </span>            : __NTH (bcopy (const void *__src, void *__dest, size_t __len))
+<span class="lineNum">      96 </span>            : {
+<span class="lineNum">      97 </span>            :   (void) __builtin___memmove_chk (__dest, __src, __len, __bos0 (__dest));
+<span class="lineNum">      98 </span>            : }
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : __fortify_function void
+<span class="lineNum">     101 </span>            : __NTH (bzero (void *__dest, size_t __len))
+<span class="lineNum">     102 </span>            : {
+<span class="lineNum">     103 </span>            :   (void) __builtin___memset_chk (__dest, '\0', __len, __bos0 (__dest));
+<span class="lineNum">     104 </span>            : }
+<span class="lineNum">     105 </span>            : #endif
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : __fortify_function char *
+<span class="lineNum">     108 </span>            : __NTH (strcpy (char *__restrict __dest, const char *__restrict __src))
+<span class="lineNum">     109 </span>            : {
+<span class="lineNum">     110 </span>            :   return __builtin___strcpy_chk (__dest, __src, __bos (__dest));
+<span class="lineNum">     111 </span>            : }
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            : #ifdef __USE_GNU
+<span class="lineNum">     114 </span>            : __fortify_function char *
+<span class="lineNum">     115 </span>            : __NTH (stpcpy (char *__restrict __dest, const char *__restrict __src))
+<span class="lineNum">     116 </span>            : {
+<span class="lineNum">     117 </span>            :   return __builtin___stpcpy_chk (__dest, __src, __bos (__dest));
+<span class="lineNum">     118 </span>            : }
+<span class="lineNum">     119 </span>            : #endif
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : __fortify_function char *
+<span class="lineNum">     123 </span>            : __NTH (strncpy (char *__restrict __dest, const char *__restrict __src,
+<span class="lineNum">     124 </span>            :                 size_t __len))
+<span class="lineNum">     125 </span>            : {
+<span class="lineNum">     126 </span>            :   return __builtin___strncpy_chk (__dest, __src, __len, __bos (__dest));
+<span class="lineNum">     127 </span>            : }
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            : // XXX We have no corresponding builtin yet.
+<span class="lineNum">     130 </span>            : extern char *__stpncpy_chk (char *__dest, const char *__src, size_t __n,
+<span class="lineNum">     131 </span>            :                             size_t __destlen) __THROW;
+<span class="lineNum">     132 </span>            : extern char *__REDIRECT_NTH (__stpncpy_alias, (char *__dest, const char *__src,
+<span class="lineNum">     133 </span>            :                                                size_t __n), stpncpy);
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : __fortify_function char *
+<span class="lineNum">     136 </span>            : __NTH (stpncpy (char *__dest, const char *__src, size_t __n))
+<span class="lineNum">     137 </span>            : {
+<span class="lineNum">     138 </span>            :   if (__bos (__dest) != (size_t) -1
+<span class="lineNum">     139 </span>            :       &amp;&amp; (!__builtin_constant_p (__n) || __n &gt; __bos (__dest)))
+<span class="lineNum">     140 </span>            :     return __stpncpy_chk (__dest, __src, __n, __bos (__dest));
+<span class="lineNum">     141 </span>            :   return __stpncpy_alias (__dest, __src, __n);
+<span class="lineNum">     142 </span>            : }
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            : __fortify_function char *
+<span class="lineNum">     146 </span>            : __NTH (strcat (char *__restrict __dest, const char *__restrict __src))
+<span class="lineNum">     147 </span>            : {
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :   return __builtin___strcat_chk (__dest, __src, __bos (__dest));</span>
+<span class="lineNum">     149 </span>            : }
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            : __fortify_function char *
+<span class="lineNum">     153 </span>            : __NTH (strncat (char *__restrict __dest, const char *__restrict __src,
+<span class="lineNum">     154 </span>            :                 size_t __len))
+<span class="lineNum">     155 </span>            : {
+<span class="lineNum">     156 </span><span class="lineCov">          6 :   return __builtin___strncat_chk (__dest, __src, __len, __bos (__dest));</span>
+<span class="lineNum">     157 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

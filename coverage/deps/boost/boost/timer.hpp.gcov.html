@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/timer.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">deps/boost/boost</a> - timer.hpp<span style="font-size: 80%;"> (source / <a href="timer.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  boost timer.hpp header file  ---------------------------------------------//</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : //  Copyright Beman Dawes 1994-99.  Distributed under the Boost
+<span class="lineNum">       4 </span>            : //  Software License, Version 1.0. (See accompanying file
+<span class="lineNum">       5 </span>            : //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : //  See http://www.boost.org/libs/timer for documentation.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : //  Revision History
+<span class="lineNum">      10 </span>            : //  01 Apr 01  Modified to use new &lt;boost/limits.hpp&gt; header. (JMaddock)
+<span class="lineNum">      11 </span>            : //  12 Jan 01  Change to inline implementation to allow use without library
+<span class="lineNum">      12 </span>            : //             builds. See docs for more rationale. (Beman Dawes) 
+<span class="lineNum">      13 </span>            : //  25 Sep 99  elapsed_max() and elapsed_min() added (John Maddock)
+<span class="lineNum">      14 </span>            : //  16 Jul 99  Second beta
+<span class="lineNum">      15 </span>            : //   6 Jul 99  Initial boost version
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : #ifndef BOOST_TIMER_HPP
+<span class="lineNum">      18 </span>            : #define BOOST_TIMER_HPP
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;ctime&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/limits.hpp&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : # ifdef BOOST_NO_STDC_NAMESPACE
+<span class="lineNum">      25 </span>            :     namespace std { using ::clock_t; using ::clock; }
+<span class="lineNum">      26 </span>            : # endif
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace boost {
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : //  timer  -------------------------------------------------------------------//
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : //  A timer object measures elapsed time.
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : //  It is recommended that implementations measure wall clock rather than CPU
+<span class="lineNum">      36 </span>            : //  time since the intended use is performance measurement on systems where
+<span class="lineNum">      37 </span>            : //  total elapsed time is more important than just process or CPU time.
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : //  Warnings: The maximum measurable elapsed time may well be only 596.5+ hours
+<span class="lineNum">      40 </span>            : //  due to implementation limitations.  The accuracy of timings depends on the
+<span class="lineNum">      41 </span>            : //  accuracy of timing information provided by the underlying platform, and
+<span class="lineNum">      42 </span>            : //  this varies a great deal from platform to platform.
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : class timer
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span>            :  public:
+<span class="lineNum">      47 </span><span class="lineCov">        363 :          timer() { _start_time = std::clock(); } // postcondition: elapsed()==0</span>
+<span class="lineNum">      48 </span>            : //         timer( const timer&amp; src );      // post: elapsed()==src.elapsed()
+<span class="lineNum">      49 </span>            : //        ~timer(){}
+<span class="lineNum">      50 </span>            : //  timer&amp; operator=( const timer&amp; src );  // post: elapsed()==src.elapsed()
+<span class="lineNum">      51 </span>            :   void   restart() { _start_time = std::clock(); } // post: elapsed()==0
+<span class="lineNum">      52 </span>            :   double elapsed() const                  // return elapsed time in seconds
+<span class="lineNum">      53 </span><span class="lineCov">        729 :     { return  double(std::clock() - _start_time) / CLOCKS_PER_SEC; }</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :   double elapsed_max() const   // return estimated maximum value for elapsed()
+<span class="lineNum">      56 </span>            :   // Portability warning: elapsed_max() may return too high a value on systems
+<span class="lineNum">      57 </span>            :   // where std::clock_t overflows or resets at surprising values.
+<span class="lineNum">      58 </span>            :   {
+<span class="lineNum">      59 </span>            :     return (double((std::numeric_limits&lt;std::clock_t&gt;::max)())
+<span class="lineNum">      60 </span>            :        - double(_start_time)) / double(CLOCKS_PER_SEC); 
+<span class="lineNum">      61 </span>            :   }
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            :   double elapsed_min() const            // return minimum value for elapsed()
+<span class="lineNum">      64 </span>            :    { return double(1)/double(CLOCKS_PER_SEC); }
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :  private:
+<span class="lineNum">      67 </span>            :   std::clock_t _start_time;
+<span class="lineNum">      68 </span>            : }; // timer
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : } // namespace boost
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span>            : #endif  // BOOST_TIMER_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

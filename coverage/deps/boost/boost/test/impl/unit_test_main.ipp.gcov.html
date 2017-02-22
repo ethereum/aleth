@@ -1,0 +1,371 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/impl/unit_test_main.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/impl</a> - unit_test_main.ipp<span style="font-size: 80%;"> (source / <a href="unit_test_main.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">99</td>
+            <td class="headerCovTableEntryLo">12.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntryLo">6.2 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : main function implementation for Unit Test Framework
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_UNIT_TEST_MAIN_IPP_012205GER
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_UNIT_TEST_MAIN_IPP_012205GER
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/framework.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/results_collector.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/test/results_reporter.hpp&gt;
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;boost/test/tree/visitor.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/tree/test_unit.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/tree/traverse.hpp&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;boost/test/unit_test_parameters.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #include &lt;boost/test/utils/foreach.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/test/utils/basic_cstring/io.hpp&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : // Boost
+<span class="lineNum">      33 </span>            : #include &lt;boost/cstdlib.hpp&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : // STL
+<span class="lineNum">      36 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      37 </span>            : #include &lt;stdexcept&gt;
+<span class="lineNum">      38 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      39 </span>            : #include &lt;iomanip&gt;
+<span class="lineNum">      40 </span>            : #include &lt;set&gt;
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : namespace boost {
+<span class="lineNum">      47 </span>            : namespace unit_test {
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : namespace ut_detail {
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : // ************************************************************************** //
+<span class="lineNum">      52 </span>            : // **************             hrf_content_reporter             ************** //
+<a name="53"><span class="lineNum">      53 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 : struct hrf_content_reporter : test_tree_visitor {</span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :     explicit        hrf_content_reporter( std::ostream&amp; os ) : m_os( os ), m_indent( -4 ) {} // skip master test suite</span>
+<a name="57"><span class="lineNum">      57 </span>            : </a>
+<span class="lineNum">      58 </span>            : private:
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :     void            report_test_unit( test_unit const&amp; tu )</span>
+<span class="lineNum">      60 </span>            :     {
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :         m_os &lt;&lt; std::setw( m_indent ) &lt;&lt; &quot;&quot; &lt;&lt; tu.p_name;</span>
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 :         m_os &lt;&lt; (tu.p_default_status == test_unit::RS_ENABLED ? &quot;*&quot; : &quot; &quot;);</span>
+<span class="lineNum">      63 </span>            :         //m_os &lt;&lt; '[' &lt;&lt; tu.p_sibling_rank &lt;&lt; ']';
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :         if( !tu.p_description-&gt;empty() )</span>
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :             m_os &lt;&lt; &quot;: &quot; &lt;&lt; tu.p_description;</span>
+<span class="lineNum">      66 </span>            : 
+<a name="67"><span class="lineNum">      67 </span><span class="lineNoCov">          0 :         m_os &lt;&lt; &quot;\n&quot;;</span></a>
+<a name="68"><span class="lineNum">      68 </span><span class="lineNoCov">          0 :     }</span></a>
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :     virtual void    visit( test_case const&amp; tc ) { report_test_unit( tc ); }</span>
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :     virtual bool    test_suite_start( test_suite const&amp; ts )</span>
+<span class="lineNum">      71 </span>            :     {
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :         if( m_indent &gt;= 0 )</span>
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :             report_test_unit( ts );</span>
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :         m_indent += 4;</span>
+<a name="75"><span class="lineNum">      75 </span><span class="lineNoCov">          0 :         return true;</span></a>
+<span class="lineNum">      76 </span>            :     }
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :     virtual void    test_suite_finish( test_suite const&amp; )</span>
+<span class="lineNum">      78 </span>            :     {
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :         m_indent -= 4;</span>
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :     // Data members
+<span class="lineNum">      83 </span>            :     std::ostream&amp;   m_os;
+<span class="lineNum">      84 </span>            :     int             m_indent;
+<span class="lineNum">      85 </span>            : };
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            : // ************************************************************************** //
+<span class="lineNum">      88 </span>            : // **************             dot_content_reporter             ************** //
+<a name="89"><span class="lineNum">      89 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 : struct dot_content_reporter : test_tree_visitor {</span>
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :     explicit        dot_content_reporter( std::ostream&amp; os ) : m_os( os ) {}</span>
+<a name="93"><span class="lineNum">      93 </span>            : </a>
+<span class="lineNum">      94 </span>            : private:
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :     void            report_test_unit( test_unit const&amp; tu )</span>
+<span class="lineNum">      96 </span>            :     {
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :         bool master_ts = tu.p_parent_id == INV_TEST_UNIT_ID;</span>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :         m_os &lt;&lt; &quot;tu&quot; &lt;&lt; tu.p_id;</span>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :         m_os &lt;&lt; (master_ts ? &quot;[shape=ellipse,peripheries=2&quot; : &quot;[shape=Mrecord&quot; );</span>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :         m_os &lt;&lt; &quot;,fontname=Helvetica&quot;;</span>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :         m_os &lt;&lt; (tu.p_default_status == test_unit::RS_ENABLED ? &quot;,color=green&quot; : &quot;,color=yellow&quot;);</span>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :         if( master_ts )</span>
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :             m_os &lt;&lt; &quot;,label=\&quot;&quot; &lt;&lt; tu.p_name &lt;&lt; &quot;\&quot;];\n&quot;;</span>
+<span class="lineNum">     109 </span>            :         else {
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :             m_os &lt;&lt; &quot;,label=\&quot;&quot; &lt;&lt; tu.p_name &lt;&lt; &quot;|&quot; &lt;&lt; tu.p_file_name &lt;&lt; &quot;(&quot; &lt;&lt; tu.p_line_num &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :             if( tu.p_timeout &gt; 0  )</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :                 m_os &lt;&lt; &quot;|timeout=&quot; &lt;&lt; tu.p_timeout;</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :             if( tu.p_expected_failures != 0  )</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :                 m_os &lt;&lt; &quot;|expected failures=&quot; &lt;&lt; tu.p_expected_failures;</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :             if( !tu.p_labels-&gt;empty() ) {</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :                 m_os &lt;&lt; &quot;|labels:&quot;;</span>
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :                 BOOST_TEST_FOREACH( std::string const&amp;, l, tu.p_labels.get() )</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :                     m_os &lt;&lt; &quot; @&quot; &lt;&lt; l;</span>
+<span class="lineNum">     120 </span>            :             }
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :             m_os &lt;&lt; &quot;\&quot;];\n&quot;;</span>
+<span class="lineNum">     122 </span>            :         }
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :         if( !master_ts )</span>
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :             m_os &lt;&lt; &quot;tu&quot; &lt;&lt; tu.p_parent_id &lt;&lt; &quot; -&gt; &quot; &lt;&lt; &quot;tu&quot; &lt;&lt; tu.p_id &lt;&lt; &quot;;\n&quot;;</span>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :         BOOST_TEST_FOREACH( test_unit_id, dep_id, tu.p_dependencies.get() ) {</span>
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :             test_unit const&amp; dep = framework::get( dep_id, TUT_ANY );</span>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :             m_os &lt;&lt; &quot;tu&quot; &lt;&lt; tu.p_id &lt;&lt; &quot; -&gt; &quot; &lt;&lt; &quot;tu&quot; &lt;&lt; dep.p_id &lt;&lt; &quot;[color=red,style=dotted,constraint=false];\n&quot;;</span>
+<span class="lineNum">     131 </span>            :         }
+<a name="132"><span class="lineNum">     132 </span>            : </a>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :     virtual void    visit( test_case const&amp; tc )</span>
+<span class="lineNum">     135 </span>            :     { 
+<a name="136"><span class="lineNum">     136 </span><span class="lineNoCov">          0 :         report_test_unit( tc );</span></a>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :     virtual bool    test_suite_start( test_suite const&amp; ts )</span>
+<span class="lineNum">     139 </span>            :     {
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :         if( ts.p_parent_id == INV_TEST_UNIT_ID )</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :             m_os &lt;&lt; &quot;digraph G {rankdir=LR;\n&quot;;</span>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :         report_test_unit( ts );</span>
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :         m_os &lt;&lt; &quot;{\n&quot;;</span>
+<span class="lineNum">     146 </span>            : 
+<a name="147"><span class="lineNum">     147 </span><span class="lineNoCov">          0 :         return true;</span></a>
+<span class="lineNum">     148 </span>            :     }
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :     virtual void    test_suite_finish( test_suite const&amp; ts )</span>
+<span class="lineNum">     150 </span>            :     {
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :         m_os &lt;&lt; &quot;}\n&quot;;</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :         if( ts.p_parent_id == INV_TEST_UNIT_ID )</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :             m_os &lt;&lt; &quot;}\n&quot;;</span>
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :     std::ostream&amp;   m_os;
+<span class="lineNum">     157 </span>            : };
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : // ************************************************************************** //
+<span class="lineNum">     160 </span>            : // **************               labels_collector               ************** //
+<a name="161"><span class="lineNum">     161 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 : struct labels_collector : test_tree_visitor {</span>
+<span class="lineNum">     164 </span>            :     std::set&lt;std::string&gt; const&amp; labels() const { return m_labels; }
+<a name="165"><span class="lineNum">     165 </span>            : </a>
+<span class="lineNum">     166 </span>            : private:
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :     virtual bool            visit( test_unit const&amp; tu ) </span>
+<span class="lineNum">     168 </span>            :     {
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :         m_labels.insert( tu.p_labels-&gt;begin(), tu.p_labels-&gt;end() );</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :         return true;</span>
+<span class="lineNum">     171 </span>            :     }
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :     // Data members
+<span class="lineNum">     174 </span>            :     std::set&lt;std::string&gt;   m_labels;
+<span class="lineNum">     175 </span>            : };
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            : } // namespace ut_detail
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            : // ************************************************************************** //
+<span class="lineNum">     180 </span>            : // **************                  unit_test_main              ************** //
+<span class="lineNum">     181 </span>            : // ************************************************************************** //
+<a name="182"><span class="lineNum">     182 </span>            : </a>
+<span class="lineNum">     183 </span>            : int BOOST_TEST_DECL
+<span class="lineNum">     184 </span><span class="lineCov">          1 : unit_test_main( init_unit_test_func init_func, int argc, char* argv[] )</span>
+<span class="lineNum">     185 </span>            : {
+<span class="lineNum">     186 </span><span class="lineCov">          1 :     int result_code = 0;</span>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            :     BOOST_TEST_I_TRY {
+<span class="lineNum">     189 </span><span class="lineCov">          1 :         framework::init( init_func, argc, argv );</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">          2 :         if( runtime_config::get&lt;bool&gt;( runtime_config::WAIT_FOR_DEBUGGER ) ) {</span>
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :             results_reporter::get_stream() &lt;&lt; &quot;Press any key to continue...&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            :             // getchar is defined as a macro in uClibc. Use parenthesis to fix
+<span class="lineNum">     195 </span>            :             // gcc bug 58952 for gcc &lt;= 4.8.2.
+<span class="lineNum">     196 </span>            :             (std::getchar)();
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :             results_reporter::get_stream() &lt;&lt; &quot;Continuing...&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     198 </span>            :         }
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span><span class="lineCov">          1 :         framework::finalize_setup_phase();</span>
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span><span class="lineCov">          2 :         output_format list_cont = runtime_config::get&lt;output_format&gt;( runtime_config::LIST_CONTENT );</span>
+<span class="lineNum">     203 </span><span class="lineCov">          1 :         if( list_cont != unit_test::OF_INVALID ) {</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :             if( list_cont == unit_test::OF_DOT ) {</span>
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :                 ut_detail::dot_content_reporter reporter( results_reporter::get_stream() );</span>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :                 traverse_test_tree( framework::master_test_suite().p_id, reporter, true );</span>
+<span class="lineNum">     208 </span>            :             }
+<span class="lineNum">     209 </span>            :             else {
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :                 ut_detail::hrf_content_reporter reporter( results_reporter::get_stream() );</span>
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :                 traverse_test_tree( framework::master_test_suite().p_id, reporter, true );</span>
+<span class="lineNum">     213 </span>            :             }
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            :             return boost::exit_success;
+<span class="lineNum">     216 </span>            :         }
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span><span class="lineCov">          2 :         if( runtime_config::get&lt;bool&gt;( runtime_config::LIST_LABELS ) ) {</span>
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :             ut_detail::labels_collector collector;</span>
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :             traverse_test_tree( framework::master_test_suite().p_id, collector, true );</span>
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :             results_reporter::get_stream() &lt;&lt; &quot;Available labels:\n  &quot;;</span>
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :             std::copy( collector.labels().begin(), collector.labels().end(), </span>
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :                        std::ostream_iterator&lt;std::string&gt;( results_reporter::get_stream(), &quot;\n  &quot; ) );</span>
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :             results_reporter::get_stream() &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :             return boost::exit_success;</span>
+<span class="lineNum">     229 </span>            :         }
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span><span class="lineCov">          1 :         framework::run();</span>
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span><span class="lineCov">          1 :         results_reporter::make_report();</span>
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span><span class="lineCov">          1 :         result_code = !runtime_config::get&lt;bool&gt;( runtime_config::RESULT_CODE )</span>
+<span class="lineNum">     236 </span>            :                         ? boost::exit_success
+<span class="lineNum">     237 </span><span class="lineCov">          2 :                         : results_collector.results( framework::master_test_suite().p_id ).result_code();</span>
+<span class="lineNum">     238 </span>            :     }
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :     BOOST_TEST_I_CATCH( framework::nothing_to_test, ex ) {</span>
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :         result_code = ex.m_result_code;</span>
+<span class="lineNum">     241 </span>            :     }
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :     BOOST_TEST_I_CATCH( framework::internal_error, ex ) {</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :         results_reporter::get_stream() &lt;&lt; &quot;Boost.Test framework internal error: &quot; &lt;&lt; ex.what() &lt;&lt; std::endl;</span>
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :         result_code = boost::exit_exception_failure;</span>
+<span class="lineNum">     246 </span>            :     }
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 :     BOOST_TEST_I_CATCH( framework::setup_error, ex ) {</span>
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :         results_reporter::get_stream() &lt;&lt; &quot;Test setup error: &quot; &lt;&lt; ex.what() &lt;&lt; std::endl;</span>
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :         result_code = boost::exit_exception_failure;</span>
+<span class="lineNum">     251 </span>            :     }
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :     BOOST_TEST_I_CATCHALL() {</span>
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :         results_reporter::get_stream() &lt;&lt; &quot;Boost.Test framework internal error: unknown reason&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :         result_code = boost::exit_exception_failure;</span>
+<span class="lineNum">     256 </span>            :     }
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            :     framework::shutdown();
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span>            :     return result_code;
+<span class="lineNum">     261 </span>            : }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            : } // namespace unit_test
+<span class="lineNum">     264 </span>            : } // namespace boost
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            : #if !defined(BOOST_TEST_DYN_LINK) &amp;&amp; !defined(BOOST_TEST_NO_MAIN)
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            : // ************************************************************************** //
+<span class="lineNum">     269 </span>            : // **************        main function for tests using lib     ************** //
+<span class="lineNum">     270 </span>            : // ************************************************************************** //
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            : int BOOST_TEST_CALL_DECL
+<span class="lineNum">     273 </span>            : main( int argc, char* argv[] )
+<span class="lineNum">     274 </span>            : {
+<span class="lineNum">     275 </span>            :     // prototype for user's unit test init function
+<span class="lineNum">     276 </span>            : #ifdef BOOST_TEST_ALTERNATIVE_INIT_API
+<span class="lineNum">     277 </span>            :     extern bool init_unit_test();
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            :     boost::unit_test::init_unit_test_func init_func = &amp;init_unit_test;
+<span class="lineNum">     280 </span>            : #else
+<span class="lineNum">     281 </span>            :     extern ::boost::unit_test::test_suite* init_unit_test_suite( int argc, char* argv[] );
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span>            :     boost::unit_test::init_unit_test_func init_func = &amp;init_unit_test_suite;
+<span class="lineNum">     284 </span>            : #endif
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            :     return ::boost::unit_test::unit_test_main( init_func, argc, argv );
+<span class="lineNum">     287 </span>            : }
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            : #endif // !BOOST_TEST_DYN_LINK &amp;&amp; !BOOST_TEST_NO_MAIN
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span>            : #endif // BOOST_TEST_UNIT_TEST_MAIN_IPP_012205GER
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/condition_variable</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5</a> - condition_variable<span style="font-size: 80%;"> (source / <a href="condition_variable.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // &lt;condition_variable&gt; -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2008-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file include/condition_variable
+<span class="lineNum">      26 </span>            :  *  This is a Standard C++ Library header.
+<span class="lineNum">      27 </span>            :  */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #ifndef _GLIBCXX_CONDITION_VARIABLE
+<span class="lineNum">      30 </span>            : #define _GLIBCXX_CONDITION_VARIABLE 1
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #pragma GCC system_header
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #if __cplusplus &lt; 201103L
+<span class="lineNum">      35 </span>            : # include &lt;bits/c++0x_warning.h&gt;
+<span class="lineNum">      36 </span>            : #else
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #include &lt;chrono&gt;
+<span class="lineNum">      39 </span>            : #include &lt;mutex&gt;
+<span class="lineNum">      40 </span>            : #include &lt;ext/concurrence.h&gt;
+<span class="lineNum">      41 </span>            : #include &lt;bits/alloc_traits.h&gt;
+<span class="lineNum">      42 </span>            : #include &lt;bits/allocator.h&gt;
+<span class="lineNum">      43 </span>            : #include &lt;bits/unique_ptr.h&gt;
+<span class="lineNum">      44 </span>            : #include &lt;bits/shared_ptr.h&gt;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : #if defined(_GLIBCXX_HAS_GTHREADS) &amp;&amp; defined(_GLIBCXX_USE_C99_STDINT_TR1)
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      49 </span>            : {
+<span class="lineNum">      50 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            :   /**
+<span class="lineNum">      53 </span>            :    * @defgroup condition_variables Condition Variables
+<span class="lineNum">      54 </span>            :    * @ingroup concurrency
+<span class="lineNum">      55 </span>            :    *
+<span class="lineNum">      56 </span>            :    * Classes for condition_variable support.
+<span class="lineNum">      57 </span>            :    * @{
+<span class="lineNum">      58 </span>            :    */
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :   /// cv_status
+<span class="lineNum">      61 </span>            :   enum class cv_status { no_timeout, timeout };
+<span class="lineNum">      62 </span>            :   
+<span class="lineNum">      63 </span>            :   /// condition_variable
+<span class="lineNum">      64 </span>            :   class condition_variable
+<span class="lineNum">      65 </span>            :   {
+<span class="lineNum">      66 </span>            :     typedef chrono::system_clock        __clock_t;
+<span class="lineNum">      67 </span>            :     typedef __gthread_cond_t            __native_type;
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : #ifdef __GTHREAD_COND_INIT
+<span class="lineNum">      70 </span>            :     __native_type                       _M_cond = __GTHREAD_COND_INIT;
+<span class="lineNum">      71 </span>            : #else
+<span class="lineNum">      72 </span>            :     __native_type                       _M_cond;
+<span class="lineNum">      73 </span>            : #endif
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            :   public:
+<span class="lineNum">      76 </span>            :     typedef __native_type*              native_handle_type;
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :     condition_variable() noexcept;
+<span class="lineNum">      79 </span>            :     ~condition_variable() noexcept;
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            :     condition_variable(const condition_variable&amp;) = delete;
+<span class="lineNum">      82 </span>            :     condition_variable&amp; operator=(const condition_variable&amp;) = delete;
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            :     void
+<span class="lineNum">      85 </span>            :     notify_one() noexcept;
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :     void
+<span class="lineNum">      88 </span>            :     notify_all() noexcept;
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            :     void
+<span class="lineNum">      91 </span>            :     wait(unique_lock&lt;mutex&gt;&amp; __lock);
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            :     template&lt;typename _Predicate&gt;
+<span class="lineNum">      94 </span>            :       void
+<span class="lineNum">      95 </span>            :       wait(unique_lock&lt;mutex&gt;&amp; __lock, _Predicate __p)
+<span class="lineNum">      96 </span>            :       {
+<span class="lineNum">      97 </span><span class="lineCov">     362156 :         while (!__p())</span>
+<span class="lineNum">      98 </span><span class="lineCov">     181079 :           wait(__lock);</span>
+<span class="lineNum">      99 </span>            :       }
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :     template&lt;typename _Duration&gt;
+<span class="lineNum">     102 </span>            :       cv_status
+<span class="lineNum">     103 </span>            :       wait_until(unique_lock&lt;mutex&gt;&amp; __lock,
+<span class="lineNum">     104 </span>            :                  const chrono::time_point&lt;__clock_t, _Duration&gt;&amp; __atime)
+<span class="lineNum">     105 </span><span class="lineCov">          4 :       { return __wait_until_impl(__lock, __atime); }</span>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :     template&lt;typename _Clock, typename _Duration&gt;
+<span class="lineNum">     108 </span>            :       cv_status
+<span class="lineNum">     109 </span>            :       wait_until(unique_lock&lt;mutex&gt;&amp; __lock,
+<span class="lineNum">     110 </span>            :                  const chrono::time_point&lt;_Clock, _Duration&gt;&amp; __atime)
+<span class="lineNum">     111 </span>            :       {
+<span class="lineNum">     112 </span>            :         // DR 887 - Sync unknown clock to known clock.
+<span class="lineNum">     113 </span>            :         const typename _Clock::time_point __c_entry = _Clock::now();
+<span class="lineNum">     114 </span>            :         const __clock_t::time_point __s_entry = __clock_t::now();
+<span class="lineNum">     115 </span>            :         const auto __delta = __atime - __c_entry;
+<span class="lineNum">     116 </span>            :         const auto __s_atime = __s_entry + __delta;
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :         return __wait_until_impl(__lock, __s_atime);
+<span class="lineNum">     119 </span>            :       }
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            :     template&lt;typename _Clock, typename _Duration, typename _Predicate&gt;
+<span class="lineNum">     122 </span>            :       bool
+<span class="lineNum">     123 </span>            :       wait_until(unique_lock&lt;mutex&gt;&amp; __lock,
+<span class="lineNum">     124 </span>            :                  const chrono::time_point&lt;_Clock, _Duration&gt;&amp; __atime,
+<span class="lineNum">     125 </span>            :                  _Predicate __p)
+<span class="lineNum">     126 </span>            :       {
+<span class="lineNum">     127 </span>            :         while (!__p())
+<span class="lineNum">     128 </span>            :           if (wait_until(__lock, __atime) == cv_status::timeout)
+<span class="lineNum">     129 </span>            :             return __p();
+<span class="lineNum">     130 </span>            :         return true;
+<span class="lineNum">     131 </span>            :       }
+<span class="lineNum">     132 </span>            : 
+<a name="133"><span class="lineNum">     133 </span>            :     template&lt;typename _Rep, typename _Period&gt;</a>
+<span class="lineNum">     134 </span>            :       cv_status
+<span class="lineNum">     135 </span><span class="lineCov">          4 :       wait_for(unique_lock&lt;mutex&gt;&amp; __lock,</span>
+<span class="lineNum">     136 </span>            :                const chrono::duration&lt;_Rep, _Period&gt;&amp; __rtime)
+<span class="lineNum">     137 </span><span class="lineCov">         12 :       { return wait_until(__lock, __clock_t::now() + __rtime); }</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :     template&lt;typename _Rep, typename _Period, typename _Predicate&gt;
+<span class="lineNum">     140 </span>            :       bool
+<span class="lineNum">     141 </span>            :       wait_for(unique_lock&lt;mutex&gt;&amp; __lock,
+<span class="lineNum">     142 </span>            :                const chrono::duration&lt;_Rep, _Period&gt;&amp; __rtime,
+<span class="lineNum">     143 </span>            :                _Predicate __p)
+<span class="lineNum">     144 </span>            :       { return wait_until(__lock, __clock_t::now() + __rtime, std::move(__p)); }
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :     native_handle_type
+<span class="lineNum">     147 </span>            :     native_handle()
+<span class="lineNum">     148 </span>            :     { return &amp;_M_cond; }
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            :   private:
+<a name="151"><span class="lineNum">     151 </span>            :     template&lt;typename _Dur&gt;</a>
+<span class="lineNum">     152 </span>            :       cv_status
+<span class="lineNum">     153 </span><span class="lineCov">          4 :       __wait_until_impl(unique_lock&lt;mutex&gt;&amp; __lock,</span>
+<span class="lineNum">     154 </span>            :                         const chrono::time_point&lt;__clock_t, _Dur&gt;&amp; __atime)
+<span class="lineNum">     155 </span>            :       {
+<span class="lineNum">     156 </span><span class="lineCov">          4 :         auto __s = chrono::time_point_cast&lt;chrono::seconds&gt;(__atime);</span>
+<span class="lineNum">     157 </span><span class="lineCov">          8 :         auto __ns = chrono::duration_cast&lt;chrono::nanoseconds&gt;(__atime - __s);</span>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :         __gthread_time_t __ts =
+<span class="lineNum">     160 </span>            :           {
+<span class="lineNum">     161 </span>            :             static_cast&lt;std::time_t&gt;(__s.time_since_epoch().count()),
+<span class="lineNum">     162 </span>            :             static_cast&lt;long&gt;(__ns.count())
+<span class="lineNum">     163 </span><span class="lineCov">          4 :           };</span>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineCov">         12 :         __gthread_cond_timedwait(&amp;_M_cond, __lock.mutex()-&gt;native_handle(),</span>
+<span class="lineNum">     166 </span>            :                                  &amp;__ts);
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span><span class="lineCov">         12 :         return (__clock_t::now() &lt; __atime</span>
+<span class="lineNum">     169 </span><span class="lineCov">          8 :                 ? cv_status::no_timeout : cv_status::timeout);</span>
+<span class="lineNum">     170 </span>            :       }
+<span class="lineNum">     171 </span>            :   };
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :   void
+<span class="lineNum">     174 </span>            :   notify_all_at_thread_exit(condition_variable&amp;, unique_lock&lt;mutex&gt;);
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            :   struct __at_thread_exit_elt
+<span class="lineNum">     177 </span>            :   {
+<span class="lineNum">     178 </span>            :     __at_thread_exit_elt* _M_next;
+<span class="lineNum">     179 </span>            :     void (*_M_cb)(void*);
+<span class="lineNum">     180 </span>            :   };
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            :   inline namespace _V2 {
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            :   /// condition_variable_any
+<span class="lineNum">     185 </span>            :   // Like above, but mutex is not required to have try_lock.
+<span class="lineNum">     186 </span>            :   class condition_variable_any
+<span class="lineNum">     187 </span>            :   {
+<span class="lineNum">     188 </span>            :     typedef chrono::system_clock        __clock_t;
+<span class="lineNum">     189 </span>            :     condition_variable                  _M_cond;
+<span class="lineNum">     190 </span>            :     shared_ptr&lt;mutex&gt;                     _M_mutex;
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :     // scoped unlock - unlocks in ctor, re-locks in dtor
+<span class="lineNum">     193 </span>            :     template&lt;typename _Lock&gt;
+<span class="lineNum">     194 </span>            :       struct _Unlock
+<span class="lineNum">     195 </span>            :       {
+<span class="lineNum">     196 </span>            :         explicit _Unlock(_Lock&amp; __lk) : _M_lock(__lk) { __lk.unlock(); }
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :         ~_Unlock() noexcept(false)
+<span class="lineNum">     199 </span>            :         {
+<span class="lineNum">     200 </span>            :           if (uncaught_exception())
+<span class="lineNum">     201 </span>            :             {
+<span class="lineNum">     202 </span>            :               __try
+<span class="lineNum">     203 </span>            :               { _M_lock.lock(); }
+<span class="lineNum">     204 </span>            :               __catch(const __cxxabiv1::__forced_unwind&amp;)
+<span class="lineNum">     205 </span>            :               { __throw_exception_again; }
+<span class="lineNum">     206 </span>            :               __catch(...)
+<span class="lineNum">     207 </span>            :               { }
+<span class="lineNum">     208 </span>            :             }
+<span class="lineNum">     209 </span>            :           else
+<span class="lineNum">     210 </span>            :             _M_lock.lock();
+<span class="lineNum">     211 </span>            :         }
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            :         _Unlock(const _Unlock&amp;) = delete;
+<span class="lineNum">     214 </span>            :         _Unlock&amp; operator=(const _Unlock&amp;) = delete;
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span>            :         _Lock&amp; _M_lock;
+<span class="lineNum">     217 </span>            :       };
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            :   public:
+<span class="lineNum">     220 </span>            :     condition_variable_any() : _M_mutex(std::make_shared&lt;mutex&gt;()) { }
+<span class="lineNum">     221 </span>            :     ~condition_variable_any() = default;
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            :     condition_variable_any(const condition_variable_any&amp;) = delete;
+<span class="lineNum">     224 </span>            :     condition_variable_any&amp; operator=(const condition_variable_any&amp;) = delete;
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            :     void
+<span class="lineNum">     227 </span>            :     notify_one() noexcept
+<span class="lineNum">     228 </span>            :     {
+<span class="lineNum">     229 </span>            :       lock_guard&lt;mutex&gt; __lock(*_M_mutex);
+<span class="lineNum">     230 </span>            :       _M_cond.notify_one();
+<span class="lineNum">     231 </span>            :     }
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            :     void
+<span class="lineNum">     234 </span>            :     notify_all() noexcept
+<span class="lineNum">     235 </span>            :     {
+<span class="lineNum">     236 </span>            :       lock_guard&lt;mutex&gt; __lock(*_M_mutex);
+<span class="lineNum">     237 </span>            :       _M_cond.notify_all();
+<span class="lineNum">     238 </span>            :     }
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            :     template&lt;typename _Lock&gt;
+<span class="lineNum">     241 </span>            :       void
+<span class="lineNum">     242 </span>            :       wait(_Lock&amp; __lock)
+<span class="lineNum">     243 </span>            :       {
+<span class="lineNum">     244 </span>            :         shared_ptr&lt;mutex&gt; __mutex = _M_mutex;
+<span class="lineNum">     245 </span>            :         unique_lock&lt;mutex&gt; __my_lock(*__mutex);
+<span class="lineNum">     246 </span>            :         _Unlock&lt;_Lock&gt; __unlock(__lock);
+<span class="lineNum">     247 </span>            :         // *__mutex must be unlocked before re-locking __lock so move
+<span class="lineNum">     248 </span>            :         // ownership of *__mutex lock to an object with shorter lifetime.
+<span class="lineNum">     249 </span>            :         unique_lock&lt;mutex&gt; __my_lock2(std::move(__my_lock));
+<span class="lineNum">     250 </span>            :         _M_cond.wait(__my_lock2);
+<span class="lineNum">     251 </span>            :       }
+<span class="lineNum">     252 </span>            :       
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            :     template&lt;typename _Lock, typename _Predicate&gt;
+<span class="lineNum">     255 </span>            :       void
+<span class="lineNum">     256 </span>            :       wait(_Lock&amp; __lock, _Predicate __p)
+<span class="lineNum">     257 </span>            :       {
+<span class="lineNum">     258 </span>            :         while (!__p())
+<span class="lineNum">     259 </span>            :           wait(__lock);
+<span class="lineNum">     260 </span>            :       }
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span>            :     template&lt;typename _Lock, typename _Clock, typename _Duration&gt;
+<span class="lineNum">     263 </span>            :       cv_status
+<span class="lineNum">     264 </span>            :       wait_until(_Lock&amp; __lock,
+<span class="lineNum">     265 </span>            :                  const chrono::time_point&lt;_Clock, _Duration&gt;&amp; __atime)
+<span class="lineNum">     266 </span>            :       {
+<span class="lineNum">     267 </span>            :         shared_ptr&lt;mutex&gt; __mutex = _M_mutex;
+<span class="lineNum">     268 </span>            :         unique_lock&lt;mutex&gt; __my_lock(*__mutex);
+<span class="lineNum">     269 </span>            :         _Unlock&lt;_Lock&gt; __unlock(__lock);
+<span class="lineNum">     270 </span>            :         // *__mutex must be unlocked before re-locking __lock so move
+<span class="lineNum">     271 </span>            :         // ownership of *__mutex lock to an object with shorter lifetime.
+<span class="lineNum">     272 </span>            :         unique_lock&lt;mutex&gt; __my_lock2(std::move(__my_lock));
+<span class="lineNum">     273 </span>            :         return _M_cond.wait_until(__my_lock2, __atime);
+<span class="lineNum">     274 </span>            :       }
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span>            :     template&lt;typename _Lock, typename _Clock,
+<span class="lineNum">     277 </span>            :              typename _Duration, typename _Predicate&gt;
+<span class="lineNum">     278 </span>            :       bool
+<span class="lineNum">     279 </span>            :       wait_until(_Lock&amp; __lock,
+<span class="lineNum">     280 </span>            :                  const chrono::time_point&lt;_Clock, _Duration&gt;&amp; __atime,
+<span class="lineNum">     281 </span>            :                  _Predicate __p)
+<span class="lineNum">     282 </span>            :       {
+<span class="lineNum">     283 </span>            :         while (!__p())
+<span class="lineNum">     284 </span>            :           if (wait_until(__lock, __atime) == cv_status::timeout)
+<span class="lineNum">     285 </span>            :             return __p();
+<span class="lineNum">     286 </span>            :         return true;
+<span class="lineNum">     287 </span>            :       }
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            :     template&lt;typename _Lock, typename _Rep, typename _Period&gt;
+<span class="lineNum">     290 </span>            :       cv_status
+<span class="lineNum">     291 </span>            :       wait_for(_Lock&amp; __lock, const chrono::duration&lt;_Rep, _Period&gt;&amp; __rtime)
+<span class="lineNum">     292 </span>            :       { return wait_until(__lock, __clock_t::now() + __rtime); }
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            :     template&lt;typename _Lock, typename _Rep,
+<span class="lineNum">     295 </span>            :              typename _Period, typename _Predicate&gt;
+<span class="lineNum">     296 </span>            :       bool
+<span class="lineNum">     297 </span>            :       wait_for(_Lock&amp; __lock,
+<span class="lineNum">     298 </span>            :                const chrono::duration&lt;_Rep, _Period&gt;&amp; __rtime, _Predicate __p)
+<span class="lineNum">     299 </span>            :       { return wait_until(__lock, __clock_t::now() + __rtime, std::move(__p)); }
+<span class="lineNum">     300 </span>            :   };
+<span class="lineNum">     301 </span>            : 
+<span class="lineNum">     302 </span>            :   } // end inline namespace
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span>            :   // @} group condition_variables
+<span class="lineNum">     305 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     306 </span>            : } // namespace
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            : #endif // _GLIBCXX_HAS_GTHREADS &amp;&amp; _GLIBCXX_USE_C99_STDINT_TR1
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            : #endif // C++11
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span>            : #endif // _GLIBCXX_CONDITION_VARIABLE
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

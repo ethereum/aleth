@@ -1,0 +1,563 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/RLP.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - RLP.h<span style="font-size: 80%;"> (source / <a href="RLP.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">114</td>
+            <td class="headerCovTableEntry">138</td>
+            <td class="headerCovTableEntryMed">82.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">84</td>
+            <td class="headerCovTableEntry">99</td>
+            <td class="headerCovTableEntryMed">84.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file RLP.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  *
+<span class="lineNum">      21 </span>            :  * RLP (de-)serialisation.
+<span class="lineNum">      22 </span>            :  */
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #pragma once
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;vector&gt;
+<span class="lineNum">      27 </span>            : #include &lt;array&gt;
+<span class="lineNum">      28 </span>            : #include &lt;exception&gt;
+<span class="lineNum">      29 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      30 </span>            : #include &lt;iomanip&gt;
+<span class="lineNum">      31 </span>            : #include &quot;vector_ref.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      33 </span>            : #include &quot;Exceptions.h&quot;
+<span class="lineNum">      34 </span>            : #include &quot;FixedHash.h&quot;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : namespace dev
+<span class="lineNum">      37 </span>            : {
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : class RLP;
+<span class="lineNum">      40 </span>            : using RLPs = std::vector&lt;RLP&gt;;
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : template &lt;class _T&gt; struct intTraits { static const unsigned maxSize = sizeof(_T); };
+<span class="lineNum">      43 </span>            : template &lt;&gt; struct intTraits&lt;u160&gt; { static const unsigned maxSize = 20; };
+<span class="lineNum">      44 </span>            : template &lt;&gt; struct intTraits&lt;u256&gt; { static const unsigned maxSize = 32; };
+<span class="lineNum">      45 </span>            : template &lt;&gt; struct intTraits&lt;bigint&gt; { static const unsigned maxSize = ~(unsigned)0; };
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : static const byte c_rlpMaxLengthBytes = 8;
+<span class="lineNum">      48 </span>            : static const byte c_rlpDataImmLenStart = 0x80;
+<span class="lineNum">      49 </span>            : static const byte c_rlpListStart = 0xc0;
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : static const byte c_rlpDataImmLenCount = c_rlpListStart - c_rlpDataImmLenStart - c_rlpMaxLengthBytes;
+<span class="lineNum">      52 </span>            : static const byte c_rlpDataIndLenZero = c_rlpDataImmLenStart + c_rlpDataImmLenCount - 1;
+<span class="lineNum">      53 </span>            : static const byte c_rlpListImmLenCount = 256 - c_rlpListStart - c_rlpMaxLengthBytes;
+<span class="lineNum">      54 </span>            : static const byte c_rlpListIndLenZero = c_rlpListStart + c_rlpListImmLenCount - 1;
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : template &lt;class T&gt; struct Converter { static T convert(RLP const&amp;, int) { BOOST_THROW_EXCEPTION(BadCast()); } };
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : /**
+<span class="lineNum">      59 </span>            :  * @brief Class for interpreting Recursive Linear-Prefix Data.
+<span class="lineNum">      60 </span>            :  * @by Gav Wood, 2013
+<span class="lineNum">      61 </span>            :  *
+<span class="lineNum">      62 </span>            :  * Class for reading byte arrays of data in RLP format.
+<span class="lineNum">      63 </span>            :  */
+<span class="lineNum">      64 </span>            : class RLP
+<span class="lineNum">      65 </span>            : {
+<span class="lineNum">      66 </span>            : public:
+<span class="lineNum">      67 </span>            :         /// Conversion flags
+<span class="lineNum">      68 </span>            :         enum
+<span class="lineNum">      69 </span>            :         {
+<span class="lineNum">      70 </span>            :                 AllowNonCanon = 1,
+<span class="lineNum">      71 </span>            :                 ThrowOnFail = 4,
+<span class="lineNum">      72 </span>            :                 FailIfTooBig = 8,
+<span class="lineNum">      73 </span>            :                 FailIfTooSmall = 16,
+<span class="lineNum">      74 </span>            :                 Strict = ThrowOnFail | FailIfTooBig,
+<span class="lineNum">      75 </span>            :                 VeryStrict = ThrowOnFail | FailIfTooBig | FailIfTooSmall,
+<span class="lineNum">      76 </span>            :                 LaissezFaire = AllowNonCanon
+<span class="lineNum">      77 </span>            :         };
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :         using Strictness = int;
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            :         /// Construct a null node.
+<span class="lineNum">      82 </span><span class="lineCov">       3189 :         RLP() {}</span>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            :         /// Construct a node of value given in the bytes.
+<span class="lineNum">      85 </span>            :         explicit RLP(bytesConstRef _d, Strictness _s = VeryStrict);
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :         /// Construct a node of value given in the bytes.
+<span class="lineNum">      88 </span><span class="lineCov">     141902 :         explicit RLP(bytes const&amp; _d, Strictness _s = VeryStrict): RLP(&amp;_d, _s) {}</span>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            :         /// Construct a node to read RLP data in the bytes given.
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :         RLP(byte const* _b, unsigned _s, Strictness _st = VeryStrict): RLP(bytesConstRef(_b, _s), _st) {}</span>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            :         /// Construct a node to read RLP data in the string.
+<span class="lineNum">      94 </span><span class="lineCov">    3880620 :         explicit RLP(std::string const&amp; _s, Strictness _st = VeryStrict): RLP(bytesConstRef((byte const*)_s.data(), _s.size()), _st) {}</span>
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            :         /// The bare data of the RLP.
+<span class="lineNum">      97 </span>            :         bytesConstRef data() const { return m_data; }
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :         /// @returns true if the RLP is non-null.
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :         explicit operator bool() const { return !isNull(); }</span>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :         /// No value.
+<span class="lineNum">     103 </span><span class="lineCov">  809687103 :         bool isNull() const { return m_data.size() == 0; }</span>
+<a name="104"><span class="lineNum">     104 </span>            : </a>
+<span class="lineNum">     105 </span>            :         /// Contains a zero-length string or zero-length list.
+<span class="lineNum">     106 </span><span class="lineCov">    6176674 :         bool isEmpty() const { return !isNull() &amp;&amp; (m_data[0] == c_rlpDataImmLenStart || m_data[0] == c_rlpListStart); }</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :         /// String value.
+<span class="lineNum">     109 </span><span class="lineCov">  192532154 :         bool isData() const { return !isNull() &amp;&amp; m_data[0] &lt; c_rlpListStart; }</span>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            :         /// List value.
+<span class="lineNum">     112 </span><span class="lineCov">  116071686 :         bool isList() const { return !isNull() &amp;&amp; m_data[0] &gt;= c_rlpListStart; }</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :         /// Integer value. Must not have a leading zero.
+<span class="lineNum">     115 </span>            :         bool isInt() const;
+<a name="116"><span class="lineNum">     116 </span>            : </a>
+<span class="lineNum">     117 </span>            :         /// @returns the number of items in the list, or zero if it isn't a list.
+<span class="lineNum">     118 </span><span class="lineCov">    4478558 :         size_t itemCount() const { return isList() ? items() : 0; }</span>
+<span class="lineNum">     119 </span><span class="lineCov">        150 :         size_t itemCountStrict() const { if (!isList()) BOOST_THROW_EXCEPTION(BadCast()); return items(); }</span>
+<a name="120"><span class="lineNum">     120 </span>            : </a>
+<span class="lineNum">     121 </span>            :         /// @returns the number of bytes in the data, or zero if it isn't data.
+<span class="lineNum">     122 </span><span class="lineCov">      80576 :         size_t size() const { return isData() ? length() : 0; }</span>
+<span class="lineNum">     123 </span>            :         size_t sizeStrict() const { if (!isData()) BOOST_THROW_EXCEPTION(BadCast()); return length(); }
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :         /// Equality operators; does best-effort conversion and checks for equality.
+<a name="126"><span class="lineNum">     126 </span>            :         bool operator==(char const* _s) const { return isData() &amp;&amp; toString() == _s; }</a>
+<span class="lineNum">     127 </span>            :         bool operator!=(char const* _s) const { return isData() &amp;&amp; toString() != _s; }
+<span class="lineNum">     128 </span><span class="lineCov">        417 :         bool operator==(std::string const&amp; _s) const { return isData() &amp;&amp; toString() == _s; }</span>
+<span class="lineNum">     129 </span>            :         bool operator!=(std::string const&amp; _s) const { return isData() &amp;&amp; toString() != _s; }
+<a name="130"><span class="lineNum">     130 </span>            :         template &lt;unsigned _N&gt; bool operator==(FixedHash&lt;_N&gt; const&amp; _h) const { return isData() &amp;&amp; toHash&lt;_N&gt;() == _h; }</a>
+<span class="lineNum">     131 </span>            :         template &lt;unsigned _N&gt; bool operator!=(FixedHash&lt;_N&gt; const&amp; _s) const { return isData() &amp;&amp; toHash&lt;_N&gt;() != _s; }
+<span class="lineNum">     132 </span><span class="lineCov">         10 :         bool operator==(unsigned const&amp; _i) const { return isInt() &amp;&amp; toInt&lt;unsigned&gt;() == _i; }</span>
+<span class="lineNum">     133 </span>            :         bool operator!=(unsigned const&amp; _i) const { return isInt() &amp;&amp; toInt&lt;unsigned&gt;() != _i; }
+<a name="134"><span class="lineNum">     134 </span>            :         bool operator==(u256 const&amp; _i) const { return isInt() &amp;&amp; toInt&lt;u256&gt;() == _i; }</a>
+<span class="lineNum">     135 </span>            :         bool operator!=(u256 const&amp; _i) const { return isInt() &amp;&amp; toInt&lt;u256&gt;() != _i; }
+<span class="lineNum">     136 </span><span class="lineCov">          9 :         bool operator==(bigint const&amp; _i) const { return isInt() &amp;&amp; toInt&lt;bigint&gt;() == _i; }</span>
+<span class="lineNum">     137 </span>            :         bool operator!=(bigint const&amp; _i) const { return isInt() &amp;&amp; toInt&lt;bigint&gt;() != _i; }
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :         /// Subscript operator.
+<span class="lineNum">     140 </span>            :         /// @returns the list item @a _i if isList() and @a _i &lt; listItems(), or RLP() otherwise.
+<span class="lineNum">     141 </span>            :         /// @note if used to access items in ascending order, this is efficient.
+<span class="lineNum">     142 </span>            :         RLP operator[](size_t _i) const;
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            :         using element_type = RLP;
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :         /// @brief Iterator class for iterating through items of RLP list.
+<span class="lineNum">     147 </span>            :         class iterator
+<span class="lineNum">     148 </span>            :         {
+<span class="lineNum">     149 </span>            :                 friend class RLP;
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            :         public:
+<span class="lineNum">     152 </span>            :                 using value_type = RLP;
+<span class="lineNum">     153 </span>            :                 using element_type = RLP;
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            :                 iterator&amp; operator++();
+<span class="lineNum">     156 </span>            :                 iterator operator++(int) { auto ret = *this; operator++(); return ret; }
+<span class="lineNum">     157 </span><span class="lineCov">      12660 :                 RLP operator*() const { return RLP(m_currentItem); }</span>
+<span class="lineNum">     158 </span><span class="lineCov">     131556 :                 bool operator==(iterator const&amp; _cmp) const { return m_currentItem == _cmp.m_currentItem; }</span>
+<span class="lineNum">     159 </span><span class="lineCov">      65778 :                 bool operator!=(iterator const&amp; _cmp) const { return !operator==(_cmp); }</span>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :         private:
+<span class="lineNum">     162 </span>            :                 iterator() {}
+<span class="lineNum">     163 </span>            :                 iterator(RLP const&amp; _parent, bool _begin);
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :                 size_t m_remaining = 0;
+<span class="lineNum">     166 </span>            :                 bytesConstRef m_currentItem;
+<span class="lineNum">     167 </span>            :         };
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            :         /// @brief Iterator into beginning of sub-item list (valid only if we are a list).
+<span class="lineNum">     170 </span><span class="lineCov">      53292 :         iterator begin() const { return iterator(*this, true); }</span>
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :         /// @brief Iterator into end of sub-item list (valid only if we are a list).
+<span class="lineNum">     173 </span><span class="lineCov">      53280 :         iterator end() const { return iterator(*this, false); }</span>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :         template &lt;class T&gt; inline T convert(int _flags) const;
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :         /// Best-effort conversion operators.
+<span class="lineNum">     178 </span><span class="lineCov">          9 :         explicit operator std::string() const { return toString(); }</span>
+<span class="lineNum">     179 </span>            :         explicit operator bytes() const { return toBytes(); }
+<span class="lineNum">     180 </span>            :         explicit operator RLPs() const { return toList(); }
+<span class="lineNum">     181 </span>            :         explicit operator uint8_t() const { return toInt&lt;uint8_t&gt;(); }
+<span class="lineNum">     182 </span>            :         explicit operator uint16_t() const { return toInt&lt;uint16_t&gt;(); }
+<span class="lineNum">     183 </span><span class="lineCov">          5 :         explicit operator uint32_t() const { return toInt&lt;uint32_t&gt;(); }</span>
+<span class="lineNum">     184 </span>            :         explicit operator uint64_t() const { return toInt&lt;uint64_t&gt;(); }
+<span class="lineNum">     185 </span>            :         explicit operator u160() const { return toInt&lt;u160&gt;(); }
+<span class="lineNum">     186 </span><span class="lineCov">         69 :         explicit operator u256() const { return toInt&lt;u256&gt;(); }</span>
+<span class="lineNum">     187 </span>            :         explicit operator bigint() const { return toInt&lt;bigint&gt;(); }
+<span class="lineNum">     188 </span><span class="lineCov">        177 :         template &lt;unsigned N&gt; explicit operator FixedHash&lt;N&gt;() const { return toHash&lt;FixedHash&lt;N&gt;&gt;(); }</span>
+<span class="lineNum">     189 </span>            :         template &lt;class T, class U&gt; explicit operator std::pair&lt;T, U&gt;() const { return toPair&lt;T, U&gt;(); }
+<span class="lineNum">     190 </span>            :         template &lt;class T&gt; explicit operator std::vector&lt;T&gt;() const { return toVector&lt;T&gt;(); }
+<span class="lineNum">     191 </span>            :         template &lt;class T&gt; explicit operator std::set&lt;T&gt;() const { return toSet&lt;T&gt;(); }
+<span class="lineNum">     192 </span>            :         template &lt;class T, size_t N&gt; explicit operator std::array&lt;T, N&gt;() const { return toArray&lt;T, N&gt;(); }
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            :         /// Converts to bytearray. @returns the empty byte array if not a string.
+<span class="lineNum">     195 </span><span class="lineCov">     461052 :         bytes toBytes(int _flags = LaissezFaire) const { if (!isData()) { if (_flags &amp; ThrowOnFail) BOOST_THROW_EXCEPTION(BadCast()); else return bytes(); } return bytes(payload().data(), payload().data() + length()); }</span>
+<span class="lineNum">     196 </span>            :         /// Converts to bytearray. @returns the empty byte array if not a string.
+<span class="lineNum">     197 </span>            :         bytesConstRef toBytesConstRef(int _flags = LaissezFaire) const { if (!isData()) { if (_flags &amp; ThrowOnFail) BOOST_THROW_EXCEPTION(BadCast()); else return bytesConstRef(); } return payload().cropped(0, length()); }
+<span class="lineNum">     198 </span>            :         /// Converts to string. @returns the empty string if not a string.
+<span class="lineNum">     199 </span><span class="lineCov">     411040 :         std::string toString(int _flags = LaissezFaire) const { if (!isData()) { if (_flags &amp; ThrowOnFail) BOOST_THROW_EXCEPTION(BadCast()); else return std::string(); } return payload().cropped(0, length()).toString(); }</span>
+<span class="lineNum">     200 </span>            :         /// Converts to string. @throws BadCast if not a string.
+<span class="lineNum">     201 </span>            :         std::string toStringStrict() const { return toString(Strict); }
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            :         template &lt;class T&gt;
+<span class="lineNum">     204 </span><span class="lineCov">       4264 :         std::vector&lt;T&gt; toVector(int _flags = LaissezFaire) const</span>
+<span class="lineNum">     205 </span>            :         {
+<span class="lineNum">     206 </span><span class="lineCov">       4264 :                 std::vector&lt;T&gt; ret;</span>
+<span class="lineNum">     207 </span><span class="lineCov">       4264 :                 if (isList())</span>
+<span class="lineNum">     208 </span>            :                 {
+<span class="lineNum">     209 </span><span class="lineCov">       4264 :                         ret.reserve(itemCount());</span>
+<span class="lineNum">     210 </span><span class="lineCov">      12906 :                         for (auto const&amp; i: *this)</span>
+<span class="lineNum">     211 </span><span class="lineCov">        114 :                                 ret.push_back(i.convert&lt;T&gt;(_flags));</span>
+<span class="lineNum">     212 </span>            :                  }
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :                 else if (_flags &amp; ThrowOnFail)</span>
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(BadCast());</span>
+<span class="lineNum">     215 </span><span class="lineCov">       4264 :                  return ret;</span>
+<span class="lineNum">     216 </span>            :         }
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            :         template &lt;class T&gt;
+<span class="lineNum">     219 </span><span class="lineCov">         37 :         std::set&lt;T&gt; toSet(int _flags = LaissezFaire) const</span>
+<span class="lineNum">     220 </span>            :         {
+<span class="lineNum">     221 </span><span class="lineCov">         37 :                 std::set&lt;T&gt; ret;</span>
+<span class="lineNum">     222 </span><span class="lineCov">         37 :                 if (isList())</span>
+<span class="lineNum">     223 </span><span class="lineCov">        226 :                         for (auto const&amp; i: *this)</span>
+<span class="lineNum">     224 </span><span class="lineCov">        114 :                                 ret.insert(i.convert&lt;T&gt;(_flags));</span>
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :                 else if (_flags &amp; ThrowOnFail)</span>
+<span class="lineNum">     226 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(BadCast());</span>
+<span class="lineNum">     227 </span><span class="lineCov">         38 :                 return ret;</span>
+<span class="lineNum">     228 </span>            :         }
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            :         template &lt;class T&gt;
+<span class="lineNum">     231 </span><span class="lineCov">          2 :         std::unordered_set&lt;T&gt; toUnorderedSet(int _flags = LaissezFaire) const</span>
+<span class="lineNum">     232 </span>            :         {
+<span class="lineNum">     233 </span><span class="lineCov">          2 :                 std::unordered_set&lt;T&gt; ret;</span>
+<span class="lineNum">     234 </span><span class="lineCov">          2 :                 if (isList())</span>
+<span class="lineNum">     235 </span><span class="lineCov">         12 :                         for (auto const&amp; i: *this)</span>
+<span class="lineNum">     236 </span><span class="lineCov">          4 :                                 ret.insert(i.convert&lt;T&gt;(_flags));</span>
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 :                 else if (_flags &amp; ThrowOnFail)</span>
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(BadCast());</span>
+<span class="lineNum">     239 </span><span class="lineCov">          2 :                 return ret;</span>
+<span class="lineNum">     240 </span>            :         }
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            :         template &lt;class T, class U&gt;
+<span class="lineNum">     243 </span><span class="lineCov">         75 :         std::pair&lt;T, U&gt; toPair(int _flags = Strict) const</span>
+<span class="lineNum">     244 </span>            :         {
+<span class="lineNum">     245 </span><span class="lineCov">         75 :                 std::pair&lt;T, U&gt; ret;</span>
+<span class="lineNum">     246 </span><span class="lineCov">         75 :                 if (itemCountStrict() != 2)</span>
+<span class="lineNum">     247 </span>            :                 {
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :                         if (_flags &amp; ThrowOnFail)</span>
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :                                 BOOST_THROW_EXCEPTION(BadCast());</span>
+<span class="lineNum">     250 </span>            :                         else
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :                                 return ret;</span>
+<span class="lineNum">     252 </span>            :                 }
+<span class="lineNum">     253 </span><span class="lineCov">        304 :                 ret.first = (*this)[0].convert&lt;T&gt;(_flags);</span>
+<span class="lineNum">     254 </span><span class="lineCov">        228 :                 ret.second = (*this)[1].convert&lt;U&gt;(_flags);</span>
+<span class="lineNum">     255 </span><span class="lineCov">         76 :                 return ret;</span>
+<span class="lineNum">     256 </span>            :         }
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            :         template &lt;class T, size_t N&gt;
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :         std::array&lt;T, N&gt; toArray(int _flags = LaissezFaire) const</span>
+<span class="lineNum">     260 </span>            :         {
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :                 if (itemCountStrict() != N)</span>
+<span class="lineNum">     262 </span>            :                 {
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :                         if (_flags &amp; ThrowOnFail)</span>
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :                                 BOOST_THROW_EXCEPTION(BadCast());</span>
+<span class="lineNum">     265 </span>            :                         else
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :                                 return std::array&lt;T, N&gt;();</span>
+<span class="lineNum">     267 </span>            :                 }
+<span class="lineNum">     268 </span>            :                 std::array&lt;T, N&gt; ret;
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :                 for (size_t i = 0; i &lt; N; ++i)</span>
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :                         ret[i] = operator[](i).convert&lt;T&gt;(_flags);</span>
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :                 return ret;</span>
+<span class="lineNum">     272 </span>            :         }
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            :         /// Converts to int of type given; if isString(), decodes as big-endian bytestream. @returns 0 if not an int or string.
+<span class="lineNum">     275 </span><span class="lineCov">     836035 :         template &lt;class _T = unsigned&gt; _T toInt(int _flags = Strict) const</span>
+<span class="lineNum">     276 </span>            :         {
+<span class="lineNum">     277 </span><span class="lineCov">     836035 :                 requireGood();</span>
+<span class="lineNum">     278 </span><span class="lineCov">    2508001 :                 if ((!isInt() &amp;&amp; !(_flags &amp; AllowNonCanon)) || isList() || isNull())</span>
+<span class="lineNum">     279 </span>            :                 {
+<span class="lineNum">     280 </span><span class="lineCov">         52 :                         if (_flags &amp; ThrowOnFail)</span>
+<span class="lineNum">     281 </span><span class="lineCov">        156 :                                 BOOST_THROW_EXCEPTION(BadCast());</span>
+<span class="lineNum">     282 </span>            :                         else
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :                                 return 0;</span>
+<span class="lineNum">     284 </span>            :                 }
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span><span class="lineCov">     835983 :                 auto p = payload();</span>
+<span class="lineNum">     287 </span><span class="lineCov">     835983 :                 if (p.size() &gt; intTraits&lt;_T&gt;::maxSize &amp;&amp; (_flags &amp; FailIfTooBig))</span>
+<span class="lineNum">     288 </span>            :                 {
+<span class="lineNum">     289 </span><span class="lineCov">         76 :                         if (_flags &amp; ThrowOnFail)</span>
+<span class="lineNum">     290 </span><span class="lineCov">        228 :                                 BOOST_THROW_EXCEPTION(BadCast());</span>
+<span class="lineNum">     291 </span>            :                         else
+<span class="lineNum">     292 </span><span class="lineNoCov">          0 :                                 return 0;</span>
+<span class="lineNum">     293 </span>            :                 }
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span><span class="lineCov">     802346 :                 return fromBigEndian&lt;_T&gt;(p);</span>
+<span class="lineNum">     296 </span>            :         }
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span><span class="lineCov">    1449861 :         template &lt;class _N&gt; _N toHash(int _flags = Strict) const</span>
+<span class="lineNum">     299 </span>            :         {
+<span class="lineNum">     300 </span><span class="lineCov">    1449861 :                 requireGood();</span>
+<span class="lineNum">     301 </span><span class="lineCov">    1449861 :                 auto p = payload();</span>
+<span class="lineNum">     302 </span><span class="lineCov">    1449861 :                 auto l = p.size();</span>
+<span class="lineNum">     303 </span><span class="lineCov">    1449861 :                 if (!isData() || (l &gt; _N::size &amp;&amp; (_flags &amp; FailIfTooBig)) || (l &lt; _N::size &amp;&amp; (_flags &amp; FailIfTooSmall)))</span>
+<span class="lineNum">     304 </span>            :                 {
+<span class="lineNum">     305 </span><span class="lineCov">         98 :                         if (_flags &amp; ThrowOnFail)</span>
+<span class="lineNum">     306 </span><span class="lineCov">        294 :                                 BOOST_THROW_EXCEPTION(BadCast());</span>
+<span class="lineNum">     307 </span>            :                         else
+<span class="lineNum">     308 </span><span class="lineNoCov">          0 :                                 return _N();</span>
+<span class="lineNum">     309 </span>            :                 }
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span><span class="lineCov">    1449763 :                 _N ret;</span>
+<span class="lineNum">     312 </span><span class="lineCov">    2899526 :                 size_t s = std::min&lt;size_t&gt;(_N::size, l);</span>
+<span class="lineNum">     313 </span><span class="lineCov">    4349289 :                 memcpy(ret.data() + _N::size - s, p.data(), s);</span>
+<span class="lineNum">     314 </span><span class="lineCov">    1449763 :                 return ret;</span>
+<span class="lineNum">     315 </span>            :         }
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span>            :         /// Converts to RLPs collection object. Useful if you need random access to sub items or will iterate over multiple times.
+<span class="lineNum">     318 </span>            :         RLPs toList(int _flags = Strict) const;
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span>            :         /// @returns the data payload. Valid for all types.
+<span class="lineNum">     321 </span><span class="lineCov">   42771395 :         bytesConstRef payload() const { auto l = length(); if (l &gt; m_data.size()) BOOST_THROW_EXCEPTION(BadRLP()); return m_data.cropped(payloadOffset(), l); }</span>
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span>            :         /// @returns the theoretical size of this item as encoded in the data.
+<span class="lineNum">     324 </span>            :         /// @note Under normal circumstances, is equivalent to m_data.size() - use that unless you know it won't work.
+<span class="lineNum">     325 </span>            :         size_t actualSize() const;
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span>            : private:
+<span class="lineNum">     328 </span>            :         /// Disable construction from rvalue
+<span class="lineNum">     329 </span>            :         explicit RLP(bytes const&amp;&amp;) {}
+<span class="lineNum">     330 </span>            : 
+<span class="lineNum">     331 </span>            :         /// Throws if is non-canonical data (i.e. single byte done in two bytes that could be done in one).
+<span class="lineNum">     332 </span>            :         void requireGood() const;
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span>            :         /// Single-byte data payload.
+<span class="lineNum">     335 </span><span class="lineCov">  192868540 :         bool isSingleByte() const { return !isNull() &amp;&amp; m_data[0] &lt; c_rlpDataImmLenStart; }</span>
+<a name="336"><span class="lineNum">     336 </span>            : </a>
+<span class="lineNum">     337 </span>            :         /// @returns the amount of bytes used to encode the length of the data. Valid for all types.
+<span class="lineNum">     338 </span><span class="lineCov">  314693012 :         unsigned lengthSize() const { if (isData() &amp;&amp; m_data[0] &gt; c_rlpDataIndLenZero) return m_data[0] - c_rlpDataIndLenZero; if (isList() &amp;&amp; m_data[0] &gt; c_rlpListIndLenZero) return m_data[0] - c_rlpListIndLenZero; return 0; }</span>
+<span class="lineNum">     339 </span>            : 
+<span class="lineNum">     340 </span>            :         /// @returns the size in bytes of the payload, as given by the RLP as opposed to as inferred from m_data.
+<span class="lineNum">     341 </span>            :         size_t length() const;
+<a name="342"><span class="lineNum">     342 </span>            : </a>
+<span class="lineNum">     343 </span>            :         /// @returns the number of bytes into the data that the payload starts.
+<span class="lineNum">     344 </span><span class="lineCov">  212375197 :         size_t payloadOffset() const { return isSingleByte() ? 0 : (1 + lengthSize()); }</span>
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span>            :         /// @returns the number of data items.
+<span class="lineNum">     347 </span>            :         size_t items() const;
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span>            :         /// @returns the size encoded into the RLP in @a _data and throws if _data is too short.
+<span class="lineNum">     350 </span><span class="lineCov">   36397538 :         static size_t sizeAsEncoded(bytesConstRef _data) { return RLP(_data, ThrowOnFail | FailIfTooSmall).actualSize(); }</span>
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span>            :         /// Our byte data.
+<span class="lineNum">     353 </span>            :         bytesConstRef m_data;
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span>            :         /// The list-indexing cache.
+<span class="lineNum">     356 </span>            :         mutable size_t m_lastIndex = (size_t)-1;
+<span class="lineNum">     357 </span>            :         mutable size_t m_lastEnd = 0;
+<span class="lineNum">     358 </span>            :         mutable bytesConstRef m_lastItem;
+<span class="lineNum">     359 </span>            : };
+<span class="lineNum">     360 </span>            : 
+<span class="lineNum">     361 </span><span class="lineCov">         76 : template &lt;&gt; struct Converter&lt;std::string&gt; { static std::string convert(RLP const&amp; _r, int _flags) { return _r.toString(_flags); } };</span>
+<span class="lineNum">     362 </span>            : template &lt;&gt; struct Converter&lt;bytes&gt; { static bytes convert(RLP const&amp; _r, int _flags) { return _r.toBytes(_flags); } };
+<span class="lineNum">     363 </span>            : template &lt;&gt; struct Converter&lt;RLPs&gt; { static RLPs convert(RLP const&amp; _r, int _flags) { return _r.toList(_flags); } };
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 : template &lt;&gt; struct Converter&lt;uint8_t&gt; { static uint8_t convert(RLP const&amp; _r, int _flags) { return _r.toInt&lt;uint8_t&gt;(_flags); } };</span>
+<span class="lineNum">     365 </span>            : template &lt;&gt; struct Converter&lt;uint16_t&gt; { static uint16_t convert(RLP const&amp; _r, int _flags) { return _r.toInt&lt;uint16_t&gt;(_flags); } };
+<span class="lineNum">     366 </span>            : template &lt;&gt; struct Converter&lt;uint32_t&gt; { static uint32_t convert(RLP const&amp; _r, int _flags) { return _r.toInt&lt;uint32_t&gt;(_flags); } };
+<span class="lineNum">     367 </span>            : template &lt;&gt; struct Converter&lt;uint64_t&gt; { static uint64_t convert(RLP const&amp; _r, int _flags) { return _r.toInt&lt;uint64_t&gt;(_flags); } };
+<span class="lineNum">     368 </span>            : template &lt;&gt; struct Converter&lt;u160&gt; { static u160 convert(RLP const&amp; _r, int _flags) { return _r.toInt&lt;u160&gt;(_flags); } };
+<span class="lineNum">     369 </span><span class="lineCov">         76 : template &lt;&gt; struct Converter&lt;u256&gt; { static u256 convert(RLP const&amp; _r, int _flags) { return _r.toInt&lt;u256&gt;(_flags); } };</span>
+<span class="lineNum">     370 </span>            : template &lt;&gt; struct Converter&lt;bigint&gt; { static bigint convert(RLP const&amp; _r, int _flags) { return _r.toInt&lt;bigint&gt;(_flags); } };
+<span class="lineNum">     371 </span><span class="lineCov">      31583 : template &lt;unsigned N&gt; struct Converter&lt;FixedHash&lt;N&gt;&gt; { static FixedHash&lt;N&gt; convert(RLP const&amp; _r, int _flags) { return _r.toHash&lt;FixedHash&lt;N&gt;&gt;(_flags); } };</span>
+<span class="lineNum">     372 </span><span class="lineCov">         75 : template &lt;class T, class U&gt; struct Converter&lt;std::pair&lt;T, U&gt;&gt; { static std::pair&lt;T, U&gt; convert(RLP const&amp; _r, int _flags) { return _r.toPair&lt;T, U&gt;(_flags); } };</span>
+<span class="lineNum">     373 </span>            : template &lt;class T&gt; struct Converter&lt;std::vector&lt;T&gt;&gt; { static std::vector&lt;T&gt; convert(RLP const&amp; _r, int _flags) { return _r.toVector&lt;T&gt;(_flags); } };
+<span class="lineNum">     374 </span>            : template &lt;class T&gt; struct Converter&lt;std::set&lt;T&gt;&gt; { static std::set&lt;T&gt; convert(RLP const&amp; _r, int _flags) { return _r.toSet&lt;T&gt;(_flags); } };
+<span class="lineNum">     375 </span>            : template &lt;class T&gt; struct Converter&lt;std::unordered_set&lt;T&gt;&gt; { static std::unordered_set&lt;T&gt; convert(RLP const&amp; _r, int _flags) { return _r.toUnorderedSet&lt;T&gt;(_flags); } };
+<span class="lineNum">     376 </span>            : template &lt;class T, size_t N&gt; struct Converter&lt;std::array&lt;T, N&gt;&gt; { static std::array&lt;T, N&gt; convert(RLP const&amp; _r, int _flags) { return _r.toArray&lt;T, N&gt;(_flags); } };
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span><span class="lineCov">      31795 : template &lt;class T&gt; inline T RLP::convert(int _flags) const { return Converter&lt;T&gt;::convert(*this, _flags); }</span>
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span>            : /**
+<a name="381"><span class="lineNum">     381 </span>            :  * @brief Class for writing to an RLP bytestream.</a>
+<span class="lineNum">     382 </span>            :  */
+<span class="lineNum">     383 </span><span class="lineCov">         20 : class RLPStream</span>
+<span class="lineNum">     384 </span>            : {
+<span class="lineNum">     385 </span>            : public:
+<span class="lineNum">     386 </span>            :         /// Initializes empty RLPStream.
+<span class="lineNum">     387 </span><span class="lineCov">    1296804 :         RLPStream() {}</span>
+<a name="388"><span class="lineNum">     388 </span>            : </a>
+<span class="lineNum">     389 </span>            :         /// Initializes the RLPStream as a list of @a _listItems items.
+<a name="390"><span class="lineNum">     390 </span><span class="lineCov">    2550087 :         explicit RLPStream(size_t _listItems) { appendList(_listItems); }</span></a>
+<span class="lineNum">     391 </span>            : 
+<span class="lineNum">     392 </span><span class="lineCov">    3846903 :         ~RLPStream() {}</span>
+<a name="393"><span class="lineNum">     393 </span>            : </a>
+<span class="lineNum">     394 </span>            :         /// Append given datum to the byte stream.
+<a name="395"><span class="lineNum">     395 </span><span class="lineCov">     264963 :         RLPStream&amp; append(unsigned _s) { return append(bigint(_s)); }</span></a>
+<span class="lineNum">     396 </span>            :         RLPStream&amp; append(u160 _s) { return append(bigint(_s)); }
+<span class="lineNum">     397 </span><span class="lineCov">    2721404 :         RLPStream&amp; append(u256 _s) { return append(bigint(_s)); }</span>
+<span class="lineNum">     398 </span>            :         RLPStream&amp; append(bigint _s);
+<span class="lineNum">     399 </span>            :         RLPStream&amp; append(bytesConstRef _s, bool _compact = false);
+<a name="400"><span class="lineNum">     400 </span><span class="lineCov">     248039 :         RLPStream&amp; append(bytes const&amp; _s) { return append(bytesConstRef(&amp;_s)); }</span></a>
+<a name="401"><span class="lineNum">     401 </span><span class="lineCov">    2300430 :         RLPStream&amp; append(std::string const&amp; _s) { return append(bytesConstRef(_s)); }</span></a>
+<span class="lineNum">     402 </span><span class="lineCov">    9475780 :         RLPStream&amp; append(char const* _s) { return append(std::string(_s)); }</span>
+<span class="lineNum">     403 </span><span class="lineCov">    3805119 :         template &lt;unsigned N&gt; RLPStream&amp; append(FixedHash&lt;N&gt; _s, bool _compact = false, bool _allOrNothing = false) { return _allOrNothing &amp;&amp; !_s ? append(bytesConstRef()) : append(_s.ref(), _compact); }</span>
+<span class="lineNum">     404 </span>            : 
+<span class="lineNum">     405 </span>            :         /// Appends an arbitrary RLP fragment - this *must* be a single item unless @a _itemCount is given.
+<span class="lineNum">     406 </span><span class="lineCov">    5560363 :         RLPStream&amp; append(RLP const&amp; _rlp, size_t _itemCount = 1) { return appendRaw(_rlp.data(), _itemCount); }</span>
+<span class="lineNum">     407 </span>            : 
+<a name="408"><span class="lineNum">     408 </span>            :         /// Appends a sequence of data to the stream as a list.</a>
+<a name="409"><span class="lineNum">     409 </span><span class="lineCov">      16233 :         template &lt;class _T&gt; RLPStream&amp; append(std::vector&lt;_T&gt; const&amp; _s) { return appendVector(_s); }</span></a>
+<span class="lineNum">     410 </span><span class="lineCov">     108006 :         template &lt;class _T&gt; RLPStream&amp; appendVector(std::vector&lt;_T&gt; const&amp; _s) { appendList(_s.size()); for (auto const&amp; i: _s) append(i); return *this; }</span>
+<a name="411"><span class="lineNum">     411 </span><span class="lineCov">      20316 :         template &lt;class _T, size_t S&gt; RLPStream&amp; append(std::array&lt;_T, S&gt; const&amp; _s) { appendList(_s.size()); for (auto const&amp; i: _s) append(i); return *this; }</span></a>
+<a name="412"><span class="lineNum">     412 </span>            :         template &lt;class _T&gt; RLPStream&amp; append(std::set&lt;_T&gt; const&amp; _s) { appendList(_s.size()); for (auto const&amp; i: _s) append(i); return *this; }</a>
+<span class="lineNum">     413 </span><span class="lineNoCov">          0 :         template &lt;class _T&gt; RLPStream&amp; append(std::unordered_set&lt;_T&gt; const&amp; _s) { appendList(_s.size()); for (auto const&amp; i: _s) append(i); return *this; }</span>
+<span class="lineNum">     414 </span><span class="lineCov">        114 :         template &lt;class T, class U&gt; RLPStream&amp; append(std::pair&lt;T, U&gt; const&amp; _s) { appendList(2); append(_s.first); append(_s.second); return *this; }</span>
+<span class="lineNum">     415 </span>            : 
+<span class="lineNum">     416 </span>            :         /// Appends a list.
+<span class="lineNum">     417 </span>            :         RLPStream&amp; appendList(size_t _items);
+<span class="lineNum">     418 </span>            :         RLPStream&amp; appendList(bytesConstRef _rlp);
+<span class="lineNum">     419 </span><span class="lineCov">      25683 :         RLPStream&amp; appendList(bytes const&amp; _rlp) { return appendList(&amp;_rlp); }</span>
+<span class="lineNum">     420 </span>            :         RLPStream&amp; appendList(RLPStream const&amp; _s) { return appendList(&amp;_s.out()); }
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span>            :         /// Appends raw (pre-serialised) RLP data. Use with caution.
+<span class="lineNum">     423 </span>            :         RLPStream&amp; appendRaw(bytesConstRef _rlp, size_t _itemCount = 1);
+<span class="lineNum">     424 </span><span class="lineCov">     208446 :         RLPStream&amp; appendRaw(bytes const&amp; _rlp, size_t _itemCount = 1) { return appendRaw(&amp;_rlp, _itemCount); }</span>
+<a name="425"><span class="lineNum">     425 </span>            : </a>
+<span class="lineNum">     426 </span>            :         /// Shift operators for appending data items.
+<span class="lineNum">     427 </span><span class="lineCov">    5444255 :         template &lt;class T&gt; RLPStream&amp; operator&lt;&lt;(T _data) { return append(_data); }</span>
+<span class="lineNum">     428 </span>            : 
+<span class="lineNum">     429 </span>            :         /// Clear the output stream so far.
+<span class="lineNum">     430 </span>            :         void clear() { m_out.clear(); m_listStack.clear(); }
+<a name="431"><span class="lineNum">     431 </span>            : </a>
+<span class="lineNum">     432 </span>            :         /// Read the byte stream.
+<span class="lineNum">     433 </span><span class="lineCov">    2939516 :         bytes const&amp; out() const { if(!m_listStack.empty()) BOOST_THROW_EXCEPTION(RLPException() &lt;&lt; errinfo_comment(&quot;listStack is not empty&quot;)); return m_out; }</span>
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span>            :         /// Invalidate the object and steal the output byte stream.
+<span class="lineNum">     436 </span>            :         bytes&amp;&amp; invalidate() { if(!m_listStack.empty()) BOOST_THROW_EXCEPTION(RLPException() &lt;&lt; errinfo_comment(&quot;listStack is not empty&quot;)); return std::move(m_out); }
+<a name="437"><span class="lineNum">     437 </span>            : </a>
+<span class="lineNum">     438 </span>            :         /// Swap the contents of the output stream out for some other byte array.
+<span class="lineNum">     439 </span><span class="lineCov">        735 :         void swapOut(bytes&amp; _dest) { if(!m_listStack.empty()) BOOST_THROW_EXCEPTION(RLPException() &lt;&lt; errinfo_comment(&quot;listStack is not empty&quot;)); swap(m_out, _dest); }</span>
+<span class="lineNum">     440 </span>            : 
+<span class="lineNum">     441 </span>            : private:
+<span class="lineNum">     442 </span>            :         void noteAppended(size_t _itemCount = 1);
+<span class="lineNum">     443 </span>            : 
+<span class="lineNum">     444 </span>            :         /// Push the node-type byte (using @a _base) along with the item count @a _count.
+<span class="lineNum">     445 </span>            :         /// @arg _count is number of characters for strings, data-bytes for ints, or items for lists.
+<span class="lineNum">     446 </span>            :         void pushCount(size_t _count, byte _offset);
+<a name="447"><span class="lineNum">     447 </span>            : </a>
+<span class="lineNum">     448 </span>            :         /// Push an integer as a raw big-endian byte-stream.
+<span class="lineNum">     449 </span><span class="lineCov">     795336 :         template &lt;class _T&gt; void pushInt(_T _i, size_t _br)</span>
+<span class="lineNum">     450 </span>            :         {
+<span class="lineNum">     451 </span><span class="lineCov">    1590672 :                 m_out.resize(m_out.size() + _br);</span>
+<span class="lineNum">     452 </span><span class="lineCov">    1590672 :                 byte* b = &amp;m_out.back();</span>
+<span class="lineNum">     453 </span><span class="lineCov">    6006507 :                 for (; _i; _i &gt;&gt;= 8)</span>
+<span class="lineNum">     454 </span><span class="lineCov">    8856993 :                         *(b--) = (byte)_i;</span>
+<span class="lineNum">     455 </span><span class="lineCov">     795336 :         }</span>
+<span class="lineNum">     456 </span>            : 
+<span class="lineNum">     457 </span>            :         /// Our output byte stream.
+<span class="lineNum">     458 </span>            :         bytes m_out;
+<span class="lineNum">     459 </span>            : 
+<span class="lineNum">     460 </span>            :         std::vector&lt;std::pair&lt;size_t, size_t&gt;&gt; m_listStack;
+<a name="461"><span class="lineNum">     461 </span>            : };</a>
+<a name="462"><span class="lineNum">     462 </span>            : </a>
+<span class="lineNum">     463 </span><span class="lineCov">     328262 : template &lt;class _T&gt; void rlpListAux(RLPStream&amp; _out, _T _t) { _out &lt;&lt; _t; }</span>
+<span class="lineNum">     464 </span><span class="lineCov">    1229453 : template &lt;class _T, class ... _Ts&gt; void rlpListAux(RLPStream&amp; _out, _T _t, _Ts ... _ts) { rlpListAux(_out &lt;&lt; _t, _ts...); }</span>
+<a name="465"><span class="lineNum">     465 </span>            : </a>
+<span class="lineNum">     466 </span>            : /// Export a single item in RLP format, returning a byte array.
+<span class="lineNum">     467 </span><span class="lineCov">     220162 : template &lt;class _T&gt; bytes rlp(_T _t) { return (RLPStream() &lt;&lt; _t).out(); }</span>
+<a name="468"><span class="lineNum">     468 </span>            : </a>
+<a name="469"><span class="lineNum">     469 </span>            : /// Export a list of items in RLP format, returning a byte array.</a>
+<span class="lineNum">     470 </span><span class="lineCov">          2 : inline bytes rlpList() { return RLPStream(0).out(); }</span>
+<span class="lineNum">     471 </span><span class="lineCov">     253801 : template &lt;class ... _Ts&gt; bytes rlpList(_Ts ... _ts)</span>
+<span class="lineNum">     472 </span>            : {
+<span class="lineNum">     473 </span><span class="lineCov">     507602 :         RLPStream out(sizeof ...(_Ts));</span>
+<span class="lineNum">     474 </span><span class="lineCov">     471085 :         rlpListAux(out, _ts...);</span>
+<span class="lineNum">     475 </span><span class="lineCov">     507602 :         return out.out();</span>
+<span class="lineNum">     476 </span>            : }
+<span class="lineNum">     477 </span>            : 
+<span class="lineNum">     478 </span>            : /// The empty string in RLP format.
+<span class="lineNum">     479 </span>            : extern bytes RLPNull;
+<span class="lineNum">     480 </span>            : 
+<span class="lineNum">     481 </span>            : /// The empty list in RLP format.
+<span class="lineNum">     482 </span>            : extern bytes RLPEmptyList;
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span>            : /// Human readable version of RLP.
+<span class="lineNum">     485 </span>            : std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, dev::RLP const&amp; _d);
+<span class="lineNum">     486 </span>            : 
+<span class="lineNum">     487 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

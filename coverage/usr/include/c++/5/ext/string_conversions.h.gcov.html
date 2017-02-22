@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/ext/string_conversions.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5/ext</a> - string_conversions.h<span style="font-size: 80%;"> (source / <a href="string_conversions.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryLo">52.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">33.3 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // String Conversions -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2008-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file ext/string_conversions.h
+<span class="lineNum">      26 </span>            :  *  This file is a GNU extension to the Standard C++ Library.
+<span class="lineNum">      27 </span>            :  */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #ifndef _STRING_CONVERSIONS_H
+<span class="lineNum">      30 </span>            : #define _STRING_CONVERSIONS_H 1
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #pragma GCC system_header
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #if __cplusplus &lt; 201103L
+<span class="lineNum">      35 </span>            : # include &lt;bits/c++0x_warning.h&gt;
+<span class="lineNum">      36 </span>            : #else
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #include &lt;bits/c++config.h&gt;
+<span class="lineNum">      39 </span>            : #include &lt;ext/numeric_traits.h&gt;
+<span class="lineNum">      40 </span>            : #include &lt;bits/functexcept.h&gt;
+<span class="lineNum">      41 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      42 </span>            : #include &lt;cwchar&gt;
+<span class="lineNum">      43 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      44 </span>            : #include &lt;cerrno&gt;
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : namespace __gnu_cxx _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      47 </span>            : {
+<span class="lineNum">      48 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            :   // Helper for all the sto* functions.
+<span class="lineNum">      51 </span>            :   template&lt;typename _TRet, typename _Ret = _TRet, typename _CharT,
+<a name="52"><span class="lineNum">      52 </span>            :            typename... _Base&gt;</a>
+<span class="lineNum">      53 </span>            :     _Ret
+<span class="lineNum">      54 </span><span class="lineCov">          4 :     __stoa(_TRet (*__convf) (const _CharT*, _CharT**, _Base...),</span>
+<span class="lineNum">      55 </span>            :            const char* __name, const _CharT* __str, std::size_t* __idx,
+<span class="lineNum">      56 </span>            :            _Base... __base)
+<span class="lineNum">      57 </span>            :     {
+<span class="lineNum">      58 </span>            :       _Ret __ret;
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :       _CharT* __endptr;
+<span class="lineNum">      61 </span><span class="lineCov">          4 :       errno = 0;</span>
+<span class="lineNum">      62 </span><span class="lineCov">          4 :       const _TRet __tmp = __convf(__str, &amp;__endptr, __base...);</span>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">          4 :       if (__endptr == __str)</span>
+<span class="lineNum">      65 </span><span class="lineCov">          1 :         std::__throw_invalid_argument(__name);</span>
+<span class="lineNum">      66 </span><span class="lineCov">          3 :       else if (errno == ERANGE</span>
+<span class="lineNum">      67 </span>            :                || (std::__are_same&lt;_Ret, int&gt;::__value
+<span class="lineNum">      68 </span>            :                    &amp;&amp; (__tmp &lt; __numeric_traits&lt;int&gt;::__min
+<span class="lineNum">      69 </span>            :                        || __tmp &gt; __numeric_traits&lt;int&gt;::__max)))
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :         std::__throw_out_of_range(__name);</span>
+<span class="lineNum">      71 </span>            :       else
+<span class="lineNum">      72 </span><span class="lineCov">          3 :         __ret = __tmp;</span>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineCov">          3 :       if (__idx)</span>
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :         *__idx = __endptr - __str;</span>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">          3 :       return __ret;</span>
+<span class="lineNum">      78 </span>            :     }
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            :   // Helper for the to_string / to_wstring functions.
+<a name="81"><span class="lineNum">      81 </span>            :   template&lt;typename _String, typename _CharT = typename _String::value_type&gt;</a>
+<span class="lineNum">      82 </span>            :     _String
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :     __to_xstring(int (*__convf) (_CharT*, std::size_t, const _CharT*,</span>
+<span class="lineNum">      84 </span>            :                                  __builtin_va_list), std::size_t __n,
+<span class="lineNum">      85 </span>            :                  const _CharT* __fmt, ...)
+<span class="lineNum">      86 </span>            :     {
+<span class="lineNum">      87 </span>            :       // XXX Eventually the result will be constructed in place in
+<span class="lineNum">      88 </span>            :       // the C++0x string, likely with the help of internal hooks.
+<span class="lineNum">      89 </span>            :       _CharT* __s = static_cast&lt;_CharT*&gt;(__builtin_alloca(sizeof(_CharT)
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 :                                                           * __n));</span>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :       __builtin_va_list __args;
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :       __builtin_va_start(__args, __fmt);</span>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :       const int __len = __convf(__s, __n, __fmt, __args);</span>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :       __builtin_va_end(__args);</span>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :       return _String(__s, __s + __len);</span>
+<span class="lineNum">     100 </span>            :     }
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     103 </span>            : } // namespace
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : #endif // C++11
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : #endif // _STRING_CONVERSIONS_H
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

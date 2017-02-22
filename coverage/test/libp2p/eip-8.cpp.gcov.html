@@ -1,0 +1,475 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libp2p/eip-8.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libp2p</a> - eip-8.cpp<span style="font-size: 80%;"> (source / <a href="eip-8.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">135</td>
+            <td class="headerCovTableEntry">135</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file discovery.cpp
+<span class="lineNum">      18 </span>            :  * @author Felix Lange &lt;fjl@twurst.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2016
+<span class="lineNum">      20 </span>            :  * Forward-compatibility tests checking EIP-8 compliance.
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;boost/test/unit_test.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;libp2p/NodeTable.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libp2p/Host.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libp2p/RLPXSocket.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libp2p/RLPxHandshake.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : using namespace std;
+<span class="lineNum">      31 </span>            : using namespace dev;
+<span class="lineNum">      32 </span>            : using namespace dev::test;
+<span class="lineNum">      33 </span>            : using namespace dev::p2p;
+<span class="lineNum">      34 </span>            : 
+<a name="35"><span class="lineNum">      35 </span><span class="lineCov">          3 : BOOST_FIXTURE_TEST_SUITE(eip8, TestOutputHelper)</span></a>
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(test_discovery_packets)</span>
+<span class="lineNum">      38 </span>            : {
+<span class="lineNum">      39 </span><span class="lineCov">          1 :         bi::udp::endpoint ep;</span>
+<span class="lineNum">      40 </span><span class="lineCov">          2 :         bytes packet;</span>
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span><span class="lineCov">          5 :         packet = fromHex(</span>
+<span class="lineNum">      43 </span>            :                 &quot;e9614ccfd9fc3e74360018522d30e1419a143407ffcce748de3e22116b7e8dc92ff74788c0b6663a&quot;
+<span class="lineNum">      44 </span>            :                 &quot;aa3d67d641936511c8f8d6ad8698b820a7cf9e1be7155e9a241f556658c55428ec0563514365799a&quot;
+<span class="lineNum">      45 </span>            :                 &quot;4be2be5a685a80971ddcfa80cb422cdd0101ec04cb847f000001820cfa8215a8d790000000000000&quot;
+<span class="lineNum">      46 </span>            :                 &quot;000000000000000000018208ae820d058443b9a3550102&quot;
+<span class="lineNum">      47 </span><span class="lineCov">          1 :         );</span>
+<span class="lineNum">      48 </span><span class="lineCov">          4 :         auto ping1 = dynamic_cast&lt;PingNode&amp;&gt;(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&amp;packet)));</span>
+<span class="lineNum">      49 </span><span class="lineCov">          5 :         BOOST_CHECK_EQUAL(ping1.version, 4);</span>
+<span class="lineNum">      50 </span><span class="lineCov">          5 :         BOOST_CHECK_EQUAL(ping1.ts, 1136239445);</span>
+<span class="lineNum">      51 </span><span class="lineCov">          6 :         BOOST_CHECK_EQUAL(ping1.source, NodeIPEndpoint(bi::address::from_string(&quot;127.0.0.1&quot;), 3322, 5544));</span>
+<span class="lineNum">      52 </span><span class="lineCov">          6 :         BOOST_CHECK_EQUAL(ping1.destination, NodeIPEndpoint(bi::address::from_string(&quot;::1&quot;), 2222, 3333));</span>
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span><span class="lineCov">          5 :         packet = fromHex(</span>
+<span class="lineNum">      55 </span>            :                 &quot;577be4349c4dd26768081f58de4c6f375a7a22f3f7adda654d1428637412c3d7fe917cadc56d4e5e&quot;
+<span class="lineNum">      56 </span>            :                 &quot;7ffae1dbe3efffb9849feb71b262de37977e7c7a44e677295680e9e38ab26bee2fcbae207fba3ff3&quot;
+<span class="lineNum">      57 </span>            :                 &quot;d74069a50b902a82c9903ed37cc993c50001f83e82022bd79020010db83c4d001500000000abcdef&quot;
+<span class="lineNum">      58 </span>            :                 &quot;12820cfa8215a8d79020010db885a308d313198a2e037073488208ae82823a8443b9a355c5010203&quot;
+<span class="lineNum">      59 </span>            :                 &quot;040531b9019afde696e582a78fa8d95ea13ce3297d4afb8ba6433e4154caa5ac6431af1b80ba7602&quot;
+<span class="lineNum">      60 </span>            :                 &quot;3fa4090c408f6b4bc3701562c031041d4702971d102c9ab7fa5eed4cd6bab8f7af956f7d565ee191&quot;
+<span class="lineNum">      61 </span>            :                 &quot;7084a95398b6a21eac920fe3dd1345ec0a7ef39367ee69ddf092cbfe5b93e5e568ebc491983c09c7&quot;
+<span class="lineNum">      62 </span>            :                 &quot;6d922dc3&quot;
+<span class="lineNum">      63 </span><span class="lineCov">          1 :         );</span>
+<span class="lineNum">      64 </span><span class="lineCov">          4 :         auto ping2 = dynamic_cast&lt;PingNode&amp;&gt;(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&amp;packet)));</span>
+<span class="lineNum">      65 </span><span class="lineCov">          5 :         BOOST_CHECK_EQUAL(ping2.version, 555);</span>
+<span class="lineNum">      66 </span><span class="lineCov">          6 :         BOOST_CHECK_EQUAL(ping2.source, NodeIPEndpoint(bi::address::from_string(&quot;2001:db8:3c4d:15::abcd:ef12&quot;), 3322, 5544));</span>
+<span class="lineNum">      67 </span><span class="lineCov">          6 :         BOOST_CHECK_EQUAL(ping2.destination, NodeIPEndpoint(bi::address::from_string(&quot;2001:db8:85a3:8d3:1319:8a2e:370:7348&quot;), 2222, 33338));</span>
+<span class="lineNum">      68 </span><span class="lineCov">          5 :         BOOST_CHECK_EQUAL(ping2.ts, 1136239445);</span>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineCov">          5 :         packet = fromHex(</span>
+<span class="lineNum">      71 </span>            :                 &quot;09b2428d83348d27cdf7064ad9024f526cebc19e4958f0fdad87c15eb598dd61d08423e0bf66b206&quot;
+<span class="lineNum">      72 </span>            :                 &quot;9869e1724125f820d851c136684082774f870e614d95a2855d000f05d1648b2d5945470bc187c2d2&quot;
+<span class="lineNum">      73 </span>            :                 &quot;216fbe870f43ed0909009882e176a46b0102f846d79020010db885a308d313198a2e037073488208&quot;
+<span class="lineNum">      74 </span>            :                 &quot;ae82823aa0fbc914b16819237dcd8801d7e53f69e9719adecb3cc0e790c57e91ca4461c9548443b9&quot;
+<span class="lineNum">      75 </span>            :                 &quot;a355c6010203c2040506a0c969a58f6f9095004c0177a6b47f451530cab38966a25cca5cb58f0555&quot;
+<span class="lineNum">      76 </span>            :                 &quot;42124e&quot;
+<span class="lineNum">      77 </span><span class="lineCov">          1 :         );</span>
+<span class="lineNum">      78 </span><span class="lineCov">          4 :         auto pong = dynamic_cast&lt;Pong&amp;&gt;(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&amp;packet)));</span>
+<span class="lineNum">      79 </span><span class="lineCov">          6 :         BOOST_CHECK_EQUAL(pong.destination, NodeIPEndpoint(bi::address::from_string(&quot;2001:db8:85a3:8d3:1319:8a2e:370:7348&quot;), 2222, 33338));</span>
+<span class="lineNum">      80 </span><span class="lineCov">          6 :         BOOST_CHECK_EQUAL(pong.echo, h256(&quot;fbc914b16819237dcd8801d7e53f69e9719adecb3cc0e790c57e91ca4461c954&quot;));</span>
+<span class="lineNum">      81 </span><span class="lineCov">          5 :         BOOST_CHECK_EQUAL(pong.ts, 1136239445);</span>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span><span class="lineCov">          5 :         packet = fromHex(</span>
+<span class="lineNum">      84 </span>            :                 &quot;c7c44041b9f7c7e41934417ebac9a8e1a4c6298f74553f2fcfdcae6ed6fe53163eb3d2b52e39fe91&quot;
+<span class="lineNum">      85 </span>            :                 &quot;831b8a927bf4fc222c3902202027e5e9eb812195f95d20061ef5cd31d502e47ecb61183f74a504fe&quot;
+<span class="lineNum">      86 </span>            :                 &quot;04c51e73df81f25c4d506b26db4517490103f84eb840ca634cae0d49acb401d8a4c6b6fe8c55b70d&quot;
+<span class="lineNum">      87 </span>            :                 &quot;115bf400769cc1400f3258cd31387574077f301b421bc84df7266c44e9e6d569fc56be0081290476&quot;
+<span class="lineNum">      88 </span>            :                 &quot;7bf5ccd1fc7f8443b9a35582999983999999280dc62cc8255c73471e0a61da0c89acdc0e035e260a&quot;
+<span class="lineNum">      89 </span>            :                 &quot;dd7fc0c04ad9ebf3919644c91cb247affc82b69bd2ca235c71eab8e49737c937a2c396&quot;
+<span class="lineNum">      90 </span><span class="lineCov">          1 :         );</span>
+<span class="lineNum">      91 </span><span class="lineCov">          5 :         auto findnode = dynamic_cast&lt;FindNode&amp;&gt;(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&amp;packet)));</span>
+<span class="lineNum">      92 </span><span class="lineCov">          7 :         BOOST_CHECK_EQUAL(findnode.target, Public(&quot;ca634cae0d49acb401d8a4c6b6fe8c55b70d115bf400769cc1400f3258cd31387574077f301b421bc84df7266c44e9e6d569fc56be00812904767bf5ccd1fc7f&quot;));</span>
+<span class="lineNum">      93 </span><span class="lineCov">          5 :         BOOST_CHECK_EQUAL(findnode.ts, 1136239445);</span>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineCov">          5 :         packet = fromHex(</span>
+<span class="lineNum">      96 </span>            :                 &quot;c679fc8fe0b8b12f06577f2e802d34f6fa257e6137a995f6f4cbfc9ee50ed3710faf6e66f932c4c8&quot;
+<span class="lineNum">      97 </span>            :                 &quot;d81d64343f429651328758b47d3dbc02c4042f0fff6946a50f4a49037a72bb550f3a7872363a83e1&quot;
+<span class="lineNum">      98 </span>            :                 &quot;b9ee6469856c24eb4ef80b7535bcf99c0004f9015bf90150f84d846321163782115c82115db84031&quot;
+<span class="lineNum">      99 </span>            :                 &quot;55e1427f85f10a5c9a7755877748041af1bcd8d474ec065eb33df57a97babf54bfd2103575fa8291&quot;
+<span class="lineNum">     100 </span>            :                 &quot;15d224c523596b401065a97f74010610fce76382c0bf32f84984010203040101b840312c55512422&quot;
+<span class="lineNum">     101 </span>            :                 &quot;cf9b8a4097e9a6ad79402e87a15ae909a4bfefa22398f03d20951933beea1e4dfa6f968212385e82&quot;
+<span class="lineNum">     102 </span>            :                 &quot;9f04c2d314fc2d4e255e0d3bc08792b069dbf8599020010db83c4d001500000000abcdef12820d05&quot;
+<span class="lineNum">     103 </span>            :                 &quot;820d05b84038643200b172dcfef857492156971f0e6aa2c538d8b74010f8e140811d53b98c765dd2&quot;
+<span class="lineNum">     104 </span>            :                 &quot;d96126051913f44582e8c199ad7c6d6819e9a56483f637feaac9448aacf8599020010db885a308d3&quot;
+<span class="lineNum">     105 </span>            :                 &quot;13198a2e037073488203e78203e8b8408dcab8618c3253b558d459da53bd8fa68935a719aff8b811&quot;
+<span class="lineNum">     106 </span>            :                 &quot;197101a4b2b47dd2d47295286fc00cc081bb542d760717d1bdd6bec2c37cd72eca367d6dd3b9df73&quot;
+<span class="lineNum">     107 </span>            :                 &quot;8443b9a355010203b525a138aa34383fec3d2719a0&quot;
+<span class="lineNum">     108 </span><span class="lineCov">          1 :         );</span>
+<span class="lineNum">     109 </span><span class="lineCov">          4 :         auto neighbours = dynamic_cast&lt;Neighbours&amp;&gt;(*DiscoveryDatagram::interpretUDP(ep, bytesConstRef(&amp;packet)));</span>
+<span class="lineNum">     110 </span><span class="lineCov">          6 :         BOOST_REQUIRE_EQUAL(neighbours.neighbours.size(), 4);</span>
+<span class="lineNum">     111 </span><span class="lineCov">          6 :         BOOST_CHECK_EQUAL(neighbours.neighbours[0].endpoint, NodeIPEndpoint(bi::address::from_string(&quot;99.33.22.55&quot;), 4444, 4445));</span>
+<span class="lineNum">     112 </span><span class="lineCov">          7 :         BOOST_CHECK_EQUAL(neighbours.neighbours[0].node, Public(&quot;3155e1427f85f10a5c9a7755877748041af1bcd8d474ec065eb33df57a97babf54bfd2103575fa829115d224c523596b401065a97f74010610fce76382c0bf32&quot;));</span>
+<span class="lineNum">     113 </span><span class="lineCov">          6 :         BOOST_CHECK_EQUAL(neighbours.neighbours[1].endpoint, NodeIPEndpoint(bi::address::from_string(&quot;1.2.3.4&quot;), 1, 1));</span>
+<span class="lineNum">     114 </span><span class="lineCov">          7 :         BOOST_CHECK_EQUAL(neighbours.neighbours[1].node, Public(&quot;312c55512422cf9b8a4097e9a6ad79402e87a15ae909a4bfefa22398f03d20951933beea1e4dfa6f968212385e829f04c2d314fc2d4e255e0d3bc08792b069db&quot;));</span>
+<span class="lineNum">     115 </span><span class="lineCov">          6 :         BOOST_CHECK_EQUAL(neighbours.neighbours[2].endpoint, NodeIPEndpoint(bi::address::from_string(&quot;2001:db8:3c4d:15::abcd:ef12&quot;), 3333, 3333));</span>
+<span class="lineNum">     116 </span><span class="lineCov">          7 :         BOOST_CHECK_EQUAL(neighbours.neighbours[2].node, Public(&quot;38643200b172dcfef857492156971f0e6aa2c538d8b74010f8e140811d53b98c765dd2d96126051913f44582e8c199ad7c6d6819e9a56483f637feaac9448aac&quot;));</span>
+<span class="lineNum">     117 </span><span class="lineCov">          6 :         BOOST_CHECK_EQUAL(neighbours.neighbours[3].endpoint, NodeIPEndpoint(bi::address::from_string(&quot;2001:db8:85a3:8d3:1319:8a2e:370:7348&quot;), 999, 1000));</span>
+<span class="lineNum">     118 </span><span class="lineCov">          7 :         BOOST_CHECK_EQUAL(neighbours.neighbours[3].node, Public(&quot;8dcab8618c3253b558d459da53bd8fa68935a719aff8b811197101a4b2b47dd2d47295286fc00cc081bb542d760717d1bdd6bec2c37cd72eca367d6dd3b9df73&quot;));</span>
+<span class="lineNum">     119 </span><span class="lineCov">          5 :         BOOST_CHECK_EQUAL(neighbours.ts, 1136239445);</span>
+<span class="lineNum">     120 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">          6 : class TestHandshake: public RLPXHandshake</span>
+<span class="lineNum">     123 </span>            : {
+<span class="lineNum">     124 </span>            : public:
+<span class="lineNum">     125 </span>            :         TestHandshake(Host* _host, std::shared_ptr&lt;RLPXSocket&gt; const&amp; _socket):
+<span class="lineNum">     126 </span><span class="lineCov">          3 :                 RLPXHandshake(_host, _socket) {};</span>
+<span class="lineNum">     127 </span>            :         TestHandshake(Host* _host, std::shared_ptr&lt;RLPXSocket&gt; const&amp; _socket, NodeID _remote):
+<span class="lineNum">     128 </span><span class="lineCov">          3 :                 RLPXHandshake(_host, _socket, _remote) {};</span>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :         /// Creates a handshake attached to a Host with the given alias,
+<span class="lineNum">     131 </span>            :         /// then runs it through the key establishment, supplying packet
+<span class="lineNum">     132 </span>            :         /// as the input on the socket.
+<span class="lineNum">     133 </span>            :         ///
+<span class="lineNum">     134 </span>            :         /// If remoteID is supplied, the handshake runs in initiator mode.
+<span class="lineNum">     135 </span>            :         static shared_ptr&lt;TestHandshake&gt; runWithInput(Secret _hostAlias, bytes _packet, NodeID _remoteID = NodeID());
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :         /// transition is overridden to stop after key establishment.
+<span class="lineNum">     138 </span>            :         virtual void transition(boost::system::error_code _ec);
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :         /// Reports whether we made it through the key establishment without error.
+<span class="lineNum">     141 </span><span class="lineCov">          6 :         bool completedKeyEstablishment() { return m_nextState == ReadHello; }</span>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :         /// Checks whether Auth-related members match the values in the EIP-8 test vectors.
+<span class="lineNum">     144 </span>            :         void checkAuthValuesEIP8(uint64_t _expectedRemoteVersion);
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :         /// Checks whether Ack-related members match the values in the EIP-8 test vectors.
+<span class="lineNum">     147 </span>            :         void checkAckValuesEIP8(uint64_t _expectedRemoteVersion);
+<span class="lineNum">     148 </span>            : };
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            : // This test checks that pre-EIP-8 'plain' format is still accepted.
+<span class="lineNum">     151 </span>            : //
+<span class="lineNum">     152 </span>            : // TODO - This test appears to be consistently broken on Windows, so we will
+<span class="lineNum">     153 </span>            : // disable it for the time being, so that we have &quot;clean&quot; tests to iterate on.
+<span class="lineNum">     154 </span>            : // With any tests in a broken state, the automation is not useful, because
+<span class="lineNum">     155 </span>            : // we do not see the working -&gt; broken transition occur.
+<span class="lineNum">     156 </span>            : //
+<span class="lineNum">     157 </span>            : // See https://github.com/ethereum/cpp-ethereum/issues/3273 
+<a name="158"><span class="lineNum">     158 </span>            : </a>
+<span class="lineNum">     159 </span>            : #if !defined(_WIN32)
+<span class="lineNum">     160 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(test_handshake_plain_auth)</span>
+<span class="lineNum">     161 </span>            : {
+<span class="lineNum">     162 </span><span class="lineCov">          5 :         Secret keyB(&quot;b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291&quot;);</span>
+<span class="lineNum">     163 </span>            :         bytes auth(fromHex(
+<span class="lineNum">     164 </span>            :                 &quot;048ca79ad18e4b0659fab4853fe5bc58eb83992980f4c9cc147d2aa31532efd29a3d3dc6a3d89eaf&quot;
+<span class="lineNum">     165 </span>            :                 &quot;913150cfc777ce0ce4af2758bf4810235f6e6ceccfee1acc6b22c005e9e3a49d6448610a58e98744&quot;
+<span class="lineNum">     166 </span>            :                 &quot;ba3ac0399e82692d67c1f58849050b3024e21a52c9d3b01d871ff5f210817912773e610443a9ef14&quot;
+<span class="lineNum">     167 </span>            :                 &quot;2e91cdba0bd77b5fdf0769b05671fc35f83d83e4d3b0b000c6b2a1b1bba89e0fc51bf4e460df3105&quot;
+<span class="lineNum">     168 </span>            :                 &quot;c444f14be226458940d6061c296350937ffd5e3acaceeaaefd3c6f74be8e23e0f45163cc7ebd7622&quot;
+<span class="lineNum">     169 </span>            :                 &quot;0f0128410fd05250273156d548a414444ae2f7dea4dfca2d43c057adb701a715bf59f6fb66b2d1d2&quot;
+<span class="lineNum">     170 </span>            :                 &quot;0f2c703f851cbf5ac47396d9ca65b6260bd141ac4d53e2de585a73d1750780db4c9ee4cd4d225173&quot;
+<span class="lineNum">     171 </span>            :                 &quot;a4592ee77e2bd94d0be3691f3b406f9bba9b591fc63facc016bfa8&quot;
+<span class="lineNum">     172 </span><span class="lineCov">          5 :         ));</span>
+<span class="lineNum">     173 </span><span class="lineCov">          4 :         shared_ptr&lt;TestHandshake&gt; h = TestHandshake::runWithInput(keyB, auth);</span>
+<span class="lineNum">     174 </span><span class="lineCov">          9 :         BOOST_REQUIRE(h-&gt;completedKeyEstablishment());</span>
+<span class="lineNum">     175 </span><span class="lineCov">          1 :         h-&gt;checkAuthValuesEIP8(4);</span>
+<span class="lineNum">     176 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     177 </span>            : #endif // !defined(_WIN32)
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            : // TODO - This test appears to be consistently broken on Windows, so we will
+<span class="lineNum">     180 </span>            : // disable it for the time being, so that we have &quot;clean&quot; tests to iterate on.
+<span class="lineNum">     181 </span>            : // With any tests in a broken state, the automation is not useful, because
+<span class="lineNum">     182 </span>            : // we do not see the working -&gt; broken transition occur.
+<span class="lineNum">     183 </span>            : //
+<span class="lineNum">     184 </span>            : // See https://github.com/ethereum/cpp-ethereum/issues/3273 
+<a name="185"><span class="lineNum">     185 </span>            : </a>
+<span class="lineNum">     186 </span>            : #if !defined(_WIN32)
+<span class="lineNum">     187 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(test_handshake_eip8_auth1)</span>
+<span class="lineNum">     188 </span>            : {
+<span class="lineNum">     189 </span><span class="lineCov">          5 :         Secret keyB(&quot;b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291&quot;);</span>
+<span class="lineNum">     190 </span>            :         bytes auth(fromHex(
+<span class="lineNum">     191 </span>            :                 &quot;01b304ab7578555167be8154d5cc456f567d5ba302662433674222360f08d5f1534499d3678b513b&quot;
+<span class="lineNum">     192 </span>            :                 &quot;0fca474f3a514b18e75683032eb63fccb16c156dc6eb2c0b1593f0d84ac74f6e475f1b8d56116b84&quot;
+<span class="lineNum">     193 </span>            :                 &quot;9634a8c458705bf83a626ea0384d4d7341aae591fae42ce6bd5c850bfe0b999a694a49bbbaf3ef6c&quot;
+<span class="lineNum">     194 </span>            :                 &quot;da61110601d3b4c02ab6c30437257a6e0117792631a4b47c1d52fc0f8f89caadeb7d02770bf999cc&quot;
+<span class="lineNum">     195 </span>            :                 &quot;147d2df3b62e1ffb2c9d8c125a3984865356266bca11ce7d3a688663a51d82defaa8aad69da39ab6&quot;
+<span class="lineNum">     196 </span>            :                 &quot;d5470e81ec5f2a7a47fb865ff7cca21516f9299a07b1bc63ba56c7a1a892112841ca44b6e0034dee&quot;
+<span class="lineNum">     197 </span>            :                 &quot;70c9adabc15d76a54f443593fafdc3b27af8059703f88928e199cb122362a4b35f62386da7caad09&quot;
+<span class="lineNum">     198 </span>            :                 &quot;c001edaeb5f8a06d2b26fb6cb93c52a9fca51853b68193916982358fe1e5369e249875bb8d0d0ec3&quot;
+<span class="lineNum">     199 </span>            :                 &quot;6f917bc5e1eafd5896d46bd61ff23f1a863a8a8dcd54c7b109b771c8e61ec9c8908c733c0263440e&quot;
+<span class="lineNum">     200 </span>            :                 &quot;2aa067241aaa433f0bb053c7b31a838504b148f570c0ad62837129e547678c5190341e4f1693956c&quot;
+<span class="lineNum">     201 </span>            :                 &quot;3bf7678318e2d5b5340c9e488eefea198576344afbdf66db5f51204a6961a63ce072c8926c&quot;
+<span class="lineNum">     202 </span><span class="lineCov">          5 :         ));</span>
+<span class="lineNum">     203 </span><span class="lineCov">          4 :         shared_ptr&lt;TestHandshake&gt; h = TestHandshake::runWithInput(keyB, auth);</span>
+<span class="lineNum">     204 </span><span class="lineCov">          9 :         BOOST_REQUIRE(h-&gt;completedKeyEstablishment());</span>
+<span class="lineNum">     205 </span><span class="lineCov">          1 :         h-&gt;checkAuthValuesEIP8(4);</span>
+<span class="lineNum">     206 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     207 </span>            : #endif // !defined(_WIN32)
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            : // TODO - This test appears to be consistently broken on Windows, so we will
+<span class="lineNum">     210 </span>            : // disable it for the time being, so that we have &quot;clean&quot; tests to iterate on.
+<span class="lineNum">     211 </span>            : // With any tests in a broken state, the automation is not useful, because
+<span class="lineNum">     212 </span>            : // we do not see the working -&gt; broken transition occur.
+<span class="lineNum">     213 </span>            : //
+<span class="lineNum">     214 </span>            : // See https://github.com/ethereum/cpp-ethereum/issues/3273 
+<a name="215"><span class="lineNum">     215 </span>            : </a>
+<span class="lineNum">     216 </span>            : #if !defined(_WIN32)
+<span class="lineNum">     217 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(test_handshake_eip8_auth2)</span>
+<span class="lineNum">     218 </span>            : {
+<span class="lineNum">     219 </span><span class="lineCov">          5 :         Secret keyB(&quot;b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291&quot;);</span>
+<span class="lineNum">     220 </span>            :         bytes auth(fromHex(
+<span class="lineNum">     221 </span>            :                 &quot;01b8044c6c312173685d1edd268aa95e1d495474c6959bcdd10067ba4c9013df9e40ff45f5bfd6f7&quot;
+<span class="lineNum">     222 </span>            :                 &quot;2471f93a91b493f8e00abc4b80f682973de715d77ba3a005a242eb859f9a211d93a347fa64b597bf&quot;
+<span class="lineNum">     223 </span>            :                 &quot;280a6b88e26299cf263b01b8dfdb712278464fd1c25840b995e84d367d743f66c0e54a586725b7bb&quot;
+<span class="lineNum">     224 </span>            :                 &quot;f12acca27170ae3283c1073adda4b6d79f27656993aefccf16e0d0409fe07db2dc398a1b7e8ee93b&quot;
+<span class="lineNum">     225 </span>            :                 &quot;cd181485fd332f381d6a050fba4c7641a5112ac1b0b61168d20f01b479e19adf7fdbfa0905f63352&quot;
+<span class="lineNum">     226 </span>            :                 &quot;bfc7e23cf3357657455119d879c78d3cf8c8c06375f3f7d4861aa02a122467e069acaf513025ff19&quot;
+<span class="lineNum">     227 </span>            :                 &quot;6641f6d2810ce493f51bee9c966b15c5043505350392b57645385a18c78f14669cc4d960446c1757&quot;
+<span class="lineNum">     228 </span>            :                 &quot;1b7c5d725021babbcd786957f3d17089c084907bda22c2b2675b4378b114c601d858802a55345a15&quot;
+<span class="lineNum">     229 </span>            :                 &quot;116bc61da4193996187ed70d16730e9ae6b3bb8787ebcaea1871d850997ddc08b4f4ea668fbf3740&quot;
+<span class="lineNum">     230 </span>            :                 &quot;7ac044b55be0908ecb94d4ed172ece66fd31bfdadf2b97a8bc690163ee11f5b575a4b44e36e2bfb2&quot;
+<span class="lineNum">     231 </span>            :                 &quot;f0fce91676fd64c7773bac6a003f481fddd0bae0a1f31aa27504e2a533af4cef3b623f4791b2cca6&quot;
+<span class="lineNum">     232 </span>            :                 &quot;d490&quot;
+<span class="lineNum">     233 </span><span class="lineCov">          5 :         ));</span>
+<span class="lineNum">     234 </span><span class="lineCov">          4 :         shared_ptr&lt;TestHandshake&gt; h = TestHandshake::runWithInput(keyB, auth);</span>
+<span class="lineNum">     235 </span><span class="lineCov">          9 :         BOOST_REQUIRE(h-&gt;completedKeyEstablishment());</span>
+<span class="lineNum">     236 </span><span class="lineCov">          1 :         h-&gt;checkAuthValuesEIP8(56);</span>
+<span class="lineNum">     237 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     238 </span>            : #endif // !defined(_WIN32)
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            : // TODO - This test appears to be consistently broken on Windows, so we will
+<span class="lineNum">     241 </span>            : // disable it for the time being, so that we have &quot;clean&quot; tests to iterate on.
+<span class="lineNum">     242 </span>            : // With any tests in a broken state, the automation is not useful, because
+<span class="lineNum">     243 </span>            : // we do not see the working -&gt; broken transition occur.
+<span class="lineNum">     244 </span>            : //
+<span class="lineNum">     245 </span>            : // See https://github.com/ethereum/cpp-ethereum/issues/3273 
+<a name="246"><span class="lineNum">     246 </span>            : </a>
+<span class="lineNum">     247 </span>            : #if !defined(_WIN32)
+<span class="lineNum">     248 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(test_handshake_eip8_ack_plain)</span>
+<span class="lineNum">     249 </span>            : {
+<span class="lineNum">     250 </span><span class="lineCov">          5 :         Secret keyA(&quot;49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee&quot;);</span>
+<span class="lineNum">     251 </span>            :         bytes ack(fromHex(
+<span class="lineNum">     252 </span>            :                 &quot;049f8abcfa9c0dc65b982e98af921bc0ba6e4243169348a236abe9df5f93aa69d99cadddaa387662&quot;
+<span class="lineNum">     253 </span>            :                 &quot;b0ff2c08e9006d5a11a278b1b3331e5aaabf0a32f01281b6f4ede0e09a2d5f585b26513cb794d963&quot;
+<span class="lineNum">     254 </span>            :                 &quot;5a57563921c04a9090b4f14ee42be1a5461049af4ea7a7f49bf4c97a352d39c8d02ee4acc416388c&quot;
+<span class="lineNum">     255 </span>            :                 &quot;1c66cec761d2bc1c72da6ba143477f049c9d2dde846c252c111b904f630ac98e51609b3b1f58168d&quot;
+<span class="lineNum">     256 </span>            :                 &quot;dca6505b7196532e5f85b259a20c45e1979491683fee108e9660edbf38f3add489ae73e3dda2c71b&quot;
+<span class="lineNum">     257 </span>            :                 &quot;d1497113d5c755e942d1&quot;
+<span class="lineNum">     258 </span><span class="lineCov">          4 :         ));</span>
+<span class="lineNum">     259 </span><span class="lineCov">          3 :         NodeID initiatorPubk(&quot;fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877&quot;);</span>
+<span class="lineNum">     260 </span><span class="lineCov">          4 :         shared_ptr&lt;TestHandshake&gt; h = TestHandshake::runWithInput(keyA, ack, initiatorPubk);</span>
+<span class="lineNum">     261 </span><span class="lineCov">          9 :         BOOST_REQUIRE(h-&gt;completedKeyEstablishment());</span>
+<span class="lineNum">     262 </span><span class="lineCov">          1 :         h-&gt;checkAckValuesEIP8(4);</span>
+<span class="lineNum">     263 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     264 </span>            : #endif // !defined(_WIN32)
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            : // TODO - This test appears to be consistently broken on Windows, so we will
+<span class="lineNum">     267 </span>            : // disable it for the time being, so that we have &quot;clean&quot; tests to iterate on.
+<span class="lineNum">     268 </span>            : // With any tests in a broken state, the automation is not useful, because
+<span class="lineNum">     269 </span>            : // we do not see the working -&gt; broken transition occur.
+<span class="lineNum">     270 </span>            : //
+<span class="lineNum">     271 </span>            : // See https://github.com/ethereum/cpp-ethereum/issues/3273 
+<a name="272"><span class="lineNum">     272 </span>            : </a>
+<span class="lineNum">     273 </span>            : #if !defined(_WIN32)
+<span class="lineNum">     274 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(test_handshake_eip8_ack1)</span>
+<span class="lineNum">     275 </span>            : {
+<span class="lineNum">     276 </span><span class="lineCov">          5 :         Secret keyA(&quot;49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee&quot;);</span>
+<span class="lineNum">     277 </span>            :         bytes ack(fromHex(
+<span class="lineNum">     278 </span>            :                 &quot;01ea0451958701280a56482929d3b0757da8f7fbe5286784beead59d95089c217c9b917788989470&quot;
+<span class="lineNum">     279 </span>            :                 &quot;b0e330cc6e4fb383c0340ed85fab836ec9fb8a49672712aeabbdfd1e837c1ff4cace34311cd7f4de&quot;
+<span class="lineNum">     280 </span>            :                 &quot;05d59279e3524ab26ef753a0095637ac88f2b499b9914b5f64e143eae548a1066e14cd2f4bd7f814&quot;
+<span class="lineNum">     281 </span>            :                 &quot;c4652f11b254f8a2d0191e2f5546fae6055694aed14d906df79ad3b407d94692694e259191cde171&quot;
+<span class="lineNum">     282 </span>            :                 &quot;ad542fc588fa2b7333313d82a9f887332f1dfc36cea03f831cb9a23fea05b33deb999e85489e645f&quot;
+<span class="lineNum">     283 </span>            :                 &quot;6aab1872475d488d7bd6c7c120caf28dbfc5d6833888155ed69d34dbdc39c1f299be1057810f34fb&quot;
+<span class="lineNum">     284 </span>            :                 &quot;e754d021bfca14dc989753d61c413d261934e1a9c67ee060a25eefb54e81a4d14baff922180c395d&quot;
+<span class="lineNum">     285 </span>            :                 &quot;3f998d70f46f6b58306f969627ae364497e73fc27f6d17ae45a413d322cb8814276be6ddd13b885b&quot;
+<span class="lineNum">     286 </span>            :                 &quot;201b943213656cde498fa0e9ddc8e0b8f8a53824fbd82254f3e2c17e8eaea009c38b4aa0a3f306e8&quot;
+<span class="lineNum">     287 </span>            :                 &quot;797db43c25d68e86f262e564086f59a2fc60511c42abfb3057c247a8a8fe4fb3ccbadde17514b7ac&quot;
+<span class="lineNum">     288 </span>            :                 &quot;8000cdb6a912778426260c47f38919a91f25f4b5ffb455d6aaaf150f7e5529c100ce62d6d92826a7&quot;
+<span class="lineNum">     289 </span>            :                 &quot;1778d809bdf60232ae21ce8a437eca8223f45ac37f6487452ce626f549b3b5fdee26afd2072e4bc7&quot;
+<span class="lineNum">     290 </span>            :                 &quot;5833c2464c805246155289f4&quot;
+<span class="lineNum">     291 </span><span class="lineCov">          4 :         ));</span>
+<span class="lineNum">     292 </span><span class="lineCov">          3 :         NodeID initiatorPubk(&quot;fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877&quot;);</span>
+<span class="lineNum">     293 </span><span class="lineCov">          4 :         shared_ptr&lt;TestHandshake&gt; h = TestHandshake::runWithInput(keyA, ack, initiatorPubk);</span>
+<span class="lineNum">     294 </span><span class="lineCov">          9 :         BOOST_REQUIRE(h-&gt;completedKeyEstablishment());</span>
+<span class="lineNum">     295 </span><span class="lineCov">          1 :         h-&gt;checkAckValuesEIP8(4);</span>
+<span class="lineNum">     296 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     297 </span>            : #endif // !defined(_WIN32)
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span>            : // TODO - This test appears to be consistently broken on Windows, so we will
+<span class="lineNum">     300 </span>            : // disable it for the time being, so that we have &quot;clean&quot; tests to iterate on.
+<span class="lineNum">     301 </span>            : // With any tests in a broken state, the automation is not useful, because
+<span class="lineNum">     302 </span>            : // we do not see the working -&gt; broken transition occur.
+<span class="lineNum">     303 </span>            : //
+<span class="lineNum">     304 </span>            : // See https://github.com/ethereum/cpp-ethereum/issues/3273 
+<a name="305"><span class="lineNum">     305 </span>            : </a>
+<span class="lineNum">     306 </span>            : #if !defined(_WIN32)
+<span class="lineNum">     307 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(test_handshake_eip8_ack2)</span>
+<span class="lineNum">     308 </span>            : {
+<span class="lineNum">     309 </span><span class="lineCov">          5 :         Secret keyA(&quot;49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee&quot;);</span>
+<span class="lineNum">     310 </span>            :         bytes ack(fromHex(
+<span class="lineNum">     311 </span>            :                 &quot;01f004076e58aae772bb101ab1a8e64e01ee96e64857ce82b1113817c6cdd52c09d26f7b90981cd7&quot;
+<span class="lineNum">     312 </span>            :                 &quot;ae835aeac72e1573b8a0225dd56d157a010846d888dac7464baf53f2ad4e3d584531fa203658fab0&quot;
+<span class="lineNum">     313 </span>            :                 &quot;3a06c9fd5e35737e417bc28c1cbf5e5dfc666de7090f69c3b29754725f84f75382891c561040ea1d&quot;
+<span class="lineNum">     314 </span>            :                 &quot;dc0d8f381ed1b9d0d4ad2a0ec021421d847820d6fa0ba66eaf58175f1b235e851c7e2124069fbc20&quot;
+<span class="lineNum">     315 </span>            :                 &quot;2888ddb3ac4d56bcbd1b9b7eab59e78f2e2d400905050f4a92dec1c4bdf797b3fc9b2f8e84a482f3&quot;
+<span class="lineNum">     316 </span>            :                 &quot;d800386186712dae00d5c386ec9387a5e9c9a1aca5a573ca91082c7d68421f388e79127a5177d4f8&quot;
+<span class="lineNum">     317 </span>            :                 &quot;590237364fd348c9611fa39f78dcdceee3f390f07991b7b47e1daa3ebcb6ccc9607811cb17ce51f1&quot;
+<span class="lineNum">     318 </span>            :                 &quot;c8c2c5098dbdd28fca547b3f58c01a424ac05f869f49c6a34672ea2cbbc558428aa1fe48bbfd6115&quot;
+<span class="lineNum">     319 </span>            :                 &quot;8b1b735a65d99f21e70dbc020bfdface9f724a0d1fb5895db971cc81aa7608baa0920abb0a565c9c&quot;
+<span class="lineNum">     320 </span>            :                 &quot;436e2fd13323428296c86385f2384e408a31e104670df0791d93e743a3a5194ee6b076fb6323ca59&quot;
+<span class="lineNum">     321 </span>            :                 &quot;3011b7348c16cf58f66b9633906ba54a2ee803187344b394f75dd2e663a57b956cb830dd7a908d4f&quot;
+<span class="lineNum">     322 </span>            :                 &quot;39a2336a61ef9fda549180d4ccde21514d117b6c6fd07a9102b5efe710a32af4eeacae2cb3b1dec0&quot;
+<span class="lineNum">     323 </span>            :                 &quot;35b9593b48b9d3ca4c13d245d5f04169b0b1&quot;
+<span class="lineNum">     324 </span><span class="lineCov">          4 :         ));</span>
+<span class="lineNum">     325 </span><span class="lineCov">          3 :         NodeID initiatorPubk(&quot;fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877&quot;);</span>
+<span class="lineNum">     326 </span><span class="lineCov">          4 :         shared_ptr&lt;TestHandshake&gt; h = TestHandshake::runWithInput(keyA, ack, initiatorPubk);</span>
+<span class="lineNum">     327 </span><span class="lineCov">          9 :         BOOST_REQUIRE(h-&gt;completedKeyEstablishment());</span>
+<span class="lineNum">     328 </span><span class="lineCov">          1 :         h-&gt;checkAckValuesEIP8(57);</span>
+<span class="lineNum">     329 </span><span class="lineCov">          1 : }</span>
+<a name="330"><span class="lineNum">     330 </span>            : #endif // !defined(_WIN32)</a>
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span><span class="lineCov">          3 : void TestHandshake::checkAuthValuesEIP8(uint64_t _expectedRemoteVersion)</span>
+<span class="lineNum">     333 </span>            : {
+<span class="lineNum">     334 </span><span class="lineCov">         21 :         BOOST_CHECK_EQUAL(m_remote, Public(&quot;fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877&quot;));</span>
+<span class="lineNum">     335 </span><span class="lineCov">         21 :         BOOST_CHECK_EQUAL(m_remoteNonce, h256(&quot;7e968bba13b6c50e2c4cd7f241cc0d64d1ac25c7f5952df231ac6a2bda8ee5d6&quot;));</span>
+<span class="lineNum">     336 </span><span class="lineCov">         21 :         BOOST_CHECK_EQUAL(m_remoteEphemeral, Public(&quot;654d1044b69c577a44e5f01a1209523adb4026e70c62d1c13a067acabc09d2667a49821a0ad4b634554d330a15a58fe61f8a8e0544b310c6de7b0c8da7528a8d&quot;));</span>
+<span class="lineNum">     337 </span><span class="lineCov">         15 :         BOOST_CHECK_EQUAL(m_remoteVersion, _expectedRemoteVersion);</span>
+<a name="338"><span class="lineNum">     338 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     339 </span>            : 
+<span class="lineNum">     340 </span><span class="lineCov">          3 : void TestHandshake::checkAckValuesEIP8(uint64_t _expectedRemoteVersion)</span>
+<span class="lineNum">     341 </span>            : {
+<span class="lineNum">     342 </span><span class="lineCov">         21 :         BOOST_CHECK_EQUAL(m_remoteNonce, h256(&quot;559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd&quot;));</span>
+<span class="lineNum">     343 </span><span class="lineCov">         21 :         BOOST_CHECK_EQUAL(m_remoteEphemeral, Public(&quot;b6d82fa3409da933dbf9cb0140c5dde89f4e64aec88d476af648880f4a10e1e49fe35ef3e69e93dd300b4797765a747c6384a6ecf5db9c2690398607a86181e4&quot;));</span>
+<span class="lineNum">     344 </span><span class="lineCov">         15 :         BOOST_CHECK_EQUAL(m_remoteVersion, _expectedRemoteVersion);</span>
+<span class="lineNum">     345 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span>            : #define throwErrorCode(what, error) \
+<a name="348"><span class="lineNum">     348 </span>            :         { if (error) BOOST_THROW_EXCEPTION(Exception(what + _ec.message())); }</a>
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span><span class="lineCov">          6 : shared_ptr&lt;TestHandshake&gt; TestHandshake::runWithInput(Secret _hostAlias, bytes _packet, NodeID _remoteID)</span>
+<span class="lineNum">     351 </span>            : {
+<span class="lineNum">     352 </span>            :         // Spawn a listener which sends the packet to any client.
+<span class="lineNum">     353 </span><span class="lineCov">         12 :         ba::io_service io;</span>
+<span class="lineNum">     354 </span><span class="lineCov">         12 :         bi::tcp::acceptor acceptor(io);</span>
+<span class="lineNum">     355 </span><span class="lineCov">         12 :         bi::tcp::endpoint endpoint(bi::address::from_string(&quot;127.0.0.1&quot;), 0);</span>
+<span class="lineNum">     356 </span><span class="lineCov">          6 :         acceptor.open(endpoint.protocol());</span>
+<span class="lineNum">     357 </span><span class="lineCov">          6 :         acceptor.bind(endpoint);</span>
+<a name="358"><span class="lineNum">     358 </span><span class="lineCov">          6 :         acceptor.listen();</span></a>
+<span class="lineNum">     359 </span><span class="lineCov">         12 :         auto server = std::make_shared&lt;RLPXSocket&gt;(io);</span>
+<span class="lineNum">     360 </span><span class="lineCov">        150 :         acceptor.async_accept(server-&gt;ref(), [_packet,server](boost::system::error_code const&amp; _ec)</span>
+<span class="lineNum">     361 </span>            :         {
+<span class="lineNum">     362 </span><span class="lineCov">         12 :                 throwErrorCode(&quot;accept error: &quot;, _ec);</span>
+<span class="lineNum">     363 </span><span class="lineCov">         30 :                 ba::async_write(server-&gt;ref(), ba::buffer(_packet), [](const boost::system::error_code&amp; _ec, std::size_t)</span>
+<span class="lineNum">     364 </span>            :                 {
+<span class="lineNum">     365 </span><span class="lineCov">         12 :                         throwErrorCode(&quot;write error: &quot;, _ec);</span>
+<span class="lineNum">     366 </span><span class="lineCov">         12 :                 });</span>
+<span class="lineNum">     367 </span><span class="lineCov">         18 :         });</span>
+<span class="lineNum">     368 </span>            : 
+<span class="lineNum">     369 </span>            :         // Spawn a client to execute the handshake.
+<span class="lineNum">     370 </span><span class="lineCov">         24 :         auto host = make_shared&lt;Host&gt;(&quot;peer name&quot;, KeyPair(_hostAlias));</span>
+<span class="lineNum">     371 </span><span class="lineCov">         12 :         auto client = make_shared&lt;RLPXSocket&gt;(io);</span>
+<span class="lineNum">     372 </span><span class="lineCov">          6 :         shared_ptr&lt;TestHandshake&gt; handshake;</span>
+<span class="lineNum">     373 </span><span class="lineCov">         12 :         if (_remoteID == NodeID())</span>
+<span class="lineNum">     374 </span><span class="lineCov">          6 :                 handshake.reset(new TestHandshake(host.get(), client));</span>
+<span class="lineNum">     375 </span>            :         else
+<span class="lineNum">     376 </span><span class="lineCov">          6 :                 handshake.reset(new TestHandshake(host.get(), client, _remoteID));</span>
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span><span class="lineCov">         96 :         client-&gt;ref().async_connect(acceptor.local_endpoint(), [handshake](boost::system::error_code const&amp; _ec)</span>
+<span class="lineNum">     379 </span>            :         {
+<span class="lineNum">     380 </span><span class="lineCov">         12 :                 throwErrorCode(&quot;connect error: &quot;, _ec);</span>
+<span class="lineNum">     381 </span><span class="lineCov">          6 :                 handshake-&gt;start();</span>
+<span class="lineNum">     382 </span><span class="lineCov">         12 :         });</span>
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span>            :         // Run all I/O to completion and return the finished handshake.
+<span class="lineNum">     385 </span><span class="lineCov">          6 :         io.run();</span>
+<span class="lineNum">     386 </span><span class="lineCov">          6 :         return handshake;</span>
+<a name="387"><span class="lineNum">     387 </span>            : }</a>
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span><span class="lineCov">         24 : void TestHandshake::transition(boost::system::error_code _ec)</span>
+<span class="lineNum">     390 </span>            : {
+<span class="lineNum">     391 </span><span class="lineCov">         24 :         if (!_ec &amp;&amp; m_nextState == ReadHello)</span>
+<span class="lineNum">     392 </span>            :         {
+<span class="lineNum">     393 </span><span class="lineCov">          6 :                 cancel();</span>
+<span class="lineNum">     394 </span><span class="lineCov">          6 :                 return;</span>
+<span class="lineNum">     395 </span>            :         }
+<span class="lineNum">     396 </span><span class="lineCov">         18 :         RLPXHandshake::transition(_ec);</span>
+<a name="397"><span class="lineNum">     397 </span>            : }</a>
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span><span class="lineCov">          4 : BOOST_AUTO_TEST_SUITE_END()</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

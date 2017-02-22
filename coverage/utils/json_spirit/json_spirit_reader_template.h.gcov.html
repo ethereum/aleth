@@ -1,0 +1,688 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - utils/json_spirit/json_spirit_reader_template.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">utils/json_spirit</a> - json_spirit_reader_template.h<span style="font-size: 80%;"> (source / <a href="json_spirit_reader_template.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">158</td>
+            <td class="headerCovTableEntry">183</td>
+            <td class="headerCovTableEntryMed">86.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntry">60</td>
+            <td class="headerCovTableEntryLo">40.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef JSON_SPIRIT_READER_TEMPLATE</a>
+<span class="lineNum">       2 </span>            : #define JSON_SPIRIT_READER_TEMPLATE
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : //          Copyright John W. Wilkinson 2007 - 2009.
+<span class="lineNum">       5 </span>            : // Distributed under the MIT License, see accompanying file LICENSE.txt
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : // json spirit version 4.03
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : #include &quot;json_spirit_value.h&quot;
+<span class="lineNum">      10 </span>            : #include &quot;json_spirit_error_position.h&quot;
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : //#define BOOST_SPIRIT_THREADSAFE  // uncomment for multithreaded use, requires linking to boost.thread
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &lt;boost/bind.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/function.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/version.hpp&gt;
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #if BOOST_VERSION &gt;= 103800
+<span class="lineNum">      19 </span>            :     #include &lt;boost/spirit/include/classic_core.hpp&gt;
+<span class="lineNum">      20 </span>            :     #include &lt;boost/spirit/include/classic_confix.hpp&gt;
+<span class="lineNum">      21 </span>            :     #include &lt;boost/spirit/include/classic_escape_char.hpp&gt;
+<span class="lineNum">      22 </span>            :     #include &lt;boost/spirit/include/classic_multi_pass.hpp&gt;
+<span class="lineNum">      23 </span>            :     #include &lt;boost/spirit/include/classic_position_iterator.hpp&gt;
+<span class="lineNum">      24 </span>            :     #define spirit_namespace boost::spirit::classic
+<span class="lineNum">      25 </span>            : #else
+<span class="lineNum">      26 </span>            :     #include &lt;boost/spirit/core.hpp&gt;
+<span class="lineNum">      27 </span>            :     #include &lt;boost/spirit/utility/confix.hpp&gt;
+<span class="lineNum">      28 </span>            :     #include &lt;boost/spirit/utility/escape_char.hpp&gt;
+<span class="lineNum">      29 </span>            :     #include &lt;boost/spirit/iterator/multi_pass.hpp&gt;
+<span class="lineNum">      30 </span>            :     #include &lt;boost/spirit/iterator/position_iterator.hpp&gt;
+<span class="lineNum">      31 </span>            :     #define spirit_namespace boost::spirit
+<span class="lineNum">      32 </span>            : #endif
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace json_spirit
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            :     const spirit_namespace::int_parser &lt; boost::int64_t &gt;  int64_p  = spirit_namespace::int_parser &lt; boost::int64_t  &gt;();
+<span class="lineNum">      37 </span>            :     const spirit_namespace::uint_parser&lt; boost::uint64_t &gt; uint64_p = spirit_namespace::uint_parser&lt; boost::uint64_t &gt;();
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            :     template&lt; class Iter_type &gt;
+<span class="lineNum">      40 </span>            :     bool is_eq( Iter_type first, Iter_type last, const char* c_str )
+<span class="lineNum">      41 </span>            :     {
+<span class="lineNum">      42 </span><span class="lineCov">     124954 :         for( Iter_type i = first; i != last; ++i, ++c_str )</span>
+<span class="lineNum">      43 </span>            :         {
+<span class="lineNum">      44 </span><span class="lineCov">      52057 :             if( *c_str == 0 ) return false;</span>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span><span class="lineCov">      52057 :             if( *i != *c_str ) return false;</span>
+<span class="lineNum">      47 </span>            :         }
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :         return true;
+<span class="lineNum">      50 </span>            :     }
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            :     template&lt; class Char_type &gt;
+<span class="lineNum">      53 </span>            :     Char_type hex_to_num( const Char_type c )
+<span class="lineNum">      54 </span>            :     {
+<span class="lineNum">      55 </span><span class="lineCov">          6 :         if( ( c &gt;= '0' ) &amp;&amp; ( c &lt;= '9' ) ) return c - '0';</span>
+<span class="lineNum">      56 </span><span class="lineCov">          1 :         if( ( c &gt;= 'a' ) &amp;&amp; ( c &lt;= 'f' ) ) return c - 'a' + 10;</span>
+<span class="lineNum">      57 </span><span class="lineCov">          1 :         if( ( c &gt;= 'A' ) &amp;&amp; ( c &lt;= 'F' ) ) return c - 'A' + 10;</span>
+<span class="lineNum">      58 </span>            :         return 0;
+<span class="lineNum">      59 </span>            :     }
+<a name="60"><span class="lineNum">      60 </span>            : </a>
+<span class="lineNum">      61 </span>            :     template&lt; class Char_type, class Iter_type &gt;
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 :     Char_type hex_str_to_char( Iter_type&amp; begin )</span>
+<span class="lineNum">      63 </span>            :     {
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :         const Char_type c1( *( ++begin ) );</span>
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :         const Char_type c2( *( ++begin ) );</span>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :         return ( hex_to_num( c1 ) &lt;&lt; 4 ) + hex_to_num( c2 );</span>
+<span class="lineNum">      68 </span>            :     }       
+<a name="69"><span class="lineNum">      69 </span>            : </a>
+<span class="lineNum">      70 </span>            :     template&lt; class Char_type, class Iter_type &gt;
+<span class="lineNum">      71 </span><span class="lineCov">          3 :     Char_type unicode_str_to_char( Iter_type&amp; begin )</span>
+<span class="lineNum">      72 </span>            :     {
+<span class="lineNum">      73 </span><span class="lineCov">          3 :         const Char_type c1( *( ++begin ) );</span>
+<span class="lineNum">      74 </span><span class="lineCov">          3 :         const Char_type c2( *( ++begin ) );</span>
+<span class="lineNum">      75 </span><span class="lineCov">          3 :         const Char_type c3( *( ++begin ) );</span>
+<span class="lineNum">      76 </span><span class="lineCov">          3 :         const Char_type c4( *( ++begin ) );</span>
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span><span class="lineCov">          3 :         return ( hex_to_num( c1 ) &lt;&lt; 12 ) + </span>
+<span class="lineNum">      79 </span><span class="lineCov">          3 :                ( hex_to_num( c2 ) &lt;&lt;  8 ) + </span>
+<span class="lineNum">      80 </span><span class="lineCov">          3 :                ( hex_to_num( c3 ) &lt;&lt;  4 ) + </span>
+<span class="lineNum">      81 </span><span class="lineCov">          6 :                hex_to_num( c4 );</span>
+<span class="lineNum">      82 </span>            :     }
+<a name="83"><span class="lineNum">      83 </span>            : </a>
+<span class="lineNum">      84 </span>            :     template&lt; class String_type &gt;
+<span class="lineNum">      85 </span><span class="lineCov">          3 :     void append_esc_char_and_incr_iter( String_type&amp; s, </span>
+<span class="lineNum">      86 </span>            :                                         typename String_type::const_iterator&amp; begin, 
+<span class="lineNum">      87 </span>            :                                         typename String_type::const_iterator end )
+<span class="lineNum">      88 </span>            :     {
+<span class="lineNum">      89 </span>            :         typedef typename String_type::value_type Char_type;
+<span class="lineNum">      90 </span>            :              
+<span class="lineNum">      91 </span><span class="lineCov">          3 :         const Char_type c2( *begin );</span>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">          3 :         switch( c2 )</span>
+<span class="lineNum">      94 </span>            :         {
+<span class="lineNum">      95 </span>            :             case 't':  s += '\t'; break;
+<span class="lineNum">      96 </span>            :             case 'b':  s += '\b'; break;
+<span class="lineNum">      97 </span>            :             case 'f':  s += '\f'; break;
+<span class="lineNum">      98 </span>            :             case 'n':  s += '\n'; break;
+<span class="lineNum">      99 </span>            :             case 'r':  s += '\r'; break;
+<span class="lineNum">     100 </span>            :             case '\\': s += '\\'; break;
+<span class="lineNum">     101 </span>            :             case '/':  s += '/';  break;
+<span class="lineNum">     102 </span>            :             case '&quot;':  s += '&quot;';  break;
+<span class="lineNum">     103 </span>            :             case 'x':  
+<span class="lineNum">     104 </span>            :             {
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :                 if( end - begin &gt;= 3 )  //  expecting &quot;xHH...&quot;</span>
+<span class="lineNum">     106 </span>            :                 {
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :                     s += hex_str_to_char&lt; Char_type &gt;( begin );  </span>
+<span class="lineNum">     108 </span>            :                 }
+<span class="lineNum">     109 </span>            :                 break;
+<span class="lineNum">     110 </span>            :             }
+<span class="lineNum">     111 </span>            :             case 'u':  
+<span class="lineNum">     112 </span>            :             {
+<span class="lineNum">     113 </span><span class="lineCov">          3 :                 if( end - begin &gt;= 5 )  //  expecting &quot;uHHHH...&quot;</span>
+<span class="lineNum">     114 </span>            :                 {
+<span class="lineNum">     115 </span><span class="lineCov">          3 :                     s += unicode_str_to_char&lt; Char_type &gt;( begin );  </span>
+<span class="lineNum">     116 </span>            :                 }
+<span class="lineNum">     117 </span>            :                 break;
+<span class="lineNum">     118 </span>            :             }
+<span class="lineNum">     119 </span>            :         }
+<span class="lineNum">     120 </span><span class="lineCov">          3 :     }</span>
+<a name="121"><span class="lineNum">     121 </span>            : </a>
+<span class="lineNum">     122 </span>            :     template&lt; class String_type &gt;
+<span class="lineNum">     123 </span><span class="lineCov">    2450201 :     String_type substitute_esc_chars( typename String_type::const_iterator begin, </span>
+<span class="lineNum">     124 </span>            :                                    typename String_type::const_iterator end )
+<span class="lineNum">     125 </span>            :     {
+<span class="lineNum">     126 </span>            :         typedef typename String_type::const_iterator Iter_type;
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span><span class="lineCov">    2525685 :         if( end - begin &lt; 2 ) return String_type( begin, end );</span>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineCov">    2374717 :         String_type result;</span>
+<span class="lineNum">     131 </span>            :         
+<span class="lineNum">     132 </span><span class="lineCov">    2374717 :         result.reserve( end - begin );</span>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineCov">    2374717 :         const Iter_type end_minus_1( end - 1 );</span>
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineCov">    2374717 :         Iter_type substr_start = begin;</span>
+<span class="lineNum">     137 </span><span class="lineCov">    2374717 :         Iter_type i = begin;</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineCov">  199966692 :         for( ; i &lt; end_minus_1; ++i )</span>
+<span class="lineNum">     140 </span>            :         {
+<span class="lineNum">     141 </span><span class="lineCov">  197591975 :             if( *i == '\\' )</span>
+<span class="lineNum">     142 </span>            :             {
+<span class="lineNum">     143 </span><span class="lineCov">          3 :                 result.append( substr_start, i );</span>
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span><span class="lineCov">          3 :                 ++i;  // skip the '\'</span>
+<span class="lineNum">     146 </span>            :              
+<span class="lineNum">     147 </span><span class="lineCov">          3 :                 append_esc_char_and_incr_iter( result, i, end );</span>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">          3 :                 substr_start = i + 1;</span>
+<span class="lineNum">     150 </span>            :             }
+<span class="lineNum">     151 </span>            :         }
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineCov">    2374717 :         result.append( substr_start, end );</span>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">    2374717 :         return result;</span>
+<span class="lineNum">     156 </span>            :     }
+<a name="157"><span class="lineNum">     157 </span>            : </a>
+<span class="lineNum">     158 </span>            :     template&lt; class String_type &gt;
+<span class="lineNum">     159 </span><span class="lineCov">    2450201 :     String_type get_str_( typename String_type::const_iterator begin, </span>
+<span class="lineNum">     160 </span>            :                        typename String_type::const_iterator end )
+<span class="lineNum">     161 </span>            :     {
+<span class="lineNum">     162 </span><span class="lineCov">    2450201 :         assert( end - begin &gt;= 2 );</span>
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :         typedef typename String_type::const_iterator Iter_type;
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span><span class="lineCov">    2450201 :         Iter_type str_without_quotes( ++begin );</span>
+<span class="lineNum">     167 </span><span class="lineCov">    2450201 :         Iter_type end_without_quotes( --end );</span>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineCov">    2450201 :         return substitute_esc_chars&lt; String_type &gt;( str_without_quotes, end_without_quotes );</span>
+<span class="lineNum">     170 </span>            :     }
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :     inline std::string get_str( std::string::const_iterator begin, std::string::const_iterator end )
+<span class="lineNum">     173 </span>            :     {
+<span class="lineNum">     174 </span><span class="lineCov">    2450201 :         return get_str_&lt; std::string &gt;( begin, end );</span>
+<span class="lineNum">     175 </span>            :     }
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :     inline std::wstring get_str( std::wstring::const_iterator begin, std::wstring::const_iterator end )
+<span class="lineNum">     178 </span>            :     {
+<span class="lineNum">     179 </span>            :         return get_str_&lt; std::wstring &gt;( begin, end );
+<span class="lineNum">     180 </span>            :     }
+<a name="181"><span class="lineNum">     181 </span>            :     </a>
+<span class="lineNum">     182 </span>            :     template&lt; class String_type, class Iter_type &gt;
+<span class="lineNum">     183 </span><span class="lineCov">    2450201 :     String_type get_str( Iter_type begin, Iter_type end )</span>
+<span class="lineNum">     184 </span>            :     {
+<span class="lineNum">     185 </span><span class="lineCov">   12251005 :         const String_type tmp( begin, end );  // convert multipass iterators to string iterators</span>
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineCov">    7350603 :         return get_str( tmp.begin(), tmp.end() );</span>
+<span class="lineNum">     188 </span>            :     }
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            :     // this class's methods get called by the spirit parse resulting
+<span class="lineNum">     191 </span>            :     // in the creation of a JSON object or array
+<span class="lineNum">     192 </span>            :     //
+<span class="lineNum">     193 </span>            :     // NB Iter_type could be a std::string iterator, wstring iterator, a position iterator or a multipass iterator
+<a name="194"><span class="lineNum">     194 </span>            :     //</a>
+<span class="lineNum">     195 </span>            :     template&lt; class Value_type, class Iter_type &gt;
+<span class="lineNum">     196 </span><span class="lineCov">     146262 :     class Semantic_actions </span>
+<span class="lineNum">     197 </span>            :     {
+<span class="lineNum">     198 </span>            :     public:
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            :         typedef typename Value_type::Config_type Config_type;
+<span class="lineNum">     201 </span>            :         typedef typename Config_type::String_type String_type;
+<span class="lineNum">     202 </span>            :         typedef typename Config_type::Object_type Object_type;
+<span class="lineNum">     203 </span>            :         typedef typename Config_type::Array_type Array_type;
+<span class="lineNum">     204 </span>            :         typedef typename String_type::value_type Char_type;
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            :         Semantic_actions( Value_type&amp; value )
+<span class="lineNum">     207 </span>            :         :   value_( value )
+<span class="lineNum">     208 </span><span class="lineCov">     146262 :         ,   current_p_( 0 )</span>
+<span class="lineNum">     209 </span>            :         {
+<a name="210"><span class="lineNum">     210 </span>            :         }</a>
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span><span class="lineCov">     548753 :         void begin_obj( Char_type c )</span>
+<span class="lineNum">     213 </span>            :         {
+<span class="lineNum">     214 </span><span class="lineCov">     548753 :             assert( c == '{' );</span>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineCov">     548753 :             begin_compound&lt; Object_type &gt;();</span>
+<a name="217"><span class="lineNum">     217 </span><span class="lineCov">     548753 :         }</span></a>
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span><span class="lineCov">     548753 :         void end_obj( Char_type c )</span>
+<span class="lineNum">     220 </span>            :         {
+<span class="lineNum">     221 </span><span class="lineCov">     548753 :             assert( c == '}' );</span>
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span><span class="lineCov">     548753 :             end_compound();</span>
+<a name="224"><span class="lineNum">     224 </span><span class="lineCov">     548753 :         }</span></a>
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span><span class="lineCov">      19802 :         void begin_array( Char_type c )</span>
+<span class="lineNum">     227 </span>            :         {
+<span class="lineNum">     228 </span><span class="lineCov">      19802 :             assert( c == '[' );</span>
+<span class="lineNum">     229 </span>            :      
+<span class="lineNum">     230 </span><span class="lineCov">      19802 :             begin_compound&lt; Array_type &gt;();</span>
+<a name="231"><span class="lineNum">     231 </span><span class="lineCov">      19802 :         }</span></a>
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span><span class="lineCov">      19802 :         void end_array( Char_type c )</span>
+<span class="lineNum">     234 </span>            :         {
+<span class="lineNum">     235 </span><span class="lineCov">      19802 :             assert( c == ']' );</span>
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span><span class="lineCov">      19802 :             end_compound();</span>
+<a name="238"><span class="lineNum">     238 </span><span class="lineCov">      19802 :         }</span></a>
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span><span class="lineCov">    1575975 :         void new_name( Iter_type begin, Iter_type end )</span>
+<span class="lineNum">     241 </span>            :         {
+<span class="lineNum">     242 </span><span class="lineCov">    1575975 :             assert( current_p_-&gt;type() == obj_type );</span>
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span><span class="lineCov">    4727925 :             name_ = get_str&lt; String_type &gt;( begin, end );</span>
+<a name="245"><span class="lineNum">     245 </span><span class="lineCov">    1575975 :         }</span></a>
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span><span class="lineCov">     874226 :         void new_str( Iter_type begin, Iter_type end )</span>
+<span class="lineNum">     248 </span>            :         {
+<span class="lineNum">     249 </span><span class="lineCov">    3496904 :             add_to_current( get_str&lt; String_type &gt;( begin, end ) );</span>
+<a name="250"><span class="lineNum">     250 </span><span class="lineCov">     874226 :         }</span></a>
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span><span class="lineCov">         15 :         void new_true( Iter_type begin, Iter_type end )</span>
+<span class="lineNum">     253 </span>            :         {
+<span class="lineNum">     254 </span><span class="lineCov">         15 :             assert( is_eq( begin, end, &quot;true&quot; ) );</span>
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span><span class="lineCov">         30 :             add_to_current( true );</span>
+<a name="257"><span class="lineNum">     257 </span><span class="lineCov">         15 :         }</span></a>
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span><span class="lineCov">      10377 :         void new_false( Iter_type begin, Iter_type end )</span>
+<span class="lineNum">     260 </span>            :         {
+<span class="lineNum">     261 </span><span class="lineCov">      10377 :             assert( is_eq( begin, end, &quot;false&quot; ) );</span>
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span><span class="lineCov">      20754 :             add_to_current( false );</span>
+<a name="264"><span class="lineNum">     264 </span><span class="lineCov">      10377 :         }</span></a>
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span><span class="lineCov">         28 :         void new_null( Iter_type begin, Iter_type end )</span>
+<span class="lineNum">     267 </span>            :         {
+<span class="lineNum">     268 </span><span class="lineCov">         28 :             assert( is_eq( begin, end, &quot;null&quot; ) );</span>
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span><span class="lineCov">         56 :             add_to_current( Value_type() );</span>
+<a name="271"><span class="lineNum">     271 </span><span class="lineCov">         28 :         }</span></a>
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span><span class="lineCov">     193369 :         void new_int( boost::int64_t i )</span>
+<span class="lineNum">     274 </span>            :         {
+<span class="lineNum">     275 </span><span class="lineCov">     386738 :             add_to_current( i );</span>
+<a name="276"><span class="lineNum">     276 </span><span class="lineCov">     193369 :         }</span></a>
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :         void new_uint64( boost::uint64_t ui )</span>
+<span class="lineNum">     279 </span>            :         {
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 :             add_to_current( ui );</span>
+<a name="281"><span class="lineNum">     281 </span><span class="lineNoCov">          0 :         }</span></a>
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :         void new_real( double d )</span>
+<span class="lineNum">     284 </span>            :         {
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :             add_to_current( d );</span>
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :         }</span>
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span>            :     private:
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            :         Semantic_actions&amp; operator=( const Semantic_actions&amp; ); 
+<a name="291"><span class="lineNum">     291 </span>            :                                     // to prevent &quot;assignment operator could not be generated&quot; warning</a>
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span><span class="lineCov">      48754 :         Value_type* add_first( const Value_type&amp; value )</span>
+<span class="lineNum">     294 </span>            :         {
+<span class="lineNum">     295 </span><span class="lineCov">      48754 :             assert( current_p_ == 0 );</span>
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span><span class="lineCov">      48754 :             value_ = value;</span>
+<span class="lineNum">     298 </span><span class="lineCov">      48754 :             current_p_ = &amp;value_;</span>
+<span class="lineNum">     299 </span><span class="lineCov">      48754 :             return current_p_;</span>
+<span class="lineNum">     300 </span>            :         }
+<a name="301"><span class="lineNum">     301 </span>            : </a>
+<span class="lineNum">     302 </span>            :         template&lt; class Array_or_obj &gt;
+<span class="lineNum">     303 </span><span class="lineCov">     568555 :         void begin_compound()</span>
+<span class="lineNum">     304 </span>            :         {
+<span class="lineNum">     305 </span><span class="lineCov">     568555 :             if( current_p_ == 0 )</span>
+<span class="lineNum">     306 </span>            :             {
+<span class="lineNum">     307 </span><span class="lineCov">     195016 :                 add_first( Array_or_obj() );</span>
+<span class="lineNum">     308 </span>            :             }
+<span class="lineNum">     309 </span>            :             else
+<span class="lineNum">     310 </span>            :             {
+<span class="lineNum">     311 </span><span class="lineCov">     519801 :                 stack_.push_back( current_p_ );</span>
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span><span class="lineCov">    1039602 :                 Array_or_obj new_array_or_obj;   // avoid copy by building new array or object in place</span>
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span><span class="lineCov">    1039602 :                 current_p_ = add_to_current( new_array_or_obj );</span>
+<span class="lineNum">     316 </span>            :             }
+<span class="lineNum">     317 </span><span class="lineCov">     568555 :         }</span>
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            :         void end_compound()
+<span class="lineNum">     320 </span>            :         {
+<span class="lineNum">     321 </span><span class="lineCov">     568555 :             if( current_p_ != &amp;value_ )</span>
+<span class="lineNum">     322 </span>            :             {
+<span class="lineNum">     323 </span><span class="lineCov">    1039602 :                 current_p_ = stack_.back();</span>
+<span class="lineNum">     324 </span>            :                 
+<span class="lineNum">     325 </span><span class="lineCov">     519801 :                 stack_.pop_back();</span>
+<span class="lineNum">     326 </span>            :             }    
+<a name="327"><span class="lineNum">     327 </span>            :         }</a>
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span><span class="lineCov">    1597816 :         Value_type* add_to_current( const Value_type&amp; value )</span>
+<span class="lineNum">     330 </span>            :         {
+<span class="lineNum">     331 </span><span class="lineCov">    1597816 :             if( current_p_ == 0 )</span>
+<span class="lineNum">     332 </span>            :             {
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :                 return add_first( value );</span>
+<span class="lineNum">     334 </span>            :             }
+<span class="lineNum">     335 </span><span class="lineCov">    1597816 :             else if( current_p_-&gt;type() == array_type )</span>
+<span class="lineNum">     336 </span>            :             {
+<span class="lineNum">     337 </span><span class="lineCov">      21841 :                 current_p_-&gt;get_array().push_back( value );</span>
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span><span class="lineCov">      43682 :                 return &amp;current_p_-&gt;get_array().back(); </span>
+<span class="lineNum">     340 </span>            :             }
+<span class="lineNum">     341 </span>            :             
+<span class="lineNum">     342 </span><span class="lineCov">    1575975 :             assert( current_p_-&gt;type() == obj_type );</span>
+<span class="lineNum">     343 </span>            : 
+<span class="lineNum">     344 </span><span class="lineCov">    3151950 :             return &amp;Config_type::add( current_p_-&gt;get_obj(), name_, value );</span>
+<span class="lineNum">     345 </span>            :         }
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span>            :         Value_type&amp; value_;             // this is the object or array that is being created
+<span class="lineNum">     348 </span>            :         Value_type* current_p_;         // the child object or array that is currently being constructed
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span>            :         std::vector&lt; Value_type* &gt; stack_;   // previous child objects and arrays
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span>            :         String_type name_;              // of current name/value pair
+<span class="lineNum">     353 </span>            :     };
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span>            :     template&lt; typename Iter_type &gt;
+<span class="lineNum">     356 </span>            :     void throw_error( spirit_namespace::position_iterator&lt; Iter_type &gt; i, const std::string&amp; reason )
+<span class="lineNum">     357 </span>            :     {
+<span class="lineNum">     358 </span>            :         throw Error_position( i.get_position().line, i.get_position().column, reason );
+<span class="lineNum">     359 </span>            :     }
+<a name="360"><span class="lineNum">     360 </span>            : </a>
+<span class="lineNum">     361 </span>            :     template&lt; typename Iter_type &gt;
+<span class="lineNum">     362 </span><span class="lineNoCov">          0 :     void throw_error( Iter_type i, const std::string&amp; reason )</span>
+<span class="lineNum">     363 </span>            :     {
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :        throw reason;</span>
+<span class="lineNum">     365 </span>            :     }
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span>            :     // the spirit grammer 
+<span class="lineNum">     368 </span>            :     //
+<span class="lineNum">     369 </span>            :     template&lt; class Value_type, class Iter_type &gt;
+<span class="lineNum">     370 </span><span class="lineCov">      48754 :     class Json_grammer : public spirit_namespace::grammar&lt; Json_grammer&lt; Value_type, Iter_type &gt; &gt;</span>
+<span class="lineNum">     371 </span>            :     {
+<span class="lineNum">     372 </span>            :     public:
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span>            :         typedef Semantic_actions&lt; Value_type, Iter_type &gt; Semantic_actions_t;
+<span class="lineNum">     375 </span>            : 
+<span class="lineNum">     376 </span>            :         Json_grammer( Semantic_actions_t&amp; semantic_actions )
+<span class="lineNum">     377 </span><span class="lineCov">      97508 :         :   actions_( semantic_actions )</span>
+<span class="lineNum">     378 </span>            :         {
+<a name="379"><span class="lineNum">     379 </span>            :         }</a>
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 :         static void throw_not_value( Iter_type begin, Iter_type end )</span>
+<span class="lineNum">     382 </span>            :         {
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 :             throw_error( begin, &quot;not a value&quot; );</span>
+<a name="384"><span class="lineNum">     384 </span>            :         }</a>
+<span class="lineNum">     385 </span>            : 
+<span class="lineNum">     386 </span><span class="lineNoCov">          0 :         static void throw_not_array( Iter_type begin, Iter_type end )</span>
+<span class="lineNum">     387 </span>            :         {
+<span class="lineNum">     388 </span><span class="lineNoCov">          0 :             throw_error( begin, &quot;not an array&quot; );</span>
+<a name="389"><span class="lineNum">     389 </span>            :         }</a>
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span><span class="lineNoCov">          0 :         static void throw_not_object( Iter_type begin, Iter_type end )</span>
+<span class="lineNum">     392 </span>            :         {
+<span class="lineNum">     393 </span><span class="lineNoCov">          0 :             throw_error( begin, &quot;not an object&quot; );</span>
+<span class="lineNum">     394 </span>            :         }
+<span class="lineNum">     395 </span>            : 
+<span class="lineNum">     396 </span>            :         static void throw_not_pair( Iter_type begin, Iter_type end )
+<span class="lineNum">     397 </span>            :         {
+<span class="lineNum">     398 </span>            :             throw_error( begin, &quot;not a pair&quot; );
+<a name="399"><span class="lineNum">     399 </span>            :         }</a>
+<span class="lineNum">     400 </span>            : 
+<span class="lineNum">     401 </span><span class="lineNoCov">          0 :         static void throw_not_colon( Iter_type begin, Iter_type end )</span>
+<span class="lineNum">     402 </span>            :         {
+<span class="lineNum">     403 </span><span class="lineNoCov">          0 :             throw_error( begin, &quot;no colon in pair&quot; );</span>
+<span class="lineNum">     404 </span>            :         }
+<span class="lineNum">     405 </span>            : 
+<span class="lineNum">     406 </span>            :         static void throw_not_string( Iter_type begin, Iter_type end )
+<span class="lineNum">     407 </span>            :         {
+<span class="lineNum">     408 </span>            :             throw_error( begin, &quot;not a string&quot; );
+<span class="lineNum">     409 </span>            :         }
+<a name="410"><span class="lineNum">     410 </span>            : </a>
+<span class="lineNum">     411 </span>            :         template&lt; typename ScannerT &gt;
+<span class="lineNum">     412 </span><span class="lineCov">     487540 :         class definition</span>
+<span class="lineNum">     413 </span>            :         {
+<a name="414"><span class="lineNum">     414 </span>            :         public:</a>
+<span class="lineNum">     415 </span>            : 
+<span class="lineNum">     416 </span><span class="lineCov">      48754 :             definition( const Json_grammer&amp; self )</span>
+<span class="lineNum">     417 </span><span class="lineCov">     487540 :             {</span>
+<span class="lineNum">     418 </span>            :                 using namespace spirit_namespace;
+<span class="lineNum">     419 </span>            : 
+<span class="lineNum">     420 </span>            :                 typedef typename Value_type::String_type::value_type Char_type;
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span>            :                 // first we convert the semantic action class methods to functors with the 
+<span class="lineNum">     423 </span>            :                 // parameter signature expected by spirit
+<span class="lineNum">     424 </span>            : 
+<span class="lineNum">     425 </span>            :                 typedef boost::function&lt; void( Char_type )            &gt; Char_action;
+<span class="lineNum">     426 </span>            :                 typedef boost::function&lt; void( Iter_type, Iter_type ) &gt; Str_action;
+<span class="lineNum">     427 </span>            :                 typedef boost::function&lt; void( double )               &gt; Real_action;
+<span class="lineNum">     428 </span>            :                 typedef boost::function&lt; void( boost::int64_t )       &gt; Int_action;
+<span class="lineNum">     429 </span>            :                 typedef boost::function&lt; void( boost::uint64_t )      &gt; Uint64_action;
+<span class="lineNum">     430 </span>            : 
+<span class="lineNum">     431 </span><span class="lineCov">     195016 :                 Char_action   begin_obj  ( boost::bind( &amp;Semantic_actions_t::begin_obj,   &amp;self.actions_, _1 ) );</span>
+<span class="lineNum">     432 </span><span class="lineCov">     195016 :                 Char_action   end_obj    ( boost::bind( &amp;Semantic_actions_t::end_obj,     &amp;self.actions_, _1 ) );</span>
+<span class="lineNum">     433 </span><span class="lineCov">     195016 :                 Char_action   begin_array( boost::bind( &amp;Semantic_actions_t::begin_array, &amp;self.actions_, _1 ) );</span>
+<span class="lineNum">     434 </span><span class="lineCov">     195016 :                 Char_action   end_array  ( boost::bind( &amp;Semantic_actions_t::end_array,   &amp;self.actions_, _1 ) );</span>
+<span class="lineNum">     435 </span><span class="lineCov">     195016 :                 Str_action    new_name   ( boost::bind( &amp;Semantic_actions_t::new_name,    &amp;self.actions_, _1, _2 ) );</span>
+<span class="lineNum">     436 </span><span class="lineCov">     195016 :                 Str_action    new_str    ( boost::bind( &amp;Semantic_actions_t::new_str,     &amp;self.actions_, _1, _2 ) );</span>
+<span class="lineNum">     437 </span><span class="lineCov">     195016 :                 Str_action    new_true   ( boost::bind( &amp;Semantic_actions_t::new_true,    &amp;self.actions_, _1, _2 ) );</span>
+<span class="lineNum">     438 </span><span class="lineCov">     195016 :                 Str_action    new_false  ( boost::bind( &amp;Semantic_actions_t::new_false,   &amp;self.actions_, _1, _2 ) );</span>
+<span class="lineNum">     439 </span><span class="lineCov">     195016 :                 Str_action    new_null   ( boost::bind( &amp;Semantic_actions_t::new_null,    &amp;self.actions_, _1, _2 ) );</span>
+<span class="lineNum">     440 </span><span class="lineCov">     195016 :                 Real_action   new_real   ( boost::bind( &amp;Semantic_actions_t::new_real,    &amp;self.actions_, _1 ) );</span>
+<span class="lineNum">     441 </span><span class="lineCov">     195016 :                 Int_action    new_int    ( boost::bind( &amp;Semantic_actions_t::new_int,     &amp;self.actions_, _1 ) );</span>
+<span class="lineNum">     442 </span><span class="lineCov">     195016 :                 Uint64_action new_uint64 ( boost::bind( &amp;Semantic_actions_t::new_uint64,  &amp;self.actions_, _1 ) );</span>
+<span class="lineNum">     443 </span>            : 
+<span class="lineNum">     444 </span>            :                 // actual grammer
+<span class="lineNum">     445 </span>            : 
+<span class="lineNum">     446 </span><span class="lineCov">      48754 :                 json_</span>
+<span class="lineNum">     447 </span><span class="lineCov">     195016 :                     = value_ | eps_p[ &amp;throw_not_value ]</span>
+<span class="lineNum">     448 </span>            :                     ;
+<span class="lineNum">     449 </span>            : 
+<span class="lineNum">     450 </span><span class="lineCov">      48754 :                 value_</span>
+<span class="lineNum">     451 </span><span class="lineCov">    1023834 :                     = string_[ new_str ] </span>
+<span class="lineNum">     452 </span>            :                     | number_ 
+<span class="lineNum">     453 </span>            :                     | object_ 
+<span class="lineNum">     454 </span>            :                     | array_ 
+<span class="lineNum">     455 </span>            :                     | str_p( &quot;true&quot; ) [ new_true  ] 
+<span class="lineNum">     456 </span>            :                     | str_p( &quot;false&quot; )[ new_false ] 
+<span class="lineNum">     457 </span>            :                     | str_p( &quot;null&quot; ) [ new_null  ]
+<span class="lineNum">     458 </span>            :                     ;
+<span class="lineNum">     459 </span>            : 
+<span class="lineNum">     460 </span><span class="lineCov">      48754 :                 object_ </span>
+<span class="lineNum">     461 </span><span class="lineCov">     731310 :                     = ch_p('{')[ begin_obj ]</span>
+<span class="lineNum">     462 </span><span class="lineCov">      48754 :                     &gt;&gt; !members_</span>
+<span class="lineNum">     463 </span>            :                     &gt;&gt; ( ch_p('}')[ end_obj ] | eps_p[ &amp;throw_not_object ] )
+<span class="lineNum">     464 </span>            :                     ;
+<span class="lineNum">     465 </span>            : 
+<span class="lineNum">     466 </span><span class="lineCov">      48754 :                 members_</span>
+<span class="lineNum">     467 </span><span class="lineCov">     243770 :                     = pair_ &gt;&gt; *( ',' &gt;&gt; pair_ )</span>
+<span class="lineNum">     468 </span>            :                     ;
+<span class="lineNum">     469 </span>            : 
+<span class="lineNum">     470 </span><span class="lineCov">      48754 :                 pair_</span>
+<span class="lineNum">     471 </span><span class="lineCov">     390032 :                     = string_[ new_name ]</span>
+<span class="lineNum">     472 </span><span class="lineCov">      97508 :                     &gt;&gt; ( ':' | eps_p[ &amp;throw_not_colon ] )</span>
+<span class="lineNum">     473 </span><span class="lineCov">      97508 :                     &gt;&gt; ( value_ | eps_p[ &amp;throw_not_value ] )</span>
+<span class="lineNum">     474 </span>            :                     ;
+<span class="lineNum">     475 </span>            : 
+<span class="lineNum">     476 </span><span class="lineCov">      48754 :                 array_</span>
+<span class="lineNum">     477 </span><span class="lineCov">     731310 :                     = ch_p('[')[ begin_array ]</span>
+<span class="lineNum">     478 </span><span class="lineCov">      48754 :                     &gt;&gt; !elements_</span>
+<span class="lineNum">     479 </span>            :                     &gt;&gt; ( ch_p(']')[ end_array ] | eps_p[ &amp;throw_not_array ] )
+<span class="lineNum">     480 </span>            :                     ;
+<span class="lineNum">     481 </span>            : 
+<span class="lineNum">     482 </span><span class="lineCov">      48754 :                 elements_</span>
+<span class="lineNum">     483 </span><span class="lineCov">     243770 :                     = value_ &gt;&gt; *( ',' &gt;&gt; value_ )</span>
+<span class="lineNum">     484 </span>            :                     ;
+<span class="lineNum">     485 </span>            : 
+<span class="lineNum">     486 </span><span class="lineCov">      48754 :                 string_ </span>
+<span class="lineNum">     487 </span><span class="lineCov">     195016 :                     = lexeme_d // this causes white space inside a string to be retained</span>
+<span class="lineNum">     488 </span>            :                       [
+<span class="lineNum">     489 </span>            :                           confix_p
+<span class="lineNum">     490 </span><span class="lineCov">      48754 :                           ( </span>
+<span class="lineNum">     491 </span>            :                               '&quot;', 
+<span class="lineNum">     492 </span>            :                               *lex_escape_ch_p,
+<span class="lineNum">     493 </span>            :                               '&quot;'
+<span class="lineNum">     494 </span>            :                           ) 
+<span class="lineNum">     495 </span>            :                       ]
+<span class="lineNum">     496 </span>            :                     ;
+<span class="lineNum">     497 </span>            : 
+<span class="lineNum">     498 </span><span class="lineCov">      48754 :                 number_</span>
+<span class="lineNum">     499 </span><span class="lineCov">     536294 :                     = strict_real_p[ new_real   ] </span>
+<span class="lineNum">     500 </span>            :                     | int64_p      [ new_int    ]
+<span class="lineNum">     501 </span>            :                     | uint64_p     [ new_uint64 ]
+<span class="lineNum">     502 </span>            :                     ;
+<span class="lineNum">     503 </span><span class="lineCov">      48754 :             }</span>
+<span class="lineNum">     504 </span>            : 
+<span class="lineNum">     505 </span>            :             spirit_namespace::rule&lt; ScannerT &gt; json_, object_, members_, pair_, array_, elements_, value_, string_, number_;
+<span class="lineNum">     506 </span>            : 
+<span class="lineNum">     507 </span>            :             const spirit_namespace::rule&lt; ScannerT &gt;&amp; start() const { return json_; }
+<span class="lineNum">     508 </span>            :         };
+<span class="lineNum">     509 </span>            : 
+<span class="lineNum">     510 </span>            :     private:
+<span class="lineNum">     511 </span>            : 
+<span class="lineNum">     512 </span>            :         Json_grammer&amp; operator=( const Json_grammer&amp; ); // to prevent &quot;assignment operator could not be generated&quot; warning
+<span class="lineNum">     513 </span>            : 
+<span class="lineNum">     514 </span>            :         Semantic_actions_t&amp; actions_;
+<span class="lineNum">     515 </span>            :     };
+<a name="516"><span class="lineNum">     516 </span>            : </a>
+<span class="lineNum">     517 </span>            :     template&lt; class Iter_type, class Value_type &gt;
+<span class="lineNum">     518 </span><span class="lineCov">      48754 :     Iter_type read_range_or_throw( Iter_type begin, Iter_type end, Value_type&amp; value )</span>
+<span class="lineNum">     519 </span>            :     {
+<span class="lineNum">     520 </span><span class="lineCov">      97508 :         Semantic_actions&lt; Value_type, Iter_type &gt; semantic_actions( value );</span>
+<span class="lineNum">     521 </span>            :      
+<span class="lineNum">     522 </span>            :         const spirit_namespace::parse_info&lt; Iter_type &gt; info = 
+<span class="lineNum">     523 </span><span class="lineCov">      97508 :                             spirit_namespace::parse( begin, end, </span>
+<span class="lineNum">     524 </span>            :                                                     Json_grammer&lt; Value_type, Iter_type &gt;( semantic_actions ), 
+<span class="lineNum">     525 </span><span class="lineCov">      97508 :                                                     spirit_namespace::space_p );</span>
+<span class="lineNum">     526 </span>            : 
+<span class="lineNum">     527 </span><span class="lineCov">      48754 :         if( !info.hit )</span>
+<span class="lineNum">     528 </span>            :         {
+<span class="lineNum">     529 </span><span class="lineNoCov">          0 :             assert( false ); // in theory exception should already have been thrown</span>
+<span class="lineNum">     530 </span>            :             throw_error( info.stop, &quot;error&quot; );
+<span class="lineNum">     531 </span>            :         }
+<span class="lineNum">     532 </span>            : 
+<span class="lineNum">     533 </span><span class="lineCov">      97508 :         return info.stop;</span>
+<span class="lineNum">     534 </span>            :     }
+<span class="lineNum">     535 </span>            : 
+<span class="lineNum">     536 </span>            :     template&lt; class Iter_type, class Value_type &gt;
+<span class="lineNum">     537 </span>            :     void add_posn_iter_and_read_range_or_throw( Iter_type begin, Iter_type end, Value_type&amp; value )
+<span class="lineNum">     538 </span>            :     {
+<span class="lineNum">     539 </span>            :         typedef spirit_namespace::position_iterator&lt; Iter_type &gt; Posn_iter_t;
+<span class="lineNum">     540 </span>            : 
+<span class="lineNum">     541 </span>            :         const Posn_iter_t posn_begin( begin, end );
+<span class="lineNum">     542 </span>            :         const Posn_iter_t posn_end( end, end );
+<span class="lineNum">     543 </span>            :      
+<span class="lineNum">     544 </span>            :         read_range_or_throw( posn_begin, posn_end, value );
+<span class="lineNum">     545 </span>            :     }
+<a name="546"><span class="lineNum">     546 </span>            : </a>
+<span class="lineNum">     547 </span>            :     template&lt; class Iter_type, class Value_type &gt;
+<span class="lineNum">     548 </span><span class="lineCov">      48754 :     bool read_range( Iter_type&amp; begin, Iter_type end, Value_type&amp; value )</span>
+<span class="lineNum">     549 </span>            :     {
+<span class="lineNum">     550 </span>            :         try
+<span class="lineNum">     551 </span>            :         {
+<span class="lineNum">     552 </span><span class="lineCov">      48754 :             begin = read_range_or_throw( begin, end, value );</span>
+<span class="lineNum">     553 </span>            : 
+<span class="lineNum">     554 </span>            :             return true;
+<span class="lineNum">     555 </span>            :         }
+<span class="lineNum">     556 </span><span class="lineNoCov">          0 :         catch( ... )</span>
+<span class="lineNum">     557 </span>            :         {
+<span class="lineNum">     558 </span>            :             return false;
+<span class="lineNum">     559 </span>            :         }
+<span class="lineNum">     560 </span>            :     }
+<span class="lineNum">     561 </span>            : 
+<span class="lineNum">     562 </span>            :     template&lt; class String_type, class Value_type &gt;
+<span class="lineNum">     563 </span>            :     void read_string_or_throw( const String_type&amp; s, Value_type&amp; value )
+<span class="lineNum">     564 </span>            :     {
+<span class="lineNum">     565 </span>            :         add_posn_iter_and_read_range_or_throw( s.begin(), s.end(), value );
+<span class="lineNum">     566 </span>            :     }
+<span class="lineNum">     567 </span>            : 
+<span class="lineNum">     568 </span>            :     template&lt; class String_type, class Value_type &gt;
+<span class="lineNum">     569 </span>            :     bool read_string( const String_type&amp; s, Value_type&amp; value )
+<span class="lineNum">     570 </span>            :     {
+<span class="lineNum">     571 </span><span class="lineCov">      48754 :         typename String_type::const_iterator begin = s.begin();</span>
+<span class="lineNum">     572 </span>            : 
+<span class="lineNum">     573 </span><span class="lineCov">      48754 :         return read_range( begin, s.end(), value );</span>
+<span class="lineNum">     574 </span>            :     }
+<span class="lineNum">     575 </span>            : 
+<span class="lineNum">     576 </span>            :     template&lt; class Istream_type &gt;
+<span class="lineNum">     577 </span>            :     struct Multi_pass_iters
+<span class="lineNum">     578 </span>            :     {
+<span class="lineNum">     579 </span>            :         typedef typename Istream_type::char_type Char_type;
+<span class="lineNum">     580 </span>            :         typedef std::istream_iterator&lt; Char_type, Char_type &gt; istream_iter;
+<span class="lineNum">     581 </span>            :         typedef spirit_namespace::multi_pass&lt; istream_iter &gt; Mp_iter;
+<span class="lineNum">     582 </span>            : 
+<span class="lineNum">     583 </span>            :         Multi_pass_iters( Istream_type&amp; is )
+<span class="lineNum">     584 </span>            :         {
+<span class="lineNum">     585 </span>            :             is.unsetf( std::ios::skipws );
+<span class="lineNum">     586 </span>            : 
+<span class="lineNum">     587 </span>            :             begin_ = spirit_namespace::make_multi_pass( istream_iter( is ) );
+<span class="lineNum">     588 </span>            :             end_   = spirit_namespace::make_multi_pass( istream_iter() );
+<span class="lineNum">     589 </span>            :         }
+<span class="lineNum">     590 </span>            : 
+<span class="lineNum">     591 </span>            :         Mp_iter begin_;
+<span class="lineNum">     592 </span>            :         Mp_iter end_;
+<span class="lineNum">     593 </span>            :     };
+<span class="lineNum">     594 </span>            : 
+<span class="lineNum">     595 </span>            :     template&lt; class Istream_type, class Value_type &gt;
+<span class="lineNum">     596 </span>            :     bool read_stream( Istream_type&amp; is, Value_type&amp; value )
+<span class="lineNum">     597 </span>            :     {
+<span class="lineNum">     598 </span>            :         Multi_pass_iters&lt; Istream_type &gt; mp_iters( is );
+<span class="lineNum">     599 </span>            : 
+<span class="lineNum">     600 </span>            :         return read_range( mp_iters.begin_, mp_iters.end_, value );
+<span class="lineNum">     601 </span>            :     }
+<span class="lineNum">     602 </span>            : 
+<span class="lineNum">     603 </span>            :     template&lt; class Istream_type, class Value_type &gt;
+<span class="lineNum">     604 </span>            :     void read_stream_or_throw( Istream_type&amp; is, Value_type&amp; value )
+<span class="lineNum">     605 </span>            :     {
+<span class="lineNum">     606 </span>            :         const Multi_pass_iters&lt; Istream_type &gt; mp_iters( is );
+<span class="lineNum">     607 </span>            : 
+<span class="lineNum">     608 </span>            :         add_posn_iter_and_read_range_or_throw( mp_iters.begin_, mp_iters.end_, value );
+<span class="lineNum">     609 </span>            :     }
+<span class="lineNum">     610 </span>            : }
+<span class="lineNum">     611 </span>            : 
+<span class="lineNum">     612 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

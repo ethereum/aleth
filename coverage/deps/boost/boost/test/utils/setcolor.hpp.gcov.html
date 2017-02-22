@@ -1,0 +1,202 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/utils/setcolor.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/utils</a> - setcolor.hpp<span style="font-size: 80%;"> (source / <a href="setcolor.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntryLo">35.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">33.3 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : contains definition for setcolor iostream manipulator
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_UTILS_SETCOLOR_HPP
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_UTILS_SETCOLOR_HPP
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/detail/config.hpp&gt;
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : // STL
+<span class="lineNum">      22 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      23 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace boost {
+<span class="lineNum">      30 </span>            : namespace unit_test {
+<span class="lineNum">      31 </span>            : namespace utils {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : // ************************************************************************** //
+<span class="lineNum">      34 </span>            : // **************                    term_attr                 ************** //
+<span class="lineNum">      35 </span>            : // ************************************************************************** //
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : struct term_attr { enum _ {
+<span class="lineNum">      38 </span>            :     NORMAL    = 0,
+<span class="lineNum">      39 </span>            :     BRIGHT    = 1,
+<span class="lineNum">      40 </span>            :     DIM       = 2,
+<span class="lineNum">      41 </span>            :     UNDERLINE = 4,
+<span class="lineNum">      42 </span>            :     BLINK     = 5,
+<span class="lineNum">      43 </span>            :     REVERSE   = 7,
+<span class="lineNum">      44 </span>            :     CROSSOUT  = 9
+<span class="lineNum">      45 </span>            : }; };
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : // ************************************************************************** //
+<span class="lineNum">      48 </span>            : // **************                   term_color                 ************** //
+<span class="lineNum">      49 </span>            : // ************************************************************************** //
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : struct term_color { enum _ {
+<span class="lineNum">      52 </span>            :     BLACK    = 0,
+<span class="lineNum">      53 </span>            :     RED      = 1,
+<span class="lineNum">      54 </span>            :     GREEN    = 2,
+<span class="lineNum">      55 </span>            :     YELLOW   = 3,
+<span class="lineNum">      56 </span>            :     BLUE     = 4,
+<span class="lineNum">      57 </span>            :     MAGENTA  = 5,
+<span class="lineNum">      58 </span>            :     CYAN     = 6,
+<span class="lineNum">      59 </span>            :     WHITE    = 7,
+<span class="lineNum">      60 </span>            :     ORIGINAL = 9
+<span class="lineNum">      61 </span>            : }; };
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : // ************************************************************************** //
+<span class="lineNum">      64 </span>            : // **************                    setcolor                  ************** //
+<span class="lineNum">      65 </span>            : // ************************************************************************** //
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : class setcolor {
+<a name="68"><span class="lineNum">      68 </span>            : public:</a>
+<span class="lineNum">      69 </span>            :     // Constructor
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :     explicit    setcolor( term_attr::_  attr = term_attr::NORMAL,</span>
+<span class="lineNum">      71 </span>            :                           term_color::_ fg   = term_color::ORIGINAL,
+<span class="lineNum">      72 </span>            :                           term_color::_ bg   = term_color::ORIGINAL )
+<span class="lineNum">      73 </span>            :     {
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :         m_command_size = std::sprintf( m_control_command, &quot;%c[%d;%d;%dm&quot;, 0x1B, attr, fg + 30, bg + 40 );</span>
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :     friend std::ostream&amp;
+<span class="lineNum">      78 </span>            :     operator&lt;&lt;( std::ostream&amp; os, setcolor const&amp; sc )
+<span class="lineNum">      79 </span>            :     {
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :         return os.write( sc.m_control_command, sc.m_command_size );</span>
+<span class="lineNum">      81 </span>            :     }
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : private:
+<span class="lineNum">      84 </span>            :     // Data members
+<span class="lineNum">      85 </span>            :     char        m_control_command[13];
+<span class="lineNum">      86 </span>            :     int         m_command_size;
+<span class="lineNum">      87 </span>            : };
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            : // ************************************************************************** //
+<span class="lineNum">      90 </span>            : // **************                 scope_setcolor               ************** //
+<span class="lineNum">      91 </span>            : // ************************************************************************** //
+<span class="lineNum">      92 </span>            : 
+<a name="93"><span class="lineNum">      93 </span>            : struct scope_setcolor {</a>
+<span class="lineNum">      94 </span><span class="lineCov">          1 :     scope_setcolor() : m_os( 0 ) {}</span>
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :     explicit    scope_setcolor( std::ostream&amp; os,</span>
+<span class="lineNum">      96 </span>            :                                 term_attr::_  attr = term_attr::NORMAL,
+<span class="lineNum">      97 </span>            :                                 term_color::_ fg   = term_color::ORIGINAL,
+<span class="lineNum">      98 </span>            :                                 term_color::_ bg   = term_color::ORIGINAL )
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :     : m_os( &amp;os )</span>
+<span class="lineNum">     100 </span>            :     {
+<a name="101"><span class="lineNum">     101 </span><span class="lineNoCov">          0 :         os &lt;&lt; setcolor( attr, fg, bg );</span></a>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :     }</span>
+<span class="lineNum">     103 </span><span class="lineCov">          1 :     ~scope_setcolor()</span>
+<span class="lineNum">     104 </span><span class="lineCov">          1 :     {</span>
+<span class="lineNum">     105 </span><span class="lineCov">          1 :         if( m_os )</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :             *m_os &lt;&lt; setcolor();</span>
+<span class="lineNum">     107 </span><span class="lineCov">          1 :     }</span>
+<span class="lineNum">     108 </span>            : private:
+<span class="lineNum">     109 </span>            :     // Data members
+<span class="lineNum">     110 </span>            :     std::ostream* m_os;
+<span class="lineNum">     111 </span>            : };
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            : #define BOOST_TEST_SCOPE_SETCOLOR( is_color_output, os, attr, color )   \
+<span class="lineNum">     114 </span>            :     utils::scope_setcolor const&amp; sc = is_color_output                   \
+<span class="lineNum">     115 </span>            :            ? utils::scope_setcolor( os, utils::attr, utils::color )     \
+<span class="lineNum">     116 </span>            :            : utils::scope_setcolor();                                   \
+<span class="lineNum">     117 </span>            :     ut_detail::ignore_unused_variable_warning( sc )                     \
+<span class="lineNum">     118 </span>            : /**/
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : } // namespace utils
+<span class="lineNum">     121 </span>            : } // namespace unit_test
+<span class="lineNum">     122 </span>            : } // namespace boost
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : #endif // BOOST_TEST_UTILS_SETCOLOR_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

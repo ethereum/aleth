@@ -1,0 +1,837 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/impl/unit_test_parameters.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/impl</a> - unit_test_parameters.ipp<span style="font-size: 80%;"> (source / <a href="unit_test_parameters.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">171</td>
+            <td class="headerCovTableEntry">208</td>
+            <td class="headerCovTableEntryMed">82.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryLo">40.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : simple implementation for Unit Test Framework parameter
+<span class="lineNum">      13 </span>            : //  handling routines. May be rewritten in future to use some kind of
+<span class="lineNum">      14 </span>            : //  command-line arguments parsing facility and environment variable handling
+<span class="lineNum">      15 </span>            : //  facility
+<span class="lineNum">      16 </span>            : // ***************************************************************************
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #ifndef BOOST_TEST_UNIT_TEST_PARAMETERS_IPP_012205GER
+<span class="lineNum">      19 </span>            : #define BOOST_TEST_UNIT_TEST_PARAMETERS_IPP_012205GER
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : // Boost.Test
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/unit_test_parameters.hpp&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/utils/basic_cstring/basic_cstring.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/utils/basic_cstring/compare.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/test/utils/basic_cstring/io.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/test/utils/iterator/token_iterator.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : #include &lt;boost/test/debug.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/test/framework.hpp&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &lt;boost/test/detail/log_level.hpp&gt;
+<span class="lineNum">      33 </span>            : #include &lt;boost/test/detail/throw_exception.hpp&gt;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : // Boost.Runtime.Param
+<span class="lineNum">      36 </span>            : #include &lt;boost/test/utils/runtime/parameter.hpp&gt;
+<span class="lineNum">      37 </span>            : #include &lt;boost/test/utils/runtime/argument.hpp&gt;
+<span class="lineNum">      38 </span>            : #include &lt;boost/test/utils/runtime/finalize.hpp&gt;
+<span class="lineNum">      39 </span>            : #include &lt;boost/test/utils/runtime/cla/parser.hpp&gt;
+<span class="lineNum">      40 </span>            : #include &lt;boost/test/utils/runtime/env/fetch.hpp&gt;
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : // Boost
+<span class="lineNum">      43 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      44 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      45 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">      46 </span>            : #include &lt;boost/optional.hpp&gt;
+<span class="lineNum">      47 </span>            : #include &lt;boost/cstdlib.hpp&gt;
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : // STL
+<span class="lineNum">      50 </span>            : #include &lt;cstdlib&gt;
+<span class="lineNum">      51 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      52 </span>            : #include &lt;fstream&gt;
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            : # ifdef BOOST_NO_STDC_NAMESPACE
+<span class="lineNum">      59 </span>            : namespace std { using ::getenv; using ::strncmp; using ::strcmp; }
+<span class="lineNum">      60 </span>            : # endif
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : namespace boost {
+<span class="lineNum">      63 </span>            : namespace unit_test {
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : namespace rt = boost::runtime;
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : // ************************************************************************** //
+<span class="lineNum">      68 </span>            : // **************                 runtime_config               ************** //
+<span class="lineNum">      69 </span>            : // ************************************************************************** //
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : namespace runtime_config {
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : // UTF parameters
+<span class="lineNum">      74 </span><span class="lineCov">          3 : std::string AUTO_START_DBG    = &quot;auto_start_dbg&quot;;</span>
+<span class="lineNum">      75 </span><span class="lineCov">          3 : std::string BREAK_EXEC_PATH   = &quot;break_exec_path&quot;;</span>
+<span class="lineNum">      76 </span><span class="lineCov">          3 : std::string BUILD_INFO        = &quot;build_info&quot;;</span>
+<span class="lineNum">      77 </span><span class="lineCov">          3 : std::string CATCH_SYS_ERRORS  = &quot;catch_system_errors&quot;;</span>
+<span class="lineNum">      78 </span><span class="lineCov">          3 : std::string COLOR_OUTPUT      = &quot;color_output&quot;;</span>
+<span class="lineNum">      79 </span><span class="lineCov">          3 : std::string DETECT_FP_EXCEPT  = &quot;detect_fp_exceptions&quot;;</span>
+<span class="lineNum">      80 </span><span class="lineCov">          3 : std::string DETECT_MEM_LEAKS  = &quot;detect_memory_leaks&quot;;</span>
+<span class="lineNum">      81 </span><span class="lineCov">          3 : std::string LIST_CONTENT      = &quot;list_content&quot;;</span>
+<span class="lineNum">      82 </span><span class="lineCov">          3 : std::string LIST_LABELS       = &quot;list_labels&quot;;</span>
+<span class="lineNum">      83 </span><span class="lineCov">          3 : std::string LOG_FORMAT        = &quot;log_format&quot;;</span>
+<span class="lineNum">      84 </span><span class="lineCov">          3 : std::string LOG_LEVEL         = &quot;log_level&quot;;</span>
+<span class="lineNum">      85 </span><span class="lineCov">          3 : std::string LOG_SINK          = &quot;log_sink&quot;;</span>
+<span class="lineNum">      86 </span><span class="lineCov">          3 : std::string COMBINED_LOGGER   = &quot;logger&quot;;</span>
+<span class="lineNum">      87 </span><span class="lineCov">          3 : std::string OUTPUT_FORMAT     = &quot;output_format&quot;;</span>
+<span class="lineNum">      88 </span><span class="lineCov">          3 : std::string RANDOM_SEED       = &quot;random&quot;;</span>
+<span class="lineNum">      89 </span><span class="lineCov">          3 : std::string REPORT_FORMAT     = &quot;report_format&quot;;</span>
+<span class="lineNum">      90 </span><span class="lineCov">          3 : std::string REPORT_LEVEL      = &quot;report_level&quot;;</span>
+<span class="lineNum">      91 </span><span class="lineCov">          3 : std::string REPORT_MEM_LEAKS  = &quot;report_memory_leaks_to&quot;;</span>
+<span class="lineNum">      92 </span><span class="lineCov">          3 : std::string REPORT_SINK       = &quot;report_sink&quot;;</span>
+<span class="lineNum">      93 </span><span class="lineCov">          3 : std::string RESULT_CODE       = &quot;result_code&quot;;</span>
+<span class="lineNum">      94 </span><span class="lineCov">          3 : std::string RUN_FILTERS       = &quot;run_test&quot;;</span>
+<span class="lineNum">      95 </span><span class="lineCov">          3 : std::string SAVE_TEST_PATTERN = &quot;save_pattern&quot;;</span>
+<span class="lineNum">      96 </span><span class="lineCov">          3 : std::string SHOW_PROGRESS     = &quot;show_progress&quot;;</span>
+<span class="lineNum">      97 </span><span class="lineCov">          3 : std::string USE_ALT_STACK     = &quot;use_alt_stack&quot;;</span>
+<span class="lineNum">      98 </span><span class="lineCov">          3 : std::string WAIT_FOR_DEBUGGER = &quot;wait_for_debugger&quot;;</span>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">          3 : std::string HELP              = &quot;help&quot;;</span>
+<span class="lineNum">     101 </span><span class="lineCov">          3 : std::string USAGE             = &quot;usage&quot;;</span>
+<span class="lineNum">     102 </span><span class="lineCov">          3 : std::string VERSION           = &quot;version&quot;;</span>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : namespace {
+<a name="107"><span class="lineNum">     107 </span>            : </a>
+<span class="lineNum">     108 </span>            : void
+<span class="lineNum">     109 </span><span class="lineCov">          1 : register_parameters( rt::parameters_store&amp; store )</span>
+<span class="lineNum">     110 </span>            : {
+<span class="lineNum">     111 </span>            :     rt::option auto_start_dbg( AUTO_START_DBG, (
+<span class="lineNum">     112 </span>            :         rt::description = &quot;Automatically attaches debugger in case of system level failure (signal).&quot;,
+<span class="lineNum">     113 </span>            :         rt::env_var = &quot;BOOST_TEST_AUTO_START_DBG&quot;,
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span><span class="lineCov">          3 :         rt::help = &quot;Option &quot; + AUTO_START_DBG + &quot; specifies whether Boost.Test should attempt &quot;</span>
+<span class="lineNum">     116 </span>            :                    &quot;to attach a debugger when fatal system error occurs. At the moment this feature &quot;
+<span class="lineNum">     117 </span>            :                    &quot;is only available on a few selected platforms: Win32 and *nix. There is a &quot;
+<span class="lineNum">     118 </span>            :                    &quot;default debugger configured for these platforms. You can manually configure &quot;
+<span class="lineNum">     119 </span>            :                    &quot;different debugger. For more details on how to configure the debugger see the &quot;
+<span class="lineNum">     120 </span>            :                    &quot;Boost.Test debug API, specifically the function boost::debug::set_debugger.&quot;
+<span class="lineNum">     121 </span><span class="lineCov">         11 :     ));</span>
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span><span class="lineCov">          3 :     auto_start_dbg.add_cla_id( &quot;--&quot;, AUTO_START_DBG, &quot;=&quot; );</span>
+<span class="lineNum">     124 </span><span class="lineCov">          2 :     auto_start_dbg.add_cla_id( &quot;-&quot;, &quot;d&quot;, &quot; &quot; );</span>
+<span class="lineNum">     125 </span><span class="lineCov">          1 :     store.add( auto_start_dbg );</span>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            :     rt::parameter&lt;std::string&gt; break_exec_path( BREAK_EXEC_PATH, (
+<span class="lineNum">     130 </span>            :         rt::description = &quot;For the exception safety testing allows to break at specific execution path.&quot;,
+<span class="lineNum">     131 </span>            :         rt::env_var = &quot;BOOST_TEST_BREAK_EXEC_PATH&quot;
+<a name="132"><span class="lineNum">     132 </span>            : #ifndef BOOST_NO_CXX11_LAMBDAS</a>
+<span class="lineNum">     133 </span>            :         ,
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :         rt::callback = [](rt::cstring) {</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :             BOOST_TEST_SETUP_ASSERT( false, &quot;parameter break_exec_path is disabled in this release&quot; );</span>
+<span class="lineNum">     136 </span>            :         }
+<span class="lineNum">     137 </span>            : #endif
+<span class="lineNum">     138 </span><span class="lineCov">         10 :     ));</span>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span><span class="lineCov">          4 :     break_exec_path.add_cla_id( &quot;--&quot;, BREAK_EXEC_PATH, &quot;=&quot; );</span>
+<span class="lineNum">     141 </span><span class="lineCov">          1 :     store.add( break_exec_path );</span>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            :     rt::option build_info( BUILD_INFO, (
+<span class="lineNum">     146 </span>            :         rt::description = &quot;Displays library build information.&quot;,
+<span class="lineNum">     147 </span>            :         rt::env_var = &quot;BOOST_TEST_BUILD_INFO&quot;,
+<span class="lineNum">     148 </span><span class="lineCov">          3 :         rt::help = &quot;Option &quot; + BUILD_INFO + &quot; displays library build information, including: platform, &quot;</span>
+<span class="lineNum">     149 </span>            :                    &quot;compiler, STL version and Boost version.&quot;
+<span class="lineNum">     150 </span><span class="lineCov">         11 :     ));</span>
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span><span class="lineCov">          3 :     build_info.add_cla_id( &quot;--&quot;, BUILD_INFO, &quot;=&quot; );</span>
+<span class="lineNum">     153 </span><span class="lineCov">          2 :     build_info.add_cla_id( &quot;-&quot;, &quot;i&quot;, &quot; &quot; );</span>
+<span class="lineNum">     154 </span><span class="lineCov">          1 :     store.add( build_info );</span>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            :     rt::option catch_sys_errors( CATCH_SYS_ERRORS, (
+<span class="lineNum">     159 </span>            :         rt::description = &quot;Allows to switch between catching and ignoring system errors (signals).&quot;,
+<span class="lineNum">     160 </span>            :         rt::env_var = &quot;BOOST_TEST_CATCH_SYSTEM_ERRORS&quot;,
+<span class="lineNum">     161 </span>            :         rt::default_value =
+<span class="lineNum">     162 </span>            : #ifdef BOOST_TEST_DEFAULTS_TO_CORE_DUMP
+<span class="lineNum">     163 </span>            :             false,
+<span class="lineNum">     164 </span>            : #else
+<span class="lineNum">     165 </span>            :             true,
+<span class="lineNum">     166 </span>            : #endif
+<span class="lineNum">     167 </span><span class="lineCov">          3 :         rt::help = &quot;If option &quot; + CATCH_SYS_ERRORS + &quot; has value no the frameworks does not attempt to catch &quot;</span>
+<span class="lineNum">     168 </span>            :                    &quot;asynchronous system failure events (signals on *NIX platforms or structured exceptions on Windows). &quot;
+<span class="lineNum">     169 </span>            :                    &quot; Default value is &quot;
+<span class="lineNum">     170 </span>            : #ifdef BOOST_TEST_DEFAULTS_TO_CORE_DUMP
+<span class="lineNum">     171 </span>            :                     &quot;no.&quot;
+<span class="lineNum">     172 </span>            : #else
+<span class="lineNum">     173 </span>            :                     &quot;true.&quot;
+<span class="lineNum">     174 </span>            : #endif
+<span class="lineNum">     175 </span><span class="lineCov">         13 :     ));</span>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span><span class="lineCov">          3 :     catch_sys_errors.add_cla_id( &quot;--&quot;, CATCH_SYS_ERRORS, &quot;=&quot;, true );</span>
+<span class="lineNum">     178 </span><span class="lineCov">          2 :     catch_sys_errors.add_cla_id( &quot;-&quot;, &quot;s&quot;, &quot; &quot; );</span>
+<span class="lineNum">     179 </span><span class="lineCov">          1 :     store.add( catch_sys_errors );</span>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            :     rt::option color_output( COLOR_OUTPUT, (
+<span class="lineNum">     184 </span>            :         rt::description = &quot;Enables color output of the framework log and report messages.&quot;,
+<span class="lineNum">     185 </span>            :         rt::env_var = &quot;BOOST_TEST_COLOR_OUTPUT&quot;,
+<span class="lineNum">     186 </span>            :         rt::help = &quot;The framework is able to produce color output on systems which supports it. &quot;
+<span class="lineNum">     187 </span>            :                    &quot;To enable this behavior set this option to yes. By default the framework &quot;
+<span class="lineNum">     188 </span>            :                    &quot;does not produces color output.&quot;
+<span class="lineNum">     189 </span><span class="lineCov">         10 :     ));</span>
+<span class="lineNum">     190 </span>            : 
+<span class="lineNum">     191 </span><span class="lineCov">          3 :     color_output.add_cla_id( &quot;--&quot;, COLOR_OUTPUT, &quot;=&quot;, true );</span>
+<span class="lineNum">     192 </span><span class="lineCov">          2 :     color_output.add_cla_id( &quot;-&quot;, &quot;x&quot;, &quot; &quot; );</span>
+<span class="lineNum">     193 </span><span class="lineCov">          1 :     store.add( color_output );</span>
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :     rt::option detect_fp_except( DETECT_FP_EXCEPT, (
+<span class="lineNum">     198 </span>            :         rt::description = &quot;Enables/disables floating point exceptions traps.&quot;,
+<span class="lineNum">     199 </span>            :         rt::env_var = &quot;BOOST_TEST_DETECT_FP_EXCEPTIONS&quot;,
+<span class="lineNum">     200 </span><span class="lineCov">          3 :         rt::help = &quot;Option &quot; + DETECT_FP_EXCEPT + &quot; enables/disables hardware traps for the floating &quot;</span>
+<span class="lineNum">     201 </span>            :                    &quot;point exceptions (if supported on your platfrom).&quot;
+<span class="lineNum">     202 </span><span class="lineCov">         11 :     ));</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineCov">          4 :     detect_fp_except.add_cla_id( &quot;--&quot;, DETECT_FP_EXCEPT, &quot;=&quot;, true );</span>
+<span class="lineNum">     205 </span><span class="lineCov">          1 :     store.add( detect_fp_except );</span>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            :     rt::parameter&lt;unsigned long&gt; detect_mem_leaks( DETECT_MEM_LEAKS, (
+<span class="lineNum">     210 </span>            :         rt::description = &quot;Turns on/off memory leaks detection (optionally breaking on specified alloc order number).&quot;,
+<span class="lineNum">     211 </span>            :         rt::env_var = &quot;BOOST_TEST_DETECT_MEMORY_LEAK&quot;,
+<span class="lineNum">     212 </span>            :         rt::default_value = 1L,
+<span class="lineNum">     213 </span>            :         rt::optional_value = 1L,
+<span class="lineNum">     214 </span>            :         rt::value_hint = &quot;&lt;alloc order number&gt;&quot;,
+<span class="lineNum">     215 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + DETECT_MEM_LEAKS + &quot; enables/disables memory leaks detection. &quot;</span>
+<span class="lineNum">     216 </span>            :                    &quot;This parameter has optional long integer value. The default value is 1, which &quot;
+<span class="lineNum">     217 </span>            :                    &quot;enables the memory leak detection. The value 0 disables memory leak detection. &quot;
+<span class="lineNum">     218 </span>            :                    &quot;Any value N greater than 1 is treated as leak allocation number and tells the &quot;
+<span class="lineNum">     219 </span>            :                    &quot;framework to setup runtime breakpoint at Nth heap allocation. If value is &quot;
+<span class="lineNum">     220 </span>            :                    &quot;omitted the default value is assumed.&quot;
+<span class="lineNum">     221 </span><span class="lineCov">         18 :     ));</span>
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span><span class="lineCov">          4 :     detect_mem_leaks.add_cla_id( &quot;--&quot;, DETECT_MEM_LEAKS, &quot;=&quot; );</span>
+<span class="lineNum">     224 </span><span class="lineCov">          1 :     store.add( detect_mem_leaks );</span>
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :     rt::enum_parameter&lt;unit_test::output_format&gt; list_content( LIST_CONTENT, (
+<span class="lineNum">     229 </span>            :         rt::description = &quot;Lists the content of test tree - names of all test suites and test cases.&quot;,
+<span class="lineNum">     230 </span>            :         rt::env_var = &quot;BOOST_TEST_LIST_CONTENT&quot;,
+<span class="lineNum">     231 </span>            :         rt::default_value = OF_INVALID,
+<span class="lineNum">     232 </span>            :         rt::optional_value = OF_CLF,
+<span class="lineNum">     233 </span>            :         rt::enum_values&lt;unit_test::output_format&gt;::value =
+<span class="lineNum">     234 </span>            : #if defined(BOOST_TEST_CLA_NEW_API)
+<span class="lineNum">     235 </span>            :         {
+<span class="lineNum">     236 </span>            :             { &quot;HRF&quot;, OF_CLF },
+<span class="lineNum">     237 </span>            :             { &quot;DOT&quot;, OF_DOT }
+<span class="lineNum">     238 </span>            :         },
+<span class="lineNum">     239 </span>            : #else
+<span class="lineNum">     240 </span>            :         rt::enum_values_list&lt;unit_test::output_format&gt;()
+<span class="lineNum">     241 </span>            :             ( &quot;HRF&quot;, OF_CLF )
+<span class="lineNum">     242 </span>            :             ( &quot;DOT&quot;, OF_DOT )
+<span class="lineNum">     243 </span>            :         ,
+<span class="lineNum">     244 </span>            : #endif
+<span class="lineNum">     245 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + LIST_CONTENT + &quot; instructs the framework to list the content &quot;</span>
+<span class="lineNum">     246 </span>            :                    &quot;of the test module instead of executing the test cases. Parameter accepts &quot;
+<span class="lineNum">     247 </span>            :                    &quot;optional string value indicating the format of the output. Currently the &quot;
+<span class="lineNum">     248 </span>            :                    &quot;framework supports two formats: human readable format (HRF) and dot graph &quot;
+<span class="lineNum">     249 </span>            :                    &quot;format (DOT). If value is omitted HRF value is assumed.&quot;
+<span class="lineNum">     250 </span><span class="lineCov">         19 :     ));</span>
+<span class="lineNum">     251 </span><span class="lineCov">          4 :     list_content.add_cla_id( &quot;--&quot;, LIST_CONTENT, &quot;=&quot; );</span>
+<span class="lineNum">     252 </span><span class="lineCov">          1 :     store.add( list_content );</span>
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            :     rt::option list_labels( LIST_LABELS, (
+<span class="lineNum">     257 </span>            :         rt::description = &quot;Lists all available labels.&quot;,
+<span class="lineNum">     258 </span>            :         rt::env_var = &quot;BOOST_TEST_LIST_LABELS&quot;,
+<span class="lineNum">     259 </span><span class="lineCov">          3 :         rt::help = &quot;Option &quot; + LIST_LABELS + &quot; instructs the framework to list all the the labels &quot;</span>
+<span class="lineNum">     260 </span>            :                    &quot;defined in the test module instead of executing the test cases.&quot;
+<span class="lineNum">     261 </span><span class="lineCov">         11 :     ));</span>
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span><span class="lineCov">          4 :     list_labels.add_cla_id( &quot;--&quot;, LIST_LABELS, &quot;=&quot; );</span>
+<span class="lineNum">     264 </span><span class="lineCov">          1 :     store.add( list_labels );</span>
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            :     rt::enum_parameter&lt;unit_test::output_format&gt; log_format( LOG_FORMAT, (
+<span class="lineNum">     269 </span>            :         rt::description = &quot;Specifies log format.&quot;,
+<span class="lineNum">     270 </span>            :         rt::env_var = &quot;BOOST_TEST_LOG_FORMAT&quot;,
+<span class="lineNum">     271 </span>            :         rt::default_value = OF_CLF,
+<span class="lineNum">     272 </span>            :         rt::enum_values&lt;unit_test::output_format&gt;::value =
+<span class="lineNum">     273 </span>            : #if defined(BOOST_TEST_CLA_NEW_API)
+<span class="lineNum">     274 </span>            :         {
+<span class="lineNum">     275 </span>            :             { &quot;HRF&quot;, OF_CLF },
+<span class="lineNum">     276 </span>            :             { &quot;CLF&quot;, OF_CLF },
+<span class="lineNum">     277 </span>            :             { &quot;XML&quot;, OF_XML },
+<span class="lineNum">     278 </span>            :             { &quot;JUNIT&quot;, OF_JUNIT },
+<span class="lineNum">     279 </span>            :         },
+<span class="lineNum">     280 </span>            : #else
+<span class="lineNum">     281 </span>            :         rt::enum_values_list&lt;unit_test::output_format&gt;()
+<span class="lineNum">     282 </span>            :             ( &quot;HRF&quot;, OF_CLF )
+<span class="lineNum">     283 </span>            :             ( &quot;CLF&quot;, OF_CLF )
+<span class="lineNum">     284 </span>            :             ( &quot;XML&quot;, OF_XML )
+<span class="lineNum">     285 </span>            :             ( &quot;JUNIT&quot;, OF_JUNIT )
+<span class="lineNum">     286 </span>            :         ,
+<span class="lineNum">     287 </span>            : #endif
+<span class="lineNum">     288 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + LOG_FORMAT + &quot; allows to set the frameowrk's log format to one &quot;</span>
+<span class="lineNum">     289 </span>            :                    &quot;of the formats supplied by the framework. The only acceptable values for this &quot;
+<span class="lineNum">     290 </span>            :                    &quot;parameter are the names of the output formats supplied by the framework. By &quot;
+<span class="lineNum">     291 </span>            :                    &quot;default the framework uses human readable format (HRF) for testing log. This &quot;
+<span class="lineNum">     292 </span>            :                    &quot;format is similar to compiler error format. Alternatively you can specify XML &quot;
+<span class="lineNum">     293 </span>            :                    &quot;or JUNIT as log format, which are easier to process by testing automation tools.&quot;
+<span class="lineNum">     294 </span><span class="lineCov">         19 :     ));</span>
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span><span class="lineCov">          3 :     log_format.add_cla_id( &quot;--&quot;, LOG_FORMAT, &quot;=&quot; );</span>
+<span class="lineNum">     297 </span><span class="lineCov">          2 :     log_format.add_cla_id( &quot;-&quot;, &quot;f&quot;, &quot; &quot; );</span>
+<span class="lineNum">     298 </span><span class="lineCov">          1 :     store.add( log_format );</span>
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     301 </span>            : 
+<span class="lineNum">     302 </span>            :     rt::enum_parameter&lt;unit_test::log_level&gt; log_level( LOG_LEVEL, (
+<span class="lineNum">     303 </span>            :         rt::description = &quot;Specifies log level.&quot;,
+<span class="lineNum">     304 </span>            :         rt::env_var = &quot;BOOST_TEST_LOG_LEVEL&quot;,
+<span class="lineNum">     305 </span>            :         rt::default_value = log_all_errors,
+<span class="lineNum">     306 </span>            :         rt::enum_values&lt;unit_test::log_level&gt;::value =
+<span class="lineNum">     307 </span>            : #if defined(BOOST_TEST_CLA_NEW_API)
+<span class="lineNum">     308 </span>            :         {
+<span class="lineNum">     309 </span>            :             { &quot;all&quot;           , log_successful_tests },
+<span class="lineNum">     310 </span>            :             { &quot;success&quot;       , log_successful_tests },
+<span class="lineNum">     311 </span>            :             { &quot;test_suite&quot;    , log_test_units },
+<span class="lineNum">     312 </span>            :             { &quot;unit_scope&quot;    , log_test_units },
+<span class="lineNum">     313 </span>            :             { &quot;message&quot;       , log_messages },
+<span class="lineNum">     314 </span>            :             { &quot;warning&quot;       , log_warnings },
+<span class="lineNum">     315 </span>            :             { &quot;error&quot;         , log_all_errors },
+<span class="lineNum">     316 </span>            :             { &quot;cpp_exception&quot; , log_cpp_exception_errors },
+<span class="lineNum">     317 </span>            :             { &quot;system_error&quot;  , log_system_errors },
+<span class="lineNum">     318 </span>            :             { &quot;fatal_error&quot;   , log_fatal_errors },
+<span class="lineNum">     319 </span>            :             { &quot;nothing&quot;       , log_nothing }
+<span class="lineNum">     320 </span>            :         },
+<span class="lineNum">     321 </span>            : #else
+<span class="lineNum">     322 </span>            :         rt::enum_values_list&lt;unit_test::log_level&gt;()
+<span class="lineNum">     323 </span>            :             ( &quot;all&quot;           , log_successful_tests )
+<span class="lineNum">     324 </span>            :             ( &quot;success&quot;       , log_successful_tests )
+<span class="lineNum">     325 </span>            :             ( &quot;test_suite&quot;    , log_test_units )
+<span class="lineNum">     326 </span>            :             ( &quot;unit_scope&quot;    , log_test_units )
+<span class="lineNum">     327 </span>            :             ( &quot;message&quot;       , log_messages )
+<span class="lineNum">     328 </span>            :             ( &quot;warning&quot;       , log_warnings )
+<span class="lineNum">     329 </span>            :             ( &quot;error&quot;         , log_all_errors )
+<span class="lineNum">     330 </span>            :             ( &quot;cpp_exception&quot; , log_cpp_exception_errors )
+<span class="lineNum">     331 </span>            :             ( &quot;system_error&quot;  , log_system_errors )
+<span class="lineNum">     332 </span>            :             ( &quot;fatal_error&quot;   , log_fatal_errors )
+<span class="lineNum">     333 </span>            :             ( &quot;nothing&quot;       , log_nothing )
+<span class="lineNum">     334 </span>            :         ,
+<span class="lineNum">     335 </span>            : #endif
+<span class="lineNum">     336 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + LOG_LEVEL + &quot; allows to set the framework's log level. &quot;</span>
+<span class="lineNum">     337 </span>            :                    &quot;Log level defines the verbosity of testing log produced by a testing &quot;
+<span class="lineNum">     338 </span>            :                    &quot;module. The verbosity ranges from a complete log, when all assertions &quot;
+<span class="lineNum">     339 </span>            :                    &quot;(both successful and failing) are reported, all notifications about &quot;
+<span class="lineNum">     340 </span>            :                    &quot;test units start and finish are included, to an empty log when nothing &quot;
+<span class="lineNum">     341 </span>            :                    &quot;is reported to a testing log stream.&quot;
+<span class="lineNum">     342 </span><span class="lineCov">         26 :     ));</span>
+<span class="lineNum">     343 </span>            : 
+<span class="lineNum">     344 </span><span class="lineCov">          3 :     log_level.add_cla_id( &quot;--&quot;, LOG_LEVEL, &quot;=&quot; );</span>
+<span class="lineNum">     345 </span><span class="lineCov">          2 :     log_level.add_cla_id( &quot;-&quot;, &quot;l&quot;, &quot; &quot; );</span>
+<span class="lineNum">     346 </span><span class="lineCov">          1 :     store.add( log_level );</span>
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span>            :     rt::parameter&lt;std::string&gt; log_sink( LOG_SINK, (
+<span class="lineNum">     351 </span>            :         rt::description = &quot;Specifies log sink: stdout(default), stderr or file name.&quot;,
+<span class="lineNum">     352 </span>            :         rt::env_var = &quot;BOOST_TEST_LOG_SINK&quot;,
+<span class="lineNum">     353 </span>            :         rt::value_hint = &quot;&lt;stderr|stdout|file name&gt;&quot;,
+<span class="lineNum">     354 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + LOG_SINK + &quot; allows to set the log sink - location &quot;</span>
+<span class="lineNum">     355 </span>            :                    &quot;where we report the log to, thus it allows to easily redirect the &quot;
+<span class="lineNum">     356 </span>            :                    &quot;test logs to file or standard streams. By default testing log is &quot;
+<span class="lineNum">     357 </span>            :                    &quot;directed to standard output.&quot;
+<span class="lineNum">     358 </span><span class="lineCov">         14 :     ));</span>
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span><span class="lineCov">          3 :     log_sink.add_cla_id( &quot;--&quot;, LOG_SINK, &quot;=&quot; );</span>
+<span class="lineNum">     361 </span><span class="lineCov">          2 :     log_sink.add_cla_id( &quot;-&quot;, &quot;k&quot;, &quot; &quot; );</span>
+<span class="lineNum">     362 </span><span class="lineCov">          1 :     store.add( log_sink );</span>
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span>            :     rt::enum_parameter&lt;unit_test::output_format&gt; output_format( OUTPUT_FORMAT, (
+<span class="lineNum">     367 </span>            :         rt::description = &quot;Specifies output format (both log and report).&quot;,
+<span class="lineNum">     368 </span>            :         rt::env_var = &quot;BOOST_TEST_OUTPUT_FORMAT&quot;,
+<span class="lineNum">     369 </span>            :         rt::enum_values&lt;unit_test::output_format&gt;::value =
+<span class="lineNum">     370 </span>            : #if defined(BOOST_TEST_CLA_NEW_API)
+<span class="lineNum">     371 </span>            :         {
+<span class="lineNum">     372 </span>            :             { &quot;HRF&quot;, OF_CLF },
+<span class="lineNum">     373 </span>            :             { &quot;CLF&quot;, OF_CLF },
+<span class="lineNum">     374 </span>            :             { &quot;XML&quot;, OF_XML }
+<span class="lineNum">     375 </span>            :         },
+<span class="lineNum">     376 </span>            : #else
+<span class="lineNum">     377 </span>            :         rt::enum_values_list&lt;unit_test::output_format&gt;()
+<span class="lineNum">     378 </span>            :             ( &quot;HRF&quot;, OF_CLF )
+<span class="lineNum">     379 </span>            :             ( &quot;CLF&quot;, OF_CLF )
+<span class="lineNum">     380 </span>            :             ( &quot;XML&quot;, OF_XML )
+<span class="lineNum">     381 </span>            :         ,
+<span class="lineNum">     382 </span>            : #endif
+<span class="lineNum">     383 </span><span class="lineCov">          5 :         rt::help = &quot;Parameter &quot; + OUTPUT_FORMAT + &quot; combines an effect of &quot; + REPORT_FORMAT +</span>
+<span class="lineNum">     384 </span><span class="lineCov">          3 :                    &quot; and &quot; + LOG_FORMAT + &quot; parameters. This parameter has higher priority &quot;</span>
+<span class="lineNum">     385 </span>            :                    &quot;than either one of them. In other words if this parameter is specified &quot;
+<span class="lineNum">     386 </span>            :                    &quot;it overrides the value of other two parameters. This parameter does not &quot;
+<span class="lineNum">     387 </span>            :                    &quot;have a default value. The only acceptable values are string names of &quot;
+<span class="lineNum">     388 </span>            :                    &quot;output formats: HRF - human readable format and XML - XML formats for &quot;
+<span class="lineNum">     389 </span>            :                    &quot;automation tools processing.&quot;
+<span class="lineNum">     390 </span><span class="lineCov">         16 :     ));</span>
+<span class="lineNum">     391 </span>            : 
+<span class="lineNum">     392 </span><span class="lineCov">          3 :     output_format.add_cla_id( &quot;--&quot;, OUTPUT_FORMAT, &quot;=&quot; );</span>
+<span class="lineNum">     393 </span><span class="lineCov">          2 :     output_format.add_cla_id( &quot;-&quot;, &quot;o&quot;, &quot; &quot; );</span>
+<span class="lineNum">     394 </span><span class="lineCov">          1 :     store.add( output_format );</span>
+<span class="lineNum">     395 </span>            : 
+<span class="lineNum">     396 </span>            :     /////////////////////////////////////////////// combined logger option
+<span class="lineNum">     397 </span>            : 
+<span class="lineNum">     398 </span>            :     rt::parameter&lt;std::string,rt::REPEATABLE_PARAM&gt; combined_logger( COMBINED_LOGGER, (
+<span class="lineNum">     399 </span>            :         rt::description = &quot;Specifies log level and sink for one or several log format&quot;,
+<span class="lineNum">     400 </span>            :         rt::env_var = &quot;BOOST_TEST_LOGGER&quot;,
+<span class="lineNum">     401 </span>            :         rt::value_hint = &quot;log_format:log_level:log_sink&quot;,
+<span class="lineNum">     402 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + COMBINED_LOGGER + &quot; allows to specify the logger type, level and sink\n&quot;</span>
+<span class="lineNum">     403 </span>            :                    &quot;in one command.&quot;
+<span class="lineNum">     404 </span><span class="lineCov">         15 :     ));</span>
+<span class="lineNum">     405 </span>            : 
+<span class="lineNum">     406 </span><span class="lineCov">          4 :     combined_logger.add_cla_id( &quot;--&quot;, COMBINED_LOGGER, &quot;=&quot; );</span>
+<span class="lineNum">     407 </span><span class="lineCov">          1 :     store.add( combined_logger );</span>
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span>            :     rt::parameter&lt;unsigned&gt; random_seed( RANDOM_SEED, (
+<span class="lineNum">     412 </span>            :         rt::description = &quot;Allows to switch between sequential and random order of test units execution.&quot;
+<span class="lineNum">     413 </span>            :                           &quot; Optionally allows to specify concrete seed for random number generator.&quot;,
+<span class="lineNum">     414 </span>            :         rt::env_var = &quot;BOOST_TEST_RANDOM&quot;,
+<span class="lineNum">     415 </span>            :         rt::default_value = 0U,
+<span class="lineNum">     416 </span>            :         rt::optional_value = 1U,
+<span class="lineNum">     417 </span>            :         rt::value_hint = &quot;&lt;seed&gt;&quot;,
+<span class="lineNum">     418 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + RANDOM_SEED + &quot; instructs the framework to execute the &quot;</span>
+<span class="lineNum">     419 </span>            :                    &quot;test cases in random order. This parameter accepts optional unsigned &quot;
+<span class="lineNum">     420 </span>            :                    &quot;integer argument. By default test cases are executed in some specific &quot;
+<span class="lineNum">     421 </span>            :                    &quot;order defined by order of test units in test files and dependency between &quot;
+<span class="lineNum">     422 </span>            :                    &quot;test units. If parameter is specified without the argument value testing &quot;
+<span class="lineNum">     423 </span>            :                    &quot;order is randomized based on current time. Alternatively you can specify &quot;
+<span class="lineNum">     424 </span>            :                    &quot;any positive value greater than 1 and it will be used as random seed for &quot;
+<span class="lineNum">     425 </span>            :                    &quot;the run.&quot;
+<span class="lineNum">     426 </span><span class="lineCov">         18 :     ));</span>
+<span class="lineNum">     427 </span>            : 
+<span class="lineNum">     428 </span><span class="lineCov">          4 :     random_seed.add_cla_id( &quot;--&quot;, RANDOM_SEED, &quot;=&quot; );</span>
+<span class="lineNum">     429 </span><span class="lineCov">          1 :     store.add( random_seed );</span>
+<span class="lineNum">     430 </span>            : 
+<span class="lineNum">     431 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span>            :     rt::enum_parameter&lt;unit_test::output_format&gt; report_format( REPORT_FORMAT, (
+<span class="lineNum">     434 </span>            :         rt::description = &quot;Specifies report format.&quot;,
+<span class="lineNum">     435 </span>            :         rt::env_var = &quot;BOOST_TEST_REPORT_FORMAT&quot;,
+<span class="lineNum">     436 </span>            :         rt::default_value = OF_CLF,
+<span class="lineNum">     437 </span>            :         rt::enum_values&lt;unit_test::output_format&gt;::value =
+<span class="lineNum">     438 </span>            : #if defined(BOOST_TEST_CLA_NEW_API)
+<span class="lineNum">     439 </span>            :         {
+<span class="lineNum">     440 </span>            :             { &quot;HRF&quot;, OF_CLF },
+<span class="lineNum">     441 </span>            :             { &quot;CLF&quot;, OF_CLF },
+<span class="lineNum">     442 </span>            :             { &quot;XML&quot;, OF_XML }
+<span class="lineNum">     443 </span>            :         },
+<span class="lineNum">     444 </span>            : #else
+<span class="lineNum">     445 </span>            :         rt::enum_values_list&lt;unit_test::output_format&gt;()
+<span class="lineNum">     446 </span>            :             ( &quot;HRF&quot;, OF_CLF )
+<span class="lineNum">     447 </span>            :             ( &quot;CLF&quot;, OF_CLF )
+<span class="lineNum">     448 </span>            :             ( &quot;XML&quot;, OF_XML )
+<span class="lineNum">     449 </span>            :         ,
+<span class="lineNum">     450 </span>            : #endif
+<span class="lineNum">     451 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + REPORT_FORMAT + &quot; allows to set the framework's report format &quot;</span>
+<span class="lineNum">     452 </span>            :                    &quot;to one of the formats supplied by the framework. The only acceptable values &quot;
+<span class="lineNum">     453 </span>            :                    &quot;for this parameter are the names of the output formats. By default the framework &quot;
+<span class="lineNum">     454 </span>            :                    &quot;uses human readable format (HRF) for results reporting. Alternatively you can &quot;
+<span class="lineNum">     455 </span>            :                    &quot;specify XML as report format. This format is easier to process by testing &quot;
+<span class="lineNum">     456 </span>            :                    &quot;automation tools.&quot;
+<span class="lineNum">     457 </span><span class="lineCov">         18 :     ));</span>
+<span class="lineNum">     458 </span>            : 
+<span class="lineNum">     459 </span><span class="lineCov">          3 :     report_format.add_cla_id( &quot;--&quot;, REPORT_FORMAT, &quot;=&quot; );</span>
+<span class="lineNum">     460 </span><span class="lineCov">          2 :     report_format.add_cla_id( &quot;-&quot;, &quot;m&quot;, &quot; &quot; );</span>
+<span class="lineNum">     461 </span><span class="lineCov">          1 :     store.add( report_format );</span>
+<span class="lineNum">     462 </span>            : 
+<span class="lineNum">     463 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     464 </span>            : 
+<span class="lineNum">     465 </span>            :     rt::enum_parameter&lt;unit_test::report_level&gt; report_level( REPORT_LEVEL, (
+<span class="lineNum">     466 </span>            :         rt::description = &quot;Specifies report level.&quot;,
+<span class="lineNum">     467 </span>            :         rt::env_var = &quot;BOOST_TEST_REPORT_LEVEL&quot;,
+<span class="lineNum">     468 </span>            :         rt::default_value = CONFIRMATION_REPORT,
+<span class="lineNum">     469 </span>            :         rt::enum_values&lt;unit_test::report_level&gt;::value =
+<span class="lineNum">     470 </span>            : #if defined(BOOST_TEST_CLA_NEW_API)
+<span class="lineNum">     471 </span>            :         {
+<span class="lineNum">     472 </span>            :             { &quot;confirm&quot;,  CONFIRMATION_REPORT },
+<span class="lineNum">     473 </span>            :             { &quot;short&quot;,    SHORT_REPORT },
+<span class="lineNum">     474 </span>            :             { &quot;detailed&quot;, DETAILED_REPORT },
+<span class="lineNum">     475 </span>            :             { &quot;no&quot;,       NO_REPORT }
+<span class="lineNum">     476 </span>            :         },
+<span class="lineNum">     477 </span>            : #else
+<span class="lineNum">     478 </span>            :         rt::enum_values_list&lt;unit_test::report_level&gt;()
+<span class="lineNum">     479 </span>            :             ( &quot;confirm&quot;,  CONFIRMATION_REPORT )
+<span class="lineNum">     480 </span>            :             ( &quot;short&quot;,    SHORT_REPORT )
+<span class="lineNum">     481 </span>            :             ( &quot;detailed&quot;, DETAILED_REPORT )
+<span class="lineNum">     482 </span>            :             ( &quot;no&quot;,       NO_REPORT )
+<span class="lineNum">     483 </span>            :         ,
+<span class="lineNum">     484 </span>            : #endif
+<span class="lineNum">     485 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + REPORT_LEVEL + &quot; allows to set the verbosity level of the &quot;</span>
+<span class="lineNum">     486 </span>            :                    &quot;testing result report generated by the framework. Use value 'no' to &quot;
+<span class="lineNum">     487 </span>            :                    &quot;eliminate the results report completely.&quot;
+<span class="lineNum">     488 </span><span class="lineCov">         19 :     ));</span>
+<span class="lineNum">     489 </span>            : 
+<span class="lineNum">     490 </span><span class="lineCov">          3 :     report_level.add_cla_id( &quot;--&quot;, REPORT_LEVEL, &quot;=&quot; );</span>
+<span class="lineNum">     491 </span><span class="lineCov">          2 :     report_level.add_cla_id( &quot;-&quot;, &quot;r&quot;, &quot; &quot; );</span>
+<span class="lineNum">     492 </span><span class="lineCov">          1 :     store.add( report_level );</span>
+<span class="lineNum">     493 </span>            : 
+<span class="lineNum">     494 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     495 </span>            : 
+<span class="lineNum">     496 </span>            :     rt::parameter&lt;std::string&gt; report_mem_leaks( REPORT_MEM_LEAKS, (
+<span class="lineNum">     497 </span>            :         rt::description = &quot;File where to report memory leaks to.&quot;,
+<span class="lineNum">     498 </span>            :         rt::env_var = &quot;BOOST_TEST_REPORT_MEMORY_LEAKS_TO&quot;,
+<span class="lineNum">     499 </span>            :         rt::default_value = std::string(),
+<span class="lineNum">     500 </span>            :         rt::value_hint = &quot;&lt;file name&gt;&quot;,
+<span class="lineNum">     501 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + REPORT_MEM_LEAKS + &quot; allows to specify a file where to report &quot;</span>
+<span class="lineNum">     502 </span>            :                    &quot;memory leaks to. The parameter does not have default value. If it is not specified, &quot;
+<span class="lineNum">     503 </span>            :                    &quot;memory leaks (if any) are reported to the standard error stream.&quot;
+<span class="lineNum">     504 </span><span class="lineCov">         18 :     ));</span>
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span><span class="lineCov">          4 :     report_mem_leaks.add_cla_id( &quot;--&quot;, REPORT_MEM_LEAKS, &quot;=&quot; );</span>
+<span class="lineNum">     507 </span><span class="lineCov">          1 :     store.add( report_mem_leaks );</span>
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     510 </span>            : 
+<span class="lineNum">     511 </span>            :     rt::parameter&lt;std::string&gt; report_sink( REPORT_SINK, (
+<span class="lineNum">     512 </span>            :         rt::description = &quot;Specifies report sink: stderr(default), stdout or file name.&quot;,
+<span class="lineNum">     513 </span>            :         rt::env_var = &quot;BOOST_TEST_REPORT_SINK&quot;,
+<span class="lineNum">     514 </span>            :         rt::value_hint = &quot;&lt;stderr|stdout|file name&gt;&quot;,
+<span class="lineNum">     515 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + REPORT_SINK + &quot; allows to set the result report sink - &quot;</span>
+<span class="lineNum">     516 </span>            :                    &quot;the location where the framework writes the result report to, thus it &quot;
+<span class="lineNum">     517 </span>            :                    &quot;allows to easily redirect the result report to a file or a standard &quot;
+<span class="lineNum">     518 </span>            :                    &quot;stream. By default the testing result report is directed to the &quot;
+<span class="lineNum">     519 </span>            :                    &quot;standard error stream.&quot;
+<span class="lineNum">     520 </span><span class="lineCov">         14 :     ));</span>
+<span class="lineNum">     521 </span>            : 
+<span class="lineNum">     522 </span><span class="lineCov">          3 :     report_sink.add_cla_id( &quot;--&quot;, REPORT_SINK, &quot;=&quot; );</span>
+<span class="lineNum">     523 </span><span class="lineCov">          2 :     report_sink.add_cla_id( &quot;-&quot;, &quot;e&quot;, &quot; &quot; );</span>
+<span class="lineNum">     524 </span><span class="lineCov">          1 :     store.add( report_sink );</span>
+<span class="lineNum">     525 </span>            : 
+<span class="lineNum">     526 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     527 </span>            : 
+<span class="lineNum">     528 </span>            :     rt::option result_code( RESULT_CODE, (
+<span class="lineNum">     529 </span>            :         rt::description = &quot;Disables test modules's result code generation.&quot;,
+<span class="lineNum">     530 </span>            :         rt::env_var = &quot;BOOST_TEST_RESULT_CODE&quot;,
+<span class="lineNum">     531 </span>            :         rt::default_value = true,
+<span class="lineNum">     532 </span><span class="lineCov">          3 :         rt::help = &quot;The 'no' argument value for the parameter &quot; + RESULT_CODE + &quot; instructs the &quot;</span>
+<span class="lineNum">     533 </span>            :                    &quot;framework to always return zero result code. This can be used for test programs &quot;
+<span class="lineNum">     534 </span>            :                    &quot;executed within IDE. By default this parameter has value 'yes'.&quot;
+<span class="lineNum">     535 </span><span class="lineCov">         13 :     ));</span>
+<span class="lineNum">     536 </span>            : 
+<span class="lineNum">     537 </span><span class="lineCov">          3 :     result_code.add_cla_id( &quot;--&quot;, RESULT_CODE, &quot;=&quot;, true );</span>
+<span class="lineNum">     538 </span><span class="lineCov">          2 :     result_code.add_cla_id( &quot;-&quot;, &quot;c&quot;, &quot; &quot; );</span>
+<span class="lineNum">     539 </span><span class="lineCov">          1 :     store.add( result_code );</span>
+<span class="lineNum">     540 </span>            : 
+<span class="lineNum">     541 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     542 </span>            : 
+<span class="lineNum">     543 </span>            :     rt::parameter&lt;std::string,rt::REPEATABLE_PARAM&gt; tests_to_run( RUN_FILTERS, (
+<span class="lineNum">     544 </span>            :         rt::description = &quot;Filters, which test units to include or exclude from test module execution.&quot;,
+<span class="lineNum">     545 </span>            :         rt::env_var = &quot;BOOST_TEST_RUN_FILTERS&quot;,
+<span class="lineNum">     546 </span>            :         rt::value_hint = &quot;&lt;test unit filter&gt;&quot;,
+<span class="lineNum">     547 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + RUN_FILTERS + &quot; allows to filter which test units to execute during &quot;</span>
+<span class="lineNum">     548 </span>            :                    &quot;testing. The framework supports both 'selection filters', which allow to select &quot;
+<span class="lineNum">     549 </span>            :                    &quot;which test units to enable from the set of available test units, and 'disabler &quot;
+<span class="lineNum">     550 </span>            :                    &quot;filters', which allow to disable some test units. The __UTF__ also supports &quot;
+<span class="lineNum">     551 </span>            :                    &quot;enabling/disabling test units at compile time. These settings identify the default &quot;
+<span class="lineNum">     552 </span><span class="lineCov">          3 :                    &quot;set of test units to run. Parameter &quot; + RUN_FILTERS + &quot; is used to change this default. &quot;</span>
+<span class="lineNum">     553 </span>            :                    &quot;This parameter is repeatable, so you can specify more than one filter if necessary.&quot;
+<span class="lineNum">     554 </span><span class="lineCov">         15 :     ));</span>
+<span class="lineNum">     555 </span>            : 
+<span class="lineNum">     556 </span><span class="lineCov">          3 :     tests_to_run.add_cla_id( &quot;--&quot;, RUN_FILTERS, &quot;=&quot; );</span>
+<span class="lineNum">     557 </span><span class="lineCov">          2 :     tests_to_run.add_cla_id( &quot;-&quot;, &quot;t&quot;, &quot; &quot; );</span>
+<span class="lineNum">     558 </span><span class="lineCov">          1 :     store.add( tests_to_run );</span>
+<span class="lineNum">     559 </span>            : 
+<span class="lineNum">     560 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     561 </span>            : 
+<span class="lineNum">     562 </span>            :     rt::option save_test_pattern( SAVE_TEST_PATTERN, (
+<span class="lineNum">     563 </span>            :         rt::description = &quot;Allows to switch between saving or matching test pattern file.&quot;,
+<span class="lineNum">     564 </span>            :         rt::env_var = &quot;BOOST_TEST_SAVE_PATTERN&quot;,
+<span class="lineNum">     565 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + SAVE_TEST_PATTERN + &quot; facilitates switching mode of operation for &quot;</span>
+<span class="lineNum">     566 </span>            :                    &quot;testing output streams.\n\nThis parameter serves no particular purpose within the &quot;
+<span class="lineNum">     567 </span>            :                    &quot;framework itself. It can be used by test modules relying on output_test_stream to &quot;
+<span class="lineNum">     568 </span>            :                    &quot;implement testing logic. Default mode is 'match' (false).&quot;
+<span class="lineNum">     569 </span><span class="lineCov">         11 :     ));</span>
+<span class="lineNum">     570 </span>            : 
+<span class="lineNum">     571 </span><span class="lineCov">          4 :     save_test_pattern.add_cla_id( &quot;--&quot;, SAVE_TEST_PATTERN, &quot;=&quot; );</span>
+<span class="lineNum">     572 </span><span class="lineCov">          1 :     store.add( save_test_pattern );</span>
+<span class="lineNum">     573 </span>            : 
+<span class="lineNum">     574 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     575 </span>            : 
+<span class="lineNum">     576 </span>            :     rt::option show_progress( SHOW_PROGRESS, (
+<span class="lineNum">     577 </span>            :         rt::description = &quot;Turns on progress display.&quot;,
+<span class="lineNum">     578 </span>            :         rt::env_var = &quot;BOOST_TEST_SHOW_PROGRESS&quot;,
+<span class="lineNum">     579 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + SHOW_PROGRESS + &quot; instructs the framework to display test progress &quot;</span>
+<span class="lineNum">     580 </span>            :                    &quot;information. By default the test progress is not shown.&quot;
+<span class="lineNum">     581 </span><span class="lineCov">         11 :     ));</span>
+<span class="lineNum">     582 </span>            : 
+<span class="lineNum">     583 </span><span class="lineCov">          3 :     show_progress.add_cla_id( &quot;--&quot;, SHOW_PROGRESS, &quot;=&quot; );</span>
+<span class="lineNum">     584 </span><span class="lineCov">          2 :     show_progress.add_cla_id( &quot;-&quot;, &quot;p&quot;, &quot; &quot; );</span>
+<span class="lineNum">     585 </span><span class="lineCov">          1 :     store.add( show_progress );</span>
+<span class="lineNum">     586 </span>            : 
+<span class="lineNum">     587 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     588 </span>            : 
+<span class="lineNum">     589 </span>            :     rt::option use_alt_stack( USE_ALT_STACK, (
+<span class="lineNum">     590 </span>            :         rt::description = &quot;Turns on/off usage of an alternative stack for signal handling.&quot;,
+<span class="lineNum">     591 </span>            :         rt::env_var = &quot;BOOST_TEST_USE_ALT_STACK&quot;,
+<span class="lineNum">     592 </span>            :         rt::default_value = true,
+<span class="lineNum">     593 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + USE_ALT_STACK + &quot; instructs the framework to use alternative &quot;</span>
+<span class="lineNum">     594 </span>            :                    &quot;stack for signals processing, on platforms where they are supported. The feature &quot;
+<span class="lineNum">     595 </span>            :                    &quot;is enabled by default, but can be disabled using this parameter.&quot;
+<span class="lineNum">     596 </span><span class="lineCov">         13 :     ));</span>
+<span class="lineNum">     597 </span>            : 
+<span class="lineNum">     598 </span><span class="lineCov">          4 :     use_alt_stack.add_cla_id( &quot;--&quot;, USE_ALT_STACK, &quot;=&quot;, true );</span>
+<span class="lineNum">     599 </span><span class="lineCov">          1 :     store.add( use_alt_stack );</span>
+<span class="lineNum">     600 </span>            : 
+<span class="lineNum">     601 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     602 </span>            : 
+<span class="lineNum">     603 </span>            :     rt::option wait_for_debugger( WAIT_FOR_DEBUGGER, (
+<span class="lineNum">     604 </span>            :         rt::description = &quot;Forces test module to wait for button to be pressed before starting test run.&quot;,
+<span class="lineNum">     605 </span>            :         rt::env_var = &quot;BOOST_TEST_WAIT_FOR_DEBUGGER&quot;,
+<span class="lineNum">     606 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + WAIT_FOR_DEBUGGER + &quot; instructs the framework to pause before starting &quot;</span>
+<span class="lineNum">     607 </span>            :                    &quot;test units execution, so that you can attach a debugger to running test module. By &quot;
+<span class="lineNum">     608 </span>            :                    &quot;default this parameters turned off.&quot;
+<span class="lineNum">     609 </span><span class="lineCov">         11 :     ));</span>
+<span class="lineNum">     610 </span>            : 
+<span class="lineNum">     611 </span><span class="lineCov">          3 :     wait_for_debugger.add_cla_id( &quot;--&quot;, WAIT_FOR_DEBUGGER, &quot;=&quot; );</span>
+<span class="lineNum">     612 </span><span class="lineCov">          2 :     wait_for_debugger.add_cla_id( &quot;-&quot;, &quot;w&quot;, &quot; &quot; );</span>
+<span class="lineNum">     613 </span><span class="lineCov">          1 :     store.add( wait_for_debugger );</span>
+<span class="lineNum">     614 </span>            : 
+<span class="lineNum">     615 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     616 </span>            : 
+<span class="lineNum">     617 </span>            :     rt::parameter&lt;std::string&gt; help( HELP, (
+<span class="lineNum">     618 </span>            :         rt::description = &quot;Help for framework parameters.&quot;,
+<span class="lineNum">     619 </span>            :         rt::optional_value = std::string(),
+<span class="lineNum">     620 </span>            :         rt::value_hint = &quot;&lt;parameter name&gt;&quot;,
+<span class="lineNum">     621 </span><span class="lineCov">          3 :         rt::help = &quot;Parameter &quot; + HELP + &quot; displays help on the framework's parameters. &quot;</span>
+<span class="lineNum">     622 </span>            :                    &quot;The parameter accepts an optional argument value. If present, an argument value is &quot;
+<span class="lineNum">     623 </span>            :                    &quot;interpreted as a parameter name (name guessing works as well, so for example &quot;
+<span class="lineNum">     624 </span>            :                    &quot;--help=rand displays help on the parameter random). If the parameter name is unknown &quot;
+<span class="lineNum">     625 </span>            :                    &quot;or ambiguous error is reported. If argument value is absent, a summary of all &quot;
+<span class="lineNum">     626 </span>            :                    &quot;framework's parameter is displayed.&quot;
+<span class="lineNum">     627 </span><span class="lineCov">         15 :     ));</span>
+<span class="lineNum">     628 </span><span class="lineCov">          4 :     help.add_cla_id( &quot;--&quot;, HELP, &quot;=&quot; );</span>
+<span class="lineNum">     629 </span><span class="lineCov">          1 :     store.add( help );</span>
+<span class="lineNum">     630 </span>            : 
+<span class="lineNum">     631 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     632 </span>            : 
+<span class="lineNum">     633 </span>            :     rt::option usage( USAGE, (
+<span class="lineNum">     634 </span>            :         rt::description = &quot;Short message explaining usage of Boost.Test parameters.&quot;
+<span class="lineNum">     635 </span><span class="lineCov">          4 :     ));</span>
+<span class="lineNum">     636 </span><span class="lineCov">          2 :     usage.add_cla_id( &quot;-&quot;, &quot;?&quot;, &quot; &quot; );</span>
+<span class="lineNum">     637 </span><span class="lineCov">          1 :     store.add( usage );</span>
+<span class="lineNum">     638 </span>            : 
+<span class="lineNum">     639 </span>            :     ///////////////////////////////////////////////
+<span class="lineNum">     640 </span>            : 
+<span class="lineNum">     641 </span>            :     rt::option version( VERSION, (
+<span class="lineNum">     642 </span>            :         rt::description = &quot;Prints Boost.Test version and exits.&quot;
+<span class="lineNum">     643 </span><span class="lineCov">          4 :     ));</span>
+<span class="lineNum">     644 </span><span class="lineCov">          4 :     version.add_cla_id( &quot;--&quot;, VERSION, &quot; &quot; );</span>
+<span class="lineNum">     645 </span><span class="lineCov">          1 :     store.add( version );</span>
+<span class="lineNum">     646 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     647 </span>            : 
+<span class="lineNum">     648 </span><span class="lineCov">          1 : static rt::arguments_store  s_arguments_store;</span>
+<span class="lineNum">     649 </span><span class="lineCov">          1 : static rt::parameters_store s_parameters_store;</span>
+<span class="lineNum">     650 </span>            : 
+<span class="lineNum">     651 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     652 </span>            : 
+<span class="lineNum">     653 </span>            : } // local namespace
+<a name="654"><span class="lineNum">     654 </span>            : </a>
+<span class="lineNum">     655 </span>            : void
+<span class="lineNum">     656 </span><span class="lineCov">          1 : init( int&amp; argc, char** argv )</span>
+<span class="lineNum">     657 </span>            : {
+<span class="lineNum">     658 </span><span class="lineCov">          2 :     shared_ptr&lt;rt::cla::parser&gt; parser;</span>
+<span class="lineNum">     659 </span>            : 
+<span class="lineNum">     660 </span>            :     BOOST_TEST_I_TRY {
+<span class="lineNum">     661 </span>            :         // Initialize parameters list
+<span class="lineNum">     662 </span><span class="lineCov">          1 :         if( s_parameters_store.is_empty() )</span>
+<span class="lineNum">     663 </span><span class="lineCov">          1 :             register_parameters( s_parameters_store );</span>
+<span class="lineNum">     664 </span>            : 
+<span class="lineNum">     665 </span>            :         // Clear up arguments store just in case (of multiple init invocations)
+<span class="lineNum">     666 </span><span class="lineCov">          1 :         s_arguments_store.clear();</span>
+<span class="lineNum">     667 </span>            : 
+<span class="lineNum">     668 </span>            :         // Parse CLA they take precedence over  environment
+<span class="lineNum">     669 </span><span class="lineCov">          5 :         parser.reset( new rt::cla::parser( s_parameters_store, (rt::end_of_params = &quot;--&quot;, rt::negation_prefix = &quot;no_&quot;) ) );</span>
+<span class="lineNum">     670 </span><span class="lineCov">          2 :         argc = parser-&gt;parse( argc, argv, s_arguments_store );</span>
+<span class="lineNum">     671 </span>            : 
+<span class="lineNum">     672 </span>            :         // Try to fetch missing arguments from environment
+<span class="lineNum">     673 </span><span class="lineCov">          1 :         rt::env::fetch_absent( s_parameters_store, s_arguments_store );</span>
+<span class="lineNum">     674 </span>            : 
+<span class="lineNum">     675 </span>            :         // Set arguments to default values if defined and perform all the validations
+<span class="lineNum">     676 </span><span class="lineCov">          1 :         rt::finalize_arguments( s_parameters_store, s_arguments_store );</span>
+<span class="lineNum">     677 </span>            : 
+<span class="lineNum">     678 </span>            :         // Report help if requested
+<span class="lineNum">     679 </span><span class="lineCov">          2 :         if( runtime_config::get&lt;bool&gt;( VERSION ) ) {</span>
+<span class="lineNum">     680 </span><span class="lineNoCov">          0 :             parser-&gt;version( std::cerr );</span>
+<span class="lineNum">     681 </span><span class="lineNoCov">          0 :             BOOST_TEST_I_THROW( framework::nothing_to_test( boost::exit_success ) );</span>
+<span class="lineNum">     682 </span>            :         }
+<span class="lineNum">     683 </span><span class="lineCov">          2 :         else if( runtime_config::get&lt;bool&gt;( USAGE ) ) {</span>
+<span class="lineNum">     684 </span><span class="lineNoCov">          0 :             parser-&gt;usage( std::cerr );</span>
+<span class="lineNum">     685 </span><span class="lineNoCov">          0 :             BOOST_TEST_I_THROW( framework::nothing_to_test( boost::exit_success ) );</span>
+<span class="lineNum">     686 </span>            :         }
+<span class="lineNum">     687 </span><span class="lineCov">          2 :         else if( s_arguments_store.has( HELP ) ) {</span>
+<span class="lineNum">     688 </span><span class="lineNoCov">          0 :             parser-&gt;help( std::cerr, s_parameters_store, runtime_config::get&lt;std::string&gt;( HELP ) );</span>
+<span class="lineNum">     689 </span><span class="lineNoCov">          0 :             BOOST_TEST_I_THROW( framework::nothing_to_test( boost::exit_success ) );</span>
+<span class="lineNum">     690 </span>            :         }
+<span class="lineNum">     691 </span>            : 
+<span class="lineNum">     692 </span>            :         // A bit of business logic: output_format takes precedence over log/report formats
+<span class="lineNum">     693 </span><span class="lineCov">          2 :         if( s_arguments_store.has( OUTPUT_FORMAT ) ) {</span>
+<span class="lineNum">     694 </span><span class="lineNoCov">          0 :             unit_test::output_format of = s_arguments_store.get&lt;unit_test::output_format&gt;( OUTPUT_FORMAT );</span>
+<span class="lineNum">     695 </span><span class="lineNoCov">          0 :             s_arguments_store.set( REPORT_FORMAT, of );</span>
+<span class="lineNum">     696 </span><span class="lineNoCov">          0 :             s_arguments_store.set( LOG_FORMAT, of );</span>
+<span class="lineNum">     697 </span>            :         }
+<span class="lineNum">     698 </span>            : 
+<span class="lineNum">     699 </span>            :     }
+<span class="lineNum">     700 </span><span class="lineNoCov">          0 :     BOOST_TEST_I_CATCH( rt::init_error, ex ) {</span>
+<span class="lineNum">     701 </span><span class="lineNoCov">          0 :         BOOST_TEST_SETUP_ASSERT( false, ex.msg );</span>
+<span class="lineNum">     702 </span>            :     }
+<span class="lineNum">     703 </span><span class="lineNoCov">          0 :     BOOST_TEST_I_CATCH( rt::ambiguous_param, ex ) {</span>
+<span class="lineNum">     704 </span><span class="lineNoCov">          0 :         std::cerr &lt;&lt; ex.msg &lt;&lt; &quot;\n Did you mean one of these?\n&quot;;</span>
+<span class="lineNum">     705 </span>            : 
+<span class="lineNum">     706 </span><span class="lineNoCov">          0 :         BOOST_TEST_FOREACH( rt::cstring, name, ex.m_amb_candidates )</span>
+<span class="lineNum">     707 </span><span class="lineNoCov">          0 :             std::cerr &lt;&lt; &quot;   &quot; &lt;&lt; name &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     708 </span>            : 
+<span class="lineNum">     709 </span><span class="lineNoCov">          0 :         BOOST_TEST_I_THROW( framework::nothing_to_test( boost::exit_exception_failure ) );</span>
+<span class="lineNum">     710 </span>            :     }
+<span class="lineNum">     711 </span><span class="lineNoCov">          0 :     BOOST_TEST_I_CATCH( rt::unrecognized_param, ex ) {</span>
+<span class="lineNum">     712 </span><span class="lineNoCov">          0 :         std::cerr &lt;&lt; ex.msg &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     713 </span>            : 
+<span class="lineNum">     714 </span><span class="lineNoCov">          0 :         if( !ex.m_typo_candidates.empty() ) {</span>
+<span class="lineNum">     715 </span><span class="lineNoCov">          0 :             std::cerr &lt;&lt; &quot; Did you mean one of these?\n&quot;;</span>
+<span class="lineNum">     716 </span>            : 
+<span class="lineNum">     717 </span><span class="lineNoCov">          0 :             BOOST_TEST_FOREACH( rt::cstring, name, ex.m_typo_candidates )</span>
+<span class="lineNum">     718 </span><span class="lineNoCov">          0 :                 std::cerr &lt;&lt; &quot;   &quot; &lt;&lt; name &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     719 </span>            :         }
+<span class="lineNum">     720 </span><span class="lineNoCov">          0 :         else if( parser ) {</span>
+<span class="lineNum">     721 </span><span class="lineNoCov">          0 :             std::cerr &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">     722 </span><span class="lineNoCov">          0 :             parser-&gt;usage( std::cerr );</span>
+<span class="lineNum">     723 </span>            :         }
+<span class="lineNum">     724 </span>            : 
+<span class="lineNum">     725 </span><span class="lineNoCov">          0 :         BOOST_TEST_I_THROW( framework::nothing_to_test( boost::exit_exception_failure ) );</span>
+<span class="lineNum">     726 </span>            :     }
+<span class="lineNum">     727 </span><span class="lineNoCov">          0 :     BOOST_TEST_I_CATCH( rt::input_error, ex ) {</span>
+<span class="lineNum">     728 </span><span class="lineNoCov">          0 :         std::cerr &lt;&lt; ex.msg &lt;&lt; &quot;\n\n&quot;;</span>
+<span class="lineNum">     729 </span>            : 
+<span class="lineNum">     730 </span><span class="lineNoCov">          0 :         if( parser )</span>
+<span class="lineNum">     731 </span><span class="lineNoCov">          0 :             parser-&gt;usage( std::cerr, ex.param_name );</span>
+<span class="lineNum">     732 </span>            : 
+<span class="lineNum">     733 </span><span class="lineNoCov">          0 :         BOOST_TEST_I_THROW( framework::nothing_to_test( boost::exit_exception_failure ) );</span>
+<span class="lineNum">     734 </span>            :     }
+<span class="lineNum">     735 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     736 </span>            : 
+<span class="lineNum">     737 </span>            : //____________________________________________________________________________//
+<a name="738"><span class="lineNum">     738 </span>            : </a>
+<span class="lineNum">     739 </span>            : rt::arguments_store const&amp;
+<span class="lineNum">     740 </span><span class="lineNoCov">          0 : argument_store()</span>
+<span class="lineNum">     741 </span>            : {
+<span class="lineNum">     742 </span><span class="lineNoCov">          0 :     return s_arguments_store;</span>
+<span class="lineNum">     743 </span>            : }
+<span class="lineNum">     744 </span>            : 
+<span class="lineNum">     745 </span>            : //____________________________________________________________________________//
+<a name="746"><span class="lineNum">     746 </span>            : </a>
+<span class="lineNum">     747 </span>            : bool
+<span class="lineNum">     748 </span><span class="lineNoCov">          0 : save_pattern()</span>
+<span class="lineNum">     749 </span>            : {
+<span class="lineNum">     750 </span><span class="lineNoCov">          0 :     return runtime_config::get&lt;bool&gt;( SAVE_TEST_PATTERN );</span>
+<span class="lineNum">     751 </span>            : }
+<span class="lineNum">     752 </span>            : 
+<span class="lineNum">     753 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     754 </span>            : 
+<span class="lineNum">     755 </span>            : } // namespace runtime_config
+<span class="lineNum">     756 </span>            : } // namespace unit_test
+<span class="lineNum">     757 </span>            : } // namespace boost
+<span class="lineNum">     758 </span>            : 
+<span class="lineNum">     759 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     760 </span>            : 
+<span class="lineNum">     761 </span>            : #endif // BOOST_TEST_UNIT_TEST_PARAMETERS_IPP_012205GER
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/algorithm/string/case_conv.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/algorithm/string</a> - case_conv.hpp<span style="font-size: 80%;"> (source / <a href="case_conv.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">33.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  Boost string_algo library case_conv.hpp header file  ---------------------------//</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : //  Copyright Pavol Droba 2002-2003.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       6 </span>            : //    (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       7 </span>            : //          http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : //  See http://www.boost.org/ for updates, documentation, and revision history.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_STRING_CASE_CONV_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_STRING_CASE_CONV_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &lt;boost/algorithm/string/config.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      16 </span>            : #include &lt;locale&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/iterator/transform_iterator.hpp&gt;
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #include &lt;boost/range/as_literal.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/range/begin.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/range/end.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/range/value_type.hpp&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;boost/algorithm/string/detail/case_conv.hpp&gt;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : /*! \file
+<span class="lineNum">      27 </span>            :     Defines sequence case-conversion algorithms.
+<span class="lineNum">      28 </span>            :     Algorithms convert each element in the input sequence to the
+<span class="lineNum">      29 </span>            :     desired case using provided locales.
+<span class="lineNum">      30 </span>            : */
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace boost {
+<span class="lineNum">      33 </span>            :     namespace algorithm {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : //  to_lower  -----------------------------------------------//
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            :         //! Convert to lower case
+<span class="lineNum">      38 </span>            :         /*!
+<span class="lineNum">      39 </span>            :             Each element of the input sequence is converted to lower
+<span class="lineNum">      40 </span>            :             case. The result is a copy of the input converted to lower case.
+<span class="lineNum">      41 </span>            :             It is returned as a sequence or copied to the output iterator.
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            :             \param Output An output iterator to which the result will be copied
+<span class="lineNum">      44 </span>            :             \param Input An input range
+<span class="lineNum">      45 </span>            :             \param Loc A locale used for conversion
+<span class="lineNum">      46 </span>            :             \return 
+<span class="lineNum">      47 </span>            :                 An output iterator pointing just after the last inserted character or
+<span class="lineNum">      48 </span>            :                 a copy of the input
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            :             \note The second variant of this function provides the strong exception-safety guarantee
+<span class="lineNum">      51 </span>            :                 
+<span class="lineNum">      52 </span>            :         */
+<span class="lineNum">      53 </span>            :         template&lt;typename OutputIteratorT, typename RangeT&gt;
+<span class="lineNum">      54 </span>            :         inline OutputIteratorT 
+<span class="lineNum">      55 </span>            :         to_lower_copy(
+<span class="lineNum">      56 </span>            :             OutputIteratorT Output,
+<span class="lineNum">      57 </span>            :             const RangeT&amp; Input,
+<span class="lineNum">      58 </span>            :             const std::locale&amp; Loc=std::locale())
+<span class="lineNum">      59 </span>            :         {
+<span class="lineNum">      60 </span>            :             return ::boost::algorithm::detail::transform_range_copy( 
+<span class="lineNum">      61 </span>            :                Output,
+<span class="lineNum">      62 </span>            :                ::boost::as_literal(Input),
+<span class="lineNum">      63 </span>            :                ::boost::algorithm::detail::to_lowerF&lt;
+<span class="lineNum">      64 </span>            :                     typename range_value&lt;RangeT&gt;::type &gt;(Loc));
+<span class="lineNum">      65 </span>            :         }
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :         //! Convert to lower case
+<span class="lineNum">      68 </span>            :         /*!
+<span class="lineNum">      69 </span>            :             \overload
+<span class="lineNum">      70 </span>            :         */
+<span class="lineNum">      71 </span>            :         template&lt;typename SequenceT&gt;
+<span class="lineNum">      72 </span>            :         inline SequenceT to_lower_copy( 
+<span class="lineNum">      73 </span>            :             const SequenceT&amp; Input, 
+<span class="lineNum">      74 </span>            :             const std::locale&amp; Loc=std::locale())
+<span class="lineNum">      75 </span>            :         {
+<span class="lineNum">      76 </span>            :             return ::boost::algorithm::detail::transform_range_copy&lt;SequenceT&gt;(
+<span class="lineNum">      77 </span>            :                 Input,
+<span class="lineNum">      78 </span>            :                 ::boost::algorithm::detail::to_lowerF&lt;
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :                     typename range_value&lt;SequenceT&gt;::type &gt;(Loc));</span>
+<span class="lineNum">      80 </span>            :         }
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :         //! Convert to lower case
+<span class="lineNum">      83 </span>            :         /*!
+<span class="lineNum">      84 </span>            :             Each element of the input sequence is converted to lower
+<span class="lineNum">      85 </span>            :             case. The input sequence is modified in-place.
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :             \param Input A range
+<span class="lineNum">      88 </span>            :             \param Loc a locale used for conversion
+<span class="lineNum">      89 </span>            :         */
+<span class="lineNum">      90 </span>            :         template&lt;typename WritableRangeT&gt;
+<span class="lineNum">      91 </span>            :         inline void to_lower( 
+<span class="lineNum">      92 </span>            :             WritableRangeT&amp; Input, 
+<span class="lineNum">      93 </span>            :             const std::locale&amp; Loc=std::locale())
+<span class="lineNum">      94 </span>            :         {
+<span class="lineNum">      95 </span>            :             ::boost::algorithm::detail::transform_range(
+<span class="lineNum">      96 </span>            :                 ::boost::as_literal(Input),
+<span class="lineNum">      97 </span>            :                 ::boost::algorithm::detail::to_lowerF&lt;
+<span class="lineNum">      98 </span>            :                     typename range_value&lt;WritableRangeT&gt;::type &gt;(Loc));
+<span class="lineNum">      99 </span>            :         }
+<span class="lineNum">     100 </span>            :         
+<span class="lineNum">     101 </span>            : //  to_upper  -----------------------------------------------//
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            :         //! Convert to upper case
+<span class="lineNum">     104 </span>            :         /*!
+<span class="lineNum">     105 </span>            :             Each element of the input sequence is converted to upper
+<span class="lineNum">     106 </span>            :             case. The result is a copy of the input converted to upper case.
+<span class="lineNum">     107 </span>            :             It is returned as a sequence or copied to the output iterator
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            :             \param Output An output iterator to which the result will be copied
+<span class="lineNum">     110 </span>            :             \param Input An input range
+<span class="lineNum">     111 </span>            :             \param Loc A locale used for conversion
+<span class="lineNum">     112 </span>            :             \return 
+<span class="lineNum">     113 </span>            :                 An output iterator pointing just after the last inserted character or
+<span class="lineNum">     114 </span>            :                 a copy of the input
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            :             \note The second variant of this function provides the strong exception-safety guarantee
+<span class="lineNum">     117 </span>            :         */
+<span class="lineNum">     118 </span>            :         template&lt;typename OutputIteratorT, typename RangeT&gt;
+<span class="lineNum">     119 </span>            :         inline OutputIteratorT 
+<span class="lineNum">     120 </span>            :         to_upper_copy(
+<span class="lineNum">     121 </span>            :             OutputIteratorT Output,
+<span class="lineNum">     122 </span>            :             const RangeT&amp; Input,
+<span class="lineNum">     123 </span>            :             const std::locale&amp; Loc=std::locale())
+<span class="lineNum">     124 </span>            :         {
+<span class="lineNum">     125 </span>            :             return ::boost::algorithm::detail::transform_range_copy( 
+<span class="lineNum">     126 </span>            :                Output,
+<span class="lineNum">     127 </span>            :                ::boost::as_literal(Input),
+<span class="lineNum">     128 </span>            :                ::boost::algorithm::detail::to_upperF&lt;
+<span class="lineNum">     129 </span>            :                     typename range_value&lt;RangeT&gt;::type &gt;(Loc));
+<span class="lineNum">     130 </span>            :         }
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            :         //! Convert to upper case
+<span class="lineNum">     133 </span>            :         /*!
+<span class="lineNum">     134 </span>            :             \overload
+<span class="lineNum">     135 </span>            :         */
+<span class="lineNum">     136 </span>            :         template&lt;typename SequenceT&gt;
+<span class="lineNum">     137 </span>            :         inline SequenceT to_upper_copy( 
+<span class="lineNum">     138 </span>            :             const SequenceT&amp; Input, 
+<span class="lineNum">     139 </span>            :             const std::locale&amp; Loc=std::locale())
+<span class="lineNum">     140 </span>            :         {
+<span class="lineNum">     141 </span>            :             return ::boost::algorithm::detail::transform_range_copy&lt;SequenceT&gt;(
+<span class="lineNum">     142 </span>            :                 Input,
+<span class="lineNum">     143 </span>            :                 ::boost::algorithm::detail::to_upperF&lt;
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :                     typename range_value&lt;SequenceT&gt;::type &gt;(Loc));</span>
+<span class="lineNum">     145 </span>            :         }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            :         //! Convert to upper case
+<span class="lineNum">     148 </span>            :         /*!
+<span class="lineNum">     149 </span>            :             Each element of the input sequence is converted to upper
+<span class="lineNum">     150 </span>            :             case. The input sequence is modified in-place.
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :             \param Input An input range
+<span class="lineNum">     153 </span>            :             \param Loc a locale used for conversion
+<span class="lineNum">     154 </span>            :         */
+<span class="lineNum">     155 </span>            :         template&lt;typename WritableRangeT&gt;
+<span class="lineNum">     156 </span>            :         inline void to_upper( 
+<span class="lineNum">     157 </span>            :             WritableRangeT&amp; Input, 
+<span class="lineNum">     158 </span>            :             const std::locale&amp; Loc=std::locale())
+<span class="lineNum">     159 </span>            :         {
+<span class="lineNum">     160 </span><span class="lineCov">        130 :             ::boost::algorithm::detail::transform_range(</span>
+<span class="lineNum">     161 </span>            :                 ::boost::as_literal(Input),
+<span class="lineNum">     162 </span>            :                 ::boost::algorithm::detail::to_upperF&lt;
+<span class="lineNum">     163 </span>            :                     typename range_value&lt;WritableRangeT&gt;::type &gt;(Loc));
+<span class="lineNum">     164 </span>            :         }
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :     } // namespace algorithm
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :     // pull names to the boost namespace
+<span class="lineNum">     169 </span>            :     using algorithm::to_lower;
+<span class="lineNum">     170 </span>            :     using algorithm::to_lower_copy;
+<span class="lineNum">     171 </span>            :     using algorithm::to_upper;
+<span class="lineNum">     172 </span>            :     using algorithm::to_upper_copy;
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : } // namespace boost
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            : #endif  // BOOST_STRING_CASE_CONV_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

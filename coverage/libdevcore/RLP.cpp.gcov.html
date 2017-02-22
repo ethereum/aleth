@@ -1,0 +1,454 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/RLP.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - RLP.cpp<span style="font-size: 80%;"> (source / <a href="RLP.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">184</td>
+            <td class="headerCovTableEntry">215</td>
+            <td class="headerCovTableEntryMed">85.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntryHi">95.2 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file RLP.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;RLP.h&quot;
+<span class="lineNum">      23 </span>            : using namespace std;
+<span class="lineNum">      24 </span>            : using namespace dev;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span><span class="lineCov">          1 : bytes dev::RLPNull = rlp(&quot;&quot;);</span>
+<span class="lineNum">      27 </span><span class="lineCov">          1 : bytes dev::RLPEmptyList = rlpList();</span>
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span><span class="lineCov">   48669052 : RLP::RLP(bytesConstRef _d, Strictness _s):</span>
+<span class="lineNum">      30 </span><span class="lineCov">   97338104 :         m_data(_d)</span>
+<span class="lineNum">      31 </span>            : {
+<span class="lineNum">      32 </span><span class="lineCov">   48669052 :         if ((_s &amp; FailIfTooBig) &amp;&amp; actualSize() &lt; _d.size())</span>
+<span class="lineNum">      33 </span>            :         {
+<span class="lineNum">      34 </span><span class="lineCov">        139 :                 if (_s &amp; ThrowOnFail)</span>
+<span class="lineNum">      35 </span><span class="lineCov">        417 :                         BOOST_THROW_EXCEPTION(OversizeRLP());</span>
+<span class="lineNum">      36 </span>            :                 else
+<span class="lineNum">      37 </span><span class="lineNoCov">          0 :                         m_data.reset();</span>
+<span class="lineNum">      38 </span>            :         }
+<span class="lineNum">      39 </span><span class="lineCov">   48668901 :         if ((_s &amp; FailIfTooSmall) &amp;&amp; actualSize() &gt; _d.size())</span>
+<span class="lineNum">      40 </span>            :         {
+<span class="lineNum">      41 </span><span class="lineCov">       2065 :                 if (_s &amp; ThrowOnFail)</span>
+<span class="lineNum">      42 </span><span class="lineCov">       6195 :                         BOOST_THROW_EXCEPTION(UndersizeRLP());</span>
+<span class="lineNum">      43 </span>            :                 else
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :                         m_data.reset();</span>
+<span class="lineNum">      45 </span>            :         }
+<a name="46"><span class="lineNum">      46 </span><span class="lineCov">   48666815 : }</span></a>
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span><span class="lineCov">      12512 : RLP::iterator&amp; RLP::iterator::operator++()</span>
+<span class="lineNum">      49 </span>            : {
+<span class="lineNum">      50 </span><span class="lineCov">      12512 :         if (m_remaining)</span>
+<span class="lineNum">      51 </span>            :         {
+<span class="lineNum">      52 </span><span class="lineCov">       7476 :                 m_currentItem.retarget(m_currentItem.next().data(), m_remaining);</span>
+<span class="lineNum">      53 </span><span class="lineCov">       4956 :                 m_currentItem = m_currentItem.cropped(0, sizeAsEncoded(m_currentItem));</span>
+<span class="lineNum">      54 </span><span class="lineCov">       4956 :                 m_remaining -= std::min&lt;size_t&gt;(m_remaining, m_currentItem.size());</span>
+<span class="lineNum">      55 </span>            :         }
+<span class="lineNum">      56 </span>            :         else
+<span class="lineNum">      57 </span><span class="lineCov">      30060 :                 m_currentItem.retarget(m_currentItem.next().data(), 0);</span>
+<span class="lineNum">      58 </span><span class="lineCov">      12498 :         return *this;</span>
+<a name="59"><span class="lineNum">      59 </span>            : }</a>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineCov">     213144 : RLP::iterator::iterator(RLP const&amp; _parent, bool _begin)</span>
+<span class="lineNum">      62 </span>            : {
+<span class="lineNum">      63 </span><span class="lineCov">     159864 :         if (_begin &amp;&amp; _parent.isList())</span>
+<span class="lineNum">      64 </span>            :         {
+<span class="lineNum">      65 </span><span class="lineCov">      53292 :                 auto pl = _parent.payload();</span>
+<span class="lineNum">      66 </span><span class="lineCov">     106560 :                 m_currentItem = pl.cropped(0, sizeAsEncoded(pl));</span>
+<span class="lineNum">      67 </span><span class="lineCov">      53280 :                 m_remaining = pl.size() - m_currentItem.size();</span>
+<span class="lineNum">      68 </span>            :         }
+<span class="lineNum">      69 </span>            :         else
+<span class="lineNum">      70 </span>            :         {
+<span class="lineNum">      71 </span><span class="lineCov">     106560 :                 m_currentItem = _parent.data().cropped(_parent.data().size());</span>
+<span class="lineNum">      72 </span>            :                 m_remaining = 0;
+<span class="lineNum">      73 </span>            :         }
+<a name="74"><span class="lineNum">      74 </span><span class="lineCov">     106560 : }</span></a>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">   10575556 : RLP RLP::operator[](size_t _i) const</span>
+<span class="lineNum">      77 </span>            : {
+<span class="lineNum">      78 </span><span class="lineCov">   10575556 :         if (_i &lt; m_lastIndex)</span>
+<span class="lineNum">      79 </span>            :         {
+<span class="lineNum">      80 </span><span class="lineCov">    3809257 :                 m_lastEnd = sizeAsEncoded(payload());</span>
+<span class="lineNum">      81 </span><span class="lineCov">    3809250 :                 m_lastItem = payload().cropped(0, m_lastEnd);</span>
+<span class="lineNum">      82 </span><span class="lineCov">    1904625 :                 m_lastIndex = 0;</span>
+<span class="lineNum">      83 </span>            :         }
+<span class="lineNum">      84 </span><span class="lineCov">   34514913 :         for (; m_lastIndex &lt; _i &amp;&amp; m_lastItem.size(); ++m_lastIndex)</span>
+<span class="lineNum">      85 </span>            :         {
+<span class="lineNum">      86 </span><span class="lineCov">   23939373 :                 m_lastItem = payload().cropped(m_lastEnd);</span>
+<span class="lineNum">      87 </span><span class="lineCov">   23939364 :                 m_lastItem = m_lastItem.cropped(0, sizeAsEncoded(m_lastItem));</span>
+<span class="lineNum">      88 </span><span class="lineCov">   11969682 :                 m_lastEnd += m_lastItem.size();</span>
+<span class="lineNum">      89 </span>            :         }
+<span class="lineNum">      90 </span><span class="lineCov">   10575545 :         return RLP(m_lastItem, ThrowOnFail | FailIfTooSmall);</span>
+<span class="lineNum">      91 </span>            : }
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 : RLPs RLP::toList(int _flags) const</span>
+<span class="lineNum">      94 </span>            : {
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :         RLPs ret;</span>
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :         if (!isList())</span>
+<span class="lineNum">      97 </span>            :         {
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :                 if (_flags &amp; ThrowOnFail)</span>
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(BadCast());</span>
+<span class="lineNum">     100 </span>            :                 else
+<span class="lineNum">     101 </span>            :                         return ret;
+<span class="lineNum">     102 </span>            :         }
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :         for (auto const&amp; i: *this)</span>
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :                 ret.push_back(i);</span>
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="106"><span class="lineNum">     106 </span>            : }</a>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span><span class="lineCov">   86767162 : size_t RLP::actualSize() const</span>
+<span class="lineNum">     109 </span>            : {
+<span class="lineNum">     110 </span><span class="lineCov">   86767162 :         if (isNull())</span>
+<span class="lineNum">     111 </span>            :                 return 0;
+<span class="lineNum">     112 </span><span class="lineCov">   86680928 :         if (isSingleByte())</span>
+<span class="lineNum">     113 </span>            :                 return 1;
+<span class="lineNum">     114 </span><span class="lineCov">   89816507 :         if (isData() || isList())</span>
+<span class="lineNum">     115 </span><span class="lineCov">   84801904 :                 return payloadOffset() + length();</span>
+<span class="lineNum">     116 </span>            :         return 0;
+<span class="lineNum">     117 </span>            : }
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineCov">  109545193 : void RLP::requireGood() const</span>
+<span class="lineNum">     120 </span>            : {
+<span class="lineNum">     121 </span><span class="lineCov">  109545193 :         if (isNull())</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(BadRLP());</span>
+<span class="lineNum">     123 </span><span class="lineCov">  109545193 :         byte n = m_data[0];</span>
+<span class="lineNum">     124 </span><span class="lineCov">  109545186 :         if (n != c_rlpDataImmLenStart + 1)</span>
+<span class="lineNum">     125 </span>            :                 return;
+<span class="lineNum">     126 </span><span class="lineCov">      10723 :         if (m_data.size() &lt; 2)</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(BadRLP());</span>
+<span class="lineNum">     128 </span><span class="lineCov">      10723 :         if (m_data[1] &lt; c_rlpDataImmLenStart)</span>
+<span class="lineNum">     129 </span><span class="lineCov">         45 :                 BOOST_THROW_EXCEPTION(BadRLP());</span>
+<span class="lineNum">     130 </span>            : }
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span><span class="lineCov">     838245 : bool RLP::isInt() const</span>
+<span class="lineNum">     133 </span>            : {
+<span class="lineNum">     134 </span><span class="lineCov">     838245 :         if (isNull())</span>
+<span class="lineNum">     135 </span>            :                 return false;
+<span class="lineNum">     136 </span><span class="lineCov">     838245 :         requireGood();</span>
+<span class="lineNum">     137 </span><span class="lineCov">     838245 :         byte n = m_data[0];</span>
+<span class="lineNum">     138 </span><span class="lineCov">     838246 :         if (n &lt; c_rlpDataImmLenStart)</span>
+<span class="lineNum">     139 </span><span class="lineCov">     184197 :                 return !!n;</span>
+<span class="lineNum">     140 </span><span class="lineCov">     654049 :         else if (n == c_rlpDataImmLenStart)</span>
+<span class="lineNum">     141 </span>            :                 return true;
+<span class="lineNum">     142 </span><span class="lineCov">     499541 :         else if (n &lt;= c_rlpDataIndLenZero)</span>
+<span class="lineNum">     143 </span>            :         {
+<span class="lineNum">     144 </span><span class="lineCov">     499151 :                 if (m_data.size() &lt;= 1)</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(BadRLP());</span>
+<span class="lineNum">     146 </span><span class="lineCov">     499151 :                 return m_data[1] != 0;</span>
+<span class="lineNum">     147 </span>            :         }
+<span class="lineNum">     148 </span><span class="lineCov">        390 :         else if (n &lt; c_rlpListStart)</span>
+<span class="lineNum">     149 </span>            :         {
+<span class="lineNum">     150 </span><span class="lineCov">         16 :                 if (m_data.size() &lt;= size_t(1 + n - c_rlpDataIndLenZero))</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(BadRLP());</span>
+<span class="lineNum">     152 </span><span class="lineCov">         16 :                 return m_data[1 + n - c_rlpDataIndLenZero] != 0;</span>
+<span class="lineNum">     153 </span>            :         }
+<span class="lineNum">     154 </span>            :         else
+<span class="lineNum">     155 </span>            :                 return false;
+<span class="lineNum">     156 </span>            :         return false;
+<span class="lineNum">     157 </span>            : }
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span><span class="lineCov">  106421073 : size_t RLP::length() const</span>
+<span class="lineNum">     160 </span>            : {
+<span class="lineNum">     161 </span><span class="lineCov">  106421073 :         if (isNull())</span>
+<span class="lineNum">     162 </span>            :                 return 0;
+<span class="lineNum">     163 </span><span class="lineCov">  106421077 :         requireGood();</span>
+<span class="lineNum">     164 </span><span class="lineCov">  106421057 :         size_t ret = 0;</span>
+<span class="lineNum">     165 </span><span class="lineCov">  106421057 :         byte const n = m_data[0];</span>
+<span class="lineNum">     166 </span><span class="lineCov">  106421054 :         if (n &lt; c_rlpDataImmLenStart)</span>
+<span class="lineNum">     167 </span>            :                 return 1;
+<span class="lineNum">     168 </span><span class="lineCov">  106126038 :         else if (n &lt;= c_rlpDataIndLenZero)</span>
+<span class="lineNum">     169 </span><span class="lineCov">   79917271 :                 return n - c_rlpDataImmLenStart;</span>
+<span class="lineNum">     170 </span><span class="lineCov">   26208767 :         else if (n &lt; c_rlpListStart)</span>
+<span class="lineNum">     171 </span>            :         {
+<span class="lineNum">     172 </span><span class="lineCov">    3122583 :                 if (m_data.size() &lt;= size_t(n - c_rlpDataIndLenZero))</span>
+<span class="lineNum">     173 </span><span class="lineCov">          6 :                         BOOST_THROW_EXCEPTION(BadRLP());</span>
+<span class="lineNum">     174 </span><span class="lineCov">    3122581 :                 if (m_data.size() &gt; 1)</span>
+<span class="lineNum">     175 </span><span class="lineCov">    3122581 :                         if (m_data[1] == 0)</span>
+<span class="lineNum">     176 </span><span class="lineCov">         18 :                                 BOOST_THROW_EXCEPTION(BadRLP());</span>
+<span class="lineNum">     177 </span><span class="lineCov">    3122575 :                 unsigned lengthSize = n - c_rlpDataIndLenZero;</span>
+<span class="lineNum">     178 </span><span class="lineCov">    3122575 :                 if (lengthSize &gt; sizeof(ret))</span>
+<span class="lineNum">     179 </span>            :                         // We did not check, but would most probably not fit in our memory.
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(UndersizeRLP());</span>
+<span class="lineNum">     181 </span>            :                 // No leading zeroes.
+<span class="lineNum">     182 </span><span class="lineCov">    3122575 :                 if (!m_data[1])</span>
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(BadRLP());</span>
+<span class="lineNum">     184 </span><span class="lineCov">   11274165 :                 for (unsigned i = 0; i &lt; lengthSize; ++i)</span>
+<span class="lineNum">     185 </span><span class="lineCov">    4075795 :                         ret = (ret &lt;&lt; 8) | m_data[i + 1];</span>
+<span class="lineNum">     186 </span>            :                 // Must be greater than the limit.
+<span class="lineNum">     187 </span><span class="lineCov">    3122575 :                 if (ret &lt; c_rlpListStart - c_rlpDataImmLenStart - c_rlpMaxLengthBytes)</span>
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(BadRLP());</span>
+<span class="lineNum">     189 </span>            :         }
+<span class="lineNum">     190 </span><span class="lineCov">   23086184 :         else if (n &lt;= c_rlpListIndLenZero)</span>
+<span class="lineNum">     191 </span><span class="lineCov">    3370933 :                 return n - c_rlpListStart;</span>
+<span class="lineNum">     192 </span>            :         else
+<span class="lineNum">     193 </span>            :         {
+<span class="lineNum">     194 </span><span class="lineCov">   19715251 :                 unsigned lengthSize = n - c_rlpListIndLenZero;</span>
+<span class="lineNum">     195 </span><span class="lineCov">   19715251 :                 if (m_data.size() &lt;= lengthSize)</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(BadRLP());</span>
+<span class="lineNum">     197 </span><span class="lineCov">   19715251 :                 if (m_data.size() &gt; 1)</span>
+<span class="lineNum">     198 </span><span class="lineCov">   19715251 :                         if (m_data[1] == 0)</span>
+<span class="lineNum">     199 </span><span class="lineCov">         12 :                                 BOOST_THROW_EXCEPTION(BadRLP());</span>
+<span class="lineNum">     200 </span><span class="lineCov">   19715247 :                 if (lengthSize &gt; sizeof(ret))</span>
+<span class="lineNum">     201 </span>            :                         // We did not check, but would most probably not fit in our memory.
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(UndersizeRLP());</span>
+<span class="lineNum">     203 </span><span class="lineCov">   19715247 :                 if (!m_data[1])</span>
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(BadRLP());</span>
+<span class="lineNum">     205 </span><span class="lineCov">   76257461 :                 for (unsigned i = 0; i &lt; lengthSize; ++i)</span>
+<span class="lineNum">     206 </span><span class="lineCov">   28271108 :                         ret = (ret &lt;&lt; 8) | m_data[i + 1];</span>
+<span class="lineNum">     207 </span><span class="lineCov">   19715246 :                 if (ret &lt; 0x100 - c_rlpListStart - c_rlpMaxLengthBytes)</span>
+<span class="lineNum">     208 </span><span class="lineCov">          6 :                         BOOST_THROW_EXCEPTION(BadRLP());</span>
+<span class="lineNum">     209 </span>            :         }
+<span class="lineNum">     210 </span>            :         // We have to be able to add payloadOffset to length without overflow.
+<span class="lineNum">     211 </span>            :         // This rejects roughly 4GB-sized RLPs on some platforms.
+<span class="lineNum">     212 </span><span class="lineCov">   22837819 :         if (ret &gt;= std::numeric_limits&lt;size_t&gt;::max() - 0x100)</span>
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(UndersizeRLP());</span>
+<span class="lineNum">     214 </span>            :         return ret;
+<a name="215"><span class="lineNum">     215 </span>            : }</a>
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span><span class="lineCov">    2239340 : size_t RLP::items() const</span>
+<span class="lineNum">     218 </span>            : {
+<span class="lineNum">     219 </span><span class="lineCov">    2239340 :         if (isList())</span>
+<span class="lineNum">     220 </span>            :         {
+<span class="lineNum">     221 </span><span class="lineCov">    2239340 :                 bytesConstRef d = payload();</span>
+<span class="lineNum">     222 </span>            :                 size_t i = 0;
+<span class="lineNum">     223 </span><span class="lineCov">   47174212 :                 for (; d.size(); ++i)</span>
+<span class="lineNum">     224 </span><span class="lineCov">   44934872 :                         d = d.cropped(sizeAsEncoded(d));</span>
+<span class="lineNum">     225 </span>            :                 return i;
+<span class="lineNum">     226 </span>            :         }
+<span class="lineNum">     227 </span>            :         return 0;
+<a name="228"><span class="lineNum">     228 </span>            : }</a>
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span><span class="lineCov">    9700455 : RLPStream&amp; RLPStream::appendRaw(bytesConstRef _s, size_t _itemCount)</span>
+<span class="lineNum">     231 </span>            : {
+<span class="lineNum">     232 </span><span class="lineCov">   38801823 :         m_out.insert(m_out.end(), _s.begin(), _s.end());</span>
+<span class="lineNum">     233 </span><span class="lineCov">    9700458 :         noteAppended(_itemCount);</span>
+<span class="lineNum">     234 </span><span class="lineCov">    9700457 :         return *this;</span>
+<a name="235"><span class="lineNum">     235 </span>            : }</a>
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span><span class="lineCov">   14735184 : void RLPStream::noteAppended(size_t _itemCount)</span>
+<span class="lineNum">     238 </span>            : {
+<span class="lineNum">     239 </span><span class="lineCov">   14735184 :         if (!_itemCount)</span>
+<span class="lineNum">     240 </span>            :                 return;
+<span class="lineNum">     241 </span>            : //      cdebug &lt;&lt; &quot;noteAppended(&quot; &lt;&lt; _itemCount &lt;&lt; &quot;)&quot;;
+<span class="lineNum">     242 </span><span class="lineCov">   24076248 :         while (m_listStack.size())</span>
+<span class="lineNum">     243 </span>            :         {
+<span class="lineNum">     244 </span><span class="lineCov">   21539714 :                 if (m_listStack.back().first &lt; _itemCount)</span>
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(RLPException() &lt;&lt; errinfo_comment(&quot;itemCount too large&quot;) &lt;&lt; RequirementError((bigint)m_listStack.back().first, (bigint)_itemCount));</span>
+<span class="lineNum">     246 </span><span class="lineCov">   21539714 :                 m_listStack.back().first -= _itemCount;</span>
+<span class="lineNum">     247 </span><span class="lineCov">   21539714 :                 if (m_listStack.back().first)</span>
+<span class="lineNum">     248 </span>            :                         break;
+<span class="lineNum">     249 </span>            :                 else
+<span class="lineNum">     250 </span>            :                 {
+<span class="lineNum">     251 </span><span class="lineCov">    2417824 :                         auto p = m_listStack.back().second;</span>
+<span class="lineNum">     252 </span><span class="lineCov">    1208912 :                         m_listStack.pop_back();</span>
+<span class="lineNum">     253 </span><span class="lineCov">    2417824 :                         size_t s = m_out.size() - p;            // list size</span>
+<span class="lineNum">     254 </span><span class="lineCov">    1208912 :                         auto brs = bytesRequired(s);</span>
+<span class="lineNum">     255 </span><span class="lineCov">    1208912 :                         unsigned encodeSize = s &lt; c_rlpListImmLenCount ? 1 : (1 + brs);</span>
+<span class="lineNum">     256 </span>            : //                      cdebug &lt;&lt; &quot;s: &quot; &lt;&lt; s &lt;&lt; &quot;, p: &quot; &lt;&lt; p &lt;&lt; &quot;, m_out.size(): &quot; &lt;&lt; m_out.size() &lt;&lt; &quot;, encodeSize: &quot; &lt;&lt; encodeSize &lt;&lt; &quot; (br: &quot; &lt;&lt; brs &lt;&lt; &quot;)&quot;;
+<span class="lineNum">     257 </span><span class="lineCov">    1208912 :                         auto os = m_out.size();</span>
+<span class="lineNum">     258 </span><span class="lineCov">    1208912 :                         m_out.resize(os + encodeSize);</span>
+<span class="lineNum">     259 </span><span class="lineCov">    4835648 :                         memmove(m_out.data() + p + encodeSize, m_out.data() + p, os - p);</span>
+<span class="lineNum">     260 </span><span class="lineCov">    1208912 :                         if (s &lt; c_rlpListImmLenCount)</span>
+<span class="lineNum">     261 </span><span class="lineCov">     603932 :                                 m_out[p] = (byte)(c_rlpListStart + s);</span>
+<span class="lineNum">     262 </span><span class="lineCov">     906946 :                         else if (c_rlpListIndLenZero + brs &lt;= 0xff)</span>
+<span class="lineNum">     263 </span>            :                         {
+<span class="lineNum">     264 </span><span class="lineCov">    1813892 :                                 m_out[p] = (byte)(c_rlpListIndLenZero + brs);</span>
+<span class="lineNum">     265 </span><span class="lineCov">    1813892 :                                 byte* b = &amp;(m_out[p + brs]);</span>
+<span class="lineNum">     266 </span><span class="lineCov">    3195398 :                                 for (; s; s &gt;&gt;= 8)</span>
+<span class="lineNum">     267 </span><span class="lineCov">    1144226 :                                         *(b--) = (byte)s;</span>
+<span class="lineNum">     268 </span>            :                         }
+<span class="lineNum">     269 </span>            :                         else
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :                                 BOOST_THROW_EXCEPTION(RLPException() &lt;&lt; errinfo_comment(&quot;itemCount too large for RLP&quot;));</span>
+<span class="lineNum">     271 </span>            :                 }
+<span class="lineNum">     272 </span>            :                 _itemCount = 1; // for all following iterations, we've effectively appended a single item only since we completed a list.
+<span class="lineNum">     273 </span>            :         }
+<a name="274"><span class="lineNum">     274 </span>            : }</a>
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span><span class="lineCov">    1236605 : RLPStream&amp; RLPStream::appendList(size_t _items)</span>
+<span class="lineNum">     277 </span>            : {
+<span class="lineNum">     278 </span>            : //      cdebug &lt;&lt; &quot;appendList(&quot; &lt;&lt; _items &lt;&lt; &quot;)&quot;;
+<span class="lineNum">     279 </span><span class="lineCov">    1236605 :         if (_items)</span>
+<span class="lineNum">     280 </span><span class="lineCov">    4843933 :                 m_listStack.push_back(std::make_pair(_items, m_out.size()));</span>
+<span class="lineNum">     281 </span>            :         else
+<span class="lineNum">     282 </span><span class="lineCov">      76866 :                 appendList(bytes());</span>
+<span class="lineNum">     283 </span><span class="lineCov">    1236606 :         return *this;</span>
+<a name="284"><span class="lineNum">     284 </span>            : }</a>
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span><span class="lineCov">      25683 : RLPStream&amp; RLPStream::appendList(bytesConstRef _rlp)</span>
+<span class="lineNum">     287 </span>            : {
+<span class="lineNum">     288 </span><span class="lineCov">      25683 :         if (_rlp.size() &lt; c_rlpListImmLenCount)</span>
+<span class="lineNum">     289 </span><span class="lineCov">      51362 :                 m_out.push_back((byte)(_rlp.size() + c_rlpListStart));</span>
+<span class="lineNum">     290 </span>            :         else
+<span class="lineNum">     291 </span><span class="lineCov">          2 :                 pushCount(_rlp.size(), c_rlpListIndLenZero);</span>
+<span class="lineNum">     292 </span><span class="lineCov">      25683 :         appendRaw(_rlp, 1);</span>
+<span class="lineNum">     293 </span><span class="lineCov">      25683 :         return *this;</span>
+<a name="294"><span class="lineNum">     294 </span>            : }</a>
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span><span class="lineCov">    4007722 : RLPStream&amp; RLPStream::append(bytesConstRef _s, bool _compact)</span>
+<span class="lineNum">     297 </span>            : {
+<span class="lineNum">     298 </span><span class="lineCov">    4007722 :         size_t s = _s.size();</span>
+<span class="lineNum">     299 </span><span class="lineCov">    4007722 :         byte const* d = _s.data();</span>
+<span class="lineNum">     300 </span><span class="lineCov">    4007722 :         if (_compact)</span>
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :                 for (size_t i = 0; i &lt; _s.size() &amp;&amp; !*d; ++i, --s, ++d) {}</span>
+<span class="lineNum">     302 </span>            : 
+<span class="lineNum">     303 </span><span class="lineCov">    4007722 :         if (s == 1 &amp;&amp; *d &lt; c_rlpDataImmLenStart)</span>
+<span class="lineNum">     304 </span><span class="lineCov">     101772 :                 m_out.push_back(*d);</span>
+<span class="lineNum">     305 </span>            :         else
+<span class="lineNum">     306 </span>            :         {
+<span class="lineNum">     307 </span><span class="lineCov">    3905950 :                 if (s &lt; c_rlpDataImmLenCount)</span>
+<span class="lineNum">     308 </span><span class="lineCov">    7098324 :                         m_out.push_back((byte)(s + c_rlpDataImmLenStart));</span>
+<span class="lineNum">     309 </span>            :                 else
+<span class="lineNum">     310 </span><span class="lineCov">     356788 :                         pushCount(s, c_rlpDataIndLenZero);</span>
+<span class="lineNum">     311 </span><span class="lineCov">    3905950 :                 appendRaw(bytesConstRef(d, s), 0);</span>
+<span class="lineNum">     312 </span>            :         }
+<span class="lineNum">     313 </span><span class="lineCov">    4007722 :         noteAppended();</span>
+<span class="lineNum">     314 </span><span class="lineCov">    4007722 :         return *this;</span>
+<a name="315"><span class="lineNum">     315 </span>            : }</a>
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span><span class="lineCov">    1027012 : RLPStream&amp; RLPStream::append(bigint _i)</span>
+<span class="lineNum">     318 </span>            : {
+<span class="lineNum">     319 </span><span class="lineCov">    1027012 :         if (!_i)</span>
+<span class="lineNum">     320 </span><span class="lineCov">     270442 :                 m_out.push_back(c_rlpDataImmLenStart);</span>
+<span class="lineNum">     321 </span><span class="lineCov">    1513140 :         else if (_i &lt; c_rlpDataImmLenStart)</span>
+<span class="lineNum">     322 </span><span class="lineCov">     636053 :                 m_out.push_back((byte)_i);</span>
+<span class="lineNum">     323 </span>            :         else
+<span class="lineNum">     324 </span>            :         {
+<span class="lineNum">     325 </span><span class="lineCov">     877090 :                 unsigned br = bytesRequired(_i);</span>
+<span class="lineNum">     326 </span><span class="lineCov">     438545 :                 if (br &lt; c_rlpDataImmLenCount)</span>
+<span class="lineNum">     327 </span><span class="lineCov">     877090 :                         m_out.push_back((byte)(br + c_rlpDataImmLenStart));</span>
+<span class="lineNum">     328 </span>            :                 else
+<span class="lineNum">     329 </span>            :                 {
+<span class="lineNum">     330 </span><span class="lineNoCov">          0 :                         auto brbr = bytesRequired(br);</span>
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 :                         if (c_rlpDataIndLenZero + brbr &gt; 0xff)</span>
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 :                                 BOOST_THROW_EXCEPTION(RLPException() &lt;&lt; errinfo_comment(&quot;Number too large for RLP&quot;));</span>
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :                         m_out.push_back((byte)(c_rlpDataIndLenZero + brbr));</span>
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :                         pushInt(br, brbr);</span>
+<span class="lineNum">     335 </span>            :                 }
+<span class="lineNum">     336 </span><span class="lineCov">    1315637 :                 pushInt(_i, br);</span>
+<span class="lineNum">     337 </span>            :         }
+<span class="lineNum">     338 </span><span class="lineCov">    1027015 :         noteAppended();</span>
+<span class="lineNum">     339 </span><span class="lineCov">    1027014 :         return *this;</span>
+<a name="340"><span class="lineNum">     340 </span>            : }</a>
+<span class="lineNum">     341 </span>            : 
+<span class="lineNum">     342 </span><span class="lineCov">     356790 : void RLPStream::pushCount(size_t _count, byte _base)</span>
+<span class="lineNum">     343 </span>            : {
+<span class="lineNum">     344 </span><span class="lineCov">     356790 :         auto br = bytesRequired(_count);</span>
+<span class="lineNum">     345 </span><span class="lineCov">     356790 :         if (int(br) + _base &gt; 0xff)</span>
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(RLPException() &lt;&lt; errinfo_comment(&quot;Count too large for RLP&quot;));</span>
+<span class="lineNum">     347 </span><span class="lineCov">     713580 :         m_out.push_back((byte)(br + _base));    // max 8 bytes.</span>
+<span class="lineNum">     348 </span><span class="lineCov">     356790 :         pushInt(_count, br);</span>
+<a name="349"><span class="lineNum">     349 </span><span class="lineCov">     356790 : }</span></a>
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span><span class="lineCov">       2115 : static void streamOut(std::ostream&amp; _out, dev::RLP const&amp; _d, unsigned _depth = 0)</span>
+<span class="lineNum">     352 </span>            : {
+<span class="lineNum">     353 </span><span class="lineCov">       2115 :         if (_depth &gt; 64)</span>
+<span class="lineNum">     354 </span><span class="lineNoCov">          0 :                 _out &lt;&lt; &quot;&lt;max-depth-reached&gt;&quot;;</span>
+<span class="lineNum">     355 </span><span class="lineCov">       2115 :         else if (_d.isNull())</span>
+<span class="lineNum">     356 </span><span class="lineCov">          1 :                 _out &lt;&lt; &quot;null&quot;;</span>
+<span class="lineNum">     357 </span><span class="lineCov">       2114 :         else if (_d.isInt())</span>
+<span class="lineNum">     358 </span><span class="lineCov">      10764 :                 _out &lt;&lt; std::showbase &lt;&lt; std::hex &lt;&lt; std::nouppercase &lt;&lt; _d.toInt&lt;bigint&gt;(RLP::LaissezFaire) &lt;&lt; dec;</span>
+<span class="lineNum">     359 </span><span class="lineCov">        320 :         else if (_d.isData())</span>
+<span class="lineNum">     360 </span><span class="lineCov">        124 :                 _out &lt;&lt; escaped(_d.toString(), false);</span>
+<span class="lineNum">     361 </span><span class="lineCov">        289 :         else if (_d.isList())</span>
+<span class="lineNum">     362 </span>            :         {
+<span class="lineNum">     363 </span><span class="lineCov">        289 :                 _out &lt;&lt; &quot;[&quot;;</span>
+<span class="lineNum">     364 </span><span class="lineCov">        289 :                 int j = 0;</span>
+<span class="lineNum">     365 </span><span class="lineCov">       4555 :                 for (auto i: _d)</span>
+<span class="lineNum">     366 </span>            :                 {
+<span class="lineNum">     367 </span><span class="lineCov">       1879 :                         _out &lt;&lt; (j++ ? &quot;, &quot; : &quot; &quot;);</span>
+<span class="lineNum">     368 </span><span class="lineCov">       1879 :                         streamOut(_out, i, _depth + 1);</span>
+<span class="lineNum">     369 </span>            :                 }
+<span class="lineNum">     370 </span><span class="lineCov">        247 :                 _out &lt;&lt; &quot; ]&quot;;</span>
+<span class="lineNum">     371 </span>            :         }
+<a name="372"><span class="lineNum">     372 </span><span class="lineCov">       2073 : }</span></a>
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span><span class="lineCov">        236 : std::ostream&amp; dev::operator&lt;&lt;(std::ostream&amp; _out, RLP const&amp; _d)</span>
+<span class="lineNum">     375 </span>            : {
+<a name="376"><span class="lineNum">     376 </span><span class="lineCov">        236 :         streamOut(_out, _d);</span></a>
+<span class="lineNum">     377 </span><span class="lineCov">        211 :         return _out;</span>
+<span class="lineNum">     378 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

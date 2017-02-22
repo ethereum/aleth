@@ -1,0 +1,521 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libwhisper/whisperTopic.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libwhisper</a> - whisperTopic.cpp<span style="font-size: 80%;"> (source / <a href="whisperTopic.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file whisperTopic.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : #include &lt;functional&gt;
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;boost/test/unit_test.hpp&gt;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;libp2p/Host.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libp2p/Session.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libwhisper/WhisperPeer.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libwhisper/WhisperHost.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : using namespace std;
+<span class="lineNum">      32 </span>            : using namespace dev;
+<span class="lineNum">      33 </span>            : using namespace dev::test;
+<span class="lineNum">      34 </span>            : using namespace dev::p2p;
+<span class="lineNum">      35 </span>            : using namespace dev::shh;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : struct P2PFixture: public TestOutputHelper
+<span class="lineNum">      38 </span>            : {
+<span class="lineNum">      39 </span>            :         P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
+<span class="lineNum">      40 </span>            :         ~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
+<span class="lineNum">      41 </span>            :         TestOutputHelper testHelper;
+<span class="lineNum">      42 </span>            : };
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span><span class="lineCov">          3 : BOOST_FIXTURE_TEST_SUITE(whisper, P2PFixture)</span>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : //
+<span class="lineNum">      47 </span>            : // Disabled tests as they are unstable and tend to stall the test suite.
+<span class="lineNum">      48 </span>            : //
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : //BOOST_AUTO_TEST_CASE(topic)
+<span class="lineNum">      51 </span>            : //{
+<span class="lineNum">      52 </span>            : //      cnote &lt;&lt; &quot;Testing Whisper...&quot;;
+<span class="lineNum">      53 </span>            : //      VerbosityHolder setTemporaryLevel(0);
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : //      Host host1(&quot;Test&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">      56 </span>            : //      host1.setIdealPeerCount(1);
+<span class="lineNum">      57 </span>            : //      auto whost1 = host1.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">      58 </span>            : //      host1.start();
+<span class="lineNum">      59 </span>            : //      auto port1 = host1.listenPort();
+<span class="lineNum">      60 </span>            : //      BOOST_REQUIRE(port1);
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : //      bool host1Ready = false;
+<span class="lineNum">      63 </span>            : //      unsigned result = 0;
+<span class="lineNum">      64 </span>            : //      unsigned const step = 10;
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            : //      std::thread listener([&amp;]()
+<span class="lineNum">      67 </span>            : //      {
+<span class="lineNum">      68 </span>            : //              setThreadName(&quot;other&quot;);
+<span class="lineNum">      69 </span>            :                 
+<span class="lineNum">      70 </span>            : //              /// Only interested in odd packets
+<span class="lineNum">      71 </span>            : //              auto w = whost1-&gt;installWatch(BuildTopicMask(&quot;odd&quot;));
+<span class="lineNum">      72 </span>            : //              host1Ready = true;
+<span class="lineNum">      73 </span>            : //              set&lt;unsigned&gt; received;
+<span class="lineNum">      74 </span>            : //              for (int iterout = 0, last = 0; iterout &lt; 200 &amp;&amp; last &lt; 81; ++iterout)
+<span class="lineNum">      75 </span>            : //              {
+<span class="lineNum">      76 </span>            : //                      for (auto i: whost1-&gt;checkWatch(w))
+<span class="lineNum">      77 </span>            : //                      {
+<span class="lineNum">      78 </span>            : //                              Message msg = whost1-&gt;envelope(i).open(whost1-&gt;fullTopics(w));
+<span class="lineNum">      79 </span>            : //                              last = RLP(msg.payload()).toInt&lt;unsigned&gt;();
+<span class="lineNum">      80 </span>            : //                              if (received.count(last))
+<span class="lineNum">      81 </span>            : //                                      continue;
+<span class="lineNum">      82 </span>            : //                              received.insert(last);
+<span class="lineNum">      83 </span>            : //                              cnote &lt;&lt; &quot;New message from:&quot; &lt;&lt; msg.from() &lt;&lt; RLP(msg.payload()).toInt&lt;unsigned&gt;();
+<span class="lineNum">      84 </span>            : //                              result += last;
+<span class="lineNum">      85 </span>            : //                      }
+<span class="lineNum">      86 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">      87 </span>            : //              }
+<span class="lineNum">      88 </span>            : //      });
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : //      Host host2(&quot;Test&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">      91 </span>            : //      host2.setIdealPeerCount(1);
+<span class="lineNum">      92 </span>            : //      auto whost2 = host2.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">      93 </span>            : //      host2.start();
+<span class="lineNum">      94 </span>            : //      auto port2 = host2.listenPort();
+<span class="lineNum">      95 </span>            : //      BOOST_REQUIRE(port2);
+<span class="lineNum">      96 </span>            : //      BOOST_REQUIRE_NE(port1, port2);
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : //      for (unsigned i = 0; i &lt; 3000 &amp;&amp; (!host1.haveNetwork() || !host2.haveNetwork()); i += step)
+<span class="lineNum">      99 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            : //      BOOST_REQUIRE(host1.haveNetwork());
+<span class="lineNum">     102 </span>            : //      BOOST_REQUIRE(host2.haveNetwork());
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            : //      host2.addNode(host1.id(), NodeIPEndpoint(bi::address::from_string(&quot;127.0.0.1&quot;), port1, port1));
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : //      for (unsigned i = 0; i &lt; 3000 &amp;&amp; (!host1.peerCount() || !host2.peerCount()); i += step)
+<span class="lineNum">     107 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : //      BOOST_REQUIRE(host1.peerCount());
+<span class="lineNum">     110 </span>            : //      BOOST_REQUIRE(host2.peerCount());
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            : //      for (unsigned i = 0; i &lt; 3000 &amp;&amp; !host1Ready; i += step)
+<span class="lineNum">     113 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : //      BOOST_REQUIRE(host1Ready);
+<span class="lineNum">     116 </span>            :         
+<span class="lineNum">     117 </span>            : //      KeyPair us = KeyPair::create();
+<span class="lineNum">     118 </span>            : //      for (int i = 0; i &lt; 10; ++i)
+<span class="lineNum">     119 </span>            : //      {
+<span class="lineNum">     120 </span>            : //              whost2-&gt;post(us.sec(), RLPStream().append(i * i).out(), BuildTopic(i)(i % 2 ? &quot;odd&quot; : &quot;even&quot;));
+<span class="lineNum">     121 </span>            : //              this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     122 </span>            : //      }
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : //      listener.join();
+<span class="lineNum">     125 </span>            : //      BOOST_REQUIRE_EQUAL(result, 1 + 9 + 25 + 49 + 81);
+<span class="lineNum">     126 </span>            : //}
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : //BOOST_AUTO_TEST_CASE(forwarding)
+<span class="lineNum">     129 </span>            : //{
+<span class="lineNum">     130 </span>            : //      cnote &lt;&lt; &quot;Testing Whisper forwarding...&quot;;
+<span class="lineNum">     131 </span>            : //      VerbosityHolder setTemporaryLevel(0);
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            : //      // Host must be configured not to share peers.
+<span class="lineNum">     134 </span>            : //      Host host1(&quot;Listner&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">     135 </span>            : //      host1.setIdealPeerCount(1);
+<span class="lineNum">     136 </span>            : //      auto whost1 = host1.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">     137 </span>            : //      host1.start();
+<span class="lineNum">     138 </span>            : //      auto port1 = host1.listenPort();
+<span class="lineNum">     139 </span>            : //      BOOST_REQUIRE(port1);
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            : //      while (!host1.haveNetwork())
+<span class="lineNum">     142 </span>            : //              this_thread::sleep_for(chrono::milliseconds(2));
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : //      unsigned result = 0;
+<span class="lineNum">     145 </span>            : //      bool done = false;
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : //      bool startedListener = false;
+<span class="lineNum">     148 </span>            : //      std::thread listener([&amp;]()
+<span class="lineNum">     149 </span>            : //      {
+<span class="lineNum">     150 </span>            : //              setThreadName(&quot;listener&quot;);
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            : //              startedListener = true;
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            : //              /// Only interested in odd packets
+<span class="lineNum">     155 </span>            : //              auto w = whost1-&gt;installWatch(BuildTopicMask(&quot;test&quot;));
+<span class="lineNum">     156 </span>            : 
+<span class="lineNum">     157 </span>            : //              for (int i = 0; i &lt; 200 &amp;&amp; !result; ++i)
+<span class="lineNum">     158 </span>            : //              {
+<span class="lineNum">     159 </span>            : //                      for (auto i: whost1-&gt;checkWatch(w))
+<span class="lineNum">     160 </span>            : //                      {
+<span class="lineNum">     161 </span>            : //                              Message msg = whost1-&gt;envelope(i).open(whost1-&gt;fullTopics(w));
+<span class="lineNum">     162 </span>            : //                              unsigned last = RLP(msg.payload()).toInt&lt;unsigned&gt;();
+<span class="lineNum">     163 </span>            : //                              cnote &lt;&lt; &quot;New message from:&quot; &lt;&lt; msg.from() &lt;&lt; RLP(msg.payload()).toInt&lt;unsigned&gt;();
+<span class="lineNum">     164 </span>            : //                              result = last;
+<span class="lineNum">     165 </span>            : //                      }
+<span class="lineNum">     166 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     167 </span>            : //              }
+<span class="lineNum">     168 </span>            : //      });
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            : //      // Host must be configured not to share peers.
+<span class="lineNum">     172 </span>            : //      Host host2(&quot;Forwarder&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">     173 </span>            : //      host2.setIdealPeerCount(1);
+<span class="lineNum">     174 </span>            : //      auto whost2 = host2.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">     175 </span>            : //      host2.start();
+<span class="lineNum">     176 </span>            : //      auto port2 = host2.listenPort();
+<span class="lineNum">     177 </span>            : //      BOOST_REQUIRE(port2);
+<span class="lineNum">     178 </span>            : //      BOOST_REQUIRE_NE(port1, port2);
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            : //      while (!host2.haveNetwork())
+<span class="lineNum">     181 </span>            : //              this_thread::sleep_for(chrono::milliseconds(2));
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            : //      Public fwderid;
+<span class="lineNum">     184 </span>            : //      bool startedForwarder = false;
+<span class="lineNum">     185 </span>            : //      std::thread forwarder([&amp;]()
+<span class="lineNum">     186 </span>            : //      {
+<span class="lineNum">     187 </span>            : //              setThreadName(&quot;forwarder&quot;);
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            : //              while (!startedListener)
+<span class="lineNum">     190 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            : //              this_thread::sleep_for(chrono::milliseconds(500));
+<span class="lineNum">     193 </span>            : //              host2.addNode(host1.id(), NodeIPEndpoint(bi::address::from_string(&quot;127.0.0.1&quot;), port1, port1));
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            : //              startedForwarder = true;
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            : //              /// Only interested in odd packets
+<span class="lineNum">     198 </span>            : //              auto w = whost2-&gt;installWatch(BuildTopicMask(&quot;test&quot;));
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            : //              while (!done)
+<span class="lineNum">     201 </span>            : //              {
+<span class="lineNum">     202 </span>            : //                      for (auto i: whost2-&gt;checkWatch(w))
+<span class="lineNum">     203 </span>            : //                      {
+<span class="lineNum">     204 </span>            : //                              Message msg = whost2-&gt;envelope(i).open(whost2-&gt;fullTopics(w));
+<span class="lineNum">     205 </span>            : //                              cnote &lt;&lt; &quot;New message from:&quot; &lt;&lt; msg.from() &lt;&lt; RLP(msg.payload()).toInt&lt;unsigned&gt;();
+<span class="lineNum">     206 </span>            : //                      }
+<span class="lineNum">     207 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     208 </span>            : //              }
+<span class="lineNum">     209 </span>            : //      });
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            : //      while (!startedForwarder)
+<span class="lineNum">     212 </span>            : //              this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : //      Host ph(&quot;Sender&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">     215 </span>            : //      ph.setIdealPeerCount(1);
+<span class="lineNum">     216 </span>            : //      shared_ptr&lt;WhisperHost&gt; wh = ph.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">     217 </span>            : //      ph.start();
+<span class="lineNum">     218 </span>            : //      BOOST_REQUIRE(ph.listenPort());
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            : //      ph.addNode(host2.id(), NodeIPEndpoint(bi::address::from_string(&quot;127.0.0.1&quot;), port2, port2));
+<span class="lineNum">     221 </span>            : //      while (!ph.haveNetwork())
+<span class="lineNum">     222 </span>            : //              this_thread::sleep_for(chrono::milliseconds(10));
+<span class="lineNum">     223 </span>            : 
+<span class="lineNum">     224 </span>            : //      while (!ph.peerCount())
+<span class="lineNum">     225 </span>            : //              this_thread::sleep_for(chrono::milliseconds(10));
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span>            : //      KeyPair us = KeyPair::create();
+<span class="lineNum">     228 </span>            : //      wh-&gt;post(us.sec(), RLPStream().append(1).out(), BuildTopic(&quot;test&quot;));
+<span class="lineNum">     229 </span>            : //      this_thread::sleep_for(chrono::milliseconds(250));
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            : //      listener.join();
+<span class="lineNum">     232 </span>            : //      done = true;
+<span class="lineNum">     233 </span>            : //      forwarder.join();
+<span class="lineNum">     234 </span>            : //      BOOST_REQUIRE_EQUAL(result, 1);
+<span class="lineNum">     235 </span>            : //}
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            : //BOOST_AUTO_TEST_CASE(asyncforwarding)
+<span class="lineNum">     238 </span>            : //{
+<span class="lineNum">     239 </span>            : //      cnote &lt;&lt; &quot;Testing Whisper async forwarding...&quot;;
+<span class="lineNum">     240 </span>            : //      VerbosityHolder setTemporaryLevel(2);
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            : //      unsigned const TestValue = 8456;
+<span class="lineNum">     243 </span>            : //      unsigned result = 0;
+<span class="lineNum">     244 </span>            : //      bool done = false;
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            : //      // Host must be configured not to share peers.
+<span class="lineNum">     247 </span>            : //      Host host1(&quot;Forwarder&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">     248 </span>            : //      host1.setIdealPeerCount(1);
+<span class="lineNum">     249 </span>            : //      auto whost1 = host1.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">     250 </span>            : //      host1.start();
+<span class="lineNum">     251 </span>            : //      auto port1 = host1.listenPort();
+<span class="lineNum">     252 </span>            : //      BOOST_REQUIRE(port1);
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            : //      while (!host1.haveNetwork())
+<span class="lineNum">     255 </span>            : //              this_thread::sleep_for(chrono::milliseconds(2));
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            : //      auto w = whost1-&gt;installWatch(BuildTopicMask(&quot;test&quot;)); // only interested in odd packets
+<span class="lineNum">     258 </span>            : //      bool startedForwarder = false;
+<span class="lineNum">     259 </span>            : //      std::thread forwarder([&amp;]()
+<span class="lineNum">     260 </span>            : //      {
+<span class="lineNum">     261 </span>            : //              setThreadName(&quot;forwarder&quot;);
+<span class="lineNum">     262 </span>            : //              this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     263 </span>            : //              startedForwarder = true;
+<span class="lineNum">     264 </span>            : //              while (!done)
+<span class="lineNum">     265 </span>            : //              {
+<span class="lineNum">     266 </span>            : //                      for (auto i: whost1-&gt;checkWatch(w))
+<span class="lineNum">     267 </span>            : //                      {
+<span class="lineNum">     268 </span>            : //                              Message msg = whost1-&gt;envelope(i).open(whost1-&gt;fullTopics(w));
+<span class="lineNum">     269 </span>            : //                              cnote &lt;&lt; &quot;New message from:&quot; &lt;&lt; msg.from() &lt;&lt; RLP(msg.payload()).toInt&lt;unsigned&gt;();
+<span class="lineNum">     270 </span>            : //                      }
+<span class="lineNum">     271 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     272 </span>            : //              }
+<span class="lineNum">     273 </span>            : //      });
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            : //      while (!startedForwarder)
+<span class="lineNum">     276 </span>            : //              this_thread::sleep_for(chrono::milliseconds(2));
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span>            : //      {
+<span class="lineNum">     279 </span>            : //              Host host2(&quot;Sender&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">     280 </span>            : //              host2.setIdealPeerCount(1);
+<span class="lineNum">     281 </span>            : //              shared_ptr&lt;WhisperHost&gt; whost2 = host2.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">     282 </span>            : //              host2.start();
+<span class="lineNum">     283 </span>            : //              auto port2 = host2.listenPort();
+<span class="lineNum">     284 </span>            : //              BOOST_REQUIRE(port2);
+<span class="lineNum">     285 </span>            : //              BOOST_REQUIRE_NE(port1, port2);
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            : //              while (!host2.haveNetwork())
+<span class="lineNum">     288 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(2));
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            : //              host2.requirePeer(host1.id(), NodeIPEndpoint(bi::address::from_string(&quot;127.0.0.1&quot;), port1, port1));
+<span class="lineNum">     291 </span>            : //              while (!host2.peerCount() || !host1.peerCount())
+<span class="lineNum">     292 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(5));
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span>            : //              KeyPair us = KeyPair::create();
+<span class="lineNum">     295 </span>            : //              whost2-&gt;post(us.sec(), RLPStream().append(TestValue).out(), BuildTopic(&quot;test&quot;), 777000);
+<span class="lineNum">     296 </span>            : //              this_thread::sleep_for(chrono::milliseconds(250));
+<span class="lineNum">     297 </span>            : //      }
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span>            : //      {
+<span class="lineNum">     300 </span>            : //              Host ph(&quot;Listener&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">     301 </span>            : //              ph.setIdealPeerCount(1);
+<span class="lineNum">     302 </span>            : //              shared_ptr&lt;WhisperHost&gt; wh = ph.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">     303 </span>            : //              ph.start();
+<span class="lineNum">     304 </span>            : //              BOOST_REQUIRE(ph.listenPort());
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span>            : //              while (!ph.haveNetwork())
+<span class="lineNum">     307 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(2));
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span>            : //              auto w = wh-&gt;installWatch(BuildTopicMask(&quot;test&quot;)); // only interested in odd packets
+<span class="lineNum">     310 </span>            : //              ph.requirePeer(host1.id(), NodeIPEndpoint(bi::address::from_string(&quot;127.0.0.1&quot;), port1, port1));
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span>            : //              for (int i = 0; i &lt; 200 &amp;&amp; !result; ++i)
+<span class="lineNum">     313 </span>            : //              {
+<span class="lineNum">     314 </span>            : //                      for (auto i: wh-&gt;checkWatch(w))
+<span class="lineNum">     315 </span>            : //                      {
+<span class="lineNum">     316 </span>            : //                              Message msg = wh-&gt;envelope(i).open(wh-&gt;fullTopics(w));
+<span class="lineNum">     317 </span>            : //                              unsigned last = RLP(msg.payload()).toInt&lt;unsigned&gt;();
+<span class="lineNum">     318 </span>            : //                              cnote &lt;&lt; &quot;New message from:&quot; &lt;&lt; msg.from() &lt;&lt; RLP(msg.payload()).toInt&lt;unsigned&gt;();
+<span class="lineNum">     319 </span>            : //                              result = last;
+<span class="lineNum">     320 </span>            : //                      }
+<span class="lineNum">     321 </span>            : //                      this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     322 </span>            : //              }
+<span class="lineNum">     323 </span>            : //      }
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span>            : //      done = true;
+<span class="lineNum">     326 </span>            : //      forwarder.join();
+<span class="lineNum">     327 </span>            : //      BOOST_REQUIRE_EQUAL(result, TestValue);
+<span class="lineNum">     328 </span>            : //}
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span>            : //BOOST_AUTO_TEST_CASE(topicAdvertising)
+<span class="lineNum">     331 </span>            : //{
+<span class="lineNum">     332 </span>            : //      cnote &lt;&lt; &quot;Testing Topic Advertising...&quot;;
+<span class="lineNum">     333 </span>            : //      VerbosityHolder setTemporaryLevel(2);
+<span class="lineNum">     334 </span>            : 
+<span class="lineNum">     335 </span>            : //      Host host1(&quot;first&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">     336 </span>            : //      host1.setIdealPeerCount(1);
+<span class="lineNum">     337 </span>            : //      auto whost1 = host1.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">     338 </span>            : //      host1.start();
+<span class="lineNum">     339 </span>            : //      auto port1 = host1.listenPort();
+<span class="lineNum">     340 </span>            : //      BOOST_REQUIRE(port1);
+<span class="lineNum">     341 </span>            : 
+<span class="lineNum">     342 </span>            : //      while (!host1.haveNetwork())
+<span class="lineNum">     343 </span>            : //              this_thread::sleep_for(chrono::milliseconds(10));
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span>            : //      unsigned const step = 10;
+<span class="lineNum">     346 </span>            : //      Host host2(&quot;second&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">     347 </span>            : //      host2.setIdealPeerCount(1);
+<span class="lineNum">     348 </span>            : //      auto whost2 = host2.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">     349 </span>            : //      unsigned w2 = whost2-&gt;installWatch(BuildTopicMask(&quot;test2&quot;));
+<span class="lineNum">     350 </span>            : //      host2.start();
+<span class="lineNum">     351 </span>            : //      auto port2 = host2.listenPort();
+<span class="lineNum">     352 </span>            : //      BOOST_REQUIRE(port2);
+<span class="lineNum">     353 </span>            : //      BOOST_REQUIRE_NE(port1, port2);
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span>            : //      for (unsigned i = 0; i &lt; 3000 &amp;&amp; (!host1.haveNetwork() || !host2.haveNetwork()); i += step)
+<span class="lineNum">     356 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span>            : //      host1.addNode(host2.id(), NodeIPEndpoint(bi::address::from_string(&quot;127.0.0.1&quot;), port2, port2));
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span>            : //      for (unsigned i = 0; i &lt; 3000 &amp;&amp; (!host1.peerCount() || !host2.peerCount()); i += step)
+<span class="lineNum">     361 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span>            : //      std::vector&lt;std::pair&lt;std::shared_ptr&lt;Session&gt;, std::shared_ptr&lt;Peer&gt;&gt;&gt; sessions;
+<span class="lineNum">     364 </span>            : //      TopicBloomFilterHash bf1;
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span>            : //      for (int i = 0; i &lt; 600 &amp;&amp; !bf1; ++i)
+<span class="lineNum">     367 </span>            : //      {
+<span class="lineNum">     368 </span>            : //              sessions = whost1-&gt;peerSessions();
+<span class="lineNum">     369 </span>            : //              if (!sessions.empty())
+<span class="lineNum">     370 </span>            : //                      bf1 = sessions.back().first-&gt;cap&lt;WhisperPeer&gt;()-&gt;bloom();
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     373 </span>            : //      }
+<span class="lineNum">     374 </span>            : 
+<span class="lineNum">     375 </span>            : //      BOOST_REQUIRE(sessions.size());
+<span class="lineNum">     376 </span>            : //      TopicBloomFilterHash bf2 = whost2-&gt;bloom();
+<span class="lineNum">     377 </span>            : //      BOOST_REQUIRE_EQUAL(bf1, bf2);
+<span class="lineNum">     378 </span>            : //      BOOST_REQUIRE(bf1);
+<span class="lineNum">     379 </span>            : //      BOOST_REQUIRE(!whost1-&gt;bloom());
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span>            : //      unsigned w1 = whost1-&gt;installWatch(BuildTopicMask(&quot;test1&quot;));
+<span class="lineNum">     382 </span>            : //      bf2 = TopicBloomFilterHash();
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span>            : //      for (int i = 0; i &lt; 600 &amp;&amp; !bf2; ++i)
+<span class="lineNum">     385 </span>            : //      {
+<span class="lineNum">     386 </span>            : //              sessions = whost2-&gt;peerSessions();
+<span class="lineNum">     387 </span>            : //              if (!sessions.empty())
+<span class="lineNum">     388 </span>            : //                      bf2 = sessions.back().first-&gt;cap&lt;WhisperPeer&gt;()-&gt;bloom();
+<span class="lineNum">     389 </span>            : 
+<span class="lineNum">     390 </span>            : //              this_thread::sleep_for(chrono::milliseconds(step));
+<span class="lineNum">     391 </span>            : //      }
+<span class="lineNum">     392 </span>            : 
+<span class="lineNum">     393 </span>            : //      BOOST_REQUIRE(sessions.size());
+<span class="lineNum">     394 </span>            : //      BOOST_REQUIRE_EQUAL(sessions.back().second-&gt;id, host1.id());
+<span class="lineNum">     395 </span>            : //      bf1 = whost1-&gt;bloom();
+<span class="lineNum">     396 </span>            : //      BOOST_REQUIRE_EQUAL(bf1, bf2);
+<span class="lineNum">     397 </span>            : //      BOOST_REQUIRE(bf1);
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span>            : //      unsigned random = 0xC0FFEE;
+<span class="lineNum">     400 </span>            : //      whost1-&gt;uninstallWatch(w1);
+<span class="lineNum">     401 </span>            : //      whost1-&gt;uninstallWatch(random);
+<span class="lineNum">     402 </span>            : //      whost1-&gt;uninstallWatch(w1);
+<span class="lineNum">     403 </span>            : //      whost1-&gt;uninstallWatch(random);
+<span class="lineNum">     404 </span>            : //      whost2-&gt;uninstallWatch(random);
+<span class="lineNum">     405 </span>            : //      whost2-&gt;uninstallWatch(w2);
+<span class="lineNum">     406 </span>            : //      whost2-&gt;uninstallWatch(random);
+<span class="lineNum">     407 </span>            : //      whost2-&gt;uninstallWatch(w2);
+<span class="lineNum">     408 </span>            : //}
+<span class="lineNum">     409 </span>            : 
+<span class="lineNum">     410 </span>            : //BOOST_AUTO_TEST_CASE(selfAddressed)
+<span class="lineNum">     411 </span>            : //{
+<span class="lineNum">     412 </span>            : //      VerbosityHolder setTemporaryLevel(10);
+<span class="lineNum">     413 </span>            : //      cnote &lt;&lt; &quot;Testing self-addressed messaging with bloom filter matching...&quot;;
+<span class="lineNum">     414 </span>            : 
+<span class="lineNum">     415 </span>            : //      char const* text = &quot;deterministic pseudorandom test&quot;;
+<span class="lineNum">     416 </span>            : //      BuildTopicMask mask(text);
+<span class="lineNum">     417 </span>            : 
+<span class="lineNum">     418 </span>            : //      Host host(&quot;first&quot;, NetworkPreferences(&quot;127.0.0.1&quot;, 0, false));
+<span class="lineNum">     419 </span>            : //      auto wh = host.registerCapability(make_shared&lt;WhisperHost&gt;());
+<span class="lineNum">     420 </span>            : //      auto watch = wh-&gt;installWatch(BuildTopicMask(text));
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span>            : //      unsigned const sample = 0xFEED;
+<span class="lineNum">     423 </span>            : //      KeyPair us = KeyPair::create();
+<span class="lineNum">     424 </span>            : //      wh-&gt;post(us.sec(), RLPStream().append(sample).out(), BuildTopic(text));
+<span class="lineNum">     425 </span>            : 
+<span class="lineNum">     426 </span>            : //      TopicBloomFilterHash f = wh-&gt;bloom();
+<span class="lineNum">     427 </span>            : //      Envelope e = Message(RLPStream().append(sample).out()).seal(us.sec(), BuildTopic(text), 50, 50);
+<span class="lineNum">     428 </span>            : //      bool ok = e.matchesBloomFilter(f);
+<span class="lineNum">     429 </span>            : //      BOOST_REQUIRE(ok);
+<span class="lineNum">     430 </span>            : 
+<span class="lineNum">     431 </span>            : //      this_thread::sleep_for(chrono::milliseconds(50));
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span>            : //      unsigned single = 0;
+<span class="lineNum">     434 </span>            : //      unsigned result = 0;
+<span class="lineNum">     435 </span>            : //      for (auto j: wh-&gt;checkWatch(watch))
+<span class="lineNum">     436 </span>            : //      {
+<span class="lineNum">     437 </span>            : //              Message msg = wh-&gt;envelope(j).open(wh-&gt;fullTopics(watch));
+<span class="lineNum">     438 </span>            : //              single = RLP(msg.payload()).toInt&lt;unsigned&gt;();
+<span class="lineNum">     439 </span>            : //              result += single;
+<span class="lineNum">     440 </span>            : //      }
+<span class="lineNum">     441 </span>            : 
+<span class="lineNum">     442 </span>            : //      BOOST_REQUIRE_EQUAL(sample, result);
+<a name="443"><span class="lineNum">     443 </span>            : //}</a>
+<span class="lineNum">     444 </span>            : 
+<span class="lineNum">     445 </span><span class="lineCov">          4 : BOOST_AUTO_TEST_SUITE_END()</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

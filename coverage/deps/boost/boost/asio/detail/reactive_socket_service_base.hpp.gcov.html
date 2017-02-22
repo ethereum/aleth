@@ -1,0 +1,528 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/detail/reactive_socket_service_base.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/detail</a> - reactive_socket_service_base.hpp<span style="font-size: 80%;"> (source / <a href="reactive_socket_service_base.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">27</td>
+            <td class="headerCovTableEntry">27</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntryMed">82.4 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // detail/reactive_socket_service_base.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DETAIL_REACTIVE_SOCKET_SERVICE_BASE_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DETAIL_REACTIVE_SOCKET_SERVICE_BASE_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #if !defined(BOOST_ASIO_HAS_IOCP) \
+<span class="lineNum">      21 </span>            :   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;boost/asio/buffer.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/error.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/io_service.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/asio/socket_base.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/asio/detail/addressof.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/asio/detail/buffer_sequence_adapter.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/asio/detail/reactive_null_buffers_op.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/asio/detail/reactive_socket_recv_op.hpp&gt;
+<span class="lineNum">      31 </span>            : #include &lt;boost/asio/detail/reactive_socket_recvmsg_op.hpp&gt;
+<span class="lineNum">      32 </span>            : #include &lt;boost/asio/detail/reactive_socket_send_op.hpp&gt;
+<span class="lineNum">      33 </span>            : #include &lt;boost/asio/detail/reactor.hpp&gt;
+<span class="lineNum">      34 </span>            : #include &lt;boost/asio/detail/reactor_op.hpp&gt;
+<span class="lineNum">      35 </span>            : #include &lt;boost/asio/detail/socket_holder.hpp&gt;
+<span class="lineNum">      36 </span>            : #include &lt;boost/asio/detail/socket_ops.hpp&gt;
+<span class="lineNum">      37 </span>            : #include &lt;boost/asio/detail/socket_types.hpp&gt;
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : namespace boost {
+<span class="lineNum">      42 </span>            : namespace asio {
+<span class="lineNum">      43 </span>            : namespace detail {
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : class reactive_socket_service_base
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span>            : public:
+<span class="lineNum">      48 </span>            :   // The native type of a socket.
+<span class="lineNum">      49 </span>            :   typedef socket_type native_handle_type;
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            :   // The implementation type of the socket.
+<span class="lineNum">      52 </span>            :   struct base_implementation_type
+<span class="lineNum">      53 </span>            :   {
+<span class="lineNum">      54 </span>            :     // The native socket representation.
+<span class="lineNum">      55 </span>            :     socket_type socket_;
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :     // The current state of the socket.
+<span class="lineNum">      58 </span>            :     socket_ops::state_type state_;
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :     // Per-descriptor data used by the reactor.
+<span class="lineNum">      61 </span>            :     reactor::per_descriptor_data reactor_data_;
+<span class="lineNum">      62 </span>            :   };
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :   // Constructor.
+<span class="lineNum">      65 </span>            :   BOOST_ASIO_DECL reactive_socket_service_base(
+<span class="lineNum">      66 </span>            :       boost::asio::io_service&amp; io_service);
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            :   // Destroy all user-defined handler objects owned by the service.
+<span class="lineNum">      69 </span>            :   BOOST_ASIO_DECL void shutdown_service();
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            :   // Construct a new socket implementation.
+<span class="lineNum">      72 </span>            :   BOOST_ASIO_DECL void construct(base_implementation_type&amp; impl);
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :   // Move-construct a new socket implementation.
+<span class="lineNum">      75 </span>            :   BOOST_ASIO_DECL void base_move_construct(base_implementation_type&amp; impl,
+<span class="lineNum">      76 </span>            :       base_implementation_type&amp; other_impl);
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :   // Move-assign from another socket implementation.
+<span class="lineNum">      79 </span>            :   BOOST_ASIO_DECL void base_move_assign(base_implementation_type&amp; impl,
+<span class="lineNum">      80 </span>            :       reactive_socket_service_base&amp; other_service,
+<span class="lineNum">      81 </span>            :       base_implementation_type&amp; other_impl);
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :   // Destroy a socket implementation.
+<span class="lineNum">      84 </span>            :   BOOST_ASIO_DECL void destroy(base_implementation_type&amp; impl);
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            :   // Determine whether the socket is open.
+<span class="lineNum">      87 </span>            :   bool is_open(const base_implementation_type&amp; impl) const
+<span class="lineNum">      88 </span>            :   {
+<span class="lineNum">      89 </span><span class="lineCov">        972 :     return impl.socket_ != invalid_socket;</span>
+<span class="lineNum">      90 </span>            :   }
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :   // Destroy a socket implementation.
+<span class="lineNum">      93 </span>            :   BOOST_ASIO_DECL boost::system::error_code close(
+<span class="lineNum">      94 </span>            :       base_implementation_type&amp; impl, boost::system::error_code&amp; ec);
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            :   // Get the native socket representation.
+<span class="lineNum">      97 </span>            :   native_handle_type native_handle(base_implementation_type&amp; impl)
+<span class="lineNum">      98 </span>            :   {
+<span class="lineNum">      99 </span>            :     return impl.socket_;
+<span class="lineNum">     100 </span>            :   }
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :   // Cancel all operations associated with the socket.
+<span class="lineNum">     103 </span>            :   BOOST_ASIO_DECL boost::system::error_code cancel(
+<span class="lineNum">     104 </span>            :       base_implementation_type&amp; impl, boost::system::error_code&amp; ec);
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            :   // Determine whether the socket is at the out-of-band data mark.
+<span class="lineNum">     107 </span>            :   bool at_mark(const base_implementation_type&amp; impl,
+<span class="lineNum">     108 </span>            :       boost::system::error_code&amp; ec) const
+<span class="lineNum">     109 </span>            :   {
+<span class="lineNum">     110 </span>            :     return socket_ops::sockatmark(impl.socket_, ec);
+<span class="lineNum">     111 </span>            :   }
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :   // Determine the number of bytes available for reading.
+<span class="lineNum">     114 </span>            :   std::size_t available(const base_implementation_type&amp; impl,
+<span class="lineNum">     115 </span>            :       boost::system::error_code&amp; ec) const
+<span class="lineNum">     116 </span>            :   {
+<span class="lineNum">     117 </span>            :     return socket_ops::available(impl.socket_, ec);
+<span class="lineNum">     118 </span>            :   }
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            :   // Place the socket into the state where it will listen for new connections.
+<span class="lineNum">     121 </span>            :   boost::system::error_code listen(base_implementation_type&amp; impl,
+<span class="lineNum">     122 </span>            :       int backlog, boost::system::error_code&amp; ec)
+<span class="lineNum">     123 </span>            :   {
+<span class="lineNum">     124 </span><span class="lineCov">         18 :     socket_ops::listen(impl.socket_, backlog, ec);</span>
+<span class="lineNum">     125 </span><span class="lineCov">         18 :     return ec;</span>
+<span class="lineNum">     126 </span>            :   }
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            :   // Perform an IO control command on the socket.
+<span class="lineNum">     129 </span>            :   template &lt;typename IO_Control_Command&gt;
+<span class="lineNum">     130 </span>            :   boost::system::error_code io_control(base_implementation_type&amp; impl,
+<span class="lineNum">     131 </span>            :       IO_Control_Command&amp; command, boost::system::error_code&amp; ec)
+<span class="lineNum">     132 </span>            :   {
+<span class="lineNum">     133 </span>            :     socket_ops::ioctl(impl.socket_, impl.state_, command.name(),
+<span class="lineNum">     134 </span>            :         static_cast&lt;ioctl_arg_type*&gt;(command.data()), ec);
+<span class="lineNum">     135 </span>            :     return ec;
+<span class="lineNum">     136 </span>            :   }
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :   // Gets the non-blocking mode of the socket.
+<span class="lineNum">     139 </span>            :   bool non_blocking(const base_implementation_type&amp; impl) const
+<span class="lineNum">     140 </span>            :   {
+<span class="lineNum">     141 </span>            :     return (impl.state_ &amp; socket_ops::user_set_non_blocking) != 0;
+<span class="lineNum">     142 </span>            :   }
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            :   // Sets the non-blocking mode of the socket.
+<span class="lineNum">     145 </span>            :   boost::system::error_code non_blocking(base_implementation_type&amp; impl,
+<span class="lineNum">     146 </span>            :       bool mode, boost::system::error_code&amp; ec)
+<span class="lineNum">     147 </span>            :   {
+<span class="lineNum">     148 </span>            :     socket_ops::set_user_non_blocking(impl.socket_, impl.state_, mode, ec);
+<span class="lineNum">     149 </span>            :     return ec;
+<span class="lineNum">     150 </span>            :   }
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :   // Gets the non-blocking mode of the native socket implementation.
+<span class="lineNum">     153 </span>            :   bool native_non_blocking(const base_implementation_type&amp; impl) const
+<span class="lineNum">     154 </span>            :   {
+<span class="lineNum">     155 </span>            :     return (impl.state_ &amp; socket_ops::internal_non_blocking) != 0;
+<span class="lineNum">     156 </span>            :   }
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            :   // Sets the non-blocking mode of the native socket implementation.
+<span class="lineNum">     159 </span>            :   boost::system::error_code native_non_blocking(base_implementation_type&amp; impl,
+<span class="lineNum">     160 </span>            :       bool mode, boost::system::error_code&amp; ec)
+<span class="lineNum">     161 </span>            :   {
+<span class="lineNum">     162 </span>            :     socket_ops::set_internal_non_blocking(impl.socket_, impl.state_, mode, ec);
+<span class="lineNum">     163 </span>            :     return ec;
+<span class="lineNum">     164 </span>            :   }
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            :   // Disable sends or receives on the socket.
+<span class="lineNum">     167 </span>            :   boost::system::error_code shutdown(base_implementation_type&amp; impl,
+<span class="lineNum">     168 </span>            :       socket_base::shutdown_type what, boost::system::error_code&amp; ec)
+<span class="lineNum">     169 </span>            :   {
+<span class="lineNum">     170 </span><span class="lineCov">        145 :     socket_ops::shutdown(impl.socket_, what, ec);</span>
+<span class="lineNum">     171 </span><span class="lineCov">        145 :     return ec;</span>
+<span class="lineNum">     172 </span>            :   }
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            :   // Send the given data to the peer.
+<span class="lineNum">     175 </span>            :   template &lt;typename ConstBufferSequence&gt;
+<span class="lineNum">     176 </span>            :   size_t send(base_implementation_type&amp; impl,
+<span class="lineNum">     177 </span>            :       const ConstBufferSequence&amp; buffers,
+<span class="lineNum">     178 </span>            :       socket_base::message_flags flags, boost::system::error_code&amp; ec)
+<span class="lineNum">     179 </span>            :   {
+<span class="lineNum">     180 </span>            :     buffer_sequence_adapter&lt;boost::asio::const_buffer,
+<span class="lineNum">     181 </span>            :         ConstBufferSequence&gt; bufs(buffers);
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            :     return socket_ops::sync_send(impl.socket_, impl.state_,
+<span class="lineNum">     184 </span>            :         bufs.buffers(), bufs.count(), flags, bufs.all_empty(), ec);
+<span class="lineNum">     185 </span>            :   }
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :   // Wait until data can be sent without blocking.
+<span class="lineNum">     188 </span>            :   size_t send(base_implementation_type&amp; impl, const null_buffers&amp;,
+<span class="lineNum">     189 </span>            :       socket_base::message_flags, boost::system::error_code&amp; ec)
+<span class="lineNum">     190 </span>            :   {
+<span class="lineNum">     191 </span>            :     // Wait for socket to become ready.
+<span class="lineNum">     192 </span>            :     socket_ops::poll_write(impl.socket_, impl.state_, ec);
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            :     return 0;
+<span class="lineNum">     195 </span>            :   }
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :   // Start an asynchronous send. The data being sent must be valid for the
+<a name="198"><span class="lineNum">     198 </span>            :   // lifetime of the asynchronous operation.</a>
+<span class="lineNum">     199 </span>            :   template &lt;typename ConstBufferSequence, typename Handler&gt;
+<span class="lineNum">     200 </span><span class="lineCov">        232 :   void async_send(base_implementation_type&amp; impl,</span>
+<span class="lineNum">     201 </span>            :       const ConstBufferSequence&amp; buffers,
+<span class="lineNum">     202 </span>            :       socket_base::message_flags flags, Handler&amp; handler)
+<span class="lineNum">     203 </span>            :   {
+<span class="lineNum">     204 </span>            :     bool is_continuation =
+<span class="lineNum">     205 </span><span class="lineCov">        232 :       boost_asio_handler_cont_helpers::is_continuation(handler);</span>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :     // Allocate and construct an operation to wrap the handler.
+<span class="lineNum">     208 </span>            :     typedef reactive_socket_send_op&lt;ConstBufferSequence, Handler&gt; op;
+<span class="lineNum">     209 </span><span class="lineCov">        232 :     typename op::ptr p = { boost::asio::detail::addressof(handler),</span>
+<span class="lineNum">     210 </span><span class="lineCov">        464 :       boost_asio_handler_alloc_helpers::allocate(</span>
+<span class="lineNum">     211 </span><span class="lineCov">        928 :         sizeof(op), handler), 0 };</span>
+<span class="lineNum">     212 </span><span class="lineCov">        232 :     p.p = new (p.v) op(impl.socket_, buffers, flags, handler);</span>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            :     BOOST_ASIO_HANDLER_CREATION((p.p, &quot;socket&quot;, &amp;impl, &quot;async_send&quot;));
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineCov">        464 :     start_op(impl, reactor::write_op, p.p, is_continuation, true,</span>
+<span class="lineNum">     217 </span><span class="lineCov">        232 :         ((impl.state_ &amp; socket_ops::stream_oriented)</span>
+<span class="lineNum">     218 </span>            :           &amp;&amp; buffer_sequence_adapter&lt;boost::asio::const_buffer,
+<span class="lineNum">     219 </span><span class="lineCov">        232 :             ConstBufferSequence&gt;::all_empty(buffers)));</span>
+<span class="lineNum">     220 </span><span class="lineCov">        232 :     p.v = p.p = 0;</span>
+<span class="lineNum">     221 </span><span class="lineCov">        232 :   }</span>
+<span class="lineNum">     222 </span>            : 
+<span class="lineNum">     223 </span>            :   // Start an asynchronous wait until data can be sent without blocking.
+<span class="lineNum">     224 </span>            :   template &lt;typename Handler&gt;
+<span class="lineNum">     225 </span>            :   void async_send(base_implementation_type&amp; impl, const null_buffers&amp;,
+<span class="lineNum">     226 </span>            :       socket_base::message_flags, Handler&amp; handler)
+<span class="lineNum">     227 </span>            :   {
+<span class="lineNum">     228 </span>            :     bool is_continuation =
+<span class="lineNum">     229 </span>            :       boost_asio_handler_cont_helpers::is_continuation(handler);
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :     // Allocate and construct an operation to wrap the handler.
+<span class="lineNum">     232 </span>            :     typedef reactive_null_buffers_op&lt;Handler&gt; op;
+<span class="lineNum">     233 </span>            :     typename op::ptr p = { boost::asio::detail::addressof(handler),
+<span class="lineNum">     234 </span>            :       boost_asio_handler_alloc_helpers::allocate(
+<span class="lineNum">     235 </span>            :         sizeof(op), handler), 0 };
+<span class="lineNum">     236 </span>            :     p.p = new (p.v) op(handler);
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span>            :     BOOST_ASIO_HANDLER_CREATION((p.p, &quot;socket&quot;,
+<span class="lineNum">     239 </span>            :           &amp;impl, &quot;async_send(null_buffers)&quot;));
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            :     start_op(impl, reactor::write_op, p.p, is_continuation, false, false);
+<span class="lineNum">     242 </span>            :     p.v = p.p = 0;
+<span class="lineNum">     243 </span>            :   }
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span>            :   // Receive some data from the peer. Returns the number of bytes received.
+<span class="lineNum">     246 </span>            :   template &lt;typename MutableBufferSequence&gt;
+<span class="lineNum">     247 </span>            :   size_t receive(base_implementation_type&amp; impl,
+<span class="lineNum">     248 </span>            :       const MutableBufferSequence&amp; buffers,
+<span class="lineNum">     249 </span>            :       socket_base::message_flags flags, boost::system::error_code&amp; ec)
+<span class="lineNum">     250 </span>            :   {
+<span class="lineNum">     251 </span>            :     buffer_sequence_adapter&lt;boost::asio::mutable_buffer,
+<span class="lineNum">     252 </span>            :         MutableBufferSequence&gt; bufs(buffers);
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            :     return socket_ops::sync_recv(impl.socket_, impl.state_,
+<span class="lineNum">     255 </span>            :         bufs.buffers(), bufs.count(), flags, bufs.all_empty(), ec);
+<span class="lineNum">     256 </span>            :   }
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            :   // Wait until data can be received without blocking.
+<span class="lineNum">     259 </span>            :   size_t receive(base_implementation_type&amp; impl, const null_buffers&amp;,
+<span class="lineNum">     260 </span>            :       socket_base::message_flags, boost::system::error_code&amp; ec)
+<span class="lineNum">     261 </span>            :   {
+<span class="lineNum">     262 </span>            :     // Wait for socket to become ready.
+<span class="lineNum">     263 </span>            :     socket_ops::poll_read(impl.socket_, impl.state_, ec);
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :     return 0;
+<span class="lineNum">     266 </span>            :   }
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            :   // Start an asynchronous receive. The buffer for the data being received
+<a name="269"><span class="lineNum">     269 </span>            :   // must be valid for the lifetime of the asynchronous operation.</a>
+<span class="lineNum">     270 </span>            :   template &lt;typename MutableBufferSequence, typename Handler&gt;
+<span class="lineNum">     271 </span><span class="lineCov">        384 :   void async_receive(base_implementation_type&amp; impl,</span>
+<span class="lineNum">     272 </span>            :       const MutableBufferSequence&amp; buffers,
+<span class="lineNum">     273 </span>            :       socket_base::message_flags flags, Handler&amp; handler)
+<span class="lineNum">     274 </span>            :   {
+<span class="lineNum">     275 </span>            :     bool is_continuation =
+<span class="lineNum">     276 </span><span class="lineCov">        384 :       boost_asio_handler_cont_helpers::is_continuation(handler);</span>
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span>            :     // Allocate and construct an operation to wrap the handler.
+<span class="lineNum">     279 </span>            :     typedef reactive_socket_recv_op&lt;MutableBufferSequence, Handler&gt; op;
+<span class="lineNum">     280 </span><span class="lineCov">        384 :     typename op::ptr p = { boost::asio::detail::addressof(handler),</span>
+<span class="lineNum">     281 </span><span class="lineCov">        768 :       boost_asio_handler_alloc_helpers::allocate(</span>
+<span class="lineNum">     282 </span><span class="lineCov">       1536 :         sizeof(op), handler), 0 };</span>
+<span class="lineNum">     283 </span><span class="lineCov">        384 :     p.p = new (p.v) op(impl.socket_, impl.state_, buffers, flags, handler);</span>
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span>            :     BOOST_ASIO_HANDLER_CREATION((p.p, &quot;socket&quot;, &amp;impl, &quot;async_receive&quot;));
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span><span class="lineCov">        768 :     start_op(impl,</span>
+<span class="lineNum">     288 </span>            :         (flags &amp; socket_base::message_out_of_band)
+<span class="lineNum">     289 </span>            :           ? reactor::except_op : reactor::read_op,
+<span class="lineNum">     290 </span>            :         p.p, is_continuation,
+<span class="lineNum">     291 </span>            :         (flags &amp; socket_base::message_out_of_band) == 0,
+<span class="lineNum">     292 </span><span class="lineCov">        384 :         ((impl.state_ &amp; socket_ops::stream_oriented)</span>
+<span class="lineNum">     293 </span>            :           &amp;&amp; buffer_sequence_adapter&lt;boost::asio::mutable_buffer,
+<span class="lineNum">     294 </span><span class="lineCov">        384 :             MutableBufferSequence&gt;::all_empty(buffers)));</span>
+<span class="lineNum">     295 </span><span class="lineCov">        384 :     p.v = p.p = 0;</span>
+<span class="lineNum">     296 </span><span class="lineCov">        384 :   }</span>
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            :   // Wait until data can be received without blocking.
+<span class="lineNum">     299 </span>            :   template &lt;typename Handler&gt;
+<span class="lineNum">     300 </span>            :   void async_receive(base_implementation_type&amp; impl, const null_buffers&amp;,
+<span class="lineNum">     301 </span>            :       socket_base::message_flags flags, Handler&amp; handler)
+<span class="lineNum">     302 </span>            :   {
+<span class="lineNum">     303 </span>            :     bool is_continuation =
+<span class="lineNum">     304 </span>            :       boost_asio_handler_cont_helpers::is_continuation(handler);
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span>            :     // Allocate and construct an operation to wrap the handler.
+<span class="lineNum">     307 </span>            :     typedef reactive_null_buffers_op&lt;Handler&gt; op;
+<span class="lineNum">     308 </span>            :     typename op::ptr p = { boost::asio::detail::addressof(handler),
+<span class="lineNum">     309 </span>            :       boost_asio_handler_alloc_helpers::allocate(
+<span class="lineNum">     310 </span>            :         sizeof(op), handler), 0 };
+<span class="lineNum">     311 </span>            :     p.p = new (p.v) op(handler);
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span>            :     BOOST_ASIO_HANDLER_CREATION((p.p, &quot;socket&quot;,
+<span class="lineNum">     314 </span>            :           &amp;impl, &quot;async_receive(null_buffers)&quot;));
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span>            :     start_op(impl,
+<span class="lineNum">     317 </span>            :         (flags &amp; socket_base::message_out_of_band)
+<span class="lineNum">     318 </span>            :           ? reactor::except_op : reactor::read_op,
+<span class="lineNum">     319 </span>            :         p.p, is_continuation, false, false);
+<span class="lineNum">     320 </span>            :     p.v = p.p = 0;
+<span class="lineNum">     321 </span>            :   }
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span>            :   // Receive some data with associated flags. Returns the number of bytes
+<span class="lineNum">     324 </span>            :   // received.
+<span class="lineNum">     325 </span>            :   template &lt;typename MutableBufferSequence&gt;
+<span class="lineNum">     326 </span>            :   size_t receive_with_flags(base_implementation_type&amp; impl,
+<span class="lineNum">     327 </span>            :       const MutableBufferSequence&amp; buffers,
+<span class="lineNum">     328 </span>            :       socket_base::message_flags in_flags,
+<span class="lineNum">     329 </span>            :       socket_base::message_flags&amp; out_flags, boost::system::error_code&amp; ec)
+<span class="lineNum">     330 </span>            :   {
+<span class="lineNum">     331 </span>            :     buffer_sequence_adapter&lt;boost::asio::mutable_buffer,
+<span class="lineNum">     332 </span>            :         MutableBufferSequence&gt; bufs(buffers);
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span>            :     return socket_ops::sync_recvmsg(impl.socket_, impl.state_,
+<span class="lineNum">     335 </span>            :         bufs.buffers(), bufs.count(), in_flags, out_flags, ec);
+<span class="lineNum">     336 </span>            :   }
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            :   // Wait until data can be received without blocking.
+<span class="lineNum">     339 </span>            :   size_t receive_with_flags(base_implementation_type&amp; impl,
+<span class="lineNum">     340 </span>            :       const null_buffers&amp;, socket_base::message_flags,
+<span class="lineNum">     341 </span>            :       socket_base::message_flags&amp; out_flags, boost::system::error_code&amp; ec)
+<span class="lineNum">     342 </span>            :   {
+<span class="lineNum">     343 </span>            :     // Wait for socket to become ready.
+<span class="lineNum">     344 </span>            :     socket_ops::poll_read(impl.socket_, impl.state_, ec);
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span>            :     // Clear out_flags, since we cannot give it any other sensible value when
+<span class="lineNum">     347 </span>            :     // performing a null_buffers operation.
+<span class="lineNum">     348 </span>            :     out_flags = 0;
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span>            :     return 0;
+<span class="lineNum">     351 </span>            :   }
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span>            :   // Start an asynchronous receive. The buffer for the data being received
+<span class="lineNum">     354 </span>            :   // must be valid for the lifetime of the asynchronous operation.
+<span class="lineNum">     355 </span>            :   template &lt;typename MutableBufferSequence, typename Handler&gt;
+<span class="lineNum">     356 </span>            :   void async_receive_with_flags(base_implementation_type&amp; impl,
+<span class="lineNum">     357 </span>            :       const MutableBufferSequence&amp; buffers, socket_base::message_flags in_flags,
+<span class="lineNum">     358 </span>            :       socket_base::message_flags&amp; out_flags, Handler&amp; handler)
+<span class="lineNum">     359 </span>            :   {
+<span class="lineNum">     360 </span>            :     bool is_continuation =
+<span class="lineNum">     361 </span>            :       boost_asio_handler_cont_helpers::is_continuation(handler);
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span>            :     // Allocate and construct an operation to wrap the handler.
+<span class="lineNum">     364 </span>            :     typedef reactive_socket_recvmsg_op&lt;MutableBufferSequence, Handler&gt; op;
+<span class="lineNum">     365 </span>            :     typename op::ptr p = { boost::asio::detail::addressof(handler),
+<span class="lineNum">     366 </span>            :       boost_asio_handler_alloc_helpers::allocate(
+<span class="lineNum">     367 </span>            :         sizeof(op), handler), 0 };
+<span class="lineNum">     368 </span>            :     p.p = new (p.v) op(impl.socket_, buffers, in_flags, out_flags, handler);
+<span class="lineNum">     369 </span>            : 
+<span class="lineNum">     370 </span>            :     BOOST_ASIO_HANDLER_CREATION((p.p, &quot;socket&quot;,
+<span class="lineNum">     371 </span>            :           &amp;impl, &quot;async_receive_with_flags&quot;));
+<span class="lineNum">     372 </span>            : 
+<span class="lineNum">     373 </span>            :     start_op(impl,
+<span class="lineNum">     374 </span>            :         (in_flags &amp; socket_base::message_out_of_band)
+<span class="lineNum">     375 </span>            :           ? reactor::except_op : reactor::read_op,
+<span class="lineNum">     376 </span>            :         p.p, is_continuation,
+<span class="lineNum">     377 </span>            :         (in_flags &amp; socket_base::message_out_of_band) == 0, false);
+<span class="lineNum">     378 </span>            :     p.v = p.p = 0;
+<span class="lineNum">     379 </span>            :   }
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span>            :   // Wait until data can be received without blocking.
+<span class="lineNum">     382 </span>            :   template &lt;typename Handler&gt;
+<span class="lineNum">     383 </span>            :   void async_receive_with_flags(base_implementation_type&amp; impl,
+<span class="lineNum">     384 </span>            :       const null_buffers&amp;, socket_base::message_flags in_flags,
+<span class="lineNum">     385 </span>            :       socket_base::message_flags&amp; out_flags, Handler&amp; handler)
+<span class="lineNum">     386 </span>            :   {
+<span class="lineNum">     387 </span>            :     bool is_continuation =
+<span class="lineNum">     388 </span>            :       boost_asio_handler_cont_helpers::is_continuation(handler);
+<span class="lineNum">     389 </span>            : 
+<span class="lineNum">     390 </span>            :     // Allocate and construct an operation to wrap the handler.
+<span class="lineNum">     391 </span>            :     typedef reactive_null_buffers_op&lt;Handler&gt; op;
+<span class="lineNum">     392 </span>            :     typename op::ptr p = { boost::asio::detail::addressof(handler),
+<span class="lineNum">     393 </span>            :       boost_asio_handler_alloc_helpers::allocate(
+<span class="lineNum">     394 </span>            :         sizeof(op), handler), 0 };
+<span class="lineNum">     395 </span>            :     p.p = new (p.v) op(handler);
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span>            :     BOOST_ASIO_HANDLER_CREATION((p.p, &quot;socket&quot;, &amp;impl,
+<span class="lineNum">     398 </span>            :           &quot;async_receive_with_flags(null_buffers)&quot;));
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span>            :     // Clear out_flags, since we cannot give it any other sensible value when
+<span class="lineNum">     401 </span>            :     // performing a null_buffers operation.
+<span class="lineNum">     402 </span>            :     out_flags = 0;
+<span class="lineNum">     403 </span>            : 
+<span class="lineNum">     404 </span>            :     start_op(impl,
+<span class="lineNum">     405 </span>            :         (in_flags &amp; socket_base::message_out_of_band)
+<span class="lineNum">     406 </span>            :           ? reactor::except_op : reactor::read_op,
+<span class="lineNum">     407 </span>            :         p.p, is_continuation, false, false);
+<span class="lineNum">     408 </span>            :     p.v = p.p = 0;
+<span class="lineNum">     409 </span>            :   }
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span>            : protected:
+<span class="lineNum">     412 </span>            :   // Open a new socket implementation.
+<span class="lineNum">     413 </span>            :   BOOST_ASIO_DECL boost::system::error_code do_open(
+<span class="lineNum">     414 </span>            :       base_implementation_type&amp; impl, int af,
+<span class="lineNum">     415 </span>            :       int type, int protocol, boost::system::error_code&amp; ec);
+<span class="lineNum">     416 </span>            : 
+<span class="lineNum">     417 </span>            :   // Assign a native socket to a socket implementation.
+<span class="lineNum">     418 </span>            :   BOOST_ASIO_DECL boost::system::error_code do_assign(
+<span class="lineNum">     419 </span>            :       base_implementation_type&amp; impl, int type,
+<span class="lineNum">     420 </span>            :       const native_handle_type&amp; native_socket, boost::system::error_code&amp; ec);
+<span class="lineNum">     421 </span>            : 
+<span class="lineNum">     422 </span>            :   // Start the asynchronous read or write operation.
+<span class="lineNum">     423 </span>            :   BOOST_ASIO_DECL void start_op(base_implementation_type&amp; impl, int op_type,
+<span class="lineNum">     424 </span>            :       reactor_op* op, bool is_continuation, bool is_non_blocking, bool noop);
+<span class="lineNum">     425 </span>            : 
+<span class="lineNum">     426 </span>            :   // Start the asynchronous accept operation.
+<span class="lineNum">     427 </span>            :   BOOST_ASIO_DECL void start_accept_op(base_implementation_type&amp; impl,
+<span class="lineNum">     428 </span>            :       reactor_op* op, bool is_continuation, bool peer_is_open);
+<span class="lineNum">     429 </span>            : 
+<span class="lineNum">     430 </span>            :   // Start the asynchronous connect operation.
+<span class="lineNum">     431 </span>            :   BOOST_ASIO_DECL void start_connect_op(base_implementation_type&amp; impl,
+<span class="lineNum">     432 </span>            :       reactor_op* op, bool is_continuation,
+<span class="lineNum">     433 </span>            :       const socket_addr_type* addr, size_t addrlen);
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span>            :   // The selector that performs event demultiplexing for the service.
+<span class="lineNum">     436 </span>            :   reactor&amp; reactor_;
+<span class="lineNum">     437 </span>            : };
+<span class="lineNum">     438 </span>            : 
+<span class="lineNum">     439 </span>            : } // namespace detail
+<span class="lineNum">     440 </span>            : } // namespace asio
+<span class="lineNum">     441 </span>            : } // namespace boost
+<span class="lineNum">     442 </span>            : 
+<span class="lineNum">     443 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     444 </span>            : 
+<span class="lineNum">     445 </span>            : #if defined(BOOST_ASIO_HEADER_ONLY)
+<span class="lineNum">     446 </span>            : # include &lt;boost/asio/detail/impl/reactive_socket_service_base.ipp&gt;
+<span class="lineNum">     447 </span>            : #endif // defined(BOOST_ASIO_HEADER_ONLY)
+<span class="lineNum">     448 </span>            : 
+<span class="lineNum">     449 </span>            : #endif // !defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">     450 </span>            :        //   &amp;&amp; !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+<span class="lineNum">     451 </span>            : 
+<span class="lineNum">     452 </span>            : #endif // BOOST_ASIO_DETAIL_REACTIVE_SOCKET_SERVICE_BASE_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

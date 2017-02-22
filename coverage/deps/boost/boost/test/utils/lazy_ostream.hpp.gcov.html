@@ -1,0 +1,204 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/utils/lazy_ostream.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/utils</a> - lazy_ostream.hpp<span style="font-size: 80%;"> (source / <a href="lazy_ostream.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryLo">63.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">451</td>
+            <td class="headerCovTableEntryLo">0.4 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  Description : contains definition for all test tools in test toolbox
+<span class="lineNum">       9 </span>            : // ***************************************************************************
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_TEST_UTILS_LAZY_OSTREAM_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_TEST_UTILS_LAZY_OSTREAM_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : // Boost.Test
+<span class="lineNum">      15 </span>            : #include &lt;boost/test/detail/config.hpp&gt;
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : // STL
+<span class="lineNum">      18 </span>            : #include &lt;iosfwd&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : // ************************************************************************** //
+<span class="lineNum">      25 </span>            : // **************                  lazy_ostream                ************** //
+<span class="lineNum">      26 </span>            : // ************************************************************************** //
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace boost {
+<span class="lineNum">      29 </span>            : namespace unit_test {
+<span class="lineNum">      30 </span>            : 
+<a name="31"><span class="lineNum">      31 </span>            : class lazy_ostream {</a>
+<span class="lineNum">      32 </span>            : public:
+<a name="33"><span class="lineNum">      33 </span><span class="lineCov">     470528 :     virtual                 ~lazy_ostream()                                         {}</span></a>
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span><span class="lineCov">     345196 :     static lazy_ostream&amp;    instance()                                              { static lazy_ostream inst; return inst; }</span>
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span><span class="lineNoCov">          0 :     friend std::ostream&amp;    operator&lt;&lt;( std::ostream&amp; ostr, lazy_ostream const&amp; o ) { return o( ostr ); }</span>
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            :     // access method
+<span class="lineNum">      40 </span>            :     bool                    empty() const                                           { return m_empty; }
+<a name="41"><span class="lineNum">      41 </span>            : </a>
+<span class="lineNum">      42 </span>            :     // actual printing interface; to be accessed only by this class and children
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 :     virtual std::ostream&amp;   operator()( std::ostream&amp; ostr ) const                  { return ostr; }</span>
+<span class="lineNum">      44 </span>            : protected:
+<span class="lineNum">      45 </span><span class="lineCov">     470528 :     explicit                lazy_ostream( bool p_empty = true ) : m_empty( p_empty )    {}</span>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : private:
+<span class="lineNum">      48 </span>            :     // Data members
+<span class="lineNum">      49 </span>            :     bool                    m_empty;
+<span class="lineNum">      50 </span>            : };
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : //____________________________________________________________________________//
+<a name="53"><span class="lineNum">      53 </span>            : </a>
+<span class="lineNum">      54 </span>            : template&lt;typename PrevType, typename T, typename StorageT=T const&amp;&gt;
+<span class="lineNum">      55 </span><span class="lineCov">     941039 : class lazy_ostream_impl : public lazy_ostream {</span>
+<span class="lineNum">      56 </span>            : public:
+<span class="lineNum">      57 </span>            :     lazy_ostream_impl( PrevType const&amp; prev, T const&amp; value )
+<span class="lineNum">      58 </span>            :     : lazy_ostream( false )
+<span class="lineNum">      59 </span>            :     , m_prev( prev )
+<span class="lineNum">      60 </span><span class="lineCov">     941054 :     , m_value( value )</span>
+<span class="lineNum">      61 </span>            :     {
+<a name="62"><span class="lineNum">      62 </span>            :     }</a>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :     virtual std::ostream&amp;   operator()( std::ostream&amp; ostr ) const</span>
+<span class="lineNum">      65 </span>            :     {
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :         return m_prev(ostr) &lt;&lt; m_value;</span>
+<span class="lineNum">      67 </span>            :     }
+<span class="lineNum">      68 </span>            : private:
+<span class="lineNum">      69 </span>            :     // Data members
+<span class="lineNum">      70 </span>            :     PrevType const&amp;         m_prev;
+<span class="lineNum">      71 </span>            :     StorageT                m_value;
+<span class="lineNum">      72 </span>            : };
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            : template&lt;typename T&gt;
+<span class="lineNum">      77 </span>            : inline lazy_ostream_impl&lt;lazy_ostream,T&gt;
+<span class="lineNum">      78 </span>            : operator&lt;&lt;( lazy_ostream const&amp; prev, T const&amp; v )
+<span class="lineNum">      79 </span>            : {
+<span class="lineNum">      80 </span><span class="lineCov">     345195 :     return lazy_ostream_impl&lt;lazy_ostream,T&gt;( prev, v );</span>
+<span class="lineNum">      81 </span>            : }
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : template&lt;typename PrevPrevType, typename TPrev, typename T&gt;
+<span class="lineNum">      86 </span>            : inline lazy_ostream_impl&lt;lazy_ostream_impl&lt;PrevPrevType,TPrev&gt;,T&gt;
+<span class="lineNum">      87 </span>            : operator&lt;&lt;( lazy_ostream_impl&lt;PrevPrevType,TPrev&gt; const&amp; prev, T const&amp; v )
+<span class="lineNum">      88 </span>            : {
+<span class="lineNum">      89 </span>            :     typedef lazy_ostream_impl&lt;PrevPrevType,TPrev&gt; PrevType;
+<span class="lineNum">      90 </span><span class="lineCov">     125332 :     return lazy_ostream_impl&lt;PrevType,T&gt;( prev, v );</span>
+<span class="lineNum">      91 </span>            : }
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : #if BOOST_TEST_USE_STD_LOCALE
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : template&lt;typename R,typename S&gt;
+<span class="lineNum">      98 </span>            : inline lazy_ostream_impl&lt;lazy_ostream,R&amp; (BOOST_TEST_CALL_DECL *)(S&amp;),R&amp; (BOOST_TEST_CALL_DECL *)(S&amp;)&gt;
+<span class="lineNum">      99 </span>            : operator&lt;&lt;( lazy_ostream const&amp; prev, R&amp; (BOOST_TEST_CALL_DECL *man)(S&amp;) )
+<span class="lineNum">     100 </span>            : {
+<span class="lineNum">     101 </span>            :     typedef R&amp; (BOOST_TEST_CALL_DECL * ManipType)(S&amp;);
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            :     return lazy_ostream_impl&lt;lazy_ostream,ManipType,ManipType&gt;( prev, man );
+<span class="lineNum">     104 </span>            : }
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : template&lt;typename PrevPrevType, typename TPrev,typename R,typename S&gt;
+<span class="lineNum">     109 </span>            : inline lazy_ostream_impl&lt;lazy_ostream_impl&lt;PrevPrevType,TPrev&gt;,R&amp; (BOOST_TEST_CALL_DECL *)(S&amp;),R&amp; (BOOST_TEST_CALL_DECL *)(S&amp;)&gt;
+<span class="lineNum">     110 </span>            : operator&lt;&lt;( lazy_ostream_impl&lt;PrevPrevType,TPrev&gt; const&amp; prev, R&amp; (BOOST_TEST_CALL_DECL *man)(S&amp;) )
+<span class="lineNum">     111 </span>            : {
+<span class="lineNum">     112 </span>            :     typedef R&amp; (BOOST_TEST_CALL_DECL * ManipType)(S&amp;);
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :     return lazy_ostream_impl&lt;lazy_ostream_impl&lt;PrevPrevType,TPrev&gt;,ManipType,ManipType&gt;( prev, man );
+<span class="lineNum">     115 </span>            : }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            : #endif
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            : #define BOOST_TEST_LAZY_MSG( M ) (::boost::unit_test::lazy_ostream::instance() &lt;&lt; M)
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : } // namespace unit_test
+<span class="lineNum">     124 </span>            : } // namespace boost
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : #endif // BOOST_TEST_UTILS_LAZY_OSTREAM_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

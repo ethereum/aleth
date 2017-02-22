@@ -1,0 +1,301 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libethereum/ClientBase.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libethereum</a> - ClientBase.cpp<span style="font-size: 80%;"> (source / <a href="ClientBase.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">117</td>
+            <td class="headerCovTableEntryLo">6.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            :  */
+<span class="lineNum">      17 </span>            : /** @file ClientBase.cpp
+<span class="lineNum">      18 </span>            :  * @author Marek Kotewicz &lt;marek@ethdev.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/unit_test.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;libdevcore/CommonJS.h&gt;
+<span class="lineNum">      24 </span>            : #include &lt;libethashseal/Ethash.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;test/TestUtils.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;test/libtestutils/FixedClient.h&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : using namespace std;
+<span class="lineNum">      30 </span>            : using namespace dev;
+<span class="lineNum">      31 </span>            : using namespace dev::eth;
+<span class="lineNum">      32 </span>            : using namespace dev::test;
+<span class="lineNum">      33 </span>            : 
+<a name="34"><span class="lineNum">      34 </span><span class="lineCov">          3 : BOOST_FIXTURE_TEST_SUITE(ClientBase, ParallelClientBaseFixture)</span></a>
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span><span class="lineCov">         28 : BOOST_AUTO_TEST_CASE(blocks)</span>
+<a name="37"><span class="lineNum">      37 </span>            : {</a>
+<span class="lineNum">      38 </span><span class="lineCov">          1 :         test::TestOutputHelper::initTest();</span>
+<a name="39"><span class="lineNum">      39 </span><span class="lineCov">          3 :         enumerateClients([](Json::Value const&amp; _json, dev::eth::ClientBase&amp; _client) -&gt; void</span></a>
+<span class="lineNum">      40 </span>            :         {
+<span class="lineNum">      41 </span><span class="lineNoCov">          0 :                 auto compareState = [&amp;_client](Json::Value const&amp; _o, string const&amp; _name, BlockNumber _blockNumber) -&gt; void</span>
+<span class="lineNum">      42 </span><span class="lineNoCov">          0 :                 {</span>
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 :                         Address address(_name);</span>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            :                         // balanceAt
+<span class="lineNum">      46 </span><span class="lineNoCov">          0 :                         u256 expectedBalance = u256(_o[&quot;balance&quot;].asString());</span>
+<span class="lineNum">      47 </span><span class="lineNoCov">          0 :                         u256 balance = _client.balanceAt(address, _blockNumber);</span>
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 :                         ETH_CHECK_EQUAL(expectedBalance, balance);</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            :                         // countAt
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 :                         u256 expectedCount = u256(_o[&quot;nonce&quot;].asString());</span>
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :                         u256 count = _client.countAt(address,  _blockNumber);</span>
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 :                         ETH_CHECK_EQUAL(expectedCount, count);</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :                         // stateAt
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :                         for (string const&amp; pos: _o[&quot;storage&quot;].getMemberNames())</span>
+<span class="lineNum">      57 </span>            :                         {
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :                                 u256 expectedState = u256(_o[&quot;storage&quot;][pos].asString());</span>
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :                                 u256 state = _client.stateAt(address, u256(pos), _blockNumber);</span>
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedState, state);</span>
+<span class="lineNum">      61 </span>            :                         }
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            :                         // codeAt
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :                         bytes expectedCode = fromHex(_o[&quot;code&quot;].asString());</span>
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :                         bytes code = _client.codeAt(address, _blockNumber);</span>
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :                         ETH_CHECK_EQUAL_COLLECTIONS(expectedCode.begin(), expectedCode.end(),</span>
+<span class="lineNum">      67 </span>            :                                                                                 code.begin(), code.end());
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :                 };</span>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :                 for (string const&amp; name: _json[&quot;postState&quot;].getMemberNames())</span>
+<span class="lineNum">      71 </span>            :                 {
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :                         Json::Value o = _json[&quot;postState&quot;][name];</span>
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :                         compareState(o, name, PendingBlock);</span>
+<span class="lineNum">      74 </span>            :                 }
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :                 for (string const&amp; name: _json[&quot;pre&quot;].getMemberNames())</span>
+<span class="lineNum">      77 </span>            :                 {
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :                         Json::Value o = _json[&quot;pre&quot;][name];</span>
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :                         compareState(o, name, 0);</span>
+<span class="lineNum">      80 </span>            :                 }
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :                 // number
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :                 unsigned expectedNumber = _json[&quot;blocks&quot;].size();</span>
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :                 unsigned number = _client.number();</span>
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :                 ETH_CHECK_EQUAL(expectedNumber, number);</span>
+<span class="lineNum">      86 </span>            :                 
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :                 u256 totalDifficulty = u256(_json[&quot;genesisBlockHeader&quot;][&quot;difficulty&quot;].asString());</span>
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 :                 for (Json::Value const&amp; block: _json[&quot;blocks&quot;])</span>
+<span class="lineNum">      89 </span>            :                 {
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 :                         Json::Value blockHeader = block[&quot;blockHeader&quot;];</span>
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :                         Json::Value uncles = block[&quot;uncleHeaders&quot;];</span>
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :                         Json::Value transactions = block[&quot;transactions&quot;];</span>
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :                         h256 blockHash = h256(fromHex(blockHeader[&quot;hash&quot;].asString()));</span>
+<span class="lineNum">      94 </span>            :                         
+<span class="lineNum">      95 </span>            :                         // just update the difficulty
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :                         for (Json::Value const&amp; uncle: uncles)</span>
+<span class="lineNum">      97 </span>            :                         {
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :                                 totalDifficulty += u256(uncle[&quot;difficulty&quot;].asString());</span>
+<span class="lineNum">      99 </span>            :                         }
+<span class="lineNum">     100 </span>            :                         
+<span class="lineNum">     101 </span>            :                         // hashFromNumber
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :                         h256 expectedHashFromNumber = h256(fromHex(blockHeader[&quot;hash&quot;].asString()));</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :                         h256 hashFromNumber = _client.hashFromNumber(jsToInt(blockHeader[&quot;number&quot;].asString()));</span>
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :                         ETH_CHECK_EQUAL(expectedHashFromNumber, hashFromNumber);</span>
+<a name="105"><span class="lineNum">     105 </span>            :                         </a>
+<span class="lineNum">     106 </span>            :                         // blockInfo
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :                         auto compareBlockInfos = [](Json::Value const&amp; _b, BlockHeader _blockInfo) -&gt; void</span>
+<span class="lineNum">     108 </span>            :                         {
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :                                 LogBloom expectedBlockInfoBloom = LogBloom(fromHex(_b[&quot;bloom&quot;].asString()));</span>
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :                                 Address expectedBlockInfoCoinbase = Address(fromHex(_b[&quot;coinbase&quot;].asString()));</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :                                 u256 expectedBlockInfoDifficulty = u256(_b[&quot;difficulty&quot;].asString());</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :                                 bytes expectedBlockInfoExtraData = fromHex(_b[&quot;extraData&quot;].asString());</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :                                 u256 expectedBlockInfoGasLimit = u256(_b[&quot;gasLimit&quot;].asString());</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :                                 u256 expectedBlockInfoGasUsed = u256(_b[&quot;gasUsed&quot;].asString());</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :                                 h256 expectedBlockInfoHash = h256(fromHex(_b[&quot;hash&quot;].asString()));</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :                                 h256 expectedBlockInfoMixHash = h256(fromHex(_b[&quot;mixHash&quot;].asString()));</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :                                 Nonce expectedBlockInfoNonce = Nonce(fromHex(_b[&quot;nonce&quot;].asString()));</span>
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :                                 u256 expectedBlockInfoNumber = u256(_b[&quot;number&quot;].asString());</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :                                 h256 expectedBlockInfoParentHash = h256(fromHex(_b[&quot;parentHash&quot;].asString()));</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :                                 h256 expectedBlockInfoReceiptsRoot = h256(fromHex(_b[&quot;receiptTrie&quot;].asString()));</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :                                 u256 expectedBlockInfoTimestamp = u256(_b[&quot;timestamp&quot;].asString());</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :                                 h256 expectedBlockInfoTransactionsRoot = h256(fromHex(_b[&quot;transactionsTrie&quot;].asString()));</span>
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :                                 h256 expectedBlockInfoUncldeHash = h256(fromHex(_b[&quot;uncleHash&quot;].asString()));</span>
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedBlockInfoBloom, _blockInfo.logBloom());</span>
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedBlockInfoCoinbase, _blockInfo.author());</span>
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedBlockInfoDifficulty, _blockInfo.difficulty());</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL_COLLECTIONS(</span>
+<span class="lineNum">     128 </span>            :                                         expectedBlockInfoExtraData.begin(),
+<span class="lineNum">     129 </span>            :                                         expectedBlockInfoExtraData.end(),
+<span class="lineNum">     130 </span>            :                                         _blockInfo.extraData().begin(),
+<span class="lineNum">     131 </span>            :                                         _blockInfo.extraData().end()
+<span class="lineNum">     132 </span>            :                                 );
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedBlockInfoGasLimit, _blockInfo.gasLimit());</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedBlockInfoGasUsed, _blockInfo.gasUsed());</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedBlockInfoHash, _blockInfo.hash());</span>
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedBlockInfoMixHash, Ethash::mixHash(_blockInfo));</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedBlockInfoNonce, Ethash::nonce(_blockInfo));</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedBlockInfoNumber, _blockInfo.number());</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedBlockInfoParentHash, _blockInfo.parentHash());</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedBlockInfoReceiptsRoot, _blockInfo.receiptsRoot());</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedBlockInfoTimestamp, _blockInfo.timestamp());</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedBlockInfoTransactionsRoot, _blockInfo.transactionsRoot());</span>
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedBlockInfoUncldeHash, _blockInfo.sha3Uncles());</span>
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :                         };</span>
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 :                         BlockHeader blockInfo((static_cast&lt;FixedClient&amp;&gt;(_client)).bc().headerData(blockHash), HeaderData);</span>
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :                         compareBlockInfos(blockHeader, blockInfo);</span>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            :                         // blockDetails
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :                         unsigned expectedBlockDetailsNumber = jsToInt(blockHeader[&quot;number&quot;].asString());</span>
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :                         totalDifficulty += u256(blockHeader[&quot;difficulty&quot;].asString());</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :                         BlockDetails blockDetails = _client.blockDetails(blockHash);</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :                         ETH_CHECK_EQUAL(expectedBlockDetailsNumber, blockDetails.number);</span>
+<a name="154"><span class="lineNum">     154 </span><span class="lineNoCov">          0 :                         ETH_CHECK_EQUAL(totalDifficulty, blockDetails.totalDifficulty);</span></a>
+<span class="lineNum">     155 </span>            :                         
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :                         auto compareTransactions = [](Json::Value const&amp; _t, Transaction _transaction) -&gt; void</span>
+<span class="lineNum">     157 </span>            :                         {
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :                                 bytes expectedTransactionData = fromHex(_t[&quot;data&quot;].asString());</span>
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :                                 u256 expectedTransactionGasLimit = u256(_t[&quot;gasLimit&quot;].asString());</span>
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :                                 u256 expectedTransactionGasPrice = u256(_t[&quot;gasPrice&quot;].asString());</span>
+<span class="lineNum">     161 </span><span class="lineNoCov">          0 :                                 u256 expectedTransactionNonce = u256(_t[&quot;nonce&quot;].asString());</span>
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :                                 u256 expectedTransactionSignatureR = h256(fromHex(_t[&quot;r&quot;].asString()));</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :                                 u256 expectedTransactionSignatureS = h256(fromHex(_t[&quot;s&quot;].asString()));</span>
+<span class="lineNum">     164 </span>            : //                              unsigned expectedTransactionSignatureV = jsToInt(t[&quot;v&quot;].asString());
+<span class="lineNum">     165 </span>            :                                 
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL_COLLECTIONS(</span>
+<span class="lineNum">     167 </span>            :                                         expectedTransactionData.begin(),
+<span class="lineNum">     168 </span>            :                                         expectedTransactionData.end(),
+<span class="lineNum">     169 </span>            :                                         _transaction.data().begin(),
+<span class="lineNum">     170 </span>            :                                         _transaction.data().end()
+<span class="lineNum">     171 </span>            :                                 );
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedTransactionGasLimit, _transaction.gas());</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedTransactionGasPrice, _transaction.gasPrice());</span>
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedTransactionNonce, _transaction.nonce());</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedTransactionSignatureR, _transaction.signature().r);</span>
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(expectedTransactionSignatureS, _transaction.signature().s);</span>
+<span class="lineNum">     177 </span>            : //                              ETH_CHECK_EQUAL(expectedTransactionSignatureV, _transaction.signature().v); // 27 === 0x0, 28 === 0x1, not sure why
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :                         };</span>
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :                         Transactions ts = _client.transactions(blockHash);</span>
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :                         TransactionHashes tHashes = _client.transactionHashes(blockHash);</span>
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :                         unsigned tsCount = _client.transactionCount(blockHash);</span>
+<span class="lineNum">     183 </span>            :                         
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :                         ETH_REQUIRE(transactions.size() == ts.size());</span>
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :                         ETH_REQUIRE(transactions.size() == tHashes.size());</span>
+<span class="lineNum">     186 </span>            :                         
+<span class="lineNum">     187 </span>            :                         // transactionCount
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :                         ETH_CHECK_EQUAL(transactions.size(), tsCount);</span>
+<span class="lineNum">     189 </span>            :                         
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :                         for (unsigned i = 0; i &lt; tsCount; i++)</span>
+<span class="lineNum">     191 </span>            :                         {
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :                                 Json::Value t = transactions[i];</span>
+<span class="lineNum">     193 </span>            :                                 
+<span class="lineNum">     194 </span>            :                                 // transaction (by block hash and transaction index)
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :                                 Transaction transaction = _client.transaction(blockHash, i);</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :                                 compareTransactions(t, transaction);</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :                                 // transaction (by hash)
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :                                 Transaction transactionByHash = _client.transaction(transaction.sha3());</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :                                 compareTransactions(t, transactionByHash);</span>
+<span class="lineNum">     201 </span>            :                                 
+<span class="lineNum">     202 </span>            :                                 // transactions
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :                                 compareTransactions(t, ts[i]);</span>
+<span class="lineNum">     204 </span>            :                                 
+<span class="lineNum">     205 </span>            :                                 // transactionHashes
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :                                 ETH_CHECK_EQUAL(transaction.sha3(), tHashes[i]);</span>
+<span class="lineNum">     207 </span>            :                         }
+<span class="lineNum">     208 </span>            :                         
+<span class="lineNum">     209 </span>            :                         // uncleCount
+<span class="lineNum">     210 </span><span class="lineNoCov">          0 :                         unsigned usCount = _client.uncleCount(blockHash);</span>
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :                         ETH_CHECK_EQUAL(uncles.size(), usCount);</span>
+<span class="lineNum">     212 </span>            :                         
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :                         for (unsigned i = 0; i &lt; usCount; i++)</span>
+<span class="lineNum">     214 </span>            :                         {
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :                                 Json::Value u = uncles[i];</span>
+<span class="lineNum">     216 </span>            :                                 
+<span class="lineNum">     217 </span>            :                                 // uncle (by hash)
+<span class="lineNum">     218 </span><span class="lineNoCov">          0 :                                 BlockHeader uncle = _client.uncle(blockHash, i);</span>
+<span class="lineNum">     219 </span><span class="lineNoCov">          0 :                                 compareBlockInfos(u, uncle);</span>
+<span class="lineNum">     220 </span>            :                         }
+<span class="lineNum">     221 </span>            :                 }
+<span class="lineNum">     222 </span><span class="lineCov">          1 :         });</span>
+<a name="223"><span class="lineNum">     223 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span><span class="lineCov">          3 : BOOST_AUTO_TEST_SUITE_END()</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

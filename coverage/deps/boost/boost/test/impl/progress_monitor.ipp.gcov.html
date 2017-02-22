@@ -1,0 +1,261 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/impl/progress_monitor.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/impl</a> - progress_monitor.ipp<span style="font-size: 80%;"> (source / <a href="progress_monitor.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">47</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : implements simple text based progress monitor
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_PROGRESS_MONITOR_IPP_020105GER
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_PROGRESS_MONITOR_IPP_020105GER
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/progress_monitor.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/unit_test_parameters.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;boost/test/utils/setcolor.hpp&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/tree/test_unit.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/tree/test_case_counter.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/test/tree/traverse.hpp&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : // Boost
+<span class="lineNum">      29 </span>            : #include &lt;boost/scoped_ptr.hpp&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : //____________________________________________________________________________//
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : namespace boost {
+<span class="lineNum">      36 </span>            : namespace unit_test {
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : // ************************************************************************** //
+<span class="lineNum">      39 </span>            : // **************                progress_monitor              ************** //
+<span class="lineNum">      40 </span>            : // ************************************************************************** //
+<a name="41"><span class="lineNum">      41 </span>            : </a>
+<span class="lineNum">      42 </span>            : struct progress_display {
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 :     progress_display( counter_t expected_count, std::ostream&amp; os )</span>
+<span class="lineNum">      44 </span>            :     : m_os(os)
+<span class="lineNum">      45 </span>            :     , m_count( 0 )
+<span class="lineNum">      46 </span>            :     , m_expected_count( expected_count )
+<span class="lineNum">      47 </span>            :     , m_next_tic_count( 0 )
+<span class="lineNum">      48 </span><span class="lineNoCov">          0 :     , m_tic( 0 )</span>
+<span class="lineNum">      49 </span>            :     {
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 :         m_os &lt;&lt; &quot;\n0%   10   20   30   40   50   60   70   80   90   100%&quot;</span>
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :              &lt;&lt; &quot;\n|----|----|----|----|----|----|----|----|----|----|&quot;</span>
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 :              &lt;&lt; std::endl;</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :         if( !m_expected_count ) </span>
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :             m_expected_count = 1;  // prevent divide by zero</span>
+<a name="57"><span class="lineNum">      57 </span><span class="lineNoCov">          0 :     }</span></a>
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :     unsigned long  operator+=( unsigned long increment )</span>
+<span class="lineNum">      60 </span>            :     {
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :         if( (m_count += increment) &lt; m_next_tic_count )</span>
+<span class="lineNum">      62 </span>            :             return m_count;
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :         // use of floating point ensures that both large and small counts
+<span class="lineNum">      65 </span>            :         // work correctly.  static_cast&lt;&gt;() is also used several places
+<span class="lineNum">      66 </span>            :         // to suppress spurious compiler warnings. 
+<span class="lineNum">      67 </span>            :         unsigned int tics_needed =  static_cast&lt;unsigned int&gt;(
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :             (static_cast&lt;double&gt;(m_count)/m_expected_count)*50.0 );</span>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :         do {</span>
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :             m_os &lt;&lt; '*' &lt;&lt; std::flush;</span>
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :         } while( ++m_tic &lt; tics_needed );</span>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :         m_next_tic_count = static_cast&lt;unsigned long&gt;((m_tic/50.0) * m_expected_count);</span>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :         if( m_count == m_expected_count ) {</span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :             if( m_tic &lt; 51 )</span>
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :                 m_os &lt;&lt; '*';</span>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :             m_os &lt;&lt; std::endl;</span>
+<span class="lineNum">      81 </span>            :         }
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :         return m_count;</span>
+<span class="lineNum">      84 </span>            :     }
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :     unsigned long   operator++()           { return operator+=( 1 ); }</span>
+<span class="lineNum">      86 </span>            :     unsigned long   count() const          { return m_count; }
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : private:
+<span class="lineNum">      89 </span>            :     BOOST_DELETED_FUNCTION(progress_display(progress_display const&amp;))
+<span class="lineNum">      90 </span>            :     BOOST_DELETED_FUNCTION(progress_display&amp; operator=(progress_display const&amp;))
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            :     std::ostream&amp;   m_os;  // may not be present in all imps
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :     unsigned long   m_count;
+<span class="lineNum">      95 </span>            :     unsigned long   m_expected_count;
+<span class="lineNum">      96 </span>            :     unsigned long   m_next_tic_count;
+<span class="lineNum">      97 </span>            :     unsigned int    m_tic;
+<span class="lineNum">      98 </span>            : };
+<span class="lineNum">      99 </span>            : 
+<a name="100"><span class="lineNum">     100 </span>            : namespace {</a>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 : struct progress_monitor_impl {</span>
+<span class="lineNum">     103 </span>            :     // Constructor
+<span class="lineNum">     104 </span>            :     progress_monitor_impl()
+<span class="lineNum">     105 </span>            :     : m_stream( &amp;std::cout )
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :     , m_color_output( false )</span>
+<span class="lineNum">     107 </span>            :     {
+<span class="lineNum">     108 </span>            :     }
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            :     std::ostream*                   m_stream;
+<span class="lineNum">     111 </span>            :     scoped_ptr&lt;progress_display&gt;    m_progress_display;
+<span class="lineNum">     112 </span>            :     bool                            m_color_output;
+<a name="113"><span class="lineNum">     113 </span>            : };</a>
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 : progress_monitor_impl&amp; s_pm_impl() { static progress_monitor_impl the_inst; return the_inst; }</span>
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            : #define PM_SCOPED_COLOR() \
+<span class="lineNum">     118 </span>            :     BOOST_TEST_SCOPE_SETCOLOR( s_pm_impl().m_color_output, *s_pm_impl().m_stream, term_attr::BRIGHT, term_color::MAGENTA )
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : } // local namespace
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : //____________________________________________________________________________//
+<a name="123"><span class="lineNum">     123 </span>            : </a>
+<span class="lineNum">     124 </span>            : void
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 : progress_monitor_t::test_start( counter_t test_cases_amount )</span>
+<span class="lineNum">     126 </span>            : {
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :     s_pm_impl().m_color_output = runtime_config::get&lt;bool&gt;( runtime_config::COLOR_OUTPUT );</span>
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :     PM_SCOPED_COLOR();</span>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :     s_pm_impl().m_progress_display.reset( new progress_display( test_cases_amount, *s_pm_impl().m_stream ) );</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            : //____________________________________________________________________________//
+<a name="135"><span class="lineNum">     135 </span>            : </a>
+<span class="lineNum">     136 </span>            : void
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 : progress_monitor_t::test_aborted()</span>
+<span class="lineNum">     138 </span>            : {
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :     PM_SCOPED_COLOR();</span>
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :     (*s_pm_impl().m_progress_display) += s_pm_impl().m_progress_display-&gt;count();</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : //____________________________________________________________________________//
+<a name="145"><span class="lineNum">     145 </span>            : </a>
+<span class="lineNum">     146 </span>            : void
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 : progress_monitor_t::test_unit_finish( test_unit const&amp; tu, unsigned long )</span>
+<span class="lineNum">     148 </span>            : {
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :     PM_SCOPED_COLOR();</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :     if( tu.p_type == TUT_CASE )</span>
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :         ++(*s_pm_impl().m_progress_display);</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            : //____________________________________________________________________________//
+<a name="156"><span class="lineNum">     156 </span>            : </a>
+<span class="lineNum">     157 </span>            : void
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 : progress_monitor_t::test_unit_skipped( test_unit const&amp; tu, const_string /*reason*/ )</span>
+<span class="lineNum">     159 </span>            : {
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :     PM_SCOPED_COLOR();</span>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :     test_case_counter tcc;</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :     traverse_test_tree( tu, tcc );</span>
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :     (*s_pm_impl().m_progress_display) += tcc.p_count;</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : //____________________________________________________________________________//
+<a name="169"><span class="lineNum">     169 </span>            : </a>
+<span class="lineNum">     170 </span>            : void
+<span class="lineNum">     171 </span><span class="lineNoCov">          0 : progress_monitor_t::set_stream( std::ostream&amp; ostr )</span>
+<span class="lineNum">     172 </span>            : {
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :     s_pm_impl().m_stream = &amp;ostr;</span>
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            : //____________________________________________________________________________//
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            : #undef PM_SCOPED_COLOR
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            : } // namespace unit_test
+<span class="lineNum">     181 </span>            : } // namespace boost
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            : #endif // BOOST_TEST_PROGRESS_MONITOR_IPP_020105GER
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

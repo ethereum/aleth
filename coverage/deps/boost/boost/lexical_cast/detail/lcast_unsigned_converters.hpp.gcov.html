@@ -1,0 +1,370 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/lexical_cast/detail/lcast_unsigned_converters.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/lexical_cast/detail</a> - lcast_unsigned_converters.hpp<span style="font-size: 80%;"> (source / <a href="lcast_unsigned_converters.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntryLo">35.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Copyright Kevlin Henney, 2000-2005.</a>
+<span class="lineNum">       2 </span>            : // Copyright Alexander Nasonov, 2006-2010.
+<span class="lineNum">       3 </span>            : // Copyright Antony Polukhin, 2011-2014.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">       6 </span>            : // accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       7 </span>            : // http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            : //
+<span class="lineNum">       9 </span>            : // what:  lexical_cast custom keyword cast
+<span class="lineNum">      10 </span>            : // who:   contributed by Kevlin Henney,
+<span class="lineNum">      11 </span>            : //        enhanced with contributions from Terje Slettebo,
+<span class="lineNum">      12 </span>            : //        with additional fixes and suggestions from Gennaro Prota,
+<span class="lineNum">      13 </span>            : //        Beman Dawes, Dave Abrahams, Daryle Walker, Peter Dimov,
+<span class="lineNum">      14 </span>            : //        Alexander Nasonov, Antony Polukhin, Justin Viiret, Michael Hofmann,
+<span class="lineNum">      15 </span>            : //        Cheng Yang, Matthew Bradbury, David W. Birdsall, Pavel Korzh and other Boosters
+<span class="lineNum">      16 </span>            : // when:  November 2000, March 2003, June 2005, June 2006, March 2011 - 2014
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #ifndef BOOST_LEXICAL_CAST_DETAIL_LCAST_UNSIGNED_CONVERTERS_HPP
+<span class="lineNum">      19 </span>            : #define BOOST_LEXICAL_CAST_DETAIL_LCAST_UNSIGNED_CONVERTERS_HPP
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      22 </span>            : #ifdef BOOST_HAS_PRAGMA_ONCE
+<span class="lineNum">      23 </span>            : #   pragma once
+<span class="lineNum">      24 </span>            : #endif
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;climits&gt;
+<span class="lineNum">      27 </span>            : #include &lt;cstddef&gt;
+<span class="lineNum">      28 </span>            : #include &lt;string&gt;
+<span class="lineNum">      29 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      30 </span>            : #include &lt;cstdio&gt;
+<span class="lineNum">      31 </span>            : #include &lt;boost/limits.hpp&gt;
+<span class="lineNum">      32 </span>            : #include &lt;boost/mpl/if.hpp&gt;
+<span class="lineNum">      33 </span>            : #include &lt;boost/static_assert.hpp&gt;
+<span class="lineNum">      34 </span>            : #include &lt;boost/detail/workaround.hpp&gt;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : #ifndef BOOST_NO_STD_LOCALE
+<span class="lineNum">      38 </span>            : #   include &lt;locale&gt;
+<span class="lineNum">      39 </span>            : #else
+<span class="lineNum">      40 </span>            : #   ifndef BOOST_LEXICAL_CAST_ASSUME_C_LOCALE
+<span class="lineNum">      41 </span>            :         // Getting error at this point means, that your STL library is old/lame/misconfigured.
+<span class="lineNum">      42 </span>            :         // If nothing can be done with STL library, define BOOST_LEXICAL_CAST_ASSUME_C_LOCALE,
+<span class="lineNum">      43 </span>            :         // but beware: lexical_cast will understand only 'C' locale delimeters and thousands
+<span class="lineNum">      44 </span>            :         // separators.
+<span class="lineNum">      45 </span>            : #       error &quot;Unable to use &lt;locale&gt; header. Define BOOST_LEXICAL_CAST_ASSUME_C_LOCALE to force &quot;
+<span class="lineNum">      46 </span>            : #       error &quot;boost::lexical_cast to use only 'C' locale during conversions.&quot;
+<span class="lineNum">      47 </span>            : #   endif
+<span class="lineNum">      48 </span>            : #endif
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : #include &lt;boost/lexical_cast/detail/lcast_char_constants.hpp&gt;
+<span class="lineNum">      51 </span>            : #include &lt;boost/type_traits/make_unsigned.hpp&gt;
+<span class="lineNum">      52 </span>            : #include &lt;boost/type_traits/is_signed.hpp&gt;
+<span class="lineNum">      53 </span>            : #include &lt;boost/noncopyable.hpp&gt;
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : namespace boost 
+<span class="lineNum">      56 </span>            : {
+<span class="lineNum">      57 </span>            :     namespace detail // lcast_to_unsigned
+<span class="lineNum">      58 </span>            :     {
+<span class="lineNum">      59 </span>            :         template&lt;class T&gt;
+<span class="lineNum">      60 </span>            :         inline
+<span class="lineNum">      61 </span>            :         BOOST_DEDUCED_TYPENAME boost::make_unsigned&lt;T&gt;::type lcast_to_unsigned(const T value) BOOST_NOEXCEPT {
+<span class="lineNum">      62 </span>            :             typedef BOOST_DEDUCED_TYPENAME boost::make_unsigned&lt;T&gt;::type result_type;
+<span class="lineNum">      63 </span>            :             return value &lt; 0 
+<span class="lineNum">      64 </span>            :                 ? static_cast&lt;result_type&gt;(0u - static_cast&lt;result_type&gt;(value)) 
+<span class="lineNum">      65 </span>            :                 : static_cast&lt;result_type&gt;(value);
+<span class="lineNum">      66 </span>            :         }
+<span class="lineNum">      67 </span>            :     }
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :     namespace detail // lcast_put_unsigned
+<span class="lineNum">      70 </span>            :     {
+<span class="lineNum">      71 </span>            :         template &lt;class Traits, class T, class CharT&gt;
+<span class="lineNum">      72 </span>            :         class lcast_put_unsigned: boost::noncopyable {
+<span class="lineNum">      73 </span>            :             typedef BOOST_DEDUCED_TYPENAME Traits::int_type int_type;
+<span class="lineNum">      74 </span>            :             BOOST_DEDUCED_TYPENAME boost::mpl::if_c&lt;
+<span class="lineNum">      75 </span>            :                     (sizeof(int_type) &gt; sizeof(T))
+<span class="lineNum">      76 </span>            :                     , int_type
+<span class="lineNum">      77 </span>            :                     , T
+<span class="lineNum">      78 </span>            :             &gt;::type         m_value;
+<span class="lineNum">      79 </span>            :             CharT*          m_finish;
+<span class="lineNum">      80 </span>            :             CharT    const  m_czero;
+<span class="lineNum">      81 </span>            :             int_type const  m_zero;
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :         public:
+<span class="lineNum">      84 </span>            :             lcast_put_unsigned(const T n_param, CharT* finish) BOOST_NOEXCEPT 
+<span class="lineNum">      85 </span>            :                 : m_value(n_param), m_finish(finish)
+<span class="lineNum">      86 </span><span class="lineCov">      25554 :                 , m_czero(lcast_char_constants&lt;CharT&gt;::zero), m_zero(Traits::to_int_type(m_czero))</span>
+<span class="lineNum">      87 </span>            :             {
+<span class="lineNum">      88 </span>            : #ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+<span class="lineNum">      89 </span>            :                 BOOST_STATIC_ASSERT(!std::numeric_limits&lt;T&gt;::is_signed);
+<span class="lineNum">      90 </span>            : #endif
+<a name="91"><span class="lineNum">      91 </span>            :             }</a>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">      25554 :             CharT* convert() {</span>
+<span class="lineNum">      94 </span>            : #ifndef BOOST_LEXICAL_CAST_ASSUME_C_LOCALE
+<span class="lineNum">      95 </span><span class="lineCov">      51108 :                 std::locale loc;</span>
+<span class="lineNum">      96 </span><span class="lineCov">      25554 :                 if (loc == std::locale::classic()) {</span>
+<span class="lineNum">      97 </span><span class="lineCov">      25554 :                     return main_convert_loop();</span>
+<span class="lineNum">      98 </span>            :                 }
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :                 typedef std::numpunct&lt;CharT&gt; numpunct;
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :                 numpunct const&amp; np = BOOST_USE_FACET(numpunct, loc);</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :                 std::string const grouping = np.grouping();</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :                 std::string::size_type const grouping_size = grouping.size();</span>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :                 if (!grouping_size || grouping[0] &lt;= 0) {</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :                     return main_convert_loop();</span>
+<span class="lineNum">     107 </span>            :                 }
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            : #ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+<span class="lineNum">     110 </span>            :                 // Check that ulimited group is unreachable:
+<span class="lineNum">     111 </span>            :                 BOOST_STATIC_ASSERT(std::numeric_limits&lt;T&gt;::digits10 &lt; CHAR_MAX);
+<span class="lineNum">     112 </span>            : #endif
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :                 CharT const thousands_sep = np.thousands_sep();</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :                 std::string::size_type group = 0; // current group number</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :                 char last_grp_size = grouping[0];</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :                 char left = last_grp_size;</span>
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :                 do {</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :                     if (left == 0) {</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :                         ++group;</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :                         if (group &lt; grouping_size) {</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :                             char const grp_size = grouping[group];</span>
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :                             last_grp_size = (grp_size &lt;= 0 ? static_cast&lt;char&gt;(CHAR_MAX) : grp_size);</span>
+<span class="lineNum">     124 </span>            :                         }
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :                         left = last_grp_size;</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :                         --m_finish;</span>
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :                         Traits::assign(*m_finish, thousands_sep);</span>
+<span class="lineNum">     129 </span>            :                     }
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :                     --left;</span>
+<span class="lineNum">     132 </span>            :                 } while (main_convert_iteration());
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :                 return m_finish;</span>
+<span class="lineNum">     135 </span>            : #else
+<span class="lineNum">     136 </span>            :                 return main_convert_loop();
+<span class="lineNum">     137 </span>            : #endif
+<span class="lineNum">     138 </span>            :             }
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :         private:
+<span class="lineNum">     141 </span>            :             inline bool main_convert_iteration() BOOST_NOEXCEPT {
+<span class="lineNum">     142 </span><span class="lineCov">      51812 :                 --m_finish;</span>
+<span class="lineNum">     143 </span><span class="lineCov">      51812 :                 int_type const digit = static_cast&lt;int_type&gt;(m_value % 10U);</span>
+<span class="lineNum">     144 </span><span class="lineCov">     155436 :                 Traits::assign(*m_finish, Traits::to_char_type(m_zero + digit));</span>
+<span class="lineNum">     145 </span><span class="lineCov">      51812 :                 m_value /= 10;</span>
+<span class="lineNum">     146 </span>            :                 return !!m_value; // suppressing warnings
+<span class="lineNum">     147 </span>            :             }
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span>            :             inline CharT* main_convert_loop() BOOST_NOEXCEPT {
+<span class="lineNum">     150 </span><span class="lineCov">      51812 :                 while (main_convert_iteration());</span>
+<span class="lineNum">     151 </span><span class="lineCov">      25554 :                 return m_finish;</span>
+<span class="lineNum">     152 </span>            :             }
+<span class="lineNum">     153 </span>            :         };
+<span class="lineNum">     154 </span>            :     }
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :     namespace detail // lcast_ret_unsigned
+<span class="lineNum">     157 </span>            :     {
+<span class="lineNum">     158 </span>            :         template &lt;class Traits, class T, class CharT&gt;
+<span class="lineNum">     159 </span>            :         class lcast_ret_unsigned: boost::noncopyable {
+<span class="lineNum">     160 </span>            :             bool m_multiplier_overflowed;
+<span class="lineNum">     161 </span>            :             T m_multiplier;
+<span class="lineNum">     162 </span>            :             T&amp; m_value;
+<span class="lineNum">     163 </span>            :             const CharT* const m_begin;
+<span class="lineNum">     164 </span>            :             const CharT* m_end;
+<span class="lineNum">     165 </span>            :     
+<span class="lineNum">     166 </span>            :         public:
+<span class="lineNum">     167 </span>            :             lcast_ret_unsigned(T&amp; value, const CharT* const begin, const CharT* end) BOOST_NOEXCEPT
+<span class="lineNum">     168 </span>            :                 : m_multiplier_overflowed(false), m_multiplier(1), m_value(value), m_begin(begin), m_end(end)
+<span class="lineNum">     169 </span>            :             {
+<span class="lineNum">     170 </span>            : #ifndef BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS
+<span class="lineNum">     171 </span>            :                 BOOST_STATIC_ASSERT(!std::numeric_limits&lt;T&gt;::is_signed);
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :                 // GCC when used with flag -std=c++0x may not have std::numeric_limits
+<span class="lineNum">     174 </span>            :                 // specializations for __int128 and unsigned __int128 types.
+<span class="lineNum">     175 </span>            :                 // Try compilation with -std=gnu++0x or -std=gnu++11.
+<span class="lineNum">     176 </span>            :                 //
+<span class="lineNum">     177 </span>            :                 // http://gcc.gnu.org/bugzilla/show_bug.cgi?id=40856
+<span class="lineNum">     178 </span>            :                 BOOST_STATIC_ASSERT_MSG(std::numeric_limits&lt;T&gt;::is_specialized,
+<span class="lineNum">     179 </span>            :                     &quot;std::numeric_limits are not specialized for integral type passed to boost::lexical_cast&quot;
+<span class="lineNum">     180 </span>            :                 );
+<span class="lineNum">     181 </span>            : #endif
+<span class="lineNum">     182 </span>            :             }
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            :             inline bool convert() {
+<span class="lineNum">     185 </span>            :                 CharT const czero = lcast_char_constants&lt;CharT&gt;::zero;
+<span class="lineNum">     186 </span>            :                 --m_end;
+<span class="lineNum">     187 </span>            :                 m_value = static_cast&lt;T&gt;(0);
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            :                 if (m_begin &gt; m_end || *m_end &lt; czero || *m_end &gt;= czero + 10)
+<span class="lineNum">     190 </span>            :                     return false;
+<span class="lineNum">     191 </span>            :                 m_value = static_cast&lt;T&gt;(*m_end - czero);
+<span class="lineNum">     192 </span>            :                 --m_end;
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            : #ifdef BOOST_LEXICAL_CAST_ASSUME_C_LOCALE
+<span class="lineNum">     195 </span>            :                 return main_convert_loop();
+<span class="lineNum">     196 </span>            : #else
+<span class="lineNum">     197 </span>            :                 std::locale loc;
+<span class="lineNum">     198 </span>            :                 if (loc == std::locale::classic()) {
+<span class="lineNum">     199 </span>            :                     return main_convert_loop();
+<span class="lineNum">     200 </span>            :                 }
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            :                 typedef std::numpunct&lt;CharT&gt; numpunct;
+<span class="lineNum">     203 </span>            :                 numpunct const&amp; np = BOOST_USE_FACET(numpunct, loc);
+<span class="lineNum">     204 </span>            :                 std::string const&amp; grouping = np.grouping();
+<span class="lineNum">     205 </span>            :                 std::string::size_type const grouping_size = grouping.size();
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :                 /* According to Programming languages - C++
+<span class="lineNum">     208 </span>            :                  * we MUST check for correct grouping
+<span class="lineNum">     209 </span>            :                  */
+<span class="lineNum">     210 </span>            :                 if (!grouping_size || grouping[0] &lt;= 0) {
+<span class="lineNum">     211 </span>            :                     return main_convert_loop();
+<span class="lineNum">     212 </span>            :                 }
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            :                 unsigned char current_grouping = 0;
+<span class="lineNum">     215 </span>            :                 CharT const thousands_sep = np.thousands_sep();
+<span class="lineNum">     216 </span>            :                 char remained = static_cast&lt;char&gt;(grouping[current_grouping] - 1);
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            :                 for (;m_end &gt;= m_begin; --m_end)
+<span class="lineNum">     219 </span>            :                 {
+<span class="lineNum">     220 </span>            :                     if (remained) {
+<span class="lineNum">     221 </span>            :                         if (!main_convert_iteration()) {
+<span class="lineNum">     222 </span>            :                             return false;
+<span class="lineNum">     223 </span>            :                         }
+<span class="lineNum">     224 </span>            :                         --remained;
+<span class="lineNum">     225 </span>            :                     } else {
+<span class="lineNum">     226 </span>            :                         if ( !Traits::eq(*m_end, thousands_sep) ) //|| begin == end ) return false;
+<span class="lineNum">     227 </span>            :                         {
+<span class="lineNum">     228 </span>            :                             /*
+<span class="lineNum">     229 </span>            :                              * According to Programming languages - C++
+<span class="lineNum">     230 </span>            :                              * Digit grouping is checked. That is, the positions of discarded
+<span class="lineNum">     231 </span>            :                              * separators is examined for consistency with
+<span class="lineNum">     232 </span>            :                              * use_facet&lt;numpunct&lt;charT&gt; &gt;(loc ).grouping()
+<span class="lineNum">     233 </span>            :                              *
+<span class="lineNum">     234 </span>            :                              * BUT what if there is no separators at all and grouping()
+<span class="lineNum">     235 </span>            :                              * is not empty? Well, we have no extraced separators, so we
+<span class="lineNum">     236 </span>            :                              * won`t check them for consistency. This will allow us to
+<span class="lineNum">     237 </span>            :                              * work with &quot;C&quot; locale from other locales
+<span class="lineNum">     238 </span>            :                              */
+<span class="lineNum">     239 </span>            :                             return main_convert_loop();
+<span class="lineNum">     240 </span>            :                         } else {
+<span class="lineNum">     241 </span>            :                             if (m_begin == m_end) return false;
+<span class="lineNum">     242 </span>            :                             if (current_grouping &lt; grouping_size - 1) ++current_grouping;
+<span class="lineNum">     243 </span>            :                             remained = grouping[current_grouping];
+<span class="lineNum">     244 </span>            :                         }
+<span class="lineNum">     245 </span>            :                     }
+<span class="lineNum">     246 </span>            :                 } /*for*/
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :                 return true;
+<span class="lineNum">     249 </span>            : #endif
+<span class="lineNum">     250 </span>            :             }
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            :         private:
+<span class="lineNum">     253 </span>            :             // Iteration that does not care about grouping/separators and assumes that all 
+<span class="lineNum">     254 </span>            :             // input characters are digits
+<span class="lineNum">     255 </span>            :             inline bool main_convert_iteration() BOOST_NOEXCEPT {
+<span class="lineNum">     256 </span>            :                 CharT const czero = lcast_char_constants&lt;CharT&gt;::zero;
+<span class="lineNum">     257 </span>            :                 T const maxv = (std::numeric_limits&lt;T&gt;::max)();
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            :                 m_multiplier_overflowed = m_multiplier_overflowed || (maxv/10 &lt; m_multiplier);
+<span class="lineNum">     260 </span>            :                 m_multiplier = static_cast&lt;T&gt;(m_multiplier * 10);
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span>            :                 T const dig_value = static_cast&lt;T&gt;(*m_end - czero);
+<span class="lineNum">     263 </span>            :                 T const new_sub_value = static_cast&lt;T&gt;(m_multiplier * dig_value);
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :                 // We must correctly handle situations like `000000000000000000000000000001`.
+<span class="lineNum">     266 </span>            :                 // So we take care of overflow only if `dig_value` is not '0'.
+<span class="lineNum">     267 </span>            :                 if (*m_end &lt; czero || *m_end &gt;= czero + 10  // checking for correct digit
+<span class="lineNum">     268 </span>            :                     || (dig_value &amp;&amp; (                      // checking for overflow of ... 
+<span class="lineNum">     269 </span>            :                         m_multiplier_overflowed                             // ... multiplier
+<span class="lineNum">     270 </span>            :                         || static_cast&lt;T&gt;(maxv / dig_value) &lt; m_multiplier  // ... subvalue
+<span class="lineNum">     271 </span>            :                         || static_cast&lt;T&gt;(maxv - new_sub_value) &lt; m_value   // ... whole expression
+<span class="lineNum">     272 </span>            :                     ))
+<span class="lineNum">     273 </span>            :                 ) return false;
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            :                 m_value = static_cast&lt;T&gt;(m_value + new_sub_value);
+<span class="lineNum">     276 </span>            :                 
+<span class="lineNum">     277 </span>            :                 return true;
+<span class="lineNum">     278 </span>            :             }
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span>            :             bool main_convert_loop() BOOST_NOEXCEPT {
+<span class="lineNum">     281 </span>            :                 for ( ; m_end &gt;= m_begin; --m_end) {
+<span class="lineNum">     282 </span>            :                     if (!main_convert_iteration()) {
+<span class="lineNum">     283 </span>            :                         return false;
+<span class="lineNum">     284 </span>            :                     }
+<span class="lineNum">     285 </span>            :                 }
+<span class="lineNum">     286 </span>            :             
+<span class="lineNum">     287 </span>            :                 return true;
+<span class="lineNum">     288 </span>            :             }
+<span class="lineNum">     289 </span>            :         };
+<span class="lineNum">     290 </span>            :     }
+<span class="lineNum">     291 </span>            : } // namespace boost
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            : #endif // BOOST_LEXICAL_CAST_DETAIL_LCAST_UNSIGNED_CONVERTERS_HPP
+<span class="lineNum">     294 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

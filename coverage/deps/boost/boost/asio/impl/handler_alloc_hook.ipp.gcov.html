@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/impl/handler_alloc_hook.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/impl</a> - handler_alloc_hook.ipp<span style="font-size: 80%;"> (source / <a href="handler_alloc_hook.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // impl/handler_alloc_hook.ipp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_IMPL_HANDLER_ALLOC_HOOK_IPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_IMPL_HANDLER_ALLOC_HOOK_IPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/asio/detail/call_stack.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/asio/handler_alloc_hook.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #if !defined(BOOST_ASIO_DISABLE_SMALL_BLOCK_RECYCLING)
+<span class="lineNum">      23 </span>            : # if defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      24 </span>            : #  include &lt;boost/asio/detail/win_iocp_thread_info.hpp&gt;
+<span class="lineNum">      25 </span>            : # else // defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      26 </span>            : #  include &lt;boost/asio/detail/task_io_service_thread_info.hpp&gt;
+<span class="lineNum">      27 </span>            : # endif // defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      28 </span>            : #endif // !defined(BOOST_ASIO_DISABLE_SMALL_BLOCK_RECYCLING)
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace boost {
+<span class="lineNum">      33 </span>            : namespace asio {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #if defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      36 </span>            : namespace detail { class win_iocp_io_service; }
+<span class="lineNum">      37 </span>            : #endif // defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : void* asio_handler_allocate(std::size_t size, ...)
+<span class="lineNum">      40 </span>            : {
+<span class="lineNum">      41 </span>            : #if !defined(BOOST_ASIO_DISABLE_SMALL_BLOCK_RECYCLING)
+<span class="lineNum">      42 </span>            : # if defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      43 </span>            :   typedef detail::win_iocp_io_service io_service_impl;
+<span class="lineNum">      44 </span>            :   typedef detail::win_iocp_thread_info thread_info;
+<span class="lineNum">      45 </span>            : # else // defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      46 </span>            :   typedef detail::task_io_service io_service_impl;
+<span class="lineNum">      47 </span>            :   typedef detail::task_io_service_thread_info thread_info;
+<span class="lineNum">      48 </span>            : # endif // defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      49 </span>            :   typedef detail::call_stack&lt;io_service_impl, thread_info&gt; call_stack;
+<span class="lineNum">      50 </span><span class="lineCov">       1613 :   return thread_info::allocate(call_stack::top(), size);</span>
+<span class="lineNum">      51 </span>            : #else // !defined(BOOST_ASIO_DISABLE_SMALL_BLOCK_RECYCLING)
+<span class="lineNum">      52 </span>            :   return ::operator new(size);
+<span class="lineNum">      53 </span>            : #endif // !defined(BOOST_ASIO_DISABLE_SMALL_BLOCK_RECYCLING)
+<span class="lineNum">      54 </span>            : }
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : void asio_handler_deallocate(void* pointer, std::size_t size, ...)
+<span class="lineNum">      57 </span>            : {
+<span class="lineNum">      58 </span>            : #if !defined(BOOST_ASIO_DISABLE_SMALL_BLOCK_RECYCLING)
+<span class="lineNum">      59 </span>            : # if defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      60 </span>            :   typedef detail::win_iocp_io_service io_service_impl;
+<span class="lineNum">      61 </span>            :   typedef detail::win_iocp_thread_info thread_info;
+<span class="lineNum">      62 </span>            : # else // defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      63 </span>            :   typedef detail::task_io_service io_service_impl;
+<span class="lineNum">      64 </span>            :   typedef detail::task_io_service_thread_info thread_info;
+<span class="lineNum">      65 </span>            : # endif // defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      66 </span>            :   typedef detail::call_stack&lt;io_service_impl, thread_info&gt; call_stack;
+<span class="lineNum">      67 </span><span class="lineCov">       1613 :   thread_info::deallocate(call_stack::top(), pointer, size);</span>
+<span class="lineNum">      68 </span>            : #else // !defined(BOOST_ASIO_DISABLE_SMALL_BLOCK_RECYCLING)
+<span class="lineNum">      69 </span>            :   (void)size;
+<span class="lineNum">      70 </span>            :   ::operator delete(pointer);
+<span class="lineNum">      71 </span>            : #endif // !defined(BOOST_ASIO_DISABLE_SMALL_BLOCK_RECYCLING)
+<span class="lineNum">      72 </span>            : }
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : } // namespace asio
+<span class="lineNum">      75 </span>            : } // namespace boost
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : #endif // BOOST_ASIO_IMPL_HANDLER_ALLOC_HOOK_IPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

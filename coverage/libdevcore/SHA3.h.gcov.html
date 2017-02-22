@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/SHA3.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - SHA3.h<span style="font-size: 80%;"> (source / <a href="SHA3.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryMed">88.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryMed">85.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file SHA3.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  *
+<span class="lineNum">      21 </span>            :  * The FixedHash fixed-size &quot;hash&quot; container type.
+<span class="lineNum">      22 </span>            :  */
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #pragma once
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;string&gt;
+<span class="lineNum">      27 </span>            : #include &quot;FixedHash.h&quot;
+<span class="lineNum">      28 </span>            : #include &quot;vector_ref.h&quot;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace dev
+<span class="lineNum">      31 </span>            : {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : // SHA-3 convenience routines.
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : /// Calculate SHA3-256 hash of the given input and load it into the given output.
+<span class="lineNum">      36 </span>            : /// @returns false if o_output.size() != 32.
+<span class="lineNum">      37 </span>            : bool sha3(bytesConstRef _input, bytesRef o_output);
+<span class="lineNum">      38 </span>            : 
+<a name="39"><span class="lineNum">      39 </span>            : /// Calculate SHA3-256 hash of the given input, returning as a 256-bit hash.</a>
+<span class="lineNum">      40 </span><span class="lineCov">    4015042 : inline h256 sha3(bytesConstRef _input) { h256 ret; sha3(_input, ret.ref()); return ret; }</span>
+<span class="lineNum">      41 </span><span class="lineCov">        672 : inline SecureFixedHash&lt;32&gt; sha3Secure(bytesConstRef _input) { SecureFixedHash&lt;32&gt; ret; sha3(_input, ret.writable().ref()); return ret; }</span>
+<a name="42"><span class="lineNum">      42 </span>            : </a>
+<span class="lineNum">      43 </span>            : /// Calculate SHA3-256 hash of the given input, returning as a 256-bit hash.
+<span class="lineNum">      44 </span><span class="lineCov">     602541 : inline h256 sha3(bytes const&amp; _input) { return sha3(bytesConstRef(&amp;_input)); }</span>
+<span class="lineNum">      45 </span><span class="lineCov">          3 : inline SecureFixedHash&lt;32&gt; sha3Secure(bytes const&amp; _input) { return sha3Secure(bytesConstRef(&amp;_input)); }</span>
+<a name="46"><span class="lineNum">      46 </span>            : </a>
+<span class="lineNum">      47 </span>            : /// Calculate SHA3-256 hash of the given input (presented as a binary-filled string), returning as a 256-bit hash.
+<span class="lineNum">      48 </span><span class="lineCov">      28059 : inline h256 sha3(std::string const&amp; _input) { return sha3(bytesConstRef(_input)); }</span>
+<span class="lineNum">      49 </span>            : inline SecureFixedHash&lt;32&gt; sha3Secure(std::string const&amp; _input) { return sha3Secure(bytesConstRef(_input)); }
+<a name="50"><span class="lineNum">      50 </span>            : </a>
+<span class="lineNum">      51 </span>            : /// Calculate SHA3-256 hash of the given input (presented as a FixedHash), returns a 256-bit hash.
+<span class="lineNum">      52 </span><span class="lineCov">       7209 : template&lt;unsigned N&gt; inline h256 sha3(FixedHash&lt;N&gt; const&amp; _input) { return sha3(_input.ref()); }</span>
+<span class="lineNum">      53 </span>            : template&lt;unsigned N&gt; inline SecureFixedHash&lt;32&gt; sha3Secure(FixedHash&lt;N&gt; const&amp; _input) { return sha3Secure(_input.ref()); }
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            : /// Fully secure variants are equivalent for sha3 and sha3Secure.
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 : inline SecureFixedHash&lt;32&gt; sha3(bytesSec const&amp; _input) { return sha3Secure(_input.ref()); }</span>
+<span class="lineNum">      57 </span>            : inline SecureFixedHash&lt;32&gt; sha3Secure(bytesSec const&amp; _input) { return sha3Secure(_input.ref()); }
+<span class="lineNum">      58 </span><span class="lineCov">         98 : template&lt;unsigned N&gt; inline SecureFixedHash&lt;32&gt; sha3(SecureFixedHash&lt;N&gt; const&amp; _input) { return sha3Secure(_input.ref()); }</span>
+<span class="lineNum">      59 </span>            : template&lt;unsigned N&gt; inline SecureFixedHash&lt;32&gt; sha3Secure(SecureFixedHash&lt;N&gt; const&amp; _input) { return sha3Secure(_input.ref()); }
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : /// Calculate SHA3-256 hash of the given input, possibly interpreting it as nibbles, and return the hash as a string filled with binary data.
+<span class="lineNum">      62 </span>            : inline std::string sha3(std::string const&amp; _input, bool _isNibbles) { return asString((_isNibbles ? sha3(fromHex(_input)) : sha3(bytesConstRef(&amp;_input))).asBytes()); }
+<a name="63"><span class="lineNum">      63 </span>            : </a>
+<span class="lineNum">      64 </span>            : /// Calculate SHA3-256 MAC
+<span class="lineNum">      65 </span><span class="lineCov">         35 : inline void sha3mac(bytesConstRef _secret, bytesConstRef _plain, bytesRef _output) { sha3(_secret.toBytes() + _plain.toBytes()).ref().populate(_output); }</span>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : extern h256 EmptySHA3;
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : extern h256 EmptyListSHA3;
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

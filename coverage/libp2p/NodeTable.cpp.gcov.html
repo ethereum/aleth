@@ -1,0 +1,702 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libp2p/NodeTable.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libp2p</a> - NodeTable.cpp<span style="font-size: 80%;"> (source / <a href="NodeTable.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">137</td>
+            <td class="headerCovTableEntry">348</td>
+            <td class="headerCovTableEntryLo">39.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntry">42</td>
+            <td class="headerCovTableEntryLo">42.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :  This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            :  
+<span class="lineNum">       4 </span>            :  cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :  it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :  the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :  (at your option) any later version.
+<span class="lineNum">       8 </span>            :  
+<span class="lineNum">       9 </span>            :  cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :  but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :  GNU General Public License for more details.
+<span class="lineNum">      13 </span>            :  
+<span class="lineNum">      14 </span>            :  You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :  along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            :  */
+<span class="lineNum">      17 </span>            : /** @file NodeTable.cpp
+<span class="lineNum">      18 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;NodeTable.h&quot;
+<span class="lineNum">      23 </span>            : using namespace std;
+<span class="lineNum">      24 </span>            : using namespace dev;
+<a name="25"><span class="lineNum">      25 </span>            : using namespace dev::p2p;</a>
+<a name="26"><span class="lineNum">      26 </span>            : </a>
+<a name="27"><span class="lineNum">      27 </span><span class="lineNoCov">          0 : const char* NodeTableWarn::name() { return &quot;!P!&quot;; }</span></a>
+<a name="28"><span class="lineNum">      28 </span><span class="lineNoCov">          0 : const char* NodeTableNote::name() { return &quot;*P*&quot;; }</span></a>
+<a name="29"><span class="lineNum">      29 </span><span class="lineNoCov">          0 : const char* NodeTableMessageSummary::name() { return &quot;-P-&quot;; }</span></a>
+<a name="30"><span class="lineNum">      30 </span><span class="lineNoCov">          0 : const char* NodeTableMessageDetail::name() { return &quot;=P=&quot;; }</span></a>
+<a name="31"><span class="lineNum">      31 </span><span class="lineNoCov">          0 : const char* NodeTableConnect::name() { return &quot;+P+&quot;; }</span></a>
+<a name="32"><span class="lineNum">      32 </span><span class="lineNoCov">          0 : const char* NodeTableEvent::name() { return &quot;+P+&quot;; }</span></a>
+<a name="33"><span class="lineNum">      33 </span><span class="lineNoCov">          0 : const char* NodeTableTimer::name() { return &quot;+P+&quot;; }</span></a>
+<a name="34"><span class="lineNum">      34 </span><span class="lineNoCov">          0 : const char* NodeTableUpdate::name() { return &quot;+P+&quot;; }</span></a>
+<a name="35"><span class="lineNum">      35 </span><span class="lineNoCov">          0 : const char* NodeTableTriviaSummary::name() { return &quot;-P-&quot;; }</span></a>
+<a name="36"><span class="lineNum">      36 </span><span class="lineNoCov">          0 : const char* NodeTableTriviaDetail::name() { return &quot;=P=&quot;; }</span></a>
+<a name="37"><span class="lineNum">      37 </span><span class="lineNoCov">          0 : const char* NodeTableAllDetail::name() { return &quot;=P=&quot;; }</span></a>
+<span class="lineNum">      38 </span><span class="lineNoCov">          0 : const char* NodeTableEgress::name() { return &quot;&gt;&gt;P&quot;; }</span>
+<a name="39"><span class="lineNum">      39 </span><span class="lineNoCov">          0 : const char* NodeTableIngress::name() { return &quot;&lt;&lt;P&quot;; }</span></a>
+<span class="lineNum">      40 </span>            : 
+<a name="41"><span class="lineNum">      41 </span><span class="lineCov">        198 : NodeEntry::NodeEntry(NodeID const&amp; _src, Public const&amp; _pubk, NodeIPEndpoint const&amp; _gw): Node(_pubk, _gw), distance(NodeTable::distance(_src, _pubk)) {}</span></a>
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span><span class="lineCov">         22 : NodeTable::NodeTable(ba::io_service&amp; _io, KeyPair const&amp; _alias, NodeIPEndpoint const&amp; _endpoint, bool _enabled):</span>
+<span class="lineNum">      44 </span><span class="lineCov">         22 :         m_node(Node(_alias.pub(), _endpoint)),</span>
+<span class="lineNum">      45 </span><span class="lineCov">         22 :         m_secret(_alias.sec()),</span>
+<span class="lineNum">      46 </span>            :         m_socket(make_shared&lt;NodeSocket&gt;(_io, *reinterpret_cast&lt;UDPSocketEvents*&gt;(this), (bi::udp::endpoint)m_node.endpoint)),
+<span class="lineNum">      47 </span><span class="lineCov">         22 :         m_socketPointer(m_socket.get()),</span>
+<span class="lineNum">      48 </span><span class="lineCov">        506 :         m_timers(_io)</span>
+<span class="lineNum">      49 </span>            : {
+<span class="lineNum">      50 </span><span class="lineCov">      11242 :         for (unsigned i = 0; i &lt; s_bins; i++)</span>
+<span class="lineNum">      51 </span><span class="lineCov">      11220 :                 m_state[i].distance = i;</span>
+<span class="lineNum">      52 </span>            :         
+<span class="lineNum">      53 </span><span class="lineCov">         22 :         if (!_enabled)</span>
+<span class="lineNum">      54 </span>            :                 return;
+<span class="lineNum">      55 </span>            :         
+<span class="lineNum">      56 </span>            :         try
+<span class="lineNum">      57 </span>            :         {
+<span class="lineNum">      58 </span><span class="lineCov">         22 :                 m_socketPointer-&gt;connect();</span>
+<span class="lineNum">      59 </span><span class="lineCov">         22 :                 doDiscovery();</span>
+<span class="lineNum">      60 </span>            :         }
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">      62 </span>            :         {
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :                 clog(NetWarn) &lt;&lt; &quot;Exception connecting NodeTable socket: &quot; &lt;&lt; _e.what();</span>
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :                 clog(NetWarn) &lt;&lt; &quot;Discovery disabled.&quot;;</span>
+<span class="lineNum">      65 </span>            :         }
+<a name="66"><span class="lineNum">      66 </span>            : }</a>
+<span class="lineNum">      67 </span>            :         
+<span class="lineNum">      68 </span><span class="lineCov">        242 : NodeTable::~NodeTable()</span>
+<span class="lineNum">      69 </span>            : {
+<span class="lineNum">      70 </span><span class="lineCov">         22 :         m_socketPointer-&gt;disconnect();</span>
+<span class="lineNum">      71 </span><span class="lineCov">         22 :         m_timers.stop();</span>
+<a name="72"><span class="lineNum">      72 </span><span class="lineCov">         22 : }</span></a>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineCov">        208 : void NodeTable::processEvents()</span>
+<span class="lineNum">      75 </span>            : {
+<span class="lineNum">      76 </span><span class="lineCov">        416 :         if (m_nodeEventHandler)</span>
+<span class="lineNum">      77 </span><span class="lineCov">        416 :                 m_nodeEventHandler-&gt;processEvents();</span>
+<a name="78"><span class="lineNum">      78 </span><span class="lineCov">        208 : }</span></a>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">         41 : shared_ptr&lt;NodeEntry&gt; NodeTable::addNode(Node const&amp; _node, NodeRelation _relation)</span>
+<span class="lineNum">      81 </span>            : {
+<span class="lineNum">      82 </span><span class="lineCov">         41 :         if (_relation == Known)</span>
+<span class="lineNum">      83 </span>            :         {
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :                 auto ret = make_shared&lt;NodeEntry&gt;(m_node.id, _node.id, _node.endpoint);</span>
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :                 ret-&gt;pending = false;</span>
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :                 DEV_GUARDED(x_nodes)</span>
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :                         m_nodes[_node.id] = ret;</span>
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 :                 noteActiveNode(_node.id, _node.endpoint);</span>
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 :                 return ret;</span>
+<span class="lineNum">      90 </span>            :         }
+<span class="lineNum">      91 </span>            :         
+<span class="lineNum">      92 </span><span class="lineCov">         82 :         if (!_node.endpoint)</span>
+<span class="lineNum">      93 </span>            :                 return shared_ptr&lt;NodeEntry&gt;();
+<span class="lineNum">      94 </span>            :         
+<span class="lineNum">      95 </span>            :         // ping address to recover nodeid if nodeid is empty
+<span class="lineNum">      96 </span><span class="lineCov">         82 :         if (!_node.id)</span>
+<span class="lineNum">      97 </span>            :         {
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :                 DEV_GUARDED(x_nodes)</span>
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :                         clog(NodeTableConnect) &lt;&lt; &quot;Sending public key discovery Ping to&quot; &lt;&lt; (bi::udp::endpoint)_node.endpoint &lt;&lt; &quot;(Advertising:&quot; &lt;&lt; (bi::udp::endpoint)m_node.endpoint &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :                 DEV_GUARDED(x_pubkDiscoverPings)</span>
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :                         m_pubkDiscoverPings[_node.endpoint.address] = std::chrono::steady_clock::now();</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :                 ping(_node.endpoint);</span>
+<span class="lineNum">     103 </span>            :                 return shared_ptr&lt;NodeEntry&gt;();
+<span class="lineNum">     104 </span>            :         }
+<span class="lineNum">     105 </span>            :         
+<span class="lineNum">     106 </span><span class="lineCov">        134 :         DEV_GUARDED(x_nodes)</span>
+<span class="lineNum">     107 </span><span class="lineCov">         82 :                 if (m_nodes.count(_node.id))</span>
+<span class="lineNum">     108 </span><span class="lineCov">         60 :                         return m_nodes[_node.id];</span>
+<span class="lineNum">     109 </span>            :         
+<span class="lineNum">     110 </span><span class="lineCov">         52 :         auto ret = make_shared&lt;NodeEntry&gt;(m_node.id, _node.id, _node.endpoint);</span>
+<span class="lineNum">     111 </span><span class="lineCov">        130 :         DEV_GUARDED(x_nodes)</span>
+<span class="lineNum">     112 </span><span class="lineCov">         78 :                 m_nodes[_node.id] = ret;</span>
+<span class="lineNum">     113 </span><span class="lineCov">         52 :         clog(NodeTableConnect) &lt;&lt; &quot;addNode pending for&quot; &lt;&lt; _node.endpoint;</span>
+<span class="lineNum">     114 </span><span class="lineCov">         52 :         ping(_node.endpoint);</span>
+<span class="lineNum">     115 </span><span class="lineCov">         26 :         return ret;</span>
+<a name="116"><span class="lineNum">     116 </span>            : }</a>
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span><span class="lineCov">          1 : list&lt;NodeID&gt; NodeTable::nodes() const</span>
+<span class="lineNum">     119 </span>            : {
+<span class="lineNum">     120 </span><span class="lineCov">          1 :         list&lt;NodeID&gt; nodes;</span>
+<span class="lineNum">     121 </span><span class="lineCov">          4 :         DEV_GUARDED(x_nodes)</span>
+<span class="lineNum">     122 </span><span class="lineCov">         11 :                 for (auto&amp; i: m_nodes)</span>
+<span class="lineNum">     123 </span><span class="lineCov">         16 :                         nodes.push_back(i.second-&gt;id);</span>
+<span class="lineNum">     124 </span><span class="lineCov">          1 :         return nodes;</span>
+<a name="125"><span class="lineNum">     125 </span>            : }</a>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span><span class="lineCov">          2 : list&lt;NodeEntry&gt; NodeTable::snapshot() const</span>
+<span class="lineNum">     128 </span>            : {
+<span class="lineNum">     129 </span><span class="lineCov">          2 :         list&lt;NodeEntry&gt; ret;</span>
+<span class="lineNum">     130 </span><span class="lineCov">          8 :         DEV_GUARDED(x_state)</span>
+<span class="lineNum">     131 </span><span class="lineCov">        516 :                 for (auto const&amp; s: m_state)</span>
+<span class="lineNum">     132 </span><span class="lineCov">       1530 :                         for (auto const&amp; np: s.nodes)</span>
+<span class="lineNum">     133 </span><span class="lineCov">         20 :                                 if (auto n = np.lock())</span>
+<span class="lineNum">     134 </span><span class="lineCov">         10 :                                         ret.push_back(*n);</span>
+<span class="lineNum">     135 </span><span class="lineCov">          2 :         return ret;</span>
+<a name="136"><span class="lineNum">     136 </span>            : }</a>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span><span class="lineCov">         30 : Node NodeTable::node(NodeID const&amp; _id)</span>
+<span class="lineNum">     139 </span>            : {
+<span class="lineNum">     140 </span><span class="lineCov">         90 :         Guard l(x_nodes);</span>
+<span class="lineNum">     141 </span><span class="lineCov">         60 :         if (m_nodes.count(_id))</span>
+<span class="lineNum">     142 </span>            :         {
+<span class="lineNum">     143 </span><span class="lineCov">        116 :                 auto entry = m_nodes[_id];</span>
+<span class="lineNum">     144 </span><span class="lineCov">         58 :                 return Node(_id, entry-&gt;endpoint, entry-&gt;peerType);</span>
+<span class="lineNum">     145 </span>            :         }
+<span class="lineNum">     146 </span>            :         return UnspecifiedNode;
+<a name="147"><span class="lineNum">     147 </span>            : }</a>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">        139 : shared_ptr&lt;NodeEntry&gt; NodeTable::nodeEntry(NodeID _id)</span>
+<span class="lineNum">     150 </span>            : {
+<span class="lineNum">     151 </span><span class="lineCov">        417 :         Guard l(x_nodes);</span>
+<span class="lineNum">     152 </span><span class="lineCov">        556 :         return m_nodes.count(_id) ? m_nodes[_id] : shared_ptr&lt;NodeEntry&gt;();</span>
+<a name="153"><span class="lineNum">     153 </span>            : }</a>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 : void NodeTable::doDiscover(NodeID _node, unsigned _round, shared_ptr&lt;set&lt;shared_ptr&lt;NodeEntry&gt;&gt;&gt; _tried)</span>
+<span class="lineNum">     156 </span>            : {
+<span class="lineNum">     157 </span>            :         // NOTE: ONLY called by doDiscovery!
+<span class="lineNum">     158 </span>            :         
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :         if (!m_socketPointer-&gt;isOpen())</span>
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :                 return;</span>
+<span class="lineNum">     161 </span>            :         
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :         if (_round == s_maxSteps)</span>
+<span class="lineNum">     163 </span>            :         {
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :                 clog(NodeTableEvent) &lt;&lt; &quot;Terminating discover after &quot; &lt;&lt; _round &lt;&lt; &quot; rounds.&quot;;</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :                 doDiscovery();</span>
+<span class="lineNum">     166 </span>            :                 return;
+<span class="lineNum">     167 </span>            :         }
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :         else if (!_round &amp;&amp; !_tried)</span>
+<span class="lineNum">     169 </span>            :                 // initialized _tried on first round
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :                 _tried = make_shared&lt;set&lt;shared_ptr&lt;NodeEntry&gt;&gt;&gt;();</span>
+<span class="lineNum">     171 </span>            :         
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :         auto nearest = nearestNodeEntries(_node);</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :         list&lt;shared_ptr&lt;NodeEntry&gt;&gt; tried;</span>
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :         for (unsigned i = 0; i &lt; nearest.size() &amp;&amp; tried.size() &lt; s_alpha; i++)</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :                 if (!_tried-&gt;count(nearest[i]))</span>
+<span class="lineNum">     176 </span>            :                 {
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :                         auto r = nearest[i];</span>
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :                         tried.push_back(r);</span>
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :                         FindNode p(r-&gt;endpoint, _node);</span>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :                         p.sign(m_secret);</span>
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :                         DEV_GUARDED(x_findNodeTimeout)</span>
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :                                 m_findNodeTimeout.push_back(make_pair(r-&gt;id, chrono::steady_clock::now()));</span>
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :                         m_socketPointer-&gt;send(p);</span>
+<span class="lineNum">     184 </span>            :                 }
+<span class="lineNum">     185 </span>            :         
+<span class="lineNum">     186 </span><span class="lineNoCov">          0 :         if (tried.empty())</span>
+<span class="lineNum">     187 </span>            :         {
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :                 clog(NodeTableEvent) &lt;&lt; &quot;Terminating discover after &quot; &lt;&lt; _round &lt;&lt; &quot; rounds.&quot;;</span>
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :                 doDiscovery();</span>
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :                 return;</span>
+<span class="lineNum">     191 </span>            :         }
+<span class="lineNum">     192 </span>            :                 
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :         while (!tried.empty())</span>
+<span class="lineNum">     194 </span>            :         {
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :                 _tried-&gt;insert(tried.front());</span>
+<span class="lineNum">     196 </span>            :                 tried.pop_front();
+<a name="197"><span class="lineNum">     197 </span>            :         }</a>
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :         m_timers.schedule(c_reqTimeout.count() * 2, [this, _node, _round, _tried](boost::system::error_code const&amp; _ec)</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :         {</span>
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :                 if (_ec)</span>
+<span class="lineNum">     202 </span><span class="lineNoCov">          0 :                         clog(NodeTableMessageDetail) &lt;&lt; &quot;Discovery timer was probably cancelled: &quot; &lt;&lt; _ec.value() &lt;&lt; _ec.message();</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :                 if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())</span>
+<span class="lineNum">     205 </span>            :                         return;
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :                 // error::operation_aborted means that the timer was probably aborted. 
+<span class="lineNum">     208 </span>            :                 // It usually happens when &quot;this&quot; object is deallocated, in which case 
+<span class="lineNum">     209 </span>            :                 // subsequent call to doDiscover() would cause a crash. We can not rely on 
+<span class="lineNum">     210 </span>            :                 // m_timers.isStopped(), because &quot;this&quot; pointer was captured by the lambda,
+<span class="lineNum">     211 </span>            :                 // and therefore, in case of deallocation m_timers object no longer exists.
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :                 doDiscover(_node, _round + 1, _tried);</span>
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 :         });</span>
+<a name="215"><span class="lineNum">     215 </span>            : }</a>
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 : vector&lt;shared_ptr&lt;NodeEntry&gt;&gt; NodeTable::nearestNodeEntries(NodeID _target)</span>
+<span class="lineNum">     218 </span>            : {
+<span class="lineNum">     219 </span>            :         // send s_alpha FindNode packets to nodes we know, closest to target
+<span class="lineNum">     220 </span>            :         static unsigned lastBin = s_bins - 1;
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :         unsigned head = distance(m_node.id, _target);</span>
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :         unsigned tail = head == 0 ? lastBin : (head - 1) % s_bins;</span>
+<span class="lineNum">     223 </span>            :         
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :         map&lt;unsigned, list&lt;shared_ptr&lt;NodeEntry&gt;&gt;&gt; found;</span>
+<span class="lineNum">     225 </span><span class="lineNoCov">          0 :         unsigned count = 0;</span>
+<span class="lineNum">     226 </span>            :         
+<span class="lineNum">     227 </span>            :         // if d is 0, then we roll look forward, if last, we reverse, else, spread from d
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :         if (head &gt; 1 &amp;&amp; tail != lastBin)</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :                 while (head != tail &amp;&amp; head &lt; s_bins &amp;&amp; count &lt; s_bucketSize)</span>
+<span class="lineNum">     230 </span>            :                 {
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 :                         Guard l(x_state);</span>
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :                         for (auto const&amp; n: m_state[head].nodes)</span>
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :                                 if (auto p = n.lock())</span>
+<span class="lineNum">     234 </span>            :                                 {
+<span class="lineNum">     235 </span>            :                                         if (count &lt; s_bucketSize)
+<span class="lineNum">     236 </span><span class="lineNoCov">          0 :                                                 found[distance(_target, p-&gt;id)].push_back(p);</span>
+<span class="lineNum">     237 </span>            :                                         else
+<span class="lineNum">     238 </span>            :                                                 break;
+<span class="lineNum">     239 </span>            :                                 }
+<span class="lineNum">     240 </span>            :                         
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :                         if (count &lt; s_bucketSize &amp;&amp; tail)</span>
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :                                 for (auto const&amp; n: m_state[tail].nodes)</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :                                         if (auto p = n.lock())</span>
+<span class="lineNum">     244 </span>            :                                         {
+<span class="lineNum">     245 </span>            :                                                 if (count &lt; s_bucketSize)
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :                                                         found[distance(_target, p-&gt;id)].push_back(p);</span>
+<span class="lineNum">     247 </span>            :                                                 else
+<span class="lineNum">     248 </span>            :                                                         break;
+<span class="lineNum">     249 </span>            :                                         }
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :                         head++;</span>
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :                         if (tail)</span>
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :                                 tail--;</span>
+<span class="lineNum">     254 </span>            :                 }
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :         else if (head &lt; 2)</span>
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :                 while (head &lt; s_bins &amp;&amp; count &lt; s_bucketSize)</span>
+<span class="lineNum">     257 </span>            :                 {
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :                         Guard l(x_state);</span>
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :                         for (auto const&amp; n: m_state[head].nodes)</span>
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :                                 if (auto p = n.lock())</span>
+<span class="lineNum">     261 </span>            :                                 {
+<span class="lineNum">     262 </span>            :                                         if (count &lt; s_bucketSize)
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :                                                 found[distance(_target, p-&gt;id)].push_back(p);</span>
+<span class="lineNum">     264 </span>            :                                         else
+<span class="lineNum">     265 </span>            :                                                 break;
+<span class="lineNum">     266 </span>            :                                 }
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :                         head++;</span>
+<span class="lineNum">     268 </span>            :                 }
+<span class="lineNum">     269 </span>            :         else
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :                 while (tail &gt; 0 &amp;&amp; count &lt; s_bucketSize)</span>
+<span class="lineNum">     271 </span>            :                 {
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :                         Guard l(x_state);</span>
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :                         for (auto const&amp; n: m_state[tail].nodes)</span>
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :                                 if (auto p = n.lock())</span>
+<span class="lineNum">     275 </span>            :                                 {
+<span class="lineNum">     276 </span>            :                                         if (count &lt; s_bucketSize)
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :                                                 found[distance(_target, p-&gt;id)].push_back(p);</span>
+<span class="lineNum">     278 </span>            :                                         else
+<span class="lineNum">     279 </span>            :                                                 break;
+<span class="lineNum">     280 </span>            :                                 }
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :                         tail--;</span>
+<span class="lineNum">     282 </span>            :                 }
+<span class="lineNum">     283 </span>            :         
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :         vector&lt;shared_ptr&lt;NodeEntry&gt;&gt; ret;</span>
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :         for (auto&amp; nodes: found)</span>
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :                 for (auto const&amp; n: nodes.second)</span>
+<span class="lineNum">     287 </span><span class="lineNoCov">          0 :                         if (ret.size() &lt; s_bucketSize &amp;&amp; !!n-&gt;endpoint &amp;&amp; n-&gt;endpoint.isAllowed())</span>
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :                                 ret.push_back(n);</span>
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="290"><span class="lineNum">     290 </span>            : }</a>
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span><span class="lineCov">         26 : void NodeTable::ping(NodeIPEndpoint _to) const</span>
+<span class="lineNum">     293 </span>            : {
+<span class="lineNum">     294 </span><span class="lineCov">         26 :         NodeIPEndpoint src;</span>
+<span class="lineNum">     295 </span><span class="lineCov">        130 :         DEV_GUARDED(x_nodes)</span>
+<span class="lineNum">     296 </span><span class="lineCov">         52 :                 src = m_node.endpoint;</span>
+<span class="lineNum">     297 </span><span class="lineCov">         52 :         PingNode p(src, _to);</span>
+<span class="lineNum">     298 </span><span class="lineCov">         26 :         p.sign(m_secret);</span>
+<span class="lineNum">     299 </span><span class="lineCov">         26 :         m_socketPointer-&gt;send(p);</span>
+<a name="300"><span class="lineNum">     300 </span><span class="lineCov">         26 : }</span></a>
+<span class="lineNum">     301 </span>            : 
+<span class="lineNum">     302 </span><span class="lineNoCov">          0 : void NodeTable::ping(NodeEntry* _n) const</span>
+<span class="lineNum">     303 </span>            : {
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 :         if (_n)</span>
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 :                 ping(_n-&gt;endpoint);</span>
+<a name="306"><span class="lineNum">     306 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span><span class="lineNoCov">          0 : void NodeTable::evict(shared_ptr&lt;NodeEntry&gt; _leastSeen, shared_ptr&lt;NodeEntry&gt; _new)</span>
+<span class="lineNum">     309 </span>            : {
+<span class="lineNum">     310 </span><span class="lineNoCov">          0 :         if (!m_socketPointer-&gt;isOpen())</span>
+<span class="lineNum">     311 </span>            :                 return;
+<span class="lineNum">     312 </span>            :         
+<span class="lineNum">     313 </span><span class="lineNoCov">          0 :         unsigned evicts = 0;</span>
+<span class="lineNum">     314 </span><span class="lineNoCov">          0 :         DEV_GUARDED(x_evictions)</span>
+<span class="lineNum">     315 </span>            :         {
+<span class="lineNum">     316 </span><span class="lineNoCov">          0 :                 m_evictions.push_back(EvictionTimeout(make_pair(_leastSeen-&gt;id,chrono::steady_clock::now()), _new-&gt;id));</span>
+<span class="lineNum">     317 </span><span class="lineNoCov">          0 :                 evicts = m_evictions.size();</span>
+<span class="lineNum">     318 </span>            :         }
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span><span class="lineNoCov">          0 :         if (evicts == 1)</span>
+<span class="lineNum">     321 </span><span class="lineNoCov">          0 :                 doCheckEvictions();</span>
+<span class="lineNum">     322 </span><span class="lineNoCov">          0 :         ping(_leastSeen.get());</span>
+<a name="323"><span class="lineNum">     323 </span>            : }</a>
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span><span class="lineCov">        125 : void NodeTable::noteActiveNode(Public const&amp; _pubk, bi::udp::endpoint const&amp; _endpoint)</span>
+<span class="lineNum">     326 </span>            : {
+<span class="lineNum">     327 </span><span class="lineCov">        702 :         if (_pubk == m_node.address() || !NodeIPEndpoint(_endpoint.address(), _endpoint.port(), _endpoint.port()).isAllowed())</span>
+<span class="lineNum">     328 </span><span class="lineCov">         12 :                 return;</span>
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span><span class="lineCov">        226 :         shared_ptr&lt;NodeEntry&gt; node = nodeEntry(_pubk);</span>
+<span class="lineNum">     331 </span><span class="lineCov">        113 :         if (!!node &amp;&amp; !node-&gt;pending)</span>
+<span class="lineNum">     332 </span>            :         {
+<span class="lineNum">     333 </span><span class="lineCov">        356 :                 clog(NodeTableConnect) &lt;&lt; &quot;Noting active node:&quot; &lt;&lt; _pubk &lt;&lt; _endpoint.address().to_string() &lt;&lt; &quot;:&quot; &lt;&lt; _endpoint.port();</span>
+<span class="lineNum">     334 </span><span class="lineCov">        178 :                 node-&gt;endpoint.address = _endpoint.address();</span>
+<span class="lineNum">     335 </span><span class="lineCov">        178 :                 node-&gt;endpoint.udpPort = _endpoint.port();</span>
+<span class="lineNum">     336 </span>            :                 
+<span class="lineNum">     337 </span><span class="lineCov">        178 :                 shared_ptr&lt;NodeEntry&gt; contested;</span>
+<span class="lineNum">     338 </span>            :                 {
+<span class="lineNum">     339 </span><span class="lineCov">        267 :                         Guard l(x_state);</span>
+<a name="340"><span class="lineNum">     340 </span><span class="lineCov">        178 :                         NodeBucket&amp; s = bucket_UNSAFE(node.get());</span></a>
+<span class="lineNum">     341 </span><span class="lineCov">         89 :                         bool removed = false;</span>
+<span class="lineNum">     342 </span><span class="lineCov">        161 :                         s.nodes.remove_if([&amp;node, &amp;removed](weak_ptr&lt;NodeEntry&gt; const&amp; n)</span>
+<span class="lineNum">     343 </span><span class="lineCov">        144 :                         {</span>
+<span class="lineNum">     344 </span><span class="lineCov">        216 :                                 if (n.lock() == node)</span>
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :                                         removed = true;</span>
+<span class="lineNum">     346 </span><span class="lineCov">         72 :                                 return removed;</span>
+<span class="lineNum">     347 </span><span class="lineCov">        178 :                         });</span>
+<span class="lineNum">     348 </span>            :                         
+<span class="lineNum">     349 </span><span class="lineCov">        178 :                         if (s.nodes.size() &gt;= s_bucketSize)</span>
+<span class="lineNum">     350 </span>            :                         {
+<span class="lineNum">     351 </span><span class="lineNoCov">          0 :                                 if (removed)</span>
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :                                         clog(NodeTableWarn) &lt;&lt; &quot;DANGER: Bucket overflow when swapping node position.&quot;;</span>
+<span class="lineNum">     353 </span>            :                                 
+<span class="lineNum">     354 </span>            :                                 // It's only contested iff nodeentry exists
+<span class="lineNum">     355 </span><span class="lineNoCov">          0 :                                 contested = s.nodes.front().lock();</span>
+<span class="lineNum">     356 </span><span class="lineNoCov">          0 :                                 if (!contested)</span>
+<span class="lineNum">     357 </span>            :                                 {
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :                                         s.nodes.pop_front();</span>
+<span class="lineNum">     359 </span><span class="lineNoCov">          0 :                                         s.nodes.push_back(node);</span>
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :                                         if (!removed &amp;&amp; m_nodeEventHandler)</span>
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :                                                 m_nodeEventHandler-&gt;appendEvent(node-&gt;id, NodeEntryAdded);</span>
+<span class="lineNum">     362 </span>            :                                 }
+<span class="lineNum">     363 </span>            :                         }
+<span class="lineNum">     364 </span>            :                         else
+<span class="lineNum">     365 </span>            :                         {
+<span class="lineNum">     366 </span><span class="lineCov">        267 :                                 s.nodes.push_back(node);</span>
+<span class="lineNum">     367 </span><span class="lineCov">        178 :                                 if (!removed &amp;&amp; m_nodeEventHandler)</span>
+<span class="lineNum">     368 </span><span class="lineCov">         48 :                                         m_nodeEventHandler-&gt;appendEvent(node-&gt;id, NodeEntryAdded);</span>
+<span class="lineNum">     369 </span>            :                         }
+<span class="lineNum">     370 </span>            :                 }
+<span class="lineNum">     371 </span>            :                 
+<span class="lineNum">     372 </span><span class="lineCov">         89 :                 if (contested)</span>
+<span class="lineNum">     373 </span><span class="lineNoCov">          0 :                         evict(contested, node);</span>
+<span class="lineNum">     374 </span>            :         }
+<a name="375"><span class="lineNum">     375 </span>            : }</a>
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 : void NodeTable::dropNode(shared_ptr&lt;NodeEntry&gt; _n)</span>
+<span class="lineNum">     378 </span>            : {
+<span class="lineNum">     379 </span>            :         // remove from nodetable
+<span class="lineNum">     380 </span>            :         {
+<a name="381"><span class="lineNum">     381 </span><span class="lineNoCov">          0 :                 Guard l(x_state);</span></a>
+<span class="lineNum">     382 </span><span class="lineNoCov">          0 :                 NodeBucket&amp; s = bucket_UNSAFE(_n.get());</span>
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 :                 s.nodes.remove_if([&amp;_n](weak_ptr&lt;NodeEntry&gt; n) { return n.lock() == _n; });</span>
+<span class="lineNum">     384 </span>            :         }
+<span class="lineNum">     385 </span>            :         
+<span class="lineNum">     386 </span>            :         // notify host
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 :         clog(NodeTableUpdate) &lt;&lt; &quot;p2p.nodes.drop &quot; &lt;&lt; _n-&gt;id;</span>
+<span class="lineNum">     388 </span><span class="lineNoCov">          0 :         if (m_nodeEventHandler)</span>
+<span class="lineNum">     389 </span><span class="lineNoCov">          0 :                 m_nodeEventHandler-&gt;appendEvent(_n-&gt;id, NodeEntryDropped);</span>
+<a name="390"><span class="lineNum">     390 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     391 </span>            : 
+<span class="lineNum">     392 </span><span class="lineNoCov">          0 : NodeTable::NodeBucket&amp; NodeTable::bucket_UNSAFE(NodeEntry const* _n)</span>
+<span class="lineNum">     393 </span>            : {
+<span class="lineNum">     394 </span><span class="lineCov">        178 :         return m_state[_n-&gt;distance - 1];</span>
+<a name="395"><span class="lineNum">     395 </span>            : }</a>
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span><span class="lineCov">         52 : void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const&amp; _from, bytesConstRef _packet)</span>
+<span class="lineNum">     398 </span>            : {
+<span class="lineNum">     399 </span>            :         try {
+<span class="lineNum">     400 </span><span class="lineCov">        104 :                 unique_ptr&lt;DiscoveryDatagram&gt; packet = DiscoveryDatagram::interpretUDP(_from, _packet);</span>
+<span class="lineNum">     401 </span><span class="lineCov">         52 :                 if (!packet)</span>
+<span class="lineNum">     402 </span><span class="lineNoCov">          0 :                         return;</span>
+<span class="lineNum">     403 </span><span class="lineCov">        104 :                 if (packet-&gt;isExpired())</span>
+<span class="lineNum">     404 </span>            :                 {
+<span class="lineNum">     405 </span><span class="lineNoCov">          0 :                         clog(NodeTableWarn) &lt;&lt; &quot;Invalid packet (timestamp in the past) from &quot; &lt;&lt; _from.address().to_string() &lt;&lt; &quot;:&quot; &lt;&lt; _from.port();</span>
+<span class="lineNum">     406 </span><span class="lineNoCov">          0 :                         return;</span>
+<span class="lineNum">     407 </span>            :                 }
+<span class="lineNum">     408 </span>            : 
+<span class="lineNum">     409 </span><span class="lineCov">         52 :                 switch (packet-&gt;packetType())</span>
+<span class="lineNum">     410 </span>            :                 {
+<span class="lineNum">     411 </span>            :                         case Pong::type:
+<span class="lineNum">     412 </span>            :                         {
+<span class="lineNum">     413 </span><span class="lineCov">         26 :                                 auto in = dynamic_cast&lt;Pong const&amp;&gt;(*packet);</span>
+<span class="lineNum">     414 </span>            :                                 // whenever a pong is received, check if it's in m_evictions
+<span class="lineNum">     415 </span><span class="lineCov">         26 :                                 bool found = false;</span>
+<span class="lineNum">     416 </span><span class="lineCov">         26 :                                 EvictionTimeout evictionEntry;</span>
+<span class="lineNum">     417 </span><span class="lineCov">        130 :                                 DEV_GUARDED(x_evictions)</span>
+<span class="lineNum">     418 </span><span class="lineCov">        104 :                                         for (auto it = m_evictions.begin(); it != m_evictions.end(); ++it)</span>
+<span class="lineNum">     419 </span><span class="lineNoCov">          0 :                                                 if (it-&gt;first.first == in.sourceid &amp;&amp; it-&gt;first.second &gt; std::chrono::steady_clock::now())</span>
+<span class="lineNum">     420 </span>            :                                                 {
+<span class="lineNum">     421 </span><span class="lineNoCov">          0 :                                                         found = true;</span>
+<span class="lineNum">     422 </span><span class="lineNoCov">          0 :                                                         evictionEntry = *it;</span>
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 :                                                         m_evictions.erase(it);</span>
+<span class="lineNum">     424 </span><span class="lineNoCov">          0 :                                                         break;</span>
+<span class="lineNum">     425 </span>            :                                                 }
+<span class="lineNum">     426 </span><span class="lineCov">         26 :                                 if (found)</span>
+<span class="lineNum">     427 </span>            :                                 {
+<span class="lineNum">     428 </span><span class="lineNoCov">          0 :                                         if (auto n = nodeEntry(evictionEntry.second))</span>
+<span class="lineNum">     429 </span><span class="lineNoCov">          0 :                                                 dropNode(n);</span>
+<span class="lineNum">     430 </span><span class="lineNoCov">          0 :                                         if (auto n = nodeEntry(evictionEntry.first.first))</span>
+<span class="lineNum">     431 </span><span class="lineNoCov">          0 :                                                 n-&gt;pending = false;</span>
+<span class="lineNum">     432 </span>            :                                 }
+<span class="lineNum">     433 </span>            :                                 else
+<span class="lineNum">     434 </span>            :                                 {
+<span class="lineNum">     435 </span>            :                                         // if not, check if it's known/pending or a pubk discovery ping
+<span class="lineNum">     436 </span><span class="lineCov">         52 :                                         if (auto n = nodeEntry(in.sourceid))</span>
+<span class="lineNum">     437 </span><span class="lineCov">         26 :                                                 n-&gt;pending = false;</span>
+<span class="lineNum">     438 </span>            :                                         else
+<span class="lineNum">     439 </span>            :                                         {
+<span class="lineNum">     440 </span><span class="lineNoCov">          0 :                                                 DEV_GUARDED(x_pubkDiscoverPings)</span>
+<span class="lineNum">     441 </span>            :                                                 {
+<span class="lineNum">     442 </span><span class="lineNoCov">          0 :                                                         if (!m_pubkDiscoverPings.count(_from.address()))</span>
+<span class="lineNum">     443 </span><span class="lineNoCov">          0 :                                                                 return; // unsolicited pong; don't note node as active</span>
+<span class="lineNum">     444 </span><span class="lineNoCov">          0 :                                                         m_pubkDiscoverPings.erase(_from.address());</span>
+<span class="lineNum">     445 </span>            :                                                 }
+<span class="lineNum">     446 </span><span class="lineNoCov">          0 :                                                 if (!haveNode(in.sourceid))</span>
+<span class="lineNum">     447 </span><span class="lineNoCov">          0 :                                                         addNode(Node(in.sourceid, NodeIPEndpoint(_from.address(), _from.port(), _from.port())));</span>
+<span class="lineNum">     448 </span>            :                                         }
+<span class="lineNum">     449 </span>            :                                 }
+<span class="lineNum">     450 </span>            :                                 
+<span class="lineNum">     451 </span>            :                                 // update our endpoint address and UDP port
+<span class="lineNum">     452 </span><span class="lineCov">        130 :                                 DEV_GUARDED(x_nodes)</span>
+<span class="lineNum">     453 </span>            :                                 {
+<span class="lineNum">     454 </span><span class="lineCov">         52 :                                         if ((!m_node.endpoint || !m_node.endpoint.isAllowed()) &amp;&amp; isPublicAddress(in.destination.address))</span>
+<span class="lineNum">     455 </span><span class="lineNoCov">          0 :                                                 m_node.endpoint.address = in.destination.address;</span>
+<span class="lineNum">     456 </span><span class="lineCov">         26 :                                         m_node.endpoint.udpPort = in.destination.udpPort;</span>
+<span class="lineNum">     457 </span>            :                                 }
+<span class="lineNum">     458 </span>            :                                 
+<span class="lineNum">     459 </span><span class="lineCov">         26 :                                 clog(NodeTableConnect) &lt;&lt; &quot;PONG from &quot; &lt;&lt; in.sourceid &lt;&lt; _from;</span>
+<span class="lineNum">     460 </span><span class="lineCov">         26 :                                 break;</span>
+<span class="lineNum">     461 </span>            :                         }
+<span class="lineNum">     462 </span>            :                                 
+<span class="lineNum">     463 </span>            :                         case Neighbours::type:
+<span class="lineNum">     464 </span>            :                         {
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :                                 auto in = dynamic_cast&lt;Neighbours const&amp;&gt;(*packet);</span>
+<span class="lineNum">     466 </span><span class="lineNoCov">          0 :                                 bool expected = false;</span>
+<a name="467"><span class="lineNum">     467 </span><span class="lineNoCov">          0 :                                 auto now = chrono::steady_clock::now();</span></a>
+<span class="lineNum">     468 </span><span class="lineNoCov">          0 :                                 DEV_GUARDED(x_findNodeTimeout)</span>
+<span class="lineNum">     469 </span><span class="lineNoCov">          0 :                                         m_findNodeTimeout.remove_if([&amp;](NodeIdTimePoint const&amp; t)</span>
+<span class="lineNum">     470 </span>            :                                         {
+<span class="lineNum">     471 </span><span class="lineNoCov">          0 :                                                 if (t.first == in.sourceid &amp;&amp; now - t.second &lt; c_reqTimeout)</span>
+<span class="lineNum">     472 </span><span class="lineNoCov">          0 :                                                         expected = true;</span>
+<span class="lineNum">     473 </span><span class="lineNoCov">          0 :                                                 else if (t.first == in.sourceid)</span>
+<span class="lineNum">     474 </span>            :                                                         return true;
+<span class="lineNum">     475 </span>            :                                                 return false;
+<span class="lineNum">     476 </span><span class="lineNoCov">          0 :                                         });</span>
+<span class="lineNum">     477 </span><span class="lineNoCov">          0 :                                 if (!expected)</span>
+<span class="lineNum">     478 </span>            :                                 {
+<span class="lineNum">     479 </span><span class="lineNoCov">          0 :                                         clog(NetConnect) &lt;&lt; &quot;Dropping unsolicited neighbours packet from &quot; &lt;&lt; _from.address();</span>
+<span class="lineNum">     480 </span><span class="lineNoCov">          0 :                                         break;</span>
+<span class="lineNum">     481 </span>            :                                 }
+<span class="lineNum">     482 </span>            : 
+<span class="lineNum">     483 </span><span class="lineNoCov">          0 :                                 for (auto n: in.neighbours)</span>
+<span class="lineNum">     484 </span><span class="lineNoCov">          0 :                                         addNode(Node(n.node, n.endpoint));</span>
+<span class="lineNum">     485 </span><span class="lineNoCov">          0 :                                 break;</span>
+<span class="lineNum">     486 </span>            :                         }
+<span class="lineNum">     487 </span>            : 
+<span class="lineNum">     488 </span>            :                         case FindNode::type:
+<span class="lineNum">     489 </span>            :                         {
+<span class="lineNum">     490 </span><span class="lineNoCov">          0 :                                 auto in = dynamic_cast&lt;FindNode const&amp;&gt;(*packet);</span>
+<span class="lineNum">     491 </span><span class="lineNoCov">          0 :                                 vector&lt;shared_ptr&lt;NodeEntry&gt;&gt; nearest = nearestNodeEntries(in.target);</span>
+<span class="lineNum">     492 </span>            :                                 static unsigned const nlimit = (m_socketPointer-&gt;maxDatagramSize - 109) / 90;
+<span class="lineNum">     493 </span><span class="lineNoCov">          0 :                                 for (unsigned offset = 0; offset &lt; nearest.size(); offset += nlimit)</span>
+<span class="lineNum">     494 </span>            :                                 {
+<span class="lineNum">     495 </span><span class="lineNoCov">          0 :                                         Neighbours out(_from, nearest, offset, nlimit);</span>
+<span class="lineNum">     496 </span><span class="lineNoCov">          0 :                                         out.sign(m_secret);</span>
+<span class="lineNum">     497 </span><span class="lineNoCov">          0 :                                         if (out.data.size() &gt; 1280)</span>
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 :                                                 clog(NetWarn) &lt;&lt; &quot;Sending truncated datagram, size: &quot; &lt;&lt; out.data.size();</span>
+<span class="lineNum">     499 </span><span class="lineNoCov">          0 :                                         m_socketPointer-&gt;send(out);</span>
+<span class="lineNum">     500 </span>            :                                 }
+<span class="lineNum">     501 </span>            :                                 break;
+<span class="lineNum">     502 </span>            :                         }
+<span class="lineNum">     503 </span>            : 
+<span class="lineNum">     504 </span>            :                         case PingNode::type:
+<span class="lineNum">     505 </span>            :                         {
+<span class="lineNum">     506 </span><span class="lineCov">         52 :                                 auto in = dynamic_cast&lt;PingNode const&amp;&gt;(*packet);</span>
+<span class="lineNum">     507 </span><span class="lineCov">         52 :                                 in.source.address = _from.address();</span>
+<span class="lineNum">     508 </span><span class="lineCov">         26 :                                 in.source.udpPort = _from.port();</span>
+<span class="lineNum">     509 </span><span class="lineCov">         52 :                                 addNode(Node(in.sourceid, in.source));</span>
+<span class="lineNum">     510 </span>            :                                 
+<span class="lineNum">     511 </span><span class="lineCov">         52 :                                 Pong p(in.source);</span>
+<span class="lineNum">     512 </span><span class="lineCov">         26 :                                 p.echo = sha3(in.echo);</span>
+<span class="lineNum">     513 </span><span class="lineCov">         26 :                                 p.sign(m_secret);</span>
+<span class="lineNum">     514 </span><span class="lineCov">         26 :                                 m_socketPointer-&gt;send(p);</span>
+<span class="lineNum">     515 </span>            :                                 break;
+<span class="lineNum">     516 </span>            :                         }
+<span class="lineNum">     517 </span>            :                 }
+<span class="lineNum">     518 </span>            : 
+<span class="lineNum">     519 </span><span class="lineCov">         52 :                 noteActiveNode(packet-&gt;sourceid, _from);</span>
+<span class="lineNum">     520 </span>            :         }
+<span class="lineNum">     521 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     522 </span>            :         {
+<span class="lineNum">     523 </span><span class="lineNoCov">          0 :                 clog(NodeTableWarn) &lt;&lt; &quot;Exception processing message from &quot; &lt;&lt; _from.address().to_string() &lt;&lt; &quot;:&quot; &lt;&lt; _from.port() &lt;&lt; &quot;: &quot; &lt;&lt; _e.what();</span>
+<span class="lineNum">     524 </span>            :         }
+<span class="lineNum">     525 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     526 </span>            :         {
+<span class="lineNum">     527 </span><span class="lineNoCov">          0 :                 clog(NodeTableWarn) &lt;&lt; &quot;Exception processing message from &quot; &lt;&lt; _from.address().to_string() &lt;&lt; &quot;:&quot; &lt;&lt; _from.port();</span>
+<span class="lineNum">     528 </span>            :         }
+<a name="529"><span class="lineNum">     529 </span>            : }</a>
+<span class="lineNum">     530 </span>            : 
+<a name="531"><span class="lineNum">     531 </span><span class="lineNoCov">          0 : void NodeTable::doCheckEvictions()</span></a>
+<span class="lineNum">     532 </span>            : {
+<span class="lineNum">     533 </span><span class="lineNoCov">          0 :         m_timers.schedule(c_evictionCheckInterval.count(), [this](boost::system::error_code const&amp; _ec)</span>
+<span class="lineNum">     534 </span><span class="lineNoCov">          0 :         {</span>
+<span class="lineNum">     535 </span><span class="lineNoCov">          0 :                 if (_ec)</span>
+<span class="lineNum">     536 </span><span class="lineNoCov">          0 :                         clog(NodeTableMessageDetail) &lt;&lt; &quot;Check Evictions timer was probably cancelled: &quot; &lt;&lt; _ec.value() &lt;&lt; _ec.message();</span>
+<span class="lineNum">     537 </span>            : 
+<span class="lineNum">     538 </span><span class="lineNoCov">          0 :                 if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())</span>
+<span class="lineNum">     539 </span><span class="lineNoCov">          0 :                         return;</span>
+<span class="lineNum">     540 </span>            :                 
+<span class="lineNum">     541 </span><span class="lineNoCov">          0 :                 bool evictionsRemain = false;</span>
+<span class="lineNum">     542 </span><span class="lineNoCov">          0 :                 list&lt;shared_ptr&lt;NodeEntry&gt;&gt; drop;</span>
+<span class="lineNum">     543 </span>            :                 {
+<span class="lineNum">     544 </span><span class="lineNoCov">          0 :                         Guard le(x_evictions);</span>
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 :                         Guard ln(x_nodes);</span>
+<span class="lineNum">     546 </span><span class="lineNoCov">          0 :                         for (auto&amp; e: m_evictions)</span>
+<span class="lineNum">     547 </span><span class="lineNoCov">          0 :                                 if (chrono::steady_clock::now() - e.first.second &gt; c_reqTimeout)</span>
+<span class="lineNum">     548 </span><span class="lineNoCov">          0 :                                         if (m_nodes.count(e.second))</span>
+<span class="lineNum">     549 </span><span class="lineNoCov">          0 :                                                 drop.push_back(m_nodes[e.second]);</span>
+<span class="lineNum">     550 </span><span class="lineNoCov">          0 :                         evictionsRemain = (m_evictions.size() - drop.size() &gt; 0);</span>
+<span class="lineNum">     551 </span>            :                 }
+<span class="lineNum">     552 </span>            :                 
+<span class="lineNum">     553 </span><span class="lineNoCov">          0 :                 drop.unique();</span>
+<span class="lineNum">     554 </span><span class="lineNoCov">          0 :                 for (auto n: drop)</span>
+<span class="lineNum">     555 </span><span class="lineNoCov">          0 :                         dropNode(n);</span>
+<span class="lineNum">     556 </span>            :                 
+<span class="lineNum">     557 </span><span class="lineNoCov">          0 :                 if (evictionsRemain)</span>
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 :                         doCheckEvictions();</span>
+<span class="lineNum">     559 </span><span class="lineNoCov">          0 :         });</span>
+<a name="560"><span class="lineNum">     560 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     561 </span>            : 
+<a name="562"><span class="lineNum">     562 </span><span class="lineCov">         22 : void NodeTable::doDiscovery()</span></a>
+<span class="lineNum">     563 </span>            : {
+<span class="lineNum">     564 </span><span class="lineCov">        100 :         m_timers.schedule(c_bucketRefresh.count(), [this](boost::system::error_code const&amp; _ec)</span>
+<span class="lineNum">     565 </span><span class="lineNoCov">          0 :         {</span>
+<span class="lineNum">     566 </span><span class="lineCov">         24 :                 if (_ec)</span>
+<span class="lineNum">     567 </span><span class="lineCov">         36 :                         clog(NodeTableMessageDetail) &lt;&lt; &quot;Discovery timer was probably cancelled: &quot; &lt;&lt; _ec.value() &lt;&lt; _ec.message();</span>
+<span class="lineNum">     568 </span>            : 
+<span class="lineNum">     569 </span><span class="lineCov">         12 :                 if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())</span>
+<span class="lineNum">     570 </span><span class="lineCov">         12 :                         return;</span>
+<span class="lineNum">     571 </span>            :                 
+<span class="lineNum">     572 </span><span class="lineNoCov">          0 :                 clog(NodeTableEvent) &lt;&lt; &quot;performing random discovery&quot;;</span>
+<span class="lineNum">     573 </span><span class="lineNoCov">          0 :                 NodeID randNodeId;</span>
+<span class="lineNum">     574 </span><span class="lineNoCov">          0 :                 crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(0, h256::size));</span>
+<span class="lineNum">     575 </span><span class="lineNoCov">          0 :                 crypto::Nonce::get().ref().copyTo(randNodeId.ref().cropped(h256::size, h256::size));</span>
+<span class="lineNum">     576 </span><span class="lineNoCov">          0 :                 doDiscover(randNodeId);</span>
+<span class="lineNum">     577 </span><span class="lineCov">         22 :         });</span>
+<a name="578"><span class="lineNum">     578 </span><span class="lineCov">         22 : }</span></a>
+<span class="lineNum">     579 </span>            : 
+<span class="lineNum">     580 </span><span class="lineCov">         58 : unique_ptr&lt;DiscoveryDatagram&gt; DiscoveryDatagram::interpretUDP(bi::udp::endpoint const&amp; _from, bytesConstRef _packet)</span>
+<span class="lineNum">     581 </span>            : {
+<span class="lineNum">     582 </span><span class="lineCov">         58 :         unique_ptr&lt;DiscoveryDatagram&gt; decoded;</span>
+<span class="lineNum">     583 </span>            :         // h256 + Signature + type + RLP (smallest possible packet is empty neighbours packet which is 3 bytes)
+<span class="lineNum">     584 </span><span class="lineCov">         58 :         if (_packet.size() &lt; h256::size + Signature::size + 1 + 3)</span>
+<span class="lineNum">     585 </span>            :         {
+<span class="lineNum">     586 </span><span class="lineNoCov">          0 :                 clog(NodeTableWarn) &lt;&lt; &quot;Invalid packet (too small) from &quot; &lt;&lt; _from.address().to_string() &lt;&lt; &quot;:&quot; &lt;&lt; _from.port();</span>
+<span class="lineNum">     587 </span><span class="lineNoCov">          0 :                 return decoded;</span>
+<span class="lineNum">     588 </span>            :         }
+<span class="lineNum">     589 </span><span class="lineCov">        116 :         bytesConstRef hashedBytes(_packet.cropped(h256::size, _packet.size() - h256::size));</span>
+<span class="lineNum">     590 </span><span class="lineCov">        116 :         bytesConstRef signedBytes(hashedBytes.cropped(Signature::size, hashedBytes.size() - Signature::size));</span>
+<span class="lineNum">     591 </span><span class="lineCov">         58 :         bytesConstRef signatureBytes(_packet.cropped(h256::size, Signature::size));</span>
+<span class="lineNum">     592 </span><span class="lineCov">         58 :         bytesConstRef bodyBytes(_packet.cropped(h256::size + Signature::size + 1));</span>
+<span class="lineNum">     593 </span>            : 
+<span class="lineNum">     594 </span>            :         h256 echo(sha3(hashedBytes));
+<span class="lineNum">     595 </span><span class="lineCov">        174 :         if (!_packet.cropped(0, h256::size).contentsEqual(echo.asBytes()))</span>
+<span class="lineNum">     596 </span>            :         {
+<span class="lineNum">     597 </span><span class="lineNoCov">          0 :                 clog(NodeTableWarn) &lt;&lt; &quot;Invalid packet (bad hash) from &quot; &lt;&lt; _from.address().to_string() &lt;&lt; &quot;:&quot; &lt;&lt; _from.port();</span>
+<span class="lineNum">     598 </span><span class="lineNoCov">          0 :                 return decoded;</span>
+<span class="lineNum">     599 </span>            :         }
+<span class="lineNum">     600 </span><span class="lineCov">         58 :         Public sourceid(dev::recover(*(Signature const*)signatureBytes.data(), sha3(signedBytes)));</span>
+<span class="lineNum">     601 </span><span class="lineCov">         58 :         if (!sourceid)</span>
+<span class="lineNum">     602 </span>            :         {
+<span class="lineNum">     603 </span><span class="lineNoCov">          0 :                 clog(NodeTableWarn) &lt;&lt; &quot;Invalid packet (bad signature) from &quot; &lt;&lt; _from.address().to_string() &lt;&lt; &quot;:&quot; &lt;&lt; _from.port();</span>
+<span class="lineNum">     604 </span><span class="lineNoCov">          0 :                 return decoded;</span>
+<span class="lineNum">     605 </span>            :         }
+<span class="lineNum">     606 </span><span class="lineCov">         58 :         switch (signedBytes[0])</span>
+<span class="lineNum">     607 </span>            :         {
+<span class="lineNum">     608 </span>            :         case PingNode::type:
+<span class="lineNum">     609 </span><span class="lineCov">         28 :                 decoded.reset(new PingNode(_from, sourceid, echo));</span>
+<span class="lineNum">     610 </span>            :                 break;
+<span class="lineNum">     611 </span>            :         case Pong::type:
+<span class="lineNum">     612 </span><span class="lineCov">         27 :                 decoded.reset(new Pong(_from, sourceid, echo));</span>
+<span class="lineNum">     613 </span>            :                 break;
+<span class="lineNum">     614 </span>            :         case FindNode::type:
+<span class="lineNum">     615 </span><span class="lineCov">          1 :                 decoded.reset(new FindNode(_from, sourceid, echo));</span>
+<span class="lineNum">     616 </span>            :                 break;
+<span class="lineNum">     617 </span>            :         case Neighbours::type:
+<span class="lineNum">     618 </span><span class="lineCov">          4 :                 decoded.reset(new Neighbours(_from, sourceid, echo));</span>
+<span class="lineNum">     619 </span>            :                 break;
+<span class="lineNum">     620 </span>            :         default:
+<span class="lineNum">     621 </span><span class="lineNoCov">          0 :                 clog(NodeTableWarn) &lt;&lt; &quot;Invalid packet (unknown packet type) from &quot; &lt;&lt; _from.address().to_string() &lt;&lt; &quot;:&quot; &lt;&lt; _from.port();</span>
+<span class="lineNum">     622 </span><span class="lineNoCov">          0 :                 return decoded;</span>
+<span class="lineNum">     623 </span>            :         }
+<a name="624"><span class="lineNum">     624 </span><span class="lineCov">         58 :         decoded-&gt;interpretRLP(bodyBytes);</span></a>
+<span class="lineNum">     625 </span>            :         return decoded;
+<span class="lineNum">     626 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

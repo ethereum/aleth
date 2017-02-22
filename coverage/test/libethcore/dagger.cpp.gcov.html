@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libethcore/dagger.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libethcore</a> - dagger.cpp<span style="font-size: 80%;"> (source / <a href="dagger.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">28</td>
+            <td class="headerCovTableEntry">28</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file dagger.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  * Dashimoto test functions.
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;fstream&gt;
+<span class="lineNum">      24 </span>            : #include &lt;json_spirit/JsonSpiritHeaders.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libdevcore/CommonIO.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libethashseal/Ethash.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libethashseal/EthashAux.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/test/unit_test.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;test/TestHelper.h&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : using namespace std;
+<span class="lineNum">      32 </span>            : using namespace dev;
+<span class="lineNum">      33 </span>            : using namespace dev::eth;
+<span class="lineNum">      34 </span>            : using namespace dev::test;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : namespace js = json_spirit;
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : using dev::operator &lt;&lt;;
+<span class="lineNum">      39 </span>            : 
+<a name="40"><span class="lineNum">      40 </span><span class="lineCov">          3 : BOOST_FIXTURE_TEST_SUITE(DashimotoTests, TestOutputHelper)</span></a>
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span><span class="lineCov">         27 : BOOST_AUTO_TEST_CASE(basic_test)</span>
+<span class="lineNum">      43 </span>            : {
+<span class="lineNum">      44 </span><span class="lineCov">          2 :         string testPath = test::getTestPath();</span>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span><span class="lineCov">          1 :         testPath += &quot;/PoWTests&quot;;</span>
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span><span class="lineCov">          1 :         cnote &lt;&lt; &quot;Testing Proof of Work...&quot;;</span>
+<span class="lineNum">      49 </span><span class="lineCov">          2 :         js::mValue v;</span>
+<span class="lineNum">      50 </span><span class="lineCov">          3 :         string s = contentsString(testPath + &quot;/ethash_tests.json&quot;);</span>
+<span class="lineNum">      51 </span><span class="lineCov">          7 :         BOOST_REQUIRE_MESSAGE(s.length() &gt; 0, &quot;Contents of 'ethash_tests.json' is empty. Have you cloned the 'tests' repo branch develop?&quot;);</span>
+<span class="lineNum">      52 </span><span class="lineCov">          1 :         js::read_string(s, v);</span>
+<span class="lineNum">      53 </span><span class="lineCov">          5 :         for (auto&amp; i: v.get_obj())</span>
+<span class="lineNum">      54 </span>            :         {
+<span class="lineNum">      55 </span><span class="lineCov">          2 :                 cnote &lt;&lt; i.first;</span>
+<span class="lineNum">      56 </span><span class="lineCov">          2 :                 js::mObject&amp; o = i.second.get_obj();</span>
+<span class="lineNum">      57 </span><span class="lineCov">          4 :                 vector&lt;pair&lt;string, string&gt;&gt; ss;</span>
+<span class="lineNum">      58 </span><span class="lineCov">         14 :                 BlockHeader header(fromHex(o[&quot;header&quot;].get_str()), HeaderData);</span>
+<span class="lineNum">      59 </span><span class="lineCov">          6 :                 h256 headerHash(o[&quot;header_hash&quot;].get_str());</span>
+<span class="lineNum">      60 </span><span class="lineCov">          6 :                 Nonce nonce(o[&quot;nonce&quot;].get_str());</span>
+<span class="lineNum">      61 </span><span class="lineCov">         10 :                 BOOST_REQUIRE_EQUAL(headerHash, header.hash(WithoutSeal));</span>
+<span class="lineNum">      62 </span><span class="lineCov">         12 :                 BOOST_REQUIRE_EQUAL(nonce, Ethash::nonce(header));</span>
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span><span class="lineCov">          6 :                 unsigned cacheSize(o[&quot;cache_size&quot;].get_int());</span>
+<span class="lineNum">      65 </span><span class="lineCov">          6 :                 h256 cacheHash(o[&quot;cache_hash&quot;].get_str());</span>
+<span class="lineNum">      66 </span><span class="lineCov">         12 :                 BOOST_REQUIRE_EQUAL(EthashAux::get()-&gt;light(Ethash::seedHash(header))-&gt;size, cacheSize);</span>
+<span class="lineNum">      67 </span><span class="lineCov">         14 :                 BOOST_REQUIRE_EQUAL(sha3(EthashAux::get()-&gt;light(Ethash::seedHash(header))-&gt;data()), cacheHash);</span>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : #if TEST_FULL
+<span class="lineNum">      70 </span>            :                 unsigned fullSize(o[&quot;full_size&quot;].get_int());
+<span class="lineNum">      71 </span>            :                 h256 fullHash(o[&quot;full_hash&quot;].get_str());
+<span class="lineNum">      72 </span>            :                 BOOST_REQUIRE_EQUAL(EthashAux::get()-&gt;full(Ethash::seedHash(header))-&gt;size(), fullSize);
+<span class="lineNum">      73 </span>            :                 BOOST_REQUIRE_EQUAL(sha3(EthashAux::get()-&gt;full(Ethash::seedHash(header))-&gt;data()), fullHash);
+<span class="lineNum">      74 </span>            : #endif
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">          8 :                 h256 result(o[&quot;result&quot;].get_str());</span>
+<span class="lineNum">      77 </span><span class="lineCov">          2 :                 EthashProofOfWork::Result r = EthashAux::eval(Ethash::seedHash(header), header.hash(WithoutSeal), Ethash::nonce(header));</span>
+<span class="lineNum">      78 </span><span class="lineCov">          6 :                 BOOST_REQUIRE_EQUAL(r.value, result);</span>
+<span class="lineNum">      79 </span><span class="lineCov">         12 :                 BOOST_REQUIRE_EQUAL(r.mixHash, Ethash::mixHash(header));</span>
+<span class="lineNum">      80 </span>            :         }
+<a name="81"><span class="lineNum">      81 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span><span class="lineCov">          3 : BOOST_AUTO_TEST_SUITE_END()</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

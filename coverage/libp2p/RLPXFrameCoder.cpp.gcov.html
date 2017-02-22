@@ -1,0 +1,366 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libp2p/RLPXFrameCoder.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libp2p</a> - RLPXFrameCoder.cpp<span style="font-size: 80%;"> (source / <a href="RLPXFrameCoder.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">154</td>
+            <td class="headerCovTableEntry">155</td>
+            <td class="headerCovTableEntryHi">99.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :  This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            :  
+<span class="lineNum">       4 </span>            :  cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :  it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :  the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :  (at your option) any later version.
+<span class="lineNum">       8 </span>            :  
+<span class="lineNum">       9 </span>            :  cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :  but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :  GNU General Public License for more details.
+<span class="lineNum">      13 </span>            :  
+<span class="lineNum">      14 </span>            :  You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :  along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            :  */
+<span class="lineNum">      17 </span>            : /** @file RLPXFrameCoder.cpp
+<span class="lineNum">      18 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;RLPXFrameCoder.h&quot;
+<span class="lineNum">      23 </span>            : #include &lt;cryptopp/aes.h&gt;
+<span class="lineNum">      24 </span>            : #include &lt;cryptopp/keccak.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;cryptopp/modes.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libdevcore/Assertions.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libdevcore/SHA3.h&gt;
+<span class="lineNum">      28 </span>            : #include &quot;RLPxHandshake.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;RLPXPacket.h&quot;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : static_assert(CRYPTOPP_VERSION == 570, &quot;Wrong Crypto++ version&quot;);
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : using namespace std;
+<span class="lineNum">      34 </span>            : using namespace dev;
+<span class="lineNum">      35 </span>            : using namespace dev::p2p;
+<a name="36"><span class="lineNum">      36 </span>            : using namespace CryptoPP;</a>
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span><span class="lineCov">       2714 : RLPXFrameInfo::RLPXFrameInfo(bytesConstRef _header):</span>
+<span class="lineNum">      39 </span><span class="lineCov">       2714 :         length((_header[0] * 256 + _header[1]) * 256 + _header[2]),</span>
+<span class="lineNum">      40 </span>            :         padding((16 - (length % 16)) % 16),
+<span class="lineNum">      41 </span><span class="lineCov">       2714 :         data(_header.cropped(3).toBytes()),</span>
+<span class="lineNum">      42 </span>            :         header(RLP(data, RLP::ThrowOnFail | RLP::FailIfTooSmall)),
+<span class="lineNum">      43 </span><span class="lineCov">       5428 :         protocolId(header[0].toInt&lt;uint16_t&gt;()),</span>
+<span class="lineNum">      44 </span><span class="lineCov">       2714 :         multiFrame(header.itemCount() &gt; 1),</span>
+<span class="lineNum">      45 </span><span class="lineCov">       7024 :         sequenceId(multiFrame ? header[1].toInt&lt;uint16_t&gt;() : 0),</span>
+<span class="lineNum">      46 </span><span class="lineCov">      18998 :         totalLength(header.itemCount() == 3 ? header[2].toInt&lt;uint32_t&gt;() : 0)</span>
+<span class="lineNum">      47 </span><span class="lineCov">       2714 : {}</span>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : namespace dev
+<span class="lineNum">      50 </span>            : {
+<a name="51"><span class="lineNum">      51 </span>            : namespace p2p</a>
+<span class="lineNum">      52 </span>            : {
+<span class="lineNum">      53 </span><span class="lineCov">        754 : class RLPXFrameCoderImpl</span>
+<span class="lineNum">      54 </span>            : {
+<span class="lineNum">      55 </span>            : public:
+<span class="lineNum">      56 </span>            :         /// Update state of _mac.
+<span class="lineNum">      57 </span>            :         void updateMAC(CryptoPP::Keccak_256&amp; _mac, bytesConstRef _seed = {});
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            :         CryptoPP::SecByteBlock frameEncKey;                                             ///&lt; Key for m_frameEnc
+<span class="lineNum">      60 </span>            :         CryptoPP::CTR_Mode&lt;CryptoPP::AES&gt;::Encryption frameEnc;   ///&lt; Encoder for egress plaintext.
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            :         CryptoPP::SecByteBlock frameDecKey;                                             ///&lt; Key for m_frameDec
+<span class="lineNum">      63 </span>            :         CryptoPP::CTR_Mode&lt;CryptoPP::AES&gt;::Encryption frameDec;   ///&lt; Decoder for egress plaintext.
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            :         CryptoPP::SecByteBlock macEncKey;                                               /// Key for m_macEnd
+<span class="lineNum">      66 </span>            :         CryptoPP::ECB_Mode&lt;CryptoPP::AES&gt;::Encryption macEnc;     /// One-way coder used by updateMAC for ingress and egress MAC updates.
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            :         CryptoPP::Keccak_256 egressMac;         ///&lt; State of MAC for egress ciphertext.
+<span class="lineNum">      69 </span>            :         CryptoPP::Keccak_256 ingressMac;        ///&lt; State of MAC for ingress ciphertext.
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            : private:
+<span class="lineNum">      72 </span>            :         Mutex x_macEnc;  ///&lt; Mutex.
+<span class="lineNum">      73 </span>            : };
+<span class="lineNum">      74 </span>            : }
+<a name="75"><span class="lineNum">      75 </span>            : }</a>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">         58 : RLPXFrameCoder::~RLPXFrameCoder()</span>
+<a name="78"><span class="lineNum">      78 </span><span class="lineCov">         58 : {}</span></a>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineCov">         44 : RLPXFrameCoder::RLPXFrameCoder(RLPXHandshake const&amp; _init):</span>
+<span class="lineNum">      81 </span><span class="lineCov">         88 :         m_impl(new RLPXFrameCoderImpl)</span>
+<span class="lineNum">      82 </span>            : {
+<span class="lineNum">      83 </span><span class="lineCov">        132 :         setup(_init.m_originated, _init.m_remoteEphemeral, _init.m_remoteNonce, _init.m_ecdhe, _init.m_nonce, &amp;_init.m_ackCipher, &amp;_init.m_authCipher);</span>
+<a name="84"><span class="lineNum">      84 </span><span class="lineCov">         44 : }</span></a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">         14 : RLPXFrameCoder::RLPXFrameCoder(bool _originated, h512 const&amp; _remoteEphemeral, h256 const&amp; _remoteNonce, crypto::ECDHE const&amp; _ecdhe, h256 const&amp; _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher):</span>
+<span class="lineNum">      87 </span><span class="lineCov">         28 :         m_impl(new RLPXFrameCoderImpl)</span>
+<span class="lineNum">      88 </span>            : {
+<span class="lineNum">      89 </span><span class="lineCov">         14 :         setup(_originated, _remoteEphemeral, _remoteNonce, _ecdhe, _nonce, _ackCipher, _authCipher);</span>
+<a name="90"><span class="lineNum">      90 </span><span class="lineCov">         14 : }</span></a>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineCov">         58 : void RLPXFrameCoder::setup(bool _originated, h512 const&amp; _remoteEphemeral, h256 const&amp; _remoteNonce, crypto::ECDHE const&amp; _ecdhe, h256 const&amp; _nonce, bytesConstRef _ackCipher, bytesConstRef _authCipher)</span>
+<span class="lineNum">      93 </span>            : {
+<span class="lineNum">      94 </span><span class="lineCov">        174 :         bytes keyMaterialBytes(64);</span>
+<span class="lineNum">      95 </span><span class="lineCov">         58 :         bytesRef keyMaterial(&amp;keyMaterialBytes);</span>
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            :         // shared-secret = sha3(ecdhe-shared-secret || sha3(nonce || initiator-nonce))
+<span class="lineNum">      98 </span><span class="lineCov">        116 :         Secret ephemeralShared;</span>
+<span class="lineNum">      99 </span><span class="lineCov">         58 :         _ecdhe.agree(_remoteEphemeral, ephemeralShared);</span>
+<span class="lineNum">     100 </span><span class="lineCov">        116 :         ephemeralShared.ref().copyTo(keyMaterial.cropped(0, h256::size));</span>
+<span class="lineNum">     101 </span><span class="lineCov">         58 :         h512 nonceMaterial;</span>
+<span class="lineNum">     102 </span><span class="lineCov">         58 :         h256 const&amp; leftNonce = _originated ? _remoteNonce : _nonce;</span>
+<span class="lineNum">     103 </span><span class="lineCov">         58 :         h256 const&amp; rightNonce = _originated ? _nonce : _remoteNonce;</span>
+<span class="lineNum">     104 </span><span class="lineCov">        174 :         leftNonce.ref().copyTo(nonceMaterial.ref().cropped(0, h256::size));</span>
+<span class="lineNum">     105 </span><span class="lineCov">        116 :         rightNonce.ref().copyTo(nonceMaterial.ref().cropped(h256::size, h256::size));</span>
+<span class="lineNum">     106 </span><span class="lineCov">         58 :         auto outRef(keyMaterial.cropped(h256::size, h256::size));</span>
+<span class="lineNum">     107 </span><span class="lineCov">        116 :         sha3(nonceMaterial.ref(), outRef); // output h(nonces)</span>
+<span class="lineNum">     108 </span>            :         
+<span class="lineNum">     109 </span><span class="lineCov">         58 :         sha3(keyMaterial, outRef); // output shared-secret</span>
+<span class="lineNum">     110 </span>            :         // token: sha3(outRef, bytesRef(&amp;token)); -&gt; m_host (to be saved to disk)
+<span class="lineNum">     111 </span>            :         
+<span class="lineNum">     112 </span>            :         // aes-secret = sha3(ecdhe-shared-secret || shared-secret)
+<span class="lineNum">     113 </span><span class="lineCov">         58 :         sha3(keyMaterial, outRef); // output aes-secret</span>
+<span class="lineNum">     114 </span><span class="lineCov">        174 :         m_impl-&gt;frameEncKey.resize(h256::size);</span>
+<span class="lineNum">     115 </span><span class="lineCov">        174 :         memcpy(m_impl-&gt;frameEncKey.data(), outRef.data(), h256::size);</span>
+<span class="lineNum">     116 </span><span class="lineCov">        174 :         m_impl-&gt;frameDecKey.resize(h256::size);</span>
+<span class="lineNum">     117 </span><span class="lineCov">        174 :         memcpy(m_impl-&gt;frameDecKey.data(), outRef.data(), h256::size);</span>
+<span class="lineNum">     118 </span><span class="lineCov">         58 :         h128 iv;</span>
+<span class="lineNum">     119 </span><span class="lineCov">        174 :         m_impl-&gt;frameEnc.SetKeyWithIV(m_impl-&gt;frameEncKey, h256::size, iv.data());</span>
+<span class="lineNum">     120 </span><span class="lineCov">        174 :         m_impl-&gt;frameDec.SetKeyWithIV(m_impl-&gt;frameDecKey, h256::size, iv.data());</span>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :         // mac-secret = sha3(ecdhe-shared-secret || aes-secret)
+<span class="lineNum">     123 </span><span class="lineCov">         58 :         sha3(keyMaterial, outRef); // output mac-secret</span>
+<span class="lineNum">     124 </span><span class="lineCov">        174 :         m_impl-&gt;macEncKey.resize(h256::size);</span>
+<span class="lineNum">     125 </span><span class="lineCov">        174 :         memcpy(m_impl-&gt;macEncKey.data(), outRef.data(), h256::size);</span>
+<span class="lineNum">     126 </span><span class="lineCov">        232 :         m_impl-&gt;macEnc.SetKey(m_impl-&gt;macEncKey, h256::size);</span>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            :         // Initiator egress-mac: sha3(mac-secret^recipient-nonce || auth-sent-init)
+<span class="lineNum">     129 </span>            :         //           ingress-mac: sha3(mac-secret^initiator-nonce || auth-recvd-ack)
+<span class="lineNum">     130 </span>            :         // Recipient egress-mac: sha3(mac-secret^initiator-nonce || auth-sent-ack)
+<span class="lineNum">     131 </span>            :         //           ingress-mac: sha3(mac-secret^recipient-nonce || auth-recvd-init)
+<span class="lineNum">     132 </span>            :  
+<span class="lineNum">     133 </span><span class="lineCov">         58 :         (*(h256*)outRef.data() ^ _remoteNonce).ref().copyTo(keyMaterial);</span>
+<span class="lineNum">     134 </span><span class="lineCov">         58 :         bytesConstRef egressCipher = _originated ? _authCipher : _ackCipher;</span>
+<span class="lineNum">     135 </span><span class="lineCov">         58 :         keyMaterialBytes.resize(h256::size + egressCipher.size());</span>
+<span class="lineNum">     136 </span><span class="lineCov">        232 :         keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());</span>
+<span class="lineNum">     137 </span><span class="lineCov">        116 :         egressCipher.copyTo(keyMaterial.cropped(h256::size, egressCipher.size()));</span>
+<span class="lineNum">     138 </span><span class="lineCov">        116 :         m_impl-&gt;egressMac.Update(keyMaterial.data(), keyMaterial.size());</span>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :         // recover mac-secret by re-xoring remoteNonce
+<span class="lineNum">     141 </span><span class="lineCov">        116 :         (*(h256*)keyMaterial.data() ^ _remoteNonce ^ _nonce).ref().copyTo(keyMaterial);</span>
+<span class="lineNum">     142 </span><span class="lineCov">         58 :         bytesConstRef ingressCipher = _originated ? _ackCipher : _authCipher;</span>
+<span class="lineNum">     143 </span><span class="lineCov">         58 :         keyMaterialBytes.resize(h256::size + ingressCipher.size());</span>
+<span class="lineNum">     144 </span><span class="lineCov">        232 :         keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());</span>
+<span class="lineNum">     145 </span><span class="lineCov">        116 :         ingressCipher.copyTo(keyMaterial.cropped(h256::size, ingressCipher.size()));</span>
+<span class="lineNum">     146 </span><span class="lineCov">        116 :         m_impl-&gt;ingressMac.Update(keyMaterial.data(), keyMaterial.size());</span>
+<a name="147"><span class="lineNum">     147 </span><span class="lineCov">         58 : }</span></a>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">        559 : void RLPXFrameCoder::writeFrame(uint16_t _protocolType, bytesConstRef _payload, bytes&amp; o_bytes)</span>
+<span class="lineNum">     150 </span>            : {
+<span class="lineNum">     151 </span><span class="lineCov">       1118 :         RLPStream header;</span>
+<span class="lineNum">     152 </span><span class="lineCov">        559 :         uint32_t len = (uint32_t)_payload.size();</span>
+<span class="lineNum">     153 </span><span class="lineCov">       2236 :         header.appendRaw(bytes({byte((len &gt;&gt; 16) &amp; 0xff), byte((len &gt;&gt; 8) &amp; 0xff), byte(len &amp; 0xff)}));</span>
+<span class="lineNum">     154 </span><span class="lineCov">       1118 :         header.appendList(1) &lt;&lt; _protocolType;</span>
+<span class="lineNum">     155 </span><span class="lineCov">        559 :         writeFrame(header, _payload, o_bytes);</span>
+<a name="156"><span class="lineNum">     156 </span><span class="lineCov">        559 : }</span></a>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineCov">       1225 : void RLPXFrameCoder::writeFrame(uint16_t _protocolType, uint16_t _seqId, bytesConstRef _payload, bytes&amp; o_bytes)</span>
+<span class="lineNum">     159 </span>            : {
+<span class="lineNum">     160 </span><span class="lineCov">       2450 :         RLPStream header;</span>
+<span class="lineNum">     161 </span><span class="lineCov">       1225 :         uint32_t len = (uint32_t)_payload.size();</span>
+<span class="lineNum">     162 </span><span class="lineCov">       4900 :         header.appendRaw(bytes({byte((len &gt;&gt; 16) &amp; 0xff), byte((len &gt;&gt; 8) &amp; 0xff), byte(len &amp; 0xff)}));</span>
+<span class="lineNum">     163 </span><span class="lineCov">       3675 :         header.appendList(2) &lt;&lt; _protocolType &lt;&lt; _seqId;</span>
+<span class="lineNum">     164 </span><span class="lineCov">       1225 :         writeFrame(header, _payload, o_bytes);</span>
+<a name="165"><span class="lineNum">     165 </span><span class="lineCov">       1225 : }</span></a>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span><span class="lineCov">        806 : void RLPXFrameCoder::writeFrame(uint16_t _protocolType, uint16_t _seqId, uint32_t _totalSize, bytesConstRef _payload, bytes&amp; o_bytes)</span>
+<span class="lineNum">     168 </span>            : {
+<span class="lineNum">     169 </span><span class="lineCov">       1612 :         RLPStream header;</span>
+<span class="lineNum">     170 </span><span class="lineCov">        806 :         uint32_t len = (uint32_t)_payload.size();</span>
+<span class="lineNum">     171 </span><span class="lineCov">       3224 :         header.appendRaw(bytes({byte((len &gt;&gt; 16) &amp; 0xff), byte((len &gt;&gt; 8) &amp; 0xff), byte(len &amp; 0xff)}));</span>
+<span class="lineNum">     172 </span><span class="lineCov">       3224 :         header.appendList(3) &lt;&lt; _protocolType &lt;&lt; _seqId &lt;&lt; _totalSize;</span>
+<span class="lineNum">     173 </span><span class="lineCov">        806 :         writeFrame(header, _payload, o_bytes);</span>
+<a name="174"><span class="lineNum">     174 </span><span class="lineCov">        806 : }</span></a>
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span><span class="lineCov">       2772 : void RLPXFrameCoder::writeFrame(RLPStream const&amp; _header, bytesConstRef _payload, bytes&amp; o_bytes)</span>
+<span class="lineNum">     177 </span>            : {
+<span class="lineNum">     178 </span>            :         // TODO: SECURITY check header values &amp;&amp; header &lt;= 16 bytes
+<span class="lineNum">     179 </span><span class="lineCov">       8316 :         bytes headerWithMac(h256::size);</span>
+<span class="lineNum">     180 </span><span class="lineCov">       5544 :         bytesConstRef(&amp;_header.out()).copyTo(bytesRef(&amp;headerWithMac));</span>
+<span class="lineNum">     181 </span><span class="lineCov">      11088 :         m_impl-&gt;frameEnc.ProcessData(headerWithMac.data(), headerWithMac.data(), 16);</span>
+<span class="lineNum">     182 </span><span class="lineCov">       5544 :         updateEgressMACWithHeader(bytesConstRef(&amp;headerWithMac).cropped(0, 16));</span>
+<span class="lineNum">     183 </span><span class="lineCov">       8316 :         egressDigest().ref().copyTo(bytesRef(&amp;headerWithMac).cropped(h128::size,h128::size));</span>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span><span class="lineCov">       2772 :         auto padding = (16 - (_payload.size() % 16)) % 16;</span>
+<span class="lineNum">     186 </span><span class="lineCov">       2772 :         o_bytes.swap(headerWithMac);</span>
+<span class="lineNum">     187 </span><span class="lineCov">       2772 :         o_bytes.resize(32 + _payload.size() + padding + h128::size);</span>
+<span class="lineNum">     188 </span><span class="lineCov">       8316 :         bytesRef packetRef(o_bytes.data() + 32, _payload.size());</span>
+<span class="lineNum">     189 </span><span class="lineCov">       5544 :         m_impl-&gt;frameEnc.ProcessData(packetRef.data(), _payload.data(), _payload.size());</span>
+<span class="lineNum">     190 </span><span class="lineCov">       8316 :         bytesRef paddingRef(o_bytes.data() + 32 + _payload.size(), padding);</span>
+<span class="lineNum">     191 </span><span class="lineCov">       2772 :         if (padding)</span>
+<span class="lineNum">     192 </span><span class="lineCov">       3086 :                 m_impl-&gt;frameEnc.ProcessData(paddingRef.data(), paddingRef.data(), padding);</span>
+<span class="lineNum">     193 </span><span class="lineCov">       8316 :         bytesRef packetWithPaddingRef(o_bytes.data() + 32, _payload.size() + padding);</span>
+<span class="lineNum">     194 </span><span class="lineCov">       2772 :         updateEgressMACWithFrame(packetWithPaddingRef);</span>
+<span class="lineNum">     195 </span><span class="lineCov">       8316 :         bytesRef macRef(o_bytes.data() + 32 + _payload.size() + padding, h128::size);</span>
+<span class="lineNum">     196 </span><span class="lineCov">       5544 :         egressDigest().ref().copyTo(macRef);</span>
+<a name="197"><span class="lineNum">     197 </span><span class="lineCov">       2772 : }</span></a>
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span><span class="lineCov">        182 : void RLPXFrameCoder::writeSingleFramePacket(bytesConstRef _packet, bytes&amp; o_bytes)</span>
+<span class="lineNum">     200 </span>            : {
+<span class="lineNum">     201 </span><span class="lineCov">        364 :         RLPStream header;</span>
+<span class="lineNum">     202 </span><span class="lineCov">        182 :         uint32_t len = (uint32_t)_packet.size();</span>
+<span class="lineNum">     203 </span><span class="lineCov">        728 :         header.appendRaw(bytes({byte((len &gt;&gt; 16) &amp; 0xff), byte((len &gt;&gt; 8) &amp; 0xff), byte(len &amp; 0xff)}));</span>
+<span class="lineNum">     204 </span><span class="lineCov">        728 :         header.appendRaw(bytes({0xc2,0x80,0x80}));</span>
+<span class="lineNum">     205 </span><span class="lineCov">        182 :         writeFrame(header, _packet, o_bytes);</span>
+<a name="206"><span class="lineNum">     206 </span><span class="lineCov">        182 : }</span></a>
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span><span class="lineCov">       2752 : bool RLPXFrameCoder::authAndDecryptHeader(bytesRef io)</span>
+<span class="lineNum">     209 </span>            : {
+<span class="lineNum">     210 </span><span class="lineCov">       2752 :         asserts(io.size() == h256::size);</span>
+<span class="lineNum">     211 </span><span class="lineCov">       2752 :         updateIngressMACWithHeader(io);</span>
+<span class="lineNum">     212 </span><span class="lineCov">       5504 :         bytesConstRef macRef = io.cropped(h128::size, h128::size);</span>
+<span class="lineNum">     213 </span><span class="lineCov">       2752 :         h128 expected = ingressDigest();</span>
+<span class="lineNum">     214 </span><span class="lineCov">       5504 :         if (*(h128*)macRef.data() != expected)</span>
+<span class="lineNum">     215 </span>            :                 return false;
+<span class="lineNum">     216 </span><span class="lineCov">       5504 :         m_impl-&gt;frameDec.ProcessData(io.data(), io.data(), h128::size);</span>
+<span class="lineNum">     217 </span>            :         return true;
+<a name="218"><span class="lineNum">     218 </span>            : }</a>
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span><span class="lineCov">       2752 : bool RLPXFrameCoder::authAndDecryptFrame(bytesRef io)</span>
+<span class="lineNum">     221 </span>            : {
+<span class="lineNum">     222 </span><span class="lineCov">       5504 :         bytesRef cipherText(io.cropped(0, io.size() - h128::size));</span>
+<span class="lineNum">     223 </span><span class="lineCov">       2752 :         updateIngressMACWithFrame(cipherText);</span>
+<span class="lineNum">     224 </span><span class="lineCov">       5504 :         bytesConstRef frameMac(io.data() + io.size() - h128::size, h128::size);</span>
+<span class="lineNum">     225 </span><span class="lineCov">       5504 :         if (*(h128*)frameMac.data() != ingressDigest())</span>
+<span class="lineNum">     226 </span>            :                 return false;
+<span class="lineNum">     227 </span><span class="lineCov">       5504 :         m_impl-&gt;frameDec.ProcessData(io.data(), io.data(), io.size() - h128::size);</span>
+<span class="lineNum">     228 </span>            :         return true;
+<a name="229"><span class="lineNum">     229 </span>            : }</a>
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span><span class="lineCov">       5544 : h128 RLPXFrameCoder::egressDigest()</span>
+<span class="lineNum">     232 </span>            : {
+<span class="lineNum">     233 </span><span class="lineCov">      22176 :         Keccak_256 h(m_impl-&gt;egressMac);</span>
+<span class="lineNum">     234 </span><span class="lineCov">       5544 :         h128 digest;</span>
+<span class="lineNum">     235 </span><span class="lineCov">       5544 :         h.TruncatedFinal(digest.data(), h128::size);</span>
+<span class="lineNum">     236 </span><span class="lineCov">      11088 :         return digest;</span>
+<a name="237"><span class="lineNum">     237 </span>            : }</a>
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span><span class="lineCov">       5504 : h128 RLPXFrameCoder::ingressDigest()</span>
+<span class="lineNum">     240 </span>            : {
+<span class="lineNum">     241 </span><span class="lineCov">      22016 :         Keccak_256 h(m_impl-&gt;ingressMac);</span>
+<span class="lineNum">     242 </span><span class="lineCov">       5504 :         h128 digest;</span>
+<span class="lineNum">     243 </span><span class="lineCov">       5504 :         h.TruncatedFinal(digest.data(), h128::size);</span>
+<span class="lineNum">     244 </span><span class="lineCov">      11008 :         return digest;</span>
+<a name="245"><span class="lineNum">     245 </span>            : }</a>
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span><span class="lineCov">       2772 : void RLPXFrameCoder::updateEgressMACWithHeader(bytesConstRef _headerCipher)</span>
+<span class="lineNum">     248 </span>            : {
+<span class="lineNum">     249 </span><span class="lineCov">       8316 :         m_impl-&gt;updateMAC(m_impl-&gt;egressMac, _headerCipher.cropped(0, 16));</span>
+<a name="250"><span class="lineNum">     250 </span><span class="lineCov">       2772 : }</span></a>
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span><span class="lineCov">       2772 : void RLPXFrameCoder::updateEgressMACWithFrame(bytesConstRef _cipher)</span>
+<span class="lineNum">     253 </span>            : {
+<span class="lineNum">     254 </span><span class="lineCov">       5544 :         m_impl-&gt;egressMac.Update(_cipher.data(), _cipher.size());</span>
+<span class="lineNum">     255 </span><span class="lineCov">       8316 :         m_impl-&gt;updateMAC(m_impl-&gt;egressMac);</span>
+<a name="256"><span class="lineNum">     256 </span><span class="lineCov">       2772 : }</span></a>
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span><span class="lineCov">       2752 : void RLPXFrameCoder::updateIngressMACWithHeader(bytesConstRef _headerCipher)</span>
+<span class="lineNum">     259 </span>            : {
+<span class="lineNum">     260 </span><span class="lineCov">       8256 :         m_impl-&gt;updateMAC(m_impl-&gt;ingressMac, _headerCipher.cropped(0, 16));</span>
+<a name="261"><span class="lineNum">     261 </span><span class="lineCov">       2752 : }</span></a>
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span><span class="lineCov">       2752 : void RLPXFrameCoder::updateIngressMACWithFrame(bytesConstRef _cipher)</span>
+<span class="lineNum">     264 </span>            : {
+<span class="lineNum">     265 </span><span class="lineCov">       5504 :         m_impl-&gt;ingressMac.Update(_cipher.data(), _cipher.size());</span>
+<span class="lineNum">     266 </span><span class="lineCov">       8256 :         m_impl-&gt;updateMAC(m_impl-&gt;ingressMac);</span>
+<a name="267"><span class="lineNum">     267 </span><span class="lineCov">       2752 : }</span></a>
+<span class="lineNum">     268 </span>            : 
+<span class="lineNum">     269 </span><span class="lineCov">      11047 : void RLPXFrameCoderImpl::updateMAC(Keccak_256&amp; _mac, bytesConstRef _seed)</span>
+<span class="lineNum">     270 </span>            : {
+<span class="lineNum">     271 </span><span class="lineCov">      11047 :         if (_seed.size() &amp;&amp; _seed.size() != h128::size)</span>
+<span class="lineNum">     272 </span><span class="lineNoCov">          0 :                 asserts(false);</span>
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span><span class="lineCov">      22096 :         Keccak_256 prevDigest(_mac);</span>
+<span class="lineNum">     275 </span><span class="lineCov">      11048 :         h128 encDigest(h128::size);</span>
+<span class="lineNum">     276 </span><span class="lineCov">      11048 :         prevDigest.TruncatedFinal(encDigest.data(), h128::size);</span>
+<span class="lineNum">     277 </span><span class="lineCov">      11048 :         h128 prevDigestOut = encDigest;</span>
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            :         {
+<span class="lineNum">     280 </span><span class="lineCov">      33144 :                 Guard l(x_macEnc);</span>
+<span class="lineNum">     281 </span><span class="lineCov">      22096 :                 macEnc.ProcessData(encDigest.data(), encDigest.data(), 16);</span>
+<span class="lineNum">     282 </span>            :         }
+<span class="lineNum">     283 </span><span class="lineCov">      11048 :         if (_seed.size())</span>
+<span class="lineNum">     284 </span><span class="lineCov">       5524 :                 encDigest ^= *(h128*)_seed.data();</span>
+<span class="lineNum">     285 </span>            :         else
+<span class="lineNum">     286 </span>            :                 encDigest ^= *(h128*)prevDigestOut.data();
+<span class="lineNum">     287 </span>            : 
+<a name="288"><span class="lineNum">     288 </span>            :         // update mac for final digest</a>
+<span class="lineNum">     289 </span><span class="lineCov">      22096 :         _mac.Update(encDigest.data(), h128::size);</span>
+<span class="lineNum">     290 </span><span class="lineCov">      11051 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

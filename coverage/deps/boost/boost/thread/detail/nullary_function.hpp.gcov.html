@@ -1,0 +1,310 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/thread/detail/nullary_function.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/thread/detail</a> - nullary_function.hpp<span style="font-size: 80%;"> (source / <a href="nullary_function.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Copyright (C) 2013 Vicente J. Botet Escriba</a>
+<span class="lineNum">       2 </span>            : //
+<span class="lineNum">       3 </span>            : //  Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       4 </span>            : //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : //
+<span class="lineNum">       6 </span>            : // 2013/09 Vicente J. Botet Escriba
+<span class="lineNum">       7 </span>            : //    Adapt to boost from CCIA C++11 implementation
+<span class="lineNum">       8 </span>            : //    Make use of Boost.Move
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #ifndef BOOST_THREAD_DETAIL_NULLARY_FUNCTION_HPP
+<span class="lineNum">      11 </span>            : #define BOOST_THREAD_DETAIL_NULLARY_FUNCTION_HPP
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/thread/detail/memory.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/thread/detail/move.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/thread/csbl/memory/shared_ptr.hpp&gt;
+<span class="lineNum">      17 </span>            : #include &lt;boost/type_traits/decay.hpp&gt;
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : namespace boost
+<span class="lineNum">      20 </span>            : {
+<span class="lineNum">      21 </span>            :   namespace detail
+<span class="lineNum">      22 </span>            :   {
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            :     template &lt;typename F&gt;
+<span class="lineNum">      25 </span>            :     class nullary_function;
+<span class="lineNum">      26 </span>            :     template &lt;&gt;
+<span class="lineNum">      27 </span>            :     class nullary_function&lt;void()&gt;
+<span class="lineNum">      28 </span>            :     {
+<span class="lineNum">      29 </span>            :       struct impl_base
+<span class="lineNum">      30 </span>            :       {
+<span class="lineNum">      31 </span>            :         virtual void call()=0;
+<span class="lineNum">      32 </span>            :         virtual ~impl_base()
+<span class="lineNum">      33 </span><span class="lineNoCov">          0 :         {</span>
+<span class="lineNum">      34 </span>            :         }
+<span class="lineNum">      35 </span>            :       };
+<a name="36"><span class="lineNum">      36 </span>            :       csbl::shared_ptr&lt;impl_base&gt; impl;</a>
+<span class="lineNum">      37 </span>            :       template &lt;typename F&gt;
+<span class="lineNum">      38 </span><span class="lineNoCov">          0 :       struct impl_type: impl_base</span>
+<span class="lineNum">      39 </span>            :       {
+<span class="lineNum">      40 </span>            :         F f;
+<span class="lineNum">      41 </span>            : #ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">      42 </span>            :         impl_type(F &amp;f_)
+<span class="lineNum">      43 </span>            :           : f(f_)
+<span class="lineNum">      44 </span>            :         {}
+<span class="lineNum">      45 </span>            : #endif
+<span class="lineNum">      46 </span>            :         impl_type(BOOST_THREAD_RV_REF(F) f_)
+<span class="lineNum">      47 </span>            :           : f(boost::move(f_))
+<a name="48"><span class="lineNum">      48 </span>            :         {}</a>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineNoCov">          0 :         void call()</span>
+<span class="lineNum">      51 </span>            :         {
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :           f();</span>
+<a name="53"><span class="lineNum">      53 </span><span class="lineNoCov">          0 :         }</span></a>
+<span class="lineNum">      54 </span>            :       };
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :       struct impl_type_ptr: impl_base</span>
+<span class="lineNum">      56 </span>            :       {
+<span class="lineNum">      57 </span>            :         void (*f)();
+<span class="lineNum">      58 </span>            :         impl_type_ptr(void (*f_)())
+<a name="59"><span class="lineNum">      59 </span>            :           : f(f_)</a>
+<span class="lineNum">      60 </span>            :         {}
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :         void call()</span>
+<span class="lineNum">      62 </span>            :         {
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :           f();</span>
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :         }</span>
+<span class="lineNum">      65 </span>            :       };
+<span class="lineNum">      66 </span>            :     public:
+<span class="lineNum">      67 </span>            :       BOOST_THREAD_COPYABLE_AND_MOVABLE(nullary_function)
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :       explicit nullary_function(void (*f)()):
+<span class="lineNum">      70 </span>            :       impl(new impl_type_ptr(f))
+<span class="lineNum">      71 </span>            :       {}
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : #ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">      74 </span>            :       template&lt;typename F&gt;
+<span class="lineNum">      75 </span>            :       explicit nullary_function(F&amp; f):
+<span class="lineNum">      76 </span>            :       impl(new impl_type&lt;F&gt;(f))
+<span class="lineNum">      77 </span>            :       {}
+<span class="lineNum">      78 </span>            : #endif
+<span class="lineNum">      79 </span>            :       template&lt;typename F&gt;
+<span class="lineNum">      80 </span>            :       nullary_function(BOOST_THREAD_RV_REF(F) f):
+<span class="lineNum">      81 </span>            :       impl(new impl_type&lt;typename decay&lt;F&gt;::type&gt;(thread_detail::decay_copy(boost::forward&lt;F&gt;(f))))
+<span class="lineNum">      82 </span>            :       {}
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            :       nullary_function()
+<span class="lineNum">      85 </span>            :         : impl()
+<span class="lineNum">      86 </span>            :       {
+<span class="lineNum">      87 </span>            :       }
+<span class="lineNum">      88 </span>            :       nullary_function(nullary_function const&amp; other) BOOST_NOEXCEPT :
+<span class="lineNum">      89 </span>            :       impl(other.impl)
+<span class="lineNum">      90 </span>            :       {
+<span class="lineNum">      91 </span>            :       }
+<span class="lineNum">      92 </span>            :       nullary_function(BOOST_THREAD_RV_REF(nullary_function) other) BOOST_NOEXCEPT :
+<span class="lineNum">      93 </span>            : #if defined BOOST_NO_CXX11_SMART_PTR
+<span class="lineNum">      94 </span>            :       impl(BOOST_THREAD_RV(other).impl)
+<span class="lineNum">      95 </span>            :       {
+<span class="lineNum">      96 </span>            :         BOOST_THREAD_RV(other).impl.reset();
+<span class="lineNum">      97 </span>            :       }
+<span class="lineNum">      98 </span>            : #else
+<span class="lineNum">      99 </span>            :       impl(boost::move(other.impl))
+<span class="lineNum">     100 </span>            :       {
+<span class="lineNum">     101 </span>            :       }
+<span class="lineNum">     102 </span>            : #endif
+<span class="lineNum">     103 </span>            :       ~nullary_function()
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :       {</span>
+<span class="lineNum">     105 </span>            :       }
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :       nullary_function&amp; operator=(BOOST_THREAD_COPY_ASSIGN_REF(nullary_function) other) BOOST_NOEXCEPT
+<span class="lineNum">     108 </span>            :       {
+<span class="lineNum">     109 </span>            :         impl=other.impl;
+<span class="lineNum">     110 </span>            :         return *this;
+<span class="lineNum">     111 </span>            :       }
+<span class="lineNum">     112 </span>            :       nullary_function&amp; operator=(BOOST_THREAD_RV_REF(nullary_function) other) BOOST_NOEXCEPT
+<span class="lineNum">     113 </span>            :       {
+<span class="lineNum">     114 </span>            : #if defined BOOST_NO_CXX11_SMART_PTR
+<span class="lineNum">     115 </span>            :         impl=BOOST_THREAD_RV(other).impl;
+<span class="lineNum">     116 </span>            :         BOOST_THREAD_RV(other).impl.reset();
+<span class="lineNum">     117 </span>            : #else
+<span class="lineNum">     118 </span>            :         impl = boost::move(other.impl);
+<span class="lineNum">     119 </span>            : #endif
+<span class="lineNum">     120 </span>            :         return *this;
+<span class="lineNum">     121 </span>            :       }
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :       void operator()()
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :       { if (impl) impl-&gt;call();}</span>
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span>            :     };
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            :     template &lt;typename R&gt;
+<span class="lineNum">     130 </span>            :     class nullary_function&lt;R()&gt;
+<span class="lineNum">     131 </span>            :     {
+<span class="lineNum">     132 </span>            :       struct impl_base
+<span class="lineNum">     133 </span>            :       {
+<span class="lineNum">     134 </span>            :         virtual R call()=0;
+<span class="lineNum">     135 </span>            :         virtual ~impl_base()
+<span class="lineNum">     136 </span>            :         {
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :         }</span>
+<span class="lineNum">     138 </span>            :       };
+<a name="139"><span class="lineNum">     139 </span>            :       csbl::shared_ptr&lt;impl_base&gt; impl;</a>
+<span class="lineNum">     140 </span>            :       template &lt;typename F&gt;
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :       struct impl_type: impl_base</span>
+<span class="lineNum">     142 </span>            :       {
+<span class="lineNum">     143 </span>            :         F f;
+<span class="lineNum">     144 </span>            : #ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">     145 </span>            :         impl_type(F &amp;f_)
+<span class="lineNum">     146 </span>            :           : f(f_)
+<span class="lineNum">     147 </span>            :         {}
+<span class="lineNum">     148 </span>            : #endif
+<span class="lineNum">     149 </span>            :         impl_type(BOOST_THREAD_RV_REF(F) f_)
+<span class="lineNum">     150 </span>            :           : f(boost::move(f_))
+<a name="151"><span class="lineNum">     151 </span>            :         {}</a>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :         R call()</span>
+<span class="lineNum">     154 </span>            :         {
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :           return f();</span>
+<span class="lineNum">     156 </span>            :         }
+<span class="lineNum">     157 </span>            :       };
+<span class="lineNum">     158 </span>            :       struct impl_type_ptr: impl_base
+<span class="lineNum">     159 </span>            :       {
+<span class="lineNum">     160 </span>            :         R (*f)();
+<span class="lineNum">     161 </span>            :         impl_type_ptr(R (*f_)())
+<span class="lineNum">     162 </span>            :           : f(f_)
+<span class="lineNum">     163 </span>            :         {}
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            :         R call()
+<span class="lineNum">     166 </span>            :         {
+<span class="lineNum">     167 </span>            :           return f();
+<span class="lineNum">     168 </span>            :         }
+<span class="lineNum">     169 </span>            :       };
+<span class="lineNum">     170 </span>            :     public:
+<span class="lineNum">     171 </span>            :       BOOST_THREAD_COPYABLE_AND_MOVABLE(nullary_function)
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :       nullary_function(R (*f)()):
+<span class="lineNum">     174 </span>            :       impl(new impl_type_ptr(f))
+<span class="lineNum">     175 </span>            :       {}
+<span class="lineNum">     176 </span>            : #ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
+<span class="lineNum">     177 </span>            :       template&lt;typename F&gt;
+<span class="lineNum">     178 </span>            :       nullary_function(F&amp; f):
+<span class="lineNum">     179 </span>            :       impl(new impl_type&lt;F&gt;(f))
+<span class="lineNum">     180 </span>            :       {}
+<span class="lineNum">     181 </span>            : #endif
+<span class="lineNum">     182 </span>            :       template&lt;typename F&gt;
+<span class="lineNum">     183 </span>            :       nullary_function(BOOST_THREAD_RV_REF(F) f):
+<span class="lineNum">     184 </span>            :       impl(new impl_type&lt;typename decay&lt;F&gt;::type&gt;(thread_detail::decay_copy(boost::forward&lt;F&gt;(f))))
+<span class="lineNum">     185 </span>            :       {}
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :       nullary_function(nullary_function const&amp; other) BOOST_NOEXCEPT :
+<span class="lineNum">     188 </span>            :       impl(other.impl)
+<span class="lineNum">     189 </span>            :       {
+<span class="lineNum">     190 </span>            :       }
+<span class="lineNum">     191 </span>            :       nullary_function(BOOST_THREAD_RV_REF(nullary_function) other) BOOST_NOEXCEPT :
+<span class="lineNum">     192 </span>            : #if defined BOOST_NO_CXX11_SMART_PTR
+<span class="lineNum">     193 </span>            :       impl(BOOST_THREAD_RV(other).impl)
+<span class="lineNum">     194 </span>            :       {
+<span class="lineNum">     195 </span>            :         BOOST_THREAD_RV(other).impl.reset();
+<span class="lineNum">     196 </span>            :       }
+<span class="lineNum">     197 </span>            : #else
+<span class="lineNum">     198 </span>            :       impl(boost::move(other.impl))
+<span class="lineNum">     199 </span>            :       {
+<span class="lineNum">     200 </span>            :       }
+<span class="lineNum">     201 </span>            : #endif
+<span class="lineNum">     202 </span>            :       nullary_function()
+<span class="lineNum">     203 </span>            :         : impl()
+<span class="lineNum">     204 </span>            :       {
+<span class="lineNum">     205 </span>            :       }
+<span class="lineNum">     206 </span>            :       ~nullary_function()
+<span class="lineNum">     207 </span>            :       {
+<span class="lineNum">     208 </span>            :       }
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :       nullary_function&amp; operator=(BOOST_THREAD_COPY_ASSIGN_REF(nullary_function) other) BOOST_NOEXCEPT
+<span class="lineNum">     211 </span>            :       {
+<span class="lineNum">     212 </span>            :         impl=other.impl;
+<span class="lineNum">     213 </span>            :         return *this;
+<span class="lineNum">     214 </span>            :       }
+<span class="lineNum">     215 </span>            :       nullary_function&amp; operator=(BOOST_THREAD_RV_REF(nullary_function) other) BOOST_NOEXCEPT
+<span class="lineNum">     216 </span>            :       {
+<span class="lineNum">     217 </span>            : #if defined BOOST_NO_CXX11_SMART_PTR
+<span class="lineNum">     218 </span>            :         impl=BOOST_THREAD_RV(other).impl;
+<span class="lineNum">     219 </span>            :         BOOST_THREAD_RV(other).impl.reset();
+<span class="lineNum">     220 </span>            : #else
+<span class="lineNum">     221 </span>            :         impl = boost::move(other.impl);
+<span class="lineNum">     222 </span>            : #endif
+<span class="lineNum">     223 </span>            :         return *this;
+<span class="lineNum">     224 </span>            :       }
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            :       R operator()()
+<span class="lineNum">     227 </span>            :       { if (impl) return impl-&gt;call(); else return R();}
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            :     };
+<span class="lineNum">     230 </span>            :   }
+<span class="lineNum">     231 </span>            :   BOOST_THREAD_DCL_MOVABLE_BEG(F) detail::nullary_function&lt;F&gt; BOOST_THREAD_DCL_MOVABLE_END
+<span class="lineNum">     232 </span>            : }
+<span class="lineNum">     233 </span>            : 
+<span class="lineNum">     234 </span>            : #endif // header
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

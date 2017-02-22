@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/test/utils/runtime/argument.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/test/utils/runtime</a> - argument.hpp<span style="font-size: 80%;"> (source / <a href="argument.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntry">36</td>
+            <td class="headerCovTableEntryLo">72.2 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  (C) Copyright Gennadiy Rozental 2001.</a>
+<span class="lineNum">       2 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       3 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       4 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  See http://www.boost.org/libs/test for the library home page.
+<span class="lineNum">       7 </span>            : //
+<span class="lineNum">       8 </span>            : //  File        : $RCSfile$
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : //  Version     : $Revision$
+<span class="lineNum">      11 </span>            : //
+<span class="lineNum">      12 </span>            : //  Description : model of actual argument (both typed and abstract interface)
+<span class="lineNum">      13 </span>            : // ***************************************************************************
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_TEST_UTILS_RUNTIME_ARGUMENT_HPP
+<span class="lineNum">      16 </span>            : #define BOOST_TEST_UTILS_RUNTIME_ARGUMENT_HPP
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : // Boost.Test Runtime parameters
+<span class="lineNum">      19 </span>            : #include &lt;boost/test/utils/runtime/fwd.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/test/utils/runtime/errors.hpp&gt;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : // Boost.Test
+<span class="lineNum">      23 </span>            : #include &lt;boost/test/utils/class_properties.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/test/utils/rtti.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/test/utils/basic_cstring/compare.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/test/detail/throw_exception.hpp&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : // STL
+<span class="lineNum">      29 </span>            : #include &lt;cassert&gt;
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : #include &lt;boost/test/detail/suppress_warnings.hpp&gt;
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : namespace boost {
+<span class="lineNum">      34 </span>            : namespace runtime {
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : // ************************************************************************** //
+<span class="lineNum">      37 </span>            : // **************              runtime::argument               ************** //
+<span class="lineNum">      38 </span>            : // ************************************************************************** //
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : class argument {
+<span class="lineNum">      41 </span>            : public:
+<span class="lineNum">      42 </span>            :     // Constructor
+<span class="lineNum">      43 </span>            :     argument( rtti::id_t value_type )
+<span class="lineNum">      44 </span><span class="lineCov">         23 :     : p_value_type( value_type )</span>
+<span class="lineNum">      45 </span>            :     {}
+<a name="46"><span class="lineNum">      46 </span>            : </a>
+<span class="lineNum">      47 </span>            :     // Destructor
+<span class="lineNum">      48 </span><span class="lineCov">         23 :     virtual     ~argument()  {}</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            :     // Public properties
+<span class="lineNum">      51 </span>            :     rtti::id_t const    p_value_type;
+<span class="lineNum">      52 </span>            : };
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : // ************************************************************************** //
+<span class="lineNum">      55 </span>            : // **************             runtime::typed_argument          ************** //
+<span class="lineNum">      56 </span>            : // ************************************************************************** //
+<a name="57"><span class="lineNum">      57 </span>            : </a>
+<span class="lineNum">      58 </span>            : template&lt;typename T&gt;
+<span class="lineNum">      59 </span><span class="lineCov">         49 : class typed_argument : public argument {</span>
+<a name="60"><span class="lineNum">      60 </span>            : public:</a>
+<span class="lineNum">      61 </span>            :     // Constructor
+<span class="lineNum">      62 </span><span class="lineCov">          1 :     explicit typed_argument( T const&amp; v )</span>
+<span class="lineNum">      63 </span>            :     : argument( rtti::type_id&lt;T&gt;() )
+<span class="lineNum">      64 </span><span class="lineCov">         69 :     , p_value( v )</span>
+<span class="lineNum">      65 </span><span class="lineCov">          1 :     {}</span>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :     unit_test::readwrite_property&lt;T&gt;    p_value;
+<span class="lineNum">      68 </span>            : };
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : // ************************************************************************** //
+<span class="lineNum">      71 </span>            : // **************           runtime::arguments_store          ************** //
+<a name="72"><span class="lineNum">      72 </span>            : // ************************************************************************** //</a>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineCov">          4 : class arguments_store {</span>
+<span class="lineNum">      75 </span>            : public:
+<span class="lineNum">      76 </span>            :     typedef std::map&lt;cstring, argument_ptr&gt; storage_type;
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            :     /// Returns number of arguments in the store; mostly used for testing
+<span class="lineNum">      79 </span>            :     std::size_t size() const        { return m_arguments.size(); }
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            :     /// Clears the store for reuse
+<span class="lineNum">      82 </span><span class="lineCov">          2 :     void        clear()             { m_arguments.clear(); }</span>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            :     /// Returns true if there is an argument corresponding to the specified parameter name
+<span class="lineNum">      85 </span>            :     bool        has( cstring parameter_name ) const
+<span class="lineNum">      86 </span>            :     {
+<span class="lineNum">      87 </span><span class="lineCov">        351 :         return m_arguments.find( parameter_name ) != m_arguments.end();</span>
+<span class="lineNum">      88 </span>            :     }
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            :     /// Provides types access to argument value by parameter name
+<span class="lineNum">      91 </span>            :     template&lt;typename T&gt;
+<span class="lineNum">      92 </span>            :     T const&amp;    get( cstring parameter_name ) const {
+<span class="lineNum">      93 </span><span class="lineCov">       1318 :         return const_cast&lt;arguments_store*&gt;(this)-&gt;get&lt;T&gt;( parameter_name );</span>
+<span class="lineNum">      94 </span>            :     }
+<a name="95"><span class="lineNum">      95 </span>            : </a>
+<span class="lineNum">      96 </span>            :     template&lt;typename T&gt;
+<span class="lineNum">      97 </span><span class="lineCov">       1318 :     T&amp;          get( cstring parameter_name ) {</span>
+<span class="lineNum">      98 </span><span class="lineCov">       3954 :         storage_type::const_iterator found = m_arguments.find( parameter_name );</span>
+<span class="lineNum">      99 </span><span class="lineCov">       2636 :         BOOST_TEST_I_ASSRT( found != m_arguments.end(),</span>
+<span class="lineNum">     100 </span>            :                             access_to_missing_argument() 
+<span class="lineNum">     101 </span>            :                                 &lt;&lt; &quot;There is no argument provided for parameter &quot;
+<span class="lineNum">     102 </span>            :                                 &lt;&lt; parameter_name );
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span><span class="lineCov">       3954 :         argument_ptr arg = found-&gt;second;</span>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">       3954 :         BOOST_TEST_I_ASSRT( arg-&gt;p_value_type == rtti::type_id&lt;T&gt;(),</span>
+<span class="lineNum">     107 </span>            :                             arg_type_mismatch()
+<span class="lineNum">     108 </span>            :                                 &lt;&lt; &quot;Access with invalid type for argument corresponding to parameter &quot;
+<span class="lineNum">     109 </span>            :                                 &lt;&lt; parameter_name );
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">       3954 :         return static_cast&lt;typed_argument&lt;T&gt;&amp;&gt;( *arg ).p_value.value;</span>
+<span class="lineNum">     112 </span>            :     }
+<span class="lineNum">     113 </span>            : 
+<a name="114"><span class="lineNum">     114 </span>            :     /// Set's the argument value for specified parameter name</a>
+<span class="lineNum">     115 </span>            :     template&lt;typename T&gt;
+<span class="lineNum">     116 </span><span class="lineCov">         23 :     void        set( cstring parameter_name, T const&amp; value )</span>
+<span class="lineNum">     117 </span>            :     {
+<span class="lineNum">     118 </span><span class="lineCov">         91 :         m_arguments[parameter_name] = argument_ptr( new typed_argument&lt;T&gt;( value ) );</span>
+<span class="lineNum">     119 </span><span class="lineCov">         23 :     }</span>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span>            : private:
+<span class="lineNum">     122 </span>            :     // Data members
+<span class="lineNum">     123 </span>            :     storage_type            m_arguments;
+<span class="lineNum">     124 </span>            : };
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : } // namespace runtime
+<span class="lineNum">     127 </span>            : } // namespace boost
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            : #include &lt;boost/test/detail/enable_warnings.hpp&gt;
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            : #endif // BOOST_TEST_UTILS_RUNTIME_ARGUMENT_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

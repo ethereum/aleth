@@ -1,0 +1,585 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/date_time/int_adapter.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/date_time</a> - int_adapter.hpp<span style="font-size: 80%;"> (source / <a href="int_adapter.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">41</td>
+            <td class="headerCovTableEntryLo">39.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryLo">60.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef _DATE_TIME_INT_ADAPTER_HPP__</a>
+<span class="lineNum">       2 </span>            : #define _DATE_TIME_INT_ADAPTER_HPP__
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
+<span class="lineNum">       5 </span>            :  * Use, modification and distribution is subject to the 
+<span class="lineNum">       6 </span>            :  * Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       7 </span>            :  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            :  * Author: Jeff Garland, Bart Garst
+<span class="lineNum">       9 </span>            :  * $Date$
+<span class="lineNum">      10 </span>            :  */
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #include &quot;boost/config.hpp&quot;
+<span class="lineNum">      14 </span>            : #include &quot;boost/limits.hpp&quot; //work around compilers without limits
+<span class="lineNum">      15 </span>            : #include &quot;boost/date_time/special_defs.hpp&quot;
+<span class="lineNum">      16 </span>            : #include &quot;boost/date_time/locale_config.hpp&quot;
+<span class="lineNum">      17 </span>            : #ifndef BOOST_DATE_TIME_NO_LOCALE
+<span class="lineNum">      18 </span>            : #  include &lt;ostream&gt;
+<span class="lineNum">      19 </span>            : #endif
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : namespace boost {
+<span class="lineNum">      22 </span>            : namespace date_time {
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : //! Adapter to create integer types with +-infinity, and not a value
+<span class="lineNum">      26 </span>            : /*! This class is used internally in counted date/time representations.
+<span class="lineNum">      27 </span>            :  *  It adds the floating point like features of infinities and
+<span class="lineNum">      28 </span>            :  *  not a number. It also provides mathmatical operations with
+<span class="lineNum">      29 </span>            :  *  consideration to special values following these rules:
+<span class="lineNum">      30 </span>            :  *@code
+<span class="lineNum">      31 </span>            :  *  +infinity  -  infinity  == Not A Number (NAN)
+<span class="lineNum">      32 </span>            :  *   infinity  *  non-zero  == infinity
+<span class="lineNum">      33 </span>            :  *   infinity  *  zero      == NAN
+<span class="lineNum">      34 </span>            :  *  +infinity  * -integer   == -infinity
+<span class="lineNum">      35 </span>            :  *   infinity  /  infinity  == NAN
+<span class="lineNum">      36 </span>            :  *   infinity  *  infinity  == infinity 
+<span class="lineNum">      37 </span>            :  *@endcode 
+<span class="lineNum">      38 </span>            :  */
+<span class="lineNum">      39 </span>            : template&lt;typename int_type_&gt;
+<span class="lineNum">      40 </span>            : class int_adapter {
+<span class="lineNum">      41 </span>            : public:
+<span class="lineNum">      42 </span>            :   typedef int_type_ int_type;
+<span class="lineNum">      43 </span>            :   int_adapter(int_type v) :
+<span class="lineNum">      44 </span><span class="lineCov">       7670 :     value_(v)</span>
+<span class="lineNum">      45 </span>            :   {}
+<span class="lineNum">      46 </span>            :   static bool has_infinity()
+<span class="lineNum">      47 </span>            :   {
+<span class="lineNum">      48 </span>            :     return  true;
+<span class="lineNum">      49 </span>            :   }
+<span class="lineNum">      50 </span>            :   static const int_adapter  pos_infinity()
+<span class="lineNum">      51 </span>            :   {
+<span class="lineNum">      52 </span><span class="lineCov">      11488 :     return (::std::numeric_limits&lt;int_type&gt;::max)();</span>
+<span class="lineNum">      53 </span>            :   }
+<span class="lineNum">      54 </span>            :   static const int_adapter  neg_infinity()
+<span class="lineNum">      55 </span>            :   {
+<span class="lineNum">      56 </span><span class="lineCov">      11488 :     return (::std::numeric_limits&lt;int_type&gt;::min)();</span>
+<span class="lineNum">      57 </span>            :   }
+<span class="lineNum">      58 </span>            :   static const int_adapter  not_a_number()
+<span class="lineNum">      59 </span>            :   {
+<span class="lineNum">      60 </span><span class="lineCov">      15328 :     return (::std::numeric_limits&lt;int_type&gt;::max)()-1;</span>
+<span class="lineNum">      61 </span>            :   }
+<span class="lineNum">      62 </span>            :   static  int_adapter max BOOST_PREVENT_MACRO_SUBSTITUTION ()
+<span class="lineNum">      63 </span>            :   {
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :     return (::std::numeric_limits&lt;int_type&gt;::max)()-2;</span>
+<span class="lineNum">      65 </span>            :   }
+<span class="lineNum">      66 </span>            :   static  int_adapter min BOOST_PREVENT_MACRO_SUBSTITUTION ()
+<span class="lineNum">      67 </span>            :   {
+<a name="68"><span class="lineNum">      68 </span><span class="lineNoCov">          0 :     return (::std::numeric_limits&lt;int_type&gt;::min)()+1;</span></a>
+<span class="lineNum">      69 </span>            :   }
+<span class="lineNum">      70 </span><span class="lineCov">       1920 :   static int_adapter from_special(special_values sv)</span>
+<span class="lineNum">      71 </span>            :   {
+<span class="lineNum">      72 </span><span class="lineCov">       1920 :     switch (sv) {</span>
+<span class="lineNum">      73 </span>            :     case not_a_date_time: return not_a_number();
+<span class="lineNum">      74 </span>            :     case neg_infin:       return neg_infinity();
+<span class="lineNum">      75 </span>            :     case pos_infin:       return pos_infinity();
+<span class="lineNum">      76 </span>            :     case max_date_time:   return (max)();
+<span class="lineNum">      77 </span>            :     case min_date_time:   return (min)();
+<span class="lineNum">      78 </span>            :     default:              return not_a_number();
+<span class="lineNum">      79 </span>            :     }
+<span class="lineNum">      80 </span>            :   }
+<span class="lineNum">      81 </span>            :   static bool is_inf(int_type v)
+<span class="lineNum">      82 </span>            :   {
+<span class="lineNum">      83 </span><span class="lineCov">       3688 :     return (v == neg_infinity().as_number() ||</span>
+<span class="lineNum">      84 </span><span class="lineCov">      11064 :             v == pos_infinity().as_number());</span>
+<span class="lineNum">      85 </span>            :   }
+<span class="lineNum">      86 </span>            :   static bool is_neg_inf(int_type v)
+<span class="lineNum">      87 </span>            :   {
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 :     return (v == neg_infinity().as_number());</span>
+<span class="lineNum">      89 </span>            :   }
+<span class="lineNum">      90 </span>            :   static bool is_pos_inf(int_type v)
+<span class="lineNum">      91 </span>            :   {
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :     return (v == pos_infinity().as_number());</span>
+<span class="lineNum">      93 </span>            :   }
+<span class="lineNum">      94 </span>            :   static bool is_not_a_number(int_type v)
+<span class="lineNum">      95 </span>            :   {
+<span class="lineNum">      96 </span><span class="lineCov">       3688 :     return (v == not_a_number().as_number());</span>
+<span class="lineNum">      97 </span>            :   }
+<span class="lineNum">      98 </span>            :   //! Returns either special value type or is_not_special
+<span class="lineNum">      99 </span>            :   static special_values to_special(int_type v)
+<span class="lineNum">     100 </span>            :   {
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :     if (is_not_a_number(v)) return not_a_date_time;</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :     if (is_neg_inf(v)) return neg_infin;</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :     if (is_pos_inf(v)) return pos_infin;</span>
+<span class="lineNum">     104 </span>            :     return not_special;
+<span class="lineNum">     105 </span>            :   }
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :   //-3 leaves room for representations of infinity and not a date
+<span class="lineNum">     108 </span>            :   static  int_type maxcount()
+<span class="lineNum">     109 </span>            :   {
+<span class="lineNum">     110 </span>            :     return (::std::numeric_limits&lt;int_type&gt;::max)()-3;
+<span class="lineNum">     111 </span>            :   }
+<span class="lineNum">     112 </span>            :   bool is_infinity() const
+<span class="lineNum">     113 </span>            :   {
+<span class="lineNum">     114 </span><span class="lineCov">      15600 :     return (value_ == neg_infinity().as_number() ||</span>
+<span class="lineNum">     115 </span><span class="lineCov">      23400 :             value_ == pos_infinity().as_number());</span>
+<span class="lineNum">     116 </span>            :   }
+<span class="lineNum">     117 </span>            :   bool is_pos_infinity()const
+<span class="lineNum">     118 </span>            :   {
+<span class="lineNum">     119 </span>            :     return(value_ == pos_infinity().as_number());
+<span class="lineNum">     120 </span>            :   }
+<span class="lineNum">     121 </span>            :   bool is_neg_infinity()const
+<span class="lineNum">     122 </span>            :   {
+<span class="lineNum">     123 </span>            :     return(value_ == neg_infinity().as_number());
+<span class="lineNum">     124 </span>            :   }
+<span class="lineNum">     125 </span>            :   bool is_nan() const
+<span class="lineNum">     126 </span>            :   {
+<span class="lineNum">     127 </span><span class="lineCov">       8760 :     return (value_ == not_a_number().as_number());</span>
+<span class="lineNum">     128 </span>            :   }
+<span class="lineNum">     129 </span>            :   bool is_special() const
+<span class="lineNum">     130 </span>            :   {
+<span class="lineNum">     131 </span><span class="lineCov">      15600 :     return(is_infinity() || is_nan()); </span>
+<span class="lineNum">     132 </span>            :   }
+<span class="lineNum">     133 </span>            :   bool operator==(const int_adapter&amp; rhs) const
+<span class="lineNum">     134 </span>            :   {
+<span class="lineNum">     135 </span>            :     return (compare(rhs) == 0);
+<span class="lineNum">     136 </span>            :   }
+<span class="lineNum">     137 </span>            :   bool operator==(const int&amp; rhs) const
+<span class="lineNum">     138 </span>            :   {
+<span class="lineNum">     139 </span>            :     // quiets compiler warnings
+<span class="lineNum">     140 </span>            :     bool is_signed = std::numeric_limits&lt;int_type&gt;::is_signed;
+<span class="lineNum">     141 </span>            :     if(!is_signed)
+<span class="lineNum">     142 </span>            :     {
+<span class="lineNum">     143 </span>            :       if(is_neg_inf(value_) &amp;&amp; rhs == 0)
+<span class="lineNum">     144 </span>            :       {
+<span class="lineNum">     145 </span>            :         return false;
+<span class="lineNum">     146 </span>            :       }
+<span class="lineNum">     147 </span>            :     }
+<span class="lineNum">     148 </span>            :     return (compare(rhs) == 0);
+<span class="lineNum">     149 </span>            :   }
+<span class="lineNum">     150 </span>            :   bool operator!=(const int_adapter&amp; rhs) const
+<span class="lineNum">     151 </span>            :   {
+<span class="lineNum">     152 </span>            :     return (compare(rhs) != 0);
+<span class="lineNum">     153 </span>            :   }
+<span class="lineNum">     154 </span>            :   bool operator!=(const int&amp; rhs) const
+<span class="lineNum">     155 </span>            :   {
+<span class="lineNum">     156 </span>            :     // quiets compiler warnings
+<span class="lineNum">     157 </span>            :     bool is_signed = std::numeric_limits&lt;int_type&gt;::is_signed;
+<span class="lineNum">     158 </span>            :     if(!is_signed)
+<span class="lineNum">     159 </span>            :     {
+<span class="lineNum">     160 </span>            :       if(is_neg_inf(value_) &amp;&amp; rhs == 0)
+<span class="lineNum">     161 </span>            :       {
+<span class="lineNum">     162 </span>            :         return true;
+<span class="lineNum">     163 </span>            :       }
+<span class="lineNum">     164 </span>            :     }
+<span class="lineNum">     165 </span>            :     return (compare(rhs) != 0);
+<span class="lineNum">     166 </span>            :   }
+<span class="lineNum">     167 </span>            :   bool operator&lt;(const int_adapter&amp; rhs) const
+<span class="lineNum">     168 </span>            :   {
+<span class="lineNum">     169 </span>            :     return (compare(rhs) == -1);
+<span class="lineNum">     170 </span>            :   }
+<span class="lineNum">     171 </span>            :   bool operator&lt;(const int&amp; rhs) const
+<span class="lineNum">     172 </span>            :   {
+<span class="lineNum">     173 </span>            :     // quiets compiler warnings
+<span class="lineNum">     174 </span>            :     bool is_signed = std::numeric_limits&lt;int_type&gt;::is_signed;
+<span class="lineNum">     175 </span>            :     if(!is_signed)
+<span class="lineNum">     176 </span>            :     {
+<span class="lineNum">     177 </span>            :       if(is_neg_inf(value_) &amp;&amp; rhs == 0)
+<span class="lineNum">     178 </span>            :       {
+<span class="lineNum">     179 </span>            :         return true;
+<span class="lineNum">     180 </span>            :       }
+<span class="lineNum">     181 </span>            :     }
+<span class="lineNum">     182 </span>            :     return (compare(rhs) == -1);
+<span class="lineNum">     183 </span>            :   }
+<span class="lineNum">     184 </span>            :   bool operator&gt;(const int_adapter&amp; rhs) const
+<span class="lineNum">     185 </span>            :   {
+<span class="lineNum">     186 </span>            :     return (compare(rhs) == 1);
+<span class="lineNum">     187 </span>            :   }
+<span class="lineNum">     188 </span>            :   int_type as_number() const
+<span class="lineNum">     189 </span>            :   {
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :     return value_;</span>
+<span class="lineNum">     191 </span>            :   }
+<span class="lineNum">     192 </span>            :   //! Returns either special value type or is_not_special
+<span class="lineNum">     193 </span>            :   special_values as_special() const
+<span class="lineNum">     194 </span>            :   {
+<span class="lineNum">     195 </span>            :     return int_adapter::to_special(value_);
+<span class="lineNum">     196 </span>            :   }
+<span class="lineNum">     197 </span>            :   //creates nasty ambiguities
+<span class="lineNum">     198 </span>            : //   operator int_type() const
+<span class="lineNum">     199 </span>            : //   {
+<span class="lineNum">     200 </span>            : //     return value_;
+<span class="lineNum">     201 </span>            : //   }
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            :   /*! Operator allows for adding dissimilar int_adapter types.
+<span class="lineNum">     204 </span>            :    * The return type will match that of the the calling object's type */
+<a name="205"><span class="lineNum">     205 </span>            :   template&lt;class rhs_type&gt;</a>
+<span class="lineNum">     206 </span>            :   inline
+<span class="lineNum">     207 </span><span class="lineCov">        960 :   int_adapter operator+(const int_adapter&lt;rhs_type&gt;&amp; rhs) const</span>
+<span class="lineNum">     208 </span>            :   {
+<span class="lineNum">     209 </span><span class="lineCov">        960 :     if(is_special() || rhs.is_special())</span>
+<span class="lineNum">     210 </span>            :     {
+<span class="lineNum">     211 </span><span class="lineCov">        960 :       if (is_nan() || rhs.is_nan()) </span>
+<span class="lineNum">     212 </span>            :       {
+<span class="lineNum">     213 </span>            :         return int_adapter::not_a_number();
+<span class="lineNum">     214 </span>            :       }
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :       if((is_pos_inf(value_) &amp;&amp; rhs.is_neg_inf(rhs.as_number())) ||</span>
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :       (is_neg_inf(value_) &amp;&amp; rhs.is_pos_inf(rhs.as_number())) )</span>
+<span class="lineNum">     217 </span>            :       {
+<span class="lineNum">     218 </span>            :         return int_adapter::not_a_number();
+<span class="lineNum">     219 </span>            :       }
+<span class="lineNum">     220 </span><span class="lineNoCov">          0 :       if (is_infinity()) </span>
+<span class="lineNum">     221 </span>            :       {
+<span class="lineNum">     222 </span><span class="lineNoCov">          0 :         return *this;</span>
+<span class="lineNum">     223 </span>            :       }
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :       if (rhs.is_pos_inf(rhs.as_number())) </span>
+<span class="lineNum">     225 </span>            :       {
+<span class="lineNum">     226 </span>            :         return int_adapter::pos_infinity();
+<span class="lineNum">     227 </span>            :       }
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :       if (rhs.is_neg_inf(rhs.as_number())) </span>
+<span class="lineNum">     229 </span>            :       {
+<span class="lineNum">     230 </span>            :         return int_adapter::neg_infinity();
+<span class="lineNum">     231 </span>            :       }
+<span class="lineNum">     232 </span>            :     }
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :     return int_adapter&lt;int_type&gt;(value_ + static_cast&lt;int_type&gt;(rhs.as_number()));</span>
+<span class="lineNum">     234 </span>            :   }
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            :   int_adapter operator+(const int_type rhs) const
+<span class="lineNum">     237 </span>            :   {
+<span class="lineNum">     238 </span>            :     if(is_special())
+<span class="lineNum">     239 </span>            :     {
+<span class="lineNum">     240 </span>            :       if (is_nan()) 
+<span class="lineNum">     241 </span>            :       {
+<span class="lineNum">     242 </span>            :         return int_adapter&lt;int_type&gt;(not_a_number());
+<span class="lineNum">     243 </span>            :       }
+<span class="lineNum">     244 </span>            :       if (is_infinity()) 
+<span class="lineNum">     245 </span>            :       {
+<span class="lineNum">     246 </span>            :         return *this;
+<span class="lineNum">     247 </span>            :       }
+<span class="lineNum">     248 </span>            :     }
+<span class="lineNum">     249 </span>            :     return int_adapter&lt;int_type&gt;(value_ + rhs);
+<span class="lineNum">     250 </span>            :   }
+<span class="lineNum">     251 </span>            :   
+<span class="lineNum">     252 </span>            :   /*! Operator allows for subtracting dissimilar int_adapter types.
+<span class="lineNum">     253 </span>            :    * The return type will match that of the the calling object's type */
+<a name="254"><span class="lineNum">     254 </span>            :   template&lt;class rhs_type&gt;</a>
+<span class="lineNum">     255 </span>            :   inline
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :   int_adapter operator-(const int_adapter&lt;rhs_type&gt;&amp; rhs)const</span>
+<span class="lineNum">     257 </span>            :   {
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :     if(is_special() || rhs.is_special())</span>
+<span class="lineNum">     259 </span>            :     {
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :       if (is_nan() || rhs.is_nan()) </span>
+<span class="lineNum">     261 </span>            :       {
+<span class="lineNum">     262 </span>            :         return int_adapter::not_a_number();
+<span class="lineNum">     263 </span>            :       }
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :       if((is_pos_inf(value_) &amp;&amp; rhs.is_pos_inf(rhs.as_number())) ||</span>
+<span class="lineNum">     265 </span><span class="lineNoCov">          0 :          (is_neg_inf(value_) &amp;&amp; rhs.is_neg_inf(rhs.as_number())) )</span>
+<span class="lineNum">     266 </span>            :       {
+<span class="lineNum">     267 </span>            :         return int_adapter::not_a_number();
+<span class="lineNum">     268 </span>            :       }
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :       if (is_infinity()) </span>
+<span class="lineNum">     270 </span>            :       {
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :         return *this;</span>
+<span class="lineNum">     272 </span>            :       }
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :       if (rhs.is_pos_inf(rhs.as_number())) </span>
+<span class="lineNum">     274 </span>            :       {
+<span class="lineNum">     275 </span>            :         return int_adapter::neg_infinity();
+<span class="lineNum">     276 </span>            :       }
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :       if (rhs.is_neg_inf(rhs.as_number())) </span>
+<span class="lineNum">     278 </span>            :       {
+<span class="lineNum">     279 </span>            :         return int_adapter::pos_infinity();
+<span class="lineNum">     280 </span>            :       }
+<span class="lineNum">     281 </span>            :     }
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :     return int_adapter&lt;int_type&gt;(value_ - static_cast&lt;int_type&gt;(rhs.as_number()));</span>
+<span class="lineNum">     283 </span>            :   }
+<span class="lineNum">     284 </span>            :   int_adapter operator-(const int_type rhs) const
+<span class="lineNum">     285 </span>            :   {
+<span class="lineNum">     286 </span>            :     if(is_special())
+<span class="lineNum">     287 </span>            :     {
+<span class="lineNum">     288 </span>            :       if (is_nan()) 
+<span class="lineNum">     289 </span>            :       {
+<span class="lineNum">     290 </span>            :         return int_adapter&lt;int_type&gt;(not_a_number());
+<span class="lineNum">     291 </span>            :       }
+<span class="lineNum">     292 </span>            :       if (is_infinity()) 
+<span class="lineNum">     293 </span>            :       {
+<span class="lineNum">     294 </span>            :         return *this;
+<span class="lineNum">     295 </span>            :       }
+<span class="lineNum">     296 </span>            :     }
+<span class="lineNum">     297 </span>            :     return int_adapter&lt;int_type&gt;(value_ - rhs);
+<span class="lineNum">     298 </span>            :   }
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            :   // should templatize this to be consistant with op +-
+<span class="lineNum">     301 </span>            :   int_adapter operator*(const int_adapter&amp; rhs)const
+<span class="lineNum">     302 </span>            :   {
+<span class="lineNum">     303 </span>            :     if(this-&gt;is_special() || rhs.is_special())
+<span class="lineNum">     304 </span>            :     {
+<span class="lineNum">     305 </span>            :       return mult_div_specials(rhs);
+<span class="lineNum">     306 </span>            :     }
+<span class="lineNum">     307 </span>            :     return int_adapter&lt;int_type&gt;(value_ * rhs.value_);
+<span class="lineNum">     308 </span>            :   }
+<span class="lineNum">     309 </span>            :   /*! Provided for cases when automatic conversion from 
+<span class="lineNum">     310 </span>            :    * 'int' to 'int_adapter' causes incorrect results. */
+<span class="lineNum">     311 </span>            :   int_adapter operator*(const int rhs) const
+<span class="lineNum">     312 </span>            :   {
+<span class="lineNum">     313 </span>            :     if(is_special())
+<span class="lineNum">     314 </span>            :     {
+<span class="lineNum">     315 </span>            :       return mult_div_specials(rhs);
+<span class="lineNum">     316 </span>            :     }
+<span class="lineNum">     317 </span>            :     return int_adapter&lt;int_type&gt;(value_ * rhs);
+<span class="lineNum">     318 </span>            :   }
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span>            :   // should templatize this to be consistant with op +-
+<span class="lineNum">     321 </span>            :   int_adapter operator/(const int_adapter&amp; rhs)const
+<span class="lineNum">     322 </span>            :   {
+<span class="lineNum">     323 </span>            :     if(this-&gt;is_special() || rhs.is_special())
+<span class="lineNum">     324 </span>            :     {
+<span class="lineNum">     325 </span>            :       if(is_infinity() &amp;&amp; rhs.is_infinity())
+<span class="lineNum">     326 </span>            :       {
+<span class="lineNum">     327 </span>            :         return int_adapter&lt;int_type&gt;(not_a_number());
+<span class="lineNum">     328 </span>            :       }
+<span class="lineNum">     329 </span>            :       if(rhs != 0)
+<span class="lineNum">     330 </span>            :       {
+<span class="lineNum">     331 </span>            :         return mult_div_specials(rhs);
+<span class="lineNum">     332 </span>            :       }
+<span class="lineNum">     333 </span>            :       else { // let divide by zero blow itself up
+<span class="lineNum">     334 </span>            :         return int_adapter&lt;int_type&gt;(value_ / rhs.value_);
+<span class="lineNum">     335 </span>            :       }
+<span class="lineNum">     336 </span>            :     }
+<span class="lineNum">     337 </span>            :     return int_adapter&lt;int_type&gt;(value_ / rhs.value_);
+<span class="lineNum">     338 </span>            :   }
+<span class="lineNum">     339 </span>            :   /*! Provided for cases when automatic conversion from 
+<span class="lineNum">     340 </span>            :    * 'int' to 'int_adapter' causes incorrect results. */
+<span class="lineNum">     341 </span>            :   int_adapter operator/(const int rhs) const
+<span class="lineNum">     342 </span>            :   {
+<span class="lineNum">     343 </span>            :     if(is_special() &amp;&amp; rhs != 0)
+<span class="lineNum">     344 </span>            :     {
+<span class="lineNum">     345 </span>            :       return mult_div_specials(rhs);
+<span class="lineNum">     346 </span>            :     }
+<span class="lineNum">     347 </span>            :     return int_adapter&lt;int_type&gt;(value_ / rhs);
+<span class="lineNum">     348 </span>            :   }
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span>            :   // should templatize this to be consistant with op +-
+<span class="lineNum">     351 </span>            :   int_adapter operator%(const int_adapter&amp; rhs)const
+<span class="lineNum">     352 </span>            :   {
+<span class="lineNum">     353 </span>            :     if(this-&gt;is_special() || rhs.is_special())
+<span class="lineNum">     354 </span>            :     {
+<span class="lineNum">     355 </span>            :       if(is_infinity() &amp;&amp; rhs.is_infinity())
+<span class="lineNum">     356 </span>            :       {
+<span class="lineNum">     357 </span>            :         return int_adapter&lt;int_type&gt;(not_a_number());
+<span class="lineNum">     358 </span>            :       }
+<span class="lineNum">     359 </span>            :       if(rhs != 0)
+<span class="lineNum">     360 </span>            :       {
+<span class="lineNum">     361 </span>            :         return mult_div_specials(rhs);
+<span class="lineNum">     362 </span>            :       }
+<span class="lineNum">     363 </span>            :       else { // let divide by zero blow itself up
+<span class="lineNum">     364 </span>            :         return int_adapter&lt;int_type&gt;(value_ % rhs.value_);
+<span class="lineNum">     365 </span>            :       }
+<span class="lineNum">     366 </span>            :     }
+<span class="lineNum">     367 </span>            :     return int_adapter&lt;int_type&gt;(value_ % rhs.value_);
+<span class="lineNum">     368 </span>            :   }
+<span class="lineNum">     369 </span>            :   /*! Provided for cases when automatic conversion from 
+<span class="lineNum">     370 </span>            :    * 'int' to 'int_adapter' causes incorrect results. */
+<span class="lineNum">     371 </span>            :   int_adapter operator%(const int rhs) const
+<span class="lineNum">     372 </span>            :   {
+<span class="lineNum">     373 </span>            :     if(is_special() &amp;&amp; rhs != 0)
+<span class="lineNum">     374 </span>            :     {
+<span class="lineNum">     375 </span>            :       return mult_div_specials(rhs);
+<span class="lineNum">     376 </span>            :     }
+<span class="lineNum">     377 </span>            :     return int_adapter&lt;int_type&gt;(value_ % rhs);
+<span class="lineNum">     378 </span>            :   }
+<span class="lineNum">     379 </span>            : private:
+<span class="lineNum">     380 </span>            :   int_type value_;
+<span class="lineNum">     381 </span>            :   
+<span class="lineNum">     382 </span>            :   //! returns -1, 0, 1, or 2 if 'this' is &lt;, ==, &gt;, or 'nan comparison' rhs
+<span class="lineNum">     383 </span>            :   int compare(const int_adapter&amp; rhs)const
+<span class="lineNum">     384 </span>            :   {
+<span class="lineNum">     385 </span>            :     if(this-&gt;is_special() || rhs.is_special())
+<span class="lineNum">     386 </span>            :     {
+<span class="lineNum">     387 </span>            :       if(this-&gt;is_nan() || rhs.is_nan()) {
+<span class="lineNum">     388 </span>            :         if(this-&gt;is_nan() &amp;&amp; rhs.is_nan()) {
+<span class="lineNum">     389 </span>            :           return 0; // equal
+<span class="lineNum">     390 </span>            :         }
+<span class="lineNum">     391 </span>            :         else {
+<span class="lineNum">     392 </span>            :           return 2; // nan
+<span class="lineNum">     393 </span>            :         }
+<span class="lineNum">     394 </span>            :       }
+<span class="lineNum">     395 </span>            :       if((is_neg_inf(value_) &amp;&amp; !is_neg_inf(rhs.value_)) ||
+<span class="lineNum">     396 </span>            :          (is_pos_inf(rhs.value_) &amp;&amp; !is_pos_inf(value_)) )
+<span class="lineNum">     397 </span>            :         {
+<span class="lineNum">     398 </span>            :           return -1; // less than
+<span class="lineNum">     399 </span>            :         }
+<span class="lineNum">     400 </span>            :       if((is_pos_inf(value_) &amp;&amp; !is_pos_inf(rhs.value_)) ||
+<span class="lineNum">     401 </span>            :          (is_neg_inf(rhs.value_) &amp;&amp; !is_neg_inf(value_)) ) {
+<span class="lineNum">     402 </span>            :         return 1; // greater than
+<span class="lineNum">     403 </span>            :       }
+<span class="lineNum">     404 </span>            :     }
+<span class="lineNum">     405 </span>            :     if(value_ &lt; rhs.value_) return -1;
+<span class="lineNum">     406 </span>            :     if(value_ &gt; rhs.value_) return 1;
+<span class="lineNum">     407 </span>            :     // implied-&gt; if(value_ == rhs.value_) 
+<span class="lineNum">     408 </span>            :     return 0;
+<span class="lineNum">     409 </span>            :   }
+<span class="lineNum">     410 </span>            :   /* When multiplying and dividing with at least 1 special value
+<span class="lineNum">     411 </span>            :    * very simmilar rules apply. In those cases where the rules
+<span class="lineNum">     412 </span>            :    * are different, they are handled in the respective operator 
+<span class="lineNum">     413 </span>            :    * function. */
+<span class="lineNum">     414 </span>            :   //! Assumes at least 'this' or 'rhs' is a special value
+<span class="lineNum">     415 </span>            :   int_adapter mult_div_specials(const int_adapter&amp; rhs)const
+<span class="lineNum">     416 </span>            :   {
+<span class="lineNum">     417 </span>            :     int min_value; 
+<span class="lineNum">     418 </span>            :     // quiets compiler warnings
+<span class="lineNum">     419 </span>            :     bool is_signed = std::numeric_limits&lt;int_type&gt;::is_signed;
+<span class="lineNum">     420 </span>            :     if(is_signed) {
+<span class="lineNum">     421 </span>            :       min_value = 0;
+<span class="lineNum">     422 </span>            :     }
+<span class="lineNum">     423 </span>            :     else {
+<span class="lineNum">     424 </span>            :       min_value = 1;// there is no zero with unsigned
+<span class="lineNum">     425 </span>            :     }
+<span class="lineNum">     426 </span>            :     if(this-&gt;is_nan() || rhs.is_nan()) {
+<span class="lineNum">     427 </span>            :       return int_adapter&lt;int_type&gt;(not_a_number());
+<span class="lineNum">     428 </span>            :     }
+<span class="lineNum">     429 </span>            :     if((*this &gt; 0 &amp;&amp; rhs &gt; 0) || (*this &lt; min_value &amp;&amp; rhs &lt; min_value)) {
+<span class="lineNum">     430 </span>            :         return int_adapter&lt;int_type&gt;(pos_infinity());
+<span class="lineNum">     431 </span>            :     }
+<span class="lineNum">     432 </span>            :     if((*this &gt; 0 &amp;&amp; rhs &lt; min_value) || (*this &lt; min_value &amp;&amp; rhs &gt; 0)) {
+<span class="lineNum">     433 </span>            :         return int_adapter&lt;int_type&gt;(neg_infinity());
+<span class="lineNum">     434 </span>            :     }
+<span class="lineNum">     435 </span>            :     //implied -&gt; if(this-&gt;value_ == 0 || rhs.value_ == 0)
+<span class="lineNum">     436 </span>            :     return int_adapter&lt;int_type&gt;(not_a_number());
+<span class="lineNum">     437 </span>            :   }
+<span class="lineNum">     438 </span>            :   /* Overloaded function necessary because of special
+<span class="lineNum">     439 </span>            :    * situation where int_adapter is instantiated with 
+<span class="lineNum">     440 </span>            :    * 'unsigned' and func is called with negative int.
+<span class="lineNum">     441 </span>            :    * It would produce incorrect results since 'unsigned'
+<span class="lineNum">     442 </span>            :    * wraps around when initialized with a negative value */
+<span class="lineNum">     443 </span>            :   //! Assumes 'this' is a special value
+<span class="lineNum">     444 </span>            :   int_adapter mult_div_specials(const int&amp; rhs) const
+<span class="lineNum">     445 </span>            :   {
+<span class="lineNum">     446 </span>            :     int min_value; 
+<span class="lineNum">     447 </span>            :     // quiets compiler warnings
+<span class="lineNum">     448 </span>            :     bool is_signed = std::numeric_limits&lt;int_type&gt;::is_signed;
+<span class="lineNum">     449 </span>            :     if(is_signed) {
+<span class="lineNum">     450 </span>            :       min_value = 0;
+<span class="lineNum">     451 </span>            :     }
+<span class="lineNum">     452 </span>            :     else {
+<span class="lineNum">     453 </span>            :       min_value = 1;// there is no zero with unsigned
+<span class="lineNum">     454 </span>            :     }
+<span class="lineNum">     455 </span>            :     if(this-&gt;is_nan()) {
+<span class="lineNum">     456 </span>            :       return int_adapter&lt;int_type&gt;(not_a_number());
+<span class="lineNum">     457 </span>            :     }
+<span class="lineNum">     458 </span>            :     if((*this &gt; 0 &amp;&amp; rhs &gt; 0) || (*this &lt; min_value &amp;&amp; rhs &lt; 0)) {
+<span class="lineNum">     459 </span>            :         return int_adapter&lt;int_type&gt;(pos_infinity());
+<span class="lineNum">     460 </span>            :     }
+<span class="lineNum">     461 </span>            :     if((*this &gt; 0 &amp;&amp; rhs &lt; 0) || (*this &lt; min_value &amp;&amp; rhs &gt; 0)) {
+<span class="lineNum">     462 </span>            :         return int_adapter&lt;int_type&gt;(neg_infinity());
+<span class="lineNum">     463 </span>            :     }
+<span class="lineNum">     464 </span>            :     //implied -&gt; if(this-&gt;value_ == 0 || rhs.value_ == 0)
+<span class="lineNum">     465 </span>            :     return int_adapter&lt;int_type&gt;(not_a_number());
+<span class="lineNum">     466 </span>            :   }
+<span class="lineNum">     467 </span>            :   
+<span class="lineNum">     468 </span>            : };
+<span class="lineNum">     469 </span>            : 
+<span class="lineNum">     470 </span>            : #ifndef BOOST_DATE_TIME_NO_LOCALE
+<span class="lineNum">     471 </span>            :   /*! Expected output is either a numeric representation 
+<span class="lineNum">     472 </span>            :    * or a special values representation.&lt;BR&gt; 
+<span class="lineNum">     473 </span>            :    * Ex. &quot;12&quot;, &quot;+infinity&quot;, &quot;not-a-number&quot;, etc. */
+<span class="lineNum">     474 </span>            :   //template&lt;class charT = char, class traits = std::traits&lt;charT&gt;, typename int_type&gt;
+<span class="lineNum">     475 </span>            :   template&lt;class charT, class traits, typename int_type&gt;
+<span class="lineNum">     476 </span>            :   inline
+<span class="lineNum">     477 </span>            :   std::basic_ostream&lt;charT, traits&gt;&amp; 
+<span class="lineNum">     478 </span>            :   operator&lt;&lt;(std::basic_ostream&lt;charT, traits&gt;&amp; os, const int_adapter&lt;int_type&gt;&amp; ia)
+<span class="lineNum">     479 </span>            :   {
+<span class="lineNum">     480 </span>            :     if(ia.is_special()) {
+<span class="lineNum">     481 </span>            :       // switch copied from date_names_put.hpp
+<span class="lineNum">     482 </span>            :       switch(ia.as_special())
+<span class="lineNum">     483 </span>            :         {
+<span class="lineNum">     484 </span>            :       case not_a_date_time:
+<span class="lineNum">     485 </span>            :         os &lt;&lt; &quot;not-a-number&quot;;
+<span class="lineNum">     486 </span>            :         break;
+<span class="lineNum">     487 </span>            :       case pos_infin:
+<span class="lineNum">     488 </span>            :         os &lt;&lt; &quot;+infinity&quot;;
+<span class="lineNum">     489 </span>            :         break;
+<span class="lineNum">     490 </span>            :       case neg_infin:
+<span class="lineNum">     491 </span>            :         os &lt;&lt; &quot;-infinity&quot;;
+<span class="lineNum">     492 </span>            :         break;
+<span class="lineNum">     493 </span>            :       default:
+<span class="lineNum">     494 </span>            :         os &lt;&lt; &quot;&quot;;
+<span class="lineNum">     495 </span>            :       }
+<span class="lineNum">     496 </span>            :     }
+<span class="lineNum">     497 </span>            :     else {
+<span class="lineNum">     498 </span>            :       os &lt;&lt; ia.as_number(); 
+<span class="lineNum">     499 </span>            :     }
+<span class="lineNum">     500 </span>            :     return os;
+<span class="lineNum">     501 </span>            :   }
+<span class="lineNum">     502 </span>            : #endif
+<span class="lineNum">     503 </span>            : 
+<span class="lineNum">     504 </span>            : 
+<span class="lineNum">     505 </span>            : } } //namespace date_time
+<span class="lineNum">     506 </span>            : 
+<span class="lineNum">     507 </span>            : 
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

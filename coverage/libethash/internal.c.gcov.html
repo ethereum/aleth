@@ -1,0 +1,647 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethash/internal.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethash</a> - internal.c<span style="font-size: 80%;"> (source / <a href="internal.c.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">120</td>
+            <td class="headerCovTableEntry">165</td>
+            <td class="headerCovTableEntryLo">72.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntryLo">71.4 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :   This file is part of ethash.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :   ethash is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :   it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :   the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :   (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :   ethash is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :   but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :   GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :   You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :   along with cpp-ethereum.      If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file internal.c
+<span class="lineNum">      18 </span>            : * @author Tim Hughes &lt;tim@twistedfury.com&gt;
+<span class="lineNum">      19 </span>            : * @author Matthew Wampler-Doty
+<span class="lineNum">      20 </span>            : * @date 2015
+<span class="lineNum">      21 </span>            : */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;assert.h&gt;
+<span class="lineNum">      24 </span>            : #include &lt;inttypes.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;stddef.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;errno.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;math.h&gt;
+<span class="lineNum">      28 </span>            : #include &quot;mmap.h&quot;
+<span class="lineNum">      29 </span>            : #include &quot;ethash.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;fnv.h&quot;
+<span class="lineNum">      31 </span>            : #include &quot;endian.h&quot;
+<span class="lineNum">      32 </span>            : #include &quot;internal.h&quot;
+<span class="lineNum">      33 </span>            : #include &quot;data_sizes.h&quot;
+<span class="lineNum">      34 </span>            : #include &quot;io.h&quot;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #ifdef WITH_CRYPTOPP
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #include &quot;sha3_cryptopp.h&quot;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : #else
+<span class="lineNum">      41 </span>            : #include &quot;sha3.h&quot;
+<a name="42"><span class="lineNum">      42 </span>            : #endif // WITH_CRYPTOPP</a>
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 : uint64_t ethash_get_datasize(uint64_t const block_number)</span>
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span>            :         assert(block_number / ETHASH_EPOCH_LENGTH &lt; 2048);
+<span class="lineNum">      47 </span><span class="lineCov">          3 :         return dag_sizes[block_number / ETHASH_EPOCH_LENGTH];</span>
+<a name="48"><span class="lineNum">      48 </span>            : }</a>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">          1 : uint64_t ethash_get_cachesize(uint64_t const block_number)</span>
+<span class="lineNum">      51 </span>            : {
+<span class="lineNum">      52 </span>            :         assert(block_number / ETHASH_EPOCH_LENGTH &lt; 2048);
+<span class="lineNum">      53 </span><span class="lineCov">          2 :         return cache_sizes[block_number / ETHASH_EPOCH_LENGTH];</span>
+<span class="lineNum">      54 </span>            : }
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : // Follows Sergio's &quot;STRICT MEMORY HARD HASHING FUNCTIONS&quot; (2014)
+<a name="57"><span class="lineNum">      57 </span>            : // https://bitslog.files.wordpress.com/2013/12/memohash-v0-3.pdf</a>
+<span class="lineNum">      58 </span>            : // SeqMemoHash(s, R, N)
+<span class="lineNum">      59 </span><span class="lineCov">          1 : static bool ethash_compute_cache_nodes(</span>
+<span class="lineNum">      60 </span>            :         node* const nodes,
+<span class="lineNum">      61 </span>            :         uint64_t cache_size,
+<span class="lineNum">      62 </span>            :         ethash_h256_t const* seed
+<span class="lineNum">      63 </span>            : )
+<span class="lineNum">      64 </span>            : {
+<span class="lineNum">      65 </span><span class="lineCov">          1 :         if (cache_size % sizeof(node) != 0) {</span>
+<span class="lineNum">      66 </span>            :                 return false;
+<span class="lineNum">      67 </span>            :         }
+<span class="lineNum">      68 </span><span class="lineCov">          1 :         uint32_t const num_nodes = (uint32_t) (cache_size / sizeof(node));</span>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineCov">          2 :         SHA3_512(nodes[0].bytes, (uint8_t*)seed, 32);</span>
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span><span class="lineCov">     262139 :         for (uint32_t i = 1; i != num_nodes; ++i) {</span>
+<span class="lineNum">      73 </span><span class="lineCov">     524276 :                 SHA3_512(nodes[i].bytes, nodes[i - 1].bytes, 64);</span>
+<span class="lineNum">      74 </span>            :         }
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">          3 :         for (uint32_t j = 0; j != ETHASH_CACHE_ROUNDS; j++) {</span>
+<span class="lineNum">      77 </span><span class="lineCov">     786417 :                 for (uint32_t i = 0; i != num_nodes; i++) {</span>
+<span class="lineNum">      78 </span><span class="lineCov">     786417 :                         uint32_t const idx = nodes[i].words[0] % num_nodes;</span>
+<span class="lineNum">      79 </span>            :                         node data;
+<span class="lineNum">      80 </span><span class="lineCov">     786417 :                         data = nodes[(num_nodes - 1 + i) % num_nodes];</span>
+<span class="lineNum">      81 </span><span class="lineCov">   13369089 :                         for (uint32_t w = 0; w != NODE_WORDS; ++w) {</span>
+<span class="lineNum">      82 </span><span class="lineCov">   12582672 :                                 data.words[w] ^= nodes[idx].words[w];</span>
+<span class="lineNum">      83 </span>            :                         }
+<span class="lineNum">      84 </span><span class="lineCov">    1572834 :                         SHA3_512(nodes[i].bytes, data.bytes, sizeof(data));</span>
+<span class="lineNum">      85 </span>            :                 }
+<span class="lineNum">      86 </span>            :         }
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            :         // now perform endian conversion
+<span class="lineNum">      89 </span>            :         fix_endian_arr32(nodes-&gt;words, num_nodes * NODE_WORDS);
+<span class="lineNum">      90 </span>            :         return true;
+<a name="91"><span class="lineNum">      91 </span>            : }</a>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">        256 : void ethash_calculate_dag_item(</span>
+<span class="lineNum">      94 </span>            :         node* const ret,
+<span class="lineNum">      95 </span>            :         uint32_t node_index,
+<span class="lineNum">      96 </span>            :         ethash_light_t const light
+<span class="lineNum">      97 </span>            : )
+<span class="lineNum">      98 </span>            : {
+<span class="lineNum">      99 </span><span class="lineCov">        256 :         uint32_t num_parent_nodes = (uint32_t) (light-&gt;cache_size / sizeof(node));</span>
+<span class="lineNum">     100 </span><span class="lineCov">        256 :         node const* cache_nodes = (node const *) light-&gt;cache;</span>
+<span class="lineNum">     101 </span><span class="lineCov">        256 :         node const* init = &amp;cache_nodes[node_index % num_parent_nodes];</span>
+<span class="lineNum">     102 </span><span class="lineCov">        256 :         memcpy(ret, init, sizeof(node));</span>
+<span class="lineNum">     103 </span><span class="lineCov">        256 :         ret-&gt;words[0] ^= node_index;</span>
+<span class="lineNum">     104 </span><span class="lineCov">        512 :         SHA3_512(ret-&gt;bytes, ret-&gt;bytes, sizeof(node));</span>
+<span class="lineNum">     105 </span>            : #if defined(_M_X64) &amp;&amp; ENABLE_SSE
+<span class="lineNum">     106 </span>            :         __m128i const fnv_prime = _mm_set1_epi32(FNV_PRIME);
+<span class="lineNum">     107 </span>            :         __m128i xmm0 = ret-&gt;xmm[0];
+<span class="lineNum">     108 </span>            :         __m128i xmm1 = ret-&gt;xmm[1];
+<span class="lineNum">     109 </span>            :         __m128i xmm2 = ret-&gt;xmm[2];
+<span class="lineNum">     110 </span>            :         __m128i xmm3 = ret-&gt;xmm[3];
+<span class="lineNum">     111 </span>            : #elif defined(__MIC__)
+<span class="lineNum">     112 </span>            :         __m512i const fnv_prime = _mm512_set1_epi32(FNV_PRIME);
+<span class="lineNum">     113 </span>            :         __m512i zmm0 = ret-&gt;zmm[0];
+<span class="lineNum">     114 </span>            : #endif
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">      65792 :         for (uint32_t i = 0; i != ETHASH_DATASET_PARENTS; ++i) {</span>
+<span class="lineNum">     117 </span><span class="lineCov">     131072 :                 uint32_t parent_index = fnv_hash(node_index ^ i, ret-&gt;words[i % NODE_WORDS]) % num_parent_nodes;</span>
+<span class="lineNum">     118 </span><span class="lineCov">      65536 :                 node const *parent = &amp;cache_nodes[parent_index];</span>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : #if defined(_M_X64) &amp;&amp; ENABLE_SSE
+<span class="lineNum">     121 </span>            :                 {
+<span class="lineNum">     122 </span>            :                         xmm0 = _mm_mullo_epi32(xmm0, fnv_prime);
+<span class="lineNum">     123 </span>            :                         xmm1 = _mm_mullo_epi32(xmm1, fnv_prime);
+<span class="lineNum">     124 </span>            :                         xmm2 = _mm_mullo_epi32(xmm2, fnv_prime);
+<span class="lineNum">     125 </span>            :                         xmm3 = _mm_mullo_epi32(xmm3, fnv_prime);
+<span class="lineNum">     126 </span>            :                         xmm0 = _mm_xor_si128(xmm0, parent-&gt;xmm[0]);
+<span class="lineNum">     127 </span>            :                         xmm1 = _mm_xor_si128(xmm1, parent-&gt;xmm[1]);
+<span class="lineNum">     128 </span>            :                         xmm2 = _mm_xor_si128(xmm2, parent-&gt;xmm[2]);
+<span class="lineNum">     129 </span>            :                         xmm3 = _mm_xor_si128(xmm3, parent-&gt;xmm[3]);
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            :                         // have to write to ret as values are used to compute index
+<span class="lineNum">     132 </span>            :                         ret-&gt;xmm[0] = xmm0;
+<span class="lineNum">     133 </span>            :                         ret-&gt;xmm[1] = xmm1;
+<span class="lineNum">     134 </span>            :                         ret-&gt;xmm[2] = xmm2;
+<span class="lineNum">     135 </span>            :                         ret-&gt;xmm[3] = xmm3;
+<span class="lineNum">     136 </span>            :                 }
+<span class="lineNum">     137 </span>            :                 #elif defined(__MIC__)
+<span class="lineNum">     138 </span>            :                 {
+<span class="lineNum">     139 </span>            :                         zmm0 = _mm512_mullo_epi32(zmm0, fnv_prime);
+<span class="lineNum">     140 </span>            : 
+<span class="lineNum">     141 </span>            :                         // have to write to ret as values are used to compute index
+<span class="lineNum">     142 </span>            :                         zmm0 = _mm512_xor_si512(zmm0, parent-&gt;zmm[0]);
+<span class="lineNum">     143 </span>            :                         ret-&gt;zmm[0] = zmm0;
+<span class="lineNum">     144 </span>            :                 }
+<span class="lineNum">     145 </span>            :                 #else
+<span class="lineNum">     146 </span>            :                 {
+<span class="lineNum">     147 </span><span class="lineCov">    1114112 :                         for (unsigned w = 0; w != NODE_WORDS; ++w) {</span>
+<span class="lineNum">     148 </span><span class="lineCov">    2097152 :                                 ret-&gt;words[w] = fnv_hash(ret-&gt;words[w], parent-&gt;words[w]);</span>
+<span class="lineNum">     149 </span>            :                         }
+<span class="lineNum">     150 </span>            :                 }
+<span class="lineNum">     151 </span>            : #endif
+<span class="lineNum">     152 </span>            :         }
+<span class="lineNum">     153 </span><span class="lineCov">        512 :         SHA3_512(ret-&gt;bytes, ret-&gt;bytes, sizeof(node));</span>
+<a name="154"><span class="lineNum">     154 </span><span class="lineCov">        256 : }</span></a>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 : bool ethash_compute_full_data(</span>
+<span class="lineNum">     157 </span>            :         void* mem,
+<span class="lineNum">     158 </span>            :         uint64_t full_size,
+<span class="lineNum">     159 </span>            :         ethash_light_t const light,
+<span class="lineNum">     160 </span>            :         ethash_callback_t callback
+<span class="lineNum">     161 </span>            : )
+<span class="lineNum">     162 </span>            : {
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :         if (full_size % (sizeof(uint32_t) * MIX_WORDS) != 0 ||</span>
+<span class="lineNum">     164 </span>            :                 (full_size % sizeof(node)) != 0) {
+<span class="lineNum">     165 </span>            :                 return false;
+<span class="lineNum">     166 </span>            :         }
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :         uint32_t const max_n = (uint32_t)(full_size / sizeof(node));</span>
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :         node* full_nodes = mem;</span>
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :         double const progress_change = 1.0f / max_n;</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :         double progress = 0.0f;</span>
+<span class="lineNum">     171 </span>            :         // now compute full nodes
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :         for (uint32_t n = 0; n != max_n; ++n) {</span>
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 :                 if (callback &amp;&amp;</span>
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :                         n % (max_n / 100) == 0 &amp;&amp;</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :                         callback((unsigned int)(ceil(progress * 100.0f))) != 0) {</span>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :                         return false;
+<span class="lineNum">     178 </span>            :                 }
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :                 progress += progress_change;</span>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :                 ethash_calculate_dag_item(&amp;(full_nodes[n]), n, light);</span>
+<span class="lineNum">     181 </span>            :         }
+<span class="lineNum">     182 </span>            :         return true;
+<a name="183"><span class="lineNum">     183 </span>            : }</a>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span><span class="lineCov">    2728467 : static bool ethash_hash(</span>
+<span class="lineNum">     186 </span>            :         ethash_return_value_t* ret,
+<span class="lineNum">     187 </span>            :         node const* full_nodes,
+<span class="lineNum">     188 </span>            :         ethash_light_t const light,
+<span class="lineNum">     189 </span>            :         uint64_t full_size,
+<span class="lineNum">     190 </span>            :         ethash_h256_t const header_hash,
+<span class="lineNum">     191 </span>            :         uint64_t const nonce
+<span class="lineNum">     192 </span>            : )
+<span class="lineNum">     193 </span>            : {
+<span class="lineNum">     194 </span><span class="lineCov">    2728467 :         if (full_size % MIX_WORDS != 0) {</span>
+<span class="lineNum">     195 </span>            :                 return false;
+<span class="lineNum">     196 </span>            :         }
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :         // pack hash and nonce together into first 40 bytes of s_mix
+<span class="lineNum">     199 </span>            :         assert(sizeof(node) * 8 == 512);
+<span class="lineNum">     200 </span>            :         node s_mix[MIX_NODES + 1];
+<span class="lineNum">     201 </span><span class="lineCov">    2715154 :         memcpy(s_mix[0].bytes, &amp;header_hash, 32);</span>
+<span class="lineNum">     202 </span><span class="lineCov">    2715154 :         fix_endian64(s_mix[0].double_words[4], nonce);</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            :         // compute sha3-512 hash and replicate across mix
+<span class="lineNum">     205 </span><span class="lineCov">    2715154 :         SHA3_512(s_mix-&gt;bytes, s_mix-&gt;bytes, 40);</span>
+<span class="lineNum">     206 </span>            :         fix_endian_arr32(s_mix[0].words, 16);
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span><span class="lineCov">    2715154 :         node* const mix = s_mix + 1;</span>
+<span class="lineNum">     209 </span><span class="lineCov">   88525330 :         for (uint32_t w = 0; w != MIX_WORDS; ++w) {</span>
+<span class="lineNum">     210 </span><span class="lineCov">   85810176 :                 mix-&gt;words[w] = s_mix[0].words[w % NODE_WORDS];</span>
+<span class="lineNum">     211 </span>            :         }
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span><span class="lineCov">   14498913 :         unsigned const page_size = sizeof(uint32_t) * MIX_WORDS;</span>
+<span class="lineNum">     214 </span><span class="lineCov">   14498913 :         unsigned const num_full_pages = (unsigned) (full_size / page_size);</span>
+<span class="lineNum">     215 </span>            : 
+<span class="lineNum">     216 </span><span class="lineCov">   80547960 :         for (unsigned i = 0; i != ETHASH_ACCESSES; ++i) {</span>
+<span class="lineNum">     217 </span><span class="lineCov">  155651672 :                 uint32_t const index = fnv_hash(s_mix-&gt;words[0] ^ i, mix-&gt;words[i % MIX_WORDS]) % num_full_pages;</span>
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span><span class="lineCov">  162510385 :                 for (unsigned n = 0; n != MIX_NODES; ++n) {</span>
+<span class="lineNum">     220 </span>            :                         node const* dag_node;
+<span class="lineNum">     221 </span><span class="lineCov">   96461338 :                         if (full_nodes) {</span>
+<span class="lineNum">     222 </span><span class="lineCov">   84684293 :                                 dag_node = &amp;full_nodes[MIX_NODES * index + n];</span>
+<span class="lineNum">     223 </span>            :                         } else {
+<span class="lineNum">     224 </span>            :                                 node tmp_node;
+<span class="lineNum">     225 </span><span class="lineCov">   11777045 :                                 ethash_calculate_dag_item(&amp;tmp_node, index * MIX_NODES + n, light);</span>
+<span class="lineNum">     226 </span><span class="lineCov">        256 :                                 dag_node = &amp;tmp_node;</span>
+<span class="lineNum">     227 </span>            :                         }
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            : #if defined(_M_X64) &amp;&amp; ENABLE_SSE
+<span class="lineNum">     230 </span>            :                         {
+<span class="lineNum">     231 </span>            :                                 __m128i fnv_prime = _mm_set1_epi32(FNV_PRIME);
+<span class="lineNum">     232 </span>            :                                 __m128i xmm0 = _mm_mullo_epi32(fnv_prime, mix[n].xmm[0]);
+<span class="lineNum">     233 </span>            :                                 __m128i xmm1 = _mm_mullo_epi32(fnv_prime, mix[n].xmm[1]);
+<span class="lineNum">     234 </span>            :                                 __m128i xmm2 = _mm_mullo_epi32(fnv_prime, mix[n].xmm[2]);
+<span class="lineNum">     235 </span>            :                                 __m128i xmm3 = _mm_mullo_epi32(fnv_prime, mix[n].xmm[3]);
+<span class="lineNum">     236 </span>            :                                 mix[n].xmm[0] = _mm_xor_si128(xmm0, dag_node-&gt;xmm[0]);
+<span class="lineNum">     237 </span>            :                                 mix[n].xmm[1] = _mm_xor_si128(xmm1, dag_node-&gt;xmm[1]);
+<span class="lineNum">     238 </span>            :                                 mix[n].xmm[2] = _mm_xor_si128(xmm2, dag_node-&gt;xmm[2]);
+<span class="lineNum">     239 </span>            :                                 mix[n].xmm[3] = _mm_xor_si128(xmm3, dag_node-&gt;xmm[3]);
+<span class="lineNum">     240 </span>            :                         }
+<span class="lineNum">     241 </span>            :                         #elif defined(__MIC__)
+<span class="lineNum">     242 </span>            :                         {
+<span class="lineNum">     243 </span>            :                                 // __m512i implementation via union
+<span class="lineNum">     244 </span>            :                                 //      Each vector register (zmm) can store sixteen 32-bit integer numbers
+<span class="lineNum">     245 </span>            :                                 __m512i fnv_prime = _mm512_set1_epi32(FNV_PRIME);
+<span class="lineNum">     246 </span>            :                                 __m512i zmm0 = _mm512_mullo_epi32(fnv_prime, mix[n].zmm[0]);
+<span class="lineNum">     247 </span>            :                                 mix[n].zmm[0] = _mm512_xor_si512(zmm0, dag_node-&gt;zmm[0]);
+<span class="lineNum">     248 </span>            :                         }
+<span class="lineNum">     249 </span>            :                         #else
+<span class="lineNum">     250 </span>            :                         {
+<span class="lineNum">     251 </span><span class="lineCov"> 1430065173 :                                 for (unsigned w = 0; w != NODE_WORDS; ++w) {</span>
+<span class="lineNum">     252 </span><span class="lineCov"> 2690761248 :                                         mix[n].words[w] = fnv_hash(mix[n].words[w], dag_node-&gt;words[w]);</span>
+<span class="lineNum">     253 </span>            :                                 }
+<span class="lineNum">     254 </span>            :                         }
+<span class="lineNum">     255 </span>            : #endif
+<span class="lineNum">     256 </span>            :                 }
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span>            :         }
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span>            : // Workaround for a GCC regression which causes a bogus -Warray-bounds warning.
+<span class="lineNum">     261 </span>            : // The regression was introduced in GCC 4.8.4, fixed in GCC 5.0.0 and backported to GCC 4.9.3 but
+<span class="lineNum">     262 </span>            : // never to the GCC 4.8.x line.
+<span class="lineNum">     263 </span>            : //
+<span class="lineNum">     264 </span>            : // See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=56273
+<span class="lineNum">     265 </span>            : //
+<span class="lineNum">     266 </span>            : // This regression is affecting Debian Jesse (8.5) builds of cpp-ethereum (GCC 4.9.2) and also
+<span class="lineNum">     267 </span>            : // manifests in the doublethinkco armel v5 cross-builds, which use crosstool-ng and resulting
+<span class="lineNum">     268 </span>            : // in the use of GCC 4.8.4.  The Tizen runtime wants an even older GLIBC version - the one from
+<span class="lineNum">     269 </span>            : // GCC 4.6.0!
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            : #if defined(__GNUC__) &amp;&amp; (__GNUC__ &lt; 5)
+<span class="lineNum">     272 </span>            : #pragma GCC diagnostic push
+<span class="lineNum">     273 </span>            : #pragma GCC diagnostic ignored &quot;-Warray-bounds&quot;
+<span class="lineNum">     274 </span>            : #endif // define (__GNUC__)
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span>            :         // compress mix
+<span class="lineNum">     277 </span><span class="lineCov">   21771944 :         for (uint32_t w = 0; w != MIX_WORDS; w += 4) {</span>
+<span class="lineNum">     278 </span><span class="lineCov">   21771944 :                 uint32_t reduction = mix-&gt;words[w + 0];</span>
+<span class="lineNum">     279 </span><span class="lineCov">   21771944 :                 reduction = reduction * FNV_PRIME ^ mix-&gt;words[w + 1];</span>
+<span class="lineNum">     280 </span><span class="lineCov">   21771944 :                 reduction = reduction * FNV_PRIME ^ mix-&gt;words[w + 2];</span>
+<span class="lineNum">     281 </span><span class="lineCov">   21771944 :                 reduction = reduction * FNV_PRIME ^ mix-&gt;words[w + 3];</span>
+<span class="lineNum">     282 </span><span class="lineCov">   21771944 :                 mix-&gt;words[w / 4] = reduction;</span>
+<span class="lineNum">     283 </span>            :         }
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span>            : #if defined(__GNUC__) &amp;&amp; (__GNUC__ &lt; 5)
+<span class="lineNum">     286 </span>            : #pragma GCC diagnostic pop
+<span class="lineNum">     287 </span>            : #endif // define (__GNUC__)
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            :         fix_endian_arr32(mix-&gt;words, MIX_WORDS / 4);
+<span class="lineNum">     290 </span><span class="lineCov">    5444248 :         memcpy(&amp;ret-&gt;mix_hash, mix-&gt;bytes, 32);</span>
+<span class="lineNum">     291 </span>            :         // final Keccak hash
+<span class="lineNum">     292 </span><span class="lineCov">    5444248 :         SHA3_256(&amp;ret-&gt;result, s_mix-&gt;bytes, 64 + 32); // Keccak-256(s + compressed_mix)</span>
+<span class="lineNum">     293 </span><span class="lineCov">    2752101 :         return true;</span>
+<a name="294"><span class="lineNum">     294 </span>            : }</a>
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span><span class="lineCov">      10410 : void ethash_quick_hash(</span>
+<span class="lineNum">     297 </span>            :         ethash_h256_t* return_hash,
+<span class="lineNum">     298 </span>            :         ethash_h256_t const* header_hash,
+<span class="lineNum">     299 </span>            :         uint64_t const nonce,
+<span class="lineNum">     300 </span>            :         ethash_h256_t const* mix_hash
+<span class="lineNum">     301 </span>            : )
+<span class="lineNum">     302 </span>            : {
+<span class="lineNum">     303 </span>            :         uint8_t buf[64 + 32];
+<span class="lineNum">     304 </span><span class="lineCov">      10410 :         memcpy(buf, header_hash, 32);</span>
+<span class="lineNum">     305 </span>            :         fix_endian64_same(nonce);
+<span class="lineNum">     306 </span><span class="lineCov">      10410 :         memcpy(&amp;(buf[32]), &amp;nonce, 8);</span>
+<span class="lineNum">     307 </span><span class="lineCov">      10410 :         SHA3_512(buf, buf, 40);</span>
+<span class="lineNum">     308 </span><span class="lineCov">      10410 :         memcpy(&amp;(buf[64]), mix_hash, 32);</span>
+<span class="lineNum">     309 </span><span class="lineCov">      10410 :         SHA3_256(return_hash, buf, 64 + 32);</span>
+<a name="310"><span class="lineNum">     310 </span><span class="lineCov">      10410 : }</span></a>
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span><span class="lineCov">          2 : ethash_h256_t ethash_get_seedhash(uint64_t block_number)</span>
+<span class="lineNum">     313 </span>            : {
+<span class="lineNum">     314 </span>            :         ethash_h256_t ret;
+<span class="lineNum">     315 </span><span class="lineCov">          2 :         ethash_h256_reset(&amp;ret);</span>
+<span class="lineNum">     316 </span><span class="lineCov">          2 :         uint64_t const epochs = block_number / ETHASH_EPOCH_LENGTH;</span>
+<span class="lineNum">     317 </span><span class="lineCov">          2 :         for (uint32_t i = 0; i &lt; epochs; ++i)</span>
+<span class="lineNum">     318 </span><span class="lineNoCov">          0 :                 SHA3_256(&amp;ret, (uint8_t*)&amp;ret, 32);</span>
+<span class="lineNum">     319 </span><span class="lineCov">          2 :         return ret;</span>
+<a name="320"><span class="lineNum">     320 </span>            : }</a>
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span><span class="lineCov">      10410 : bool ethash_quick_check_difficulty(</span>
+<span class="lineNum">     323 </span>            :         ethash_h256_t const* header_hash,
+<span class="lineNum">     324 </span>            :         uint64_t const nonce,
+<span class="lineNum">     325 </span>            :         ethash_h256_t const* mix_hash,
+<span class="lineNum">     326 </span>            :         ethash_h256_t const* boundary
+<span class="lineNum">     327 </span>            : )
+<span class="lineNum">     328 </span>            : {
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span>            :         ethash_h256_t return_hash;
+<span class="lineNum">     331 </span><span class="lineCov">      10410 :         ethash_quick_hash(&amp;return_hash, header_hash, nonce, mix_hash);</span>
+<span class="lineNum">     332 </span><span class="lineCov">      10410 :         return ethash_check_difficulty(&amp;return_hash, boundary);</span>
+<a name="333"><span class="lineNum">     333 </span>            : }</a>
+<span class="lineNum">     334 </span>            : 
+<span class="lineNum">     335 </span><span class="lineCov">          1 : ethash_light_t ethash_light_new_internal(uint64_t cache_size, ethash_h256_t const* seed)</span>
+<span class="lineNum">     336 </span>            : {
+<span class="lineNum">     337 </span>            :         struct ethash_light *ret;
+<span class="lineNum">     338 </span><span class="lineCov">          1 :         ret = calloc(sizeof(*ret), 1);</span>
+<span class="lineNum">     339 </span><span class="lineCov">          1 :         if (!ret) {</span>
+<span class="lineNum">     340 </span>            :                 return NULL;
+<span class="lineNum">     341 </span>            :         }
+<span class="lineNum">     342 </span>            : #if defined(__MIC__)
+<span class="lineNum">     343 </span>            :         ret-&gt;cache = _mm_malloc((size_t)cache_size, 64);
+<span class="lineNum">     344 </span>            : #else
+<span class="lineNum">     345 </span><span class="lineCov">          1 :         ret-&gt;cache = malloc((size_t)cache_size);</span>
+<span class="lineNum">     346 </span>            : #endif
+<span class="lineNum">     347 </span><span class="lineCov">          1 :         if (!ret-&gt;cache) {</span>
+<span class="lineNum">     348 </span>            :                 goto fail_free_light;
+<span class="lineNum">     349 </span>            :         }
+<span class="lineNum">     350 </span><span class="lineCov">          1 :         node* nodes = (node*)ret-&gt;cache;</span>
+<span class="lineNum">     351 </span><span class="lineCov">          1 :         if (!ethash_compute_cache_nodes(nodes, cache_size, seed)) {</span>
+<span class="lineNum">     352 </span>            :                 goto fail_free_cache_mem;
+<span class="lineNum">     353 </span>            :         }
+<span class="lineNum">     354 </span><span class="lineCov">          1 :         ret-&gt;cache_size = cache_size;</span>
+<span class="lineNum">     355 </span><span class="lineCov">          1 :         return ret;</span>
+<span class="lineNum">     356 </span>            : 
+<span class="lineNum">     357 </span>            : fail_free_cache_mem:
+<span class="lineNum">     358 </span>            : #if defined(__MIC__)
+<span class="lineNum">     359 </span>            :         _mm_free(ret-&gt;cache);
+<span class="lineNum">     360 </span>            : #else
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :         free(ret-&gt;cache);</span>
+<span class="lineNum">     362 </span>            : #endif
+<span class="lineNum">     363 </span>            : fail_free_light:
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :         free(ret);</span>
+<span class="lineNum">     365 </span><span class="lineNoCov">          0 :         return NULL;</span>
+<a name="366"><span class="lineNum">     366 </span>            : }</a>
+<span class="lineNum">     367 </span>            : 
+<span class="lineNum">     368 </span><span class="lineCov">          1 : ethash_light_t ethash_light_new(uint64_t block_number)</span>
+<span class="lineNum">     369 </span>            : {
+<span class="lineNum">     370 </span><span class="lineCov">          1 :         ethash_h256_t seedhash = ethash_get_seedhash(block_number);</span>
+<span class="lineNum">     371 </span>            :         ethash_light_t ret;
+<span class="lineNum">     372 </span><span class="lineCov">          1 :         ret = ethash_light_new_internal(ethash_get_cachesize(block_number), &amp;seedhash);</span>
+<span class="lineNum">     373 </span><span class="lineCov">          1 :         ret-&gt;block_number = block_number;</span>
+<span class="lineNum">     374 </span><span class="lineCov">          1 :         return ret;</span>
+<a name="375"><span class="lineNum">     375 </span>            : }</a>
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 : void ethash_light_delete(ethash_light_t light)</span>
+<span class="lineNum">     378 </span>            : {
+<span class="lineNum">     379 </span><span class="lineNoCov">          0 :         if (light-&gt;cache) {</span>
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 :                 free(light-&gt;cache);</span>
+<span class="lineNum">     381 </span>            :         }
+<span class="lineNum">     382 </span><span class="lineNoCov">          0 :         free(light);</span>
+<a name="383"><span class="lineNum">     383 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     384 </span>            : 
+<span class="lineNum">     385 </span><span class="lineCov">          2 : ethash_return_value_t ethash_light_compute_internal(</span>
+<span class="lineNum">     386 </span>            :         ethash_light_t light,
+<span class="lineNum">     387 </span>            :         uint64_t full_size,
+<span class="lineNum">     388 </span>            :         ethash_h256_t const header_hash,
+<span class="lineNum">     389 </span>            :         uint64_t nonce
+<span class="lineNum">     390 </span>            : )
+<span class="lineNum">     391 </span>            : {
+<span class="lineNum">     392 </span>            :         ethash_return_value_t ret;
+<span class="lineNum">     393 </span><span class="lineCov">          2 :         ret.success = true;</span>
+<span class="lineNum">     394 </span><span class="lineCov">          2 :         if (!ethash_hash(&amp;ret, NULL, light, full_size, header_hash, nonce)) {</span>
+<span class="lineNum">     395 </span><span class="lineNoCov">          0 :                 ret.success = false;</span>
+<span class="lineNum">     396 </span>            :         }
+<span class="lineNum">     397 </span><span class="lineCov">          2 :         return ret;</span>
+<a name="398"><span class="lineNum">     398 </span>            : }</a>
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span><span class="lineCov">          2 : ethash_return_value_t ethash_light_compute(</span>
+<span class="lineNum">     401 </span>            :         ethash_light_t light,
+<span class="lineNum">     402 </span>            :         ethash_h256_t const header_hash,
+<span class="lineNum">     403 </span>            :         uint64_t nonce
+<span class="lineNum">     404 </span>            : )
+<span class="lineNum">     405 </span>            : {
+<span class="lineNum">     406 </span><span class="lineCov">          4 :         uint64_t full_size = ethash_get_datasize(light-&gt;block_number);</span>
+<span class="lineNum">     407 </span><span class="lineCov">          2 :         return ethash_light_compute_internal(light, full_size, header_hash, nonce);</span>
+<a name="408"><span class="lineNum">     408 </span>            : }</a>
+<span class="lineNum">     409 </span>            : 
+<span class="lineNum">     410 </span><span class="lineCov">          1 : static bool ethash_mmap(struct ethash_full* ret, FILE* f)</span>
+<span class="lineNum">     411 </span>            : {
+<span class="lineNum">     412 </span>            :         int fd;
+<span class="lineNum">     413 </span>            :         char* mmapped_data;
+<span class="lineNum">     414 </span><span class="lineCov">          1 :         errno = 0;</span>
+<span class="lineNum">     415 </span><span class="lineCov">          1 :         ret-&gt;file = f;</span>
+<span class="lineNum">     416 </span><span class="lineCov">          1 :         if ((fd = ethash_fileno(ret-&gt;file)) == -1) {</span>
+<span class="lineNum">     417 </span>            :                 return false;
+<span class="lineNum">     418 </span>            :         }
+<span class="lineNum">     419 </span><span class="lineCov">          1 :         mmapped_data = mmap(</span>
+<span class="lineNum">     420 </span>            :                 NULL,
+<span class="lineNum">     421 </span><span class="lineCov">          1 :                 (size_t)ret-&gt;file_size + ETHASH_DAG_MAGIC_NUM_SIZE,</span>
+<span class="lineNum">     422 </span>            :                 PROT_READ | PROT_WRITE,
+<span class="lineNum">     423 </span>            :                 MAP_SHARED,
+<span class="lineNum">     424 </span>            :                 fd,
+<span class="lineNum">     425 </span>            :                 0
+<span class="lineNum">     426 </span>            :         );
+<span class="lineNum">     427 </span><span class="lineCov">          1 :         if (mmapped_data == MAP_FAILED) {</span>
+<span class="lineNum">     428 </span>            :                 return false;
+<span class="lineNum">     429 </span>            :         }
+<span class="lineNum">     430 </span><span class="lineCov">          1 :         ret-&gt;data = (node*)(mmapped_data + ETHASH_DAG_MAGIC_NUM_SIZE);</span>
+<span class="lineNum">     431 </span><span class="lineCov">          1 :         return true;</span>
+<a name="432"><span class="lineNum">     432 </span>            : }</a>
+<span class="lineNum">     433 </span>            : 
+<span class="lineNum">     434 </span><span class="lineCov">          1 : ethash_full_t ethash_full_new_internal(</span>
+<span class="lineNum">     435 </span>            :         char const* dirname,
+<span class="lineNum">     436 </span>            :         ethash_h256_t const seed_hash,
+<span class="lineNum">     437 </span>            :         uint64_t full_size,
+<span class="lineNum">     438 </span>            :         ethash_light_t const light,
+<span class="lineNum">     439 </span>            :         ethash_callback_t callback
+<span class="lineNum">     440 </span>            : )
+<span class="lineNum">     441 </span>            : {
+<span class="lineNum">     442 </span>            :         struct ethash_full* ret;
+<span class="lineNum">     443 </span><span class="lineCov">          1 :         FILE *f = NULL;</span>
+<span class="lineNum">     444 </span><span class="lineCov">          1 :         ret = calloc(sizeof(*ret), 1);</span>
+<span class="lineNum">     445 </span><span class="lineCov">          1 :         if (!ret) {</span>
+<span class="lineNum">     446 </span>            :                 return NULL;
+<span class="lineNum">     447 </span>            :         }
+<span class="lineNum">     448 </span><span class="lineCov">          1 :         ret-&gt;file_size = (size_t)full_size;</span>
+<span class="lineNum">     449 </span><span class="lineCov">          1 :         switch (ethash_io_prepare(dirname, seed_hash, &amp;f, (size_t)full_size, false)) {</span>
+<span class="lineNum">     450 </span>            :         case ETHASH_IO_FAIL:
+<span class="lineNum">     451 </span>            :                 // ethash_io_prepare will do all ETHASH_CRITICAL() logging in fail case
+<span class="lineNum">     452 </span>            :                 goto fail_free_full;
+<span class="lineNum">     453 </span>            :         case ETHASH_IO_MEMO_MATCH:
+<span class="lineNum">     454 </span><span class="lineCov">          1 :                 if (!ethash_mmap(ret, f)) {</span>
+<span class="lineNum">     455 </span>            :                         ETHASH_CRITICAL(&quot;mmap failure()&quot;);
+<span class="lineNum">     456 </span>            :                         goto fail_close_file;
+<span class="lineNum">     457 </span>            :                 }
+<span class="lineNum">     458 </span>            : #if defined(__MIC__)
+<span class="lineNum">     459 </span>            :                 node* tmp_nodes = _mm_malloc((size_t)full_size, 64);
+<span class="lineNum">     460 </span>            :                 //copy all nodes from ret-&gt;data
+<span class="lineNum">     461 </span>            :                 //mmapped_nodes are not aligned properly
+<span class="lineNum">     462 </span>            :                 uint32_t const countnodes = (uint32_t) ((size_t)ret-&gt;file_size / sizeof(node));
+<span class="lineNum">     463 </span>            :                 //fprintf(stderr,&quot;ethash_full_new_internal:countnodes:%d&quot;,countnodes);
+<span class="lineNum">     464 </span>            :                 for (uint32_t i = 1; i != countnodes; ++i) {
+<span class="lineNum">     465 </span>            :                         tmp_nodes[i] = ret-&gt;data[i];
+<span class="lineNum">     466 </span>            :                 }
+<span class="lineNum">     467 </span>            :                 ret-&gt;data = tmp_nodes;
+<span class="lineNum">     468 </span>            : #endif
+<span class="lineNum">     469 </span>            :                 return ret;
+<span class="lineNum">     470 </span>            :         case ETHASH_IO_MEMO_SIZE_MISMATCH:
+<span class="lineNum">     471 </span>            :                 // if a DAG of same filename but unexpected size is found, silently force new file creation
+<span class="lineNum">     472 </span><span class="lineNoCov">          0 :                 if (ethash_io_prepare(dirname, seed_hash, &amp;f, (size_t)full_size, true) != ETHASH_IO_MEMO_MISMATCH) {</span>
+<span class="lineNum">     473 </span>            :                         ETHASH_CRITICAL(&quot;Could not recreate DAG file after finding existing DAG with unexpected size.&quot;);
+<span class="lineNum">     474 </span>            :                         goto fail_free_full;
+<span class="lineNum">     475 </span>            :                 }
+<span class="lineNum">     476 </span>            :                 // fallthrough to the mismatch case here, DO NOT go through match
+<span class="lineNum">     477 </span>            :         case ETHASH_IO_MEMO_MISMATCH:
+<span class="lineNum">     478 </span><span class="lineNoCov">          0 :                 if (!ethash_mmap(ret, f)) {</span>
+<span class="lineNum">     479 </span>            :                         ETHASH_CRITICAL(&quot;mmap failure()&quot;);
+<span class="lineNum">     480 </span>            :                         goto fail_close_file;
+<span class="lineNum">     481 </span>            :                 }
+<span class="lineNum">     482 </span>            :                 break;
+<span class="lineNum">     483 </span>            :         }
+<span class="lineNum">     484 </span>            : 
+<span class="lineNum">     485 </span>            : #if defined(__MIC__)
+<span class="lineNum">     486 </span>            :         ret-&gt;data = _mm_malloc((size_t)full_size, 64);
+<span class="lineNum">     487 </span>            : #endif
+<span class="lineNum">     488 </span><span class="lineNoCov">          0 :         if (!ethash_compute_full_data(ret-&gt;data, full_size, light, callback)) {</span>
+<span class="lineNum">     489 </span>            :                 ETHASH_CRITICAL(&quot;Failure at computing DAG data.&quot;);
+<span class="lineNum">     490 </span>            :                 goto fail_free_full_data;
+<span class="lineNum">     491 </span>            :         }
+<span class="lineNum">     492 </span>            : 
+<span class="lineNum">     493 </span>            :         // after the DAG has been filled then we finalize it by writting the magic number at the beginning
+<span class="lineNum">     494 </span><span class="lineNoCov">          0 :         if (fseek(f, 0, SEEK_SET) != 0) {</span>
+<span class="lineNum">     495 </span>            :                 ETHASH_CRITICAL(&quot;Could not seek to DAG file start to write magic number.&quot;);
+<span class="lineNum">     496 </span>            :                 goto fail_free_full_data;
+<span class="lineNum">     497 </span>            :         }
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 :         uint64_t const magic_num = ETHASH_DAG_MAGIC_NUM;</span>
+<span class="lineNum">     499 </span><span class="lineNoCov">          0 :         if (fwrite(&amp;magic_num, ETHASH_DAG_MAGIC_NUM_SIZE, 1, f) != 1) {</span>
+<span class="lineNum">     500 </span>            :                 ETHASH_CRITICAL(&quot;Could not write magic number to DAG's beginning.&quot;);
+<span class="lineNum">     501 </span>            :                 goto fail_free_full_data;
+<span class="lineNum">     502 </span>            :         }
+<span class="lineNum">     503 </span><span class="lineNoCov">          0 :         if (fflush(f) != 0) {// make sure the magic number IS there</span>
+<span class="lineNum">     504 </span>            :                 ETHASH_CRITICAL(&quot;Could not flush memory mapped data to DAG file. Insufficient space?&quot;);
+<span class="lineNum">     505 </span>            :                 goto fail_free_full_data;
+<span class="lineNum">     506 </span>            :         }
+<span class="lineNum">     507 </span>            :         return ret;
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            : fail_free_full_data:
+<span class="lineNum">     510 </span>            :         // could check that munmap(..) == 0 but even if it did not can't really do anything here
+<span class="lineNum">     511 </span><span class="lineNoCov">          0 :         munmap(ret-&gt;data, (size_t)full_size);</span>
+<span class="lineNum">     512 </span>            : #if defined(__MIC__)
+<span class="lineNum">     513 </span>            :         _mm_free(ret-&gt;data);
+<span class="lineNum">     514 </span>            : #endif
+<span class="lineNum">     515 </span>            : fail_close_file:
+<span class="lineNum">     516 </span><span class="lineNoCov">          0 :         fclose(ret-&gt;file);</span>
+<span class="lineNum">     517 </span>            : fail_free_full:
+<span class="lineNum">     518 </span><span class="lineNoCov">          0 :         free(ret);</span>
+<span class="lineNum">     519 </span><span class="lineNoCov">          0 :         return NULL;</span>
+<a name="520"><span class="lineNum">     520 </span>            : }</a>
+<span class="lineNum">     521 </span>            : 
+<span class="lineNum">     522 </span><span class="lineCov">          1 : ethash_full_t ethash_full_new(ethash_light_t light, ethash_callback_t callback)</span>
+<span class="lineNum">     523 </span>            : {
+<span class="lineNum">     524 </span>            :         char strbuf[256];
+<span class="lineNum">     525 </span><span class="lineCov">          1 :         if (!ethash_get_default_dirname(strbuf, 256)) {</span>
+<span class="lineNum">     526 </span>            :                 return NULL;
+<span class="lineNum">     527 </span>            :         }
+<span class="lineNum">     528 </span><span class="lineCov">          2 :         uint64_t full_size = ethash_get_datasize(light-&gt;block_number);</span>
+<span class="lineNum">     529 </span><span class="lineCov">          1 :         ethash_h256_t seedhash = ethash_get_seedhash(light-&gt;block_number);</span>
+<span class="lineNum">     530 </span><span class="lineCov">          1 :         return ethash_full_new_internal(strbuf, seedhash, full_size, light, callback);</span>
+<a name="531"><span class="lineNum">     531 </span>            : }</a>
+<span class="lineNum">     532 </span>            : 
+<span class="lineNum">     533 </span><span class="lineNoCov">          0 : void ethash_full_delete(ethash_full_t full)</span>
+<span class="lineNum">     534 </span>            : {
+<span class="lineNum">     535 </span>            :         // could check that munmap(..) == 0 but even if it did not can't really do anything here
+<span class="lineNum">     536 </span><span class="lineNoCov">          0 :         munmap(full-&gt;data, (size_t)full-&gt;file_size);</span>
+<span class="lineNum">     537 </span><span class="lineNoCov">          0 :         if (full-&gt;file) {</span>
+<span class="lineNum">     538 </span><span class="lineNoCov">          0 :                 fclose(full-&gt;file);</span>
+<span class="lineNum">     539 </span>            :         }
+<span class="lineNum">     540 </span><span class="lineNoCov">          0 :         free(full);</span>
+<a name="541"><span class="lineNum">     541 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     542 </span>            : 
+<span class="lineNum">     543 </span><span class="lineCov">    2754960 : ethash_return_value_t ethash_full_compute(</span>
+<span class="lineNum">     544 </span>            :         ethash_full_t full,
+<span class="lineNum">     545 </span>            :         ethash_h256_t const header_hash,
+<span class="lineNum">     546 </span>            :         uint64_t nonce
+<span class="lineNum">     547 </span>            : )
+<span class="lineNum">     548 </span>            : {
+<span class="lineNum">     549 </span>            :         ethash_return_value_t ret;
+<span class="lineNum">     550 </span><span class="lineCov">    2754960 :         ret.success = true;</span>
+<span class="lineNum">     551 </span><span class="lineCov">    5509920 :         if (!ethash_hash(</span>
+<span class="lineNum">     552 </span>            :                 &amp;ret,
+<span class="lineNum">     553 </span><span class="lineCov">    2754960 :                 (node const*)full-&gt;data,</span>
+<span class="lineNum">     554 </span>            :                 NULL,
+<span class="lineNum">     555 </span>            :                 full-&gt;file_size,
+<span class="lineNum">     556 </span>            :                 header_hash,
+<span class="lineNum">     557 </span>            :                 nonce)) {
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 :                 ret.success = false;</span>
+<span class="lineNum">     559 </span>            :         }
+<span class="lineNum">     560 </span><span class="lineCov">    2754291 :         return ret;</span>
+<a name="561"><span class="lineNum">     561 </span>            : }</a>
+<span class="lineNum">     562 </span>            : 
+<span class="lineNum">     563 </span><span class="lineNoCov">          0 : void const* ethash_full_dag(ethash_full_t full)</span>
+<span class="lineNum">     564 </span>            : {
+<span class="lineNum">     565 </span><span class="lineNoCov">          0 :         return full-&gt;data;</span>
+<a name="566"><span class="lineNum">     566 </span>            : }</a>
+<span class="lineNum">     567 </span>            : 
+<span class="lineNum">     568 </span><span class="lineNoCov">          0 : uint64_t ethash_full_dag_size(ethash_full_t full)</span>
+<span class="lineNum">     569 </span>            : {
+<span class="lineNum">     570 </span><span class="lineNoCov">          0 :         return full-&gt;file_size;</span>
+<span class="lineNum">     571 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

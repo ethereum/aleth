@@ -1,0 +1,445 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/bits/uniform_int_dist.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5/bits</a> - uniform_int_dist.h<span style="font-size: 80%;"> (source / <a href="uniform_int_dist.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntryLo">69.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Class template uniform_int_distribution -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2009-2016 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /**
+<span class="lineNum">      26 </span>            :  * @file bits/uniform_int_dist.h
+<span class="lineNum">      27 </span>            :  *  This is an internal header file, included by other library headers.
+<span class="lineNum">      28 </span>            :  *  Do not attempt to use it directly. @headername{random}
+<span class="lineNum">      29 </span>            :  */
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : #ifndef _GLIBCXX_BITS_UNIFORM_INT_DIST_H
+<span class="lineNum">      32 </span>            : #define _GLIBCXX_BITS_UNIFORM_INT_DIST_H
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #include &lt;type_traits&gt;
+<span class="lineNum">      35 </span>            : #include &lt;limits&gt;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      38 </span>            : {
+<span class="lineNum">      39 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            :   namespace __detail
+<span class="lineNum">      42 </span>            :   {
+<span class="lineNum">      43 </span>            :     /* Determine whether number is a power of 2.  */
+<span class="lineNum">      44 </span>            :     template&lt;typename _Tp&gt;
+<span class="lineNum">      45 </span>            :       inline bool
+<span class="lineNum">      46 </span>            :       _Power_of_2(_Tp __x)
+<span class="lineNum">      47 </span>            :       {
+<span class="lineNum">      48 </span>            :         return ((__x - 1) &amp; __x) == 0;
+<span class="lineNum">      49 </span>            :       };
+<span class="lineNum">      50 </span>            :   }
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            :   /**
+<span class="lineNum">      53 </span>            :    * @brief Uniform discrete distribution for random numbers.
+<span class="lineNum">      54 </span>            :    *
+<span class="lineNum">      55 </span>            :    * A discrete random distribution on the range @f$[min, max]@f$ with equal
+<span class="lineNum">      56 </span>            :    * probability throughout the range.
+<span class="lineNum">      57 </span>            :    *
+<span class="lineNum">      58 </span>            :    * @ingroup random_distributions_uniform
+<span class="lineNum">      59 </span>            :    */
+<span class="lineNum">      60 </span>            :   template&lt;typename _IntType = int&gt;
+<span class="lineNum">      61 </span>            :     class uniform_int_distribution
+<span class="lineNum">      62 </span>            :     {
+<span class="lineNum">      63 </span>            :       static_assert(std::is_integral&lt;_IntType&gt;::value,
+<span class="lineNum">      64 </span>            :                     &quot;template argument not an integral type&quot;);
+<span class="lineNum">      65 </span>            : 
+<span class="lineNum">      66 </span>            :     public:
+<span class="lineNum">      67 </span>            :       /** The type of the range of the distribution. */
+<span class="lineNum">      68 </span>            :       typedef _IntType result_type;
+<span class="lineNum">      69 </span>            :       /** Parameter type. */
+<span class="lineNum">      70 </span>            :       struct param_type
+<span class="lineNum">      71 </span>            :       {
+<span class="lineNum">      72 </span>            :         typedef uniform_int_distribution&lt;_IntType&gt; distribution_type;
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :         explicit
+<span class="lineNum">      75 </span>            :         param_type(_IntType __a = 0,
+<span class="lineNum">      76 </span>            :                    _IntType __b = std::numeric_limits&lt;_IntType&gt;::max())
+<span class="lineNum">      77 </span><span class="lineCov">          2 :         : _M_a(__a), _M_b(__b)</span>
+<span class="lineNum">      78 </span>            :         {
+<span class="lineNum">      79 </span>            :           _GLIBCXX_DEBUG_ASSERT(_M_a &lt;= _M_b);
+<span class="lineNum">      80 </span>            :         }
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :         result_type
+<span class="lineNum">      83 </span>            :         a() const
+<span class="lineNum">      84 </span>            :         { return _M_a; }
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            :         result_type
+<span class="lineNum">      87 </span>            :         b() const
+<span class="lineNum">      88 </span>            :         { return _M_b; }
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            :         friend bool
+<span class="lineNum">      91 </span>            :         operator==(const param_type&amp; __p1, const param_type&amp; __p2)
+<span class="lineNum">      92 </span>            :         { return __p1._M_a == __p2._M_a &amp;&amp; __p1._M_b == __p2._M_b; }
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :       private:
+<span class="lineNum">      95 </span>            :         _IntType _M_a;
+<span class="lineNum">      96 </span>            :         _IntType _M_b;
+<span class="lineNum">      97 </span>            :       };
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :     public:
+<span class="lineNum">     100 </span>            :       /**
+<span class="lineNum">     101 </span>            :        * @brief Constructs a uniform distribution object.
+<span class="lineNum">     102 </span>            :        */
+<span class="lineNum">     103 </span>            :       explicit
+<span class="lineNum">     104 </span>            :       uniform_int_distribution(_IntType __a = 0,
+<span class="lineNum">     105 </span>            :                            _IntType __b = std::numeric_limits&lt;_IntType&gt;::max())
+<span class="lineNum">     106 </span><span class="lineCov">          4 :       : _M_param(__a, __b)</span>
+<span class="lineNum">     107 </span>            :       { }
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            :       explicit
+<span class="lineNum">     110 </span>            :       uniform_int_distribution(const param_type&amp; __p)
+<span class="lineNum">     111 </span>            :       : _M_param(__p)
+<span class="lineNum">     112 </span>            :       { }
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :       /**
+<span class="lineNum">     115 </span>            :        * @brief Resets the distribution state.
+<span class="lineNum">     116 </span>            :        *
+<span class="lineNum">     117 </span>            :        * Does nothing for the uniform integer distribution.
+<span class="lineNum">     118 </span>            :        */
+<span class="lineNum">     119 </span>            :       void
+<span class="lineNum">     120 </span>            :       reset() { }
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :       result_type
+<span class="lineNum">     123 </span>            :       a() const
+<span class="lineNum">     124 </span>            :       { return _M_param.a(); }
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            :       result_type
+<span class="lineNum">     127 </span>            :       b() const
+<span class="lineNum">     128 </span>            :       { return _M_param.b(); }
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :       /**
+<span class="lineNum">     131 </span>            :        * @brief Returns the parameter set of the distribution.
+<span class="lineNum">     132 </span>            :        */
+<span class="lineNum">     133 </span>            :       param_type
+<span class="lineNum">     134 </span>            :       param() const
+<span class="lineNum">     135 </span>            :       { return _M_param; }
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :       /**
+<span class="lineNum">     138 </span>            :        * @brief Sets the parameter set of the distribution.
+<span class="lineNum">     139 </span>            :        * @param __param The new parameter set of the distribution.
+<span class="lineNum">     140 </span>            :        */
+<span class="lineNum">     141 </span>            :       void
+<span class="lineNum">     142 </span>            :       param(const param_type&amp; __param)
+<span class="lineNum">     143 </span>            :       { _M_param = __param; }
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            :       /**
+<span class="lineNum">     146 </span>            :        * @brief Returns the inclusive lower bound of the distribution range.
+<span class="lineNum">     147 </span>            :        */
+<span class="lineNum">     148 </span>            :       result_type
+<span class="lineNum">     149 </span>            :       min() const
+<span class="lineNum">     150 </span>            :       { return this-&gt;a(); }
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :       /**
+<span class="lineNum">     153 </span>            :        * @brief Returns the inclusive upper bound of the distribution range.
+<span class="lineNum">     154 </span>            :        */
+<span class="lineNum">     155 </span>            :       result_type
+<span class="lineNum">     156 </span>            :       max() const
+<span class="lineNum">     157 </span>            :       { return this-&gt;b(); }
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :       /**
+<span class="lineNum">     160 </span>            :        * @brief Generating functions.
+<span class="lineNum">     161 </span>            :        */
+<span class="lineNum">     162 </span>            :       template&lt;typename _UniformRandomNumberGenerator&gt;
+<span class="lineNum">     163 </span>            :         result_type
+<span class="lineNum">     164 </span>            :         operator()(_UniformRandomNumberGenerator&amp; __urng)
+<span class="lineNum">     165 </span><span class="lineCov">          2 :         { return this-&gt;operator()(__urng, _M_param); }</span>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            :       template&lt;typename _UniformRandomNumberGenerator&gt;
+<span class="lineNum">     168 </span>            :         result_type
+<span class="lineNum">     169 </span>            :         operator()(_UniformRandomNumberGenerator&amp; __urng,
+<span class="lineNum">     170 </span>            :                    const param_type&amp; __p);
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :       template&lt;typename _ForwardIterator,
+<span class="lineNum">     173 </span>            :                typename _UniformRandomNumberGenerator&gt;
+<span class="lineNum">     174 </span>            :         void
+<span class="lineNum">     175 </span>            :         __generate(_ForwardIterator __f, _ForwardIterator __t,
+<span class="lineNum">     176 </span>            :                    _UniformRandomNumberGenerator&amp; __urng)
+<span class="lineNum">     177 </span>            :         { this-&gt;__generate(__f, __t, __urng, _M_param); }
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :       template&lt;typename _ForwardIterator,
+<span class="lineNum">     180 </span>            :                typename _UniformRandomNumberGenerator&gt;
+<span class="lineNum">     181 </span>            :         void
+<span class="lineNum">     182 </span>            :         __generate(_ForwardIterator __f, _ForwardIterator __t,
+<span class="lineNum">     183 </span>            :                    _UniformRandomNumberGenerator&amp; __urng,
+<span class="lineNum">     184 </span>            :                    const param_type&amp; __p)
+<span class="lineNum">     185 </span>            :         { this-&gt;__generate_impl(__f, __t, __urng, __p); }
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :       template&lt;typename _UniformRandomNumberGenerator&gt;
+<span class="lineNum">     188 </span>            :         void
+<span class="lineNum">     189 </span>            :         __generate(result_type* __f, result_type* __t,
+<span class="lineNum">     190 </span>            :                    _UniformRandomNumberGenerator&amp; __urng,
+<span class="lineNum">     191 </span>            :                    const param_type&amp; __p)
+<span class="lineNum">     192 </span>            :         { this-&gt;__generate_impl(__f, __t, __urng, __p); }
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            :       /**
+<span class="lineNum">     195 </span>            :        * @brief Return true if two uniform integer distributions have
+<span class="lineNum">     196 </span>            :        *        the same parameters.
+<span class="lineNum">     197 </span>            :        */
+<span class="lineNum">     198 </span>            :       friend bool
+<span class="lineNum">     199 </span>            :       operator==(const uniform_int_distribution&amp; __d1,
+<span class="lineNum">     200 </span>            :                  const uniform_int_distribution&amp; __d2)
+<span class="lineNum">     201 </span>            :       { return __d1._M_param == __d2._M_param; }
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            :     private:
+<span class="lineNum">     204 </span>            :       template&lt;typename _ForwardIterator,
+<span class="lineNum">     205 </span>            :                typename _UniformRandomNumberGenerator&gt;
+<span class="lineNum">     206 </span>            :         void
+<span class="lineNum">     207 </span>            :         __generate_impl(_ForwardIterator __f, _ForwardIterator __t,
+<span class="lineNum">     208 </span>            :                         _UniformRandomNumberGenerator&amp; __urng,
+<span class="lineNum">     209 </span>            :                         const param_type&amp; __p);
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :       param_type _M_param;
+<span class="lineNum">     212 </span>            :     };
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            :   template&lt;typename _IntType&gt;
+<a name="215"><span class="lineNum">     215 </span>            :     template&lt;typename _UniformRandomNumberGenerator&gt;</a>
+<span class="lineNum">     216 </span>            :       typename uniform_int_distribution&lt;_IntType&gt;::result_type
+<span class="lineNum">     217 </span><span class="lineCov">          2 :       uniform_int_distribution&lt;_IntType&gt;::</span>
+<span class="lineNum">     218 </span>            :       operator()(_UniformRandomNumberGenerator&amp; __urng,
+<span class="lineNum">     219 </span>            :                  const param_type&amp; __param)
+<span class="lineNum">     220 </span>            :       {
+<span class="lineNum">     221 </span>            :         typedef typename _UniformRandomNumberGenerator::result_type
+<span class="lineNum">     222 </span>            :           _Gresult_type;
+<span class="lineNum">     223 </span>            :         typedef typename std::make_unsigned&lt;result_type&gt;::type __utype;
+<span class="lineNum">     224 </span>            :         typedef typename std::common_type&lt;_Gresult_type, __utype&gt;::type
+<span class="lineNum">     225 </span>            :           __uctype;
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span><span class="lineCov">          2 :         const __uctype __urngmin = __urng.min();</span>
+<span class="lineNum">     228 </span><span class="lineCov">          2 :         const __uctype __urngmax = __urng.max();</span>
+<span class="lineNum">     229 </span><span class="lineCov">          2 :         const __uctype __urngrange = __urngmax - __urngmin;</span>
+<span class="lineNum">     230 </span>            :         const __uctype __urange
+<span class="lineNum">     231 </span><span class="lineCov">          2 :           = __uctype(__param.b()) - __uctype(__param.a());</span>
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            :         __uctype __ret;
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span><span class="lineCov">          2 :         if (__urngrange &gt; __urange)</span>
+<span class="lineNum">     236 </span>            :           {
+<span class="lineNum">     237 </span>            :             // downscaling
+<span class="lineNum">     238 </span><span class="lineCov">          2 :             const __uctype __uerange = __urange + 1; // __urange can be zero</span>
+<span class="lineNum">     239 </span><span class="lineCov">          2 :             const __uctype __scaling = __urngrange / __uerange;</span>
+<span class="lineNum">     240 </span><span class="lineCov">          2 :             const __uctype __past = __uerange * __scaling;</span>
+<span class="lineNum">     241 </span><span class="lineCov">          2 :             do</span>
+<span class="lineNum">     242 </span><span class="lineCov">          2 :               __ret = __uctype(__urng()) - __urngmin;</span>
+<span class="lineNum">     243 </span>            :             while (__ret &gt;= __past);
+<span class="lineNum">     244 </span><span class="lineCov">          2 :             __ret /= __scaling;</span>
+<span class="lineNum">     245 </span>            :           }
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :         else if (__urngrange &lt; __urange)</span>
+<span class="lineNum">     247 </span>            :           {
+<span class="lineNum">     248 </span>            :             // upscaling
+<span class="lineNum">     249 </span>            :             /*
+<span class="lineNum">     250 </span>            :               Note that every value in [0, urange]
+<span class="lineNum">     251 </span>            :               can be written uniquely as
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span>            :               (urngrange + 1) * high + low
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            :               where
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            :               high in [0, urange / (urngrange + 1)]
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            :               and
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            :               low in [0, urngrange].
+<span class="lineNum">     262 </span>            :             */
+<span class="lineNum">     263 </span>            :             __uctype __tmp; // wraparound control
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :             do</span>
+<span class="lineNum">     265 </span>            :               {
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :                 const __uctype __uerngrange = __urngrange + 1;</span>
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :                 __tmp = (__uerngrange * operator()</span>
+<span class="lineNum">     268 </span><span class="lineNoCov">          0 :                          (__urng, param_type(0, __urange / __uerngrange)));</span>
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :                 __ret = __tmp + (__uctype(__urng()) - __urngmin);</span>
+<span class="lineNum">     270 </span>            :               }
+<span class="lineNum">     271 </span>            :             while (__ret &gt; __urange || __ret &lt; __tmp);
+<span class="lineNum">     272 </span>            :           }
+<span class="lineNum">     273 </span>            :         else
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :           __ret = __uctype(__urng()) - __urngmin;</span>
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span><span class="lineCov">          2 :         return __ret + __param.a();</span>
+<span class="lineNum">     277 </span>            :       }
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span>            :   template&lt;typename _IntType&gt;
+<span class="lineNum">     281 </span>            :     template&lt;typename _ForwardIterator,
+<span class="lineNum">     282 </span>            :              typename _UniformRandomNumberGenerator&gt;
+<span class="lineNum">     283 </span>            :       void
+<span class="lineNum">     284 </span>            :       uniform_int_distribution&lt;_IntType&gt;::
+<span class="lineNum">     285 </span>            :       __generate_impl(_ForwardIterator __f, _ForwardIterator __t,
+<span class="lineNum">     286 </span>            :                       _UniformRandomNumberGenerator&amp; __urng,
+<span class="lineNum">     287 </span>            :                       const param_type&amp; __param)
+<span class="lineNum">     288 </span>            :       {
+<span class="lineNum">     289 </span>            :         __glibcxx_function_requires(_ForwardIteratorConcept&lt;_ForwardIterator&gt;)
+<span class="lineNum">     290 </span>            :         typedef typename _UniformRandomNumberGenerator::result_type
+<span class="lineNum">     291 </span>            :           _Gresult_type;
+<span class="lineNum">     292 </span>            :         typedef typename std::make_unsigned&lt;result_type&gt;::type __utype;
+<span class="lineNum">     293 </span>            :         typedef typename std::common_type&lt;_Gresult_type, __utype&gt;::type
+<span class="lineNum">     294 </span>            :           __uctype;
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            :         const __uctype __urngmin = __urng.min();
+<span class="lineNum">     297 </span>            :         const __uctype __urngmax = __urng.max();
+<span class="lineNum">     298 </span>            :         const __uctype __urngrange = __urngmax - __urngmin;
+<span class="lineNum">     299 </span>            :         const __uctype __urange
+<span class="lineNum">     300 </span>            :           = __uctype(__param.b()) - __uctype(__param.a());
+<span class="lineNum">     301 </span>            : 
+<span class="lineNum">     302 </span>            :         __uctype __ret;
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span>            :         if (__urngrange &gt; __urange)
+<span class="lineNum">     305 </span>            :           {
+<span class="lineNum">     306 </span>            :             if (__detail::_Power_of_2(__urngrange + 1)
+<span class="lineNum">     307 </span>            :                 &amp;&amp; __detail::_Power_of_2(__urange + 1))
+<span class="lineNum">     308 </span>            :               {
+<span class="lineNum">     309 </span>            :                 while (__f != __t)
+<span class="lineNum">     310 </span>            :                   {
+<span class="lineNum">     311 </span>            :                     __ret = __uctype(__urng()) - __urngmin;
+<span class="lineNum">     312 </span>            :                     *__f++ = (__ret &amp; __urange) + __param.a();
+<span class="lineNum">     313 </span>            :                   }
+<span class="lineNum">     314 </span>            :               }
+<span class="lineNum">     315 </span>            :             else
+<span class="lineNum">     316 </span>            :               {
+<span class="lineNum">     317 </span>            :                 // downscaling
+<span class="lineNum">     318 </span>            :                 const __uctype __uerange = __urange + 1; // __urange can be zero
+<span class="lineNum">     319 </span>            :                 const __uctype __scaling = __urngrange / __uerange;
+<span class="lineNum">     320 </span>            :                 const __uctype __past = __uerange * __scaling;
+<span class="lineNum">     321 </span>            :                 while (__f != __t)
+<span class="lineNum">     322 </span>            :                   {
+<span class="lineNum">     323 </span>            :                     do
+<span class="lineNum">     324 </span>            :                       __ret = __uctype(__urng()) - __urngmin;
+<span class="lineNum">     325 </span>            :                     while (__ret &gt;= __past);
+<span class="lineNum">     326 </span>            :                     *__f++ = __ret / __scaling + __param.a();
+<span class="lineNum">     327 </span>            :                   }
+<span class="lineNum">     328 </span>            :               }
+<span class="lineNum">     329 </span>            :           }
+<span class="lineNum">     330 </span>            :         else if (__urngrange &lt; __urange)
+<span class="lineNum">     331 </span>            :           {
+<span class="lineNum">     332 </span>            :             // upscaling
+<span class="lineNum">     333 </span>            :             /*
+<span class="lineNum">     334 </span>            :               Note that every value in [0, urange]
+<span class="lineNum">     335 </span>            :               can be written uniquely as
+<span class="lineNum">     336 </span>            : 
+<span class="lineNum">     337 </span>            :               (urngrange + 1) * high + low
+<span class="lineNum">     338 </span>            : 
+<span class="lineNum">     339 </span>            :               where
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span>            :               high in [0, urange / (urngrange + 1)]
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span>            :               and
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span>            :               low in [0, urngrange].
+<span class="lineNum">     346 </span>            :             */
+<span class="lineNum">     347 </span>            :             __uctype __tmp; // wraparound control
+<span class="lineNum">     348 </span>            :             while (__f != __t)
+<span class="lineNum">     349 </span>            :               {
+<span class="lineNum">     350 </span>            :                 do
+<span class="lineNum">     351 </span>            :                   {
+<span class="lineNum">     352 </span>            :                     const __uctype __uerngrange = __urngrange + 1;
+<span class="lineNum">     353 </span>            :                     __tmp = (__uerngrange * operator()
+<span class="lineNum">     354 </span>            :                              (__urng, param_type(0, __urange / __uerngrange)));
+<span class="lineNum">     355 </span>            :                     __ret = __tmp + (__uctype(__urng()) - __urngmin);
+<span class="lineNum">     356 </span>            :                   }
+<span class="lineNum">     357 </span>            :                 while (__ret &gt; __urange || __ret &lt; __tmp);
+<span class="lineNum">     358 </span>            :                 *__f++ = __ret;
+<span class="lineNum">     359 </span>            :               }
+<span class="lineNum">     360 </span>            :           }
+<span class="lineNum">     361 </span>            :         else
+<span class="lineNum">     362 </span>            :           while (__f != __t)
+<span class="lineNum">     363 </span>            :             *__f++ = __uctype(__urng()) - __urngmin + __param.a();
+<span class="lineNum">     364 </span>            :       }
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     367 </span>            : } // namespace std
+<span class="lineNum">     368 </span>            : 
+<span class="lineNum">     369 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

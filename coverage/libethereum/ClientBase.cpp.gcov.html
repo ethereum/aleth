@@ -1,0 +1,666 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/ClientBase.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - ClientBase.cpp<span style="font-size: 80%;"> (source / <a href="ClientBase.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntry">293</td>
+            <td class="headerCovTableEntryLo">6.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">57</td>
+            <td class="headerCovTableEntryLo">8.8 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            :  */
+<span class="lineNum">      17 </span>            : /** @file ClientBase.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @author Marek Kotewicz &lt;marek@ethdev.com&gt;
+<span class="lineNum">      20 </span>            :  * @date 2015
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;ClientBase.h&quot;
+<span class="lineNum">      24 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      25 </span>            : #include &quot;BlockChain.h&quot;
+<span class="lineNum">      26 </span>            : #include &quot;Executive.h&quot;
+<span class="lineNum">      27 </span>            : #include &quot;State.h&quot;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : using namespace std;
+<span class="lineNum">      30 </span>            : using namespace dev;
+<a name="31"><span class="lineNum">      31 </span>            : using namespace dev::eth;</a>
+<a name="32"><span class="lineNum">      32 </span>            : </a>
+<a name="33"><span class="lineNum">      33 </span><span class="lineNoCov">          0 : const char* WatchChannel::name() { return EthBlue &quot;ℹ&quot; EthWhite &quot;  &quot;; }</span></a>
+<a name="34"><span class="lineNum">      34 </span><span class="lineNoCov">          0 : const char* WorkInChannel::name() { return EthOrange &quot;⚒&quot; EthGreen &quot;▬▶&quot;; }</span></a>
+<span class="lineNum">      35 </span><span class="lineNoCov">          0 : const char* WorkOutChannel::name() { return EthOrange &quot;⚒&quot; EthNavy &quot;◀▬&quot;; }</span>
+<span class="lineNum">      36 </span><span class="lineNoCov">          0 : const char* WorkChannel::name() { return EthOrange &quot;⚒&quot; EthWhite &quot;  &quot;; }</span>
+<span class="lineNum">      37 </span>            : 
+<a name="38"><span class="lineNum">      38 </span><span class="lineCov">          2 : namespace dev { namespace eth { const u256 c_maxGasEstimate = 50000000; } }</span></a>
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">          2 : pair&lt;h256, Address&gt; ClientBase::submitTransaction(TransactionSkeleton const&amp; _t, Secret const&amp; _secret)</span>
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span><span class="lineCov">          2 :         prepareForTransaction();</span>
+<span class="lineNum">      43 </span>            :         
+<span class="lineNum">      44 </span><span class="lineCov">          4 :         TransactionSkeleton ts(_t);</span>
+<span class="lineNum">      45 </span><span class="lineCov">          2 :         ts.from = toAddress(_secret);</span>
+<span class="lineNum">      46 </span><span class="lineCov">          4 :         if (_t.nonce == Invalid256)</span>
+<span class="lineNum">      47 </span><span class="lineCov">          8 :                 ts.nonce = max&lt;u256&gt;(postSeal().transactionsFrom(ts.from), m_tq.maxNonce(ts.from));</span>
+<span class="lineNum">      48 </span><span class="lineCov">          2 :         if (ts.gasPrice == Invalid256)</span>
+<span class="lineNum">      49 </span><span class="lineCov">          4 :                 ts.gasPrice = gasBidPrice();</span>
+<span class="lineNum">      50 </span><span class="lineCov">          2 :         if (ts.gas == Invalid256)</span>
+<span class="lineNum">      51 </span><span class="lineCov">         12 :                 ts.gas = min&lt;u256&gt;(gasLimitRemaining() / 5, balanceAt(ts.from) / ts.gasPrice);</span>
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineCov">          4 :         Transaction t(ts, _secret);</span>
+<span class="lineNum">      54 </span><span class="lineCov">          6 :         m_tq.import(t.rlp());</span>
+<span class="lineNum">      55 </span>            :         
+<span class="lineNum">      56 </span><span class="lineCov">          6 :         return make_pair(t.sha3(), toAddress(ts.from, ts.nonce));</span>
+<span class="lineNum">      57 </span>            : }
+<a name="58"><span class="lineNum">      58 </span>            : </a>
+<span class="lineNum">      59 </span>            : // TODO: remove try/catch, allow exceptions
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 : ExecutionResult ClientBase::call(Address const&amp; _from, u256 _value, Address _dest, bytes const&amp; _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff)</span>
+<span class="lineNum">      61 </span>            : {
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 :         ExecutionResult ret;</span>
+<span class="lineNum">      63 </span>            :         try
+<span class="lineNum">      64 </span>            :         {
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :                 Block temp = block(_blockNumber);</span>
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :                 u256 nonce = max&lt;u256&gt;(temp.transactionsFrom(_from), m_tq.maxNonce(_from));</span>
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :                 u256 gas = _gas == Invalid256 ? gasLimitRemaining() : _gas;</span>
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :                 u256 gasPrice = _gasPrice == Invalid256 ? gasBidPrice() : _gasPrice;</span>
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :                 Transaction t(_value, gasPrice, gas, _dest, _data, nonce);</span>
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :                 t.forceSender(_from);</span>
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :                 if (_ff == FudgeFactor::Lenient)</span>
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :                         temp.mutableState().addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));</span>
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :                 ret = temp.execute(bc().lastHashes(), t, Permanence::Reverted);</span>
+<span class="lineNum">      74 </span>            :         }
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">      76 </span>            :         {
+<span class="lineNum">      77 </span>            :                 // TODO: Some sort of notification of failure.
+<span class="lineNum">      78 </span>            :         }
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="80"><span class="lineNum">      80 </span>            : }</a>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span><span class="lineNoCov">          0 : ExecutionResult ClientBase::create(Address const&amp; _from, u256 _value, bytes const&amp; _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff)</span>
+<span class="lineNum">      83 </span>            : {
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :         ExecutionResult ret;</span>
+<span class="lineNum">      85 </span>            :         try
+<span class="lineNum">      86 </span>            :         {
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :                 Block temp = block(_blockNumber);</span>
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 :                 u256 n = temp.transactionsFrom(_from);</span>
+<span class="lineNum">      89 </span>            :                 //      cdebug &lt;&lt; &quot;Nonce at &quot; &lt;&lt; toAddress(_secret) &lt;&lt; &quot; pre:&quot; &lt;&lt; m_preSeal.transactionsFrom(toAddress(_secret)) &lt;&lt; &quot; post:&quot; &lt;&lt; m_postSeal.transactionsFrom(toAddress(_secret));
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 :                 Transaction t(_value, _gasPrice, _gas, _data, n);</span>
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :                 t.forceSender(_from);</span>
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :                 if (_ff == FudgeFactor::Lenient)</span>
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :                         temp.mutableState().addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));</span>
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :                 ret = temp.execute(bc().lastHashes(), t, Permanence::Reverted);</span>
+<span class="lineNum">      95 </span>            :         }
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">      97 </span>            :         {
+<span class="lineNum">      98 </span>            :                 // TODO: Some sort of notification of failure.
+<span class="lineNum">      99 </span>            :         }
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="101"><span class="lineNum">     101 </span>            : }</a>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 : std::pair&lt;u256, ExecutionResult&gt; ClientBase::estimateGas(Address const&amp; _from, u256 _value, Address _dest, bytes const&amp; _data, u256 _maxGas, u256 _gasPrice, BlockNumber _blockNumber, GasEstimationCallback const&amp; _callback)</span>
+<span class="lineNum">     104 </span>            : {
+<span class="lineNum">     105 </span>            :         try
+<span class="lineNum">     106 </span>            :         {
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :                 u256 upperBound = _maxGas;</span>
+<span class="lineNum">     108 </span><span class="lineNoCov">          0 :                 if (upperBound == Invalid256 || upperBound &gt; c_maxGasEstimate)</span>
+<span class="lineNum">     109 </span>            :                         upperBound = c_maxGasEstimate;
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :                 u256 lowerBound = (u256)Transaction::gasRequired(!_dest, &amp;_data, EVMSchedule(), 0);</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :                 Block bk = block(_blockNumber);</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :                 u256 gasPrice = _gasPrice == Invalid256 ? gasBidPrice() : _gasPrice;</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :                 ExecutionResult er;</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :                 ExecutionResult lastGood;</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :                 bool good = false;</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :                 while (upperBound != lowerBound)</span>
+<span class="lineNum">     117 </span>            :                 {
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :                         u256 mid = (lowerBound + upperBound) / 2;</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :                         u256 n = bk.transactionsFrom(_from);</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :                         Transaction t;</span>
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :                         if (_dest)</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :                                 t = Transaction(_value, gasPrice, mid, _dest, _data, n);</span>
+<span class="lineNum">     123 </span>            :                         else
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :                                 t = Transaction(_value, gasPrice, mid, _data, n);</span>
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :                         t.forceSender(_from);</span>
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :                         EnvInfo env(bk.info(), bc().lastHashes(), 0);</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :                         env.setGasLimit(mid.convert_to&lt;int64_t&gt;());</span>
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :                         State tempState(bk.state());</span>
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :                         tempState.addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :                         er = tempState.execute(env, *bc().sealEngine(), t, Permanence::Reverted).first;</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :                         if (er.excepted == TransactionException::OutOfGas ||</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :                                 er.excepted == TransactionException::OutOfGasBase ||</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :                                 er.excepted == TransactionException::OutOfGasIntrinsic ||</span>
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :                                 er.codeDeposit == CodeDeposit::Failed ||</span>
+<span class="lineNum">     135 </span>            :                                 er.excepted == TransactionException::BadJumpDestination)
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :                                         lowerBound = lowerBound == mid ? upperBound : mid;</span>
+<span class="lineNum">     137 </span>            :                         else
+<span class="lineNum">     138 </span>            :                         {
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :                                 lastGood = er;</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :                                 upperBound = upperBound == mid ? lowerBound : mid;</span>
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 :                                 good = true;</span>
+<span class="lineNum">     142 </span>            :                         }
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 :                         if (_callback)</span>
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :                                 _callback(GasEstimationProgress { lowerBound, upperBound });</span>
+<span class="lineNum">     146 </span>            :                 }
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :                 if (_callback)</span>
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :                         _callback(GasEstimationProgress { lowerBound, upperBound });</span>
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :                 return make_pair(upperBound, good ? lastGood : er);</span>
+<span class="lineNum">     150 </span>            :         }
+<span class="lineNum">     151 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     152 </span>            :         {
+<span class="lineNum">     153 </span>            :                 // TODO: Some sort of notification of failure.
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :                 return make_pair(u256(), ExecutionResult());</span>
+<span class="lineNum">     155 </span>            :         }
+<a name="156"><span class="lineNum">     156 </span>            : }</a>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 : ImportResult ClientBase::injectBlock(bytes const&amp; _block)</span>
+<span class="lineNum">     159 </span>            : {
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 :         return bc().attemptImport(_block, preSeal().db()).first;</span>
+<a name="161"><span class="lineNum">     161 </span>            : }</a>
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span><span class="lineCov">          2 : u256 ClientBase::balanceAt(Address _a, BlockNumber _block) const</span>
+<span class="lineNum">     164 </span>            : {
+<span class="lineNum">     165 </span><span class="lineCov">          4 :         return block(_block).balance(_a);</span>
+<a name="166"><span class="lineNum">     166 </span>            : }</a>
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 : u256 ClientBase::countAt(Address _a, BlockNumber _block) const</span>
+<span class="lineNum">     169 </span>            : {
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :         return block(_block).transactionsFrom(_a);</span>
+<a name="171"><span class="lineNum">     171 </span>            : }</a>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span><span class="lineNoCov">          0 : u256 ClientBase::stateAt(Address _a, u256 _l, BlockNumber _block) const</span>
+<span class="lineNum">     174 </span>            : {
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :         return block(_block).storage(_a, _l);</span>
+<a name="176"><span class="lineNum">     176 </span>            : }</a>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 : h256 ClientBase::stateRootAt(Address _a, BlockNumber _block) const</span>
+<span class="lineNum">     179 </span>            : {
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :         return block(_block).storageRoot(_a);</span>
+<a name="181"><span class="lineNum">     181 </span>            : }</a>
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 : bytes ClientBase::codeAt(Address _a, BlockNumber _block) const</span>
+<span class="lineNum">     184 </span>            : {
+<span class="lineNum">     185 </span><span class="lineNoCov">          0 :         return block(_block).code(_a);</span>
+<a name="186"><span class="lineNum">     186 </span>            : }</a>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 : h256 ClientBase::codeHashAt(Address _a, BlockNumber _block) const</span>
+<span class="lineNum">     189 </span>            : {
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :         return block(_block).codeHash(_a);</span>
+<a name="191"><span class="lineNum">     191 </span>            : }</a>
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 : map&lt;h256, pair&lt;u256, u256&gt;&gt; ClientBase::storageAt(Address _a, BlockNumber _block) const</span>
+<span class="lineNum">     194 </span>            : {
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :         return block(_block).storage(_a);</span>
+<span class="lineNum">     196 </span>            : }
+<a name="197"><span class="lineNum">     197 </span>            : </a>
+<span class="lineNum">     198 </span>            : // TODO: remove try/catch, allow exceptions
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 : LocalisedLogEntries ClientBase::logs(unsigned _watchId) const</span>
+<span class="lineNum">     200 </span>            : {
+<span class="lineNum">     201 </span><span class="lineNoCov">          0 :         LogFilter f;</span>
+<span class="lineNum">     202 </span>            :         try
+<span class="lineNum">     203 </span>            :         {
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :                 Guard l(x_filtersWatches);</span>
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :                 f = m_filters.at(m_watches.at(_watchId).id).filter;</span>
+<span class="lineNum">     206 </span>            :         }
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :         catch (...)</span>
+<span class="lineNum">     208 </span>            :         {
+<span class="lineNum">     209 </span><span class="lineNoCov">          0 :                 return LocalisedLogEntries();</span>
+<span class="lineNum">     210 </span>            :         }
+<span class="lineNum">     211 </span><span class="lineNoCov">          0 :         return logs(f);</span>
+<a name="212"><span class="lineNum">     212 </span>            : }</a>
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span><span class="lineNoCov">          0 : LocalisedLogEntries ClientBase::logs(LogFilter const&amp; _f) const</span>
+<span class="lineNum">     215 </span>            : {
+<span class="lineNum">     216 </span><span class="lineNoCov">          0 :         LocalisedLogEntries ret;</span>
+<span class="lineNum">     217 </span><span class="lineNoCov">          0 :         unsigned begin = min(bc().number() + 1, (unsigned)numberFromHash(_f.latest()));</span>
+<span class="lineNum">     218 </span><span class="lineNoCov">          0 :         unsigned end = min(bc().number(), min(begin, (unsigned)numberFromHash(_f.earliest())));</span>
+<span class="lineNum">     219 </span>            :         
+<span class="lineNum">     220 </span>            :         // Handle pending transactions differently as they're not on the block chain.
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :         if (begin &gt; bc().number())</span>
+<span class="lineNum">     222 </span>            :         {
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :                 Block temp = postSeal();</span>
+<span class="lineNum">     224 </span><span class="lineNoCov">          0 :                 for (unsigned i = 0; i &lt; temp.pending().size(); ++i)</span>
+<span class="lineNum">     225 </span>            :                 {
+<span class="lineNum">     226 </span>            :                         // Might have a transaction that contains a matching log.
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :                         TransactionReceipt const&amp; tr = temp.receipt(i);</span>
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :                         LogEntries le = _f.matches(tr);</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :                         for (unsigned j = 0; j &lt; le.size(); ++j)</span>
+<span class="lineNum">     230 </span><span class="lineNoCov">          0 :                                 ret.insert(ret.begin(), LocalisedLogEntry(le[j]));</span>
+<span class="lineNum">     231 </span>            :                 }
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :                 begin = bc().number();</span>
+<span class="lineNum">     233 </span>            :         }
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            :         // Handle reverted blocks
+<span class="lineNum">     236 </span>            :         // There are not so many, so let's iterate over them
+<span class="lineNum">     237 </span><span class="lineNoCov">          0 :         h256s blocks;</span>
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :         h256 ancestor;</span>
+<span class="lineNum">     239 </span>            :         unsigned ancestorIndex;
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :         tie(blocks, ancestor, ancestorIndex) = bc().treeRoute(_f.earliest(), _f.latest(), false);</span>
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :         for (size_t i = 0; i &lt; ancestorIndex; i++)</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :                 prependLogsFromBlock(_f, blocks[i], BlockPolarity::Dead, ret);</span>
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span>            :         // cause end is our earliest block, let's compare it with our ancestor
+<span class="lineNum">     246 </span>            :         // if ancestor is smaller let's move our end to it
+<span class="lineNum">     247 </span>            :         // example:
+<span class="lineNum">     248 </span>            :         //
+<span class="lineNum">     249 </span>            :         // 3b -&gt; 2b -&gt; 1b
+<span class="lineNum">     250 </span>            :         //                -&gt; g
+<span class="lineNum">     251 </span>            :         // 3a -&gt; 2a -&gt; 1a
+<span class="lineNum">     252 </span>            :         //
+<span class="lineNum">     253 </span>            :         // if earliest is at 2a and latest is a 3b, coverting them to numbers
+<span class="lineNum">     254 </span>            :         // will give us pair (2, 3)
+<span class="lineNum">     255 </span>            :         // and we want to get all logs from 1 (ancestor + 1) to 3
+<span class="lineNum">     256 </span>            :         // so we have to move 2a to g + 1
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :         end = min(end, (unsigned)numberFromHash(ancestor) + 1);</span>
+<span class="lineNum">     258 </span>            : 
+<span class="lineNum">     259 </span>            :         // Handle blocks from main chain
+<span class="lineNum">     260 </span><span class="lineNoCov">          0 :         set&lt;unsigned&gt; matchingBlocks;</span>
+<span class="lineNum">     261 </span><span class="lineNoCov">          0 :         if (!_f.isRangeFilter())</span>
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :                 for (auto const&amp; i: _f.bloomPossibilities())</span>
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :                         for (auto u: bc().withBlockBloom(i, end, begin))</span>
+<span class="lineNum">     264 </span><span class="lineNoCov">          0 :                                 matchingBlocks.insert(u);</span>
+<span class="lineNum">     265 </span>            :         else
+<span class="lineNum">     266 </span>            :                 // if it is a range filter, we want to get all logs from all blocks in given range
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :                 for (unsigned i = end; i &lt;= begin; i++)</span>
+<span class="lineNum">     268 </span><span class="lineNoCov">          0 :                         matchingBlocks.insert(i);</span>
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :         for (auto n: matchingBlocks)</span>
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :                 prependLogsFromBlock(_f, bc().numberHash(n), BlockPolarity::Live, ret);</span>
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :         reverse(ret.begin(), ret.end());</span>
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="275"><span class="lineNum">     275 </span>            : }</a>
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 : void ClientBase::prependLogsFromBlock(LogFilter const&amp; _f, h256 const&amp; _blockHash, BlockPolarity _polarity, LocalisedLogEntries&amp; io_logs) const</span>
+<span class="lineNum">     278 </span>            : {
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :         auto receipts = bc().receipts(_blockHash).receipts;</span>
+<span class="lineNum">     280 </span><span class="lineNoCov">          0 :         for (size_t i = 0; i &lt; receipts.size(); i++)</span>
+<span class="lineNum">     281 </span>            :         {
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :                 TransactionReceipt receipt = receipts[i];</span>
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :                 auto th = transaction(_blockHash, i).sha3();</span>
+<span class="lineNum">     284 </span><span class="lineNoCov">          0 :                 LogEntries le = _f.matches(receipt);</span>
+<span class="lineNum">     285 </span><span class="lineNoCov">          0 :                 for (unsigned j = 0; j &lt; le.size(); ++j)</span>
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :                         io_logs.insert(io_logs.begin(), LocalisedLogEntry(le[j], _blockHash, (BlockNumber)bc().number(_blockHash), th, i, 0, _polarity));</span>
+<span class="lineNum">     287 </span>            :         }
+<a name="288"><span class="lineNum">     288 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span><span class="lineNoCov">          0 : unsigned ClientBase::installWatch(LogFilter const&amp; _f, Reaping _r)</span>
+<span class="lineNum">     291 </span>            : {
+<span class="lineNum">     292 </span><span class="lineNoCov">          0 :         h256 h = _f.sha3();</span>
+<span class="lineNum">     293 </span>            :         {
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 :                 Guard l(x_filtersWatches);</span>
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :                 if (!m_filters.count(h))</span>
+<span class="lineNum">     296 </span>            :                 {
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :                         cwatch &lt;&lt; &quot;FFF&quot; &lt;&lt; _f &lt;&lt; h;</span>
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :                         m_filters.insert(make_pair(h, _f));</span>
+<span class="lineNum">     299 </span>            :                 }
+<span class="lineNum">     300 </span>            :         }
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :         return installWatch(h, _r);</span>
+<a name="302"><span class="lineNum">     302 </span>            : }</a>
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 : unsigned ClientBase::installWatch(h256 _h, Reaping _r)</span>
+<span class="lineNum">     305 </span>            : {
+<span class="lineNum">     306 </span>            :         unsigned ret;
+<span class="lineNum">     307 </span>            :         {
+<span class="lineNum">     308 </span><span class="lineNoCov">          0 :                 Guard l(x_filtersWatches);</span>
+<span class="lineNum">     309 </span><span class="lineNoCov">          0 :                 ret = m_watches.size() ? m_watches.rbegin()-&gt;first + 1 : 0;</span>
+<span class="lineNum">     310 </span><span class="lineNoCov">          0 :                 m_watches[ret] = ClientWatch(_h, _r);</span>
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :                 cwatch &lt;&lt; &quot;+++&quot; &lt;&lt; ret &lt;&lt; _h;</span>
+<span class="lineNum">     312 </span>            :         }
+<span class="lineNum">     313 </span>            : #if INITIAL_STATE_AS_CHANGES
+<span class="lineNum">     314 </span>            :         auto ch = logs(ret);
+<span class="lineNum">     315 </span>            :         if (ch.empty())
+<span class="lineNum">     316 </span>            :                 ch.push_back(InitialChange);
+<span class="lineNum">     317 </span>            :         {
+<span class="lineNum">     318 </span>            :                 Guard l(x_filtersWatches);
+<span class="lineNum">     319 </span>            :                 swap(m_watches[ret].changes, ch);
+<span class="lineNum">     320 </span>            :         }
+<span class="lineNum">     321 </span>            : #endif
+<span class="lineNum">     322 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="323"><span class="lineNum">     323 </span>            : }</a>
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span><span class="lineNoCov">          0 : bool ClientBase::uninstallWatch(unsigned _i)</span>
+<span class="lineNum">     326 </span>            : {
+<span class="lineNum">     327 </span><span class="lineNoCov">          0 :         cwatch &lt;&lt; &quot;XXX&quot; &lt;&lt; _i;</span>
+<span class="lineNum">     328 </span>            :         
+<span class="lineNum">     329 </span><span class="lineNoCov">          0 :         Guard l(x_filtersWatches);</span>
+<span class="lineNum">     330 </span>            :         
+<span class="lineNum">     331 </span><span class="lineNoCov">          0 :         auto it = m_watches.find(_i);</span>
+<span class="lineNum">     332 </span><span class="lineNoCov">          0 :         if (it == m_watches.end())</span>
+<span class="lineNum">     333 </span>            :                 return false;
+<span class="lineNum">     334 </span><span class="lineNoCov">          0 :         auto id = it-&gt;second.id;</span>
+<span class="lineNum">     335 </span><span class="lineNoCov">          0 :         m_watches.erase(it);</span>
+<span class="lineNum">     336 </span>            :         
+<span class="lineNum">     337 </span><span class="lineNoCov">          0 :         auto fit = m_filters.find(id);</span>
+<span class="lineNum">     338 </span><span class="lineNoCov">          0 :         if (fit != m_filters.end())</span>
+<span class="lineNum">     339 </span><span class="lineNoCov">          0 :                 if (!--fit-&gt;second.refCount)</span>
+<span class="lineNum">     340 </span>            :                 {
+<span class="lineNum">     341 </span><span class="lineNoCov">          0 :                         cwatch &lt;&lt; &quot;*X*&quot; &lt;&lt; fit-&gt;first &lt;&lt; &quot;:&quot; &lt;&lt; fit-&gt;second.filter;</span>
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 :                         m_filters.erase(fit);</span>
+<span class="lineNum">     343 </span>            :                 }
+<span class="lineNum">     344 </span>            :         return true;
+<a name="345"><span class="lineNum">     345 </span>            : }</a>
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span><span class="lineNoCov">          0 : LocalisedLogEntries ClientBase::peekWatch(unsigned _watchId) const</span>
+<span class="lineNum">     348 </span>            : {
+<span class="lineNum">     349 </span><span class="lineNoCov">          0 :         Guard l(x_filtersWatches);</span>
+<span class="lineNum">     350 </span>            :         
+<span class="lineNum">     351 </span>            : //      cwatch &lt;&lt; &quot;peekWatch&quot; &lt;&lt; _watchId;
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :         auto&amp; w = m_watches.at(_watchId);</span>
+<span class="lineNum">     353 </span>            : //      cwatch &lt;&lt; &quot;lastPoll updated to &quot; &lt;&lt; chrono::duration_cast&lt;chrono::seconds&gt;(chrono::system_clock::now().time_since_epoch()).count();
+<span class="lineNum">     354 </span><span class="lineNoCov">          0 :         if (w.lastPoll != chrono::system_clock::time_point::max())</span>
+<span class="lineNum">     355 </span><span class="lineNoCov">          0 :                 w.lastPoll = chrono::system_clock::now();</span>
+<span class="lineNum">     356 </span><span class="lineNoCov">          0 :         return w.changes;</span>
+<a name="357"><span class="lineNum">     357 </span>            : }</a>
+<span class="lineNum">     358 </span>            : 
+<span class="lineNum">     359 </span><span class="lineNoCov">          0 : LocalisedLogEntries ClientBase::checkWatch(unsigned _watchId)</span>
+<span class="lineNum">     360 </span>            : {
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :         Guard l(x_filtersWatches);</span>
+<span class="lineNum">     362 </span><span class="lineNoCov">          0 :         LocalisedLogEntries ret;</span>
+<span class="lineNum">     363 </span>            :         
+<span class="lineNum">     364 </span>            : //      cwatch &lt;&lt; &quot;checkWatch&quot; &lt;&lt; _watchId;
+<span class="lineNum">     365 </span><span class="lineNoCov">          0 :         auto&amp; w = m_watches.at(_watchId);</span>
+<span class="lineNum">     366 </span>            : //      cwatch &lt;&lt; &quot;lastPoll updated to &quot; &lt;&lt; chrono::duration_cast&lt;chrono::seconds&gt;(chrono::system_clock::now().time_since_epoch()).count();
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 :         std::swap(ret, w.changes);</span>
+<span class="lineNum">     368 </span><span class="lineNoCov">          0 :         if (w.lastPoll != chrono::system_clock::time_point::max())</span>
+<span class="lineNum">     369 </span><span class="lineNoCov">          0 :                 w.lastPoll = chrono::system_clock::now();</span>
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="372"><span class="lineNum">     372 </span>            : }</a>
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 : BlockHeader ClientBase::blockInfo(h256 _hash) const</span>
+<span class="lineNum">     375 </span>            : {
+<span class="lineNum">     376 </span><span class="lineNoCov">          0 :         if (_hash == PendingBlockHash)</span>
+<span class="lineNum">     377 </span><span class="lineNoCov">          0 :                 return preSeal().info();</span>
+<span class="lineNum">     378 </span><span class="lineNoCov">          0 :         return BlockHeader(bc().block(_hash));</span>
+<a name="379"><span class="lineNum">     379 </span>            : }</a>
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 : BlockDetails ClientBase::blockDetails(h256 _hash) const</span>
+<span class="lineNum">     382 </span>            : {
+<span class="lineNum">     383 </span><span class="lineNoCov">          0 :         return bc().details(_hash);</span>
+<a name="384"><span class="lineNum">     384 </span>            : }</a>
+<span class="lineNum">     385 </span>            : 
+<span class="lineNum">     386 </span><span class="lineNoCov">          0 : Transaction ClientBase::transaction(h256 _transactionHash) const</span>
+<span class="lineNum">     387 </span>            : {
+<span class="lineNum">     388 </span><span class="lineNoCov">          0 :         return Transaction(bc().transaction(_transactionHash), CheckTransaction::Cheap);</span>
+<a name="389"><span class="lineNum">     389 </span>            : }</a>
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span><span class="lineNoCov">          0 : LocalisedTransaction ClientBase::localisedTransaction(h256 const&amp; _transactionHash) const</span>
+<span class="lineNum">     392 </span>            : {
+<span class="lineNum">     393 </span><span class="lineNoCov">          0 :         std::pair&lt;h256, unsigned&gt; tl = bc().transactionLocation(_transactionHash);</span>
+<span class="lineNum">     394 </span><span class="lineNoCov">          0 :         return localisedTransaction(tl.first, tl.second);</span>
+<a name="395"><span class="lineNum">     395 </span>            : }</a>
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span><span class="lineNoCov">          0 : Transaction ClientBase::transaction(h256 _blockHash, unsigned _i) const</span>
+<span class="lineNum">     398 </span>            : {
+<span class="lineNum">     399 </span><span class="lineNoCov">          0 :         auto bl = bc().block(_blockHash);</span>
+<span class="lineNum">     400 </span><span class="lineNoCov">          0 :         RLP b(bl);</span>
+<span class="lineNum">     401 </span><span class="lineNoCov">          0 :         if (_i &lt; b[1].itemCount())</span>
+<span class="lineNum">     402 </span><span class="lineNoCov">          0 :                 return Transaction(b[1][_i].data(), CheckTransaction::Cheap);</span>
+<span class="lineNum">     403 </span>            :         else
+<span class="lineNum">     404 </span>            :                 return Transaction();
+<a name="405"><span class="lineNum">     405 </span>            : }</a>
+<span class="lineNum">     406 </span>            : 
+<span class="lineNum">     407 </span><span class="lineNoCov">          0 : LocalisedTransaction ClientBase::localisedTransaction(h256 const&amp; _blockHash, unsigned _i) const</span>
+<span class="lineNum">     408 </span>            : {
+<span class="lineNum">     409 </span><span class="lineNoCov">          0 :         Transaction t = Transaction(bc().transaction(_blockHash, _i), CheckTransaction::Cheap);</span>
+<span class="lineNum">     410 </span><span class="lineNoCov">          0 :         return LocalisedTransaction(t, _blockHash, _i, numberFromHash(_blockHash));</span>
+<a name="411"><span class="lineNum">     411 </span>            : }</a>
+<span class="lineNum">     412 </span>            : 
+<span class="lineNum">     413 </span><span class="lineNoCov">          0 : TransactionReceipt ClientBase::transactionReceipt(h256 const&amp; _transactionHash) const</span>
+<span class="lineNum">     414 </span>            : {
+<span class="lineNum">     415 </span><span class="lineNoCov">          0 :         return bc().transactionReceipt(_transactionHash);</span>
+<a name="416"><span class="lineNum">     416 </span>            : }</a>
+<span class="lineNum">     417 </span>            : 
+<span class="lineNum">     418 </span><span class="lineNoCov">          0 : LocalisedTransactionReceipt ClientBase::localisedTransactionReceipt(h256 const&amp; _transactionHash) const</span>
+<span class="lineNum">     419 </span>            : {
+<span class="lineNum">     420 </span><span class="lineNoCov">          0 :         std::pair&lt;h256, unsigned&gt; tl = bc().transactionLocation(_transactionHash);</span>
+<span class="lineNum">     421 </span><span class="lineNoCov">          0 :         Transaction t = Transaction(bc().transaction(tl.first, tl.second), CheckTransaction::Cheap);</span>
+<span class="lineNum">     422 </span><span class="lineNoCov">          0 :         TransactionReceipt tr = bc().transactionReceipt(tl.first, tl.second);</span>
+<span class="lineNum">     423 </span>            :         return LocalisedTransactionReceipt(
+<span class="lineNum">     424 </span>            :                 tr,
+<span class="lineNum">     425 </span><span class="lineNoCov">          0 :                 t.sha3(),</span>
+<span class="lineNum">     426 </span>            :                 tl.first,
+<span class="lineNum">     427 </span><span class="lineNoCov">          0 :                 numberFromHash(tl.first),</span>
+<span class="lineNum">     428 </span>            :                 tl.second,
+<span class="lineNum">     429 </span><span class="lineNoCov">          0 :                 toAddress(t.from(), t.nonce()));</span>
+<a name="430"><span class="lineNum">     430 </span>            : }</a>
+<span class="lineNum">     431 </span>            : 
+<span class="lineNum">     432 </span><span class="lineNoCov">          0 : pair&lt;h256, unsigned&gt; ClientBase::transactionLocation(h256 const&amp; _transactionHash) const</span>
+<span class="lineNum">     433 </span>            : {
+<span class="lineNum">     434 </span><span class="lineNoCov">          0 :         return bc().transactionLocation(_transactionHash);</span>
+<a name="435"><span class="lineNum">     435 </span>            : }</a>
+<span class="lineNum">     436 </span>            : 
+<span class="lineNum">     437 </span><span class="lineNoCov">          0 : Transactions ClientBase::transactions(h256 _blockHash) const</span>
+<span class="lineNum">     438 </span>            : {
+<span class="lineNum">     439 </span><span class="lineNoCov">          0 :         auto bl = bc().block(_blockHash);</span>
+<span class="lineNum">     440 </span><span class="lineNoCov">          0 :         RLP b(bl);</span>
+<span class="lineNum">     441 </span><span class="lineNoCov">          0 :         Transactions res;</span>
+<span class="lineNum">     442 </span><span class="lineNoCov">          0 :         for (unsigned i = 0; i &lt; b[1].itemCount(); i++)</span>
+<span class="lineNum">     443 </span><span class="lineNoCov">          0 :                 res.emplace_back(b[1][i].data(), CheckTransaction::Cheap);</span>
+<span class="lineNum">     444 </span><span class="lineNoCov">          0 :         return res;</span>
+<a name="445"><span class="lineNum">     445 </span>            : }</a>
+<span class="lineNum">     446 </span>            : 
+<span class="lineNum">     447 </span><span class="lineNoCov">          0 : TransactionHashes ClientBase::transactionHashes(h256 _blockHash) const</span>
+<span class="lineNum">     448 </span>            : {
+<span class="lineNum">     449 </span><span class="lineNoCov">          0 :         return bc().transactionHashes(_blockHash);</span>
+<a name="450"><span class="lineNum">     450 </span>            : }</a>
+<span class="lineNum">     451 </span>            : 
+<span class="lineNum">     452 </span><span class="lineNoCov">          0 : BlockHeader ClientBase::uncle(h256 _blockHash, unsigned _i) const</span>
+<span class="lineNum">     453 </span>            : {
+<span class="lineNum">     454 </span><span class="lineNoCov">          0 :         auto bl = bc().block(_blockHash);</span>
+<span class="lineNum">     455 </span><span class="lineNoCov">          0 :         RLP b(bl);</span>
+<span class="lineNum">     456 </span><span class="lineNoCov">          0 :         if (_i &lt; b[2].itemCount())</span>
+<span class="lineNum">     457 </span><span class="lineNoCov">          0 :                 return BlockHeader(b[2][_i].data(), HeaderData);</span>
+<span class="lineNum">     458 </span>            :         else
+<span class="lineNum">     459 </span><span class="lineNoCov">          0 :                 return BlockHeader();</span>
+<a name="460"><span class="lineNum">     460 </span>            : }</a>
+<span class="lineNum">     461 </span>            : 
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 : UncleHashes ClientBase::uncleHashes(h256 _blockHash) const</span>
+<span class="lineNum">     463 </span>            : {
+<span class="lineNum">     464 </span><span class="lineNoCov">          0 :         return bc().uncleHashes(_blockHash);</span>
+<a name="465"><span class="lineNum">     465 </span>            : }</a>
+<span class="lineNum">     466 </span>            : 
+<span class="lineNum">     467 </span><span class="lineNoCov">          0 : unsigned ClientBase::transactionCount(h256 _blockHash) const</span>
+<span class="lineNum">     468 </span>            : {
+<span class="lineNum">     469 </span><span class="lineNoCov">          0 :         auto bl = bc().block(_blockHash);</span>
+<span class="lineNum">     470 </span><span class="lineNoCov">          0 :         RLP b(bl);</span>
+<span class="lineNum">     471 </span><span class="lineNoCov">          0 :         return b[1].itemCount();</span>
+<a name="472"><span class="lineNum">     472 </span>            : }</a>
+<span class="lineNum">     473 </span>            : 
+<span class="lineNum">     474 </span><span class="lineNoCov">          0 : unsigned ClientBase::uncleCount(h256 _blockHash) const</span>
+<span class="lineNum">     475 </span>            : {
+<span class="lineNum">     476 </span><span class="lineNoCov">          0 :         auto bl = bc().block(_blockHash);</span>
+<span class="lineNum">     477 </span><span class="lineNoCov">          0 :         RLP b(bl);</span>
+<span class="lineNum">     478 </span><span class="lineNoCov">          0 :         return b[2].itemCount();</span>
+<a name="479"><span class="lineNum">     479 </span>            : }</a>
+<span class="lineNum">     480 </span>            : 
+<span class="lineNum">     481 </span><span class="lineNoCov">          0 : unsigned ClientBase::number() const</span>
+<span class="lineNum">     482 </span>            : {
+<span class="lineNum">     483 </span><span class="lineNoCov">          0 :         return bc().number();</span>
+<a name="484"><span class="lineNum">     484 </span>            : }</a>
+<span class="lineNum">     485 </span>            : 
+<span class="lineNum">     486 </span><span class="lineNoCov">          0 : Transactions ClientBase::pending() const</span>
+<span class="lineNum">     487 </span>            : {
+<span class="lineNum">     488 </span><span class="lineNoCov">          0 :         return postSeal().pending();</span>
+<a name="489"><span class="lineNum">     489 </span>            : }</a>
+<span class="lineNum">     490 </span>            : 
+<span class="lineNum">     491 </span><span class="lineNoCov">          0 : h256s ClientBase::pendingHashes() const</span>
+<span class="lineNum">     492 </span>            : {
+<span class="lineNum">     493 </span><span class="lineNoCov">          0 :         return h256s() + postSeal().pendingHashes();</span>
+<a name="494"><span class="lineNum">     494 </span>            : }</a>
+<span class="lineNum">     495 </span>            : 
+<span class="lineNum">     496 </span><span class="lineNoCov">          0 : BlockHeader ClientBase::pendingInfo() const</span>
+<span class="lineNum">     497 </span>            : {
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 :         return postSeal().info();</span>
+<a name="499"><span class="lineNum">     499 </span>            : }</a>
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span><span class="lineNoCov">          0 : BlockDetails ClientBase::pendingDetails() const</span>
+<span class="lineNum">     502 </span>            : {
+<span class="lineNum">     503 </span><span class="lineNoCov">          0 :         auto pm = postSeal().info();</span>
+<span class="lineNum">     504 </span><span class="lineNoCov">          0 :         auto li = Interface::blockDetails(LatestBlock);</span>
+<span class="lineNum">     505 </span><span class="lineNoCov">          0 :         return BlockDetails((unsigned)pm.number(), li.totalDifficulty + pm.difficulty(), pm.parentHash(), h256s{});</span>
+<a name="506"><span class="lineNum">     506 </span>            : }</a>
+<span class="lineNum">     507 </span>            : 
+<span class="lineNum">     508 </span><span class="lineNoCov">          0 : Addresses ClientBase::addresses(BlockNumber _block) const</span>
+<span class="lineNum">     509 </span>            : {
+<span class="lineNum">     510 </span><span class="lineNoCov">          0 :         Addresses ret;</span>
+<span class="lineNum">     511 </span><span class="lineNoCov">          0 :         for (auto const&amp; i: block(_block).addresses())</span>
+<span class="lineNum">     512 </span><span class="lineNoCov">          0 :                 ret.push_back(i.first);</span>
+<span class="lineNum">     513 </span><span class="lineNoCov">          0 :         return ret;</span>
+<a name="514"><span class="lineNum">     514 </span>            : }</a>
+<span class="lineNum">     515 </span>            : 
+<span class="lineNum">     516 </span><span class="lineNoCov">          0 : u256 ClientBase::gasLimitRemaining() const</span>
+<span class="lineNum">     517 </span>            : {
+<span class="lineNum">     518 </span><span class="lineNoCov">          0 :         return postSeal().gasLimitRemaining();</span>
+<a name="519"><span class="lineNum">     519 </span>            : }</a>
+<span class="lineNum">     520 </span>            : 
+<span class="lineNum">     521 </span><span class="lineNoCov">          0 : Address ClientBase::author() const</span>
+<span class="lineNum">     522 </span>            : {
+<span class="lineNum">     523 </span><span class="lineNoCov">          0 :         return preSeal().author();</span>
+<a name="524"><span class="lineNum">     524 </span>            : }</a>
+<span class="lineNum">     525 </span>            : 
+<span class="lineNum">     526 </span><span class="lineNoCov">          0 : h256 ClientBase::hashFromNumber(BlockNumber _number) const</span>
+<span class="lineNum">     527 </span>            : {
+<span class="lineNum">     528 </span><span class="lineNoCov">          0 :         if (_number == PendingBlock)</span>
+<span class="lineNum">     529 </span>            :                 return h256();
+<span class="lineNum">     530 </span><span class="lineNoCov">          0 :         if (_number == LatestBlock)</span>
+<span class="lineNum">     531 </span><span class="lineNoCov">          0 :                 return bc().currentHash();</span>
+<span class="lineNum">     532 </span><span class="lineNoCov">          0 :         return bc().numberHash(_number);</span>
+<a name="533"><span class="lineNum">     533 </span>            : }</a>
+<span class="lineNum">     534 </span>            : 
+<span class="lineNum">     535 </span><span class="lineNoCov">          0 : BlockNumber ClientBase::numberFromHash(h256 _blockHash) const</span>
+<span class="lineNum">     536 </span>            : {
+<span class="lineNum">     537 </span><span class="lineNoCov">          0 :         if (_blockHash == PendingBlockHash)</span>
+<span class="lineNum">     538 </span><span class="lineNoCov">          0 :                 return bc().number() + 1;</span>
+<span class="lineNum">     539 </span><span class="lineNoCov">          0 :         else if (_blockHash == LatestBlockHash)</span>
+<span class="lineNum">     540 </span><span class="lineNoCov">          0 :                 return bc().number();</span>
+<span class="lineNum">     541 </span><span class="lineNoCov">          0 :         else if (_blockHash == EarliestBlockHash)</span>
+<span class="lineNum">     542 </span>            :                 return 0;
+<span class="lineNum">     543 </span><span class="lineNoCov">          0 :         return bc().number(_blockHash);</span>
+<a name="544"><span class="lineNum">     544 </span>            : }</a>
+<span class="lineNum">     545 </span>            : 
+<span class="lineNum">     546 </span><span class="lineNoCov">          0 : int ClientBase::compareBlockHashes(h256 _h1, h256 _h2) const</span>
+<span class="lineNum">     547 </span>            : {
+<span class="lineNum">     548 </span><span class="lineNoCov">          0 :         BlockNumber n1 = numberFromHash(_h1);</span>
+<span class="lineNum">     549 </span><span class="lineNoCov">          0 :         BlockNumber n2 = numberFromHash(_h2);</span>
+<span class="lineNum">     550 </span>            : 
+<span class="lineNum">     551 </span><span class="lineNoCov">          0 :         if (n1 &gt; n2)</span>
+<span class="lineNum">     552 </span>            :                 return 1;
+<span class="lineNum">     553 </span><span class="lineNoCov">          0 :         else if (n1 == n2)</span>
+<span class="lineNum">     554 </span>            :                 return 0;
+<span class="lineNum">     555 </span><span class="lineNoCov">          0 :         return -1;</span>
+<a name="556"><span class="lineNum">     556 </span>            : }</a>
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 : bool ClientBase::isKnown(h256 const&amp; _hash) const</span>
+<span class="lineNum">     559 </span>            : {
+<span class="lineNum">     560 </span><span class="lineNoCov">          0 :         return _hash == PendingBlockHash ||</span>
+<span class="lineNum">     561 </span><span class="lineNoCov">          0 :                 _hash == LatestBlockHash ||</span>
+<span class="lineNum">     562 </span><span class="lineNoCov">          0 :                 _hash == EarliestBlockHash ||</span>
+<span class="lineNum">     563 </span><span class="lineNoCov">          0 :                 bc().isKnown(_hash);</span>
+<a name="564"><span class="lineNum">     564 </span>            : }</a>
+<span class="lineNum">     565 </span>            : 
+<span class="lineNum">     566 </span><span class="lineNoCov">          0 : bool ClientBase::isKnown(BlockNumber _block) const</span>
+<span class="lineNum">     567 </span>            : {
+<span class="lineNum">     568 </span><span class="lineNoCov">          0 :         return _block == PendingBlock ||</span>
+<span class="lineNum">     569 </span><span class="lineNoCov">          0 :                 _block == LatestBlock ||</span>
+<span class="lineNum">     570 </span><span class="lineNoCov">          0 :                 bc().numberHash(_block) != h256();</span>
+<a name="571"><span class="lineNum">     571 </span>            : }</a>
+<span class="lineNum">     572 </span>            : 
+<span class="lineNum">     573 </span><span class="lineNoCov">          0 : bool ClientBase::isKnownTransaction(h256 const&amp; _transactionHash) const</span>
+<span class="lineNum">     574 </span>            : {
+<span class="lineNum">     575 </span><span class="lineNoCov">          0 :         return bc().isKnownTransaction(_transactionHash);</span>
+<a name="576"><span class="lineNum">     576 </span>            : }</a>
+<span class="lineNum">     577 </span>            : 
+<span class="lineNum">     578 </span><span class="lineNoCov">          0 : bool ClientBase::isKnownTransaction(h256 const&amp; _blockHash, unsigned _i) const</span>
+<span class="lineNum">     579 </span>            : {
+<span class="lineNum">     580 </span><span class="lineNoCov">          0 :         return isKnown(_blockHash) &amp;&amp; block(_blockHash).pending().size() &gt; _i;</span>
+<a name="581"><span class="lineNum">     581 </span>            : }</a>
+<span class="lineNum">     582 </span>            : 
+<span class="lineNum">     583 </span><span class="lineCov">          2 : Block ClientBase::block(BlockNumber _h) const</span>
+<span class="lineNum">     584 </span>            : {
+<span class="lineNum">     585 </span><span class="lineCov">          2 :         if (_h == PendingBlock)</span>
+<span class="lineNum">     586 </span><span class="lineCov">          2 :                 return postSeal();</span>
+<span class="lineNum">     587 </span><span class="lineNoCov">          0 :         else if (_h == LatestBlock)</span>
+<a name="588"><span class="lineNum">     588 </span><span class="lineNoCov">          0 :                 return preSeal();</span></a>
+<span class="lineNum">     589 </span><span class="lineNoCov">          0 :         return block(bc().numberHash(_h));</span>
+<span class="lineNum">     590 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

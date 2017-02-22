@@ -1,0 +1,137 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/libtestutils/FixedClient.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">test/libtestutils</a> - FixedClient.h<span style="font-size: 80%;"> (source / <a href="FixedClient.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            :  
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            :  
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            :  
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            :  */
+<span class="lineNum">      17 </span>            : /** @file FixedClient.h
+<span class="lineNum">      18 </span>            :  * @author Marek Kotewicz &lt;marek@ethdev.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;libethereum/ClientBase.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libethereum/BlockChain.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libethereum/State.h&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace dev
+<span class="lineNum">      29 </span>            : {
+<span class="lineNum">      30 </span>            : namespace test
+<span class="lineNum">      31 </span>            : {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : /**
+<span class="lineNum">      34 </span>            :  * @brief mvp implementation of ClientBase
+<span class="lineNum">      35 </span>            :  * Doesn't support mining interface
+<span class="lineNum">      36 </span>            :  */
+<span class="lineNum">      37 </span>            : class FixedClient: public dev::eth::ClientBase
+<a name="38"><span class="lineNum">      38 </span>            : {</a>
+<a name="39"><span class="lineNum">      39 </span>            : public:</a>
+<span class="lineNum">      40 </span><span class="lineNoCov">          0 :         FixedClient(eth::BlockChain const&amp; _bc, eth::Block const&amp; _block) :  m_bc(_bc), m_block(_block) {}</span>
+<span class="lineNum">      41 </span><span class="lineNoCov">          0 :         virtual ~FixedClient() {}</span>
+<a name="42"><span class="lineNum">      42 </span>            :         </a>
+<a name="43"><span class="lineNum">      43 </span>            :         // stub</a>
+<a name="44"><span class="lineNum">      44 </span><span class="lineNoCov">          0 :         virtual void flushTransactions() override {}</span></a>
+<span class="lineNum">      45 </span><span class="lineNoCov">          0 :         virtual eth::BlockChain&amp; bc() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported(&quot;FixedClient::bc()&quot;)); }</span>
+<span class="lineNum">      46 </span><span class="lineNoCov">          0 :         virtual eth::BlockChain const&amp; bc() const override { return m_bc; }</span>
+<a name="47"><span class="lineNum">      47 </span>            :         using ClientBase::block;</a>
+<a name="48"><span class="lineNum">      48 </span>            :         virtual eth::Block block(h256 const&amp; _h) const override;</a>
+<a name="49"><span class="lineNum">      49 </span><span class="lineNoCov">          0 :         virtual eth::Block preSeal() const override { ReadGuard l(x_stateDB); return m_block; }</span></a>
+<a name="50"><span class="lineNum">      50 </span><span class="lineNoCov">          0 :         virtual eth::Block postSeal() const override { ReadGuard l(x_stateDB); return m_block; }</span></a>
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 :         virtual void setAuthor(Address const&amp; _us) override { WriteGuard l(x_stateDB); m_block.setAuthor(_us); }</span>
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :         virtual void prepareForTransaction() override {}</span>
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : private:
+<span class="lineNum">      55 </span>            :         eth::BlockChain const&amp; m_bc;
+<span class="lineNum">      56 </span>            :         eth::Block m_block;
+<span class="lineNum">      57 </span>            :         mutable SharedMutex x_stateDB;                  ///&lt; Lock on the state DB, effectively a lock on m_postSeal.
+<span class="lineNum">      58 </span>            : };
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            : }
+<span class="lineNum">      61 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

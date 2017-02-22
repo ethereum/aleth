@@ -1,0 +1,394 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/detail/socket_option.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/detail</a> - socket_option.hpp<span style="font-size: 80%;"> (source / <a href="socket_option.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // detail/socket_option.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DETAIL_SOCKET_OPTION_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DETAIL_SOCKET_OPTION_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;cstddef&gt;
+<span class="lineNum">      20 </span>            : #include &lt;stdexcept&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/asio/detail/socket_types.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/asio/detail/throw_exception.hpp&gt;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : namespace boost {
+<span class="lineNum">      27 </span>            : namespace asio {
+<span class="lineNum">      28 </span>            : namespace detail {
+<span class="lineNum">      29 </span>            : namespace socket_option {
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : // Helper template for implementing boolean-based options.
+<span class="lineNum">      32 </span>            : template &lt;int Level, int Name&gt;
+<span class="lineNum">      33 </span>            : class boolean
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span>            : public:
+<span class="lineNum">      36 </span>            :   // Default constructor.
+<span class="lineNum">      37 </span>            :   boolean()
+<span class="lineNum">      38 </span>            :     : value_(0)
+<span class="lineNum">      39 </span>            :   {
+<span class="lineNum">      40 </span>            :   }
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            :   // Construct with a specific option value.
+<span class="lineNum">      43 </span>            :   explicit boolean(bool v)
+<span class="lineNum">      44 </span><span class="lineCov">         20 :     : value_(v ? 1 : 0)</span>
+<span class="lineNum">      45 </span>            :   {
+<span class="lineNum">      46 </span>            :   }
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            :   // Set the current value of the boolean.
+<span class="lineNum">      49 </span>            :   boolean&amp; operator=(bool v)
+<span class="lineNum">      50 </span>            :   {
+<span class="lineNum">      51 </span>            :     value_ = v ? 1 : 0;
+<span class="lineNum">      52 </span>            :     return *this;
+<span class="lineNum">      53 </span>            :   }
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :   // Get the current value of the boolean.
+<span class="lineNum">      56 </span>            :   bool value() const
+<span class="lineNum">      57 </span>            :   {
+<span class="lineNum">      58 </span>            :     return !!value_;
+<span class="lineNum">      59 </span>            :   }
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            :   // Convert to bool.
+<span class="lineNum">      62 </span>            :   operator bool() const
+<span class="lineNum">      63 </span>            :   {
+<span class="lineNum">      64 </span>            :     return !!value_;
+<span class="lineNum">      65 </span>            :   }
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :   // Test for false.
+<span class="lineNum">      68 </span>            :   bool operator!() const
+<span class="lineNum">      69 </span>            :   {
+<span class="lineNum">      70 </span>            :     return !value_;
+<span class="lineNum">      71 </span>            :   }
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :   // Get the level of the socket option.
+<span class="lineNum">      74 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">      75 </span>            :   int level(const Protocol&amp;) const
+<span class="lineNum">      76 </span>            :   {
+<span class="lineNum">      77 </span>            :     return Level;
+<span class="lineNum">      78 </span>            :   }
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            :   // Get the name of the socket option.
+<span class="lineNum">      81 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">      82 </span>            :   int name(const Protocol&amp;) const
+<span class="lineNum">      83 </span>            :   {
+<span class="lineNum">      84 </span>            :     return Name;
+<span class="lineNum">      85 </span>            :   }
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :   // Get the address of the boolean data.
+<span class="lineNum">      88 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">      89 </span>            :   int* data(const Protocol&amp;)
+<span class="lineNum">      90 </span>            :   {
+<span class="lineNum">      91 </span>            :     return &amp;value_;
+<span class="lineNum">      92 </span>            :   }
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :   // Get the address of the boolean data.
+<span class="lineNum">      95 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">      96 </span>            :   const int* data(const Protocol&amp;) const
+<span class="lineNum">      97 </span>            :   {
+<span class="lineNum">      98 </span><span class="lineCov">         20 :     return &amp;value_;</span>
+<span class="lineNum">      99 </span>            :   }
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :   // Get the size of the boolean data.
+<span class="lineNum">     102 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">     103 </span>            :   std::size_t size(const Protocol&amp;) const
+<span class="lineNum">     104 </span>            :   {
+<span class="lineNum">     105 </span>            :     return sizeof(value_);
+<span class="lineNum">     106 </span>            :   }
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :   // Set the size of the boolean data.
+<span class="lineNum">     109 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">     110 </span>            :   void resize(const Protocol&amp;, std::size_t s)
+<span class="lineNum">     111 </span>            :   {
+<span class="lineNum">     112 </span>            :     // On some platforms (e.g. Windows Vista), the getsockopt function will
+<span class="lineNum">     113 </span>            :     // return the size of a boolean socket option as one byte, even though a
+<span class="lineNum">     114 </span>            :     // four byte integer was passed in.
+<span class="lineNum">     115 </span>            :     switch (s)
+<span class="lineNum">     116 </span>            :     {
+<span class="lineNum">     117 </span>            :     case sizeof(char):
+<span class="lineNum">     118 </span>            :       value_ = *reinterpret_cast&lt;char*&gt;(&amp;value_) ? 1 : 0;
+<span class="lineNum">     119 </span>            :       break;
+<span class="lineNum">     120 </span>            :     case sizeof(value_):
+<span class="lineNum">     121 </span>            :       break;
+<span class="lineNum">     122 </span>            :     default:
+<span class="lineNum">     123 </span>            :       {
+<span class="lineNum">     124 </span>            :         std::length_error ex(&quot;boolean socket option resize&quot;);
+<span class="lineNum">     125 </span>            :         boost::asio::detail::throw_exception(ex);
+<span class="lineNum">     126 </span>            :       }
+<span class="lineNum">     127 </span>            :     }
+<span class="lineNum">     128 </span>            :   }
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            : private:
+<span class="lineNum">     131 </span>            :   int value_;
+<span class="lineNum">     132 </span>            : };
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            : // Helper template for implementing integer options.
+<span class="lineNum">     135 </span>            : template &lt;int Level, int Name&gt;
+<span class="lineNum">     136 </span>            : class integer
+<span class="lineNum">     137 </span>            : {
+<span class="lineNum">     138 </span>            : public:
+<span class="lineNum">     139 </span>            :   // Default constructor.
+<span class="lineNum">     140 </span>            :   integer()
+<span class="lineNum">     141 </span>            :     : value_(0)
+<span class="lineNum">     142 </span>            :   {
+<span class="lineNum">     143 </span>            :   }
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span>            :   // Construct with a specific option value.
+<span class="lineNum">     146 </span>            :   explicit integer(int v)
+<span class="lineNum">     147 </span>            :     : value_(v)
+<span class="lineNum">     148 </span>            :   {
+<span class="lineNum">     149 </span>            :   }
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            :   // Set the value of the int option.
+<span class="lineNum">     152 </span>            :   integer&amp; operator=(int v)
+<span class="lineNum">     153 </span>            :   {
+<span class="lineNum">     154 </span>            :     value_ = v;
+<span class="lineNum">     155 </span>            :     return *this;
+<span class="lineNum">     156 </span>            :   }
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            :   // Get the current value of the int option.
+<span class="lineNum">     159 </span>            :   int value() const
+<span class="lineNum">     160 </span>            :   {
+<span class="lineNum">     161 </span>            :     return value_;
+<span class="lineNum">     162 </span>            :   }
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :   // Get the level of the socket option.
+<span class="lineNum">     165 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">     166 </span>            :   int level(const Protocol&amp;) const
+<span class="lineNum">     167 </span>            :   {
+<span class="lineNum">     168 </span>            :     return Level;
+<span class="lineNum">     169 </span>            :   }
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            :   // Get the name of the socket option.
+<span class="lineNum">     172 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">     173 </span>            :   int name(const Protocol&amp;) const
+<span class="lineNum">     174 </span>            :   {
+<span class="lineNum">     175 </span>            :     return Name;
+<span class="lineNum">     176 </span>            :   }
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :   // Get the address of the int data.
+<span class="lineNum">     179 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">     180 </span>            :   int* data(const Protocol&amp;)
+<span class="lineNum">     181 </span>            :   {
+<span class="lineNum">     182 </span>            :     return &amp;value_;
+<span class="lineNum">     183 </span>            :   }
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :   // Get the address of the int data.
+<span class="lineNum">     186 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">     187 </span>            :   const int* data(const Protocol&amp;) const
+<span class="lineNum">     188 </span>            :   {
+<span class="lineNum">     189 </span>            :     return &amp;value_;
+<span class="lineNum">     190 </span>            :   }
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :   // Get the size of the int data.
+<span class="lineNum">     193 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">     194 </span>            :   std::size_t size(const Protocol&amp;) const
+<span class="lineNum">     195 </span>            :   {
+<span class="lineNum">     196 </span>            :     return sizeof(value_);
+<span class="lineNum">     197 </span>            :   }
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            :   // Set the size of the int data.
+<span class="lineNum">     200 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">     201 </span>            :   void resize(const Protocol&amp;, std::size_t s)
+<span class="lineNum">     202 </span>            :   {
+<span class="lineNum">     203 </span>            :     if (s != sizeof(value_))
+<span class="lineNum">     204 </span>            :     {
+<span class="lineNum">     205 </span>            :       std::length_error ex(&quot;integer socket option resize&quot;);
+<span class="lineNum">     206 </span>            :       boost::asio::detail::throw_exception(ex);
+<span class="lineNum">     207 </span>            :     }
+<span class="lineNum">     208 </span>            :   }
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            : private:
+<span class="lineNum">     211 </span>            :   int value_;
+<span class="lineNum">     212 </span>            : };
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : // Helper template for implementing linger options.
+<span class="lineNum">     215 </span>            : template &lt;int Level, int Name&gt;
+<span class="lineNum">     216 </span>            : class linger
+<span class="lineNum">     217 </span>            : {
+<span class="lineNum">     218 </span>            : public:
+<span class="lineNum">     219 </span>            :   // Default constructor.
+<span class="lineNum">     220 </span>            :   linger()
+<span class="lineNum">     221 </span>            :   {
+<span class="lineNum">     222 </span>            :     value_.l_onoff = 0;
+<span class="lineNum">     223 </span>            :     value_.l_linger = 0;
+<span class="lineNum">     224 </span>            :   }
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            :   // Construct with specific option values.
+<span class="lineNum">     227 </span>            :   linger(bool e, int t)
+<span class="lineNum">     228 </span>            :   {
+<span class="lineNum">     229 </span>            :     enabled(e);
+<span class="lineNum">     230 </span>            :     timeout BOOST_ASIO_PREVENT_MACRO_SUBSTITUTION(t);
+<span class="lineNum">     231 </span>            :   }
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            :   // Set the value for whether linger is enabled.
+<span class="lineNum">     234 </span>            :   void enabled(bool value)
+<span class="lineNum">     235 </span>            :   {
+<span class="lineNum">     236 </span>            :     value_.l_onoff = value ? 1 : 0;
+<span class="lineNum">     237 </span>            :   }
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            :   // Get the value for whether linger is enabled.
+<span class="lineNum">     240 </span>            :   bool enabled() const
+<span class="lineNum">     241 </span>            :   {
+<span class="lineNum">     242 </span>            :     return value_.l_onoff != 0;
+<span class="lineNum">     243 </span>            :   }
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span>            :   // Set the value for the linger timeout.
+<span class="lineNum">     246 </span>            :   void timeout BOOST_ASIO_PREVENT_MACRO_SUBSTITUTION(int value)
+<span class="lineNum">     247 </span>            :   {
+<span class="lineNum">     248 </span>            : #if defined(WIN32)
+<span class="lineNum">     249 </span>            :     value_.l_linger = static_cast&lt;u_short&gt;(value);
+<span class="lineNum">     250 </span>            : #else
+<span class="lineNum">     251 </span>            :     value_.l_linger = value;
+<span class="lineNum">     252 </span>            : #endif
+<span class="lineNum">     253 </span>            :   }
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            :   // Get the value for the linger timeout.
+<span class="lineNum">     256 </span>            :   int timeout BOOST_ASIO_PREVENT_MACRO_SUBSTITUTION() const
+<span class="lineNum">     257 </span>            :   {
+<span class="lineNum">     258 </span>            :     return static_cast&lt;int&gt;(value_.l_linger);
+<span class="lineNum">     259 </span>            :   }
+<span class="lineNum">     260 </span>            : 
+<span class="lineNum">     261 </span>            :   // Get the level of the socket option.
+<span class="lineNum">     262 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">     263 </span>            :   int level(const Protocol&amp;) const
+<span class="lineNum">     264 </span>            :   {
+<span class="lineNum">     265 </span>            :     return Level;
+<span class="lineNum">     266 </span>            :   }
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span>            :   // Get the name of the socket option.
+<span class="lineNum">     269 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">     270 </span>            :   int name(const Protocol&amp;) const
+<span class="lineNum">     271 </span>            :   {
+<span class="lineNum">     272 </span>            :     return Name;
+<span class="lineNum">     273 </span>            :   }
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            :   // Get the address of the linger data.
+<span class="lineNum">     276 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">     277 </span>            :   detail::linger_type* data(const Protocol&amp;)
+<span class="lineNum">     278 </span>            :   {
+<span class="lineNum">     279 </span>            :     return &amp;value_;
+<span class="lineNum">     280 </span>            :   }
+<span class="lineNum">     281 </span>            : 
+<span class="lineNum">     282 </span>            :   // Get the address of the linger data.
+<span class="lineNum">     283 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">     284 </span>            :   const detail::linger_type* data(const Protocol&amp;) const
+<span class="lineNum">     285 </span>            :   {
+<span class="lineNum">     286 </span>            :     return &amp;value_;
+<span class="lineNum">     287 </span>            :   }
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span>            :   // Get the size of the linger data.
+<span class="lineNum">     290 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">     291 </span>            :   std::size_t size(const Protocol&amp;) const
+<span class="lineNum">     292 </span>            :   {
+<span class="lineNum">     293 </span>            :     return sizeof(value_);
+<span class="lineNum">     294 </span>            :   }
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            :   // Set the size of the int data.
+<span class="lineNum">     297 </span>            :   template &lt;typename Protocol&gt;
+<span class="lineNum">     298 </span>            :   void resize(const Protocol&amp;, std::size_t s)
+<span class="lineNum">     299 </span>            :   {
+<span class="lineNum">     300 </span>            :     if (s != sizeof(value_))
+<span class="lineNum">     301 </span>            :     {
+<span class="lineNum">     302 </span>            :       std::length_error ex(&quot;linger socket option resize&quot;);
+<span class="lineNum">     303 </span>            :       boost::asio::detail::throw_exception(ex);
+<span class="lineNum">     304 </span>            :     }
+<span class="lineNum">     305 </span>            :   }
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            : private:
+<span class="lineNum">     308 </span>            :   detail::linger_type value_;
+<span class="lineNum">     309 </span>            : };
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            : } // namespace socket_option
+<span class="lineNum">     312 </span>            : } // namespace detail
+<span class="lineNum">     313 </span>            : } // namespace asio
+<span class="lineNum">     314 </span>            : } // namespace boost
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span>            : #endif // BOOST_ASIO_DETAIL_SOCKET_OPTION_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

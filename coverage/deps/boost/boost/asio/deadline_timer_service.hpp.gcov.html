@@ -1,0 +1,249 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/deadline_timer_service.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio</a> - deadline_timer_service.hpp<span style="font-size: 80%;"> (source / <a href="deadline_timer_service.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryLo">66.7 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // deadline_timer_service.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DEADLINE_TIMER_SERVICE_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DEADLINE_TIMER_SERVICE_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #if defined(BOOST_ASIO_HAS_BOOST_DATE_TIME) \
+<span class="lineNum">      21 </span>            :   || defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;cstddef&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/async_result.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/detail/deadline_timer_service.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/asio/io_service.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/asio/time_traits.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/asio/detail/timer_queue_ptime.hpp&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : namespace boost {
+<span class="lineNum">      33 </span>            : namespace asio {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : /// Default service implementation for a timer.
+<a name="36"><span class="lineNum">      36 </span>            : template &lt;typename TimeType,</a>
+<span class="lineNum">      37 </span>            :     typename TimeTraits = boost::asio::time_traits&lt;TimeType&gt; &gt;
+<span class="lineNum">      38 </span><span class="lineCov">         40 : class deadline_timer_service</span>
+<span class="lineNum">      39 </span>            : #if defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      40 </span>            :   : public boost::asio::io_service::service
+<span class="lineNum">      41 </span>            : #else
+<span class="lineNum">      42 </span>            :   : public boost::asio::detail::service_base&lt;
+<span class="lineNum">      43 </span>            :       deadline_timer_service&lt;TimeType, TimeTraits&gt; &gt;
+<span class="lineNum">      44 </span>            : #endif
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span>            : public:
+<span class="lineNum">      47 </span>            : #if defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      48 </span>            :   /// The unique service identifier.
+<span class="lineNum">      49 </span>            :   static boost::asio::io_service::id id;
+<span class="lineNum">      50 </span>            : #endif
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            :   /// The time traits type.
+<span class="lineNum">      53 </span>            :   typedef TimeTraits traits_type;
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :   /// The time type.
+<span class="lineNum">      56 </span>            :   typedef typename traits_type::time_type time_type;
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            :   /// The duration type.
+<span class="lineNum">      59 </span>            :   typedef typename traits_type::duration_type duration_type;
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : private:
+<span class="lineNum">      62 </span>            :   // The type of the platform-specific implementation.
+<span class="lineNum">      63 </span>            :   typedef detail::deadline_timer_service&lt;traits_type&gt; service_impl_type;
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : public:
+<span class="lineNum">      66 </span>            :   /// The implementation type of the deadline timer.
+<span class="lineNum">      67 </span>            : #if defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      68 </span>            :   typedef implementation_defined implementation_type;
+<span class="lineNum">      69 </span>            : #else
+<span class="lineNum">      70 </span>            :   typedef typename service_impl_type::implementation_type implementation_type;
+<span class="lineNum">      71 </span>            : #endif
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :   /// Construct a new timer service for the specified io_service.
+<span class="lineNum">      74 </span>            :   explicit deadline_timer_service(boost::asio::io_service&amp; io_service)
+<span class="lineNum">      75 </span>            :     : boost::asio::detail::service_base&lt;
+<span class="lineNum">      76 </span>            :         deadline_timer_service&lt;TimeType, TimeTraits&gt; &gt;(io_service),
+<span class="lineNum">      77 </span><span class="lineCov">         40 :       service_impl_(io_service)</span>
+<span class="lineNum">      78 </span>            :   {
+<span class="lineNum">      79 </span>            :   }
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            :   /// Construct a new timer implementation.
+<span class="lineNum">      82 </span>            :   void construct(implementation_type&amp; impl)
+<span class="lineNum">      83 </span>            :   {
+<span class="lineNum">      84 </span><span class="lineCov">        480 :     service_impl_.construct(impl);</span>
+<span class="lineNum">      85 </span>            :   }
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span>            :   /// Destroy a timer implementation.
+<span class="lineNum">      88 </span>            :   void destroy(implementation_type&amp; impl)
+<span class="lineNum">      89 </span>            :   {
+<span class="lineNum">      90 </span><span class="lineCov">        480 :     service_impl_.destroy(impl);</span>
+<span class="lineNum">      91 </span>            :   }
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            :   /// Cancel any asynchronous wait operations associated with the timer.
+<span class="lineNum">      94 </span>            :   std::size_t cancel(implementation_type&amp; impl, boost::system::error_code&amp; ec)
+<span class="lineNum">      95 </span>            :   {
+<span class="lineNum">      96 </span><span class="lineCov">        617 :     return service_impl_.cancel(impl, ec);</span>
+<span class="lineNum">      97 </span>            :   }
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :   /// Cancels one asynchronous wait operation associated with the timer.
+<span class="lineNum">     100 </span>            :   std::size_t cancel_one(implementation_type&amp; impl,
+<span class="lineNum">     101 </span>            :       boost::system::error_code&amp; ec)
+<span class="lineNum">     102 </span>            :   {
+<span class="lineNum">     103 </span>            :     return service_impl_.cancel_one(impl, ec);
+<span class="lineNum">     104 </span>            :   }
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            :   /// Get the expiry time for the timer as an absolute time.
+<span class="lineNum">     107 </span>            :   time_type expires_at(const implementation_type&amp; impl) const
+<span class="lineNum">     108 </span>            :   {
+<span class="lineNum">     109 </span>            :     return service_impl_.expires_at(impl);
+<span class="lineNum">     110 </span>            :   }
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            :   /// Set the expiry time for the timer as an absolute time.
+<span class="lineNum">     113 </span>            :   std::size_t expires_at(implementation_type&amp; impl,
+<span class="lineNum">     114 </span>            :       const time_type&amp; expiry_time, boost::system::error_code&amp; ec)
+<span class="lineNum">     115 </span>            :   {
+<span class="lineNum">     116 </span>            :     return service_impl_.expires_at(impl, expiry_time, ec);
+<span class="lineNum">     117 </span>            :   }
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span>            :   /// Get the expiry time for the timer relative to now.
+<span class="lineNum">     120 </span>            :   duration_type expires_from_now(const implementation_type&amp; impl) const
+<span class="lineNum">     121 </span>            :   {
+<span class="lineNum">     122 </span><span class="lineCov">        760 :     return service_impl_.expires_from_now(impl);</span>
+<span class="lineNum">     123 </span>            :   }
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :   /// Set the expiry time for the timer relative to now.
+<span class="lineNum">     126 </span>            :   std::size_t expires_from_now(implementation_type&amp; impl,
+<span class="lineNum">     127 </span>            :       const duration_type&amp; expiry_time, boost::system::error_code&amp; ec)
+<span class="lineNum">     128 </span>            :   {
+<span class="lineNum">     129 </span><span class="lineCov">        802 :     return service_impl_.expires_from_now(impl, expiry_time, ec);</span>
+<span class="lineNum">     130 </span>            :   }
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            :   // Perform a blocking wait on the timer.
+<span class="lineNum">     133 </span>            :   void wait(implementation_type&amp; impl, boost::system::error_code&amp; ec)
+<span class="lineNum">     134 </span>            :   {
+<span class="lineNum">     135 </span><span class="lineCov">        380 :     service_impl_.wait(impl, ec);</span>
+<span class="lineNum">     136 </span>            :   }
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :   // Start an asynchronous wait on the timer.
+<span class="lineNum">     139 </span>            :   template &lt;typename WaitHandler&gt;
+<a name="140"><span class="lineNum">     140 </span>            :   BOOST_ASIO_INITFN_RESULT_TYPE(WaitHandler,</a>
+<span class="lineNum">     141 </span>            :       void (boost::system::error_code))
+<span class="lineNum">     142 </span><span class="lineCov">        594 :   async_wait(implementation_type&amp; impl,</span>
+<span class="lineNum">     143 </span>            :       BOOST_ASIO_MOVE_ARG(WaitHandler) handler)
+<span class="lineNum">     144 </span>            :   {
+<span class="lineNum">     145 </span>            :     detail::async_result_init&lt;
+<span class="lineNum">     146 </span>            :       WaitHandler, void (boost::system::error_code)&gt; init(
+<span class="lineNum">     147 </span><span class="lineCov">       1604 :         BOOST_ASIO_MOVE_CAST(WaitHandler)(handler));</span>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">        802 :     service_impl_.async_wait(impl, init.handler);</span>
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span><span class="lineCov">       1396 :     return init.result.get();</span>
+<span class="lineNum">     152 </span>            :   }
+<span class="lineNum">     153 </span>            : 
+<a name="154"><span class="lineNum">     154 </span>            : private:</a>
+<span class="lineNum">     155 </span>            :   // Destroy all user-defined handler objects owned by the service.
+<span class="lineNum">     156 </span><span class="lineCov">         20 :   void shutdown_service()</span>
+<span class="lineNum">     157 </span>            :   {
+<span class="lineNum">     158 </span><span class="lineCov">         20 :     service_impl_.shutdown_service();</span>
+<span class="lineNum">     159 </span><span class="lineCov">         20 :   }</span>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :   // The platform-specific implementation.
+<span class="lineNum">     162 </span>            :   service_impl_type service_impl_;
+<span class="lineNum">     163 </span>            : };
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : } // namespace asio
+<span class="lineNum">     166 </span>            : } // namespace boost
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            : #endif // defined(BOOST_ASIO_HAS_BOOST_DATE_TIME)
+<span class="lineNum">     171 </span>            :        // || defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            : #endif // BOOST_ASIO_DEADLINE_TIMER_SERVICE_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

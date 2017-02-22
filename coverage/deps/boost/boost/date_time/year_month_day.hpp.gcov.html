@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/date_time/year_month_day.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/date_time</a> - year_month_day.hpp<span style="font-size: 80%;"> (source / <a href="year_month_day.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef YearMonthDayBase_HPP__</a>
+<span class="lineNum">       2 </span>            : #define YearMonthDayBase_HPP__
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : /* Copyright (c) 2002,2003 CrystalClear Software, Inc.
+<span class="lineNum">       5 </span>            :  * Use, modification and distribution is subject to the 
+<span class="lineNum">       6 </span>            :  * Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       7 </span>            :  * file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            :  * Author: Jeff Garland 
+<span class="lineNum">       9 </span>            :  * $Date$
+<span class="lineNum">      10 </span>            :  */
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : namespace boost {
+<span class="lineNum">      13 </span>            : namespace date_time {
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            :   //! Allow rapid creation of ymd triples of different types
+<span class="lineNum">      16 </span>            :   template&lt;typename YearType, typename MonthType, typename DayType&gt;
+<span class="lineNum">      17 </span>            :   struct year_month_day_base {
+<span class="lineNum">      18 </span>            :     year_month_day_base(YearType  year, 
+<span class="lineNum">      19 </span>            :                         MonthType month,
+<span class="lineNum">      20 </span>            :                         DayType   day);
+<span class="lineNum">      21 </span>            :     YearType year;
+<span class="lineNum">      22 </span>            :     MonthType month;
+<span class="lineNum">      23 </span>            :     DayType day;
+<span class="lineNum">      24 </span>            :     typedef YearType  year_type;
+<span class="lineNum">      25 </span>            :     typedef MonthType month_type;
+<span class="lineNum">      26 </span>            :     typedef DayType   day_type;
+<span class="lineNum">      27 </span>            :   };
+<span class="lineNum">      28 </span>            :   
+<span class="lineNum">      29 </span>            :   
+<span class="lineNum">      30 </span>            :   //! A basic constructor
+<span class="lineNum">      31 </span>            :   template&lt;typename YearType, typename MonthType, typename DayType&gt;
+<span class="lineNum">      32 </span>            :   inline
+<span class="lineNum">      33 </span>            :   year_month_day_base&lt;YearType,MonthType,DayType&gt;::year_month_day_base(YearType y, 
+<span class="lineNum">      34 </span>            :                                                                        MonthType m,
+<span class="lineNum">      35 </span>            :                                                                        DayType d) :
+<span class="lineNum">      36 </span>            :     year(y),
+<span class="lineNum">      37 </span>            :     month(m),
+<span class="lineNum">      38 </span><span class="lineCov">       2728 :     day(d)</span>
+<span class="lineNum">      39 </span>            :   {}
+<span class="lineNum">      40 </span>            :   
+<span class="lineNum">      41 </span>            : } }//namespace date_time
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : #endif
+<span class="lineNum">      45 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,1091 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/filesystem/path.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/filesystem</a> - path.hpp<span style="font-size: 80%;"> (source / <a href="path.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntryMed">75.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">66.7 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //  filesystem path.hpp  ---------------------------------------------------------------//</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : //  Copyright Beman Dawes 2002-2005, 2009
+<span class="lineNum">       4 </span>            : //  Copyright Vladimir Prus 2002
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : //  Distributed under the Boost Software License, Version 1.0.
+<span class="lineNum">       7 </span>            : //  See http://www.boost.org/LICENSE_1_0.txt
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : //  Library home page: http://www.boost.org/libs/filesystem
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : //  path::stem(), extension(), and replace_extension() are based on
+<span class="lineNum">      12 </span>            : //  basename(), extension(), and change_extension() from the original
+<span class="lineNum">      13 </span>            : //  filesystem/convenience.hpp header by Vladimir Prus.
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #ifndef BOOST_FILESYSTEM_PATH_HPP
+<span class="lineNum">      16 </span>            : #define BOOST_FILESYSTEM_PATH_HPP
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : # if defined( BOOST_NO_STD_WSTRING )
+<span class="lineNum">      21 </span>            : #   error Configuration not supported: Boost.Filesystem V3 and later requires std::wstring support
+<span class="lineNum">      22 </span>            : # endif
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;boost/filesystem/config.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/filesystem/path_traits.hpp&gt;  // includes &lt;cwchar&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/system/error_code.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/system/system_error.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/iterator/iterator_facade.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/shared_ptr.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/io/detail/quoted_manip.hpp&gt;
+<span class="lineNum">      31 </span>            : #include &lt;boost/static_assert.hpp&gt;
+<span class="lineNum">      32 </span>            : #include &lt;boost/functional/hash_fwd.hpp&gt;
+<span class="lineNum">      33 </span>            : #include &lt;boost/type_traits/is_integral.hpp&gt;
+<span class="lineNum">      34 </span>            : #include &lt;string&gt;
+<span class="lineNum">      35 </span>            : #include &lt;iterator&gt;
+<span class="lineNum">      36 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      37 </span>            : #include &lt;iosfwd&gt;
+<span class="lineNum">      38 </span>            : #include &lt;stdexcept&gt;
+<span class="lineNum">      39 </span>            : #include &lt;cassert&gt;
+<span class="lineNum">      40 </span>            : #include &lt;locale&gt;
+<span class="lineNum">      41 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : #include &lt;boost/config/abi_prefix.hpp&gt; // must be the last #include
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            : namespace boost
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span>            : namespace filesystem
+<span class="lineNum">      48 </span>            : {
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            :   //------------------------------------------------------------------------------------//
+<span class="lineNum">      51 </span>            :   //                                                                                    //
+<span class="lineNum">      52 </span>            :   //                                    class path                                      //
+<span class="lineNum">      53 </span>            :   //                                                                                    //
+<span class="lineNum">      54 </span>            :   //------------------------------------------------------------------------------------//
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span><span class="lineCov">     412900 :   class BOOST_FILESYSTEM_DECL path</span>
+<span class="lineNum">      57 </span>            :   {
+<span class="lineNum">      58 </span>            :   public:
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :     //  value_type is the character type used by the operating system API to
+<span class="lineNum">      61 </span>            :     //  represent paths.
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : # ifdef BOOST_WINDOWS_API
+<span class="lineNum">      64 </span>            :     typedef wchar_t                        value_type;
+<span class="lineNum">      65 </span>            :     BOOST_STATIC_CONSTEXPR value_type      separator = L'/';
+<span class="lineNum">      66 </span>            :     BOOST_STATIC_CONSTEXPR value_type      preferred_separator = L'\\';
+<span class="lineNum">      67 </span>            :     BOOST_STATIC_CONSTEXPR value_type      dot = L'.';
+<span class="lineNum">      68 </span>            : # else 
+<span class="lineNum">      69 </span>            :     typedef char                           value_type;
+<span class="lineNum">      70 </span>            :     BOOST_STATIC_CONSTEXPR value_type      separator = '/';
+<span class="lineNum">      71 </span>            :     BOOST_STATIC_CONSTEXPR value_type      preferred_separator = '/';
+<span class="lineNum">      72 </span>            :     BOOST_STATIC_CONSTEXPR value_type      dot = '.';
+<span class="lineNum">      73 </span>            : # endif
+<span class="lineNum">      74 </span>            :     typedef std::basic_string&lt;value_type&gt;  string_type;  
+<span class="lineNum">      75 </span>            :     typedef std::codecvt&lt;wchar_t, char,
+<span class="lineNum">      76 </span>            :                          std::mbstate_t&gt;   codecvt_type;
+<span class="lineNum">      77 </span>            : 
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :     //  ----- character encoding conversions -----
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            :     //  Following the principle of least astonishment, path input arguments
+<span class="lineNum">      82 </span>            :     //  passed to or obtained from the operating system via objects of
+<span class="lineNum">      83 </span>            :     //  class path behave as if they were directly passed to or
+<span class="lineNum">      84 </span>            :     //  obtained from the O/S API, unless conversion is explicitly requested.
+<span class="lineNum">      85 </span>            :     //
+<span class="lineNum">      86 </span>            :     //  POSIX specfies that path strings are passed unchanged to and from the
+<span class="lineNum">      87 </span>            :     //  API. Note that this is different from the POSIX command line utilities,
+<span class="lineNum">      88 </span>            :     //  which convert according to a locale.
+<span class="lineNum">      89 </span>            :     //
+<span class="lineNum">      90 </span>            :     //  Thus for POSIX, char strings do not undergo conversion.  wchar_t strings
+<span class="lineNum">      91 </span>            :     //  are converted to/from char using the path locale or, if a conversion
+<span class="lineNum">      92 </span>            :     //  argument is given, using a conversion object modeled on
+<span class="lineNum">      93 </span>            :     //  std::wstring_convert.
+<span class="lineNum">      94 </span>            :     //
+<span class="lineNum">      95 </span>            :     //  The path locale, which is global to the thread, can be changed by the
+<span class="lineNum">      96 </span>            :     //  imbue() function. It is initialized to an implementation defined locale.
+<span class="lineNum">      97 </span>            :     //  
+<span class="lineNum">      98 </span>            :     //  For Windows, wchar_t strings do not undergo conversion. char strings
+<span class="lineNum">      99 </span>            :     //  are converted using the &quot;ANSI&quot; or &quot;OEM&quot; code pages, as determined by
+<span class="lineNum">     100 </span>            :     //  the AreFileApisANSI() function, or, if a conversion argument is given,
+<span class="lineNum">     101 </span>            :     //  using a conversion object modeled on std::wstring_convert.
+<span class="lineNum">     102 </span>            :     //
+<span class="lineNum">     103 </span>            :     //  See m_pathname comments for further important rationale.
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            :     //  TODO: rules needed for operating systems that use / or .
+<span class="lineNum">     106 </span>            :     //  differently, or format directory paths differently from file paths. 
+<span class="lineNum">     107 </span>            :     //
+<span class="lineNum">     108 </span>            :     //  **********************************************************************************
+<span class="lineNum">     109 </span>            :     //
+<span class="lineNum">     110 </span>            :     //  More work needed: How to handle an operating system that may have
+<span class="lineNum">     111 </span>            :     //  slash characters or dot characters in valid filenames, either because
+<span class="lineNum">     112 </span>            :     //  it doesn't follow the POSIX standard, or because it allows MBCS
+<span class="lineNum">     113 </span>            :     //  filename encodings that may contain slash or dot characters. For
+<span class="lineNum">     114 </span>            :     //  example, ISO/IEC 2022 (JIS) encoding which allows switching to
+<span class="lineNum">     115 </span>            :     //  JIS x0208-1983 encoding. A valid filename in this set of encodings is
+<span class="lineNum">     116 </span>            :     //  0x1B 0x24 0x42 [switch to X0208-1983] 0x24 0x2F [U+304F Kiragana letter KU]
+<span class="lineNum">     117 </span>            :     //                                             ^^^^
+<span class="lineNum">     118 </span>            :     //  Note that 0x2F is the ASCII slash character
+<span class="lineNum">     119 </span>            :     //
+<span class="lineNum">     120 </span>            :     //  **********************************************************************************
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            :     //  Supported source arguments: half-open iterator range, container, c-array,
+<span class="lineNum">     123 </span>            :     //  and single pointer to null terminated string.
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :     //  All source arguments except pointers to null terminated byte strings support
+<span class="lineNum">     126 </span>            :     //  multi-byte character strings which may have embedded nulls. Embedded null
+<span class="lineNum">     127 </span>            :     //  support is required for some Asian languages on Windows.
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            :     //  &quot;const codecvt_type&amp; cvt=codecvt()&quot; default arguments are not used because this
+<span class="lineNum">     130 </span>            :     //  limits the impact of locale(&quot;&quot;) initialization failures on POSIX systems to programs
+<span class="lineNum">     131 </span>            :     //  that actually depend on locale(&quot;&quot;). It further ensures that exceptions thrown
+<span class="lineNum">     132 </span>            :     //  as a result of such failues occur after main() has started, so can be caught. 
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            :     //  -----  constructors  -----
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineCov">        220 :     path() BOOST_NOEXCEPT {}                                          </span>
+<span class="lineNum">     137 </span><span class="lineCov">      86986 :     path(const path&amp; p) : m_pathname(p.m_pathname) {}</span>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            :     template &lt;class Source&gt;
+<span class="lineNum">     140 </span>            :     path(Source const&amp; source,
+<span class="lineNum">     141 </span>            :       typename boost::enable_if&lt;path_traits::is_pathable&lt;
+<span class="lineNum">     142 </span>            :         typename boost::decay&lt;Source&gt;::type&gt; &gt;::type* =0)
+<span class="lineNum">     143 </span>            :     {
+<span class="lineNum">     144 </span>            :       path_traits::dispatch(source, m_pathname);
+<span class="lineNum">     145 </span>            :     }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">      14008 :     path(const value_type* s) : m_pathname(s) {}</span>
+<span class="lineNum">     148 </span>            :     path(value_type* s) : m_pathname(s) {}
+<span class="lineNum">     149 </span><span class="lineCov">      46343 :     path(const string_type&amp; s) : m_pathname(s) {}</span>
+<span class="lineNum">     150 </span><span class="lineCov">     130553 :     path(string_type&amp; s) : m_pathname(s) {}</span>
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :   //  As of October 2015 the interaction between noexcept and =default is so troublesome
+<span class="lineNum">     153 </span>            :   //  for VC++, GCC, and probably other compilers, that =default is not used with noexcept
+<span class="lineNum">     154 </span>            :   //  functions. GCC is not even consistent for the same release on different platforms.
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            : # if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+<span class="lineNum">     157 </span><span class="lineCov">         93 :     path(path&amp;&amp; p) BOOST_NOEXCEPT { m_pathname = std::move(p.m_pathname); }</span>
+<span class="lineNum">     158 </span>            :     path&amp; operator=(path&amp;&amp; p) BOOST_NOEXCEPT
+<span class="lineNum">     159 </span><span class="lineCov">         20 :       { m_pathname = std::move(p.m_pathname); return *this; }</span>
+<span class="lineNum">     160 </span>            : # endif
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            :     template &lt;class Source&gt;
+<span class="lineNum">     163 </span>            :     path(Source const&amp; source, const codecvt_type&amp; cvt)
+<span class="lineNum">     164 </span>            :     {
+<span class="lineNum">     165 </span>            :       path_traits::dispatch(source, m_pathname, cvt);
+<span class="lineNum">     166 </span>            :     }
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :     template &lt;class InputIterator&gt;
+<span class="lineNum">     169 </span>            :     path(InputIterator begin, InputIterator end)
+<span class="lineNum">     170 </span>            :     { 
+<span class="lineNum">     171 </span>            :       if (begin != end)
+<span class="lineNum">     172 </span>            :       {
+<span class="lineNum">     173 </span>            :         // convert requires contiguous string, so copy
+<span class="lineNum">     174 </span>            :         std::basic_string&lt;typename std::iterator_traits&lt;InputIterator&gt;::value_type&gt;
+<span class="lineNum">     175 </span>            :           seq(begin, end);
+<span class="lineNum">     176 </span>            :         path_traits::convert(seq.c_str(), seq.c_str()+seq.size(), m_pathname);
+<span class="lineNum">     177 </span>            :       }
+<span class="lineNum">     178 </span>            :     }
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            :     template &lt;class InputIterator&gt;
+<span class="lineNum">     181 </span>            :     path(InputIterator begin, InputIterator end, const codecvt_type&amp; cvt)
+<span class="lineNum">     182 </span>            :     { 
+<span class="lineNum">     183 </span>            :       if (begin != end)
+<span class="lineNum">     184 </span>            :       {
+<span class="lineNum">     185 </span>            :         // convert requires contiguous string, so copy
+<span class="lineNum">     186 </span>            :         std::basic_string&lt;typename std::iterator_traits&lt;InputIterator&gt;::value_type&gt;
+<span class="lineNum">     187 </span>            :           seq(begin, end);
+<span class="lineNum">     188 </span>            :         path_traits::convert(seq.c_str(), seq.c_str()+seq.size(), m_pathname, cvt);
+<span class="lineNum">     189 </span>            :       }
+<span class="lineNum">     190 </span>            :     }
+<span class="lineNum">     191 </span>            : 
+<span class="lineNum">     192 </span>            :     //  -----  assignments  -----
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            :     path&amp; operator=(const path&amp; p)
+<span class="lineNum">     195 </span>            :     {
+<span class="lineNum">     196 </span>            :       m_pathname = p.m_pathname;
+<span class="lineNum">     197 </span>            :       return *this;
+<span class="lineNum">     198 </span>            :     }
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            :     template &lt;class Source&gt;
+<span class="lineNum">     201 </span>            :       typename boost::enable_if&lt;path_traits::is_pathable&lt;
+<span class="lineNum">     202 </span>            :         typename boost::decay&lt;Source&gt;::type&gt;, path&amp;&gt;::type
+<span class="lineNum">     203 </span>            :     operator=(Source const&amp; source)
+<span class="lineNum">     204 </span>            :     {
+<span class="lineNum">     205 </span>            :       m_pathname.clear();
+<span class="lineNum">     206 </span>            :       path_traits::dispatch(source, m_pathname);
+<span class="lineNum">     207 </span>            :       return *this;
+<span class="lineNum">     208 </span>            :     }
+<span class="lineNum">     209 </span>            : 
+<span class="lineNum">     210 </span>            :     //  value_type overloads
+<span class="lineNum">     211 </span>            : 
+<span class="lineNum">     212 </span>            :     path&amp; operator=(const value_type* ptr)  // required in case ptr overlaps *this
+<span class="lineNum">     213 </span>            :                                           {m_pathname = ptr; return *this;}
+<span class="lineNum">     214 </span>            :     path&amp; operator=(value_type* ptr)  // required in case ptr overlaps *this
+<span class="lineNum">     215 </span>            :                                           {m_pathname = ptr; return *this;}
+<span class="lineNum">     216 </span>            :     path&amp; operator=(const string_type&amp; s) {m_pathname = s; return *this;}
+<span class="lineNum">     217 </span>            :     path&amp; operator=(string_type&amp; s)       {m_pathname = s; return *this;}
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            :     path&amp; assign(const value_type* ptr, const codecvt_type&amp;)  // required in case ptr overlaps *this
+<span class="lineNum">     220 </span>            :                                           {m_pathname = ptr; return *this;}
+<span class="lineNum">     221 </span>            :     template &lt;class Source&gt;
+<span class="lineNum">     222 </span>            :     path&amp; assign(Source const&amp; source, const codecvt_type&amp; cvt)
+<span class="lineNum">     223 </span>            :     {
+<span class="lineNum">     224 </span>            :       m_pathname.clear();
+<span class="lineNum">     225 </span>            :       path_traits::dispatch(source, m_pathname, cvt);
+<span class="lineNum">     226 </span>            :       return *this;
+<span class="lineNum">     227 </span>            :     }
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            :     template &lt;class InputIterator&gt;
+<span class="lineNum">     230 </span>            :     path&amp; assign(InputIterator begin, InputIterator end)
+<span class="lineNum">     231 </span>            :     {
+<span class="lineNum">     232 </span>            :       m_pathname.clear();
+<span class="lineNum">     233 </span>            :       if (begin != end)
+<span class="lineNum">     234 </span>            :       {
+<span class="lineNum">     235 </span>            :         std::basic_string&lt;typename std::iterator_traits&lt;InputIterator&gt;::value_type&gt;
+<span class="lineNum">     236 </span>            :           seq(begin, end);
+<span class="lineNum">     237 </span>            :         path_traits::convert(seq.c_str(), seq.c_str()+seq.size(), m_pathname);
+<span class="lineNum">     238 </span>            :       }
+<span class="lineNum">     239 </span>            :       return *this;
+<span class="lineNum">     240 </span>            :     }
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            :     template &lt;class InputIterator&gt;
+<span class="lineNum">     243 </span>            :     path&amp; assign(InputIterator begin, InputIterator end, const codecvt_type&amp; cvt)
+<span class="lineNum">     244 </span>            :     { 
+<span class="lineNum">     245 </span>            :       m_pathname.clear();
+<span class="lineNum">     246 </span>            :       if (begin != end)
+<span class="lineNum">     247 </span>            :       {
+<span class="lineNum">     248 </span>            :         std::basic_string&lt;typename std::iterator_traits&lt;InputIterator&gt;::value_type&gt;
+<span class="lineNum">     249 </span>            :           seq(begin, end);
+<span class="lineNum">     250 </span>            :         path_traits::convert(seq.c_str(), seq.c_str()+seq.size(), m_pathname, cvt);
+<span class="lineNum">     251 </span>            :       }
+<span class="lineNum">     252 </span>            :       return *this;
+<span class="lineNum">     253 </span>            :     }
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            :     //  -----  concatenation  -----
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            :     template &lt;class Source&gt;
+<span class="lineNum">     258 </span>            :       typename boost::enable_if&lt;path_traits::is_pathable&lt;
+<span class="lineNum">     259 </span>            :         typename boost::decay&lt;Source&gt;::type&gt;, path&amp;&gt;::type
+<span class="lineNum">     260 </span>            :     operator+=(Source const&amp; source)
+<span class="lineNum">     261 </span>            :     {
+<span class="lineNum">     262 </span>            :       return concat(source);
+<span class="lineNum">     263 </span>            :     }
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :     //  value_type overloads. Same rationale as for constructors above
+<span class="lineNum">     266 </span>            :     path&amp; operator+=(const path&amp; p)         { m_pathname += p.m_pathname; return *this; }
+<span class="lineNum">     267 </span>            :     path&amp; operator+=(const value_type* ptr) { m_pathname += ptr; return *this; }
+<span class="lineNum">     268 </span>            :     path&amp; operator+=(value_type* ptr)       { m_pathname += ptr; return *this; }
+<span class="lineNum">     269 </span>            :     path&amp; operator+=(const string_type&amp; s)  { m_pathname += s; return *this; }
+<span class="lineNum">     270 </span>            :     path&amp; operator+=(string_type&amp; s)        { m_pathname += s; return *this; }
+<span class="lineNum">     271 </span>            :     path&amp; operator+=(value_type c)          { m_pathname += c; return *this; }
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span>            :     template &lt;class CharT&gt;
+<span class="lineNum">     274 </span>            :       typename boost::enable_if&lt;is_integral&lt;CharT&gt;, path&amp;&gt;::type
+<span class="lineNum">     275 </span>            :     operator+=(CharT c)
+<span class="lineNum">     276 </span>            :     {
+<span class="lineNum">     277 </span>            :       CharT tmp[2];
+<span class="lineNum">     278 </span>            :       tmp[0] = c;
+<span class="lineNum">     279 </span>            :       tmp[1] = 0;
+<span class="lineNum">     280 </span>            :       return concat(tmp);
+<span class="lineNum">     281 </span>            :     }
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span>            :     template &lt;class Source&gt;
+<span class="lineNum">     284 </span>            :     path&amp; concat(Source const&amp; source)
+<span class="lineNum">     285 </span>            :     {
+<span class="lineNum">     286 </span>            :       path_traits::dispatch(source, m_pathname);
+<span class="lineNum">     287 </span>            :       return *this;
+<span class="lineNum">     288 </span>            :     }
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            :     template &lt;class Source&gt;
+<span class="lineNum">     291 </span>            :     path&amp; concat(Source const&amp; source, const codecvt_type&amp; cvt)
+<span class="lineNum">     292 </span>            :     {
+<span class="lineNum">     293 </span>            :       path_traits::dispatch(source, m_pathname, cvt);
+<span class="lineNum">     294 </span>            :       return *this;
+<span class="lineNum">     295 </span>            :     }
+<span class="lineNum">     296 </span>            : 
+<span class="lineNum">     297 </span>            :     template &lt;class InputIterator&gt;
+<span class="lineNum">     298 </span>            :     path&amp; concat(InputIterator begin, InputIterator end)
+<span class="lineNum">     299 </span>            :     { 
+<span class="lineNum">     300 </span>            :       if (begin == end)
+<span class="lineNum">     301 </span>            :         return *this;
+<span class="lineNum">     302 </span>            :       std::basic_string&lt;typename std::iterator_traits&lt;InputIterator&gt;::value_type&gt;
+<span class="lineNum">     303 </span>            :         seq(begin, end);
+<span class="lineNum">     304 </span>            :       path_traits::convert(seq.c_str(), seq.c_str()+seq.size(), m_pathname);
+<span class="lineNum">     305 </span>            :       return *this;
+<span class="lineNum">     306 </span>            :     }
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span>            :     template &lt;class InputIterator&gt;
+<span class="lineNum">     309 </span>            :     path&amp; concat(InputIterator begin, InputIterator end, const codecvt_type&amp; cvt)
+<span class="lineNum">     310 </span>            :     { 
+<span class="lineNum">     311 </span>            :       if (begin == end)
+<span class="lineNum">     312 </span>            :         return *this;
+<span class="lineNum">     313 </span>            :       std::basic_string&lt;typename std::iterator_traits&lt;InputIterator&gt;::value_type&gt;
+<span class="lineNum">     314 </span>            :         seq(begin, end);
+<span class="lineNum">     315 </span>            :       path_traits::convert(seq.c_str(), seq.c_str()+seq.size(), m_pathname, cvt);
+<span class="lineNum">     316 </span>            :       return *this;
+<span class="lineNum">     317 </span>            :     }
+<span class="lineNum">     318 </span>            : 
+<span class="lineNum">     319 </span>            :     //  -----  appends  -----
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span>            :     //  if a separator is added, it is the preferred separator for the platform;
+<span class="lineNum">     322 </span>            :     //  slash for POSIX, backslash for Windows
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span>            :     path&amp; operator/=(const path&amp; p);
+<span class="lineNum">     325 </span>            : 
+<span class="lineNum">     326 </span>            :     template &lt;class Source&gt;
+<span class="lineNum">     327 </span>            :       typename boost::enable_if&lt;path_traits::is_pathable&lt;
+<span class="lineNum">     328 </span>            :         typename boost::decay&lt;Source&gt;::type&gt;, path&amp;&gt;::type
+<span class="lineNum">     329 </span>            :     operator/=(Source const&amp; source)
+<span class="lineNum">     330 </span>            :     {
+<span class="lineNum">     331 </span>            :       return append(source);
+<span class="lineNum">     332 </span>            :     }
+<span class="lineNum">     333 </span>            : 
+<span class="lineNum">     334 </span>            :     path&amp; operator/=(const value_type* ptr);
+<span class="lineNum">     335 </span>            :     path&amp; operator/=(value_type* ptr)
+<span class="lineNum">     336 </span>            :     {
+<span class="lineNum">     337 </span>            :       return this-&gt;operator/=(const_cast&lt;const value_type*&gt;(ptr));
+<span class="lineNum">     338 </span>            :     }
+<span class="lineNum">     339 </span>            :     path&amp; operator/=(const string_type&amp; s) { return this-&gt;operator/=(path(s)); }
+<span class="lineNum">     340 </span>            :     path&amp; operator/=(string_type&amp; s)       { return this-&gt;operator/=(path(s)); }
+<span class="lineNum">     341 </span>            : 
+<span class="lineNum">     342 </span>            :     path&amp; append(const value_type* ptr)  // required in case ptr overlaps *this
+<span class="lineNum">     343 </span>            :     {
+<span class="lineNum">     344 </span>            :       this-&gt;operator/=(ptr);
+<span class="lineNum">     345 </span>            :       return *this;
+<span class="lineNum">     346 </span>            :     }
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            :     path&amp; append(const value_type* ptr, const codecvt_type&amp;)  // required in case ptr overlaps *this
+<span class="lineNum">     349 </span>            :     {
+<span class="lineNum">     350 </span>            :       this-&gt;operator/=(ptr);
+<span class="lineNum">     351 </span>            :       return *this;
+<span class="lineNum">     352 </span>            :     }
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span>            :     template &lt;class Source&gt;
+<span class="lineNum">     355 </span>            :     path&amp; append(Source const&amp; source);
+<span class="lineNum">     356 </span>            : 
+<span class="lineNum">     357 </span>            :     template &lt;class Source&gt;
+<span class="lineNum">     358 </span>            :     path&amp; append(Source const&amp; source, const codecvt_type&amp; cvt);
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span>            :     template &lt;class InputIterator&gt;
+<span class="lineNum">     361 </span>            :     path&amp; append(InputIterator begin, InputIterator end);
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span>            :     template &lt;class InputIterator&gt;
+<span class="lineNum">     364 </span>            :     path&amp; append(InputIterator begin, InputIterator end, const codecvt_type&amp; cvt);
+<span class="lineNum">     365 </span>            : 
+<span class="lineNum">     366 </span>            :     //  -----  modifiers  -----
+<span class="lineNum">     367 </span>            : 
+<span class="lineNum">     368 </span>            :     void   clear() BOOST_NOEXCEPT             { m_pathname.clear(); }
+<span class="lineNum">     369 </span>            :     path&amp;  make_preferred()
+<span class="lineNum">     370 </span>            : #   ifdef BOOST_POSIX_API
+<span class="lineNum">     371 </span>            :       { return *this; }  // POSIX no effect
+<span class="lineNum">     372 </span>            : #   else // BOOST_WINDOWS_API
+<span class="lineNum">     373 </span>            :       ;  // change slashes to backslashes
+<span class="lineNum">     374 </span>            : #   endif
+<span class="lineNum">     375 </span>            :     path&amp;  remove_filename();
+<span class="lineNum">     376 </span>            :     path&amp;  remove_trailing_separator();
+<span class="lineNum">     377 </span>            :     path&amp;  replace_extension(const path&amp; new_extension = path());
+<span class="lineNum">     378 </span>            :     void   swap(path&amp; rhs) BOOST_NOEXCEPT     { m_pathname.swap(rhs.m_pathname); }
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span>            :     //  -----  observers  -----
+<span class="lineNum">     381 </span>            :   
+<span class="lineNum">     382 </span>            :     //  For operating systems that format file paths differently than directory
+<span class="lineNum">     383 </span>            :     //  paths, return values from observers are formatted as file names unless there
+<span class="lineNum">     384 </span>            :     //  is a trailing separator, in which case returns are formatted as directory
+<span class="lineNum">     385 </span>            :     //  paths. POSIX and Windows make no such distinction.
+<span class="lineNum">     386 </span>            : 
+<span class="lineNum">     387 </span>            :     //  Implementations are permitted to return const values or const references.
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span>            :     //  The string or path returned by an observer are specified as being formatted
+<span class="lineNum">     390 </span>            :     //  as &quot;native&quot; or &quot;generic&quot;.
+<span class="lineNum">     391 </span>            :     //
+<span class="lineNum">     392 </span>            :     //  For POSIX, these are all the same format; slashes and backslashes are as input and
+<span class="lineNum">     393 </span>            :     //  are not modified.
+<span class="lineNum">     394 </span>            :     //
+<span class="lineNum">     395 </span>            :     //  For Windows,   native:    as input; slashes and backslashes are not modified;
+<span class="lineNum">     396 </span>            :     //                            this is the format of the internally stored string.
+<span class="lineNum">     397 </span>            :     //                 generic:   backslashes are converted to slashes
+<span class="lineNum">     398 </span>            : 
+<span class="lineNum">     399 </span>            :     //  -----  native format observers  -----
+<span class="lineNum">     400 </span>            : 
+<span class="lineNum">     401 </span>            :     const string_type&amp;  native() const BOOST_NOEXCEPT  { return m_pathname; }
+<span class="lineNum">     402 </span>            :     const value_type*   c_str() const BOOST_NOEXCEPT   { return m_pathname.c_str(); }
+<span class="lineNum">     403 </span>            :     string_type::size_type size() const BOOST_NOEXCEPT { return m_pathname.size(); }
+<span class="lineNum">     404 </span>            : 
+<span class="lineNum">     405 </span>            :     template &lt;class String&gt;
+<span class="lineNum">     406 </span>            :     String string() const;
+<span class="lineNum">     407 </span>            : 
+<span class="lineNum">     408 </span>            :     template &lt;class String&gt;
+<span class="lineNum">     409 </span>            :     String string(const codecvt_type&amp; cvt) const;
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span>            : #   ifdef BOOST_WINDOWS_API
+<span class="lineNum">     412 </span>            :     const std::string string() const
+<span class="lineNum">     413 </span>            :     {
+<span class="lineNum">     414 </span>            :       std::string tmp;
+<span class="lineNum">     415 </span>            :       if (!m_pathname.empty())
+<span class="lineNum">     416 </span>            :         path_traits::convert(&amp;*m_pathname.begin(), &amp;*m_pathname.begin()+m_pathname.size(),
+<span class="lineNum">     417 </span>            :         tmp);
+<span class="lineNum">     418 </span>            :       return tmp;
+<span class="lineNum">     419 </span>            :     }
+<span class="lineNum">     420 </span>            :     const std::string string(const codecvt_type&amp; cvt) const
+<span class="lineNum">     421 </span>            :     { 
+<span class="lineNum">     422 </span>            :       std::string tmp;
+<span class="lineNum">     423 </span>            :       if (!m_pathname.empty())
+<span class="lineNum">     424 </span>            :         path_traits::convert(&amp;*m_pathname.begin(), &amp;*m_pathname.begin()+m_pathname.size(),
+<span class="lineNum">     425 </span>            :           tmp, cvt);
+<span class="lineNum">     426 </span>            :       return tmp;
+<span class="lineNum">     427 </span>            :     }
+<span class="lineNum">     428 </span>            :     
+<span class="lineNum">     429 </span>            :     //  string_type is std::wstring, so there is no conversion
+<span class="lineNum">     430 </span>            :     const std::wstring&amp;  wstring() const { return m_pathname; }
+<span class="lineNum">     431 </span>            :     const std::wstring&amp;  wstring(const codecvt_type&amp;) const { return m_pathname; }
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span>            : #   else   // BOOST_POSIX_API
+<span class="lineNum">     434 </span>            :     //  string_type is std::string, so there is no conversion
+<span class="lineNum">     435 </span><span class="lineCov">         27 :     const std::string&amp;  string() const { return m_pathname; }</span>
+<span class="lineNum">     436 </span>            :     const std::string&amp;  string(const codecvt_type&amp;) const { return m_pathname; }
+<span class="lineNum">     437 </span>            : 
+<span class="lineNum">     438 </span>            :     const std::wstring  wstring() const
+<span class="lineNum">     439 </span>            :     {
+<span class="lineNum">     440 </span>            :       std::wstring tmp;
+<span class="lineNum">     441 </span>            :       if (!m_pathname.empty())
+<span class="lineNum">     442 </span>            :         path_traits::convert(&amp;*m_pathname.begin(), &amp;*m_pathname.begin()+m_pathname.size(),
+<span class="lineNum">     443 </span>            :           tmp);
+<span class="lineNum">     444 </span>            :       return tmp;
+<span class="lineNum">     445 </span>            :     }
+<span class="lineNum">     446 </span>            :     const std::wstring  wstring(const codecvt_type&amp; cvt) const
+<span class="lineNum">     447 </span>            :     { 
+<span class="lineNum">     448 </span>            :       std::wstring tmp;
+<span class="lineNum">     449 </span>            :       if (!m_pathname.empty())
+<span class="lineNum">     450 </span>            :         path_traits::convert(&amp;*m_pathname.begin(), &amp;*m_pathname.begin()+m_pathname.size(),
+<span class="lineNum">     451 </span>            :           tmp, cvt);
+<span class="lineNum">     452 </span>            :       return tmp;
+<span class="lineNum">     453 </span>            :     }
+<span class="lineNum">     454 </span>            : 
+<span class="lineNum">     455 </span>            : #   endif
+<span class="lineNum">     456 </span>            : 
+<span class="lineNum">     457 </span>            :     //  -----  generic format observers  -----
+<span class="lineNum">     458 </span>            : 
+<span class="lineNum">     459 </span>            :     //  Experimental generic function returning generic formatted path (i.e. separators
+<span class="lineNum">     460 </span>            :     //  are forward slashes). Motivation: simpler than a family of generic_*string
+<span class="lineNum">     461 </span>            :     //  functions.
+<span class="lineNum">     462 </span>            :     path generic_path() const
+<span class="lineNum">     463 </span>            :     {
+<span class="lineNum">     464 </span>            : #   ifdef BOOST_WINDOWS_API
+<span class="lineNum">     465 </span>            :       path tmp;
+<span class="lineNum">     466 </span>            :       std::replace_copy(m_pathname.begin(), m_pathname.end(),
+<span class="lineNum">     467 </span>            :         std::back_inserter(tmp.m_pathname), L'\\', L'/');
+<span class="lineNum">     468 </span>            :       return tmp;
+<span class="lineNum">     469 </span>            : #   else
+<span class="lineNum">     470 </span>            :       return path(*this);
+<span class="lineNum">     471 </span>            : #   endif
+<span class="lineNum">     472 </span>            :     }
+<span class="lineNum">     473 </span>            : 
+<span class="lineNum">     474 </span>            :     template &lt;class String&gt;
+<span class="lineNum">     475 </span>            :     String generic_string() const;
+<span class="lineNum">     476 </span>            : 
+<span class="lineNum">     477 </span>            :     template &lt;class String&gt;
+<span class="lineNum">     478 </span>            :     String generic_string(const codecvt_type&amp; cvt) const;
+<span class="lineNum">     479 </span>            : 
+<span class="lineNum">     480 </span>            : #   ifdef BOOST_WINDOWS_API
+<span class="lineNum">     481 </span>            :     const std::string   generic_string() const; 
+<span class="lineNum">     482 </span>            :     const std::string   generic_string(const codecvt_type&amp; cvt) const; 
+<span class="lineNum">     483 </span>            :     const std::wstring  generic_wstring() const;
+<span class="lineNum">     484 </span>            :     const std::wstring  generic_wstring(const codecvt_type&amp;) const { return generic_wstring(); };
+<span class="lineNum">     485 </span>            : 
+<span class="lineNum">     486 </span>            : #   else // BOOST_POSIX_API
+<span class="lineNum">     487 </span>            :     //  On POSIX-like systems, the generic format is the same as the native format
+<span class="lineNum">     488 </span>            :     const std::string&amp;  generic_string() const  { return m_pathname; }
+<span class="lineNum">     489 </span>            :     const std::string&amp;  generic_string(const codecvt_type&amp;) const  { return m_pathname; }
+<span class="lineNum">     490 </span>            :     const std::wstring  generic_wstring() const { return wstring(); }
+<span class="lineNum">     491 </span>            :     const std::wstring  generic_wstring(const codecvt_type&amp; cvt) const { return wstring(cvt); }
+<span class="lineNum">     492 </span>            : 
+<span class="lineNum">     493 </span>            : #   endif
+<span class="lineNum">     494 </span>            : 
+<span class="lineNum">     495 </span>            :     //  -----  compare  -----
+<span class="lineNum">     496 </span>            : 
+<a name="497"><span class="lineNum">     497 </span>            :     int compare(const path&amp; p) const BOOST_NOEXCEPT;  // generic, lexicographical</a>
+<span class="lineNum">     498 </span>            :     int compare(const std::string&amp; s) const { return compare(path(s)); }
+<span class="lineNum">     499 </span><span class="lineCov">       9408 :     int compare(const value_type* s) const  { return compare(path(s)); }</span>
+<span class="lineNum">     500 </span>            : 
+<span class="lineNum">     501 </span>            :     //  -----  decomposition  -----
+<span class="lineNum">     502 </span>            : 
+<span class="lineNum">     503 </span>            :     path  root_path() const; 
+<span class="lineNum">     504 </span>            :     path  root_name() const;         // returns 0 or 1 element path
+<span class="lineNum">     505 </span>            :                                      // even on POSIX, root_name() is non-empty() for network paths
+<span class="lineNum">     506 </span>            :     path  root_directory() const;    // returns 0 or 1 element path
+<span class="lineNum">     507 </span>            :     path  relative_path() const;
+<span class="lineNum">     508 </span>            :     path  parent_path() const;
+<span class="lineNum">     509 </span>            :     path  filename() const;          // returns 0 or 1 element path
+<span class="lineNum">     510 </span>            :     path  stem() const;              // returns 0 or 1 element path
+<span class="lineNum">     511 </span>            :     path  extension() const;         // returns 0 or 1 element path
+<span class="lineNum">     512 </span>            : 
+<span class="lineNum">     513 </span>            :     //  -----  query  -----
+<span class="lineNum">     514 </span>            : 
+<span class="lineNum">     515 </span><span class="lineNoCov">          0 :     bool empty() const BOOST_NOEXCEPT{ return m_pathname.empty(); }</span>
+<span class="lineNum">     516 </span>            :     bool filename_is_dot() const;
+<span class="lineNum">     517 </span>            :     bool filename_is_dot_dot() const;
+<span class="lineNum">     518 </span>            :     bool has_root_path() const       { return has_root_directory() || has_root_name(); }
+<span class="lineNum">     519 </span>            :     bool has_root_name() const       { return !root_name().empty(); }
+<span class="lineNum">     520 </span>            :     bool has_root_directory() const  { return !root_directory().empty(); }
+<span class="lineNum">     521 </span>            :     bool has_relative_path() const   { return !relative_path().empty(); }
+<span class="lineNum">     522 </span>            :     bool has_parent_path() const     { return !parent_path().empty(); }
+<span class="lineNum">     523 </span>            :     bool has_filename() const        { return !m_pathname.empty(); }
+<span class="lineNum">     524 </span>            :     bool has_stem() const            { return !stem().empty(); }
+<span class="lineNum">     525 </span>            :     bool has_extension() const       { return !extension().empty(); }
+<span class="lineNum">     526 </span>            :     bool is_relative() const         { return !is_absolute(); } 
+<span class="lineNum">     527 </span>            :     bool is_absolute() const
+<span class="lineNum">     528 </span>            :     {
+<span class="lineNum">     529 </span>            : #     ifdef BOOST_WINDOWS_API
+<span class="lineNum">     530 </span>            :       return has_root_name() &amp;&amp; has_root_directory();
+<span class="lineNum">     531 </span>            : #     else
+<span class="lineNum">     532 </span>            :       return has_root_directory();
+<span class="lineNum">     533 </span>            : #     endif
+<span class="lineNum">     534 </span>            :     }
+<span class="lineNum">     535 </span>            : 
+<span class="lineNum">     536 </span>            :     //  -----  lexical operations  -----
+<span class="lineNum">     537 </span>            : 
+<span class="lineNum">     538 </span>            :     path  lexically_normal() const;
+<span class="lineNum">     539 </span>            :     path  lexically_relative(const path&amp; base) const;
+<span class="lineNum">     540 </span>            :     path  lexically_proximate(const path&amp; base) const
+<span class="lineNum">     541 </span>            :     {
+<span class="lineNum">     542 </span>            :       path tmp(lexically_relative(base));
+<span class="lineNum">     543 </span>            :       return tmp.empty() ? *this : tmp;
+<span class="lineNum">     544 </span>            :     }
+<span class="lineNum">     545 </span>            : 
+<span class="lineNum">     546 </span>            :     //  -----  iterators  -----
+<span class="lineNum">     547 </span>            : 
+<span class="lineNum">     548 </span>            :     class iterator;
+<span class="lineNum">     549 </span>            :     typedef iterator const_iterator;
+<span class="lineNum">     550 </span>            :     class reverse_iterator;
+<span class="lineNum">     551 </span>            :     typedef reverse_iterator const_reverse_iterator;
+<span class="lineNum">     552 </span>            : 
+<span class="lineNum">     553 </span>            :     iterator begin() const;
+<span class="lineNum">     554 </span>            :     iterator end() const;
+<span class="lineNum">     555 </span>            :     reverse_iterator rbegin() const;
+<span class="lineNum">     556 </span>            :     reverse_iterator rend() const;
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span>            :     //  -----  static member functions  -----
+<span class="lineNum">     559 </span>            : 
+<span class="lineNum">     560 </span>            :     static std::locale          imbue(const std::locale&amp; loc);
+<span class="lineNum">     561 </span>            :     static const codecvt_type&amp;  codecvt();
+<span class="lineNum">     562 </span>            : 
+<span class="lineNum">     563 </span>            :     //  -----  deprecated functions  -----
+<span class="lineNum">     564 </span>            : 
+<span class="lineNum">     565 </span>            : # if defined(BOOST_FILESYSTEM_DEPRECATED) &amp;&amp; defined(BOOST_FILESYSTEM_NO_DEPRECATED)
+<span class="lineNum">     566 </span>            : #   error both BOOST_FILESYSTEM_DEPRECATED and BOOST_FILESYSTEM_NO_DEPRECATED are defined
+<span class="lineNum">     567 </span>            : # endif
+<span class="lineNum">     568 </span>            : 
+<span class="lineNum">     569 </span>            : # if !defined(BOOST_FILESYSTEM_NO_DEPRECATED)
+<span class="lineNum">     570 </span>            :     //  recently deprecated functions supplied by default
+<span class="lineNum">     571 </span>            :     path&amp;  normalize()              { 
+<span class="lineNum">     572 </span>            :                                       path tmp(lexically_normal());
+<span class="lineNum">     573 </span>            :                                       m_pathname.swap(tmp.m_pathname);
+<span class="lineNum">     574 </span>            :                                       return *this;
+<span class="lineNum">     575 </span>            :                                     }
+<span class="lineNum">     576 </span>            :     path&amp;  remove_leaf()            { return remove_filename(); }
+<span class="lineNum">     577 </span>            :     path   leaf() const             { return filename(); }
+<span class="lineNum">     578 </span>            :     path   branch_path() const      { return parent_path(); }
+<span class="lineNum">     579 </span>            :     path   generic() const          { return generic_path(); }
+<span class="lineNum">     580 </span>            :     bool   has_leaf() const         { return !m_pathname.empty(); }
+<span class="lineNum">     581 </span>            :     bool   has_branch_path() const  { return !parent_path().empty(); }
+<span class="lineNum">     582 </span>            :     bool   is_complete() const      { return is_absolute(); }
+<span class="lineNum">     583 </span>            : # endif
+<span class="lineNum">     584 </span>            : 
+<span class="lineNum">     585 </span>            : # if defined(BOOST_FILESYSTEM_DEPRECATED)
+<span class="lineNum">     586 </span>            :     //  deprecated functions with enough signature or semantic changes that they are
+<span class="lineNum">     587 </span>            :     //  not supplied by default 
+<span class="lineNum">     588 </span>            :     const std::string file_string() const               { return string(); }
+<span class="lineNum">     589 </span>            :     const std::string directory_string() const          { return string(); }
+<span class="lineNum">     590 </span>            :     const std::string native_file_string() const        { return string(); }
+<span class="lineNum">     591 </span>            :     const std::string native_directory_string() const   { return string(); }
+<span class="lineNum">     592 </span>            :     const string_type external_file_string() const      { return native(); }
+<span class="lineNum">     593 </span>            :     const string_type external_directory_string() const { return native(); }
+<span class="lineNum">     594 </span>            : 
+<span class="lineNum">     595 </span>            :     //  older functions no longer supported
+<span class="lineNum">     596 </span>            :     //typedef bool (*name_check)(const std::string &amp; name);
+<span class="lineNum">     597 </span>            :     //basic_path(const string_type&amp; str, name_check) { operator/=(str); }
+<span class="lineNum">     598 </span>            :     //basic_path(const typename string_type::value_type* s, name_check)
+<span class="lineNum">     599 </span>            :     //  { operator/=(s);}
+<span class="lineNum">     600 </span>            :     //static bool default_name_check_writable() { return false; } 
+<span class="lineNum">     601 </span>            :     //static void default_name_check(name_check) {}
+<span class="lineNum">     602 </span>            :     //static name_check default_name_check() { return 0; }
+<span class="lineNum">     603 </span>            :     //basic_path&amp; canonize();
+<span class="lineNum">     604 </span>            : # endif
+<span class="lineNum">     605 </span>            : 
+<span class="lineNum">     606 </span>            : //--------------------------------------------------------------------------------------//
+<span class="lineNum">     607 </span>            : //                            class path private members                                //
+<span class="lineNum">     608 </span>            : //--------------------------------------------------------------------------------------//
+<span class="lineNum">     609 </span>            : 
+<span class="lineNum">     610 </span>            :   private:
+<span class="lineNum">     611 </span>            : 
+<span class="lineNum">     612 </span>            : #   if defined(_MSC_VER)
+<span class="lineNum">     613 </span>            : #     pragma warning(push) // Save warning settings
+<span class="lineNum">     614 </span>            : #     pragma warning(disable : 4251) // disable warning: class 'std::basic_string&lt;_Elem,_Traits,_Ax&gt;'
+<span class="lineNum">     615 </span>            : #   endif                            // needs to have dll-interface...
+<span class="lineNum">     616 </span>            : /*
+<span class="lineNum">     617 </span>            :       m_pathname has the type, encoding, and format required by the native
+<span class="lineNum">     618 </span>            :       operating system. Thus for POSIX and Windows there is no conversion for
+<span class="lineNum">     619 </span>            :       passing m_pathname.c_str() to the O/S API or when obtaining a path from the
+<span class="lineNum">     620 </span>            :       O/S API. POSIX encoding is unspecified other than for dot and slash
+<span class="lineNum">     621 </span>            :       characters; POSIX just treats paths as a sequence of bytes. Windows
+<span class="lineNum">     622 </span>            :       encoding is UCS-2 or UTF-16 depending on the version.
+<span class="lineNum">     623 </span>            : */
+<span class="lineNum">     624 </span>            :     string_type  m_pathname;  // Windows: as input; backslashes NOT converted to slashes,
+<span class="lineNum">     625 </span>            :                               // slashes NOT converted to backslashes
+<span class="lineNum">     626 </span>            : #   if defined(_MSC_VER)
+<span class="lineNum">     627 </span>            : #     pragma warning(pop) // restore warning settings.
+<span class="lineNum">     628 </span>            : #   endif 
+<span class="lineNum">     629 </span>            : 
+<span class="lineNum">     630 </span>            :     string_type::size_type m_append_separator_if_needed();
+<span class="lineNum">     631 </span>            :     //  Returns: If separator is to be appended, m_pathname.size() before append. Otherwise 0.
+<span class="lineNum">     632 </span>            :     //  Note: An append is never performed if size()==0, so a returned 0 is unambiguous.
+<span class="lineNum">     633 </span>            : 
+<span class="lineNum">     634 </span>            :     void m_erase_redundant_separator(string_type::size_type sep_pos);
+<span class="lineNum">     635 </span>            :     string_type::size_type m_parent_path_end() const;
+<span class="lineNum">     636 </span>            : 
+<span class="lineNum">     637 </span>            :     path&amp; m_normalize();
+<span class="lineNum">     638 </span>            : 
+<span class="lineNum">     639 </span>            :     // Was qualified; como433beta8 reports:
+<span class="lineNum">     640 </span>            :     //    warning #427-D: qualified name is not allowed in member declaration 
+<span class="lineNum">     641 </span>            :     friend class iterator;
+<span class="lineNum">     642 </span>            :     friend bool operator&lt;(const path&amp; lhs, const path&amp; rhs);
+<span class="lineNum">     643 </span>            : 
+<span class="lineNum">     644 </span>            :     // see path::iterator::increment/decrement comment below
+<span class="lineNum">     645 </span>            :     static void m_path_iterator_increment(path::iterator &amp; it);
+<span class="lineNum">     646 </span>            :     static void m_path_iterator_decrement(path::iterator &amp; it);
+<span class="lineNum">     647 </span>            : 
+<span class="lineNum">     648 </span>            :   };  // class path
+<span class="lineNum">     649 </span>            : 
+<span class="lineNum">     650 </span>            :   namespace detail
+<span class="lineNum">     651 </span>            :   {
+<span class="lineNum">     652 </span>            :     BOOST_FILESYSTEM_DECL
+<span class="lineNum">     653 </span>            :       int lex_compare(path::iterator first1, path::iterator last1,
+<span class="lineNum">     654 </span>            :         path::iterator first2, path::iterator last2);
+<span class="lineNum">     655 </span>            :     BOOST_FILESYSTEM_DECL
+<span class="lineNum">     656 </span>            :       const path&amp;  dot_path();
+<span class="lineNum">     657 </span>            :     BOOST_FILESYSTEM_DECL
+<span class="lineNum">     658 </span>            :       const path&amp;  dot_dot_path();
+<span class="lineNum">     659 </span>            :   }
+<span class="lineNum">     660 </span>            : 
+<span class="lineNum">     661 </span>            : # ifndef BOOST_FILESYSTEM_NO_DEPRECATED
+<span class="lineNum">     662 </span>            :   typedef path wpath;
+<span class="lineNum">     663 </span>            : # endif
+<span class="lineNum">     664 </span>            : 
+<span class="lineNum">     665 </span>            :   //------------------------------------------------------------------------------------//
+<span class="lineNum">     666 </span>            :   //                             class path::iterator                                   //
+<span class="lineNum">     667 </span>            :   //------------------------------------------------------------------------------------//
+<span class="lineNum">     668 </span>            :  
+<span class="lineNum">     669 </span>            :   class path::iterator
+<span class="lineNum">     670 </span>            :     : public boost::iterator_facade&lt;
+<span class="lineNum">     671 </span>            :       path::iterator,
+<span class="lineNum">     672 </span>            :       path const,
+<span class="lineNum">     673 </span>            :       boost::bidirectional_traversal_tag &gt;
+<span class="lineNum">     674 </span>            :   {
+<span class="lineNum">     675 </span>            :   private:
+<span class="lineNum">     676 </span>            :     friend class boost::iterator_core_access;
+<span class="lineNum">     677 </span>            :     friend class boost::filesystem::path;
+<span class="lineNum">     678 </span>            :     friend class boost::filesystem::path::reverse_iterator;
+<span class="lineNum">     679 </span>            :     friend void m_path_iterator_increment(path::iterator &amp; it);
+<span class="lineNum">     680 </span>            :     friend void m_path_iterator_decrement(path::iterator &amp; it);
+<span class="lineNum">     681 </span>            : 
+<span class="lineNum">     682 </span>            :     const path&amp; dereference() const { return m_element; }
+<span class="lineNum">     683 </span>            : 
+<span class="lineNum">     684 </span>            :     bool equal(const iterator &amp; rhs) const
+<span class="lineNum">     685 </span>            :     {
+<span class="lineNum">     686 </span>            :       return m_path_ptr == rhs.m_path_ptr &amp;&amp; m_pos == rhs.m_pos;
+<span class="lineNum">     687 </span>            :     }
+<span class="lineNum">     688 </span>            : 
+<span class="lineNum">     689 </span>            :     // iterator_facade derived classes don't seem to like implementations in
+<span class="lineNum">     690 </span>            :     // separate translation unit dll's, so forward to class path static members
+<span class="lineNum">     691 </span>            :     void increment() { m_path_iterator_increment(*this); }
+<span class="lineNum">     692 </span>            :     void decrement() { m_path_iterator_decrement(*this); }
+<span class="lineNum">     693 </span>            : 
+<span class="lineNum">     694 </span>            :     path                    m_element;   // current element
+<span class="lineNum">     695 </span>            :     const path*             m_path_ptr;  // path being iterated over
+<span class="lineNum">     696 </span>            :     string_type::size_type  m_pos;       // position of m_element in
+<span class="lineNum">     697 </span>            :                                          // m_path_ptr-&gt;m_pathname.
+<span class="lineNum">     698 </span>            :                                          // if m_element is implicit dot, m_pos is the
+<span class="lineNum">     699 </span>            :                                          // position of the last separator in the path.
+<span class="lineNum">     700 </span>            :                                          // end() iterator is indicated by 
+<span class="lineNum">     701 </span>            :                                          // m_pos == m_path_ptr-&gt;m_pathname.size()
+<span class="lineNum">     702 </span>            :   }; // path::iterator
+<span class="lineNum">     703 </span>            : 
+<span class="lineNum">     704 </span>            :   //------------------------------------------------------------------------------------//
+<span class="lineNum">     705 </span>            :   //                         class path::reverse_iterator                               //
+<span class="lineNum">     706 </span>            :   //------------------------------------------------------------------------------------//
+<span class="lineNum">     707 </span>            :  
+<span class="lineNum">     708 </span>            :   class path::reverse_iterator
+<span class="lineNum">     709 </span>            :     : public boost::iterator_facade&lt;
+<span class="lineNum">     710 </span>            :       path::reverse_iterator,
+<span class="lineNum">     711 </span>            :       path const,
+<span class="lineNum">     712 </span>            :       boost::bidirectional_traversal_tag &gt;
+<span class="lineNum">     713 </span>            :   {
+<span class="lineNum">     714 </span>            :   public:
+<span class="lineNum">     715 </span>            : 
+<span class="lineNum">     716 </span>            :     explicit reverse_iterator(iterator itr) : m_itr(itr)
+<span class="lineNum">     717 </span>            :     {
+<span class="lineNum">     718 </span>            :       if (itr != itr.m_path_ptr-&gt;begin())
+<span class="lineNum">     719 </span>            :         m_element = *--itr;
+<span class="lineNum">     720 </span>            :     }
+<span class="lineNum">     721 </span>            :   private:
+<span class="lineNum">     722 </span>            :     friend class boost::iterator_core_access;
+<span class="lineNum">     723 </span>            :     friend class boost::filesystem::path;
+<span class="lineNum">     724 </span>            : 
+<span class="lineNum">     725 </span>            :     const path&amp; dereference() const { return m_element; }
+<span class="lineNum">     726 </span>            :     bool equal(const reverse_iterator&amp; rhs) const { return m_itr == rhs.m_itr; }
+<span class="lineNum">     727 </span>            :     void increment()
+<span class="lineNum">     728 </span>            :     { 
+<span class="lineNum">     729 </span>            :       --m_itr;
+<span class="lineNum">     730 </span>            :       if (m_itr != m_itr.m_path_ptr-&gt;begin())
+<span class="lineNum">     731 </span>            :       {
+<span class="lineNum">     732 </span>            :         iterator tmp = m_itr;
+<span class="lineNum">     733 </span>            :         m_element = *--tmp;
+<span class="lineNum">     734 </span>            :       }
+<span class="lineNum">     735 </span>            :     }
+<span class="lineNum">     736 </span>            :     void decrement()
+<span class="lineNum">     737 </span>            :     {
+<span class="lineNum">     738 </span>            :       m_element = *m_itr;
+<span class="lineNum">     739 </span>            :       ++m_itr;
+<span class="lineNum">     740 </span>            :     }
+<span class="lineNum">     741 </span>            : 
+<span class="lineNum">     742 </span>            :     iterator m_itr;
+<span class="lineNum">     743 </span>            :     path     m_element;
+<span class="lineNum">     744 </span>            : 
+<span class="lineNum">     745 </span>            :   }; // path::reverse_iterator
+<span class="lineNum">     746 </span>            : 
+<span class="lineNum">     747 </span>            :   //------------------------------------------------------------------------------------//
+<span class="lineNum">     748 </span>            :   //                                                                                    //
+<span class="lineNum">     749 </span>            :   //                              non-member functions                                  //
+<span class="lineNum">     750 </span>            :   //                                                                                    //
+<span class="lineNum">     751 </span>            :   //------------------------------------------------------------------------------------//
+<span class="lineNum">     752 </span>            : 
+<span class="lineNum">     753 </span>            :   //  std::lexicographical_compare would infinately recurse because path iterators
+<span class="lineNum">     754 </span>            :   //  yield paths, so provide a path aware version
+<span class="lineNum">     755 </span>            :   inline bool lexicographical_compare(path::iterator first1, path::iterator last1,
+<span class="lineNum">     756 </span>            :     path::iterator first2, path::iterator last2)
+<span class="lineNum">     757 </span>            :     { return detail::lex_compare(first1, last1, first2, last2) &lt; 0; }
+<span class="lineNum">     758 </span>            :   
+<span class="lineNum">     759 </span>            :   inline bool operator==(const path&amp; lhs, const path&amp; rhs)              {return lhs.compare(rhs) == 0;}
+<span class="lineNum">     760 </span>            :   inline bool operator==(const path&amp; lhs, const path::string_type&amp; rhs) {return lhs.compare(rhs) == 0;} 
+<span class="lineNum">     761 </span>            :   inline bool operator==(const path::string_type&amp; lhs, const path&amp; rhs) {return rhs.compare(lhs) == 0;}
+<span class="lineNum">     762 </span><span class="lineCov">       3136 :   inline bool operator==(const path&amp; lhs, const path::value_type* rhs)  {return lhs.compare(rhs) == 0;}</span>
+<span class="lineNum">     763 </span>            :   inline bool operator==(const path::value_type* lhs, const path&amp; rhs)  {return rhs.compare(lhs) == 0;}
+<span class="lineNum">     764 </span>            :   
+<span class="lineNum">     765 </span>            :   inline bool operator!=(const path&amp; lhs, const path&amp; rhs)              {return lhs.compare(rhs) != 0;}
+<span class="lineNum">     766 </span>            :   inline bool operator!=(const path&amp; lhs, const path::string_type&amp; rhs) {return lhs.compare(rhs) != 0;} 
+<span class="lineNum">     767 </span>            :   inline bool operator!=(const path::string_type&amp; lhs, const path&amp; rhs) {return rhs.compare(lhs) != 0;}
+<span class="lineNum">     768 </span>            :   inline bool operator!=(const path&amp; lhs, const path::value_type* rhs)  {return lhs.compare(rhs) != 0;}
+<span class="lineNum">     769 </span>            :   inline bool operator!=(const path::value_type* lhs, const path&amp; rhs)  {return rhs.compare(lhs) != 0;}
+<span class="lineNum">     770 </span>            : 
+<span class="lineNum">     771 </span>            :   // TODO: why do == and != have additional overloads, but the others don't?
+<span class="lineNum">     772 </span>            : 
+<span class="lineNum">     773 </span>            :   inline bool operator&lt;(const path&amp; lhs, const path&amp; rhs)  {return lhs.compare(rhs) &lt; 0;}
+<span class="lineNum">     774 </span>            :   inline bool operator&lt;=(const path&amp; lhs, const path&amp; rhs) {return !(rhs &lt; lhs);}
+<span class="lineNum">     775 </span>            :   inline bool operator&gt; (const path&amp; lhs, const path&amp; rhs) {return rhs &lt; lhs;}
+<span class="lineNum">     776 </span>            :   inline bool operator&gt;=(const path&amp; lhs, const path&amp; rhs) {return !(lhs &lt; rhs);}
+<span class="lineNum">     777 </span>            : 
+<span class="lineNum">     778 </span>            :   inline std::size_t hash_value(const path&amp; x)
+<span class="lineNum">     779 </span>            :   {
+<span class="lineNum">     780 </span>            : # ifdef BOOST_WINDOWS_API
+<span class="lineNum">     781 </span>            :     std::size_t seed = 0;
+<span class="lineNum">     782 </span>            :     for(const path::value_type* it = x.c_str(); *it; ++it)
+<span class="lineNum">     783 </span>            :       hash_combine(seed, *it == '/' ? L'\\' : *it);
+<span class="lineNum">     784 </span>            :     return seed;
+<span class="lineNum">     785 </span>            : # else   // BOOST_POSIX_API
+<span class="lineNum">     786 </span>            :     return hash_range(x.native().begin(), x.native().end());
+<span class="lineNum">     787 </span>            : # endif
+<span class="lineNum">     788 </span>            :   }
+<span class="lineNum">     789 </span>            : 
+<a name="790"><span class="lineNum">     790 </span>            :   inline void swap(path&amp; lhs, path&amp; rhs)                   { lhs.swap(rhs); }</a>
+<span class="lineNum">     791 </span>            : 
+<span class="lineNum">     792 </span><span class="lineCov">      86968 :   inline path operator/(const path&amp; lhs, const path&amp; rhs)  { return path(lhs) /= rhs; }</span>
+<span class="lineNum">     793 </span>            : 
+<span class="lineNum">     794 </span>            :   //  inserters and extractors
+<span class="lineNum">     795 </span>            :   //    use boost::io::quoted() to handle spaces in paths
+<span class="lineNum">     796 </span>            :   //    use '&amp;' as escape character to ease use for Windows paths
+<span class="lineNum">     797 </span>            : 
+<a name="798"><span class="lineNum">     798 </span>            :   template &lt;class Char, class Traits&gt;</a>
+<span class="lineNum">     799 </span>            :   inline std::basic_ostream&lt;Char, Traits&gt;&amp;
+<span class="lineNum">     800 </span><span class="lineNoCov">          0 :   operator&lt;&lt;(std::basic_ostream&lt;Char, Traits&gt;&amp; os, const path&amp; p)</span>
+<span class="lineNum">     801 </span>            :   {
+<span class="lineNum">     802 </span>            :     return os
+<span class="lineNum">     803 </span><span class="lineNoCov">          0 :       &lt;&lt; boost::io::quoted(p.template string&lt;std::basic_string&lt;Char&gt; &gt;(), static_cast&lt;Char&gt;('&amp;'));</span>
+<span class="lineNum">     804 </span>            :   }
+<span class="lineNum">     805 </span>            :   
+<span class="lineNum">     806 </span>            :   template &lt;class Char, class Traits&gt;
+<span class="lineNum">     807 </span>            :   inline std::basic_istream&lt;Char, Traits&gt;&amp;
+<span class="lineNum">     808 </span>            :   operator&gt;&gt;(std::basic_istream&lt;Char, Traits&gt;&amp; is, path&amp; p)
+<span class="lineNum">     809 </span>            :   {
+<span class="lineNum">     810 </span>            :     std::basic_string&lt;Char&gt; str;
+<span class="lineNum">     811 </span>            :     is &gt;&gt; boost::io::quoted(str, static_cast&lt;Char&gt;('&amp;'));
+<span class="lineNum">     812 </span>            :     p = str;
+<span class="lineNum">     813 </span>            :     return is;
+<span class="lineNum">     814 </span>            :   }
+<span class="lineNum">     815 </span>            :  
+<span class="lineNum">     816 </span>            :   //  name_checks
+<span class="lineNum">     817 </span>            : 
+<span class="lineNum">     818 </span>            :   //  These functions are holdovers from version 1. It isn't clear they have much
+<span class="lineNum">     819 </span>            :   //  usefulness, or how to generalize them for later versions.
+<span class="lineNum">     820 </span>            : 
+<span class="lineNum">     821 </span>            :   BOOST_FILESYSTEM_DECL bool portable_posix_name(const std::string &amp; name);
+<span class="lineNum">     822 </span>            :   BOOST_FILESYSTEM_DECL bool windows_name(const std::string &amp; name);
+<span class="lineNum">     823 </span>            :   BOOST_FILESYSTEM_DECL bool portable_name(const std::string &amp; name);
+<span class="lineNum">     824 </span>            :   BOOST_FILESYSTEM_DECL bool portable_directory_name(const std::string &amp; name);
+<span class="lineNum">     825 </span>            :   BOOST_FILESYSTEM_DECL bool portable_file_name(const std::string &amp; name);
+<span class="lineNum">     826 </span>            :   BOOST_FILESYSTEM_DECL bool native(const std::string &amp; name);
+<span class="lineNum">     827 </span>            : 
+<span class="lineNum">     828 </span>            :   namespace detail
+<span class="lineNum">     829 </span>            :   {
+<span class="lineNum">     830 </span>            :     //  For POSIX, is_directory_separator() and is_element_separator() are identical since
+<span class="lineNum">     831 </span>            :     //  a forward slash is the only valid directory separator and also the only valid
+<span class="lineNum">     832 </span>            :     //  element separator. For Windows, forward slash and back slash are the possible
+<span class="lineNum">     833 </span>            :     //  directory separators, but colon (example: &quot;c:foo&quot;) is also an element separator.
+<span class="lineNum">     834 </span>            : 
+<span class="lineNum">     835 </span>            :     inline bool is_directory_separator(path::value_type c) BOOST_NOEXCEPT
+<span class="lineNum">     836 </span>            :     {
+<span class="lineNum">     837 </span>            :       return c == path::separator
+<span class="lineNum">     838 </span>            : #     ifdef BOOST_WINDOWS_API
+<span class="lineNum">     839 </span>            :         || c == path::preferred_separator
+<span class="lineNum">     840 </span>            : #     endif
+<span class="lineNum">     841 </span>            :       ;
+<span class="lineNum">     842 </span>            :     }
+<span class="lineNum">     843 </span>            :     inline bool is_element_separator(path::value_type c) BOOST_NOEXCEPT
+<span class="lineNum">     844 </span>            :     {
+<span class="lineNum">     845 </span>            :       return c == path::separator
+<span class="lineNum">     846 </span>            : #     ifdef BOOST_WINDOWS_API
+<span class="lineNum">     847 </span>            :         || c == path::preferred_separator || c == L':'
+<span class="lineNum">     848 </span>            : #     endif
+<span class="lineNum">     849 </span>            :       ;
+<span class="lineNum">     850 </span>            :     }
+<span class="lineNum">     851 </span>            :   }  // namespace detail
+<span class="lineNum">     852 </span>            : 
+<span class="lineNum">     853 </span>            :   //------------------------------------------------------------------------------------//
+<span class="lineNum">     854 </span>            :   //                  class path miscellaneous function implementations                 //
+<span class="lineNum">     855 </span>            :   //------------------------------------------------------------------------------------//
+<span class="lineNum">     856 </span>            : 
+<span class="lineNum">     857 </span>            :   inline path::reverse_iterator path::rbegin() const { return reverse_iterator(end()); }
+<span class="lineNum">     858 </span>            :   inline path::reverse_iterator path::rend() const   { return reverse_iterator(begin()); }
+<span class="lineNum">     859 </span>            : 
+<span class="lineNum">     860 </span>            :   inline bool path::filename_is_dot() const
+<span class="lineNum">     861 </span>            :   {
+<span class="lineNum">     862 </span>            :     // implicit dot is tricky, so actually call filename(); see path::filename() example
+<span class="lineNum">     863 </span>            :     // in reference.html 
+<span class="lineNum">     864 </span>            :     path p(filename());
+<span class="lineNum">     865 </span>            :     return p.size() == 1 &amp;&amp; *p.c_str() == dot;
+<span class="lineNum">     866 </span>            :   }
+<span class="lineNum">     867 </span>            : 
+<span class="lineNum">     868 </span>            :   inline bool path::filename_is_dot_dot() const
+<span class="lineNum">     869 </span>            :   {
+<span class="lineNum">     870 </span>            :     return size() &gt;= 2 &amp;&amp; m_pathname[size()-1] == dot &amp;&amp; m_pathname[size()-2] == dot
+<span class="lineNum">     871 </span>            :       &amp;&amp; (m_pathname.size() == 2 || detail::is_element_separator(m_pathname[size()-3]));
+<span class="lineNum">     872 </span>            :       // use detail::is_element_separator() rather than detail::is_directory_separator
+<span class="lineNum">     873 </span>            :       // to deal with &quot;c:..&quot; edge case on Windows when ':' acts as a separator
+<span class="lineNum">     874 </span>            :   }
+<span class="lineNum">     875 </span>            :  
+<span class="lineNum">     876 </span>            : //--------------------------------------------------------------------------------------//
+<span class="lineNum">     877 </span>            : //                     class path member template implementation                        //
+<span class="lineNum">     878 </span>            : //--------------------------------------------------------------------------------------//
+<span class="lineNum">     879 </span>            : 
+<span class="lineNum">     880 </span>            :   template &lt;class InputIterator&gt;
+<span class="lineNum">     881 </span>            :   path&amp; path::append(InputIterator begin, InputIterator end)
+<span class="lineNum">     882 </span>            :   {
+<span class="lineNum">     883 </span>            :     if (begin == end)
+<span class="lineNum">     884 </span>            :       return *this;
+<span class="lineNum">     885 </span>            :     string_type::size_type sep_pos(m_append_separator_if_needed());
+<span class="lineNum">     886 </span>            :     std::basic_string&lt;typename std::iterator_traits&lt;InputIterator&gt;::value_type&gt;
+<span class="lineNum">     887 </span>            :       seq(begin, end);
+<span class="lineNum">     888 </span>            :     path_traits::convert(seq.c_str(), seq.c_str()+seq.size(), m_pathname);
+<span class="lineNum">     889 </span>            :     if (sep_pos)
+<span class="lineNum">     890 </span>            :       m_erase_redundant_separator(sep_pos);
+<span class="lineNum">     891 </span>            :     return *this;
+<span class="lineNum">     892 </span>            :   }
+<span class="lineNum">     893 </span>            : 
+<span class="lineNum">     894 </span>            :   template &lt;class InputIterator&gt;
+<span class="lineNum">     895 </span>            :   path&amp; path::append(InputIterator begin, InputIterator end, const codecvt_type&amp; cvt)
+<span class="lineNum">     896 </span>            :   {
+<span class="lineNum">     897 </span>            :     if (begin == end)
+<span class="lineNum">     898 </span>            :       return *this;
+<span class="lineNum">     899 </span>            :     string_type::size_type sep_pos(m_append_separator_if_needed());
+<span class="lineNum">     900 </span>            :     std::basic_string&lt;typename std::iterator_traits&lt;InputIterator&gt;::value_type&gt;
+<span class="lineNum">     901 </span>            :       seq(begin, end);
+<span class="lineNum">     902 </span>            :     path_traits::convert(seq.c_str(), seq.c_str()+seq.size(), m_pathname, cvt);
+<span class="lineNum">     903 </span>            :     if (sep_pos)
+<span class="lineNum">     904 </span>            :       m_erase_redundant_separator(sep_pos);
+<span class="lineNum">     905 </span>            :     return *this;
+<span class="lineNum">     906 </span>            :   }
+<span class="lineNum">     907 </span>            : 
+<span class="lineNum">     908 </span>            :   template &lt;class Source&gt;
+<span class="lineNum">     909 </span>            :   path&amp; path::append(Source const&amp; source)
+<span class="lineNum">     910 </span>            :   {
+<span class="lineNum">     911 </span>            :     if (path_traits::empty(source))
+<span class="lineNum">     912 </span>            :       return *this;
+<span class="lineNum">     913 </span>            :     string_type::size_type sep_pos(m_append_separator_if_needed());
+<span class="lineNum">     914 </span>            :     path_traits::dispatch(source, m_pathname);
+<span class="lineNum">     915 </span>            :     if (sep_pos)
+<span class="lineNum">     916 </span>            :       m_erase_redundant_separator(sep_pos);
+<span class="lineNum">     917 </span>            :     return *this;
+<span class="lineNum">     918 </span>            :   }
+<span class="lineNum">     919 </span>            : 
+<span class="lineNum">     920 </span>            :   template &lt;class Source&gt;
+<span class="lineNum">     921 </span>            :   path&amp; path::append(Source const&amp; source, const codecvt_type&amp; cvt)
+<span class="lineNum">     922 </span>            :   {
+<span class="lineNum">     923 </span>            :     if (path_traits::empty(source))
+<span class="lineNum">     924 </span>            :       return *this;
+<span class="lineNum">     925 </span>            :     string_type::size_type sep_pos(m_append_separator_if_needed());
+<span class="lineNum">     926 </span>            :     path_traits::dispatch(source, m_pathname, cvt);
+<span class="lineNum">     927 </span>            :     if (sep_pos)
+<span class="lineNum">     928 </span>            :       m_erase_redundant_separator(sep_pos);
+<span class="lineNum">     929 </span>            :     return *this;
+<span class="lineNum">     930 </span>            :   }
+<span class="lineNum">     931 </span>            : 
+<span class="lineNum">     932 </span>            : //--------------------------------------------------------------------------------------//
+<span class="lineNum">     933 </span>            : //                     class path member template specializations                       //
+<span class="lineNum">     934 </span>            : //--------------------------------------------------------------------------------------//
+<span class="lineNum">     935 </span>            : 
+<span class="lineNum">     936 </span>            :   template &lt;&gt; inline
+<span class="lineNum">     937 </span>            :   std::string path::string&lt;std::string&gt;() const
+<span class="lineNum">     938 </span><span class="lineNoCov">          0 :     { return string(); }</span>
+<span class="lineNum">     939 </span>            : 
+<span class="lineNum">     940 </span>            :   template &lt;&gt; inline
+<span class="lineNum">     941 </span>            :   std::wstring path::string&lt;std::wstring&gt;() const
+<span class="lineNum">     942 </span>            :     { return wstring(); }
+<span class="lineNum">     943 </span>            : 
+<span class="lineNum">     944 </span>            :   template &lt;&gt; inline
+<span class="lineNum">     945 </span>            :   std::string path::string&lt;std::string&gt;(const codecvt_type&amp; cvt) const
+<span class="lineNum">     946 </span>            :     { return string(cvt); }
+<span class="lineNum">     947 </span>            : 
+<span class="lineNum">     948 </span>            :   template &lt;&gt; inline
+<span class="lineNum">     949 </span>            :   std::wstring path::string&lt;std::wstring&gt;(const codecvt_type&amp; cvt) const
+<span class="lineNum">     950 </span>            :     { return wstring(cvt); }
+<span class="lineNum">     951 </span>            : 
+<span class="lineNum">     952 </span>            :   template &lt;&gt; inline
+<span class="lineNum">     953 </span>            :   std::string path::generic_string&lt;std::string&gt;() const
+<span class="lineNum">     954 </span>            :     { return generic_string(); }
+<span class="lineNum">     955 </span>            : 
+<span class="lineNum">     956 </span>            :   template &lt;&gt; inline
+<span class="lineNum">     957 </span>            :   std::wstring path::generic_string&lt;std::wstring&gt;() const
+<span class="lineNum">     958 </span>            :     { return generic_wstring(); }
+<span class="lineNum">     959 </span>            : 
+<span class="lineNum">     960 </span>            :   template &lt;&gt; inline
+<span class="lineNum">     961 </span>            :   std::string path::generic_string&lt;std::string&gt;(const codecvt_type&amp; cvt) const
+<span class="lineNum">     962 </span>            :     { return generic_string(cvt); }
+<span class="lineNum">     963 </span>            : 
+<span class="lineNum">     964 </span>            :   template &lt;&gt; inline
+<span class="lineNum">     965 </span>            :   std::wstring path::generic_string&lt;std::wstring&gt;(const codecvt_type&amp; cvt) const
+<span class="lineNum">     966 </span>            :     { return generic_wstring(cvt); }
+<span class="lineNum">     967 </span>            : 
+<span class="lineNum">     968 </span>            :   //--------------------------------------------------------------------------------------//
+<span class="lineNum">     969 </span>            :   //                     path_traits convert function implementations                     //
+<span class="lineNum">     970 </span>            :   //                        requiring path::codecvt() be visable                          //
+<span class="lineNum">     971 </span>            :   //--------------------------------------------------------------------------------------//
+<span class="lineNum">     972 </span>            : 
+<span class="lineNum">     973 </span>            : namespace path_traits
+<span class="lineNum">     974 </span>            : {  //  without codecvt
+<span class="lineNum">     975 </span>            : 
+<span class="lineNum">     976 </span>            :   inline
+<span class="lineNum">     977 </span>            :     void convert(const char* from,
+<span class="lineNum">     978 </span>            :     const char* from_end,    // 0 for null terminated MBCS
+<span class="lineNum">     979 </span>            :     std::wstring &amp; to)
+<span class="lineNum">     980 </span>            :   {
+<span class="lineNum">     981 </span>            :     convert(from, from_end, to, path::codecvt());
+<span class="lineNum">     982 </span>            :   }
+<span class="lineNum">     983 </span>            : 
+<span class="lineNum">     984 </span>            :   inline
+<span class="lineNum">     985 </span>            :     void convert(const wchar_t* from,
+<span class="lineNum">     986 </span>            :     const wchar_t* from_end,  // 0 for null terminated MBCS
+<span class="lineNum">     987 </span>            :     std::string &amp; to)
+<span class="lineNum">     988 </span>            :   {
+<span class="lineNum">     989 </span>            :     convert(from, from_end, to, path::codecvt());
+<span class="lineNum">     990 </span>            :   }
+<span class="lineNum">     991 </span>            : 
+<span class="lineNum">     992 </span>            :   inline
+<span class="lineNum">     993 </span>            :     void convert(const char* from,
+<span class="lineNum">     994 </span>            :     std::wstring &amp; to)
+<span class="lineNum">     995 </span>            :   {
+<span class="lineNum">     996 </span>            :     BOOST_ASSERT(from);
+<span class="lineNum">     997 </span>            :     convert(from, 0, to, path::codecvt());
+<span class="lineNum">     998 </span>            :   }
+<span class="lineNum">     999 </span>            : 
+<span class="lineNum">    1000 </span>            :   inline
+<span class="lineNum">    1001 </span>            :     void convert(const wchar_t* from,
+<span class="lineNum">    1002 </span>            :     std::string &amp; to)
+<span class="lineNum">    1003 </span>            :   {
+<span class="lineNum">    1004 </span>            :     BOOST_ASSERT(from);
+<span class="lineNum">    1005 </span>            :     convert(from, 0, to, path::codecvt());
+<span class="lineNum">    1006 </span>            :   }
+<span class="lineNum">    1007 </span>            : }  // namespace path_traits
+<span class="lineNum">    1008 </span>            : }  // namespace filesystem
+<span class="lineNum">    1009 </span>            : }  // namespace boost
+<span class="lineNum">    1010 </span>            : 
+<span class="lineNum">    1011 </span>            : //----------------------------------------------------------------------------//
+<span class="lineNum">    1012 </span>            : 
+<span class="lineNum">    1013 </span>            : #include &lt;boost/config/abi_suffix.hpp&gt; // pops abi_prefix.hpp pragmas
+<span class="lineNum">    1014 </span>            : 
+<span class="lineNum">    1015 </span>            : #endif  // BOOST_FILESYSTEM_PATH_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

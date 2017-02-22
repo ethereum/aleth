@@ -1,0 +1,223 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethereum/Transaction.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethereum</a> - Transaction.h<span style="font-size: 80%;"> (source / <a href="Transaction.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryMed">75.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryLo">40.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Transaction.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;libdevcore/RLP.h&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libdevcore/SHA3.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libethcore/Common.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libethcore/Transaction.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libethcore/ChainOperationParams.h&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace dev
+<span class="lineNum">      31 </span>            : {
+<span class="lineNum">      32 </span>            : namespace eth
+<span class="lineNum">      33 </span>            : {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : enum class TransactionException
+<span class="lineNum">      36 </span>            : {
+<span class="lineNum">      37 </span>            :         None = 0,
+<span class="lineNum">      38 </span>            :         Unknown,
+<span class="lineNum">      39 </span>            :         BadRLP,
+<span class="lineNum">      40 </span>            :         InvalidFormat,
+<span class="lineNum">      41 </span>            :         OutOfGasIntrinsic,              ///&lt; Too little gas to pay for the base transaction cost.
+<span class="lineNum">      42 </span>            :         InvalidSignature,
+<span class="lineNum">      43 </span>            :         InvalidNonce,
+<span class="lineNum">      44 </span>            :         NotEnoughCash,
+<span class="lineNum">      45 </span>            :         OutOfGasBase,                   ///&lt; Too little gas to pay for the base transaction cost.
+<span class="lineNum">      46 </span>            :         BlockGasLimitReached,
+<span class="lineNum">      47 </span>            :         BadInstruction,
+<span class="lineNum">      48 </span>            :         BadJumpDestination,
+<span class="lineNum">      49 </span>            :         OutOfGas,                               ///&lt; Ran out of gas executing code of the transaction.
+<span class="lineNum">      50 </span>            :         OutOfStack,                             ///&lt; Ran out of stack executing code of the transaction.
+<span class="lineNum">      51 </span>            :         StackUnderflow
+<span class="lineNum">      52 </span>            : };
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            : enum class CodeDeposit
+<span class="lineNum">      55 </span>            : {
+<span class="lineNum">      56 </span>            :         None = 0,
+<span class="lineNum">      57 </span>            :         Failed,
+<span class="lineNum">      58 </span>            :         Success
+<span class="lineNum">      59 </span>            : };
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : struct VMException;
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : TransactionException toTransactionException(Exception const&amp; _e);
+<span class="lineNum">      64 </span>            : std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, TransactionException const&amp; _er);
+<a name="65"><span class="lineNum">      65 </span>            : </a>
+<span class="lineNum">      66 </span>            : /// Description of the result of executing a transaction.
+<span class="lineNum">      67 </span><span class="lineCov">    2483820 : struct ExecutionResult</span>
+<span class="lineNum">      68 </span>            : {
+<span class="lineNum">      69 </span>            :         u256 gasUsed = 0;
+<span class="lineNum">      70 </span>            :         TransactionException excepted = TransactionException::Unknown;
+<span class="lineNum">      71 </span>            :         Address newAddress;
+<span class="lineNum">      72 </span>            :         bytes output;
+<span class="lineNum">      73 </span>            :         CodeDeposit codeDeposit = CodeDeposit::None;                                    ///&lt; Failed if an attempted deposit failed due to lack of gas.
+<span class="lineNum">      74 </span>            :         u256 gasRefunded = 0;
+<span class="lineNum">      75 </span>            :         unsigned depositSize = 0;                                                                               ///&lt; Amount of code of the creation's attempted deposit.
+<span class="lineNum">      76 </span>            :         u256 gasForDeposit;                                                                                     ///&lt; Amount of gas remaining for the code deposit phase.
+<span class="lineNum">      77 </span>            : };
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : std::ostream&amp; operator&lt;&lt;(std::ostream&amp; _out, ExecutionResult const&amp; _er);
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            : /// Encodes a transaction, ready to be exported to or freshly imported from RLP.
+<span class="lineNum">      82 </span><span class="lineCov">    3077695 : class Transaction: public TransactionBase</span>
+<span class="lineNum">      83 </span>            : {
+<span class="lineNum">      84 </span>            : public:
+<span class="lineNum">      85 </span>            :         /// Constructs a null transaction.
+<span class="lineNum">      86 </span><span class="lineCov">     553096 :         Transaction() {}</span>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            :         /// Constructs from a transaction skeleton &amp; optional secret.
+<span class="lineNum">      89 </span><span class="lineCov">          2 :         Transaction(TransactionSkeleton const&amp; _ts, Secret const&amp; _s = Secret()): TransactionBase(_ts, _s) {}</span>
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            :         /// Constructs a signed message-call transaction.
+<span class="lineNum">      92 </span>            :         Transaction(u256 const&amp; _value, u256 const&amp; _gasPrice, u256 const&amp; _gas, Address const&amp; _dest, bytes const&amp; _data, u256 const&amp; _nonce, Secret const&amp; _secret):
+<span class="lineNum">      93 </span><span class="lineCov">       1610 :                 TransactionBase(_value, _gasPrice, _gas, _dest, _data, _nonce, _secret)</span>
+<span class="lineNum">      94 </span>            :         {}
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            :         /// Constructs a signed contract-creation transaction.
+<span class="lineNum">      97 </span>            :         Transaction(u256 const&amp; _value, u256 const&amp; _gasPrice, u256 const&amp; _gas, bytes const&amp; _data, u256 const&amp; _nonce, Secret const&amp; _secret):
+<span class="lineNum">      98 </span><span class="lineCov">        260 :                 TransactionBase(_value, _gasPrice, _gas, _data, _nonce, _secret)</span>
+<span class="lineNum">      99 </span>            :         {}
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :         /// Constructs an unsigned message-call transaction.
+<span class="lineNum">     102 </span>            :         Transaction(u256 const&amp; _value, u256 const&amp; _gasPrice, u256 const&amp; _gas, Address const&amp; _dest, bytes const&amp; _data, u256 const&amp; _nonce = Invalid256):
+<span class="lineNum">     103 </span><span class="lineCov">         34 :                 TransactionBase(_value, _gasPrice, _gas, _dest, _data, _nonce)</span>
+<span class="lineNum">     104 </span>            :         {}
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span>            :         /// Constructs an unsigned contract-creation transaction.
+<span class="lineNum">     107 </span>            :         Transaction(u256 const&amp; _value, u256 const&amp; _gasPrice, u256 const&amp; _gas, bytes const&amp; _data, u256 const&amp; _nonce = Invalid256):
+<span class="lineNum">     108 </span><span class="lineCov">          4 :                 TransactionBase(_value, _gasPrice, _gas, _data, _nonce)</span>
+<span class="lineNum">     109 </span>            :         {}
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            :         /// Constructs a transaction from the given RLP.
+<span class="lineNum">     112 </span>            :         explicit Transaction(bytesConstRef _rlp, CheckTransaction _checkSig);
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :         /// Constructs a transaction from the given RLP.
+<span class="lineNum">     115 </span><span class="lineCov">        137 :         explicit Transaction(bytes const&amp; _rlp, CheckTransaction _checkSig): Transaction(&amp;_rlp, _checkSig) {}</span>
+<span class="lineNum">     116 </span>            : };
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : /// Nice name for vector of Transaction.
+<span class="lineNum">     119 </span>            : using Transactions = std::vector&lt;Transaction&gt;;
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 : class LocalisedTransaction: public Transaction</span>
+<span class="lineNum">     122 </span>            : {
+<span class="lineNum">     123 </span>            : public:
+<span class="lineNum">     124 </span>            :         LocalisedTransaction(
+<span class="lineNum">     125 </span>            :                 Transaction const&amp; _t,
+<span class="lineNum">     126 </span>            :                 h256 const&amp; _blockHash,
+<span class="lineNum">     127 </span>            :                 unsigned _transactionIndex,
+<span class="lineNum">     128 </span>            :                 BlockNumber _blockNumber = 0
+<span class="lineNum">     129 </span>            :         ):
+<span class="lineNum">     130 </span>            :                 Transaction(_t),
+<span class="lineNum">     131 </span>            :                 m_blockHash(_blockHash),
+<span class="lineNum">     132 </span>            :                 m_transactionIndex(_transactionIndex),
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :                 m_blockNumber(_blockNumber)</span>
+<span class="lineNum">     134 </span>            :         {}
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :         h256 const&amp; blockHash() const { return m_blockHash; }</span>
+<span class="lineNum">     137 </span>            :         unsigned transactionIndex() const { return m_transactionIndex; }
+<span class="lineNum">     138 </span>            :         BlockNumber blockNumber() const { return m_blockNumber; }
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : private:
+<span class="lineNum">     141 </span>            :         h256 m_blockHash;
+<span class="lineNum">     142 </span>            :         unsigned m_transactionIndex;
+<span class="lineNum">     143 </span>            :         BlockNumber m_blockNumber;
+<span class="lineNum">     144 </span>            : };
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            : }
+<span class="lineNum">     147 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

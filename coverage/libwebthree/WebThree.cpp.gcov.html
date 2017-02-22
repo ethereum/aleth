@@ -1,0 +1,235 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libwebthree/WebThree.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libwebthree</a> - WebThree.cpp<span style="font-size: 80%;"> (source / <a href="WebThree.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">32</td>
+            <td class="headerCovTableEntry">63</td>
+            <td class="headerCovTableEntryLo">50.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntryLo">33.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file WebThree.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;WebThree.h&quot;
+<span class="lineNum">      23 </span>            : #include &lt;boost/filesystem.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/algorithm/string.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;libethereum/Defaults.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libethereum/EthereumHost.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libethereum/ClientTest.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libethashseal/EthashClient.h&gt;
+<span class="lineNum">      29 </span>            : #include &quot;BuildInfo.h&quot;
+<span class="lineNum">      30 </span>            : #include &lt;libethashseal/Ethash.h&gt;
+<span class="lineNum">      31 </span>            : using namespace std;
+<span class="lineNum">      32 </span>            : using namespace dev;
+<span class="lineNum">      33 </span>            : using namespace dev::p2p;
+<span class="lineNum">      34 </span>            : using namespace dev::eth;
+<span class="lineNum">      35 </span>            : using namespace dev::shh;
+<span class="lineNum">      36 </span>            : 
+<a name="37"><span class="lineNum">      37 </span>            : static_assert(BOOST_VERSION == 106300, &quot;Wrong boost headers version&quot;);</a>
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span><span class="lineCov">          1 : WebThreeDirect::WebThreeDirect(</span>
+<span class="lineNum">      40 </span>            :         std::string const&amp; _clientVersion,
+<span class="lineNum">      41 </span>            :         std::string const&amp; _dbPath,
+<span class="lineNum">      42 </span>            :         eth::ChainParams const&amp; _params,
+<span class="lineNum">      43 </span>            :         WithExisting _we,
+<span class="lineNum">      44 </span>            :         std::set&lt;std::string&gt; const&amp; _interfaces,
+<span class="lineNum">      45 </span>            :         NetworkPreferences const&amp; _n,
+<span class="lineNum">      46 </span>            :         bytesConstRef _network,
+<span class="lineNum">      47 </span>            :         bool _testing
+<span class="lineNum">      48 </span>            : ):
+<span class="lineNum">      49 </span>            :         m_clientVersion(_clientVersion),
+<span class="lineNum">      50 </span><span class="lineCov">          5 :         m_net(_clientVersion, _n, _network)</span>
+<span class="lineNum">      51 </span>            : {
+<span class="lineNum">      52 </span><span class="lineCov">          1 :         if (_dbPath.size())</span>
+<span class="lineNum">      53 </span>            :                 Defaults::setDBPath(_dbPath);
+<span class="lineNum">      54 </span><span class="lineCov">          5 :         if (_interfaces.count(&quot;eth&quot;))</span>
+<span class="lineNum">      55 </span>            :         {
+<span class="lineNum">      56 </span><span class="lineCov">          1 :                 Ethash::init();</span>
+<span class="lineNum">      57 </span><span class="lineCov">          1 :                 NoProof::init();</span>
+<span class="lineNum">      58 </span><span class="lineCov">          2 :                 if (_params.sealEngineName == &quot;Ethash&quot;)</span>
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :                         m_ethereum.reset(new eth::EthashClient(_params, (int)_params.u256Param(&quot;networkID&quot;), &amp;m_net, shared_ptr&lt;GasPricer&gt;(), _dbPath, _we));</span>
+<span class="lineNum">      60 </span><span class="lineCov">          2 :                 else if (_params.sealEngineName == &quot;NoProof&quot; &amp;&amp; _testing)</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :                         m_ethereum.reset(new eth::ClientTest(_params, (int)_params.u256Param(&quot;networkID&quot;), &amp;m_net, shared_ptr&lt;GasPricer&gt;(), _dbPath, _we));</span>
+<span class="lineNum">      62 </span>            :                 else
+<span class="lineNum">      63 </span><span class="lineCov">          8 :                         m_ethereum.reset(new eth::Client(_params, (int)_params.u256Param(&quot;networkID&quot;), &amp;m_net, shared_ptr&lt;GasPricer&gt;(), _dbPath, _we));</span>
+<span class="lineNum">      64 </span><span class="lineCov">          4 :                 string bp = DEV_QUOTED(ETH_BUILD_PLATFORM);</span>
+<span class="lineNum">      65 </span><span class="lineCov">          2 :                 vector&lt;string&gt; bps;</span>
+<span class="lineNum">      66 </span><span class="lineCov">          1 :                 boost::split(bps, bp, boost::is_any_of(&quot;/&quot;));</span>
+<span class="lineNum">      67 </span><span class="lineCov">          3 :                 bps[0] = bps[0].substr(0, 5);</span>
+<span class="lineNum">      68 </span><span class="lineCov">          5 :                 bps[1] = bps[1].substr(0, 3);</span>
+<span class="lineNum">      69 </span><span class="lineCov">          4 :                 bps.back() = bps.back().substr(0, 3);</span>
+<span class="lineNum">      70 </span><span class="lineCov">         21 :                 m_ethereum-&gt;setExtraData(rlpList(0, string(dev::Version) + &quot;++&quot; + string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 4) + (ETH_CLEAN_REPO ? &quot;-&quot; : &quot;*&quot;) + string(DEV_QUOTED(ETH_BUILD_TYPE)).substr(0, 1) + boost::join(bps, &quot;/&quot;)));</span>
+<span class="lineNum">      71 </span>            :         }
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span><span class="lineCov">          5 :         if (_interfaces.count(&quot;shh&quot;))</span>
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :                 m_whisper = m_net.registerCapability(make_shared&lt;WhisperHost&gt;());</span>
+<a name="75"><span class="lineNum">      75 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">          5 : WebThreeDirect::~WebThreeDirect()</span>
+<span class="lineNum">      78 </span>            : {
+<span class="lineNum">      79 </span>            :         // Utterly horrible right now - WebThree owns everything (good), but:
+<span class="lineNum">      80 </span>            :         // m_net (Host) owns the eth::EthereumHost via a shared_ptr.
+<span class="lineNum">      81 </span>            :         // The eth::EthereumHost depends on eth::Client (it maintains a reference to the BlockChain field of Client).
+<span class="lineNum">      82 </span>            :         // eth::Client (owned by us via a unique_ptr) uses eth::EthereumHost (via a weak_ptr).
+<span class="lineNum">      83 </span>            :         // Really need to work out a clean way of organising ownership and guaranteeing startup/shutdown is perfect.
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            :         // Have to call stop here to get the Host to kill its io_service otherwise we end up with left-over reads,
+<span class="lineNum">      86 </span>            :         // still referencing Sessions getting deleted *after* m_ethereum is reset, causing bad things to happen, since
+<span class="lineNum">      87 </span>            :         // the guarantee is that m_ethereum is only reset *after* all sessions have ended (sessions are allowed to
+<span class="lineNum">      88 </span>            :         // use bits of data owned by m_ethereum).
+<span class="lineNum">      89 </span><span class="lineCov">          1 :         m_net.stop();</span>
+<span class="lineNum">      90 </span><span class="lineCov">          2 :         m_ethereum.reset();</span>
+<a name="91"><span class="lineNum">      91 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">          1 : std::string WebThreeDirect::composeClientVersion(std::string const&amp; _client)</span>
+<span class="lineNum">      94 </span>            : {
+<span class="lineNum">      95 </span><span class="lineCov">          3 :         return _client + &quot;/&quot; + \</span>
+<span class="lineNum">      96 </span><span class="lineCov">          5 :                 &quot;v&quot; + dev::Version + &quot;/&quot; + \</span>
+<span class="lineNum">      97 </span><span class="lineCov">          3 :                 DEV_QUOTED(ETH_BUILD_OS) + &quot;/&quot; + \</span>
+<span class="lineNum">      98 </span><span class="lineCov">          3 :                 DEV_QUOTED(ETH_BUILD_COMPILER) + &quot;/&quot; + \</span>
+<span class="lineNum">      99 </span><span class="lineCov">          3 :                 DEV_QUOTED(ETH_BUILD_JIT_MODE) + &quot;/&quot; + \</span>
+<span class="lineNum">     100 </span><span class="lineCov">          3 :                 DEV_QUOTED(ETH_BUILD_TYPE) + &quot;/&quot; + \</span>
+<span class="lineNum">     101 </span><span class="lineCov">          7 :                 string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 8) + \</span>
+<span class="lineNum">     102 </span><span class="lineCov">          2 :                 (ETH_CLEAN_REPO ? &quot;&quot; : &quot;*&quot;) + &quot;/&quot;;</span>
+<a name="103"><span class="lineNum">     103 </span>            : }</a>
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 : p2p::NetworkPreferences const&amp; WebThreeDirect::networkPreferences() const</span>
+<span class="lineNum">     106 </span>            : {
+<span class="lineNum">     107 </span><span class="lineNoCov">          0 :         return m_net.networkPreferences();</span>
+<a name="108"><span class="lineNum">     108 </span>            : }</a>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 : void WebThreeDirect::setNetworkPreferences(p2p::NetworkPreferences const&amp; _n, bool _dropPeers)</span>
+<span class="lineNum">     111 </span>            : {
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :         auto had = isNetworkStarted();</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :         if (had)</span>
+<span class="lineNum">     114 </span><span class="lineNoCov">          0 :                 stopNetwork();</span>
+<span class="lineNum">     115 </span><span class="lineNoCov">          0 :         m_net.setNetworkPreferences(_n, _dropPeers);</span>
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :         if (had)</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :                 startNetwork();</span>
+<a name="118"><span class="lineNum">     118 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 : std::vector&lt;PeerSessionInfo&gt; WebThreeDirect::peers()</span>
+<span class="lineNum">     121 </span>            : {
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :         return m_net.peerSessionInfo();</span>
+<a name="123"><span class="lineNum">     123 </span>            : }</a>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 : size_t WebThreeDirect::peerCount() const</span>
+<span class="lineNum">     126 </span>            : {
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :         return m_net.peerCount();</span>
+<a name="128"><span class="lineNum">     128 </span>            : }</a>
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 : void WebThreeDirect::setIdealPeerCount(size_t _n)</span>
+<span class="lineNum">     131 </span>            : {
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :         return m_net.setIdealPeerCount(_n);</span>
+<a name="133"><span class="lineNum">     133 </span>            : }</a>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 : void WebThreeDirect::setPeerStretch(size_t _n)</span>
+<span class="lineNum">     136 </span>            : {
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :         return m_net.setPeerStretch(_n);</span>
+<a name="138"><span class="lineNum">     138 </span>            : }</a>
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 : bytes WebThreeDirect::saveNetwork()</span>
+<span class="lineNum">     141 </span>            : {
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :         return m_net.saveNetwork();</span>
+<a name="143"><span class="lineNum">     143 </span>            : }</a>
+<span class="lineNum">     144 </span>            : 
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 : void WebThreeDirect::addNode(NodeID const&amp; _node, bi::tcp::endpoint const&amp; _host)</span>
+<span class="lineNum">     146 </span>            : {
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :         m_net.addNode(_node, NodeIPEndpoint(_host.address(), _host.port(), _host.port()));</span>
+<a name="148"><span class="lineNum">     148 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 : void WebThreeDirect::requirePeer(NodeID const&amp; _node, bi::tcp::endpoint const&amp; _host)</span>
+<span class="lineNum">     151 </span>            : {
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :         m_net.requirePeer(_node, NodeIPEndpoint(_host.address(), _host.port(), _host.port()));</span>
+<a name="153"><span class="lineNum">     153 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 : void WebThreeDirect::addPeer(NodeSpec const&amp; _s, PeerType _t)</span>
+<a name="156"><span class="lineNum">     156 </span>            : {</a>
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :         m_net.addPeer(_s, _t);</span>
+<span class="lineNum">     158 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     159 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

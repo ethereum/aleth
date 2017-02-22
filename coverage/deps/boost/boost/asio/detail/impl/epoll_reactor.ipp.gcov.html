@@ -1,0 +1,740 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/detail/impl/epoll_reactor.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/detail/impl</a> - epoll_reactor.ipp<span style="font-size: 80%;"> (source / <a href="epoll_reactor.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">181</td>
+            <td class="headerCovTableEntry">271</td>
+            <td class="headerCovTableEntryLo">66.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntry">24</td>
+            <td class="headerCovTableEntryMed">87.5 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // detail/impl/epoll_reactor.ipp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DETAIL_IMPL_EPOLL_REACTOR_IPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DETAIL_IMPL_EPOLL_REACTOR_IPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #if defined(BOOST_ASIO_HAS_EPOLL)
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;cstddef&gt;
+<span class="lineNum">      23 </span>            : #include &lt;sys/epoll.h&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/detail/epoll_reactor.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/detail/throw_error.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/asio/error.hpp&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #if defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">      29 </span>            : # include &lt;sys/timerfd.h&gt;
+<span class="lineNum">      30 </span>            : #endif // defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace boost {
+<span class="lineNum">      35 </span>            : namespace asio {
+<a name="36"><span class="lineNum">      36 </span>            : namespace detail {</a>
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span><span class="lineCov">         30 : epoll_reactor::epoll_reactor(boost::asio::io_service&amp; io_service)</span>
+<span class="lineNum">      39 </span>            :   : boost::asio::detail::service_base&lt;epoll_reactor&gt;(io_service),
+<span class="lineNum">      40 </span><span class="lineCov">         30 :     io_service_(use_service&lt;io_service_impl&gt;(io_service)),</span>
+<span class="lineNum">      41 </span>            :     mutex_(),
+<span class="lineNum">      42 </span>            :     interrupter_(),
+<span class="lineNum">      43 </span><span class="lineCov">         30 :     epoll_fd_(do_epoll_create()),</span>
+<span class="lineNum">      44 </span><span class="lineCov">         30 :     timer_fd_(do_timerfd_create()),</span>
+<span class="lineNum">      45 </span><span class="lineCov">        240 :     shutdown_(false)</span>
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span>            :   // Add the interrupter's descriptor to epoll.
+<span class="lineNum">      48 </span><span class="lineCov">         30 :   epoll_event ev = { 0, { 0 } };</span>
+<span class="lineNum">      49 </span><span class="lineCov">         30 :   ev.events = EPOLLIN | EPOLLERR | EPOLLET;</span>
+<span class="lineNum">      50 </span><span class="lineCov">         30 :   ev.data.ptr = &amp;interrupter_;</span>
+<span class="lineNum">      51 </span><span class="lineCov">         30 :   epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, interrupter_.read_descriptor(), &amp;ev);</span>
+<span class="lineNum">      52 </span><span class="lineCov">         60 :   interrupter_.interrupt();</span>
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            :   // Add the timer descriptor to epoll.
+<span class="lineNum">      55 </span><span class="lineCov">         30 :   if (timer_fd_ != -1)</span>
+<span class="lineNum">      56 </span>            :   {
+<span class="lineNum">      57 </span><span class="lineCov">         30 :     ev.events = EPOLLIN | EPOLLERR;</span>
+<span class="lineNum">      58 </span><span class="lineCov">         30 :     ev.data.ptr = &amp;timer_fd_;</span>
+<span class="lineNum">      59 </span><span class="lineCov">         30 :     epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, timer_fd_, &amp;ev);</span>
+<span class="lineNum">      60 </span>            :   }
+<a name="61"><span class="lineNum">      61 </span><span class="lineCov">         30 : }</span></a>
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span><span class="lineCov">        240 : epoll_reactor::~epoll_reactor()</span>
+<span class="lineNum">      64 </span>            : {
+<span class="lineNum">      65 </span><span class="lineCov">         30 :   if (epoll_fd_ != -1)</span>
+<span class="lineNum">      66 </span><span class="lineCov">         30 :     close(epoll_fd_);</span>
+<span class="lineNum">      67 </span><span class="lineCov">         30 :   if (timer_fd_ != -1)</span>
+<span class="lineNum">      68 </span><span class="lineCov">         30 :     close(timer_fd_);</span>
+<a name="69"><span class="lineNum">      69 </span><span class="lineCov">         60 : }</span></a>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineCov">         30 : void epoll_reactor::shutdown_service()</span>
+<span class="lineNum">      72 </span>            : {
+<span class="lineNum">      73 </span><span class="lineCov">         90 :   mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">      74 </span><span class="lineCov">         30 :   shutdown_ = true;</span>
+<span class="lineNum">      75 </span><span class="lineCov">         30 :   lock.unlock();</span>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">         30 :   op_queue&lt;operation&gt; ops;</span>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineCov">         31 :   while (descriptor_state* state = registered_descriptors_.first())</span>
+<span class="lineNum">      80 </span>            :   {
+<span class="lineNum">      81 </span><span class="lineCov">          7 :     for (int i = 0; i &lt; max_ops; ++i)</span>
+<span class="lineNum">      82 </span><span class="lineCov">          6 :       ops.push(state-&gt;op_queue_[i]);</span>
+<span class="lineNum">      83 </span><span class="lineCov">          1 :     state-&gt;shutdown_ = true;</span>
+<span class="lineNum">      84 </span><span class="lineCov">          1 :     registered_descriptors_.free(state);</span>
+<span class="lineNum">      85 </span>            :   }
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">         60 :   timer_queues_.get_all_timers(ops);</span>
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span><span class="lineCov">         30 :   io_service_.abandon_operations(ops);</span>
+<a name="90"><span class="lineNum">      90 </span><span class="lineCov">         30 : }</span></a>
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 : void epoll_reactor::fork_service(boost::asio::io_service::fork_event fork_ev)</span>
+<span class="lineNum">      93 </span>            : {
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :   if (fork_ev == boost::asio::io_service::fork_child)</span>
+<span class="lineNum">      95 </span>            :   {
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :     if (epoll_fd_ != -1)</span>
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :       ::close(epoll_fd_);</span>
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :     epoll_fd_ = -1;</span>
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :     epoll_fd_ = do_epoll_create();</span>
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :     if (timer_fd_ != -1)</span>
+<span class="lineNum">     102 </span><span class="lineNoCov">          0 :       ::close(timer_fd_);</span>
+<span class="lineNum">     103 </span><span class="lineNoCov">          0 :     timer_fd_ = -1;</span>
+<span class="lineNum">     104 </span><span class="lineNoCov">          0 :     timer_fd_ = do_timerfd_create();</span>
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :     interrupter_.recreate();</span>
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :     // Add the interrupter's descriptor to epoll.
+<span class="lineNum">     109 </span><span class="lineNoCov">          0 :     epoll_event ev = { 0, { 0 } };</span>
+<span class="lineNum">     110 </span><span class="lineNoCov">          0 :     ev.events = EPOLLIN | EPOLLERR | EPOLLET;</span>
+<span class="lineNum">     111 </span><span class="lineNoCov">          0 :     ev.data.ptr = &amp;interrupter_;</span>
+<span class="lineNum">     112 </span><span class="lineNoCov">          0 :     epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, interrupter_.read_descriptor(), &amp;ev);</span>
+<span class="lineNum">     113 </span><span class="lineNoCov">          0 :     interrupter_.interrupt();</span>
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            :     // Add the timer descriptor to epoll.
+<span class="lineNum">     116 </span><span class="lineNoCov">          0 :     if (timer_fd_ != -1)</span>
+<span class="lineNum">     117 </span>            :     {
+<span class="lineNum">     118 </span><span class="lineNoCov">          0 :       ev.events = EPOLLIN | EPOLLERR;</span>
+<span class="lineNum">     119 </span><span class="lineNoCov">          0 :       ev.data.ptr = &amp;timer_fd_;</span>
+<span class="lineNum">     120 </span><span class="lineNoCov">          0 :       epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, timer_fd_, &amp;ev);</span>
+<span class="lineNum">     121 </span>            :     }
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :     update_timeout();</span>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :     // Re-register all descriptors with epoll.
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :     mutex::scoped_lock descriptors_lock(registered_descriptors_mutex_);</span>
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :     for (descriptor_state* state = registered_descriptors_.first();</span>
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :         state != 0; state = state-&gt;next_)</span>
+<span class="lineNum">     129 </span>            :     {
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :       ev.events = state-&gt;registered_events_;</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :       ev.data.ptr = state;</span>
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :       int result = epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, state-&gt;descriptor_, &amp;ev);</span>
+<span class="lineNum">     133 </span><span class="lineNoCov">          0 :       if (result != 0)</span>
+<span class="lineNum">     134 </span>            :       {
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :         boost::system::error_code ec(errno,</span>
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :             boost::asio::error::get_system_category());</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :         boost::asio::detail::throw_error(ec, &quot;epoll re-registration&quot;);</span>
+<span class="lineNum">     138 </span>            :       }
+<span class="lineNum">     139 </span>            :     }
+<span class="lineNum">     140 </span>            :   }
+<span class="lineNum">     141 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            : void epoll_reactor::init_task()
+<span class="lineNum">     144 </span>            : {
+<span class="lineNum">     145 </span><span class="lineCov">         80 :   io_service_.init_task();</span>
+<a name="146"><span class="lineNum">     146 </span>            : }</a>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineCov">        103 : int epoll_reactor::register_descriptor(socket_type descriptor,</span>
+<span class="lineNum">     149 </span>            :     epoll_reactor::per_descriptor_data&amp; descriptor_data)
+<span class="lineNum">     150 </span>            : {
+<span class="lineNum">     151 </span><span class="lineCov">        103 :   descriptor_data = allocate_descriptor_state();</span>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :   {
+<span class="lineNum">     154 </span><span class="lineCov">        309 :     mutex::scoped_lock descriptor_lock(descriptor_data-&gt;mutex_);</span>
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span><span class="lineCov">        103 :     descriptor_data-&gt;reactor_ = this;</span>
+<span class="lineNum">     157 </span><span class="lineCov">        103 :     descriptor_data-&gt;descriptor_ = descriptor;</span>
+<span class="lineNum">     158 </span><span class="lineCov">        103 :     descriptor_data-&gt;shutdown_ = false;</span>
+<span class="lineNum">     159 </span>            :   }
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span><span class="lineCov">        103 :   epoll_event ev = { 0, { 0 } };</span>
+<span class="lineNum">     162 </span><span class="lineCov">        103 :   ev.events = EPOLLIN | EPOLLERR | EPOLLHUP | EPOLLPRI | EPOLLET;</span>
+<span class="lineNum">     163 </span><span class="lineCov">        103 :   descriptor_data-&gt;registered_events_ = ev.events;</span>
+<span class="lineNum">     164 </span><span class="lineCov">        103 :   ev.data.ptr = descriptor_data;</span>
+<span class="lineNum">     165 </span><span class="lineCov">        103 :   int result = epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, descriptor, &amp;ev);</span>
+<span class="lineNum">     166 </span><span class="lineCov">        103 :   if (result != 0)</span>
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :     return errno;</span>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span>            :   return 0;
+<a name="170"><span class="lineNum">     170 </span>            : }</a>
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 : int epoll_reactor::register_internal_descriptor(</span>
+<span class="lineNum">     173 </span>            :     int op_type, socket_type descriptor,
+<span class="lineNum">     174 </span>            :     epoll_reactor::per_descriptor_data&amp; descriptor_data, reactor_op* op)
+<span class="lineNum">     175 </span>            : {
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :   descriptor_data = allocate_descriptor_state();</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :   {
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :     mutex::scoped_lock descriptor_lock(descriptor_data-&gt;mutex_);</span>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 :     descriptor_data-&gt;reactor_ = this;</span>
+<span class="lineNum">     182 </span><span class="lineNoCov">          0 :     descriptor_data-&gt;descriptor_ = descriptor;</span>
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :     descriptor_data-&gt;shutdown_ = false;</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :     descriptor_data-&gt;op_queue_[op_type].push(op);</span>
+<span class="lineNum">     185 </span>            :   }
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :   epoll_event ev = { 0, { 0 } };</span>
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :   ev.events = EPOLLIN | EPOLLERR | EPOLLHUP | EPOLLPRI | EPOLLET;</span>
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :   descriptor_data-&gt;registered_events_ = ev.events;</span>
+<span class="lineNum">     190 </span><span class="lineNoCov">          0 :   ev.data.ptr = descriptor_data;</span>
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :   int result = epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, descriptor, &amp;ev);</span>
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :   if (result != 0)</span>
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :     return errno;</span>
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span>            :   return 0;
+<span class="lineNum">     196 </span>            : }
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            : void epoll_reactor::move_descriptor(socket_type,
+<span class="lineNum">     199 </span>            :     epoll_reactor::per_descriptor_data&amp; target_descriptor_data,
+<span class="lineNum">     200 </span>            :     epoll_reactor::per_descriptor_data&amp; source_descriptor_data)
+<span class="lineNum">     201 </span>            : {
+<span class="lineNum">     202 </span>            :   target_descriptor_data = source_descriptor_data;
+<span class="lineNum">     203 </span>            :   source_descriptor_data = 0;
+<a name="204"><span class="lineNum">     204 </span>            : }</a>
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span><span class="lineCov">        811 : void epoll_reactor::start_op(int op_type, socket_type descriptor,</span>
+<span class="lineNum">     207 </span>            :     epoll_reactor::per_descriptor_data&amp; descriptor_data, reactor_op* op,
+<span class="lineNum">     208 </span>            :     bool is_continuation, bool allow_speculative)
+<span class="lineNum">     209 </span>            : {
+<span class="lineNum">     210 </span><span class="lineCov">        811 :   if (!descriptor_data)</span>
+<span class="lineNum">     211 </span>            :   {
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :     op-&gt;ec_ = boost::asio::error::bad_descriptor;</span>
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :     post_immediate_completion(op, is_continuation);</span>
+<span class="lineNum">     214 </span>            :     return;
+<span class="lineNum">     215 </span>            :   }
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span><span class="lineCov">       1838 :   mutex::scoped_lock descriptor_lock(descriptor_data-&gt;mutex_);</span>
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span><span class="lineCov">        811 :   if (descriptor_data-&gt;shutdown_)</span>
+<span class="lineNum">     220 </span>            :   {
+<span class="lineNum">     221 </span><span class="lineNoCov">          0 :     post_immediate_completion(op, is_continuation);</span>
+<span class="lineNum">     222 </span>            :     return;
+<span class="lineNum">     223 </span>            :   }
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span><span class="lineCov">        811 :   if (descriptor_data-&gt;op_queue_[op_type].empty())</span>
+<span class="lineNum">     226 </span>            :   {
+<span class="lineNum">     227 </span><span class="lineCov">        811 :     if (allow_speculative</span>
+<span class="lineNum">     228 </span><span class="lineCov">        811 :         &amp;&amp; (op_type != read_op</span>
+<span class="lineNum">     229 </span><span class="lineCov">        460 :           || descriptor_data-&gt;op_queue_[except_op].empty()))</span>
+<span class="lineNum">     230 </span>            :     {
+<span class="lineNum">     231 </span><span class="lineCov">        745 :       if (op-&gt;perform())</span>
+<span class="lineNum">     232 </span>            :       {
+<span class="lineNum">     233 </span><span class="lineCov">        595 :         descriptor_lock.unlock();</span>
+<span class="lineNum">     234 </span><span class="lineCov">        595 :         io_service_.post_immediate_completion(op, is_continuation);</span>
+<span class="lineNum">     235 </span>            :         return;
+<span class="lineNum">     236 </span>            :       }
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span><span class="lineCov">        150 :       if (op_type == write_op)</span>
+<span class="lineNum">     239 </span>            :       {
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :         if ((descriptor_data-&gt;registered_events_ &amp; EPOLLOUT) == 0)</span>
+<span class="lineNum">     241 </span>            :         {
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :           epoll_event ev = { 0, { 0 } };</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :           ev.events = descriptor_data-&gt;registered_events_ | EPOLLOUT;</span>
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :           ev.data.ptr = descriptor_data;</span>
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :           if (epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, descriptor, &amp;ev) == 0)</span>
+<span class="lineNum">     246 </span>            :           {
+<span class="lineNum">     247 </span><span class="lineNoCov">          0 :             descriptor_data-&gt;registered_events_ |= ev.events;</span>
+<span class="lineNum">     248 </span>            :           }
+<span class="lineNum">     249 </span>            :           else
+<span class="lineNum">     250 </span>            :           {
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :             op-&gt;ec_ = boost::system::error_code(errno,</span>
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :                 boost::asio::error::get_system_category());</span>
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :             io_service_.post_immediate_completion(op, is_continuation);</span>
+<span class="lineNum">     254 </span><span class="lineNoCov">          0 :             return;</span>
+<span class="lineNum">     255 </span>            :           }
+<span class="lineNum">     256 </span>            :         }
+<span class="lineNum">     257 </span>            :       }
+<span class="lineNum">     258 </span>            :     }
+<span class="lineNum">     259 </span>            :     else
+<span class="lineNum">     260 </span>            :     {
+<span class="lineNum">     261 </span><span class="lineCov">         66 :       if (op_type == write_op)</span>
+<span class="lineNum">     262 </span>            :       {
+<span class="lineNum">     263 </span><span class="lineCov">         29 :         descriptor_data-&gt;registered_events_ |= EPOLLOUT;</span>
+<span class="lineNum">     264 </span>            :       }
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span><span class="lineCov">         66 :       epoll_event ev = { 0, { 0 } };</span>
+<span class="lineNum">     267 </span><span class="lineCov">         66 :       ev.events = descriptor_data-&gt;registered_events_;</span>
+<span class="lineNum">     268 </span><span class="lineCov">         66 :       ev.data.ptr = descriptor_data;</span>
+<span class="lineNum">     269 </span><span class="lineCov">         66 :       epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, descriptor, &amp;ev);</span>
+<span class="lineNum">     270 </span>            :     }
+<span class="lineNum">     271 </span>            :   }
+<span class="lineNum">     272 </span>            : 
+<span class="lineNum">     273 </span><span class="lineCov">        432 :   descriptor_data-&gt;op_queue_[op_type].push(op);</span>
+<span class="lineNum">     274 </span><span class="lineCov">        432 :   io_service_.work_started();</span>
+<a name="275"><span class="lineNum">     275 </span>            : }</a>
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span><span class="lineCov">         12 : void epoll_reactor::cancel_ops(socket_type,</span>
+<span class="lineNum">     278 </span>            :     epoll_reactor::per_descriptor_data&amp; descriptor_data)
+<span class="lineNum">     279 </span>            : {
+<span class="lineNum">     280 </span><span class="lineCov">         12 :   if (!descriptor_data)</span>
+<span class="lineNum">     281 </span><span class="lineNoCov">          0 :     return;</span>
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span><span class="lineCov">         36 :   mutex::scoped_lock descriptor_lock(descriptor_data-&gt;mutex_);</span>
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span><span class="lineCov">         24 :   op_queue&lt;operation&gt; ops;</span>
+<span class="lineNum">     286 </span><span class="lineCov">         48 :   for (int i = 0; i &lt; max_ops; ++i)</span>
+<span class="lineNum">     287 </span>            :   {
+<span class="lineNum">     288 </span><span class="lineCov">         48 :     while (reactor_op* op = descriptor_data-&gt;op_queue_[i].front())</span>
+<span class="lineNum">     289 </span>            :     {
+<span class="lineNum">     290 </span><span class="lineCov">         24 :       op-&gt;ec_ = boost::asio::error::operation_aborted;</span>
+<span class="lineNum">     291 </span><span class="lineCov">         24 :       descriptor_data-&gt;op_queue_[i].pop();</span>
+<span class="lineNum">     292 </span>            :       ops.push(op);
+<span class="lineNum">     293 </span>            :     }
+<span class="lineNum">     294 </span>            :   }
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span><span class="lineCov">         12 :   descriptor_lock.unlock();</span>
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span><span class="lineCov">         12 :   io_service_.post_deferred_completions(ops);</span>
+<a name="299"><span class="lineNum">     299 </span>            : }</a>
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span><span class="lineCov">        103 : void epoll_reactor::deregister_descriptor(socket_type descriptor,</span>
+<span class="lineNum">     302 </span>            :     epoll_reactor::per_descriptor_data&amp; descriptor_data, bool closing)
+<span class="lineNum">     303 </span>            : {
+<span class="lineNum">     304 </span><span class="lineCov">        103 :   if (!descriptor_data)</span>
+<span class="lineNum">     305 </span>            :     return;
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span><span class="lineCov">        309 :   mutex::scoped_lock descriptor_lock(descriptor_data-&gt;mutex_);</span>
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span><span class="lineCov">        103 :   if (!descriptor_data-&gt;shutdown_)</span>
+<span class="lineNum">     310 </span>            :   {
+<span class="lineNum">     311 </span><span class="lineCov">        102 :     if (closing)</span>
+<span class="lineNum">     312 </span>            :     {
+<span class="lineNum">     313 </span>            :       // The descriptor will be automatically removed from the epoll set when
+<span class="lineNum">     314 </span>            :       // it is closed.
+<span class="lineNum">     315 </span>            :     }
+<span class="lineNum">     316 </span>            :     else
+<span class="lineNum">     317 </span>            :     {
+<span class="lineNum">     318 </span><span class="lineCov">         25 :       epoll_event ev = { 0, { 0 } };</span>
+<span class="lineNum">     319 </span><span class="lineCov">         25 :       epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, descriptor, &amp;ev);</span>
+<span class="lineNum">     320 </span>            :     }
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span><span class="lineCov">        204 :     op_queue&lt;operation&gt; ops;</span>
+<span class="lineNum">     323 </span><span class="lineCov">        408 :     for (int i = 0; i &lt; max_ops; ++i)</span>
+<span class="lineNum">     324 </span>            :     {
+<span class="lineNum">     325 </span><span class="lineCov">        340 :       while (reactor_op* op = descriptor_data-&gt;op_queue_[i].front())</span>
+<span class="lineNum">     326 </span>            :       {
+<span class="lineNum">     327 </span><span class="lineCov">         68 :         op-&gt;ec_ = boost::asio::error::operation_aborted;</span>
+<span class="lineNum">     328 </span><span class="lineCov">         68 :         descriptor_data-&gt;op_queue_[i].pop();</span>
+<span class="lineNum">     329 </span>            :         ops.push(op);
+<span class="lineNum">     330 </span>            :       }
+<span class="lineNum">     331 </span>            :     }
+<span class="lineNum">     332 </span>            : 
+<span class="lineNum">     333 </span><span class="lineCov">        102 :     descriptor_data-&gt;descriptor_ = -1;</span>
+<span class="lineNum">     334 </span><span class="lineCov">        102 :     descriptor_data-&gt;shutdown_ = true;</span>
+<span class="lineNum">     335 </span>            : 
+<span class="lineNum">     336 </span><span class="lineCov">        102 :     descriptor_lock.unlock();</span>
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span><span class="lineCov">        102 :     free_descriptor_state(descriptor_data);</span>
+<span class="lineNum">     339 </span><span class="lineCov">        102 :     descriptor_data = 0;</span>
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span><span class="lineCov">        102 :     io_service_.post_deferred_completions(ops);</span>
+<span class="lineNum">     342 </span>            :   }
+<a name="343"><span class="lineNum">     343 </span>            : }</a>
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 : void epoll_reactor::deregister_internal_descriptor(socket_type descriptor,</span>
+<span class="lineNum">     346 </span>            :     epoll_reactor::per_descriptor_data&amp; descriptor_data)
+<span class="lineNum">     347 </span>            : {
+<span class="lineNum">     348 </span><span class="lineNoCov">          0 :   if (!descriptor_data)</span>
+<span class="lineNum">     349 </span>            :     return;
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span><span class="lineNoCov">          0 :   mutex::scoped_lock descriptor_lock(descriptor_data-&gt;mutex_);</span>
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span><span class="lineNoCov">          0 :   if (!descriptor_data-&gt;shutdown_)</span>
+<span class="lineNum">     354 </span>            :   {
+<span class="lineNum">     355 </span><span class="lineNoCov">          0 :     epoll_event ev = { 0, { 0 } };</span>
+<span class="lineNum">     356 </span><span class="lineNoCov">          0 :     epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, descriptor, &amp;ev);</span>
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :     op_queue&lt;operation&gt; ops;</span>
+<span class="lineNum">     359 </span><span class="lineNoCov">          0 :     for (int i = 0; i &lt; max_ops; ++i)</span>
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :       ops.push(descriptor_data-&gt;op_queue_[i]);</span>
+<span class="lineNum">     361 </span>            : 
+<span class="lineNum">     362 </span><span class="lineNoCov">          0 :     descriptor_data-&gt;descriptor_ = -1;</span>
+<span class="lineNum">     363 </span><span class="lineNoCov">          0 :     descriptor_data-&gt;shutdown_ = true;</span>
+<span class="lineNum">     364 </span>            : 
+<span class="lineNum">     365 </span><span class="lineNoCov">          0 :     descriptor_lock.unlock();</span>
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 :     free_descriptor_state(descriptor_data);</span>
+<span class="lineNum">     368 </span><span class="lineNoCov">          0 :     descriptor_data = 0;</span>
+<span class="lineNum">     369 </span>            :   }
+<a name="370"><span class="lineNum">     370 </span>            : }</a>
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span><span class="lineCov">        953 : void epoll_reactor::run(bool block, op_queue&lt;operation&gt;&amp; ops)</span>
+<span class="lineNum">     373 </span>            : {
+<span class="lineNum">     374 </span>            :   // This code relies on the fact that the task_io_service queues the reactor
+<span class="lineNum">     375 </span>            :   // task behind all descriptor operations generated by this function. This
+<span class="lineNum">     376 </span>            :   // means, that by the time we reach this point, any previously returned
+<span class="lineNum">     377 </span>            :   // descriptor operations have already been dequeued. Therefore it is now safe
+<span class="lineNum">     378 </span>            :   // for us to reuse and return them for the task_io_service to queue again.
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span>            :   // Calculate a timeout only if timerfd is not used.
+<span class="lineNum">     381 </span>            :   int timeout;
+<span class="lineNum">     382 </span><span class="lineCov">        953 :   if (timer_fd_ != -1)</span>
+<span class="lineNum">     383 </span><span class="lineCov">        953 :     timeout = block ? -1 : 0;</span>
+<span class="lineNum">     384 </span>            :   else
+<span class="lineNum">     385 </span>            :   {
+<span class="lineNum">     386 </span><span class="lineNoCov">          0 :     mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">     387 </span><span class="lineNoCov">          0 :     timeout = block ? get_timeout() : 0;</span>
+<span class="lineNum">     388 </span>            :   }
+<span class="lineNum">     389 </span>            : 
+<span class="lineNum">     390 </span>            :   // Block on the epoll descriptor.
+<span class="lineNum">     391 </span>            :   epoll_event events[128];
+<span class="lineNum">     392 </span><span class="lineCov">        953 :   int num_events = epoll_wait(epoll_fd_, events, 128, timeout);</span>
+<span class="lineNum">     393 </span>            : 
+<span class="lineNum">     394 </span>            : #if defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     395 </span><span class="lineCov">        953 :   bool check_timers = (timer_fd_ == -1);</span>
+<span class="lineNum">     396 </span>            : #else // defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     397 </span>            :   bool check_timers = true;
+<span class="lineNum">     398 </span>            : #endif // defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span>            :   // Dispatch the waiting events.
+<span class="lineNum">     401 </span><span class="lineCov">       1529 :   for (int i = 0; i &lt; num_events; ++i)</span>
+<span class="lineNum">     402 </span>            :   {
+<span class="lineNum">     403 </span><span class="lineCov">        576 :     void* ptr = events[i].data.ptr;</span>
+<span class="lineNum">     404 </span><span class="lineCov">        576 :     if (ptr == &amp;interrupter_)</span>
+<span class="lineNum">     405 </span>            :     {
+<span class="lineNum">     406 </span>            :       // No need to reset the interrupter since we're leaving the descriptor
+<span class="lineNum">     407 </span>            :       // in a ready-to-read state and relying on edge-triggered notifications
+<span class="lineNum">     408 </span>            :       // to make it so that we only get woken up when the descriptor's epoll
+<span class="lineNum">     409 </span>            :       // registration is updated.
+<span class="lineNum">     410 </span>            : 
+<span class="lineNum">     411 </span>            : #if defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     412 </span><span class="lineCov">         31 :       if (timer_fd_ == -1)</span>
+<span class="lineNum">     413 </span><span class="lineNoCov">          0 :         check_timers = true;</span>
+<span class="lineNum">     414 </span>            : #else // defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     415 </span>            :       check_timers = true;
+<span class="lineNum">     416 </span>            : #endif // defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     417 </span>            :     }
+<span class="lineNum">     418 </span>            : #if defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     419 </span><span class="lineCov">        545 :     else if (ptr == &amp;timer_fd_)</span>
+<span class="lineNum">     420 </span>            :     {
+<span class="lineNum">     421 </span>            :       check_timers = true;
+<span class="lineNum">     422 </span>            :     }
+<span class="lineNum">     423 </span>            : #endif // defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     424 </span>            :     else
+<span class="lineNum">     425 </span>            :     {
+<span class="lineNum">     426 </span>            :       // The descriptor operation doesn't count as work in and of itself, so we
+<span class="lineNum">     427 </span>            :       // don't call work_started() here. This still allows the io_service to
+<span class="lineNum">     428 </span>            :       // stop if the only remaining operations are descriptor operations.
+<span class="lineNum">     429 </span><span class="lineCov">        254 :       descriptor_state* descriptor_data = static_cast&lt;descriptor_state*&gt;(ptr);</span>
+<span class="lineNum">     430 </span><span class="lineCov">        508 :       descriptor_data-&gt;set_ready_events(events[i].events);</span>
+<span class="lineNum">     431 </span>            :       ops.push(descriptor_data);
+<span class="lineNum">     432 </span>            :     }
+<span class="lineNum">     433 </span>            :   }
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span><span class="lineCov">        953 :   if (check_timers)</span>
+<span class="lineNum">     436 </span>            :   {
+<span class="lineNum">     437 </span><span class="lineCov">        876 :     mutex::scoped_lock common_lock(mutex_);</span>
+<span class="lineNum">     438 </span><span class="lineCov">        584 :     timer_queues_.get_ready_timers(ops);</span>
+<span class="lineNum">     439 </span>            : 
+<span class="lineNum">     440 </span>            : #if defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     441 </span><span class="lineCov">        292 :     if (timer_fd_ != -1)</span>
+<span class="lineNum">     442 </span>            :     {
+<span class="lineNum">     443 </span>            :       itimerspec new_timeout;
+<span class="lineNum">     444 </span>            :       itimerspec old_timeout;
+<span class="lineNum">     445 </span><span class="lineCov">        292 :       int flags = get_timeout(new_timeout);</span>
+<span class="lineNum">     446 </span><span class="lineCov">        292 :       timerfd_settime(timer_fd_, flags, &amp;new_timeout, &amp;old_timeout);</span>
+<span class="lineNum">     447 </span>            :     }
+<span class="lineNum">     448 </span>            : #endif // defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     449 </span>            :   }
+<a name="450"><span class="lineNum">     450 </span><span class="lineCov">        953 : }</span></a>
+<span class="lineNum">     451 </span>            : 
+<span class="lineNum">     452 </span><span class="lineCov">         11 : void epoll_reactor::interrupt()</span>
+<span class="lineNum">     453 </span>            : {
+<span class="lineNum">     454 </span><span class="lineCov">         11 :   epoll_event ev = { 0, { 0 } };</span>
+<span class="lineNum">     455 </span><span class="lineCov">         11 :   ev.events = EPOLLIN | EPOLLERR | EPOLLET;</span>
+<span class="lineNum">     456 </span><span class="lineCov">         11 :   ev.data.ptr = &amp;interrupter_;</span>
+<span class="lineNum">     457 </span><span class="lineCov">         11 :   epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, interrupter_.read_descriptor(), &amp;ev);</span>
+<a name="458"><span class="lineNum">     458 </span><span class="lineCov">         11 : }</span></a>
+<span class="lineNum">     459 </span>            : 
+<span class="lineNum">     460 </span><span class="lineCov">         30 : int epoll_reactor::do_epoll_create()</span>
+<span class="lineNum">     461 </span>            : {
+<span class="lineNum">     462 </span>            : #if defined(EPOLL_CLOEXEC)
+<span class="lineNum">     463 </span><span class="lineCov">         30 :   int fd = epoll_create1(EPOLL_CLOEXEC);</span>
+<span class="lineNum">     464 </span>            : #else // defined(EPOLL_CLOEXEC)
+<span class="lineNum">     465 </span>            :   int fd = -1;
+<span class="lineNum">     466 </span>            :   errno = EINVAL;
+<span class="lineNum">     467 </span>            : #endif // defined(EPOLL_CLOEXEC)
+<span class="lineNum">     468 </span>            : 
+<span class="lineNum">     469 </span><span class="lineCov">         30 :   if (fd == -1 &amp;&amp; (errno == EINVAL || errno == ENOSYS))</span>
+<span class="lineNum">     470 </span>            :   {
+<span class="lineNum">     471 </span><span class="lineNoCov">          0 :     fd = epoll_create(epoll_size);</span>
+<span class="lineNum">     472 </span><span class="lineNoCov">          0 :     if (fd != -1)</span>
+<span class="lineNum">     473 </span><span class="lineNoCov">          0 :       ::fcntl(fd, F_SETFD, FD_CLOEXEC);</span>
+<span class="lineNum">     474 </span>            :   }
+<span class="lineNum">     475 </span>            : 
+<span class="lineNum">     476 </span><span class="lineCov">         30 :   if (fd == -1)</span>
+<span class="lineNum">     477 </span>            :   {
+<span class="lineNum">     478 </span><span class="lineNoCov">          0 :     boost::system::error_code ec(errno,</span>
+<span class="lineNum">     479 </span><span class="lineNoCov">          0 :         boost::asio::error::get_system_category());</span>
+<span class="lineNum">     480 </span><span class="lineNoCov">          0 :     boost::asio::detail::throw_error(ec, &quot;epoll&quot;);</span>
+<span class="lineNum">     481 </span>            :   }
+<span class="lineNum">     482 </span>            : 
+<span class="lineNum">     483 </span><span class="lineCov">         30 :   return fd;</span>
+<a name="484"><span class="lineNum">     484 </span>            : }</a>
+<span class="lineNum">     485 </span>            : 
+<span class="lineNum">     486 </span><span class="lineCov">         30 : int epoll_reactor::do_timerfd_create()</span>
+<span class="lineNum">     487 </span>            : {
+<span class="lineNum">     488 </span>            : #if defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     489 </span>            : # if defined(TFD_CLOEXEC)
+<span class="lineNum">     490 </span><span class="lineCov">         30 :   int fd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC);</span>
+<span class="lineNum">     491 </span>            : # else // defined(TFD_CLOEXEC)
+<span class="lineNum">     492 </span>            :   int fd = -1;
+<span class="lineNum">     493 </span>            :   errno = EINVAL;
+<span class="lineNum">     494 </span>            : # endif // defined(TFD_CLOEXEC)
+<span class="lineNum">     495 </span>            : 
+<span class="lineNum">     496 </span><span class="lineCov">         30 :   if (fd == -1 &amp;&amp; errno == EINVAL)</span>
+<span class="lineNum">     497 </span>            :   {
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 :     fd = timerfd_create(CLOCK_MONOTONIC, 0);</span>
+<span class="lineNum">     499 </span><span class="lineNoCov">          0 :     if (fd != -1)</span>
+<span class="lineNum">     500 </span><span class="lineNoCov">          0 :       ::fcntl(fd, F_SETFD, FD_CLOEXEC);</span>
+<span class="lineNum">     501 </span>            :   }
+<span class="lineNum">     502 </span>            : 
+<span class="lineNum">     503 </span><span class="lineCov">         30 :   return fd;</span>
+<span class="lineNum">     504 </span>            : #else // defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     505 </span>            :   return -1;
+<span class="lineNum">     506 </span>            : #endif // defined(BOOST_ASIO_HAS_TIMERFD)
+<a name="507"><span class="lineNum">     507 </span>            : }</a>
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span><span class="lineCov">        103 : epoll_reactor::descriptor_state* epoll_reactor::allocate_descriptor_state()</span>
+<span class="lineNum">     510 </span>            : {
+<span class="lineNum">     511 </span><span class="lineCov">        309 :   mutex::scoped_lock descriptors_lock(registered_descriptors_mutex_);</span>
+<span class="lineNum">     512 </span><span class="lineCov">        206 :   return registered_descriptors_.alloc();</span>
+<a name="513"><span class="lineNum">     513 </span>            : }</a>
+<span class="lineNum">     514 </span>            : 
+<span class="lineNum">     515 </span><span class="lineCov">        102 : void epoll_reactor::free_descriptor_state(epoll_reactor::descriptor_state* s)</span>
+<span class="lineNum">     516 </span>            : {
+<span class="lineNum">     517 </span><span class="lineCov">        306 :   mutex::scoped_lock descriptors_lock(registered_descriptors_mutex_);</span>
+<span class="lineNum">     518 </span><span class="lineCov">        204 :   registered_descriptors_.free(s);</span>
+<span class="lineNum">     519 </span><span class="lineCov">        102 : }</span>
+<span class="lineNum">     520 </span>            : 
+<span class="lineNum">     521 </span>            : void epoll_reactor::do_add_timer_queue(timer_queue_base&amp; queue)
+<span class="lineNum">     522 </span>            : {
+<span class="lineNum">     523 </span><span class="lineCov">         60 :   mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">     524 </span><span class="lineCov">         40 :   timer_queues_.insert(&amp;queue);</span>
+<a name="525"><span class="lineNum">     525 </span>            : }</a>
+<span class="lineNum">     526 </span>            : 
+<span class="lineNum">     527 </span><span class="lineCov">         20 : void epoll_reactor::do_remove_timer_queue(timer_queue_base&amp; queue)</span>
+<span class="lineNum">     528 </span>            : {
+<span class="lineNum">     529 </span><span class="lineCov">         60 :   mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">     530 </span><span class="lineCov">         40 :   timer_queues_.erase(&amp;queue);</span>
+<a name="531"><span class="lineNum">     531 </span><span class="lineCov">         20 : }</span></a>
+<span class="lineNum">     532 </span>            : 
+<span class="lineNum">     533 </span><span class="lineCov">        202 : void epoll_reactor::update_timeout()</span>
+<span class="lineNum">     534 </span>            : {
+<span class="lineNum">     535 </span>            : #if defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     536 </span><span class="lineCov">        202 :   if (timer_fd_ != -1)</span>
+<span class="lineNum">     537 </span>            :   {
+<span class="lineNum">     538 </span>            :     itimerspec new_timeout;
+<span class="lineNum">     539 </span>            :     itimerspec old_timeout;
+<span class="lineNum">     540 </span><span class="lineCov">        202 :     int flags = get_timeout(new_timeout);</span>
+<span class="lineNum">     541 </span><span class="lineCov">        202 :     timerfd_settime(timer_fd_, flags, &amp;new_timeout, &amp;old_timeout);</span>
+<span class="lineNum">     542 </span>            :     return;
+<span class="lineNum">     543 </span>            :   }
+<span class="lineNum">     544 </span>            : #endif // defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 :   interrupt();</span>
+<span class="lineNum">     546 </span>            : }
+<span class="lineNum">     547 </span>            : 
+<span class="lineNum">     548 </span>            : int epoll_reactor::get_timeout()
+<span class="lineNum">     549 </span>            : {
+<span class="lineNum">     550 </span>            :   // By default we will wait no longer than 5 minutes. This will ensure that
+<span class="lineNum">     551 </span>            :   // any changes to the system clock are detected after no longer than this.
+<span class="lineNum">     552 </span><span class="lineNoCov">          0 :   return timer_queues_.wait_duration_msec(5 * 60 * 1000);</span>
+<span class="lineNum">     553 </span>            : }
+<a name="554"><span class="lineNum">     554 </span>            : </a>
+<span class="lineNum">     555 </span>            : #if defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     556 </span><span class="lineCov">        494 : int epoll_reactor::get_timeout(itimerspec&amp; ts)</span>
+<span class="lineNum">     557 </span>            : {
+<span class="lineNum">     558 </span><span class="lineCov">        494 :   ts.it_interval.tv_sec = 0;</span>
+<span class="lineNum">     559 </span><span class="lineCov">        494 :   ts.it_interval.tv_nsec = 0;</span>
+<span class="lineNum">     560 </span>            : 
+<span class="lineNum">     561 </span><span class="lineCov">        988 :   long usec = timer_queues_.wait_duration_usec(5 * 60 * 1000 * 1000);</span>
+<span class="lineNum">     562 </span><span class="lineCov">        494 :   ts.it_value.tv_sec = usec / 1000000;</span>
+<span class="lineNum">     563 </span><span class="lineCov">        494 :   ts.it_value.tv_nsec = usec ? (usec % 1000000) * 1000 : 1;</span>
+<span class="lineNum">     564 </span>            : 
+<span class="lineNum">     565 </span><span class="lineCov">        494 :   return usec ? 0 : TFD_TIMER_ABSTIME;</span>
+<span class="lineNum">     566 </span>            : }
+<span class="lineNum">     567 </span>            : #endif // defined(BOOST_ASIO_HAS_TIMERFD)
+<span class="lineNum">     568 </span>            : 
+<span class="lineNum">     569 </span>            : struct epoll_reactor::perform_io_cleanup_on_block_exit
+<span class="lineNum">     570 </span>            : {
+<span class="lineNum">     571 </span>            :   explicit perform_io_cleanup_on_block_exit(epoll_reactor* r)
+<span class="lineNum">     572 </span><span class="lineCov">        498 :     : reactor_(r), first_op_(0)</span>
+<span class="lineNum">     573 </span>            :   {
+<a name="574"><span class="lineNum">     574 </span>            :   }</a>
+<span class="lineNum">     575 </span>            : 
+<span class="lineNum">     576 </span><span class="lineCov">        249 :   ~perform_io_cleanup_on_block_exit()</span>
+<span class="lineNum">     577 </span><span class="lineCov">        249 :   {</span>
+<span class="lineNum">     578 </span><span class="lineCov">        249 :     if (first_op_)</span>
+<span class="lineNum">     579 </span>            :     {
+<span class="lineNum">     580 </span>            :       // Post the remaining completed operations for invocation.
+<span class="lineNum">     581 </span><span class="lineCov">        169 :       if (!ops_.empty())</span>
+<span class="lineNum">     582 </span><span class="lineNoCov">          0 :         reactor_-&gt;io_service_.post_deferred_completions(ops_);</span>
+<span class="lineNum">     583 </span>            : 
+<span class="lineNum">     584 </span>            :       // A user-initiated operation has completed, but there's no need to
+<span class="lineNum">     585 </span>            :       // explicitly call work_finished() here. Instead, we'll take advantage of
+<span class="lineNum">     586 </span>            :       // the fact that the task_io_service will call work_finished() once we
+<span class="lineNum">     587 </span>            :       // return.
+<span class="lineNum">     588 </span>            :     }
+<span class="lineNum">     589 </span>            :     else
+<span class="lineNum">     590 </span>            :     {
+<span class="lineNum">     591 </span>            :       // No user-initiated operations have completed, so we need to compensate
+<span class="lineNum">     592 </span>            :       // for the work_finished() call that the task_io_service will make once
+<span class="lineNum">     593 </span>            :       // this operation returns.
+<span class="lineNum">     594 </span><span class="lineCov">         80 :       reactor_-&gt;io_service_.work_started();</span>
+<span class="lineNum">     595 </span>            :     }
+<span class="lineNum">     596 </span><span class="lineCov">        249 :   }</span>
+<span class="lineNum">     597 </span>            : 
+<span class="lineNum">     598 </span>            :   epoll_reactor* reactor_;
+<span class="lineNum">     599 </span>            :   op_queue&lt;operation&gt; ops_;
+<span class="lineNum">     600 </span>            :   operation* first_op_;
+<a name="601"><span class="lineNum">     601 </span>            : };</a>
+<span class="lineNum">     602 </span>            : 
+<span class="lineNum">     603 </span><span class="lineCov">         87 : epoll_reactor::descriptor_state::descriptor_state()</span>
+<span class="lineNum">     604 </span><span class="lineCov">        435 :   : operation(&amp;epoll_reactor::descriptor_state::do_complete)</span>
+<span class="lineNum">     605 </span>            : {
+<a name="606"><span class="lineNum">     606 </span><span class="lineCov">         87 : }</span></a>
+<span class="lineNum">     607 </span>            : 
+<span class="lineNum">     608 </span><span class="lineCov">        249 : operation* epoll_reactor::descriptor_state::perform_io(uint32_t events)</span>
+<span class="lineNum">     609 </span>            : {
+<span class="lineNum">     610 </span><span class="lineCov">        498 :   mutex_.lock();</span>
+<span class="lineNum">     611 </span><span class="lineCov">        747 :   perform_io_cleanup_on_block_exit io_cleanup(reactor_);</span>
+<span class="lineNum">     612 </span><span class="lineCov">        747 :   mutex::scoped_lock descriptor_lock(mutex_, mutex::scoped_lock::adopt_lock);</span>
+<span class="lineNum">     613 </span>            : 
+<span class="lineNum">     614 </span>            :   // Exception operations must be processed first to ensure that any
+<span class="lineNum">     615 </span>            :   // out-of-band data is read before normal data.
+<span class="lineNum">     616 </span>            :   static const int flag[max_ops] = { EPOLLIN, EPOLLOUT, EPOLLPRI };
+<span class="lineNum">     617 </span><span class="lineCov">        996 :   for (int j = max_ops - 1; j &gt;= 0; --j)</span>
+<span class="lineNum">     618 </span>            :   {
+<span class="lineNum">     619 </span><span class="lineCov">        747 :     if (events &amp; (flag[j] | EPOLLERR | EPOLLHUP))</span>
+<span class="lineNum">     620 </span>            :     {
+<span class="lineNum">     621 </span><span class="lineCov">        492 :       while (reactor_op* op = op_queue_[j].front())</span>
+<span class="lineNum">     622 </span>            :       {
+<span class="lineNum">     623 </span><span class="lineCov">        169 :         if (op-&gt;perform())</span>
+<span class="lineNum">     624 </span>            :         {
+<span class="lineNum">     625 </span><span class="lineCov">        338 :           op_queue_[j].pop();</span>
+<span class="lineNum">     626 </span>            :           io_cleanup.ops_.push(op);
+<span class="lineNum">     627 </span>            :         }
+<span class="lineNum">     628 </span>            :         else
+<span class="lineNum">     629 </span>            :           break;
+<span class="lineNum">     630 </span>            :       }
+<span class="lineNum">     631 </span>            :     }
+<span class="lineNum">     632 </span>            :   }
+<span class="lineNum">     633 </span>            : 
+<span class="lineNum">     634 </span>            :   // The first operation will be returned for completion now. The others will
+<span class="lineNum">     635 </span>            :   // be posted for later by the io_cleanup object's destructor.
+<span class="lineNum">     636 </span><span class="lineCov">        249 :   io_cleanup.first_op_ = io_cleanup.ops_.front();</span>
+<span class="lineNum">     637 </span><span class="lineCov">        249 :   io_cleanup.ops_.pop();</span>
+<span class="lineNum">     638 </span><span class="lineCov">        498 :   return io_cleanup.first_op_;</span>
+<a name="639"><span class="lineNum">     639 </span>            : }</a>
+<span class="lineNum">     640 </span>            : 
+<span class="lineNum">     641 </span><span class="lineCov">        255 : void epoll_reactor::descriptor_state::do_complete(</span>
+<span class="lineNum">     642 </span>            :     io_service_impl* owner, operation* base,
+<span class="lineNum">     643 </span>            :     const boost::system::error_code&amp; ec, std::size_t bytes_transferred)
+<span class="lineNum">     644 </span>            : {
+<span class="lineNum">     645 </span><span class="lineCov">        255 :   if (owner)</span>
+<span class="lineNum">     646 </span>            :   {
+<span class="lineNum">     647 </span><span class="lineCov">        249 :     descriptor_state* descriptor_data = static_cast&lt;descriptor_state*&gt;(base);</span>
+<span class="lineNum">     648 </span><span class="lineCov">        249 :     uint32_t events = static_cast&lt;uint32_t&gt;(bytes_transferred);</span>
+<span class="lineNum">     649 </span><span class="lineCov">        249 :     if (operation* op = descriptor_data-&gt;perform_io(events))</span>
+<span class="lineNum">     650 </span>            :     {
+<span class="lineNum">     651 </span>            :       op-&gt;complete(*owner, ec, 0);
+<span class="lineNum">     652 </span>            :     }
+<span class="lineNum">     653 </span>            :   }
+<span class="lineNum">     654 </span><span class="lineCov">        255 : }</span>
+<span class="lineNum">     655 </span>            : 
+<span class="lineNum">     656 </span>            : } // namespace detail
+<span class="lineNum">     657 </span>            : } // namespace asio
+<span class="lineNum">     658 </span>            : } // namespace boost
+<span class="lineNum">     659 </span>            : 
+<span class="lineNum">     660 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     661 </span>            : 
+<span class="lineNum">     662 </span>            : #endif // defined(BOOST_ASIO_HAS_EPOLL)
+<span class="lineNum">     663 </span>            : 
+<span class="lineNum">     664 </span>            : #endif // BOOST_ASIO_DETAIL_IMPL_EPOLL_REACTOR_IPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libp2p/RLPXPacket.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libp2p</a> - RLPXPacket.h<span style="font-size: 80%;"> (source / <a href="RLPXPacket.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryHi">90.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryLo">72.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :  This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            :  
+<span class="lineNum">       4 </span>            :  cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :  it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :  the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :  (at your option) any later version.
+<span class="lineNum">       8 </span>            :  
+<span class="lineNum">       9 </span>            :  cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :  but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :  GNU General Public License for more details.
+<span class="lineNum">      13 </span>            :  
+<span class="lineNum">      14 </span>            :  You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :  along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            :  */
+<span class="lineNum">      17 </span>            : /** @file RLPXPacket.h
+<span class="lineNum">      18 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #pragma once
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;algorithm&gt;
+<span class="lineNum">      25 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : namespace dev
+<span class="lineNum">      28 </span>            : {
+<span class="lineNum">      29 </span>            : namespace p2p
+<a name="30"><span class="lineNum">      30 </span>            : {</a>
+<span class="lineNum">      31 </span>            : 
+<a name="32"><span class="lineNum">      32 </span><span class="lineNoCov">          0 : struct RLPXInvalidPacket: virtual dev::Exception {};</span></a>
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span><span class="lineCov">      16122 : static bytesConstRef nextRLP(bytesConstRef _b) { try { RLP r(_b, RLP::AllowNonCanon); return _b.cropped(0, std::min((size_t)r.actualSize(), _b.size())); } catch(...) {} return bytesConstRef(); }</span>
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : /**
+<a name="37"><span class="lineNum">      37 </span>            :  * RLPX Packet</a>
+<span class="lineNum">      38 </span>            :  */
+<span class="lineNum">      39 </span><span class="lineCov">      47040 : class RLPXPacket</span>
+<span class="lineNum">      40 </span>            : {
+<a name="41"><span class="lineNum">      41 </span>            : public:</a>
+<span class="lineNum">      42 </span>            :         /// Construct packet. RLPStream data is invalidated.
+<span class="lineNum">      43 </span><span class="lineCov">       2060 :         RLPXPacket(uint8_t _capId, RLPStream&amp; _type, RLPStream&amp; _data): m_cap(_capId), m_type(_type.out()), m_data(_data.out()) {}</span>
+<a name="44"><span class="lineNum">      44 </span>            : </a>
+<span class="lineNum">      45 </span>            :         /// Construct packet from single bytestream. RLPStream data is invalidated.
+<span class="lineNum">      46 </span><span class="lineCov">       8240 :         RLPXPacket(uint8_t _capId, bytesConstRef _in): m_cap(_capId), m_type(nextRLP(_in).toBytes()) { if (_in.size() &gt; m_type.size()) { m_data.resize(_in.size() - m_type.size()); _in.cropped(m_type.size()).copyTo(&amp;m_data); } }</span>
+<a name="47"><span class="lineNum">      47 </span>            :         </a>
+<span class="lineNum">      48 </span>            :         RLPXPacket(RLPXPacket const&amp; _p) = delete;
+<span class="lineNum">      49 </span><span class="lineCov">      11560 :         RLPXPacket(RLPXPacket&amp;&amp; _p): m_cap(_p.m_cap), m_type(_p.m_type), m_data(_p.m_data) {}</span>
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineCov">       4120 :         bytes const&amp; type() const { return m_type; }</span>
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            :         bytes const&amp; data() const { return m_data; }
+<span class="lineNum">      54 </span>            : 
+<a name="55"><span class="lineNum">      55 </span>            :         uint8_t cap() const { return m_cap; }</a>
+<span class="lineNum">      56 </span>            :         
+<span class="lineNum">      57 </span><span class="lineCov">      10206 :         size_t size() const { try { return RLP(m_type).actualSize() + RLP(m_data, RLP::LaissezFaire).actualSize(); } catch(...) { return 0; } }</span>
+<a name="58"><span class="lineNum">      58 </span>            : </a>
+<span class="lineNum">      59 </span>            :         /// Appends byte data and returns if packet is valid.
+<a name="60"><span class="lineNum">      60 </span><span class="lineCov">      13140 :         bool append(bytesConstRef _in) { auto offset = m_data.size(); m_data.resize(offset + _in.size()); _in.copyTo(bytesRef(&amp;m_data).cropped(offset)); return isValid(); }</span></a>
+<span class="lineNum">      61 </span>            :         
+<span class="lineNum">      62 </span><span class="lineCov">      40368 :         virtual bool isValid() const noexcept { try { return !(m_type.empty() &amp;&amp; m_data.empty()) &amp;&amp; RLP(m_type).actualSize() == m_type.size() &amp;&amp; RLP(m_data).actualSize() == m_data.size(); } catch (...) {} return false; }</span>
+<span class="lineNum">      63 </span>            :         
+<span class="lineNum">      64 </span>            : protected:
+<span class="lineNum">      65 </span>            :         uint8_t m_cap;
+<span class="lineNum">      66 </span>            :         bytes m_type;
+<span class="lineNum">      67 </span>            :         bytes m_data;
+<span class="lineNum">      68 </span>            : };
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : }
+<span class="lineNum">      71 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

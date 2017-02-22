@@ -1,0 +1,461 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/x86_64-linux-gnu/bits/unistd.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/x86_64-linux-gnu/bits</a> - unistd.h<span style="font-size: 80%;"> (source / <a href="unistd.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /* Checking macros for unistd functions.</a>
+<span class="lineNum">       2 </span>            :    Copyright (C) 2005-2016 Free Software Foundation, Inc.
+<span class="lineNum">       3 </span>            :    This file is part of the GNU C Library.
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :    The GNU C Library is free software; you can redistribute it and/or
+<span class="lineNum">       6 </span>            :    modify it under the terms of the GNU Lesser General Public
+<span class="lineNum">       7 </span>            :    License as published by the Free Software Foundation; either
+<span class="lineNum">       8 </span>            :    version 2.1 of the License, or (at your option) any later version.
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            :    The GNU C Library is distributed in the hope that it will be useful,
+<span class="lineNum">      11 </span>            :    but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      12 </span>            :    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+<span class="lineNum">      13 </span>            :    Lesser General Public License for more details.
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            :    You should have received a copy of the GNU Lesser General Public
+<span class="lineNum">      16 </span>            :    License along with the GNU C Library; if not, see
+<span class="lineNum">      17 </span>            :    &lt;http://www.gnu.org/licenses/&gt;.  */
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #ifndef _UNISTD_H
+<span class="lineNum">      20 </span>            : # error &quot;Never include &lt;bits/unistd.h&gt; directly; use &lt;unistd.h&gt; instead.&quot;
+<span class="lineNum">      21 </span>            : #endif
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : extern ssize_t __read_chk (int __fd, void *__buf, size_t __nbytes,
+<span class="lineNum">      24 </span>            :                            size_t __buflen) __wur;
+<span class="lineNum">      25 </span>            : extern ssize_t __REDIRECT (__read_alias, (int __fd, void *__buf,
+<span class="lineNum">      26 </span>            :                                           size_t __nbytes), read) __wur;
+<span class="lineNum">      27 </span>            : extern ssize_t __REDIRECT (__read_chk_warn,
+<span class="lineNum">      28 </span>            :                            (int __fd, void *__buf, size_t __nbytes,
+<span class="lineNum">      29 </span>            :                             size_t __buflen), __read_chk)
+<span class="lineNum">      30 </span>            :      __wur __warnattr (&quot;read called with bigger length than size of &quot;
+<span class="lineNum">      31 </span>            :                        &quot;the destination buffer&quot;);
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : __fortify_function __wur ssize_t
+<span class="lineNum">      34 </span>            : read (int __fd, void *__buf, size_t __nbytes)
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span><span class="lineCov">       2205 :   if (__bos0 (__buf) != (size_t) -1)</span>
+<span class="lineNum">      37 </span>            :     {
+<span class="lineNum">      38 </span>            :       if (!__builtin_constant_p (__nbytes))
+<span class="lineNum">      39 </span>            :         return __read_chk (__fd, __buf, __nbytes, __bos0 (__buf));
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span><span class="lineNoCov">          0 :       if (__nbytes &gt; __bos0 (__buf))</span>
+<span class="lineNum">      42 </span><span class="lineNoCov">          0 :         return __read_chk_warn (__fd, __buf, __nbytes, __bos0 (__buf));</span>
+<span class="lineNum">      43 </span>            :     }
+<span class="lineNum">      44 </span><span class="lineCov">       2205 :   return __read_alias (__fd, __buf, __nbytes);</span>
+<span class="lineNum">      45 </span>            : }
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            : #ifdef __USE_UNIX98
+<span class="lineNum">      48 </span>            : extern ssize_t __pread_chk (int __fd, void *__buf, size_t __nbytes,
+<span class="lineNum">      49 </span>            :                             __off_t __offset, size_t __bufsize) __wur;
+<span class="lineNum">      50 </span>            : extern ssize_t __pread64_chk (int __fd, void *__buf, size_t __nbytes,
+<span class="lineNum">      51 </span>            :                               __off64_t __offset, size_t __bufsize) __wur;
+<span class="lineNum">      52 </span>            : extern ssize_t __REDIRECT (__pread_alias,
+<span class="lineNum">      53 </span>            :                            (int __fd, void *__buf, size_t __nbytes,
+<span class="lineNum">      54 </span>            :                             __off_t __offset), pread) __wur;
+<span class="lineNum">      55 </span>            : extern ssize_t __REDIRECT (__pread64_alias,
+<span class="lineNum">      56 </span>            :                            (int __fd, void *__buf, size_t __nbytes,
+<span class="lineNum">      57 </span>            :                             __off64_t __offset), pread64) __wur;
+<span class="lineNum">      58 </span>            : extern ssize_t __REDIRECT (__pread_chk_warn,
+<span class="lineNum">      59 </span>            :                            (int __fd, void *__buf, size_t __nbytes,
+<span class="lineNum">      60 </span>            :                             __off_t __offset, size_t __bufsize), __pread_chk)
+<span class="lineNum">      61 </span>            :      __wur __warnattr (&quot;pread called with bigger length than size of &quot;
+<span class="lineNum">      62 </span>            :                        &quot;the destination buffer&quot;);
+<span class="lineNum">      63 </span>            : extern ssize_t __REDIRECT (__pread64_chk_warn,
+<span class="lineNum">      64 </span>            :                            (int __fd, void *__buf, size_t __nbytes,
+<span class="lineNum">      65 </span>            :                             __off64_t __offset, size_t __bufsize),
+<span class="lineNum">      66 </span>            :                             __pread64_chk)
+<span class="lineNum">      67 </span>            :      __wur __warnattr (&quot;pread64 called with bigger length than size of &quot;
+<span class="lineNum">      68 </span>            :                        &quot;the destination buffer&quot;);
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : # ifndef __USE_FILE_OFFSET64
+<span class="lineNum">      71 </span>            : __fortify_function __wur ssize_t
+<span class="lineNum">      72 </span>            : pread (int __fd, void *__buf, size_t __nbytes, __off_t __offset)
+<span class="lineNum">      73 </span>            : {
+<span class="lineNum">      74 </span>            :   if (__bos0 (__buf) != (size_t) -1)
+<span class="lineNum">      75 </span>            :     {
+<span class="lineNum">      76 </span>            :       if (!__builtin_constant_p (__nbytes))
+<span class="lineNum">      77 </span>            :         return __pread_chk (__fd, __buf, __nbytes, __offset, __bos0 (__buf));
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :       if ( __nbytes &gt; __bos0 (__buf))
+<span class="lineNum">      80 </span>            :         return __pread_chk_warn (__fd, __buf, __nbytes, __offset,
+<span class="lineNum">      81 </span>            :                                  __bos0 (__buf));
+<span class="lineNum">      82 </span>            :     }
+<span class="lineNum">      83 </span>            :   return __pread_alias (__fd, __buf, __nbytes, __offset);
+<span class="lineNum">      84 </span>            : }
+<span class="lineNum">      85 </span>            : # else
+<span class="lineNum">      86 </span>            : __fortify_function __wur ssize_t
+<span class="lineNum">      87 </span>            : pread (int __fd, void *__buf, size_t __nbytes, __off64_t __offset)
+<span class="lineNum">      88 </span>            : {
+<span class="lineNum">      89 </span>            :   if (__bos0 (__buf) != (size_t) -1)
+<span class="lineNum">      90 </span>            :     {
+<span class="lineNum">      91 </span>            :       if (!__builtin_constant_p (__nbytes))
+<span class="lineNum">      92 </span>            :         return __pread64_chk (__fd, __buf, __nbytes, __offset, __bos0 (__buf));
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :       if ( __nbytes &gt; __bos0 (__buf))
+<span class="lineNum">      95 </span>            :         return __pread64_chk_warn (__fd, __buf, __nbytes, __offset,
+<span class="lineNum">      96 </span>            :                                    __bos0 (__buf));
+<span class="lineNum">      97 </span>            :     }
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :   return __pread64_alias (__fd, __buf, __nbytes, __offset);
+<span class="lineNum">     100 </span>            : }
+<span class="lineNum">     101 </span>            : # endif
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            : # ifdef __USE_LARGEFILE64
+<span class="lineNum">     104 </span>            : __fortify_function __wur ssize_t
+<span class="lineNum">     105 </span>            : pread64 (int __fd, void *__buf, size_t __nbytes, __off64_t __offset)
+<span class="lineNum">     106 </span>            : {
+<span class="lineNum">     107 </span>            :   if (__bos0 (__buf) != (size_t) -1)
+<span class="lineNum">     108 </span>            :     {
+<span class="lineNum">     109 </span>            :       if (!__builtin_constant_p (__nbytes))
+<span class="lineNum">     110 </span>            :         return __pread64_chk (__fd, __buf, __nbytes, __offset, __bos0 (__buf));
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            :       if ( __nbytes &gt; __bos0 (__buf))
+<span class="lineNum">     113 </span>            :         return __pread64_chk_warn (__fd, __buf, __nbytes, __offset,
+<span class="lineNum">     114 </span>            :                                    __bos0 (__buf));
+<span class="lineNum">     115 </span>            :     }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :   return __pread64_alias (__fd, __buf, __nbytes, __offset);
+<span class="lineNum">     118 </span>            : }
+<span class="lineNum">     119 </span>            : # endif
+<span class="lineNum">     120 </span>            : #endif
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : #if defined __USE_XOPEN_EXTENDED || defined __USE_XOPEN2K
+<span class="lineNum">     123 </span>            : extern ssize_t __readlink_chk (const char *__restrict __path,
+<span class="lineNum">     124 </span>            :                                char *__restrict __buf, size_t __len,
+<span class="lineNum">     125 </span>            :                                size_t __buflen)
+<span class="lineNum">     126 </span>            :      __THROW __nonnull ((1, 2)) __wur;
+<span class="lineNum">     127 </span>            : extern ssize_t __REDIRECT_NTH (__readlink_alias,
+<span class="lineNum">     128 </span>            :                                (const char *__restrict __path,
+<span class="lineNum">     129 </span>            :                                 char *__restrict __buf, size_t __len), readlink)
+<span class="lineNum">     130 </span>            :      __nonnull ((1, 2)) __wur;
+<span class="lineNum">     131 </span>            : extern ssize_t __REDIRECT_NTH (__readlink_chk_warn,
+<span class="lineNum">     132 </span>            :                                (const char *__restrict __path,
+<span class="lineNum">     133 </span>            :                                 char *__restrict __buf, size_t __len,
+<span class="lineNum">     134 </span>            :                                 size_t __buflen), __readlink_chk)
+<span class="lineNum">     135 </span>            :      __nonnull ((1, 2)) __wur __warnattr (&quot;readlink called with bigger length &quot;
+<span class="lineNum">     136 </span>            :                                           &quot;than size of destination buffer&quot;);
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            : __fortify_function __nonnull ((1, 2)) __wur ssize_t
+<span class="lineNum">     139 </span>            : __NTH (readlink (const char *__restrict __path, char *__restrict __buf,
+<span class="lineNum">     140 </span>            :                  size_t __len))
+<span class="lineNum">     141 </span>            : {
+<span class="lineNum">     142 </span><span class="lineCov">       2205 :   if (__bos (__buf) != (size_t) -1)</span>
+<span class="lineNum">     143 </span>            :     {
+<span class="lineNum">     144 </span>            :       if (!__builtin_constant_p (__len))
+<span class="lineNum">     145 </span>            :         return __readlink_chk (__path, __buf, __len, __bos (__buf));
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :       if ( __len &gt; __bos (__buf))</span>
+<span class="lineNum">     148 </span><span class="lineNoCov">          0 :         return __readlink_chk_warn (__path, __buf, __len, __bos (__buf));</span>
+<span class="lineNum">     149 </span>            :     }
+<span class="lineNum">     150 </span><span class="lineCov">       2205 :   return __readlink_alias (__path, __buf, __len);</span>
+<span class="lineNum">     151 </span>            : }
+<span class="lineNum">     152 </span>            : #endif
+<span class="lineNum">     153 </span>            : 
+<span class="lineNum">     154 </span>            : #ifdef __USE_ATFILE
+<span class="lineNum">     155 </span>            : extern ssize_t __readlinkat_chk (int __fd, const char *__restrict __path,
+<span class="lineNum">     156 </span>            :                                  char *__restrict __buf, size_t __len,
+<span class="lineNum">     157 </span>            :                                  size_t __buflen)
+<span class="lineNum">     158 </span>            :      __THROW __nonnull ((2, 3)) __wur;
+<span class="lineNum">     159 </span>            : extern ssize_t __REDIRECT_NTH (__readlinkat_alias,
+<span class="lineNum">     160 </span>            :                                (int __fd, const char *__restrict __path,
+<span class="lineNum">     161 </span>            :                                 char *__restrict __buf, size_t __len),
+<span class="lineNum">     162 </span>            :                                readlinkat)
+<span class="lineNum">     163 </span>            :      __nonnull ((2, 3)) __wur;
+<span class="lineNum">     164 </span>            : extern ssize_t __REDIRECT_NTH (__readlinkat_chk_warn,
+<span class="lineNum">     165 </span>            :                                (int __fd, const char *__restrict __path,
+<span class="lineNum">     166 </span>            :                                 char *__restrict __buf, size_t __len,
+<span class="lineNum">     167 </span>            :                                 size_t __buflen), __readlinkat_chk)
+<span class="lineNum">     168 </span>            :      __nonnull ((2, 3)) __wur __warnattr (&quot;readlinkat called with bigger &quot;
+<span class="lineNum">     169 </span>            :                                           &quot;length than size of destination &quot;
+<span class="lineNum">     170 </span>            :                                           &quot;buffer&quot;);
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            : __fortify_function __nonnull ((2, 3)) __wur ssize_t
+<span class="lineNum">     173 </span>            : __NTH (readlinkat (int __fd, const char *__restrict __path,
+<span class="lineNum">     174 </span>            :                    char *__restrict __buf, size_t __len))
+<span class="lineNum">     175 </span>            : {
+<span class="lineNum">     176 </span>            :   if (__bos (__buf) != (size_t) -1)
+<span class="lineNum">     177 </span>            :     {
+<span class="lineNum">     178 </span>            :       if (!__builtin_constant_p (__len))
+<span class="lineNum">     179 </span>            :         return __readlinkat_chk (__fd, __path, __buf, __len, __bos (__buf));
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            :       if (__len &gt; __bos (__buf))
+<span class="lineNum">     182 </span>            :         return __readlinkat_chk_warn (__fd, __path, __buf, __len,
+<span class="lineNum">     183 </span>            :                                       __bos (__buf));
+<span class="lineNum">     184 </span>            :     }
+<span class="lineNum">     185 </span>            :   return __readlinkat_alias (__fd, __path, __buf, __len);
+<span class="lineNum">     186 </span>            : }
+<span class="lineNum">     187 </span>            : #endif
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            : extern char *__getcwd_chk (char *__buf, size_t __size, size_t __buflen)
+<span class="lineNum">     190 </span>            :      __THROW __wur;
+<span class="lineNum">     191 </span>            : extern char *__REDIRECT_NTH (__getcwd_alias,
+<span class="lineNum">     192 </span>            :                              (char *__buf, size_t __size), getcwd) __wur;
+<span class="lineNum">     193 </span>            : extern char *__REDIRECT_NTH (__getcwd_chk_warn,
+<span class="lineNum">     194 </span>            :                              (char *__buf, size_t __size, size_t __buflen),
+<span class="lineNum">     195 </span>            :                              __getcwd_chk)
+<span class="lineNum">     196 </span>            :      __wur __warnattr (&quot;getcwd caller with bigger length than size of &quot;
+<span class="lineNum">     197 </span>            :                        &quot;destination buffer&quot;);
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            : __fortify_function __wur char *
+<span class="lineNum">     200 </span>            : __NTH (getcwd (char *__buf, size_t __size))
+<span class="lineNum">     201 </span>            : {
+<span class="lineNum">     202 </span>            :   if (__bos (__buf) != (size_t) -1)
+<span class="lineNum">     203 </span>            :     {
+<span class="lineNum">     204 </span>            :       if (!__builtin_constant_p (__size))
+<span class="lineNum">     205 </span>            :         return __getcwd_chk (__buf, __size, __bos (__buf));
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            :       if (__size &gt; __bos (__buf))
+<span class="lineNum">     208 </span>            :         return __getcwd_chk_warn (__buf, __size, __bos (__buf));
+<span class="lineNum">     209 </span>            :     }
+<span class="lineNum">     210 </span>            :   return __getcwd_alias (__buf, __size);
+<span class="lineNum">     211 </span>            : }
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            : #if defined __USE_MISC || defined __USE_XOPEN_EXTENDED
+<span class="lineNum">     214 </span>            : extern char *__getwd_chk (char *__buf, size_t buflen)
+<span class="lineNum">     215 </span>            :      __THROW __nonnull ((1)) __wur;
+<span class="lineNum">     216 </span>            : extern char *__REDIRECT_NTH (__getwd_warn, (char *__buf), getwd)
+<span class="lineNum">     217 </span>            :      __nonnull ((1)) __wur __warnattr (&quot;please use getcwd instead, as getwd &quot;
+<span class="lineNum">     218 </span>            :                                        &quot;doesn't specify buffer size&quot;);
+<span class="lineNum">     219 </span>            : 
+<span class="lineNum">     220 </span>            : __fortify_function __nonnull ((1)) __attribute_deprecated__ __wur char *
+<span class="lineNum">     221 </span>            : __NTH (getwd (char *__buf))
+<span class="lineNum">     222 </span>            : {
+<span class="lineNum">     223 </span>            :   if (__bos (__buf) != (size_t) -1)
+<span class="lineNum">     224 </span>            :     return __getwd_chk (__buf, __bos (__buf));
+<span class="lineNum">     225 </span>            :   return __getwd_warn (__buf);
+<span class="lineNum">     226 </span>            : }
+<span class="lineNum">     227 </span>            : #endif
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            : extern size_t __confstr_chk (int __name, char *__buf, size_t __len,
+<span class="lineNum">     230 </span>            :                              size_t __buflen) __THROW;
+<span class="lineNum">     231 </span>            : extern size_t __REDIRECT_NTH (__confstr_alias, (int __name, char *__buf,
+<span class="lineNum">     232 </span>            :                                                 size_t __len), confstr);
+<span class="lineNum">     233 </span>            : extern size_t __REDIRECT_NTH (__confstr_chk_warn,
+<span class="lineNum">     234 </span>            :                               (int __name, char *__buf, size_t __len,
+<span class="lineNum">     235 </span>            :                                size_t __buflen), __confstr_chk)
+<span class="lineNum">     236 </span>            :      __warnattr (&quot;confstr called with bigger length than size of destination &quot;
+<span class="lineNum">     237 </span>            :                  &quot;buffer&quot;);
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            : __fortify_function size_t
+<span class="lineNum">     240 </span>            : __NTH (confstr (int __name, char *__buf, size_t __len))
+<span class="lineNum">     241 </span>            : {
+<span class="lineNum">     242 </span>            :   if (__bos (__buf) != (size_t) -1)
+<span class="lineNum">     243 </span>            :     {
+<span class="lineNum">     244 </span>            :       if (!__builtin_constant_p (__len))
+<span class="lineNum">     245 </span>            :         return __confstr_chk (__name, __buf, __len, __bos (__buf));
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            :       if (__bos (__buf) &lt; __len)
+<span class="lineNum">     248 </span>            :         return __confstr_chk_warn (__name, __buf, __len, __bos (__buf));
+<span class="lineNum">     249 </span>            :     }
+<span class="lineNum">     250 </span>            :   return __confstr_alias (__name, __buf, __len);
+<span class="lineNum">     251 </span>            : }
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            : extern int __getgroups_chk (int __size, __gid_t __list[], size_t __listlen)
+<span class="lineNum">     255 </span>            :      __THROW __wur;
+<span class="lineNum">     256 </span>            : extern int __REDIRECT_NTH (__getgroups_alias, (int __size, __gid_t __list[]),
+<span class="lineNum">     257 </span>            :                            getgroups) __wur;
+<span class="lineNum">     258 </span>            : extern int __REDIRECT_NTH (__getgroups_chk_warn,
+<span class="lineNum">     259 </span>            :                            (int __size, __gid_t __list[], size_t __listlen),
+<span class="lineNum">     260 </span>            :                            __getgroups_chk)
+<span class="lineNum">     261 </span>            :      __wur __warnattr (&quot;getgroups called with bigger group count than what &quot;
+<span class="lineNum">     262 </span>            :                        &quot;can fit into destination buffer&quot;);
+<span class="lineNum">     263 </span>            : 
+<span class="lineNum">     264 </span>            : __fortify_function int
+<span class="lineNum">     265 </span>            : __NTH (getgroups (int __size, __gid_t __list[]))
+<span class="lineNum">     266 </span>            : {
+<span class="lineNum">     267 </span>            :   if (__bos (__list) != (size_t) -1)
+<span class="lineNum">     268 </span>            :     {
+<span class="lineNum">     269 </span>            :       if (!__builtin_constant_p (__size) || __size &lt; 0)
+<span class="lineNum">     270 </span>            :         return __getgroups_chk (__size, __list, __bos (__list));
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            :       if (__size * sizeof (__gid_t) &gt; __bos (__list))
+<span class="lineNum">     273 </span>            :         return __getgroups_chk_warn (__size, __list, __bos (__list));
+<span class="lineNum">     274 </span>            :     }
+<span class="lineNum">     275 </span>            :   return __getgroups_alias (__size, __list);
+<span class="lineNum">     276 </span>            : }
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            : extern int __ttyname_r_chk (int __fd, char *__buf, size_t __buflen,
+<span class="lineNum">     280 </span>            :                             size_t __nreal) __THROW __nonnull ((2));
+<span class="lineNum">     281 </span>            : extern int __REDIRECT_NTH (__ttyname_r_alias, (int __fd, char *__buf,
+<span class="lineNum">     282 </span>            :                                                size_t __buflen), ttyname_r)
+<span class="lineNum">     283 </span>            :      __nonnull ((2));
+<span class="lineNum">     284 </span>            : extern int __REDIRECT_NTH (__ttyname_r_chk_warn,
+<span class="lineNum">     285 </span>            :                            (int __fd, char *__buf, size_t __buflen,
+<span class="lineNum">     286 </span>            :                             size_t __nreal), __ttyname_r_chk)
+<span class="lineNum">     287 </span>            :      __nonnull ((2)) __warnattr (&quot;ttyname_r called with bigger buflen than &quot;
+<span class="lineNum">     288 </span>            :                                  &quot;size of destination buffer&quot;);
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span>            : __fortify_function int
+<span class="lineNum">     291 </span>            : __NTH (ttyname_r (int __fd, char *__buf, size_t __buflen))
+<span class="lineNum">     292 </span>            : {
+<span class="lineNum">     293 </span>            :   if (__bos (__buf) != (size_t) -1)
+<span class="lineNum">     294 </span>            :     {
+<span class="lineNum">     295 </span>            :       if (!__builtin_constant_p (__buflen))
+<span class="lineNum">     296 </span>            :         return __ttyname_r_chk (__fd, __buf, __buflen, __bos (__buf));
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            :       if (__buflen &gt; __bos (__buf))
+<span class="lineNum">     299 </span>            :         return __ttyname_r_chk_warn (__fd, __buf, __buflen, __bos (__buf));
+<span class="lineNum">     300 </span>            :     }
+<span class="lineNum">     301 </span>            :   return __ttyname_r_alias (__fd, __buf, __buflen);
+<span class="lineNum">     302 </span>            : }
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span>            : 
+<span class="lineNum">     305 </span>            : #if defined __USE_REENTRANT || defined __USE_POSIX199506
+<span class="lineNum">     306 </span>            : extern int __getlogin_r_chk (char *__buf, size_t __buflen, size_t __nreal)
+<span class="lineNum">     307 </span>            :      __nonnull ((1));
+<span class="lineNum">     308 </span>            : extern int __REDIRECT (__getlogin_r_alias, (char *__buf, size_t __buflen),
+<span class="lineNum">     309 </span>            :                        getlogin_r) __nonnull ((1));
+<span class="lineNum">     310 </span>            : extern int __REDIRECT (__getlogin_r_chk_warn,
+<span class="lineNum">     311 </span>            :                        (char *__buf, size_t __buflen, size_t __nreal),
+<span class="lineNum">     312 </span>            :                        __getlogin_r_chk)
+<span class="lineNum">     313 </span>            :      __nonnull ((1)) __warnattr (&quot;getlogin_r called with bigger buflen than &quot;
+<span class="lineNum">     314 </span>            :                                  &quot;size of destination buffer&quot;);
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span>            : __fortify_function int
+<span class="lineNum">     317 </span>            : getlogin_r (char *__buf, size_t __buflen)
+<span class="lineNum">     318 </span>            : {
+<span class="lineNum">     319 </span>            :   if (__bos (__buf) != (size_t) -1)
+<span class="lineNum">     320 </span>            :     {
+<span class="lineNum">     321 </span>            :       if (!__builtin_constant_p (__buflen))
+<span class="lineNum">     322 </span>            :         return __getlogin_r_chk (__buf, __buflen, __bos (__buf));
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span>            :       if (__buflen &gt; __bos (__buf))
+<span class="lineNum">     325 </span>            :         return __getlogin_r_chk_warn (__buf, __buflen, __bos (__buf));
+<span class="lineNum">     326 </span>            :     }
+<span class="lineNum">     327 </span>            :   return __getlogin_r_alias (__buf, __buflen);
+<span class="lineNum">     328 </span>            : }
+<span class="lineNum">     329 </span>            : #endif
+<span class="lineNum">     330 </span>            : 
+<span class="lineNum">     331 </span>            : 
+<span class="lineNum">     332 </span>            : #if defined __USE_MISC || defined __USE_UNIX98
+<span class="lineNum">     333 </span>            : extern int __gethostname_chk (char *__buf, size_t __buflen, size_t __nreal)
+<span class="lineNum">     334 </span>            :      __THROW __nonnull ((1));
+<span class="lineNum">     335 </span>            : extern int __REDIRECT_NTH (__gethostname_alias, (char *__buf, size_t __buflen),
+<span class="lineNum">     336 </span>            :                            gethostname) __nonnull ((1));
+<span class="lineNum">     337 </span>            : extern int __REDIRECT_NTH (__gethostname_chk_warn,
+<span class="lineNum">     338 </span>            :                            (char *__buf, size_t __buflen, size_t __nreal),
+<span class="lineNum">     339 </span>            :                            __gethostname_chk)
+<span class="lineNum">     340 </span>            :      __nonnull ((1)) __warnattr (&quot;gethostname called with bigger buflen than &quot;
+<span class="lineNum">     341 </span>            :                                  &quot;size of destination buffer&quot;);
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span>            : __fortify_function int
+<span class="lineNum">     344 </span>            : __NTH (gethostname (char *__buf, size_t __buflen))
+<span class="lineNum">     345 </span>            : {
+<span class="lineNum">     346 </span>            :   if (__bos (__buf) != (size_t) -1)
+<span class="lineNum">     347 </span>            :     {
+<span class="lineNum">     348 </span>            :       if (!__builtin_constant_p (__buflen))
+<span class="lineNum">     349 </span>            :         return __gethostname_chk (__buf, __buflen, __bos (__buf));
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span>            :       if (__buflen &gt; __bos (__buf))
+<span class="lineNum">     352 </span>            :         return __gethostname_chk_warn (__buf, __buflen, __bos (__buf));
+<span class="lineNum">     353 </span>            :     }
+<span class="lineNum">     354 </span>            :   return __gethostname_alias (__buf, __buflen);
+<span class="lineNum">     355 </span>            : }
+<span class="lineNum">     356 </span>            : #endif
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span>            : 
+<span class="lineNum">     359 </span>            : #if defined __USE_MISC || (defined __USE_XOPEN &amp;&amp; !defined __USE_UNIX98)
+<span class="lineNum">     360 </span>            : extern int __getdomainname_chk (char *__buf, size_t __buflen, size_t __nreal)
+<span class="lineNum">     361 </span>            :      __THROW __nonnull ((1)) __wur;
+<span class="lineNum">     362 </span>            : extern int __REDIRECT_NTH (__getdomainname_alias, (char *__buf,
+<span class="lineNum">     363 </span>            :                                                    size_t __buflen),
+<span class="lineNum">     364 </span>            :                            getdomainname) __nonnull ((1)) __wur;
+<span class="lineNum">     365 </span>            : extern int __REDIRECT_NTH (__getdomainname_chk_warn,
+<span class="lineNum">     366 </span>            :                            (char *__buf, size_t __buflen, size_t __nreal),
+<span class="lineNum">     367 </span>            :                            __getdomainname_chk)
+<span class="lineNum">     368 </span>            :      __nonnull ((1)) __wur __warnattr (&quot;getdomainname called with bigger &quot;
+<span class="lineNum">     369 </span>            :                                        &quot;buflen than size of destination &quot;
+<span class="lineNum">     370 </span>            :                                        &quot;buffer&quot;);
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span>            : __fortify_function int
+<span class="lineNum">     373 </span>            : __NTH (getdomainname (char *__buf, size_t __buflen))
+<span class="lineNum">     374 </span>            : {
+<span class="lineNum">     375 </span>            :   if (__bos (__buf) != (size_t) -1)
+<span class="lineNum">     376 </span>            :     {
+<span class="lineNum">     377 </span>            :       if (!__builtin_constant_p (__buflen))
+<span class="lineNum">     378 </span>            :         return __getdomainname_chk (__buf, __buflen, __bos (__buf));
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span>            :       if (__buflen &gt; __bos (__buf))
+<span class="lineNum">     381 </span>            :         return __getdomainname_chk_warn (__buf, __buflen, __bos (__buf));
+<span class="lineNum">     382 </span>            :     }
+<span class="lineNum">     383 </span>            :   return __getdomainname_alias (__buf, __buflen);
+<span class="lineNum">     384 </span>            : }
+<span class="lineNum">     385 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

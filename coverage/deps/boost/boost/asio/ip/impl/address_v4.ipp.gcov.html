@@ -1,0 +1,256 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/ip/impl/address_v4.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/ip/impl</a> - address_v4.ipp<span style="font-size: 80%;"> (source / <a href="address_v4.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">27</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntryHi">93.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // ip/impl/address_v4.ipp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_IP_IMPL_ADDRESS_V4_IPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_IP_IMPL_ADDRESS_V4_IPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;climits&gt;
+<span class="lineNum">      20 </span>            : #include &lt;stdexcept&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/asio/error.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/asio/detail/socket_ops.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/asio/detail/throw_error.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/detail/throw_exception.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/ip/address_v4.hpp&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace boost {
+<span class="lineNum">      30 </span>            : namespace asio {
+<span class="lineNum">      31 </span>            : namespace ip {
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : address_v4::address_v4(const address_v4::bytes_type&amp; bytes)
+<span class="lineNum">      34 </span>            : {
+<span class="lineNum">      35 </span>            : #if UCHAR_MAX &gt; 0xFF
+<span class="lineNum">      36 </span>            :   if (bytes[0] &gt; 0xFF || bytes[1] &gt; 0xFF
+<span class="lineNum">      37 </span>            :       || bytes[2] &gt; 0xFF || bytes[3] &gt; 0xFF)
+<span class="lineNum">      38 </span>            :   {
+<span class="lineNum">      39 </span>            :     std::out_of_range ex(&quot;address_v4 from bytes_type&quot;);
+<span class="lineNum">      40 </span>            :     boost::asio::detail::throw_exception(ex);
+<span class="lineNum">      41 </span>            :   }
+<span class="lineNum">      42 </span>            : #endif // UCHAR_MAX &gt; 0xFF
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            :   using namespace std; // For memcpy.
+<span class="lineNum">      45 </span><span class="lineCov">         97 :   memcpy(&amp;addr_.s_addr, bytes.data(), 4);</span>
+<a name="46"><span class="lineNum">      46 </span>            : }</a>
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span><span class="lineCov">        466 : address_v4::address_v4(unsigned long addr)</span>
+<span class="lineNum">      49 </span>            : {
+<span class="lineNum">      50 </span>            : #if ULONG_MAX &gt; 0xFFFFFFFF
+<span class="lineNum">      51 </span><span class="lineCov">        466 :   if (addr &gt; 0xFFFFFFFF)</span>
+<span class="lineNum">      52 </span>            :   {
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 :     std::out_of_range ex(&quot;address_v4 from unsigned long&quot;);</span>
+<span class="lineNum">      54 </span><span class="lineNoCov">          0 :     boost::asio::detail::throw_exception(ex);</span>
+<span class="lineNum">      55 </span>            :   }
+<span class="lineNum">      56 </span>            : #endif // ULONG_MAX &gt; 0xFFFFFFFF
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span><span class="lineCov">        932 :   addr_.s_addr = boost::asio::detail::socket_ops::host_to_network_long(</span>
+<span class="lineNum">      59 </span><span class="lineCov">        466 :       static_cast&lt;boost::asio::detail::u_long_type&gt;(addr));</span>
+<span class="lineNum">      60 </span><span class="lineCov">        466 : }</span>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : address_v4::bytes_type address_v4::to_bytes() const
+<span class="lineNum">      63 </span>            : {
+<span class="lineNum">      64 </span>            :   using namespace std; // For memcpy.
+<span class="lineNum">      65 </span>            :   bytes_type bytes;
+<span class="lineNum">      66 </span>            : #if defined(BOOST_ASIO_HAS_STD_ARRAY)
+<span class="lineNum">      67 </span><span class="lineCov">        356 :   memcpy(bytes.data(), &amp;addr_.s_addr, 4);</span>
+<span class="lineNum">      68 </span>            : #else // defined(BOOST_ASIO_HAS_STD_ARRAY)
+<span class="lineNum">      69 </span>            :   memcpy(bytes.elems, &amp;addr_.s_addr, 4);
+<span class="lineNum">      70 </span>            : #endif // defined(BOOST_ASIO_HAS_STD_ARRAY)
+<span class="lineNum">      71 </span>            :   return bytes;
+<span class="lineNum">      72 </span>            : }
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : unsigned long address_v4::to_ulong() const
+<span class="lineNum">      75 </span>            : {
+<span class="lineNum">      76 </span><span class="lineCov">       1386 :   return boost::asio::detail::socket_ops::network_to_host_long(addr_.s_addr);</span>
+<a name="77"><span class="lineNum">      77 </span>            : }</a>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineCov">        127 : std::string address_v4::to_string() const</span>
+<span class="lineNum">      80 </span>            : {
+<span class="lineNum">      81 </span><span class="lineCov">        127 :   boost::system::error_code ec;</span>
+<span class="lineNum">      82 </span><span class="lineCov">        127 :   std::string addr = to_string(ec);</span>
+<span class="lineNum">      83 </span><span class="lineCov">        127 :   boost::asio::detail::throw_error(ec);</span>
+<span class="lineNum">      84 </span><span class="lineCov">        127 :   return addr;</span>
+<a name="85"><span class="lineNum">      85 </span>            : }</a>
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineCov">        127 : std::string address_v4::to_string(boost::system::error_code&amp; ec) const</span>
+<span class="lineNum">      88 </span>            : {
+<span class="lineNum">      89 </span>            :   char addr_str[boost::asio::detail::max_addr_v4_str_len];
+<span class="lineNum">      90 </span>            :   const char* addr =
+<span class="lineNum">      91 </span><span class="lineCov">        127 :     boost::asio::detail::socket_ops::inet_ntop(</span>
+<span class="lineNum">      92 </span>            :         BOOST_ASIO_OS_DEF(AF_INET), &amp;addr_, addr_str,
+<span class="lineNum">      93 </span><span class="lineCov">        127 :         boost::asio::detail::max_addr_v4_str_len, 0, ec);</span>
+<span class="lineNum">      94 </span><span class="lineCov">        127 :   if (addr == 0)</span>
+<span class="lineNum">      95 </span>            :     return std::string();
+<span class="lineNum">      96 </span><span class="lineCov">        254 :   return addr;</span>
+<a name="97"><span class="lineNum">      97 </span>            : }</a>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineCov">          2 : address_v4 address_v4::from_string(const char* str)</span>
+<span class="lineNum">     100 </span>            : {
+<span class="lineNum">     101 </span><span class="lineCov">          2 :   boost::system::error_code ec;</span>
+<span class="lineNum">     102 </span><span class="lineCov">          2 :   address_v4 addr = from_string(str, ec);</span>
+<span class="lineNum">     103 </span><span class="lineCov">          2 :   boost::asio::detail::throw_error(ec);</span>
+<span class="lineNum">     104 </span><span class="lineCov">          2 :   return addr;</span>
+<a name="105"><span class="lineNum">     105 </span>            : }</a>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span><span class="lineCov">        134 : address_v4 address_v4::from_string(</span>
+<span class="lineNum">     108 </span>            :     const char* str, boost::system::error_code&amp; ec)
+<span class="lineNum">     109 </span>            : {
+<span class="lineNum">     110 </span><span class="lineCov">        134 :   address_v4 tmp;</span>
+<span class="lineNum">     111 </span><span class="lineCov">        134 :   if (boost::asio::detail::socket_ops::inet_pton(</span>
+<span class="lineNum">     112 </span>            :         BOOST_ASIO_OS_DEF(AF_INET), str, &amp;tmp.addr_, 0, ec) &lt;= 0)
+<span class="lineNum">     113 </span>            :     return address_v4();
+<span class="lineNum">     114 </span>            :   return tmp;
+<span class="lineNum">     115 </span>            : }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            : address_v4 address_v4::from_string(const std::string&amp; str)
+<span class="lineNum">     118 </span>            : {
+<span class="lineNum">     119 </span>            :   return from_string(str.c_str());
+<span class="lineNum">     120 </span>            : }
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span>            : address_v4 address_v4::from_string(
+<span class="lineNum">     123 </span>            :     const std::string&amp; str, boost::system::error_code&amp; ec)
+<span class="lineNum">     124 </span>            : {
+<span class="lineNum">     125 </span>            :   return from_string(str.c_str(), ec);
+<span class="lineNum">     126 </span>            : }
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : bool address_v4::is_loopback() const
+<span class="lineNum">     129 </span>            : {
+<span class="lineNum">     130 </span>            :   return (to_ulong() &amp; 0xFF000000) == 0x7F000000;
+<span class="lineNum">     131 </span>            : }
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span>            : bool address_v4::is_unspecified() const
+<span class="lineNum">     134 </span>            : {
+<span class="lineNum">     135 </span><span class="lineCov">        278 :   return to_ulong() == 0;</span>
+<span class="lineNum">     136 </span>            : }
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            : bool address_v4::is_class_a() const
+<span class="lineNum">     139 </span>            : {
+<span class="lineNum">     140 </span>            :   return (to_ulong() &amp; 0x80000000) == 0;
+<span class="lineNum">     141 </span>            : }
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            : bool address_v4::is_class_b() const
+<span class="lineNum">     144 </span>            : {
+<span class="lineNum">     145 </span>            :   return (to_ulong() &amp; 0xC0000000) == 0x80000000;
+<span class="lineNum">     146 </span>            : }
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            : bool address_v4::is_class_c() const
+<span class="lineNum">     149 </span>            : {
+<span class="lineNum">     150 </span>            :   return (to_ulong() &amp; 0xE0000000) == 0xC0000000;
+<span class="lineNum">     151 </span>            : }
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            : bool address_v4::is_multicast() const
+<span class="lineNum">     154 </span>            : {
+<span class="lineNum">     155 </span>            :   return (to_ulong() &amp; 0xF0000000) == 0xE0000000;
+<span class="lineNum">     156 </span>            : }
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            : address_v4 address_v4::broadcast(const address_v4&amp; addr, const address_v4&amp; mask)
+<span class="lineNum">     159 </span>            : {
+<span class="lineNum">     160 </span>            :   return address_v4(addr.to_ulong() | (mask.to_ulong() ^ 0xFFFFFFFF));
+<span class="lineNum">     161 </span>            : }
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            : address_v4 address_v4::netmask(const address_v4&amp; addr)
+<span class="lineNum">     164 </span>            : {
+<span class="lineNum">     165 </span>            :   if (addr.is_class_a())
+<span class="lineNum">     166 </span>            :     return address_v4(0xFF000000);
+<span class="lineNum">     167 </span>            :   if (addr.is_class_b())
+<span class="lineNum">     168 </span>            :     return address_v4(0xFFFF0000);
+<span class="lineNum">     169 </span>            :   if (addr.is_class_c())
+<span class="lineNum">     170 </span>            :     return address_v4(0xFFFFFF00);
+<span class="lineNum">     171 </span>            :   return address_v4(0xFFFFFFFF);
+<span class="lineNum">     172 </span>            : }
+<span class="lineNum">     173 </span>            : 
+<span class="lineNum">     174 </span>            : } // namespace ip
+<span class="lineNum">     175 </span>            : } // namespace asio
+<span class="lineNum">     176 </span>            : } // namespace boost
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     179 </span>            : 
+<span class="lineNum">     180 </span>            : #endif // BOOST_ASIO_IP_IMPL_ADDRESS_V4_IPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,2094 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/bits/hashtable_policy.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5/bits</a> - hashtable_policy.h<span style="font-size: 80%;"> (source / <a href="hashtable_policy.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">155</td>
+            <td class="headerCovTableEntry">167</td>
+            <td class="headerCovTableEntryHi">92.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">206</td>
+            <td class="headerCovTableEntry">449</td>
+            <td class="headerCovTableEntryLo">45.9 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Internal policy header for unordered_set and unordered_map -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2010-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file bits/hashtable_policy.h
+<span class="lineNum">      26 </span>            :  *  This is an internal header file, included by other library headers.
+<span class="lineNum">      27 </span>            :  *  Do not attempt to use it directly.
+<span class="lineNum">      28 </span>            :  *  @headername{unordered_map,unordered_set}
+<span class="lineNum">      29 </span>            :  */
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span>            : #ifndef _HASHTABLE_POLICY_H
+<span class="lineNum">      32 </span>            : #define _HASHTABLE_POLICY_H 1
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">      39 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">      40 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">      41 </span>            :            typename _RehashPolicy, typename _Traits&gt;
+<span class="lineNum">      42 </span>            :     class _Hashtable;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : namespace __detail
+<span class="lineNum">      47 </span>            : {
+<span class="lineNum">      48 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            :   /**
+<span class="lineNum">      51 </span>            :    *  @defgroup hashtable-detail Base and Implementation Classes
+<span class="lineNum">      52 </span>            :    *  @ingroup unordered_associative_containers
+<span class="lineNum">      53 </span>            :    *  @{
+<span class="lineNum">      54 </span>            :    */
+<span class="lineNum">      55 </span>            :   template&lt;typename _Key, typename _Value,
+<span class="lineNum">      56 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">      57 </span>            :            typename _H1, typename _H2, typename _Hash, typename _Traits&gt;
+<span class="lineNum">      58 </span>            :     struct _Hashtable_base;
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :   // Helper function: return distance(first, last) for forward
+<span class="lineNum">      61 </span>            :   // iterators, or 0 for input iterators.
+<span class="lineNum">      62 </span>            :   template&lt;class _Iterator&gt;
+<span class="lineNum">      63 </span>            :     inline typename std::iterator_traits&lt;_Iterator&gt;::difference_type
+<span class="lineNum">      64 </span>            :     __distance_fw(_Iterator __first, _Iterator __last,
+<span class="lineNum">      65 </span>            :                   std::input_iterator_tag)
+<span class="lineNum">      66 </span>            :     { return 0; }
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            :   template&lt;class _Iterator&gt;
+<span class="lineNum">      69 </span>            :     inline typename std::iterator_traits&lt;_Iterator&gt;::difference_type
+<span class="lineNum">      70 </span>            :     __distance_fw(_Iterator __first, _Iterator __last,
+<span class="lineNum">      71 </span>            :                   std::forward_iterator_tag)
+<span class="lineNum">      72 </span><span class="lineCov">      27043 :     { return std::distance(__first, __last); }</span>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :   template&lt;class _Iterator&gt;
+<span class="lineNum">      75 </span>            :     inline typename std::iterator_traits&lt;_Iterator&gt;::difference_type
+<span class="lineNum">      76 </span>            :     __distance_fw(_Iterator __first, _Iterator __last)
+<span class="lineNum">      77 </span>            :     {
+<span class="lineNum">      78 </span>            :       typedef typename std::iterator_traits&lt;_Iterator&gt;::iterator_category _Tag;
+<span class="lineNum">      79 </span><span class="lineCov">      54086 :       return __distance_fw(__first, __last, _Tag());</span>
+<span class="lineNum">      80 </span>            :     }
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :   // Helper type used to detect whether the hash functor is noexcept.
+<span class="lineNum">      83 </span>            :   template &lt;typename _Key, typename _Hash&gt;
+<span class="lineNum">      84 </span>            :     struct __is_noexcept_hash : std::__bool_constant&lt;
+<span class="lineNum">      85 </span>            :         noexcept(declval&lt;const _Hash&amp;&gt;()(declval&lt;const _Key&amp;&gt;()))&gt;
+<span class="lineNum">      86 </span>            :     { };
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            :   struct _Identity
+<span class="lineNum">      89 </span>            :   {
+<span class="lineNum">      90 </span>            :     template&lt;typename _Tp&gt;
+<span class="lineNum">      91 </span>            :       _Tp&amp;&amp;
+<span class="lineNum">      92 </span>            :       operator()(_Tp&amp;&amp; __x) const
+<span class="lineNum">      93 </span><span class="lineCov">     592637 :       { return std::forward&lt;_Tp&gt;(__x); }</span>
+<span class="lineNum">      94 </span>            :   };
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            :   struct _Select1st
+<span class="lineNum">      97 </span>            :   {
+<span class="lineNum">      98 </span>            :     template&lt;typename _Tp&gt;
+<span class="lineNum">      99 </span>            :       auto
+<span class="lineNum">     100 </span>            :       operator()(_Tp&amp;&amp; __x) const
+<span class="lineNum">     101 </span>            :       -&gt; decltype(std::get&lt;0&gt;(std::forward&lt;_Tp&gt;(__x)))
+<span class="lineNum">     102 </span><span class="lineCov">   21263746 :       { return std::get&lt;0&gt;(std::forward&lt;_Tp&gt;(__x)); }</span>
+<span class="lineNum">     103 </span>            :   };
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            :   template&lt;typename _NodeAlloc&gt;
+<span class="lineNum">     106 </span>            :     struct _Hashtable_alloc;
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :   // Functor recycling a pool of nodes and using allocation once the pool is
+<span class="lineNum">     109 </span>            :   // empty.
+<span class="lineNum">     110 </span>            :   template&lt;typename _NodeAlloc&gt;
+<span class="lineNum">     111 </span>            :     struct _ReuseOrAllocNode
+<span class="lineNum">     112 </span>            :     {
+<span class="lineNum">     113 </span>            :     private:
+<span class="lineNum">     114 </span>            :       using __node_alloc_type = _NodeAlloc;
+<span class="lineNum">     115 </span>            :       using __hashtable_alloc = _Hashtable_alloc&lt;__node_alloc_type&gt;;
+<span class="lineNum">     116 </span>            :       using __value_alloc_type = typename __hashtable_alloc::__value_alloc_type;
+<span class="lineNum">     117 </span>            :       using __value_alloc_traits =
+<span class="lineNum">     118 </span>            :         typename __hashtable_alloc::__value_alloc_traits;
+<span class="lineNum">     119 </span>            :       using __node_alloc_traits =
+<span class="lineNum">     120 </span>            :         typename __hashtable_alloc::__node_alloc_traits;
+<span class="lineNum">     121 </span>            :       using __node_type = typename __hashtable_alloc::__node_type;
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            :     public:
+<span class="lineNum">     124 </span>            :       _ReuseOrAllocNode(__node_type* __nodes, __hashtable_alloc&amp; __h)
+<span class="lineNum">     125 </span><span class="lineCov">    1304914 :         : _M_nodes(__nodes), _M_h(__h) { }</span>
+<span class="lineNum">     126 </span>            :       _ReuseOrAllocNode(const _ReuseOrAllocNode&amp;) = delete;
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            :       ~_ReuseOrAllocNode()
+<span class="lineNum">     129 </span><span class="lineCov">    2453074 :       { _M_h._M_deallocate_nodes(_M_nodes); }</span>
+<span class="lineNum">     130 </span>            : 
+<a name="131"><span class="lineNum">     131 </span>            :       template&lt;typename _Arg&gt;</a>
+<span class="lineNum">     132 </span>            :         __node_type*
+<span class="lineNum">     133 </span><span class="lineCov">   10691894 :         operator()(_Arg&amp;&amp; __arg) const</span>
+<span class="lineNum">     134 </span>            :         {
+<span class="lineNum">     135 </span><span class="lineCov">   10691894 :           if (_M_nodes)</span>
+<span class="lineNum">     136 </span>            :             {
+<span class="lineNum">     137 </span><span class="lineCov">     923870 :               __node_type* __node = _M_nodes;</span>
+<span class="lineNum">     138 </span><span class="lineCov">     923870 :               _M_nodes = _M_nodes-&gt;_M_next();</span>
+<span class="lineNum">     139 </span><span class="lineCov">     923870 :               __node-&gt;_M_nxt = nullptr;</span>
+<span class="lineNum">     140 </span><span class="lineCov">    2771610 :               __value_alloc_type __a(_M_h._M_node_allocator());</span>
+<span class="lineNum">     141 </span><span class="lineCov">    2771610 :               __value_alloc_traits::destroy(__a, __node-&gt;_M_valptr());</span>
+<span class="lineNum">     142 </span>            :               __try
+<span class="lineNum">     143 </span>            :                 {
+<span class="lineNum">     144 </span><span class="lineCov">    1847740 :                   __value_alloc_traits::construct(__a, __node-&gt;_M_valptr(),</span>
+<span class="lineNum">     145 </span><span class="lineCov">     923870 :                                                   std::forward&lt;_Arg&gt;(__arg));</span>
+<span class="lineNum">     146 </span>            :                 }
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :               __catch(...)</span>
+<span class="lineNum">     148 </span>            :                 {
+<span class="lineNum">     149 </span>            :                   __node-&gt;~__node_type();
+<span class="lineNum">     150 </span><span class="lineNoCov">          0 :                   __node_alloc_traits::deallocate(_M_h._M_node_allocator(),</span>
+<span class="lineNum">     151 </span>            :                                                   __node, 1);
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :                   __throw_exception_again;</span>
+<span class="lineNum">     153 </span>            :                 }
+<span class="lineNum">     154 </span>            :               return __node;
+<span class="lineNum">     155 </span>            :             }
+<span class="lineNum">     156 </span><span class="lineCov">    9768024 :           return _M_h._M_allocate_node(std::forward&lt;_Arg&gt;(__arg));</span>
+<span class="lineNum">     157 </span>            :         }
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :     private:
+<span class="lineNum">     160 </span>            :       mutable __node_type* _M_nodes;
+<span class="lineNum">     161 </span>            :       __hashtable_alloc&amp; _M_h;
+<span class="lineNum">     162 </span>            :     };
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :   // Functor similar to the previous one but without any pool of nodes to
+<span class="lineNum">     165 </span>            :   // recycle.
+<span class="lineNum">     166 </span>            :   template&lt;typename _NodeAlloc&gt;
+<span class="lineNum">     167 </span>            :     struct _AllocNode
+<span class="lineNum">     168 </span>            :     {
+<span class="lineNum">     169 </span>            :     private:
+<span class="lineNum">     170 </span>            :       using __hashtable_alloc = _Hashtable_alloc&lt;_NodeAlloc&gt;;
+<span class="lineNum">     171 </span>            :       using __node_type = typename __hashtable_alloc::__node_type;
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :     public:
+<span class="lineNum">     174 </span>            :       _AllocNode(__hashtable_alloc&amp; __h)
+<span class="lineNum">     175 </span><span class="lineCov">     525288 :         : _M_h(__h) { }</span>
+<span class="lineNum">     176 </span>            : 
+<span class="lineNum">     177 </span>            :       template&lt;typename _Arg&gt;
+<span class="lineNum">     178 </span>            :         __node_type*
+<span class="lineNum">     179 </span>            :         operator()(_Arg&amp;&amp; __arg) const
+<span class="lineNum">     180 </span><span class="lineCov">     519475 :         { return _M_h._M_allocate_node(std::forward&lt;_Arg&gt;(__arg)); }</span>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            :     private:
+<span class="lineNum">     183 </span>            :       __hashtable_alloc&amp; _M_h;
+<span class="lineNum">     184 </span>            :     };
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :   // Auxiliary types used for all instantiations of _Hashtable nodes
+<span class="lineNum">     187 </span>            :   // and iterators.
+<span class="lineNum">     188 </span>            : 
+<span class="lineNum">     189 </span>            :   /**
+<span class="lineNum">     190 </span>            :    *  struct _Hashtable_traits
+<span class="lineNum">     191 </span>            :    *
+<span class="lineNum">     192 </span>            :    *  Important traits for hash tables.
+<span class="lineNum">     193 </span>            :    *
+<span class="lineNum">     194 </span>            :    *  @tparam _Cache_hash_code  Boolean value. True if the value of
+<span class="lineNum">     195 </span>            :    *  the hash function is stored along with the value. This is a
+<span class="lineNum">     196 </span>            :    *  time-space tradeoff.  Storing it may improve lookup speed by
+<span class="lineNum">     197 </span>            :    *  reducing the number of times we need to call the _Equal
+<span class="lineNum">     198 </span>            :    *  function.
+<span class="lineNum">     199 </span>            :    *
+<span class="lineNum">     200 </span>            :    *  @tparam _Constant_iterators  Boolean value. True if iterator and
+<span class="lineNum">     201 </span>            :    *  const_iterator are both constant iterator types. This is true
+<span class="lineNum">     202 </span>            :    *  for unordered_set and unordered_multiset, false for
+<span class="lineNum">     203 </span>            :    *  unordered_map and unordered_multimap.
+<span class="lineNum">     204 </span>            :    *
+<span class="lineNum">     205 </span>            :    *  @tparam _Unique_keys  Boolean value. True if the return value
+<span class="lineNum">     206 </span>            :    *  of _Hashtable::count(k) is always at most one, false if it may
+<span class="lineNum">     207 </span>            :    *  be an arbitrary number. This is true for unordered_set and
+<span class="lineNum">     208 </span>            :    *  unordered_map, false for unordered_multiset and
+<span class="lineNum">     209 </span>            :    *  unordered_multimap.
+<span class="lineNum">     210 </span>            :    */
+<span class="lineNum">     211 </span>            :   template&lt;bool _Cache_hash_code, bool _Constant_iterators, bool _Unique_keys&gt;
+<span class="lineNum">     212 </span>            :     struct _Hashtable_traits
+<span class="lineNum">     213 </span>            :     {
+<span class="lineNum">     214 </span>            :       using __hash_cached = __bool_constant&lt;_Cache_hash_code&gt;;
+<span class="lineNum">     215 </span>            :       using __constant_iterators = __bool_constant&lt;_Constant_iterators&gt;;
+<span class="lineNum">     216 </span>            :       using __unique_keys = __bool_constant&lt;_Unique_keys&gt;;
+<span class="lineNum">     217 </span>            :     };
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            :   /**
+<span class="lineNum">     220 </span>            :    *  struct _Hash_node_base
+<span class="lineNum">     221 </span>            :    *
+<span class="lineNum">     222 </span>            :    *  Nodes, used to wrap elements stored in the hash table.  A policy
+<span class="lineNum">     223 </span>            :    *  template parameter of class template _Hashtable controls whether
+<span class="lineNum">     224 </span>            :    *  nodes also store a hash code. In some cases (e.g. strings) this
+<span class="lineNum">     225 </span>            :    *  may be a performance win.
+<span class="lineNum">     226 </span>            :    */
+<span class="lineNum">     227 </span>            :   struct _Hash_node_base
+<span class="lineNum">     228 </span>            :   {
+<span class="lineNum">     229 </span>            :     _Hash_node_base* _M_nxt;
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span><span class="lineCov">   16568773 :     _Hash_node_base() noexcept : _M_nxt() { }</span>
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span><span class="lineCov">         27 :     _Hash_node_base(_Hash_node_base* __next) noexcept : _M_nxt(__next) { }</span>
+<span class="lineNum">     234 </span>            :   };
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            :   /**
+<span class="lineNum">     237 </span>            :    *  struct _Hash_node_value_base
+<span class="lineNum">     238 </span>            :    *
+<span class="lineNum">     239 </span>            :    *  Node type with the value to store.
+<span class="lineNum">     240 </span>            :    */
+<span class="lineNum">     241 </span>            :   template&lt;typename _Value&gt;
+<span class="lineNum">     242 </span><span class="lineCov">   40017822 :     struct _Hash_node_value_base : _Hash_node_base</span>
+<span class="lineNum">     243 </span>            :     {
+<span class="lineNum">     244 </span>            :       typedef _Value value_type;
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            :       __gnu_cxx::__aligned_buffer&lt;_Value&gt; _M_storage;
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :       _Value*
+<span class="lineNum">     249 </span>            :       _M_valptr() noexcept
+<span class="lineNum">     250 </span><span class="lineCov">  115054320 :       { return _M_storage._M_ptr(); }</span>
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            :       const _Value*
+<span class="lineNum">     253 </span>            :       _M_valptr() const noexcept
+<span class="lineNum">     254 </span><span class="lineCov">   24976990 :       { return _M_storage._M_ptr(); }</span>
+<span class="lineNum">     255 </span>            : 
+<span class="lineNum">     256 </span>            :       _Value&amp;
+<span class="lineNum">     257 </span>            :       _M_v() noexcept
+<span class="lineNum">     258 </span><span class="lineCov">   19783873 :       { return *_M_valptr(); }</span>
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span>            :       const _Value&amp;
+<span class="lineNum">     261 </span>            :       _M_v() const noexcept
+<span class="lineNum">     262 </span><span class="lineCov">   12488495 :       { return *_M_valptr(); }</span>
+<span class="lineNum">     263 </span>            :     };
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span>            :   /**
+<span class="lineNum">     266 </span>            :    *  Primary template struct _Hash_node.
+<span class="lineNum">     267 </span>            :    */
+<span class="lineNum">     268 </span>            :   template&lt;typename _Value, bool _Cache_hash_code&gt;
+<span class="lineNum">     269 </span>            :     struct _Hash_node;
+<span class="lineNum">     270 </span>            : 
+<span class="lineNum">     271 </span>            :   /**
+<span class="lineNum">     272 </span>            :    *  Specialization for nodes with caches, struct _Hash_node.
+<span class="lineNum">     273 </span>            :    *
+<span class="lineNum">     274 </span>            :    *  Base class is __detail::_Hash_node_value_base.
+<span class="lineNum">     275 </span>            :    */
+<span class="lineNum">     276 </span>            :   template&lt;typename _Value&gt;
+<span class="lineNum">     277 </span><span class="lineCov">   26678546 :     struct _Hash_node&lt;_Value, true&gt; : _Hash_node_value_base&lt;_Value&gt;</span>
+<span class="lineNum">     278 </span>            :     {
+<span class="lineNum">     279 </span>            :       std::size_t  _M_hash_code;
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span>            :       _Hash_node*
+<span class="lineNum">     282 </span>            :       _M_next() const noexcept
+<span class="lineNum">     283 </span>            :       { return static_cast&lt;_Hash_node*&gt;(this-&gt;_M_nxt); }
+<span class="lineNum">     284 </span>            :     };
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            :   /**
+<span class="lineNum">     287 </span>            :    *  Specialization for nodes without caches, struct _Hash_node.
+<span class="lineNum">     288 </span>            :    *
+<span class="lineNum">     289 </span>            :    *  Base class is __detail::_Hash_node_value_base.
+<span class="lineNum">     290 </span>            :    */
+<span class="lineNum">     291 </span>            :   template&lt;typename _Value&gt;
+<span class="lineNum">     292 </span><span class="lineCov">          2 :     struct _Hash_node&lt;_Value, false&gt; : _Hash_node_value_base&lt;_Value&gt;</span>
+<span class="lineNum">     293 </span>            :     {
+<span class="lineNum">     294 </span>            :       _Hash_node*
+<span class="lineNum">     295 </span>            :       _M_next() const noexcept
+<span class="lineNum">     296 </span>            :       { return static_cast&lt;_Hash_node*&gt;(this-&gt;_M_nxt); }
+<span class="lineNum">     297 </span>            :     };
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span>            :   /// Base class for node iterators.
+<span class="lineNum">     300 </span>            :   template&lt;typename _Value, bool _Cache_hash_code&gt;
+<span class="lineNum">     301 </span>            :     struct _Node_iterator_base
+<span class="lineNum">     302 </span>            :     {
+<span class="lineNum">     303 </span>            :       using __node_type = _Hash_node&lt;_Value, _Cache_hash_code&gt;;
+<span class="lineNum">     304 </span>            : 
+<span class="lineNum">     305 </span>            :       __node_type*  _M_cur;
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            :       _Node_iterator_base(__node_type* __p) noexcept
+<span class="lineNum">     308 </span><span class="lineCov">    8085531 :       : _M_cur(__p) { }</span>
+<span class="lineNum">     309 </span>            : 
+<span class="lineNum">     310 </span>            :       void
+<span class="lineNum">     311 </span>            :       _M_incr() noexcept
+<span class="lineNum">     312 </span><span class="lineCov">    7585006 :       { _M_cur = _M_cur-&gt;_M_next(); }</span>
+<span class="lineNum">     313 </span>            :     };
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span>            :   template&lt;typename _Value, bool _Cache_hash_code&gt;
+<span class="lineNum">     316 </span>            :     inline bool
+<span class="lineNum">     317 </span>            :     operator==(const _Node_iterator_base&lt;_Value, _Cache_hash_code&gt;&amp; __x,
+<span class="lineNum">     318 </span>            :                const _Node_iterator_base&lt;_Value, _Cache_hash_code &gt;&amp; __y)
+<span class="lineNum">     319 </span>            :     noexcept
+<span class="lineNum">     320 </span>            :     { return __x._M_cur == __y._M_cur; }
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span>            :   template&lt;typename _Value, bool _Cache_hash_code&gt;
+<span class="lineNum">     323 </span>            :     inline bool
+<span class="lineNum">     324 </span>            :     operator!=(const _Node_iterator_base&lt;_Value, _Cache_hash_code&gt;&amp; __x,
+<span class="lineNum">     325 </span>            :                const _Node_iterator_base&lt;_Value, _Cache_hash_code&gt;&amp; __y)
+<span class="lineNum">     326 </span>            :     noexcept
+<span class="lineNum">     327 </span>            :     { return __x._M_cur != __y._M_cur; }
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span>            :   /// Node iterators, used to iterate through all the hashtable.
+<span class="lineNum">     330 </span>            :   template&lt;typename _Value, bool __constant_iterators, bool __cache&gt;
+<span class="lineNum">     331 </span>            :     struct _Node_iterator
+<span class="lineNum">     332 </span>            :     : public _Node_iterator_base&lt;_Value, __cache&gt;
+<span class="lineNum">     333 </span>            :     {
+<span class="lineNum">     334 </span>            :     private:
+<span class="lineNum">     335 </span>            :       using __base_type = _Node_iterator_base&lt;_Value, __cache&gt;;
+<span class="lineNum">     336 </span>            :       using __node_type = typename __base_type::__node_type;
+<span class="lineNum">     337 </span>            : 
+<span class="lineNum">     338 </span>            :     public:
+<span class="lineNum">     339 </span>            :       typedef _Value                                    value_type;
+<span class="lineNum">     340 </span>            :       typedef std::ptrdiff_t                            difference_type;
+<span class="lineNum">     341 </span>            :       typedef std::forward_iterator_tag                 iterator_category;
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span>            :       using pointer = typename std::conditional&lt;__constant_iterators,
+<span class="lineNum">     344 </span>            :                                                 const _Value*, _Value*&gt;::type;
+<span class="lineNum">     345 </span>            : 
+<span class="lineNum">     346 </span>            :       using reference = typename std::conditional&lt;__constant_iterators,
+<span class="lineNum">     347 </span>            :                                                   const _Value&amp;, _Value&amp;&gt;::type;
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span>            :       _Node_iterator() noexcept
+<span class="lineNum">     350 </span>            :       : __base_type(0) { }
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span>            :       explicit
+<span class="lineNum">     353 </span>            :       _Node_iterator(__node_type* __p) noexcept
+<span class="lineNum">     354 </span><span class="lineCov">   13322112 :       : __base_type(__p) { }</span>
+<span class="lineNum">     355 </span>            : 
+<span class="lineNum">     356 </span>            :       reference
+<span class="lineNum">     357 </span>            :       operator*() const noexcept
+<span class="lineNum">     358 </span><span class="lineCov">     488028 :       { return this-&gt;_M_cur-&gt;_M_v(); }</span>
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span>            :       pointer
+<span class="lineNum">     361 </span>            :       operator-&gt;() const noexcept
+<span class="lineNum">     362 </span><span class="lineCov">    8774750 :       { return this-&gt;_M_cur-&gt;_M_valptr(); }</span>
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span>            :       _Node_iterator&amp;
+<span class="lineNum">     365 </span>            :       operator++() noexcept
+<span class="lineNum">     366 </span>            :       {
+<span class="lineNum">     367 </span><span class="lineCov">     488028 :         this-&gt;_M_incr();</span>
+<span class="lineNum">     368 </span>            :         return *this;
+<span class="lineNum">     369 </span>            :       }
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span>            :       _Node_iterator
+<span class="lineNum">     372 </span>            :       operator++(int) noexcept
+<span class="lineNum">     373 </span>            :       {
+<span class="lineNum">     374 </span><span class="lineNoCov">          0 :         _Node_iterator __tmp(*this);</span>
+<span class="lineNum">     375 </span><span class="lineNoCov">          0 :         this-&gt;_M_incr();</span>
+<span class="lineNum">     376 </span>            :         return __tmp;
+<span class="lineNum">     377 </span>            :       }
+<span class="lineNum">     378 </span>            :     };
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span>            :   /// Node const_iterators, used to iterate through all the hashtable.
+<span class="lineNum">     381 </span>            :   template&lt;typename _Value, bool __constant_iterators, bool __cache&gt;
+<span class="lineNum">     382 </span>            :     struct _Node_const_iterator
+<span class="lineNum">     383 </span>            :     : public _Node_iterator_base&lt;_Value, __cache&gt;
+<span class="lineNum">     384 </span>            :     {
+<span class="lineNum">     385 </span>            :     private:
+<span class="lineNum">     386 </span>            :       using __base_type = _Node_iterator_base&lt;_Value, __cache&gt;;
+<span class="lineNum">     387 </span>            :       using __node_type = typename __base_type::__node_type;
+<span class="lineNum">     388 </span>            : 
+<span class="lineNum">     389 </span>            :     public:
+<span class="lineNum">     390 </span>            :       typedef _Value                                    value_type;
+<span class="lineNum">     391 </span>            :       typedef std::ptrdiff_t                            difference_type;
+<span class="lineNum">     392 </span>            :       typedef std::forward_iterator_tag                 iterator_category;
+<span class="lineNum">     393 </span>            : 
+<span class="lineNum">     394 </span>            :       typedef const _Value*                             pointer;
+<span class="lineNum">     395 </span>            :       typedef const _Value&amp;                         reference;
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span>            :       _Node_const_iterator() noexcept
+<span class="lineNum">     398 </span>            :       : __base_type(0) { }
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span>            :       explicit
+<span class="lineNum">     401 </span>            :       _Node_const_iterator(__node_type* __p) noexcept
+<span class="lineNum">     402 </span><span class="lineCov">   15540972 :       : __base_type(__p) { }</span>
+<span class="lineNum">     403 </span>            : 
+<span class="lineNum">     404 </span>            :       _Node_const_iterator(const _Node_iterator&lt;_Value, __constant_iterators,
+<span class="lineNum">     405 </span>            :                            __cache&gt;&amp; __x) noexcept
+<span class="lineNum">     406 </span><span class="lineCov">         52 :       : __base_type(__x._M_cur) { }</span>
+<span class="lineNum">     407 </span>            : 
+<span class="lineNum">     408 </span>            :       reference
+<span class="lineNum">     409 </span>            :       operator*() const noexcept
+<span class="lineNum">     410 </span><span class="lineCov">   14682000 :       { return this-&gt;_M_cur-&gt;_M_v(); }</span>
+<span class="lineNum">     411 </span>            : 
+<span class="lineNum">     412 </span>            :       pointer
+<span class="lineNum">     413 </span>            :       operator-&gt;() const noexcept
+<span class="lineNum">     414 </span><span class="lineCov">    9659266 :       { return this-&gt;_M_cur-&gt;_M_valptr(); }</span>
+<span class="lineNum">     415 </span>            : 
+<span class="lineNum">     416 </span>            :       _Node_const_iterator&amp;
+<span class="lineNum">     417 </span>            :       operator++() noexcept
+<span class="lineNum">     418 </span>            :       {
+<span class="lineNum">     419 </span><span class="lineCov">   14681984 :         this-&gt;_M_incr();</span>
+<span class="lineNum">     420 </span>            :         return *this;
+<span class="lineNum">     421 </span>            :       }
+<span class="lineNum">     422 </span>            : 
+<span class="lineNum">     423 </span>            :       _Node_const_iterator
+<span class="lineNum">     424 </span>            :       operator++(int) noexcept
+<span class="lineNum">     425 </span>            :       {
+<span class="lineNum">     426 </span>            :         _Node_const_iterator __tmp(*this);
+<span class="lineNum">     427 </span>            :         this-&gt;_M_incr();
+<span class="lineNum">     428 </span>            :         return __tmp;
+<span class="lineNum">     429 </span>            :       }
+<span class="lineNum">     430 </span>            :     };
+<span class="lineNum">     431 </span>            : 
+<span class="lineNum">     432 </span>            :   // Many of class template _Hashtable's template parameters are policy
+<span class="lineNum">     433 </span>            :   // classes.  These are defaults for the policies.
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span>            :   /// Default range hashing function: use division to fold a large number
+<span class="lineNum">     436 </span>            :   /// into the range [0, N).
+<span class="lineNum">     437 </span>            :   struct _Mod_range_hashing
+<span class="lineNum">     438 </span>            :   {
+<span class="lineNum">     439 </span>            :     typedef std::size_t first_argument_type;
+<span class="lineNum">     440 </span>            :     typedef std::size_t second_argument_type;
+<span class="lineNum">     441 </span>            :     typedef std::size_t result_type;
+<span class="lineNum">     442 </span>            : 
+<span class="lineNum">     443 </span>            :     result_type
+<span class="lineNum">     444 </span>            :     operator()(first_argument_type __num,
+<span class="lineNum">     445 </span>            :                second_argument_type __den) const noexcept
+<span class="lineNum">     446 </span><span class="lineCov">   31889118 :     { return __num % __den; }</span>
+<span class="lineNum">     447 </span>            :   };
+<span class="lineNum">     448 </span>            : 
+<span class="lineNum">     449 </span>            :   /// Default ranged hash function H.  In principle it should be a
+<span class="lineNum">     450 </span>            :   /// function object composed from objects of type H1 and H2 such that
+<span class="lineNum">     451 </span>            :   /// h(k, N) = h2(h1(k), N), but that would mean making extra copies of
+<span class="lineNum">     452 </span>            :   /// h1 and h2.  So instead we'll just use a tag to tell class template
+<span class="lineNum">     453 </span>            :   /// hashtable to do that composition.
+<span class="lineNum">     454 </span>            :   struct _Default_ranged_hash { };
+<span class="lineNum">     455 </span>            : 
+<span class="lineNum">     456 </span>            :   /// Default value for rehash policy.  Bucket size is (usually) the
+<span class="lineNum">     457 </span>            :   /// smallest prime that keeps the load factor small enough.
+<span class="lineNum">     458 </span>            :   struct _Prime_rehash_policy
+<span class="lineNum">     459 </span>            :   {
+<span class="lineNum">     460 </span>            :     _Prime_rehash_policy(float __z = 1.0) noexcept
+<span class="lineNum">     461 </span><span class="lineCov">    2035741 :     : _M_max_load_factor(__z), _M_next_resize(0) { }</span>
+<span class="lineNum">     462 </span>            : 
+<span class="lineNum">     463 </span>            :     float
+<span class="lineNum">     464 </span>            :     max_load_factor() const noexcept
+<span class="lineNum">     465 </span>            :     { return _M_max_load_factor; }
+<span class="lineNum">     466 </span>            : 
+<span class="lineNum">     467 </span>            :     // Return a bucket size no smaller than n.
+<span class="lineNum">     468 </span>            :     std::size_t
+<span class="lineNum">     469 </span>            :     _M_next_bkt(std::size_t __n) const;
+<span class="lineNum">     470 </span>            : 
+<span class="lineNum">     471 </span>            :     // Return a bucket count appropriate for n elements
+<span class="lineNum">     472 </span>            :     std::size_t
+<span class="lineNum">     473 </span>            :     _M_bkt_for_elements(std::size_t __n) const
+<span class="lineNum">     474 </span><span class="lineCov">      27043 :     { return __builtin_ceil(__n / (long double)_M_max_load_factor); }</span>
+<span class="lineNum">     475 </span>            : 
+<span class="lineNum">     476 </span>            :     // __n_bkt is current bucket count, __n_elt is current element count,
+<span class="lineNum">     477 </span>            :     // and __n_ins is number of elements to be inserted.  Do we need to
+<span class="lineNum">     478 </span>            :     // increase bucket count?  If so, return make_pair(true, n), where n
+<span class="lineNum">     479 </span>            :     // is the new bucket count.  If not, return make_pair(false, 0).
+<span class="lineNum">     480 </span>            :     std::pair&lt;bool, std::size_t&gt;
+<span class="lineNum">     481 </span>            :     _M_need_rehash(std::size_t __n_bkt, std::size_t __n_elt,
+<span class="lineNum">     482 </span>            :                    std::size_t __n_ins) const;
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span>            :     typedef std::size_t _State;
+<span class="lineNum">     485 </span>            : 
+<span class="lineNum">     486 </span>            :     _State
+<span class="lineNum">     487 </span>            :     _M_state() const
+<span class="lineNum">     488 </span>            :     { return _M_next_resize; }
+<span class="lineNum">     489 </span>            : 
+<span class="lineNum">     490 </span>            :     void
+<span class="lineNum">     491 </span>            :     _M_reset() noexcept
+<span class="lineNum">     492 </span><span class="lineCov">     154395 :     { _M_next_resize = 0; }</span>
+<span class="lineNum">     493 </span>            : 
+<span class="lineNum">     494 </span>            :     void
+<span class="lineNum">     495 </span>            :     _M_reset(_State __state)
+<span class="lineNum">     496 </span><span class="lineNoCov">          0 :     { _M_next_resize = __state; }</span>
+<span class="lineNum">     497 </span>            : 
+<span class="lineNum">     498 </span>            :     enum { _S_n_primes = sizeof(unsigned long) != 8 ? 256 : 256 + 48 };
+<span class="lineNum">     499 </span>            : 
+<span class="lineNum">     500 </span>            :     static const std::size_t _S_growth_factor = 2;
+<span class="lineNum">     501 </span>            : 
+<span class="lineNum">     502 </span>            :     float               _M_max_load_factor;
+<span class="lineNum">     503 </span>            :     mutable std::size_t _M_next_resize;
+<span class="lineNum">     504 </span>            :   };
+<span class="lineNum">     505 </span>            : 
+<span class="lineNum">     506 </span>            :   // Base classes for std::_Hashtable.  We define these base classes
+<span class="lineNum">     507 </span>            :   // because in some cases we want to do different things depending on
+<span class="lineNum">     508 </span>            :   // the value of a policy class.  In some cases the policy class
+<span class="lineNum">     509 </span>            :   // affects which member functions and nested typedefs are defined;
+<span class="lineNum">     510 </span>            :   // we handle that by specializing base class templates.  Several of
+<span class="lineNum">     511 </span>            :   // the base class templates need to access other members of class
+<span class="lineNum">     512 </span>            :   // template _Hashtable, so we use a variant of the &quot;Curiously
+<span class="lineNum">     513 </span>            :   // Recurring Template Pattern&quot; (CRTP) technique.
+<span class="lineNum">     514 </span>            : 
+<span class="lineNum">     515 </span>            :   /**
+<span class="lineNum">     516 </span>            :    *  Primary class template _Map_base.
+<span class="lineNum">     517 </span>            :    *
+<span class="lineNum">     518 </span>            :    *  If the hashtable has a value type of the form pair&lt;T1, T2&gt; and a
+<span class="lineNum">     519 </span>            :    *  key extraction policy (_ExtractKey) that returns the first part
+<span class="lineNum">     520 </span>            :    *  of the pair, the hashtable gets a mapped_type typedef.  If it
+<span class="lineNum">     521 </span>            :    *  satisfies those criteria and also has unique keys, then it also
+<span class="lineNum">     522 </span>            :    *  gets an operator[].
+<span class="lineNum">     523 </span>            :    */
+<span class="lineNum">     524 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">     525 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">     526 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">     527 </span>            :            typename _RehashPolicy, typename _Traits,
+<span class="lineNum">     528 </span>            :            bool _Unique_keys = _Traits::__unique_keys::value&gt;
+<span class="lineNum">     529 </span>            :     struct _Map_base { };
+<span class="lineNum">     530 </span>            : 
+<span class="lineNum">     531 </span>            :   /// Partial specialization, __unique_keys set to false.
+<span class="lineNum">     532 </span>            :   template&lt;typename _Key, typename _Pair, typename _Alloc, typename _Equal,
+<span class="lineNum">     533 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">     534 </span>            :            typename _RehashPolicy, typename _Traits&gt;
+<span class="lineNum">     535 </span>            :     struct _Map_base&lt;_Key, _Pair, _Alloc, _Select1st, _Equal,
+<span class="lineNum">     536 </span>            :                      _H1, _H2, _Hash, _RehashPolicy, _Traits, false&gt;
+<span class="lineNum">     537 </span>            :     {
+<span class="lineNum">     538 </span>            :       using mapped_type = typename std::tuple_element&lt;1, _Pair&gt;::type;
+<span class="lineNum">     539 </span>            :     };
+<span class="lineNum">     540 </span>            : 
+<span class="lineNum">     541 </span>            :   /// Partial specialization, __unique_keys set to true.
+<span class="lineNum">     542 </span>            :   template&lt;typename _Key, typename _Pair, typename _Alloc, typename _Equal,
+<span class="lineNum">     543 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">     544 </span>            :            typename _RehashPolicy, typename _Traits&gt;
+<span class="lineNum">     545 </span>            :     struct _Map_base&lt;_Key, _Pair, _Alloc, _Select1st, _Equal,
+<span class="lineNum">     546 </span>            :                      _H1, _H2, _Hash, _RehashPolicy, _Traits, true&gt;
+<span class="lineNum">     547 </span>            :     {
+<span class="lineNum">     548 </span>            :     private:
+<span class="lineNum">     549 </span>            :       using __hashtable_base = __detail::_Hashtable_base&lt;_Key, _Pair,
+<span class="lineNum">     550 </span>            :                                                          _Select1st,
+<span class="lineNum">     551 </span>            :                                                         _Equal, _H1, _H2, _Hash,
+<span class="lineNum">     552 </span>            :                                                           _Traits&gt;;
+<span class="lineNum">     553 </span>            : 
+<span class="lineNum">     554 </span>            :       using __hashtable = _Hashtable&lt;_Key, _Pair, _Alloc,
+<span class="lineNum">     555 </span>            :                                      _Select1st, _Equal,
+<span class="lineNum">     556 </span>            :                                      _H1, _H2, _Hash, _RehashPolicy, _Traits&gt;;
+<span class="lineNum">     557 </span>            : 
+<span class="lineNum">     558 </span>            :       using __hash_code = typename __hashtable_base::__hash_code;
+<span class="lineNum">     559 </span>            :       using __node_type = typename __hashtable_base::__node_type;
+<span class="lineNum">     560 </span>            : 
+<span class="lineNum">     561 </span>            :     public:
+<span class="lineNum">     562 </span>            :       using key_type = typename __hashtable_base::key_type;
+<span class="lineNum">     563 </span>            :       using iterator = typename __hashtable_base::iterator;
+<span class="lineNum">     564 </span>            :       using mapped_type = typename std::tuple_element&lt;1, _Pair&gt;::type;
+<span class="lineNum">     565 </span>            : 
+<span class="lineNum">     566 </span>            :       mapped_type&amp;
+<span class="lineNum">     567 </span>            :       operator[](const key_type&amp; __k);
+<span class="lineNum">     568 </span>            : 
+<span class="lineNum">     569 </span>            :       mapped_type&amp;
+<span class="lineNum">     570 </span>            :       operator[](key_type&amp;&amp; __k);
+<span class="lineNum">     571 </span>            : 
+<span class="lineNum">     572 </span>            :       // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     573 </span>            :       // DR 761. unordered_map needs an at() member function.
+<span class="lineNum">     574 </span>            :       mapped_type&amp;
+<span class="lineNum">     575 </span>            :       at(const key_type&amp; __k);
+<span class="lineNum">     576 </span>            : 
+<span class="lineNum">     577 </span>            :       const mapped_type&amp;
+<span class="lineNum">     578 </span>            :       at(const key_type&amp; __k) const;
+<span class="lineNum">     579 </span>            :     };
+<span class="lineNum">     580 </span>            : 
+<span class="lineNum">     581 </span>            :   template&lt;typename _Key, typename _Pair, typename _Alloc, typename _Equal,
+<span class="lineNum">     582 </span>            :            typename _H1, typename _H2, typename _Hash,
+<a name="583"><span class="lineNum">     583 </span>            :            typename _RehashPolicy, typename _Traits&gt;</a>
+<span class="lineNum">     584 </span>            :     auto
+<span class="lineNum">     585 </span><span class="lineCov">    2605281 :     _Map_base&lt;_Key, _Pair, _Alloc, _Select1st, _Equal,</span>
+<span class="lineNum">     586 </span>            :               _H1, _H2, _Hash, _RehashPolicy, _Traits, true&gt;::
+<span class="lineNum">     587 </span>            :     operator[](const key_type&amp; __k)
+<span class="lineNum">     588 </span>            :     -&gt; mapped_type&amp;
+<span class="lineNum">     589 </span>            :     {
+<span class="lineNum">     590 </span><span class="lineCov">    2605281 :       __hashtable* __h = static_cast&lt;__hashtable*&gt;(this);</span>
+<span class="lineNum">     591 </span><span class="lineCov">    5210562 :       __hash_code __code = __h-&gt;_M_hash_code(__k);</span>
+<span class="lineNum">     592 </span><span class="lineCov">    5210562 :       std::size_t __n = __h-&gt;_M_bucket_index(__k, __code);</span>
+<span class="lineNum">     593 </span><span class="lineCov">    2605284 :       __node_type* __p = __h-&gt;_M_find_node(__n, __k, __code);</span>
+<span class="lineNum">     594 </span>            : 
+<span class="lineNum">     595 </span><span class="lineCov">    2605281 :       if (!__p)</span>
+<span class="lineNum">     596 </span>            :         {
+<span class="lineNum">     597 </span><span class="lineCov">    1107397 :           __p = __h-&gt;_M_allocate_node(std::piecewise_construct,</span>
+<span class="lineNum">     598 </span>            :                                       std::tuple&lt;const key_type&amp;&gt;(__k),
+<span class="lineNum">     599 </span>            :                                       std::tuple&lt;&gt;());
+<span class="lineNum">     600 </span><span class="lineCov">    2214794 :           return __h-&gt;_M_insert_unique_node(__n, __code, __p)-&gt;second;</span>
+<span class="lineNum">     601 </span>            :         }
+<span class="lineNum">     602 </span>            : 
+<span class="lineNum">     603 </span><span class="lineCov">    2995768 :       return __p-&gt;_M_v().second;</span>
+<span class="lineNum">     604 </span>            :     }
+<span class="lineNum">     605 </span>            : 
+<span class="lineNum">     606 </span>            :   template&lt;typename _Key, typename _Pair, typename _Alloc, typename _Equal,
+<span class="lineNum">     607 </span>            :            typename _H1, typename _H2, typename _Hash,
+<a name="608"><span class="lineNum">     608 </span>            :            typename _RehashPolicy, typename _Traits&gt;</a>
+<span class="lineNum">     609 </span>            :     auto
+<span class="lineNum">     610 </span><span class="lineCov">      16646 :     _Map_base&lt;_Key, _Pair, _Alloc, _Select1st, _Equal,</span>
+<span class="lineNum">     611 </span>            :               _H1, _H2, _Hash, _RehashPolicy, _Traits, true&gt;::
+<span class="lineNum">     612 </span>            :     operator[](key_type&amp;&amp; __k)
+<span class="lineNum">     613 </span>            :     -&gt; mapped_type&amp;
+<span class="lineNum">     614 </span>            :     {
+<span class="lineNum">     615 </span><span class="lineCov">      16646 :       __hashtable* __h = static_cast&lt;__hashtable*&gt;(this);</span>
+<span class="lineNum">     616 </span><span class="lineCov">      33292 :       __hash_code __code = __h-&gt;_M_hash_code(__k);</span>
+<span class="lineNum">     617 </span><span class="lineCov">      33292 :       std::size_t __n = __h-&gt;_M_bucket_index(__k, __code);</span>
+<span class="lineNum">     618 </span><span class="lineCov">      16647 :       __node_type* __p = __h-&gt;_M_find_node(__n, __k, __code);</span>
+<span class="lineNum">     619 </span>            : 
+<span class="lineNum">     620 </span><span class="lineCov">      16646 :       if (!__p)</span>
+<span class="lineNum">     621 </span>            :         {
+<span class="lineNum">     622 </span><span class="lineCov">      15955 :           __p = __h-&gt;_M_allocate_node(std::piecewise_construct,</span>
+<span class="lineNum">     623 </span><span class="lineCov">      15955 :                                       std::forward_as_tuple(std::move(__k)),</span>
+<span class="lineNum">     624 </span>            :                                       std::tuple&lt;&gt;());
+<span class="lineNum">     625 </span><span class="lineCov">      31910 :           return __h-&gt;_M_insert_unique_node(__n, __code, __p)-&gt;second;</span>
+<span class="lineNum">     626 </span>            :         }
+<span class="lineNum">     627 </span>            : 
+<span class="lineNum">     628 </span><span class="lineCov">       1382 :       return __p-&gt;_M_v().second;</span>
+<span class="lineNum">     629 </span>            :     }
+<span class="lineNum">     630 </span>            : 
+<span class="lineNum">     631 </span>            :   template&lt;typename _Key, typename _Pair, typename _Alloc, typename _Equal,
+<span class="lineNum">     632 </span>            :            typename _H1, typename _H2, typename _Hash,
+<a name="633"><span class="lineNum">     633 </span>            :            typename _RehashPolicy, typename _Traits&gt;</a>
+<span class="lineNum">     634 </span>            :     auto
+<span class="lineNum">     635 </span><span class="lineCov">        144 :     _Map_base&lt;_Key, _Pair, _Alloc, _Select1st, _Equal,</span>
+<span class="lineNum">     636 </span>            :               _H1, _H2, _Hash, _RehashPolicy, _Traits, true&gt;::
+<span class="lineNum">     637 </span>            :     at(const key_type&amp; __k)
+<span class="lineNum">     638 </span>            :     -&gt; mapped_type&amp;
+<span class="lineNum">     639 </span>            :     {
+<span class="lineNum">     640 </span><span class="lineCov">        144 :       __hashtable* __h = static_cast&lt;__hashtable*&gt;(this);</span>
+<span class="lineNum">     641 </span><span class="lineCov">        288 :       __hash_code __code = __h-&gt;_M_hash_code(__k);</span>
+<span class="lineNum">     642 </span><span class="lineCov">        288 :       std::size_t __n = __h-&gt;_M_bucket_index(__k, __code);</span>
+<span class="lineNum">     643 </span><span class="lineCov">        145 :       __node_type* __p = __h-&gt;_M_find_node(__n, __k, __code);</span>
+<span class="lineNum">     644 </span>            : 
+<span class="lineNum">     645 </span><span class="lineCov">        144 :       if (!__p)</span>
+<span class="lineNum">     646 </span><span class="lineNoCov">          0 :         __throw_out_of_range(__N(&quot;_Map_base::at&quot;));</span>
+<span class="lineNum">     647 </span><span class="lineCov">        288 :       return __p-&gt;_M_v().second;</span>
+<span class="lineNum">     648 </span>            :     }
+<span class="lineNum">     649 </span>            : 
+<span class="lineNum">     650 </span>            :   template&lt;typename _Key, typename _Pair, typename _Alloc, typename _Equal,
+<span class="lineNum">     651 </span>            :            typename _H1, typename _H2, typename _Hash,
+<a name="652"><span class="lineNum">     652 </span>            :            typename _RehashPolicy, typename _Traits&gt;</a>
+<span class="lineNum">     653 </span>            :     auto
+<span class="lineNum">     654 </span><span class="lineCov">        922 :     _Map_base&lt;_Key, _Pair, _Alloc, _Select1st, _Equal,</span>
+<span class="lineNum">     655 </span>            :               _H1, _H2, _Hash, _RehashPolicy, _Traits, true&gt;::
+<span class="lineNum">     656 </span>            :     at(const key_type&amp; __k) const
+<span class="lineNum">     657 </span>            :     -&gt; const mapped_type&amp;
+<span class="lineNum">     658 </span>            :     {
+<span class="lineNum">     659 </span><span class="lineCov">        922 :       const __hashtable* __h = static_cast&lt;const __hashtable*&gt;(this);</span>
+<span class="lineNum">     660 </span><span class="lineCov">       1844 :       __hash_code __code = __h-&gt;_M_hash_code(__k);</span>
+<span class="lineNum">     661 </span><span class="lineCov">       1844 :       std::size_t __n = __h-&gt;_M_bucket_index(__k, __code);</span>
+<span class="lineNum">     662 </span><span class="lineCov">        929 :       __node_type* __p = __h-&gt;_M_find_node(__n, __k, __code);</span>
+<span class="lineNum">     663 </span>            : 
+<span class="lineNum">     664 </span><span class="lineCov">        922 :       if (!__p)</span>
+<span class="lineNum">     665 </span><span class="lineNoCov">          0 :         __throw_out_of_range(__N(&quot;_Map_base::at&quot;));</span>
+<span class="lineNum">     666 </span><span class="lineCov">       1844 :       return __p-&gt;_M_v().second;</span>
+<span class="lineNum">     667 </span>            :     }
+<span class="lineNum">     668 </span>            : 
+<span class="lineNum">     669 </span>            :   /**
+<span class="lineNum">     670 </span>            :    *  Primary class template _Insert_base.
+<span class="lineNum">     671 </span>            :    *
+<span class="lineNum">     672 </span>            :    *  insert member functions appropriate to all _Hashtables.
+<span class="lineNum">     673 </span>            :    */
+<span class="lineNum">     674 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">     675 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">     676 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">     677 </span>            :            typename _RehashPolicy, typename _Traits&gt;
+<span class="lineNum">     678 </span>            :     struct _Insert_base
+<span class="lineNum">     679 </span>            :     {
+<span class="lineNum">     680 </span>            :     protected:
+<span class="lineNum">     681 </span>            :       using __hashtable = _Hashtable&lt;_Key, _Value, _Alloc, _ExtractKey,
+<span class="lineNum">     682 </span>            :                                      _Equal, _H1, _H2, _Hash,
+<span class="lineNum">     683 </span>            :                                      _RehashPolicy, _Traits&gt;;
+<span class="lineNum">     684 </span>            : 
+<span class="lineNum">     685 </span>            :       using __hashtable_base = _Hashtable_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">     686 </span>            :                                                _Equal, _H1, _H2, _Hash,
+<span class="lineNum">     687 </span>            :                                                _Traits&gt;;
+<span class="lineNum">     688 </span>            : 
+<span class="lineNum">     689 </span>            :       using value_type = typename __hashtable_base::value_type;
+<span class="lineNum">     690 </span>            :       using iterator = typename __hashtable_base::iterator;
+<span class="lineNum">     691 </span>            :       using const_iterator =  typename __hashtable_base::const_iterator;
+<span class="lineNum">     692 </span>            :       using size_type = typename __hashtable_base::size_type;
+<span class="lineNum">     693 </span>            : 
+<span class="lineNum">     694 </span>            :       using __unique_keys = typename __hashtable_base::__unique_keys;
+<span class="lineNum">     695 </span>            :       using __ireturn_type = typename __hashtable_base::__ireturn_type;
+<span class="lineNum">     696 </span>            :       using __node_type = _Hash_node&lt;_Value, _Traits::__hash_cached::value&gt;;
+<span class="lineNum">     697 </span>            :       using __node_alloc_type = __alloc_rebind&lt;_Alloc, __node_type&gt;;
+<span class="lineNum">     698 </span>            :       using __node_gen_type = _AllocNode&lt;__node_alloc_type&gt;;
+<span class="lineNum">     699 </span>            : 
+<span class="lineNum">     700 </span>            :       __hashtable&amp;
+<span class="lineNum">     701 </span>            :       _M_conjure_hashtable()
+<span class="lineNum">     702 </span>            :       { return *(static_cast&lt;__hashtable*&gt;(this)); }
+<span class="lineNum">     703 </span>            : 
+<span class="lineNum">     704 </span>            :       template&lt;typename _InputIterator, typename _NodeGetter&gt;
+<span class="lineNum">     705 </span>            :         void
+<span class="lineNum">     706 </span>            :         _M_insert_range(_InputIterator __first, _InputIterator __last,
+<span class="lineNum">     707 </span>            :                         const _NodeGetter&amp;);
+<span class="lineNum">     708 </span>            : 
+<span class="lineNum">     709 </span>            :     public:
+<span class="lineNum">     710 </span>            :       __ireturn_type
+<span class="lineNum">     711 </span>            :       insert(const value_type&amp; __v)
+<span class="lineNum">     712 </span>            :       {
+<span class="lineNum">     713 </span><span class="lineCov">     497821 :         __hashtable&amp; __h = _M_conjure_hashtable();</span>
+<span class="lineNum">     714 </span><span class="lineCov">     497821 :         __node_gen_type __node_gen(__h);</span>
+<span class="lineNum">     715 </span><span class="lineCov">     497821 :         return __h._M_insert(__v, __node_gen, __unique_keys());</span>
+<span class="lineNum">     716 </span>            :       }
+<span class="lineNum">     717 </span>            : 
+<span class="lineNum">     718 </span>            :       iterator
+<span class="lineNum">     719 </span>            :       insert(const_iterator __hint, const value_type&amp; __v)
+<span class="lineNum">     720 </span>            :       {
+<span class="lineNum">     721 </span>            :         __hashtable&amp; __h = _M_conjure_hashtable();
+<span class="lineNum">     722 </span>            :         __node_gen_type __node_gen(__h);        
+<span class="lineNum">     723 </span>            :         return __h._M_insert(__hint, __v, __node_gen, __unique_keys());
+<span class="lineNum">     724 </span>            :       }
+<span class="lineNum">     725 </span>            : 
+<span class="lineNum">     726 </span>            :       void
+<span class="lineNum">     727 </span>            :       insert(initializer_list&lt;value_type&gt; __l)
+<span class="lineNum">     728 </span>            :       { this-&gt;insert(__l.begin(), __l.end()); }
+<span class="lineNum">     729 </span>            : 
+<span class="lineNum">     730 </span>            :       template&lt;typename _InputIterator&gt;
+<span class="lineNum">     731 </span>            :         void
+<span class="lineNum">     732 </span>            :         insert(_InputIterator __first, _InputIterator __last)
+<span class="lineNum">     733 </span>            :         {
+<span class="lineNum">     734 </span>            :           __hashtable&amp; __h = _M_conjure_hashtable();
+<span class="lineNum">     735 </span>            :           __node_gen_type __node_gen(__h);
+<span class="lineNum">     736 </span>            :           return _M_insert_range(__first, __last, __node_gen);
+<span class="lineNum">     737 </span>            :         }
+<span class="lineNum">     738 </span>            :     };
+<span class="lineNum">     739 </span>            : 
+<span class="lineNum">     740 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">     741 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">     742 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">     743 </span>            :            typename _RehashPolicy, typename _Traits&gt;
+<span class="lineNum">     744 </span>            :     template&lt;typename _InputIterator, typename _NodeGetter&gt;
+<span class="lineNum">     745 </span>            :       void
+<span class="lineNum">     746 </span>            :       _Insert_base&lt;_Key, _Value, _Alloc, _ExtractKey, _Equal, _H1, _H2, _Hash,
+<span class="lineNum">     747 </span>            :                     _RehashPolicy, _Traits&gt;::
+<span class="lineNum">     748 </span>            :       _M_insert_range(_InputIterator __first, _InputIterator __last,
+<span class="lineNum">     749 </span>            :                       const _NodeGetter&amp; __node_gen)
+<span class="lineNum">     750 </span>            :       {
+<span class="lineNum">     751 </span>            :         using __rehash_type = typename __hashtable::__rehash_type;
+<span class="lineNum">     752 </span>            :         using __rehash_state = typename __hashtable::__rehash_state;
+<span class="lineNum">     753 </span>            :         using pair_type = std::pair&lt;bool, std::size_t&gt;;
+<span class="lineNum">     754 </span>            : 
+<span class="lineNum">     755 </span>            :         size_type __n_elt = __detail::__distance_fw(__first, __last);
+<span class="lineNum">     756 </span>            : 
+<span class="lineNum">     757 </span>            :         __hashtable&amp; __h = _M_conjure_hashtable();
+<span class="lineNum">     758 </span>            :         __rehash_type&amp; __rehash = __h._M_rehash_policy;
+<span class="lineNum">     759 </span>            :         const __rehash_state&amp; __saved_state = __rehash._M_state();
+<span class="lineNum">     760 </span>            :         pair_type __do_rehash = __rehash._M_need_rehash(__h._M_bucket_count,
+<span class="lineNum">     761 </span>            :                                                         __h._M_element_count,
+<span class="lineNum">     762 </span>            :                                                         __n_elt);
+<span class="lineNum">     763 </span>            : 
+<span class="lineNum">     764 </span>            :         if (__do_rehash.first)
+<span class="lineNum">     765 </span>            :           __h._M_rehash(__do_rehash.second, __saved_state);
+<span class="lineNum">     766 </span>            : 
+<span class="lineNum">     767 </span>            :         for (; __first != __last; ++__first)
+<span class="lineNum">     768 </span>            :           __h._M_insert(*__first, __node_gen, __unique_keys());
+<span class="lineNum">     769 </span>            :       }
+<span class="lineNum">     770 </span>            : 
+<span class="lineNum">     771 </span>            :   /**
+<span class="lineNum">     772 </span>            :    *  Primary class template _Insert.
+<span class="lineNum">     773 </span>            :    *
+<span class="lineNum">     774 </span>            :    *  Select insert member functions appropriate to _Hashtable policy choices.
+<span class="lineNum">     775 </span>            :    */
+<span class="lineNum">     776 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">     777 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">     778 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">     779 </span>            :            typename _RehashPolicy, typename _Traits,
+<span class="lineNum">     780 </span>            :            bool _Constant_iterators = _Traits::__constant_iterators::value,
+<span class="lineNum">     781 </span>            :            bool _Unique_keys = _Traits::__unique_keys::value&gt;
+<span class="lineNum">     782 </span>            :     struct _Insert;
+<span class="lineNum">     783 </span>            : 
+<span class="lineNum">     784 </span>            :   /// Specialization.
+<span class="lineNum">     785 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">     786 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">     787 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">     788 </span>            :            typename _RehashPolicy, typename _Traits&gt;
+<span class="lineNum">     789 </span><span class="lineCov">     749581 :     struct _Insert&lt;_Key, _Value, _Alloc, _ExtractKey, _Equal, _H1, _H2, _Hash,</span>
+<span class="lineNum">     790 </span>            :                    _RehashPolicy, _Traits, true, true&gt;
+<span class="lineNum">     791 </span>            :     : public _Insert_base&lt;_Key, _Value, _Alloc, _ExtractKey, _Equal,
+<span class="lineNum">     792 </span>            :                            _H1, _H2, _Hash, _RehashPolicy, _Traits&gt;
+<span class="lineNum">     793 </span>            :     {
+<span class="lineNum">     794 </span>            :       using __base_type = _Insert_base&lt;_Key, _Value, _Alloc, _ExtractKey,
+<span class="lineNum">     795 </span>            :                                         _Equal, _H1, _H2, _Hash,
+<span class="lineNum">     796 </span>            :                                         _RehashPolicy, _Traits&gt;;
+<span class="lineNum">     797 </span>            :       using value_type = typename __base_type::value_type;
+<span class="lineNum">     798 </span>            :       using iterator = typename __base_type::iterator;
+<span class="lineNum">     799 </span>            :       using const_iterator =  typename __base_type::const_iterator;
+<span class="lineNum">     800 </span>            : 
+<span class="lineNum">     801 </span>            :       using __unique_keys = typename __base_type::__unique_keys;
+<span class="lineNum">     802 </span>            :       using __hashtable = typename __base_type::__hashtable;
+<span class="lineNum">     803 </span>            :       using __node_gen_type = typename __base_type::__node_gen_type;
+<span class="lineNum">     804 </span>            : 
+<span class="lineNum">     805 </span>            :       using __base_type::insert;
+<span class="lineNum">     806 </span>            : 
+<span class="lineNum">     807 </span>            :       std::pair&lt;iterator, bool&gt;
+<span class="lineNum">     808 </span>            :       insert(value_type&amp;&amp; __v)
+<span class="lineNum">     809 </span>            :       {
+<span class="lineNum">     810 </span><span class="lineCov">      27467 :         __hashtable&amp; __h = this-&gt;_M_conjure_hashtable();</span>
+<span class="lineNum">     811 </span><span class="lineCov">      27467 :         __node_gen_type __node_gen(__h);</span>
+<span class="lineNum">     812 </span><span class="lineCov">      27467 :         return __h._M_insert(std::move(__v), __node_gen, __unique_keys());</span>
+<span class="lineNum">     813 </span>            :       }
+<span class="lineNum">     814 </span>            : 
+<span class="lineNum">     815 </span>            :       iterator
+<span class="lineNum">     816 </span>            :       insert(const_iterator __hint, value_type&amp;&amp; __v)
+<span class="lineNum">     817 </span>            :       {
+<span class="lineNum">     818 </span>            :         __hashtable&amp; __h = this-&gt;_M_conjure_hashtable();
+<span class="lineNum">     819 </span>            :         __node_gen_type __node_gen(__h);
+<span class="lineNum">     820 </span>            :         return __h._M_insert(__hint, std::move(__v), __node_gen,
+<span class="lineNum">     821 </span>            :                              __unique_keys());
+<span class="lineNum">     822 </span>            :       }
+<span class="lineNum">     823 </span>            :     };
+<span class="lineNum">     824 </span>            : 
+<span class="lineNum">     825 </span>            :   /// Specialization.
+<span class="lineNum">     826 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">     827 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">     828 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">     829 </span>            :            typename _RehashPolicy, typename _Traits&gt;
+<span class="lineNum">     830 </span>            :     struct _Insert&lt;_Key, _Value, _Alloc, _ExtractKey, _Equal, _H1, _H2, _Hash,
+<span class="lineNum">     831 </span>            :                    _RehashPolicy, _Traits, true, false&gt;
+<span class="lineNum">     832 </span>            :     : public _Insert_base&lt;_Key, _Value, _Alloc, _ExtractKey, _Equal,
+<span class="lineNum">     833 </span>            :                            _H1, _H2, _Hash, _RehashPolicy, _Traits&gt;
+<span class="lineNum">     834 </span>            :     {
+<span class="lineNum">     835 </span>            :       using __base_type = _Insert_base&lt;_Key, _Value, _Alloc, _ExtractKey,
+<span class="lineNum">     836 </span>            :                                         _Equal, _H1, _H2, _Hash,
+<span class="lineNum">     837 </span>            :                                         _RehashPolicy, _Traits&gt;;
+<span class="lineNum">     838 </span>            :       using value_type = typename __base_type::value_type;
+<span class="lineNum">     839 </span>            :       using iterator = typename __base_type::iterator;
+<span class="lineNum">     840 </span>            :       using const_iterator =  typename __base_type::const_iterator;
+<span class="lineNum">     841 </span>            : 
+<span class="lineNum">     842 </span>            :       using __unique_keys = typename __base_type::__unique_keys;
+<span class="lineNum">     843 </span>            :       using __hashtable = typename __base_type::__hashtable;
+<span class="lineNum">     844 </span>            :       using __node_gen_type = typename __base_type::__node_gen_type;
+<span class="lineNum">     845 </span>            : 
+<span class="lineNum">     846 </span>            :       using __base_type::insert;
+<span class="lineNum">     847 </span>            : 
+<span class="lineNum">     848 </span>            :       iterator
+<span class="lineNum">     849 </span>            :       insert(value_type&amp;&amp; __v)
+<span class="lineNum">     850 </span>            :       {
+<span class="lineNum">     851 </span>            :         __hashtable&amp; __h = this-&gt;_M_conjure_hashtable();
+<span class="lineNum">     852 </span>            :         __node_gen_type __node_gen(__h);
+<span class="lineNum">     853 </span>            :         return __h._M_insert(std::move(__v), __node_gen, __unique_keys());
+<span class="lineNum">     854 </span>            :       }
+<span class="lineNum">     855 </span>            : 
+<span class="lineNum">     856 </span>            :       iterator
+<span class="lineNum">     857 </span>            :       insert(const_iterator __hint, value_type&amp;&amp; __v)
+<span class="lineNum">     858 </span>            :       {
+<span class="lineNum">     859 </span>            :         __hashtable&amp; __h = this-&gt;_M_conjure_hashtable();
+<span class="lineNum">     860 </span>            :         __node_gen_type __node_gen(__h);
+<span class="lineNum">     861 </span>            :         return __h._M_insert(__hint, std::move(__v), __node_gen,
+<span class="lineNum">     862 </span>            :                              __unique_keys());
+<span class="lineNum">     863 </span>            :       }
+<span class="lineNum">     864 </span>            :     };
+<span class="lineNum">     865 </span>            : 
+<span class="lineNum">     866 </span>            :   /// Specialization.
+<span class="lineNum">     867 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">     868 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">     869 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">     870 </span>            :            typename _RehashPolicy, typename _Traits, bool _Unique_keys&gt;
+<span class="lineNum">     871 </span><span class="lineCov">    2495871 :     struct _Insert&lt;_Key, _Value, _Alloc, _ExtractKey, _Equal, _H1, _H2, _Hash,</span>
+<span class="lineNum">     872 </span>            :                    _RehashPolicy, _Traits, false, _Unique_keys&gt;
+<span class="lineNum">     873 </span>            :     : public _Insert_base&lt;_Key, _Value, _Alloc, _ExtractKey, _Equal,
+<span class="lineNum">     874 </span>            :                            _H1, _H2, _Hash, _RehashPolicy, _Traits&gt;
+<span class="lineNum">     875 </span>            :     {
+<span class="lineNum">     876 </span>            :       using __base_type = _Insert_base&lt;_Key, _Value, _Alloc, _ExtractKey,
+<span class="lineNum">     877 </span>            :                                        _Equal, _H1, _H2, _Hash,
+<span class="lineNum">     878 </span>            :                                        _RehashPolicy, _Traits&gt;;
+<span class="lineNum">     879 </span>            :       using value_type = typename __base_type::value_type;
+<span class="lineNum">     880 </span>            :       using iterator = typename __base_type::iterator;
+<span class="lineNum">     881 </span>            :       using const_iterator =  typename __base_type::const_iterator;
+<span class="lineNum">     882 </span>            : 
+<span class="lineNum">     883 </span>            :       using __unique_keys = typename __base_type::__unique_keys;
+<span class="lineNum">     884 </span>            :       using __hashtable = typename __base_type::__hashtable;
+<span class="lineNum">     885 </span>            :       using __ireturn_type = typename __base_type::__ireturn_type;
+<span class="lineNum">     886 </span>            : 
+<span class="lineNum">     887 </span>            :       using __base_type::insert;
+<span class="lineNum">     888 </span>            : 
+<span class="lineNum">     889 </span>            :       template&lt;typename _Pair&gt;
+<span class="lineNum">     890 </span>            :         using __is_cons = std::is_constructible&lt;value_type, _Pair&amp;&amp;&gt;;
+<span class="lineNum">     891 </span>            : 
+<span class="lineNum">     892 </span>            :       template&lt;typename _Pair&gt;
+<span class="lineNum">     893 </span>            :         using _IFcons = std::enable_if&lt;__is_cons&lt;_Pair&gt;::value&gt;;
+<span class="lineNum">     894 </span>            : 
+<span class="lineNum">     895 </span>            :       template&lt;typename _Pair&gt;
+<span class="lineNum">     896 </span>            :         using _IFconsp = typename _IFcons&lt;_Pair&gt;::type;
+<span class="lineNum">     897 </span>            : 
+<span class="lineNum">     898 </span>            :       template&lt;typename _Pair, typename = _IFconsp&lt;_Pair&gt;&gt;
+<span class="lineNum">     899 </span>            :         __ireturn_type
+<span class="lineNum">     900 </span>            :         insert(_Pair&amp;&amp; __v)
+<span class="lineNum">     901 </span>            :         {
+<span class="lineNum">     902 </span><span class="lineCov">      51062 :           __hashtable&amp; __h = this-&gt;_M_conjure_hashtable();</span>
+<span class="lineNum">     903 </span><span class="lineCov">      51062 :           return __h._M_emplace(__unique_keys(), std::forward&lt;_Pair&gt;(__v));</span>
+<span class="lineNum">     904 </span>            :         }
+<span class="lineNum">     905 </span>            : 
+<span class="lineNum">     906 </span>            :       template&lt;typename _Pair, typename = _IFconsp&lt;_Pair&gt;&gt;
+<span class="lineNum">     907 </span>            :         iterator
+<span class="lineNum">     908 </span>            :         insert(const_iterator __hint, _Pair&amp;&amp; __v)
+<span class="lineNum">     909 </span>            :         {
+<span class="lineNum">     910 </span>            :           __hashtable&amp; __h = this-&gt;_M_conjure_hashtable();
+<span class="lineNum">     911 </span>            :           return __h._M_emplace(__hint, __unique_keys(),
+<span class="lineNum">     912 </span>            :                                 std::forward&lt;_Pair&gt;(__v));
+<span class="lineNum">     913 </span>            :         }
+<span class="lineNum">     914 </span>            :    };
+<span class="lineNum">     915 </span>            : 
+<span class="lineNum">     916 </span>            :   /**
+<span class="lineNum">     917 </span>            :    *  Primary class template  _Rehash_base.
+<span class="lineNum">     918 </span>            :    *
+<span class="lineNum">     919 </span>            :    *  Give hashtable the max_load_factor functions and reserve iff the
+<span class="lineNum">     920 </span>            :    *  rehash policy is _Prime_rehash_policy.
+<span class="lineNum">     921 </span>            :   */
+<span class="lineNum">     922 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">     923 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">     924 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">     925 </span>            :            typename _RehashPolicy, typename _Traits&gt;
+<span class="lineNum">     926 </span>            :     struct _Rehash_base;
+<span class="lineNum">     927 </span>            : 
+<span class="lineNum">     928 </span>            :   /// Specialization.
+<span class="lineNum">     929 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">     930 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">     931 </span>            :            typename _H1, typename _H2, typename _Hash, typename _Traits&gt;
+<span class="lineNum">     932 </span>            :     struct _Rehash_base&lt;_Key, _Value, _Alloc, _ExtractKey, _Equal,
+<span class="lineNum">     933 </span>            :                         _H1, _H2, _Hash, _Prime_rehash_policy, _Traits&gt;
+<span class="lineNum">     934 </span>            :     {
+<span class="lineNum">     935 </span>            :       using __hashtable = _Hashtable&lt;_Key, _Value, _Alloc, _ExtractKey,
+<span class="lineNum">     936 </span>            :                                      _Equal, _H1, _H2, _Hash,
+<span class="lineNum">     937 </span>            :                                      _Prime_rehash_policy, _Traits&gt;;
+<span class="lineNum">     938 </span>            : 
+<span class="lineNum">     939 </span>            :       float
+<span class="lineNum">     940 </span>            :       max_load_factor() const noexcept
+<span class="lineNum">     941 </span>            :       {
+<span class="lineNum">     942 </span>            :         const __hashtable* __this = static_cast&lt;const __hashtable*&gt;(this);
+<span class="lineNum">     943 </span>            :         return __this-&gt;__rehash_policy().max_load_factor();
+<span class="lineNum">     944 </span>            :       }
+<span class="lineNum">     945 </span>            : 
+<span class="lineNum">     946 </span>            :       void
+<span class="lineNum">     947 </span>            :       max_load_factor(float __z)
+<span class="lineNum">     948 </span>            :       {
+<span class="lineNum">     949 </span>            :         __hashtable* __this = static_cast&lt;__hashtable*&gt;(this);
+<span class="lineNum">     950 </span>            :         __this-&gt;__rehash_policy(_Prime_rehash_policy(__z));
+<span class="lineNum">     951 </span>            :       }
+<span class="lineNum">     952 </span>            : 
+<span class="lineNum">     953 </span>            :       void
+<span class="lineNum">     954 </span>            :       reserve(std::size_t __n)
+<span class="lineNum">     955 </span>            :       {
+<span class="lineNum">     956 </span>            :         __hashtable* __this = static_cast&lt;__hashtable*&gt;(this);
+<span class="lineNum">     957 </span>            :         __this-&gt;rehash(__builtin_ceil(__n / max_load_factor()));
+<span class="lineNum">     958 </span>            :       }
+<span class="lineNum">     959 </span>            :     };
+<span class="lineNum">     960 </span>            : 
+<span class="lineNum">     961 </span>            :   /**
+<span class="lineNum">     962 </span>            :    *  Primary class template _Hashtable_ebo_helper.
+<span class="lineNum">     963 </span>            :    *
+<span class="lineNum">     964 </span>            :    *  Helper class using EBO when it is not forbidden (the type is not
+<span class="lineNum">     965 </span>            :    *  final) and when it is worth it (the type is empty.)
+<span class="lineNum">     966 </span>            :    */
+<span class="lineNum">     967 </span>            :   template&lt;int _Nm, typename _Tp,
+<span class="lineNum">     968 </span>            :            bool __use_ebo = !__is_final(_Tp) &amp;&amp; __is_empty(_Tp)&gt;
+<span class="lineNum">     969 </span>            :     struct _Hashtable_ebo_helper;
+<span class="lineNum">     970 </span>            : 
+<span class="lineNum">     971 </span>            :   /// Specialization using EBO.
+<span class="lineNum">     972 </span>            :   template&lt;int _Nm, typename _Tp&gt;
+<span class="lineNum">     973 </span><span class="lineCov">    3245474 :     struct _Hashtable_ebo_helper&lt;_Nm, _Tp, true&gt;</span>
+<span class="lineNum">     974 </span>            :     : private _Tp
+<span class="lineNum">     975 </span>            :     {
+<span class="lineNum">     976 </span><span class="lineCov">   10043490 :       _Hashtable_ebo_helper() = default;</span>
+<span class="lineNum">     977 </span>            : 
+<span class="lineNum">     978 </span>            :       template&lt;typename _OtherTp&gt;
+<span class="lineNum">     979 </span>            :         _Hashtable_ebo_helper(_OtherTp&amp;&amp; __tp)
+<span class="lineNum">     980 </span><span class="lineCov">    2581626 :           : _Tp(std::forward&lt;_OtherTp&gt;(__tp))</span>
+<span class="lineNum">     981 </span>            :         { }
+<span class="lineNum">     982 </span>            : 
+<span class="lineNum">     983 </span>            :       static const _Tp&amp;
+<span class="lineNum">     984 </span>            :       _S_cget(const _Hashtable_ebo_helper&amp; __eboh)
+<span class="lineNum">     985 </span>            :       { return static_cast&lt;const _Tp&amp;&gt;(__eboh); }
+<span class="lineNum">     986 </span>            : 
+<span class="lineNum">     987 </span>            :       static _Tp&amp;
+<span class="lineNum">     988 </span>            :       _S_get(_Hashtable_ebo_helper&amp; __eboh)
+<span class="lineNum">     989 </span>            :       { return static_cast&lt;_Tp&amp;&gt;(__eboh); }
+<span class="lineNum">     990 </span>            :     };
+<span class="lineNum">     991 </span>            : 
+<span class="lineNum">     992 </span>            :   /// Specialization not using EBO.
+<span class="lineNum">     993 </span>            :   template&lt;int _Nm, typename _Tp&gt;
+<span class="lineNum">     994 </span>            :     struct _Hashtable_ebo_helper&lt;_Nm, _Tp, false&gt;
+<span class="lineNum">     995 </span>            :     {
+<span class="lineNum">     996 </span>            :       _Hashtable_ebo_helper() = default;
+<span class="lineNum">     997 </span>            : 
+<span class="lineNum">     998 </span>            :       template&lt;typename _OtherTp&gt;
+<span class="lineNum">     999 </span>            :         _Hashtable_ebo_helper(_OtherTp&amp;&amp; __tp)
+<span class="lineNum">    1000 </span>            :           : _M_tp(std::forward&lt;_OtherTp&gt;(__tp))
+<span class="lineNum">    1001 </span>            :         { }
+<span class="lineNum">    1002 </span>            : 
+<span class="lineNum">    1003 </span>            :       static const _Tp&amp;
+<span class="lineNum">    1004 </span>            :       _S_cget(const _Hashtable_ebo_helper&amp; __eboh)
+<span class="lineNum">    1005 </span>            :       { return __eboh._M_tp; }
+<span class="lineNum">    1006 </span>            : 
+<span class="lineNum">    1007 </span>            :       static _Tp&amp;
+<span class="lineNum">    1008 </span>            :       _S_get(_Hashtable_ebo_helper&amp; __eboh)
+<span class="lineNum">    1009 </span>            :       { return __eboh._M_tp; }
+<span class="lineNum">    1010 </span>            : 
+<span class="lineNum">    1011 </span>            :     private:
+<span class="lineNum">    1012 </span>            :       _Tp _M_tp;
+<span class="lineNum">    1013 </span>            :     };
+<span class="lineNum">    1014 </span>            : 
+<span class="lineNum">    1015 </span>            :   /**
+<span class="lineNum">    1016 </span>            :    *  Primary class template _Local_iterator_base.
+<span class="lineNum">    1017 </span>            :    *
+<span class="lineNum">    1018 </span>            :    *  Base class for local iterators, used to iterate within a bucket
+<span class="lineNum">    1019 </span>            :    *  but not between buckets.
+<span class="lineNum">    1020 </span>            :    */
+<span class="lineNum">    1021 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1022 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">    1023 </span>            :            bool __cache_hash_code&gt;
+<span class="lineNum">    1024 </span>            :     struct _Local_iterator_base;
+<span class="lineNum">    1025 </span>            : 
+<span class="lineNum">    1026 </span>            :   /**
+<span class="lineNum">    1027 </span>            :    *  Primary class template _Hash_code_base.
+<span class="lineNum">    1028 </span>            :    *
+<span class="lineNum">    1029 </span>            :    *  Encapsulates two policy issues that aren't quite orthogonal.
+<span class="lineNum">    1030 </span>            :    *   (1) the difference between using a ranged hash function and using
+<span class="lineNum">    1031 </span>            :    *       the combination of a hash function and a range-hashing function.
+<span class="lineNum">    1032 </span>            :    *       In the former case we don't have such things as hash codes, so
+<span class="lineNum">    1033 </span>            :    *       we have a dummy type as placeholder.
+<span class="lineNum">    1034 </span>            :    *   (2) Whether or not we cache hash codes.  Caching hash codes is
+<span class="lineNum">    1035 </span>            :    *       meaningless if we have a ranged hash function.
+<span class="lineNum">    1036 </span>            :    *
+<span class="lineNum">    1037 </span>            :    *  We also put the key extraction objects here, for convenience.
+<span class="lineNum">    1038 </span>            :    *  Each specialization derives from one or more of the template
+<span class="lineNum">    1039 </span>            :    *  parameters to benefit from Ebo. This is important as this type
+<span class="lineNum">    1040 </span>            :    *  is inherited in some cases by the _Local_iterator_base type used
+<span class="lineNum">    1041 </span>            :    *  to implement local_iterator and const_local_iterator. As with
+<span class="lineNum">    1042 </span>            :    *  any iterator type we prefer to make it as small as possible.
+<span class="lineNum">    1043 </span>            :    *
+<span class="lineNum">    1044 </span>            :    *  Primary template is unused except as a hook for specializations.
+<span class="lineNum">    1045 </span>            :    */
+<span class="lineNum">    1046 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1047 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">    1048 </span>            :            bool __cache_hash_code&gt;
+<span class="lineNum">    1049 </span>            :     struct _Hash_code_base;
+<span class="lineNum">    1050 </span>            : 
+<span class="lineNum">    1051 </span>            :   /// Specialization: ranged hash function, no caching hash codes.  H1
+<span class="lineNum">    1052 </span>            :   /// and H2 are provided but ignored.  We define a dummy hash code type.
+<span class="lineNum">    1053 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1054 </span>            :            typename _H1, typename _H2, typename _Hash&gt;
+<span class="lineNum">    1055 </span>            :     struct _Hash_code_base&lt;_Key, _Value, _ExtractKey, _H1, _H2, _Hash, false&gt;
+<span class="lineNum">    1056 </span>            :     : private _Hashtable_ebo_helper&lt;0, _ExtractKey&gt;,
+<span class="lineNum">    1057 </span>            :       private _Hashtable_ebo_helper&lt;1, _Hash&gt;
+<span class="lineNum">    1058 </span>            :     {
+<span class="lineNum">    1059 </span>            :     private:
+<span class="lineNum">    1060 </span>            :       using __ebo_extract_key = _Hashtable_ebo_helper&lt;0, _ExtractKey&gt;;
+<span class="lineNum">    1061 </span>            :       using __ebo_hash = _Hashtable_ebo_helper&lt;1, _Hash&gt;;
+<span class="lineNum">    1062 </span>            : 
+<span class="lineNum">    1063 </span>            :     protected:
+<span class="lineNum">    1064 </span>            :       typedef void*                                     __hash_code;
+<span class="lineNum">    1065 </span>            :       typedef _Hash_node&lt;_Value, false&gt;                   __node_type;
+<span class="lineNum">    1066 </span>            : 
+<span class="lineNum">    1067 </span>            :       // We need the default constructor for the local iterators and _Hashtable
+<span class="lineNum">    1068 </span>            :       // default constructor.
+<span class="lineNum">    1069 </span>            :       _Hash_code_base() = default;
+<span class="lineNum">    1070 </span>            : 
+<span class="lineNum">    1071 </span>            :       _Hash_code_base(const _ExtractKey&amp; __ex, const _H1&amp;, const _H2&amp;,
+<span class="lineNum">    1072 </span>            :                       const _Hash&amp; __h)
+<span class="lineNum">    1073 </span>            :       : __ebo_extract_key(__ex), __ebo_hash(__h) { }
+<span class="lineNum">    1074 </span>            : 
+<span class="lineNum">    1075 </span>            :       __hash_code
+<span class="lineNum">    1076 </span>            :       _M_hash_code(const _Key&amp; __key) const
+<span class="lineNum">    1077 </span>            :       { return 0; }
+<span class="lineNum">    1078 </span>            : 
+<span class="lineNum">    1079 </span>            :       std::size_t
+<span class="lineNum">    1080 </span>            :       _M_bucket_index(const _Key&amp; __k, __hash_code, std::size_t __n) const
+<span class="lineNum">    1081 </span>            :       { return _M_ranged_hash()(__k, __n); }
+<span class="lineNum">    1082 </span>            : 
+<span class="lineNum">    1083 </span>            :       std::size_t
+<span class="lineNum">    1084 </span>            :       _M_bucket_index(const __node_type* __p, std::size_t __n) const
+<span class="lineNum">    1085 </span>            :         noexcept( noexcept(declval&lt;const _Hash&amp;&gt;()(declval&lt;const _Key&amp;&gt;(),
+<span class="lineNum">    1086 </span>            :                                                    (std::size_t)0)) )
+<span class="lineNum">    1087 </span>            :       { return _M_ranged_hash()(_M_extract()(__p-&gt;_M_v()), __n); }
+<span class="lineNum">    1088 </span>            : 
+<span class="lineNum">    1089 </span>            :       void
+<span class="lineNum">    1090 </span>            :       _M_store_code(__node_type*, __hash_code) const
+<span class="lineNum">    1091 </span>            :       { }
+<span class="lineNum">    1092 </span>            : 
+<span class="lineNum">    1093 </span>            :       void
+<span class="lineNum">    1094 </span>            :       _M_copy_code(__node_type*, const __node_type*) const
+<span class="lineNum">    1095 </span>            :       { }
+<span class="lineNum">    1096 </span>            : 
+<span class="lineNum">    1097 </span>            :       void
+<span class="lineNum">    1098 </span>            :       _M_swap(_Hash_code_base&amp; __x)
+<span class="lineNum">    1099 </span>            :       {
+<span class="lineNum">    1100 </span>            :         std::swap(_M_extract(), __x._M_extract());
+<span class="lineNum">    1101 </span>            :         std::swap(_M_ranged_hash(), __x._M_ranged_hash());
+<span class="lineNum">    1102 </span>            :       }
+<span class="lineNum">    1103 </span>            : 
+<span class="lineNum">    1104 </span>            :       const _ExtractKey&amp;
+<span class="lineNum">    1105 </span>            :       _M_extract() const { return __ebo_extract_key::_S_cget(*this); }
+<span class="lineNum">    1106 </span>            : 
+<span class="lineNum">    1107 </span>            :       _ExtractKey&amp;
+<span class="lineNum">    1108 </span>            :       _M_extract() { return __ebo_extract_key::_S_get(*this); }
+<span class="lineNum">    1109 </span>            : 
+<span class="lineNum">    1110 </span>            :       const _Hash&amp;
+<span class="lineNum">    1111 </span>            :       _M_ranged_hash() const { return __ebo_hash::_S_cget(*this); }
+<span class="lineNum">    1112 </span>            : 
+<span class="lineNum">    1113 </span>            :       _Hash&amp;
+<span class="lineNum">    1114 </span>            :       _M_ranged_hash() { return __ebo_hash::_S_get(*this); }
+<span class="lineNum">    1115 </span>            :     };
+<span class="lineNum">    1116 </span>            : 
+<span class="lineNum">    1117 </span>            :   // No specialization for ranged hash function while caching hash codes.
+<span class="lineNum">    1118 </span>            :   // That combination is meaningless, and trying to do it is an error.
+<span class="lineNum">    1119 </span>            : 
+<span class="lineNum">    1120 </span>            :   /// Specialization: ranged hash function, cache hash codes.  This
+<span class="lineNum">    1121 </span>            :   /// combination is meaningless, so we provide only a declaration
+<span class="lineNum">    1122 </span>            :   /// and no definition.
+<span class="lineNum">    1123 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1124 </span>            :            typename _H1, typename _H2, typename _Hash&gt;
+<span class="lineNum">    1125 </span>            :     struct _Hash_code_base&lt;_Key, _Value, _ExtractKey, _H1, _H2, _Hash, true&gt;;
+<span class="lineNum">    1126 </span>            : 
+<span class="lineNum">    1127 </span>            :   /// Specialization: hash function and range-hashing function, no
+<span class="lineNum">    1128 </span>            :   /// caching of hash codes.
+<span class="lineNum">    1129 </span>            :   /// Provides typedef and accessor required by C++ 11.
+<span class="lineNum">    1130 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1131 </span>            :            typename _H1, typename _H2&gt;
+<span class="lineNum">    1132 </span>            :     struct _Hash_code_base&lt;_Key, _Value, _ExtractKey, _H1, _H2,
+<span class="lineNum">    1133 </span>            :                            _Default_ranged_hash, false&gt;
+<span class="lineNum">    1134 </span>            :     : private _Hashtable_ebo_helper&lt;0, _ExtractKey&gt;,
+<span class="lineNum">    1135 </span>            :       private _Hashtable_ebo_helper&lt;1, _H1&gt;,
+<span class="lineNum">    1136 </span>            :       private _Hashtable_ebo_helper&lt;2, _H2&gt;
+<span class="lineNum">    1137 </span>            :     {
+<span class="lineNum">    1138 </span>            :     private:
+<span class="lineNum">    1139 </span>            :       using __ebo_extract_key = _Hashtable_ebo_helper&lt;0, _ExtractKey&gt;;
+<span class="lineNum">    1140 </span>            :       using __ebo_h1 = _Hashtable_ebo_helper&lt;1, _H1&gt;;
+<span class="lineNum">    1141 </span>            :       using __ebo_h2 = _Hashtable_ebo_helper&lt;2, _H2&gt;;
+<span class="lineNum">    1142 </span>            : 
+<span class="lineNum">    1143 </span>            :       // Gives the local iterator implementation access to _M_bucket_index().
+<span class="lineNum">    1144 </span>            :       friend struct _Local_iterator_base&lt;_Key, _Value, _ExtractKey, _H1, _H2,
+<span class="lineNum">    1145 </span>            :                                          _Default_ranged_hash, false&gt;;
+<span class="lineNum">    1146 </span>            : 
+<span class="lineNum">    1147 </span>            :     public:
+<span class="lineNum">    1148 </span>            :       typedef _H1                                       hasher;
+<span class="lineNum">    1149 </span>            : 
+<span class="lineNum">    1150 </span>            :       hasher
+<span class="lineNum">    1151 </span>            :       hash_function() const
+<span class="lineNum">    1152 </span>            :       { return _M_h1(); }
+<span class="lineNum">    1153 </span>            : 
+<span class="lineNum">    1154 </span>            :     protected:
+<span class="lineNum">    1155 </span>            :       typedef std::size_t                               __hash_code;
+<span class="lineNum">    1156 </span>            :       typedef _Hash_node&lt;_Value, false&gt;                   __node_type;
+<span class="lineNum">    1157 </span>            : 
+<span class="lineNum">    1158 </span>            :       // We need the default constructor for the local iterators and _Hashtable
+<span class="lineNum">    1159 </span>            :       // default constructor.
+<span class="lineNum">    1160 </span><span class="lineCov">       3942 :       _Hash_code_base() = default;</span>
+<span class="lineNum">    1161 </span>            : 
+<span class="lineNum">    1162 </span>            :       _Hash_code_base(const _ExtractKey&amp; __ex,
+<span class="lineNum">    1163 </span>            :                       const _H1&amp; __h1, const _H2&amp; __h2,
+<span class="lineNum">    1164 </span>            :                       const _Default_ranged_hash&amp;)
+<span class="lineNum">    1165 </span>            :       : __ebo_extract_key(__ex), __ebo_h1(__h1), __ebo_h2(__h2) { }
+<span class="lineNum">    1166 </span>            : 
+<span class="lineNum">    1167 </span>            :       __hash_code
+<span class="lineNum">    1168 </span>            :       _M_hash_code(const _Key&amp; __k) const
+<span class="lineNum">    1169 </span><span class="lineCov">       1618 :       { return _M_h1()(__k); }</span>
+<span class="lineNum">    1170 </span>            : 
+<span class="lineNum">    1171 </span>            :       std::size_t
+<span class="lineNum">    1172 </span>            :       _M_bucket_index(const _Key&amp;, __hash_code __c, std::size_t __n) const
+<span class="lineNum">    1173 </span><span class="lineCov">       1594 :       { return _M_h2()(__c, __n); }</span>
+<span class="lineNum">    1174 </span>            : 
+<span class="lineNum">    1175 </span>            :       std::size_t
+<span class="lineNum">    1176 </span>            :       _M_bucket_index(const __node_type* __p, std::size_t __n) const
+<span class="lineNum">    1177 </span>            :         noexcept( noexcept(declval&lt;const _H1&amp;&gt;()(declval&lt;const _Key&amp;&gt;()))
+<span class="lineNum">    1178 </span>            :                   &amp;&amp; noexcept(declval&lt;const _H2&amp;&gt;()((__hash_code)0,
+<span class="lineNum">    1179 </span>            :                                                     (std::size_t)0)) )
+<span class="lineNum">    1180 </span><span class="lineNoCov">          0 :       { return _M_h2()(_M_h1()(_M_extract()(__p-&gt;_M_v())), __n); }</span>
+<span class="lineNum">    1181 </span>            : 
+<span class="lineNum">    1182 </span>            :       void
+<span class="lineNum">    1183 </span>            :       _M_store_code(__node_type*, __hash_code) const
+<span class="lineNum">    1184 </span>            :       { }
+<span class="lineNum">    1185 </span>            : 
+<span class="lineNum">    1186 </span>            :       void
+<span class="lineNum">    1187 </span>            :       _M_copy_code(__node_type*, const __node_type*) const
+<span class="lineNum">    1188 </span>            :       { }
+<span class="lineNum">    1189 </span>            : 
+<span class="lineNum">    1190 </span>            :       void
+<span class="lineNum">    1191 </span>            :       _M_swap(_Hash_code_base&amp; __x)
+<span class="lineNum">    1192 </span>            :       {
+<span class="lineNum">    1193 </span>            :         std::swap(_M_extract(), __x._M_extract());
+<span class="lineNum">    1194 </span>            :         std::swap(_M_h1(), __x._M_h1());
+<span class="lineNum">    1195 </span>            :         std::swap(_M_h2(), __x._M_h2());
+<span class="lineNum">    1196 </span>            :       }
+<span class="lineNum">    1197 </span>            : 
+<span class="lineNum">    1198 </span>            :       const _ExtractKey&amp;
+<span class="lineNum">    1199 </span><span class="lineCov">         21 :       _M_extract() const { return __ebo_extract_key::_S_cget(*this); }</span>
+<span class="lineNum">    1200 </span>            : 
+<span class="lineNum">    1201 </span>            :       _ExtractKey&amp;
+<span class="lineNum">    1202 </span><span class="lineCov">          1 :       _M_extract() { return __ebo_extract_key::_S_get(*this); }</span>
+<span class="lineNum">    1203 </span>            : 
+<span class="lineNum">    1204 </span>            :       const _H1&amp;
+<span class="lineNum">    1205 </span><span class="lineCov">        796 :       _M_h1() const { return __ebo_h1::_S_cget(*this); }</span>
+<span class="lineNum">    1206 </span>            : 
+<span class="lineNum">    1207 </span>            :       _H1&amp;
+<span class="lineNum">    1208 </span>            :       _M_h1() { return __ebo_h1::_S_get(*this); }
+<span class="lineNum">    1209 </span>            : 
+<span class="lineNum">    1210 </span>            :       const _H2&amp;
+<span class="lineNum">    1211 </span><span class="lineCov">        797 :       _M_h2() const { return __ebo_h2::_S_cget(*this); }</span>
+<span class="lineNum">    1212 </span>            : 
+<span class="lineNum">    1213 </span>            :       _H2&amp;
+<span class="lineNum">    1214 </span>            :       _M_h2() { return __ebo_h2::_S_get(*this); }
+<span class="lineNum">    1215 </span>            :     };
+<span class="lineNum">    1216 </span>            : 
+<span class="lineNum">    1217 </span>            :   /// Specialization: hash function and range-hashing function,
+<span class="lineNum">    1218 </span>            :   /// caching hash codes.  H is provided but ignored.  Provides
+<span class="lineNum">    1219 </span>            :   /// typedef and accessor required by C++ 11.
+<span class="lineNum">    1220 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1221 </span>            :            typename _H1, typename _H2&gt;
+<span class="lineNum">    1222 </span>            :     struct _Hash_code_base&lt;_Key, _Value, _ExtractKey, _H1, _H2,
+<span class="lineNum">    1223 </span>            :                            _Default_ranged_hash, true&gt;
+<span class="lineNum">    1224 </span>            :     : private _Hashtable_ebo_helper&lt;0, _ExtractKey&gt;,
+<span class="lineNum">    1225 </span>            :       private _Hashtable_ebo_helper&lt;1, _H1&gt;,
+<span class="lineNum">    1226 </span>            :       private _Hashtable_ebo_helper&lt;2, _H2&gt;
+<span class="lineNum">    1227 </span>            :     {
+<span class="lineNum">    1228 </span>            :     private:
+<span class="lineNum">    1229 </span>            :       // Gives the local iterator implementation access to _M_h2().
+<span class="lineNum">    1230 </span>            :       friend struct _Local_iterator_base&lt;_Key, _Value, _ExtractKey, _H1, _H2,
+<span class="lineNum">    1231 </span>            :                                          _Default_ranged_hash, true&gt;;
+<span class="lineNum">    1232 </span>            : 
+<span class="lineNum">    1233 </span>            :       using __ebo_extract_key = _Hashtable_ebo_helper&lt;0, _ExtractKey&gt;;
+<span class="lineNum">    1234 </span>            :       using __ebo_h1 = _Hashtable_ebo_helper&lt;1, _H1&gt;;
+<span class="lineNum">    1235 </span>            :       using __ebo_h2 = _Hashtable_ebo_helper&lt;2, _H2&gt;;
+<span class="lineNum">    1236 </span>            : 
+<span class="lineNum">    1237 </span>            :     public:
+<span class="lineNum">    1238 </span>            :       typedef _H1                                       hasher;
+<span class="lineNum">    1239 </span>            : 
+<span class="lineNum">    1240 </span>            :       hasher
+<span class="lineNum">    1241 </span>            :       hash_function() const
+<span class="lineNum">    1242 </span>            :       { return _M_h1(); }
+<span class="lineNum">    1243 </span>            : 
+<span class="lineNum">    1244 </span>            :     protected:
+<span class="lineNum">    1245 </span>            :       typedef std::size_t                               __hash_code;
+<span class="lineNum">    1246 </span>            :       typedef _Hash_node&lt;_Value, true&gt;                    __node_type;
+<span class="lineNum">    1247 </span>            : 
+<span class="lineNum">    1248 </span>            :       // We need the default constructor for _Hashtable default constructor.
+<span class="lineNum">    1249 </span><span class="lineCov">    6022152 :       _Hash_code_base() = default;</span>
+<span class="lineNum">    1250 </span>            :       _Hash_code_base(const _ExtractKey&amp; __ex,
+<span class="lineNum">    1251 </span>            :                       const _H1&amp; __h1, const _H2&amp; __h2,
+<span class="lineNum">    1252 </span>            :                       const _Default_ranged_hash&amp;)
+<span class="lineNum">    1253 </span><span class="lineCov">      81129 :       : __ebo_extract_key(__ex), __ebo_h1(__h1), __ebo_h2(__h2) { }</span>
+<span class="lineNum">    1254 </span>            : 
+<span class="lineNum">    1255 </span>            :       __hash_code
+<span class="lineNum">    1256 </span>            :       _M_hash_code(const _Key&amp; __k) const
+<span class="lineNum">    1257 </span><span class="lineCov">   27454276 :       { return _M_h1()(__k); }</span>
+<span class="lineNum">    1258 </span>            : 
+<span class="lineNum">    1259 </span>            :       std::size_t
+<span class="lineNum">    1260 </span>            :       _M_bucket_index(const _Key&amp;, __hash_code __c,
+<span class="lineNum">    1261 </span>            :                       std::size_t __n) const
+<span class="lineNum">    1262 </span><span class="lineCov">   28369708 :       { return _M_h2()(__c, __n); }</span>
+<span class="lineNum">    1263 </span>            : 
+<span class="lineNum">    1264 </span>            :       std::size_t
+<span class="lineNum">    1265 </span>            :       _M_bucket_index(const __node_type* __p, std::size_t __n) const
+<span class="lineNum">    1266 </span>            :         noexcept( noexcept(declval&lt;const _H2&amp;&gt;()((__hash_code)0,
+<span class="lineNum">    1267 </span>            :                                                  (std::size_t)0)) )
+<span class="lineNum">    1268 </span><span class="lineCov">   53110401 :       { return _M_h2()(__p-&gt;_M_hash_code, __n); }</span>
+<span class="lineNum">    1269 </span>            : 
+<span class="lineNum">    1270 </span>            :       void
+<span class="lineNum">    1271 </span>            :       _M_store_code(__node_type* __n, __hash_code __c) const
+<span class="lineNum">    1272 </span><span class="lineCov">    1774648 :       { __n-&gt;_M_hash_code = __c; }</span>
+<span class="lineNum">    1273 </span>            : 
+<span class="lineNum">    1274 </span>            :       void
+<span class="lineNum">    1275 </span>            :       _M_copy_code(__node_type* __to, const __node_type* __from) const
+<span class="lineNum">    1276 </span><span class="lineCov">   12488495 :       { __to-&gt;_M_hash_code = __from-&gt;_M_hash_code; }</span>
+<span class="lineNum">    1277 </span>            : 
+<span class="lineNum">    1278 </span>            :       void
+<span class="lineNum">    1279 </span>            :       _M_swap(_Hash_code_base&amp; __x)
+<span class="lineNum">    1280 </span>            :       {
+<span class="lineNum">    1281 </span>            :         std::swap(_M_extract(), __x._M_extract());
+<span class="lineNum">    1282 </span>            :         std::swap(_M_h1(), __x._M_h1());
+<span class="lineNum">    1283 </span>            :         std::swap(_M_h2(), __x._M_h2());
+<span class="lineNum">    1284 </span>            :       }
+<span class="lineNum">    1285 </span>            : 
+<span class="lineNum">    1286 </span>            :       const _ExtractKey&amp;
+<span class="lineNum">    1287 </span><span class="lineCov">   12943400 :       _M_extract() const { return __ebo_extract_key::_S_cget(*this); }</span>
+<span class="lineNum">    1288 </span>            : 
+<span class="lineNum">    1289 </span>            :       _ExtractKey&amp;
+<span class="lineNum">    1290 </span><span class="lineCov">    1114808 :       _M_extract() { return __ebo_extract_key::_S_get(*this); }</span>
+<span class="lineNum">    1291 </span>            : 
+<span class="lineNum">    1292 </span>            :       const _H1&amp;
+<span class="lineNum">    1293 </span><span class="lineCov">   13727156 :       _M_h1() const { return __ebo_h1::_S_cget(*this); }</span>
+<span class="lineNum">    1294 </span>            : 
+<span class="lineNum">    1295 </span>            :       _H1&amp;
+<span class="lineNum">    1296 </span>            :       _M_h1() { return __ebo_h1::_S_get(*this); }
+<span class="lineNum">    1297 </span>            : 
+<span class="lineNum">    1298 </span>            :       const _H2&amp;
+<span class="lineNum">    1299 </span><span class="lineCov">   31888321 :       _M_h2() const { return __ebo_h2::_S_cget(*this); }</span>
+<span class="lineNum">    1300 </span>            : 
+<span class="lineNum">    1301 </span>            :       _H2&amp;
+<span class="lineNum">    1302 </span>            :       _M_h2() { return __ebo_h2::_S_get(*this); }
+<span class="lineNum">    1303 </span>            :     };
+<span class="lineNum">    1304 </span>            : 
+<span class="lineNum">    1305 </span>            :   /**
+<span class="lineNum">    1306 </span>            :    *  Primary class template _Equal_helper.
+<span class="lineNum">    1307 </span>            :    *
+<span class="lineNum">    1308 </span>            :    */
+<span class="lineNum">    1309 </span>            :   template &lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1310 </span>            :             typename _Equal, typename _HashCodeType,
+<span class="lineNum">    1311 </span>            :             bool __cache_hash_code&gt;
+<span class="lineNum">    1312 </span>            :   struct _Equal_helper;
+<span class="lineNum">    1313 </span>            : 
+<span class="lineNum">    1314 </span>            :   /// Specialization.
+<span class="lineNum">    1315 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1316 </span>            :            typename _Equal, typename _HashCodeType&gt;
+<span class="lineNum">    1317 </span>            :   struct _Equal_helper&lt;_Key, _Value, _ExtractKey, _Equal, _HashCodeType, true&gt;
+<a name="1318"><span class="lineNum">    1318 </span>            :   {</a>
+<span class="lineNum">    1319 </span>            :     static bool
+<span class="lineNum">    1320 </span><span class="lineCov">    4151175 :     _S_equals(const _Equal&amp; __eq, const _ExtractKey&amp; __extract,</span>
+<span class="lineNum">    1321 </span>            :               const _Key&amp; __k, _HashCodeType __c, _Hash_node&lt;_Value, true&gt;* __n)
+<span class="lineNum">    1322 </span><span class="lineCov">   43272428 :     { return __c == __n-&gt;_M_hash_code &amp;&amp; __eq(__k, __extract(__n-&gt;_M_v())); }</span>
+<span class="lineNum">    1323 </span>            :   };
+<span class="lineNum">    1324 </span>            : 
+<span class="lineNum">    1325 </span>            :   /// Specialization.
+<span class="lineNum">    1326 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1327 </span>            :            typename _Equal, typename _HashCodeType&gt;
+<span class="lineNum">    1328 </span>            :   struct _Equal_helper&lt;_Key, _Value, _ExtractKey, _Equal, _HashCodeType, false&gt;
+<span class="lineNum">    1329 </span>            :   {
+<span class="lineNum">    1330 </span>            :     static bool
+<span class="lineNum">    1331 </span>            :     _S_equals(const _Equal&amp; __eq, const _ExtractKey&amp; __extract,
+<span class="lineNum">    1332 </span>            :               const _Key&amp; __k, _HashCodeType, _Hash_node&lt;_Value, false&gt;* __n)
+<span class="lineNum">    1333 </span><span class="lineCov">         63 :     { return __eq(__k, __extract(__n-&gt;_M_v())); }</span>
+<span class="lineNum">    1334 </span>            :   };
+<span class="lineNum">    1335 </span>            : 
+<span class="lineNum">    1336 </span>            : 
+<span class="lineNum">    1337 </span>            :   /// Partial specialization used when nodes contain a cached hash code.
+<span class="lineNum">    1338 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1339 </span>            :            typename _H1, typename _H2, typename _Hash&gt;
+<span class="lineNum">    1340 </span>            :     struct _Local_iterator_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1341 </span>            :                                 _H1, _H2, _Hash, true&gt;
+<span class="lineNum">    1342 </span>            :     : private _Hashtable_ebo_helper&lt;0, _H2&gt;
+<span class="lineNum">    1343 </span>            :     {
+<span class="lineNum">    1344 </span>            :     protected:
+<span class="lineNum">    1345 </span>            :       using __base_type = _Hashtable_ebo_helper&lt;0, _H2&gt;;
+<span class="lineNum">    1346 </span>            :       using __hash_code_base = _Hash_code_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1347 </span>            :                                                _H1, _H2, _Hash, true&gt;;
+<span class="lineNum">    1348 </span>            : 
+<span class="lineNum">    1349 </span>            :       _Local_iterator_base() = default;
+<span class="lineNum">    1350 </span>            :       _Local_iterator_base(const __hash_code_base&amp; __base,
+<span class="lineNum">    1351 </span>            :                            _Hash_node&lt;_Value, true&gt;* __p,
+<span class="lineNum">    1352 </span>            :                            std::size_t __bkt, std::size_t __bkt_count)
+<span class="lineNum">    1353 </span>            :       : __base_type(__base._M_h2()),
+<span class="lineNum">    1354 </span>            :         _M_cur(__p), _M_bucket(__bkt), _M_bucket_count(__bkt_count) { }
+<span class="lineNum">    1355 </span>            : 
+<span class="lineNum">    1356 </span>            :       void
+<span class="lineNum">    1357 </span>            :       _M_incr()
+<span class="lineNum">    1358 </span>            :       {
+<span class="lineNum">    1359 </span>            :         _M_cur = _M_cur-&gt;_M_next();
+<span class="lineNum">    1360 </span>            :         if (_M_cur)
+<span class="lineNum">    1361 </span>            :           {
+<span class="lineNum">    1362 </span>            :             std::size_t __bkt
+<span class="lineNum">    1363 </span>            :               = __base_type::_S_get(*this)(_M_cur-&gt;_M_hash_code,
+<span class="lineNum">    1364 </span>            :                                            _M_bucket_count);
+<span class="lineNum">    1365 </span>            :             if (__bkt != _M_bucket)
+<span class="lineNum">    1366 </span>            :               _M_cur = nullptr;
+<span class="lineNum">    1367 </span>            :           }
+<span class="lineNum">    1368 </span>            :       }
+<span class="lineNum">    1369 </span>            : 
+<span class="lineNum">    1370 </span>            :       _Hash_node&lt;_Value, true&gt;*  _M_cur;
+<span class="lineNum">    1371 </span>            :       std::size_t _M_bucket;
+<span class="lineNum">    1372 </span>            :       std::size_t _M_bucket_count;
+<span class="lineNum">    1373 </span>            : 
+<span class="lineNum">    1374 </span>            :     public:
+<span class="lineNum">    1375 </span>            :       const void*
+<span class="lineNum">    1376 </span>            :       _M_curr() const { return _M_cur; }  // for equality ops
+<span class="lineNum">    1377 </span>            : 
+<span class="lineNum">    1378 </span>            :       std::size_t
+<span class="lineNum">    1379 </span>            :       _M_get_bucket() const { return _M_bucket; }  // for debug mode
+<span class="lineNum">    1380 </span>            :     };
+<span class="lineNum">    1381 </span>            : 
+<span class="lineNum">    1382 </span>            :   // Uninitialized storage for a _Hash_code_base.
+<span class="lineNum">    1383 </span>            :   // This type is DefaultConstructible and Assignable even if the
+<span class="lineNum">    1384 </span>            :   // _Hash_code_base type isn't, so that _Local_iterator_base&lt;..., false&gt;
+<span class="lineNum">    1385 </span>            :   // can be DefaultConstructible and Assignable.
+<span class="lineNum">    1386 </span>            :   template&lt;typename _Tp, bool _IsEmpty = std::is_empty&lt;_Tp&gt;::value&gt;
+<span class="lineNum">    1387 </span>            :     struct _Hash_code_storage
+<span class="lineNum">    1388 </span>            :     {
+<span class="lineNum">    1389 </span>            :       __gnu_cxx::__aligned_buffer&lt;_Tp&gt; _M_storage;
+<span class="lineNum">    1390 </span>            : 
+<span class="lineNum">    1391 </span>            :       _Tp*
+<span class="lineNum">    1392 </span>            :       _M_h() { return _M_storage._M_ptr(); }
+<span class="lineNum">    1393 </span>            : 
+<span class="lineNum">    1394 </span>            :       const _Tp*
+<span class="lineNum">    1395 </span>            :       _M_h() const { return _M_storage._M_ptr(); }
+<span class="lineNum">    1396 </span>            :     };
+<span class="lineNum">    1397 </span>            : 
+<span class="lineNum">    1398 </span>            :   // Empty partial specialization for empty _Hash_code_base types.
+<span class="lineNum">    1399 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">    1400 </span>            :     struct _Hash_code_storage&lt;_Tp, true&gt;
+<span class="lineNum">    1401 </span>            :     {
+<span class="lineNum">    1402 </span>            :       static_assert( std::is_empty&lt;_Tp&gt;::value, &quot;Type must be empty&quot; );
+<span class="lineNum">    1403 </span>            : 
+<span class="lineNum">    1404 </span>            :       // As _Tp is an empty type there will be no bytes written/read through
+<span class="lineNum">    1405 </span>            :       // the cast pointer, so no strict-aliasing violation.
+<span class="lineNum">    1406 </span>            :       _Tp*
+<span class="lineNum">    1407 </span>            :       _M_h() { return reinterpret_cast&lt;_Tp*&gt;(this); }
+<span class="lineNum">    1408 </span>            : 
+<span class="lineNum">    1409 </span>            :       const _Tp*
+<span class="lineNum">    1410 </span>            :       _M_h() const { return reinterpret_cast&lt;const _Tp*&gt;(this); }
+<span class="lineNum">    1411 </span>            :     };
+<span class="lineNum">    1412 </span>            : 
+<span class="lineNum">    1413 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1414 </span>            :            typename _H1, typename _H2, typename _Hash&gt;
+<span class="lineNum">    1415 </span>            :     using __hash_code_for_local_iter
+<span class="lineNum">    1416 </span>            :       = _Hash_code_storage&lt;_Hash_code_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1417 </span>            :                                            _H1, _H2, _Hash, false&gt;&gt;;
+<span class="lineNum">    1418 </span>            : 
+<span class="lineNum">    1419 </span>            :   // Partial specialization used when hash codes are not cached
+<span class="lineNum">    1420 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1421 </span>            :            typename _H1, typename _H2, typename _Hash&gt;
+<span class="lineNum">    1422 </span>            :     struct _Local_iterator_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1423 </span>            :                                 _H1, _H2, _Hash, false&gt;
+<span class="lineNum">    1424 </span>            :     : __hash_code_for_local_iter&lt;_Key, _Value, _ExtractKey, _H1, _H2, _Hash&gt;
+<span class="lineNum">    1425 </span>            :     {
+<span class="lineNum">    1426 </span>            :     protected:
+<span class="lineNum">    1427 </span>            :       using __hash_code_base = _Hash_code_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1428 </span>            :                                                _H1, _H2, _Hash, false&gt;;
+<span class="lineNum">    1429 </span>            : 
+<span class="lineNum">    1430 </span>            :       _Local_iterator_base() : _M_bucket_count(-1) { }
+<span class="lineNum">    1431 </span>            : 
+<span class="lineNum">    1432 </span>            :       _Local_iterator_base(const __hash_code_base&amp; __base,
+<span class="lineNum">    1433 </span>            :                            _Hash_node&lt;_Value, false&gt;* __p,
+<span class="lineNum">    1434 </span>            :                            std::size_t __bkt, std::size_t __bkt_count)
+<span class="lineNum">    1435 </span>            :       : _M_cur(__p), _M_bucket(__bkt), _M_bucket_count(__bkt_count)
+<span class="lineNum">    1436 </span>            :       { _M_init(__base); }
+<span class="lineNum">    1437 </span>            : 
+<span class="lineNum">    1438 </span>            :       ~_Local_iterator_base()
+<span class="lineNum">    1439 </span>            :       {
+<span class="lineNum">    1440 </span>            :         if (_M_bucket_count != -1)
+<span class="lineNum">    1441 </span>            :           _M_destroy();
+<span class="lineNum">    1442 </span>            :       }
+<span class="lineNum">    1443 </span>            : 
+<span class="lineNum">    1444 </span>            :       _Local_iterator_base(const _Local_iterator_base&amp; __iter)
+<span class="lineNum">    1445 </span>            :       : _M_cur(__iter._M_cur), _M_bucket(__iter._M_bucket),
+<span class="lineNum">    1446 </span>            :         _M_bucket_count(__iter._M_bucket_count)
+<span class="lineNum">    1447 </span>            :       {
+<span class="lineNum">    1448 </span>            :         if (_M_bucket_count != -1)
+<span class="lineNum">    1449 </span>            :           _M_init(*__iter._M_h());
+<span class="lineNum">    1450 </span>            :       }
+<span class="lineNum">    1451 </span>            : 
+<span class="lineNum">    1452 </span>            :       _Local_iterator_base&amp;
+<span class="lineNum">    1453 </span>            :       operator=(const _Local_iterator_base&amp; __iter)
+<span class="lineNum">    1454 </span>            :       {
+<span class="lineNum">    1455 </span>            :         if (_M_bucket_count != -1)
+<span class="lineNum">    1456 </span>            :           _M_destroy();
+<span class="lineNum">    1457 </span>            :         _M_cur = __iter._M_cur;
+<span class="lineNum">    1458 </span>            :         _M_bucket = __iter._M_bucket;
+<span class="lineNum">    1459 </span>            :         _M_bucket_count = __iter._M_bucket_count;
+<span class="lineNum">    1460 </span>            :         if (_M_bucket_count != -1)
+<span class="lineNum">    1461 </span>            :           _M_init(*__iter._M_h());
+<span class="lineNum">    1462 </span>            :         return *this;
+<span class="lineNum">    1463 </span>            :       }
+<span class="lineNum">    1464 </span>            : 
+<span class="lineNum">    1465 </span>            :       void
+<span class="lineNum">    1466 </span>            :       _M_incr()
+<span class="lineNum">    1467 </span>            :       {
+<span class="lineNum">    1468 </span>            :         _M_cur = _M_cur-&gt;_M_next();
+<span class="lineNum">    1469 </span>            :         if (_M_cur)
+<span class="lineNum">    1470 </span>            :           {
+<span class="lineNum">    1471 </span>            :             std::size_t __bkt = this-&gt;_M_h()-&gt;_M_bucket_index(_M_cur,
+<span class="lineNum">    1472 </span>            :                                                               _M_bucket_count);
+<span class="lineNum">    1473 </span>            :             if (__bkt != _M_bucket)
+<span class="lineNum">    1474 </span>            :               _M_cur = nullptr;
+<span class="lineNum">    1475 </span>            :           }
+<span class="lineNum">    1476 </span>            :       }
+<span class="lineNum">    1477 </span>            : 
+<span class="lineNum">    1478 </span>            :       _Hash_node&lt;_Value, false&gt;*  _M_cur;
+<span class="lineNum">    1479 </span>            :       std::size_t _M_bucket;
+<span class="lineNum">    1480 </span>            :       std::size_t _M_bucket_count;
+<span class="lineNum">    1481 </span>            : 
+<span class="lineNum">    1482 </span>            :       void
+<span class="lineNum">    1483 </span>            :       _M_init(const __hash_code_base&amp; __base)
+<span class="lineNum">    1484 </span>            :       { ::new(this-&gt;_M_h()) __hash_code_base(__base); }
+<span class="lineNum">    1485 </span>            : 
+<span class="lineNum">    1486 </span>            :       void
+<span class="lineNum">    1487 </span>            :       _M_destroy() { this-&gt;_M_h()-&gt;~__hash_code_base(); }
+<span class="lineNum">    1488 </span>            : 
+<span class="lineNum">    1489 </span>            :     public:
+<span class="lineNum">    1490 </span>            :       const void*
+<span class="lineNum">    1491 </span>            :       _M_curr() const { return _M_cur; }  // for equality ops and debug mode
+<span class="lineNum">    1492 </span>            : 
+<span class="lineNum">    1493 </span>            :       std::size_t
+<span class="lineNum">    1494 </span>            :       _M_get_bucket() const { return _M_bucket; }  // for debug mode
+<span class="lineNum">    1495 </span>            :     };
+<span class="lineNum">    1496 </span>            : 
+<span class="lineNum">    1497 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1498 </span>            :            typename _H1, typename _H2, typename _Hash, bool __cache&gt;
+<span class="lineNum">    1499 </span>            :     inline bool
+<span class="lineNum">    1500 </span>            :     operator==(const _Local_iterator_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1501 </span>            :                                           _H1, _H2, _Hash, __cache&gt;&amp; __x,
+<span class="lineNum">    1502 </span>            :                const _Local_iterator_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1503 </span>            :                                           _H1, _H2, _Hash, __cache&gt;&amp; __y)
+<span class="lineNum">    1504 </span>            :     { return __x._M_curr() == __y._M_curr(); }
+<span class="lineNum">    1505 </span>            : 
+<span class="lineNum">    1506 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1507 </span>            :            typename _H1, typename _H2, typename _Hash, bool __cache&gt;
+<span class="lineNum">    1508 </span>            :     inline bool
+<span class="lineNum">    1509 </span>            :     operator!=(const _Local_iterator_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1510 </span>            :                                           _H1, _H2, _Hash, __cache&gt;&amp; __x,
+<span class="lineNum">    1511 </span>            :                const _Local_iterator_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1512 </span>            :                                           _H1, _H2, _Hash, __cache&gt;&amp; __y)
+<span class="lineNum">    1513 </span>            :     { return __x._M_curr() != __y._M_curr(); }
+<span class="lineNum">    1514 </span>            : 
+<span class="lineNum">    1515 </span>            :   /// local iterators
+<span class="lineNum">    1516 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1517 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">    1518 </span>            :            bool __constant_iterators, bool __cache&gt;
+<span class="lineNum">    1519 </span>            :     struct _Local_iterator
+<span class="lineNum">    1520 </span>            :     : public _Local_iterator_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1521 </span>            :                                   _H1, _H2, _Hash, __cache&gt;
+<span class="lineNum">    1522 </span>            :     {
+<span class="lineNum">    1523 </span>            :     private:
+<span class="lineNum">    1524 </span>            :       using __base_type = _Local_iterator_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1525 </span>            :                                                _H1, _H2, _Hash, __cache&gt;;
+<span class="lineNum">    1526 </span>            :       using __hash_code_base = typename __base_type::__hash_code_base;
+<span class="lineNum">    1527 </span>            :     public:
+<span class="lineNum">    1528 </span>            :       typedef _Value                                    value_type;
+<span class="lineNum">    1529 </span>            :       typedef typename std::conditional&lt;__constant_iterators,
+<span class="lineNum">    1530 </span>            :                                         const _Value*, _Value*&gt;::type
+<span class="lineNum">    1531 </span>            :                                                        pointer;
+<span class="lineNum">    1532 </span>            :       typedef typename std::conditional&lt;__constant_iterators,
+<span class="lineNum">    1533 </span>            :                                         const _Value&amp;, _Value&amp;&gt;::type
+<span class="lineNum">    1534 </span>            :                                                        reference;
+<span class="lineNum">    1535 </span>            :       typedef std::ptrdiff_t                            difference_type;
+<span class="lineNum">    1536 </span>            :       typedef std::forward_iterator_tag                 iterator_category;
+<span class="lineNum">    1537 </span>            : 
+<span class="lineNum">    1538 </span>            :       _Local_iterator() = default;
+<span class="lineNum">    1539 </span>            : 
+<span class="lineNum">    1540 </span>            :       _Local_iterator(const __hash_code_base&amp; __base,
+<span class="lineNum">    1541 </span>            :                       _Hash_node&lt;_Value, __cache&gt;* __p,
+<span class="lineNum">    1542 </span>            :                       std::size_t __bkt, std::size_t __bkt_count)
+<span class="lineNum">    1543 </span>            :         : __base_type(__base, __p, __bkt, __bkt_count)
+<span class="lineNum">    1544 </span>            :       { }
+<span class="lineNum">    1545 </span>            : 
+<span class="lineNum">    1546 </span>            :       reference
+<span class="lineNum">    1547 </span>            :       operator*() const
+<span class="lineNum">    1548 </span>            :       { return this-&gt;_M_cur-&gt;_M_v(); }
+<span class="lineNum">    1549 </span>            : 
+<span class="lineNum">    1550 </span>            :       pointer
+<span class="lineNum">    1551 </span>            :       operator-&gt;() const
+<span class="lineNum">    1552 </span>            :       { return this-&gt;_M_cur-&gt;_M_valptr(); }
+<span class="lineNum">    1553 </span>            : 
+<span class="lineNum">    1554 </span>            :       _Local_iterator&amp;
+<span class="lineNum">    1555 </span>            :       operator++()
+<span class="lineNum">    1556 </span>            :       {
+<span class="lineNum">    1557 </span>            :         this-&gt;_M_incr();
+<span class="lineNum">    1558 </span>            :         return *this;
+<span class="lineNum">    1559 </span>            :       }
+<span class="lineNum">    1560 </span>            : 
+<span class="lineNum">    1561 </span>            :       _Local_iterator
+<span class="lineNum">    1562 </span>            :       operator++(int)
+<span class="lineNum">    1563 </span>            :       {
+<span class="lineNum">    1564 </span>            :         _Local_iterator __tmp(*this);
+<span class="lineNum">    1565 </span>            :         this-&gt;_M_incr();
+<span class="lineNum">    1566 </span>            :         return __tmp;
+<span class="lineNum">    1567 </span>            :       }
+<span class="lineNum">    1568 </span>            :     };
+<span class="lineNum">    1569 </span>            : 
+<span class="lineNum">    1570 </span>            :   /// local const_iterators
+<span class="lineNum">    1571 </span>            :   template&lt;typename _Key, typename _Value, typename _ExtractKey,
+<span class="lineNum">    1572 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">    1573 </span>            :            bool __constant_iterators, bool __cache&gt;
+<span class="lineNum">    1574 </span>            :     struct _Local_const_iterator
+<span class="lineNum">    1575 </span>            :     : public _Local_iterator_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1576 </span>            :                                   _H1, _H2, _Hash, __cache&gt;
+<span class="lineNum">    1577 </span>            :     {
+<span class="lineNum">    1578 </span>            :     private:
+<span class="lineNum">    1579 </span>            :       using __base_type = _Local_iterator_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1580 </span>            :                                                _H1, _H2, _Hash, __cache&gt;;
+<span class="lineNum">    1581 </span>            :       using __hash_code_base = typename __base_type::__hash_code_base;
+<span class="lineNum">    1582 </span>            : 
+<span class="lineNum">    1583 </span>            :     public:
+<span class="lineNum">    1584 </span>            :       typedef _Value                                    value_type;
+<span class="lineNum">    1585 </span>            :       typedef const _Value*                             pointer;
+<span class="lineNum">    1586 </span>            :       typedef const _Value&amp;                         reference;
+<span class="lineNum">    1587 </span>            :       typedef std::ptrdiff_t                            difference_type;
+<span class="lineNum">    1588 </span>            :       typedef std::forward_iterator_tag                 iterator_category;
+<span class="lineNum">    1589 </span>            : 
+<span class="lineNum">    1590 </span>            :       _Local_const_iterator() = default;
+<span class="lineNum">    1591 </span>            : 
+<span class="lineNum">    1592 </span>            :       _Local_const_iterator(const __hash_code_base&amp; __base,
+<span class="lineNum">    1593 </span>            :                             _Hash_node&lt;_Value, __cache&gt;* __p,
+<span class="lineNum">    1594 </span>            :                             std::size_t __bkt, std::size_t __bkt_count)
+<span class="lineNum">    1595 </span>            :         : __base_type(__base, __p, __bkt, __bkt_count)
+<span class="lineNum">    1596 </span>            :       { }
+<span class="lineNum">    1597 </span>            : 
+<span class="lineNum">    1598 </span>            :       _Local_const_iterator(const _Local_iterator&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1599 </span>            :                                                   _H1, _H2, _Hash,
+<span class="lineNum">    1600 </span>            :                                                   __constant_iterators,
+<span class="lineNum">    1601 </span>            :                                                   __cache&gt;&amp; __x)
+<span class="lineNum">    1602 </span>            :         : __base_type(__x)
+<span class="lineNum">    1603 </span>            :       { }
+<span class="lineNum">    1604 </span>            : 
+<span class="lineNum">    1605 </span>            :       reference
+<span class="lineNum">    1606 </span>            :       operator*() const
+<span class="lineNum">    1607 </span>            :       { return this-&gt;_M_cur-&gt;_M_v(); }
+<span class="lineNum">    1608 </span>            : 
+<span class="lineNum">    1609 </span>            :       pointer
+<span class="lineNum">    1610 </span>            :       operator-&gt;() const
+<span class="lineNum">    1611 </span>            :       { return this-&gt;_M_cur-&gt;_M_valptr(); }
+<span class="lineNum">    1612 </span>            : 
+<span class="lineNum">    1613 </span>            :       _Local_const_iterator&amp;
+<span class="lineNum">    1614 </span>            :       operator++()
+<span class="lineNum">    1615 </span>            :       {
+<span class="lineNum">    1616 </span>            :         this-&gt;_M_incr();
+<span class="lineNum">    1617 </span>            :         return *this;
+<span class="lineNum">    1618 </span>            :       }
+<span class="lineNum">    1619 </span>            : 
+<span class="lineNum">    1620 </span>            :       _Local_const_iterator
+<span class="lineNum">    1621 </span>            :       operator++(int)
+<span class="lineNum">    1622 </span>            :       {
+<span class="lineNum">    1623 </span>            :         _Local_const_iterator __tmp(*this);
+<span class="lineNum">    1624 </span>            :         this-&gt;_M_incr();
+<span class="lineNum">    1625 </span>            :         return __tmp;
+<span class="lineNum">    1626 </span>            :       }
+<span class="lineNum">    1627 </span>            :     };
+<span class="lineNum">    1628 </span>            : 
+<span class="lineNum">    1629 </span>            :   /**
+<span class="lineNum">    1630 </span>            :    *  Primary class template _Hashtable_base.
+<span class="lineNum">    1631 </span>            :    *
+<span class="lineNum">    1632 </span>            :    *  Helper class adding management of _Equal functor to
+<span class="lineNum">    1633 </span>            :    *  _Hash_code_base type.
+<span class="lineNum">    1634 </span>            :    *
+<span class="lineNum">    1635 </span>            :    *  Base class templates are:
+<span class="lineNum">    1636 </span>            :    *    - __detail::_Hash_code_base
+<span class="lineNum">    1637 </span>            :    *    - __detail::_Hashtable_ebo_helper
+<span class="lineNum">    1638 </span>            :    */
+<span class="lineNum">    1639 </span>            :   template&lt;typename _Key, typename _Value,
+<span class="lineNum">    1640 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">    1641 </span>            :            typename _H1, typename _H2, typename _Hash, typename _Traits&gt;
+<span class="lineNum">    1642 </span>            :   struct _Hashtable_base
+<span class="lineNum">    1643 </span>            :   : public _Hash_code_base&lt;_Key, _Value, _ExtractKey, _H1, _H2, _Hash,
+<span class="lineNum">    1644 </span>            :                            _Traits::__hash_cached::value&gt;,
+<span class="lineNum">    1645 </span>            :     private _Hashtable_ebo_helper&lt;0, _Equal&gt;
+<span class="lineNum">    1646 </span>            :   {
+<span class="lineNum">    1647 </span>            :   public:
+<span class="lineNum">    1648 </span>            :     typedef _Key                                        key_type;
+<span class="lineNum">    1649 </span>            :     typedef _Value                                      value_type;
+<span class="lineNum">    1650 </span>            :     typedef _Equal                                      key_equal;
+<span class="lineNum">    1651 </span>            :     typedef std::size_t                                 size_type;
+<span class="lineNum">    1652 </span>            :     typedef std::ptrdiff_t                              difference_type;
+<span class="lineNum">    1653 </span>            : 
+<span class="lineNum">    1654 </span>            :     using __traits_type = _Traits;
+<span class="lineNum">    1655 </span>            :     using __hash_cached = typename __traits_type::__hash_cached;
+<span class="lineNum">    1656 </span>            :     using __constant_iterators = typename __traits_type::__constant_iterators;
+<span class="lineNum">    1657 </span>            :     using __unique_keys = typename __traits_type::__unique_keys;
+<span class="lineNum">    1658 </span>            : 
+<span class="lineNum">    1659 </span>            :     using __hash_code_base = _Hash_code_base&lt;_Key, _Value, _ExtractKey,
+<span class="lineNum">    1660 </span>            :                                              _H1, _H2, _Hash,
+<span class="lineNum">    1661 </span>            :                                              __hash_cached::value&gt;;
+<span class="lineNum">    1662 </span>            : 
+<span class="lineNum">    1663 </span>            :     using __hash_code = typename __hash_code_base::__hash_code;
+<span class="lineNum">    1664 </span>            :     using __node_type = typename __hash_code_base::__node_type;
+<span class="lineNum">    1665 </span>            : 
+<span class="lineNum">    1666 </span>            :     using iterator = __detail::_Node_iterator&lt;value_type,
+<span class="lineNum">    1667 </span>            :                                               __constant_iterators::value,
+<span class="lineNum">    1668 </span>            :                                               __hash_cached::value&gt;;
+<span class="lineNum">    1669 </span>            : 
+<span class="lineNum">    1670 </span>            :     using const_iterator = __detail::_Node_const_iterator&lt;value_type,
+<span class="lineNum">    1671 </span>            :                                                    __constant_iterators::value,
+<span class="lineNum">    1672 </span>            :                                                    __hash_cached::value&gt;;
+<span class="lineNum">    1673 </span>            : 
+<span class="lineNum">    1674 </span>            :     using local_iterator = __detail::_Local_iterator&lt;key_type, value_type,
+<span class="lineNum">    1675 </span>            :                                                   _ExtractKey, _H1, _H2, _Hash,
+<span class="lineNum">    1676 </span>            :                                                   __constant_iterators::value,
+<span class="lineNum">    1677 </span>            :                                                      __hash_cached::value&gt;;
+<span class="lineNum">    1678 </span>            : 
+<span class="lineNum">    1679 </span>            :     using const_local_iterator = __detail::_Local_const_iterator&lt;key_type,
+<span class="lineNum">    1680 </span>            :                                                                  value_type,
+<span class="lineNum">    1681 </span>            :                                         _ExtractKey, _H1, _H2, _Hash,
+<span class="lineNum">    1682 </span>            :                                         __constant_iterators::value,
+<span class="lineNum">    1683 </span>            :                                         __hash_cached::value&gt;;
+<span class="lineNum">    1684 </span>            : 
+<span class="lineNum">    1685 </span>            :     using __ireturn_type = typename std::conditional&lt;__unique_keys::value,
+<span class="lineNum">    1686 </span>            :                                                      std::pair&lt;iterator, bool&gt;,
+<span class="lineNum">    1687 </span>            :                                                      iterator&gt;::type;
+<span class="lineNum">    1688 </span>            :   private:
+<span class="lineNum">    1689 </span>            :     using _EqualEBO = _Hashtable_ebo_helper&lt;0, _Equal&gt;;
+<span class="lineNum">    1690 </span>            :     using _EqualHelper =  _Equal_helper&lt;_Key, _Value, _ExtractKey, _Equal,
+<span class="lineNum">    1691 </span>            :                                         __hash_code, __hash_cached::value&gt;;
+<span class="lineNum">    1692 </span>            : 
+<span class="lineNum">    1693 </span>            :   protected:
+<span class="lineNum">    1694 </span><span class="lineCov">    4017396 :     _Hashtable_base() = default;</span>
+<span class="lineNum">    1695 </span>            :     _Hashtable_base(const _ExtractKey&amp; __ex, const _H1&amp; __h1, const _H2&amp; __h2,
+<span class="lineNum">    1696 </span>            :                     const _Hash&amp; __hash, const _Equal&amp; __eq)
+<span class="lineNum">    1697 </span><span class="lineCov">      54086 :     : __hash_code_base(__ex, __h1, __h2, __hash), _EqualEBO(__eq)</span>
+<span class="lineNum">    1698 </span>            :     { }
+<span class="lineNum">    1699 </span>            : 
+<span class="lineNum">    1700 </span>            :     bool
+<span class="lineNum">    1701 </span>            :     _M_equals(const _Key&amp; __k, __hash_code __c, __node_type* __n) const
+<span class="lineNum">    1702 </span>            :     {
+<span class="lineNum">    1703 </span><span class="lineCov">   25886842 :       return _EqualHelper::_S_equals(_M_eq(), this-&gt;_M_extract(),</span>
+<span class="lineNum">    1704 </span><span class="lineCov">   21735667 :                                      __k, __c, __n);</span>
+<span class="lineNum">    1705 </span>            :     }
+<span class="lineNum">    1706 </span>            : 
+<span class="lineNum">    1707 </span>            :     void
+<span class="lineNum">    1708 </span>            :     _M_swap(_Hashtable_base&amp; __x)
+<span class="lineNum">    1709 </span>            :     {
+<span class="lineNum">    1710 </span>            :       __hash_code_base::_M_swap(__x);
+<span class="lineNum">    1711 </span>            :       std::swap(_M_eq(), __x._M_eq());
+<span class="lineNum">    1712 </span>            :     }
+<span class="lineNum">    1713 </span>            : 
+<span class="lineNum">    1714 </span>            :     const _Equal&amp;
+<span class="lineNum">    1715 </span><span class="lineCov">   12943421 :     _M_eq() const { return _EqualEBO::_S_cget(*this); }</span>
+<span class="lineNum">    1716 </span>            : 
+<span class="lineNum">    1717 </span>            :     _Equal&amp;
+<span class="lineNum">    1718 </span>            :     _M_eq() { return _EqualEBO::_S_get(*this); }
+<span class="lineNum">    1719 </span>            :   };
+<span class="lineNum">    1720 </span>            : 
+<span class="lineNum">    1721 </span>            :   /**
+<span class="lineNum">    1722 </span>            :    *  struct _Equality_base.
+<span class="lineNum">    1723 </span>            :    *
+<span class="lineNum">    1724 </span>            :    *  Common types and functions for class _Equality.
+<span class="lineNum">    1725 </span>            :    */
+<span class="lineNum">    1726 </span>            :   struct _Equality_base
+<span class="lineNum">    1727 </span>            :   {
+<span class="lineNum">    1728 </span>            :   protected:
+<span class="lineNum">    1729 </span>            :     template&lt;typename _Uiterator&gt;
+<span class="lineNum">    1730 </span>            :       static bool
+<span class="lineNum">    1731 </span>            :       _S_is_permutation(_Uiterator, _Uiterator, _Uiterator);
+<span class="lineNum">    1732 </span>            :   };
+<span class="lineNum">    1733 </span>            : 
+<span class="lineNum">    1734 </span>            :   // See std::is_permutation in N3068.
+<span class="lineNum">    1735 </span>            :   template&lt;typename _Uiterator&gt;
+<span class="lineNum">    1736 </span>            :     bool
+<span class="lineNum">    1737 </span>            :     _Equality_base::
+<span class="lineNum">    1738 </span>            :     _S_is_permutation(_Uiterator __first1, _Uiterator __last1,
+<span class="lineNum">    1739 </span>            :                       _Uiterator __first2)
+<span class="lineNum">    1740 </span>            :     {
+<span class="lineNum">    1741 </span>            :       for (; __first1 != __last1; ++__first1, ++__first2)
+<span class="lineNum">    1742 </span>            :         if (!(*__first1 == *__first2))
+<span class="lineNum">    1743 </span>            :           break;
+<span class="lineNum">    1744 </span>            : 
+<span class="lineNum">    1745 </span>            :       if (__first1 == __last1)
+<span class="lineNum">    1746 </span>            :         return true;
+<span class="lineNum">    1747 </span>            : 
+<span class="lineNum">    1748 </span>            :       _Uiterator __last2 = __first2;
+<span class="lineNum">    1749 </span>            :       std::advance(__last2, std::distance(__first1, __last1));
+<span class="lineNum">    1750 </span>            : 
+<span class="lineNum">    1751 </span>            :       for (_Uiterator __it1 = __first1; __it1 != __last1; ++__it1)
+<span class="lineNum">    1752 </span>            :         {
+<span class="lineNum">    1753 </span>            :           _Uiterator __tmp =  __first1;
+<span class="lineNum">    1754 </span>            :           while (__tmp != __it1 &amp;&amp; !bool(*__tmp == *__it1))
+<span class="lineNum">    1755 </span>            :             ++__tmp;
+<span class="lineNum">    1756 </span>            : 
+<span class="lineNum">    1757 </span>            :           // We've seen this one before.
+<span class="lineNum">    1758 </span>            :           if (__tmp != __it1)
+<span class="lineNum">    1759 </span>            :             continue;
+<span class="lineNum">    1760 </span>            : 
+<span class="lineNum">    1761 </span>            :           std::ptrdiff_t __n2 = 0;
+<span class="lineNum">    1762 </span>            :           for (__tmp = __first2; __tmp != __last2; ++__tmp)
+<span class="lineNum">    1763 </span>            :             if (*__tmp == *__it1)
+<span class="lineNum">    1764 </span>            :               ++__n2;
+<span class="lineNum">    1765 </span>            : 
+<span class="lineNum">    1766 </span>            :           if (!__n2)
+<span class="lineNum">    1767 </span>            :             return false;
+<span class="lineNum">    1768 </span>            : 
+<span class="lineNum">    1769 </span>            :           std::ptrdiff_t __n1 = 0;
+<span class="lineNum">    1770 </span>            :           for (__tmp = __it1; __tmp != __last1; ++__tmp)
+<span class="lineNum">    1771 </span>            :             if (*__tmp == *__it1)
+<span class="lineNum">    1772 </span>            :               ++__n1;
+<span class="lineNum">    1773 </span>            : 
+<span class="lineNum">    1774 </span>            :           if (__n1 != __n2)
+<span class="lineNum">    1775 </span>            :             return false;
+<span class="lineNum">    1776 </span>            :         }
+<span class="lineNum">    1777 </span>            :       return true;
+<span class="lineNum">    1778 </span>            :     }
+<span class="lineNum">    1779 </span>            : 
+<span class="lineNum">    1780 </span>            :   /**
+<span class="lineNum">    1781 </span>            :    *  Primary class template  _Equality.
+<span class="lineNum">    1782 </span>            :    *
+<span class="lineNum">    1783 </span>            :    *  This is for implementing equality comparison for unordered
+<span class="lineNum">    1784 </span>            :    *  containers, per N3068, by John Lakos and Pablo Halpern.
+<span class="lineNum">    1785 </span>            :    *  Algorithmically, we follow closely the reference implementations
+<span class="lineNum">    1786 </span>            :    *  therein.
+<span class="lineNum">    1787 </span>            :    */
+<span class="lineNum">    1788 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">    1789 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">    1790 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">    1791 </span>            :            typename _RehashPolicy, typename _Traits,
+<span class="lineNum">    1792 </span>            :            bool _Unique_keys = _Traits::__unique_keys::value&gt;
+<span class="lineNum">    1793 </span>            :     struct _Equality;
+<span class="lineNum">    1794 </span>            : 
+<span class="lineNum">    1795 </span>            :   /// Specialization.
+<span class="lineNum">    1796 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">    1797 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">    1798 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">    1799 </span>            :            typename _RehashPolicy, typename _Traits&gt;
+<span class="lineNum">    1800 </span>            :     struct _Equality&lt;_Key, _Value, _Alloc, _ExtractKey, _Equal,
+<span class="lineNum">    1801 </span>            :                      _H1, _H2, _Hash, _RehashPolicy, _Traits, true&gt;
+<span class="lineNum">    1802 </span>            :     {
+<span class="lineNum">    1803 </span>            :       using __hashtable = _Hashtable&lt;_Key, _Value, _Alloc, _ExtractKey, _Equal,
+<span class="lineNum">    1804 </span>            :                                      _H1, _H2, _Hash, _RehashPolicy, _Traits&gt;;
+<span class="lineNum">    1805 </span>            : 
+<span class="lineNum">    1806 </span>            :       bool
+<span class="lineNum">    1807 </span>            :       _M_equal(const __hashtable&amp;) const;
+<span class="lineNum">    1808 </span>            :     };
+<span class="lineNum">    1809 </span>            : 
+<span class="lineNum">    1810 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">    1811 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">    1812 </span>            :            typename _H1, typename _H2, typename _Hash,
+<a name="1813"><span class="lineNum">    1813 </span>            :            typename _RehashPolicy, typename _Traits&gt;</a>
+<span class="lineNum">    1814 </span>            :     bool
+<span class="lineNum">    1815 </span><span class="lineCov">          6 :     _Equality&lt;_Key, _Value, _Alloc, _ExtractKey, _Equal,</span>
+<span class="lineNum">    1816 </span>            :               _H1, _H2, _Hash, _RehashPolicy, _Traits, true&gt;::
+<span class="lineNum">    1817 </span>            :     _M_equal(const __hashtable&amp; __other) const
+<span class="lineNum">    1818 </span>            :     {
+<span class="lineNum">    1819 </span><span class="lineCov">          6 :       const __hashtable* __this = static_cast&lt;const __hashtable*&gt;(this);</span>
+<span class="lineNum">    1820 </span>            : 
+<span class="lineNum">    1821 </span><span class="lineCov">          6 :       if (__this-&gt;size() != __other.size())</span>
+<span class="lineNum">    1822 </span>            :         return false;
+<span class="lineNum">    1823 </span>            : 
+<span class="lineNum">    1824 </span><span class="lineCov">         12 :       for (auto __itx = __this-&gt;begin(); __itx != __this-&gt;end(); ++__itx)</span>
+<span class="lineNum">    1825 </span>            :         {
+<span class="lineNum">    1826 </span><span class="lineCov">          8 :           const auto __ity = __other.find(_ExtractKey()(*__itx));</span>
+<span class="lineNum">    1827 </span><span class="lineCov">         17 :           if (__ity == __other.end() || !bool(*__ity == *__itx))</span>
+<span class="lineNum">    1828 </span>            :             return false;
+<span class="lineNum">    1829 </span>            :         }
+<span class="lineNum">    1830 </span>            :       return true;
+<span class="lineNum">    1831 </span>            :     }
+<span class="lineNum">    1832 </span>            : 
+<span class="lineNum">    1833 </span>            :   /// Specialization.
+<span class="lineNum">    1834 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">    1835 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">    1836 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">    1837 </span>            :            typename _RehashPolicy, typename _Traits&gt;
+<span class="lineNum">    1838 </span>            :     struct _Equality&lt;_Key, _Value, _Alloc, _ExtractKey, _Equal,
+<span class="lineNum">    1839 </span>            :                      _H1, _H2, _Hash, _RehashPolicy, _Traits, false&gt;
+<span class="lineNum">    1840 </span>            :     : public _Equality_base
+<span class="lineNum">    1841 </span>            :     {
+<span class="lineNum">    1842 </span>            :       using __hashtable = _Hashtable&lt;_Key, _Value, _Alloc, _ExtractKey, _Equal,
+<span class="lineNum">    1843 </span>            :                                      _H1, _H2, _Hash, _RehashPolicy, _Traits&gt;;
+<span class="lineNum">    1844 </span>            : 
+<span class="lineNum">    1845 </span>            :       bool
+<span class="lineNum">    1846 </span>            :       _M_equal(const __hashtable&amp;) const;
+<span class="lineNum">    1847 </span>            :     };
+<span class="lineNum">    1848 </span>            : 
+<span class="lineNum">    1849 </span>            :   template&lt;typename _Key, typename _Value, typename _Alloc,
+<span class="lineNum">    1850 </span>            :            typename _ExtractKey, typename _Equal,
+<span class="lineNum">    1851 </span>            :            typename _H1, typename _H2, typename _Hash,
+<span class="lineNum">    1852 </span>            :            typename _RehashPolicy, typename _Traits&gt;
+<span class="lineNum">    1853 </span>            :     bool
+<span class="lineNum">    1854 </span>            :     _Equality&lt;_Key, _Value, _Alloc, _ExtractKey, _Equal,
+<span class="lineNum">    1855 </span>            :               _H1, _H2, _Hash, _RehashPolicy, _Traits, false&gt;::
+<span class="lineNum">    1856 </span>            :     _M_equal(const __hashtable&amp; __other) const
+<span class="lineNum">    1857 </span>            :     {
+<span class="lineNum">    1858 </span>            :       const __hashtable* __this = static_cast&lt;const __hashtable*&gt;(this);
+<span class="lineNum">    1859 </span>            : 
+<span class="lineNum">    1860 </span>            :       if (__this-&gt;size() != __other.size())
+<span class="lineNum">    1861 </span>            :         return false;
+<span class="lineNum">    1862 </span>            : 
+<span class="lineNum">    1863 </span>            :       for (auto __itx = __this-&gt;begin(); __itx != __this-&gt;end();)
+<span class="lineNum">    1864 </span>            :         {
+<span class="lineNum">    1865 </span>            :           const auto __xrange = __this-&gt;equal_range(_ExtractKey()(*__itx));
+<span class="lineNum">    1866 </span>            :           const auto __yrange = __other.equal_range(_ExtractKey()(*__itx));
+<span class="lineNum">    1867 </span>            : 
+<span class="lineNum">    1868 </span>            :           if (std::distance(__xrange.first, __xrange.second)
+<span class="lineNum">    1869 </span>            :               != std::distance(__yrange.first, __yrange.second))
+<span class="lineNum">    1870 </span>            :             return false;
+<span class="lineNum">    1871 </span>            : 
+<span class="lineNum">    1872 </span>            :           if (!_S_is_permutation(__xrange.first, __xrange.second,
+<span class="lineNum">    1873 </span>            :                                  __yrange.first))
+<span class="lineNum">    1874 </span>            :             return false;
+<span class="lineNum">    1875 </span>            : 
+<span class="lineNum">    1876 </span>            :           __itx = __xrange.second;
+<span class="lineNum">    1877 </span>            :         }
+<span class="lineNum">    1878 </span>            :       return true;
+<span class="lineNum">    1879 </span>            :     }
+<span class="lineNum">    1880 </span>            : 
+<span class="lineNum">    1881 </span>            :   /**
+<span class="lineNum">    1882 </span>            :    * This type deals with all allocation and keeps an allocator instance through
+<span class="lineNum">    1883 </span>            :    * inheritance to benefit from EBO when possible.
+<span class="lineNum">    1884 </span>            :    */
+<span class="lineNum">    1885 </span>            :   template&lt;typename _NodeAlloc&gt;
+<span class="lineNum">    1886 </span><span class="lineCov">    3245447 :     struct _Hashtable_alloc : private _Hashtable_ebo_helper&lt;0, _NodeAlloc&gt;</span>
+<span class="lineNum">    1887 </span>            :     {
+<span class="lineNum">    1888 </span>            :     private:
+<span class="lineNum">    1889 </span>            :       using __ebo_node_alloc = _Hashtable_ebo_helper&lt;0, _NodeAlloc&gt;;
+<span class="lineNum">    1890 </span>            :     public:
+<span class="lineNum">    1891 </span>            :       using __node_type = typename _NodeAlloc::value_type;
+<span class="lineNum">    1892 </span>            :       using __node_alloc_type = _NodeAlloc;
+<span class="lineNum">    1893 </span>            :       // Use __gnu_cxx to benefit from _S_always_equal and al.
+<span class="lineNum">    1894 </span>            :       using __node_alloc_traits = __gnu_cxx::__alloc_traits&lt;__node_alloc_type&gt;;
+<span class="lineNum">    1895 </span>            : 
+<span class="lineNum">    1896 </span>            :       using __value_type = typename __node_type::value_type;
+<span class="lineNum">    1897 </span>            :       using __value_alloc_type =
+<span class="lineNum">    1898 </span>            :         __alloc_rebind&lt;__node_alloc_type, __value_type&gt;;
+<span class="lineNum">    1899 </span>            :       using __value_alloc_traits = std::allocator_traits&lt;__value_alloc_type&gt;;
+<span class="lineNum">    1900 </span>            : 
+<span class="lineNum">    1901 </span>            :       using __node_base = __detail::_Hash_node_base;
+<span class="lineNum">    1902 </span>            :       using __bucket_type = __node_base*;      
+<span class="lineNum">    1903 </span>            :       using __bucket_alloc_type =
+<span class="lineNum">    1904 </span>            :         __alloc_rebind&lt;__node_alloc_type, __bucket_type&gt;;
+<span class="lineNum">    1905 </span>            :       using __bucket_alloc_traits = std::allocator_traits&lt;__bucket_alloc_type&gt;;
+<span class="lineNum">    1906 </span>            : 
+<span class="lineNum">    1907 </span><span class="lineCov">    2008698 :       _Hashtable_alloc() = default;</span>
+<span class="lineNum">    1908 </span>            :       _Hashtable_alloc(const _Hashtable_alloc&amp;) = default;
+<span class="lineNum">    1909 </span><span class="lineCov">         27 :       _Hashtable_alloc(_Hashtable_alloc&amp;&amp;) = default;</span>
+<span class="lineNum">    1910 </span>            : 
+<span class="lineNum">    1911 </span>            :       template&lt;typename _Alloc&gt;
+<span class="lineNum">    1912 </span>            :         _Hashtable_alloc(_Alloc&amp;&amp; __a)
+<span class="lineNum">    1913 </span><span class="lineCov">    2473454 :           : __ebo_node_alloc(std::forward&lt;_Alloc&gt;(__a))</span>
+<span class="lineNum">    1914 </span>            :         { }
+<span class="lineNum">    1915 </span>            : 
+<span class="lineNum">    1916 </span>            :       __node_alloc_type&amp;
+<span class="lineNum">    1917 </span>            :       _M_node_allocator()
+<span class="lineNum">    1918 </span><span class="lineCov">   59676586 :       { return __ebo_node_alloc::_S_get(*this); }</span>
+<span class="lineNum">    1919 </span>            : 
+<span class="lineNum">    1920 </span>            :       const __node_alloc_type&amp;
+<span class="lineNum">    1921 </span>            :       _M_node_allocator() const
+<span class="lineNum">    1922 </span><span class="lineCov">    1209684 :       { return __ebo_node_alloc::_S_cget(*this); }</span>
+<span class="lineNum">    1923 </span>            : 
+<span class="lineNum">    1924 </span>            :       template&lt;typename... _Args&gt;
+<span class="lineNum">    1925 </span>            :         __node_type*
+<span class="lineNum">    1926 </span>            :         _M_allocate_node(_Args&amp;&amp;... __args);
+<span class="lineNum">    1927 </span>            : 
+<span class="lineNum">    1928 </span>            :       void
+<span class="lineNum">    1929 </span>            :       _M_deallocate_node(__node_type* __n);
+<span class="lineNum">    1930 </span>            : 
+<span class="lineNum">    1931 </span>            :       // Deallocate the linked list of nodes pointed to by __n
+<span class="lineNum">    1932 </span>            :       void
+<span class="lineNum">    1933 </span>            :       _M_deallocate_nodes(__node_type* __n);
+<span class="lineNum">    1934 </span>            : 
+<span class="lineNum">    1935 </span>            :       __bucket_type*
+<span class="lineNum">    1936 </span>            :       _M_allocate_buckets(std::size_t __n);
+<span class="lineNum">    1937 </span>            : 
+<span class="lineNum">    1938 </span>            :       void
+<span class="lineNum">    1939 </span>            :       _M_deallocate_buckets(__bucket_type*, std::size_t __n);
+<span class="lineNum">    1940 </span>            :     };
+<span class="lineNum">    1941 </span>            : 
+<span class="lineNum">    1942 </span>            :   // Definitions of class template _Hashtable_alloc's out-of-line member
+<span class="lineNum">    1943 </span>            :   // functions.
+<span class="lineNum">    1944 </span>            :   template&lt;typename _NodeAlloc&gt;
+<a name="1945"><span class="lineNum">    1945 </span>            :     template&lt;typename... _Args&gt;</a>
+<span class="lineNum">    1946 </span>            :       typename _Hashtable_alloc&lt;_NodeAlloc&gt;::__node_type*
+<span class="lineNum">    1947 </span><span class="lineCov">   13339274 :       _Hashtable_alloc&lt;_NodeAlloc&gt;::_M_allocate_node(_Args&amp;&amp;... __args)</span>
+<span class="lineNum">    1948 </span>            :       {
+<span class="lineNum">    1949 </span><span class="lineCov">   26678548 :         auto __nptr = __node_alloc_traits::allocate(_M_node_allocator(), 1);</span>
+<span class="lineNum">    1950 </span><span class="lineCov">   13339274 :         __node_type* __n = std::__addressof(*__nptr);</span>
+<span class="lineNum">    1951 </span>            :         __try
+<span class="lineNum">    1952 </span>            :           {
+<span class="lineNum">    1953 </span><span class="lineCov">   40017822 :             __value_alloc_type __a(_M_node_allocator());</span>
+<span class="lineNum">    1954 </span><span class="lineCov">   26678548 :             ::new ((void*)__n) __node_type;</span>
+<span class="lineNum">    1955 </span><span class="lineCov">   40017822 :             __value_alloc_traits::construct(__a, __n-&gt;_M_valptr(),</span>
+<span class="lineNum">    1956 </span><span class="lineCov">   13339274 :                                             std::forward&lt;_Args&gt;(__args)...);</span>
+<span class="lineNum">    1957 </span><span class="lineCov">   26678548 :             return __n;</span>
+<span class="lineNum">    1958 </span>            :           }
+<span class="lineNum">    1959 </span><span class="lineNoCov">          0 :         __catch(...)</span>
+<span class="lineNum">    1960 </span>            :           {
+<span class="lineNum">    1961 </span><span class="lineNoCov">          0 :             __node_alloc_traits::deallocate(_M_node_allocator(), __nptr, 1);</span>
+<span class="lineNum">    1962 </span><span class="lineNoCov">          0 :             __throw_exception_again;</span>
+<span class="lineNum">    1963 </span>            :           }
+<span class="lineNum">    1964 </span>            :       }
+<span class="lineNum">    1965 </span>            : 
+<a name="1966"><span class="lineNum">    1966 </span>            :   template&lt;typename _NodeAlloc&gt;</a>
+<span class="lineNum">    1967 </span>            :     void
+<span class="lineNum">    1968 </span><span class="lineCov">   10144426 :     _Hashtable_alloc&lt;_NodeAlloc&gt;::_M_deallocate_node(__node_type* __n)</span>
+<span class="lineNum">    1969 </span>            :     {
+<span class="lineNum">    1970 </span>            :       typedef typename __node_alloc_traits::pointer _Ptr;
+<span class="lineNum">    1971 </span><span class="lineCov">   13339265 :       auto __ptr = std::pointer_traits&lt;_Ptr&gt;::pointer_to(*__n);</span>
+<span class="lineNum">    1972 </span><span class="lineCov">   40017795 :       __value_alloc_type __a(_M_node_allocator());</span>
+<span class="lineNum">    1973 </span><span class="lineCov">   40017795 :       __value_alloc_traits::destroy(__a, __n-&gt;_M_valptr());</span>
+<span class="lineNum">    1974 </span>            :       __n-&gt;~__node_type();
+<span class="lineNum">    1975 </span><span class="lineCov">   26678530 :       __node_alloc_traits::deallocate(_M_node_allocator(), __ptr, 1);</span>
+<span class="lineNum">    1976 </span><span class="lineCov">   10144426 :     }</span>
+<span class="lineNum">    1977 </span>            : 
+<a name="1978"><span class="lineNum">    1978 </span>            :   template&lt;typename _NodeAlloc&gt;</a>
+<span class="lineNum">    1979 </span>            :     void
+<span class="lineNum">    1980 </span><span class="lineCov">    1059300 :     _Hashtable_alloc&lt;_NodeAlloc&gt;::_M_deallocate_nodes(__node_type* __n)</span>
+<span class="lineNum">    1981 </span>            :     {
+<span class="lineNum">    1982 </span><span class="lineCov">   18163040 :       while (__n)</span>
+<span class="lineNum">    1983 </span>            :         {
+<span class="lineNum">    1984 </span><span class="lineCov">   13296174 :           __node_type* __tmp = __n;</span>
+<span class="lineNum">    1985 </span><span class="lineCov">   13296174 :           __n = __n-&gt;_M_next();</span>
+<span class="lineNum">    1986 </span><span class="lineCov">   13289367 :           _M_deallocate_node(__tmp);</span>
+<span class="lineNum">    1987 </span>            :         }
+<span class="lineNum">    1988 </span><span class="lineCov">    1059300 :     }</span>
+<span class="lineNum">    1989 </span>            : 
+<a name="1990"><span class="lineNum">    1990 </span>            :   template&lt;typename _NodeAlloc&gt;</a>
+<span class="lineNum">    1991 </span>            :     typename _Hashtable_alloc&lt;_NodeAlloc&gt;::__bucket_type*
+<span class="lineNum">    1992 </span><span class="lineCov">    2543453 :     _Hashtable_alloc&lt;_NodeAlloc&gt;::_M_allocate_buckets(std::size_t __n)</span>
+<span class="lineNum">    1993 </span>            :     {
+<span class="lineNum">    1994 </span><span class="lineCov">    7630359 :       __bucket_alloc_type __alloc(_M_node_allocator());</span>
+<span class="lineNum">    1995 </span>            : 
+<span class="lineNum">    1996 </span><span class="lineCov">    5086906 :       auto __ptr = __bucket_alloc_traits::allocate(__alloc, __n);</span>
+<span class="lineNum">    1997 </span><span class="lineCov">    2543453 :       __bucket_type* __p = std::__addressof(*__ptr);</span>
+<span class="lineNum">    1998 </span><span class="lineCov">    2543453 :       __builtin_memset(__p, 0, __n * sizeof(__bucket_type));</span>
+<span class="lineNum">    1999 </span><span class="lineCov">    5086906 :       return __p;</span>
+<span class="lineNum">    2000 </span>            :     }
+<span class="lineNum">    2001 </span>            : 
+<span class="lineNum">    2002 </span>            :   template&lt;typename _NodeAlloc&gt;
+<span class="lineNum">    2003 </span>            :     void
+<span class="lineNum">    2004 </span>            :     _Hashtable_alloc&lt;_NodeAlloc&gt;::_M_deallocate_buckets(__bucket_type* __bkts,
+<span class="lineNum">    2005 </span>            :                                                         std::size_t __n)
+<span class="lineNum">    2006 </span>            :     {
+<span class="lineNum">    2007 </span>            :       typedef typename __bucket_alloc_traits::pointer _Ptr;
+<span class="lineNum">    2008 </span><span class="lineCov">    2543449 :       auto __ptr = std::pointer_traits&lt;_Ptr&gt;::pointer_to(*__bkts);</span>
+<span class="lineNum">    2009 </span><span class="lineCov">    7630347 :       __bucket_alloc_type __alloc(_M_node_allocator());</span>
+<span class="lineNum">    2010 </span><span class="lineCov">    5086898 :       __bucket_alloc_traits::deallocate(__alloc, __ptr, __n);</span>
+<span class="lineNum">    2011 </span>            :     }
+<span class="lineNum">    2012 </span>            : 
+<span class="lineNum">    2013 </span>            :  //@} hashtable-detail
+<span class="lineNum">    2014 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">    2015 </span>            : } // namespace __detail
+<span class="lineNum">    2016 </span>            : } // namespace std
+<span class="lineNum">    2017 </span>            : 
+<span class="lineNum">    2018 </span>            : #endif // _HASHTABLE_POLICY_H
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

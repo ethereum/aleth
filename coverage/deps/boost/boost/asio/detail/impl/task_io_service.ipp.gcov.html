@@ -1,0 +1,552 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/detail/impl/task_io_service.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/detail/impl</a> - task_io_service.ipp<span style="font-size: 80%;"> (source / <a href="task_io_service.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">134</td>
+            <td class="headerCovTableEntry">155</td>
+            <td class="headerCovTableEntryMed">86.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">15</td>
+            <td class="headerCovTableEntry">20</td>
+            <td class="headerCovTableEntryMed">75.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // detail/impl/task_io_service.ipp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_DETAIL_IMPL_TASK_IO_SERVICE_IPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_DETAIL_IMPL_TASK_IO_SERVICE_IPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #if !defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &lt;boost/asio/detail/event.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/asio/detail/limits.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/detail/reactor.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/detail/task_io_service.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/asio/detail/task_io_service_thread_info.hpp&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace boost {
+<span class="lineNum">      31 </span>            : namespace asio {
+<span class="lineNum">      32 </span>            : namespace detail {
+<span class="lineNum">      33 </span>            : 
+<a name="34"><span class="lineNum">      34 </span>            : struct task_io_service::task_cleanup</a>
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span><span class="lineCov">        954 :   ~task_cleanup()</span>
+<span class="lineNum">      37 </span><span class="lineCov">        953 :   {</span>
+<span class="lineNum">      38 </span><span class="lineCov">        954 :     if (this_thread_-&gt;private_outstanding_work &gt; 0)</span>
+<span class="lineNum">      39 </span>            :     {
+<span class="lineNum">      40 </span><span class="lineNoCov">          0 :       boost::asio::detail::increment(</span>
+<span class="lineNum">      41 </span><span class="lineNoCov">          0 :           task_io_service_-&gt;outstanding_work_,</span>
+<span class="lineNum">      42 </span>            :           this_thread_-&gt;private_outstanding_work);
+<span class="lineNum">      43 </span>            :     }
+<span class="lineNum">      44 </span><span class="lineCov">        954 :     this_thread_-&gt;private_outstanding_work = 0;</span>
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :     // Enqueue the completed operations and reinsert the task at the end of
+<span class="lineNum">      47 </span>            :     // the operation queue.
+<span class="lineNum">      48 </span><span class="lineCov">       1907 :     lock_-&gt;lock();</span>
+<span class="lineNum">      49 </span><span class="lineCov">        953 :     task_io_service_-&gt;task_interrupted_ = true;</span>
+<span class="lineNum">      50 </span><span class="lineCov">       1906 :     task_io_service_-&gt;op_queue_.push(this_thread_-&gt;private_op_queue);</span>
+<span class="lineNum">      51 </span><span class="lineCov">       1906 :     task_io_service_-&gt;op_queue_.push(&amp;task_io_service_-&gt;task_operation_);</span>
+<span class="lineNum">      52 </span><span class="lineCov">        953 :   }</span>
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            :   task_io_service* task_io_service_;
+<span class="lineNum">      55 </span>            :   mutex::scoped_lock* lock_;
+<span class="lineNum">      56 </span>            :   thread_info* this_thread_;
+<span class="lineNum">      57 </span>            : };
+<span class="lineNum">      58 </span>            : 
+<a name="59"><span class="lineNum">      59 </span>            : struct task_io_service::work_cleanup</a>
+<span class="lineNum">      60 </span>            : {
+<span class="lineNum">      61 </span><span class="lineCov">       1662 :   ~work_cleanup()</span>
+<span class="lineNum">      62 </span><span class="lineCov">       1662 :   {</span>
+<span class="lineNum">      63 </span><span class="lineCov">       1662 :     if (this_thread_-&gt;private_outstanding_work &gt; 1)</span>
+<span class="lineNum">      64 </span>            :     {
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :       boost::asio::detail::increment(</span>
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :           task_io_service_-&gt;outstanding_work_,</span>
+<span class="lineNum">      67 </span>            :           this_thread_-&gt;private_outstanding_work - 1);
+<span class="lineNum">      68 </span>            :     }
+<span class="lineNum">      69 </span><span class="lineCov">       1662 :     else if (this_thread_-&gt;private_outstanding_work &lt; 1)</span>
+<span class="lineNum">      70 </span>            :     {
+<span class="lineNum">      71 </span><span class="lineCov">       1662 :       task_io_service_-&gt;work_finished();</span>
+<span class="lineNum">      72 </span>            :     }
+<span class="lineNum">      73 </span><span class="lineCov">       1662 :     this_thread_-&gt;private_outstanding_work = 0;</span>
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span>            : #if defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">      76 </span><span class="lineCov">       1662 :     if (!this_thread_-&gt;private_op_queue.empty())</span>
+<span class="lineNum">      77 </span>            :     {
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :       lock_-&gt;lock();</span>
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 :       task_io_service_-&gt;op_queue_.push(this_thread_-&gt;private_op_queue);</span>
+<span class="lineNum">      80 </span>            :     }
+<span class="lineNum">      81 </span>            : #endif // defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">      82 </span><span class="lineCov">       1662 :   }</span>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span>            :   task_io_service* task_io_service_;
+<span class="lineNum">      85 </span>            :   mutex::scoped_lock* lock_;
+<span class="lineNum">      86 </span>            :   thread_info* this_thread_;
+<a name="87"><span class="lineNum">      87 </span>            : };</a>
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span><span class="lineCov">         30 : task_io_service::task_io_service(</span>
+<span class="lineNum">      90 </span>            :     boost::asio::io_service&amp; io_service, std::size_t concurrency_hint)
+<span class="lineNum">      91 </span>            :   : boost::asio::detail::service_base&lt;task_io_service&gt;(io_service),
+<span class="lineNum">      92 </span><span class="lineCov">         30 :     one_thread_(concurrency_hint == 1),</span>
+<span class="lineNum">      93 </span>            :     mutex_(),
+<span class="lineNum">      94 </span>            :     task_(0),
+<span class="lineNum">      95 </span>            :     task_interrupted_(true),
+<span class="lineNum">      96 </span>            :     outstanding_work_(0),
+<span class="lineNum">      97 </span>            :     stopped_(false),
+<span class="lineNum">      98 </span><span class="lineCov">        180 :     shutdown_(false)</span>
+<span class="lineNum">      99 </span>            : {
+<span class="lineNum">     100 </span>            :   BOOST_ASIO_HANDLER_TRACKING_INIT;
+<a name="101"><span class="lineNum">     101 </span><span class="lineCov">         30 : }</span></a>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">         30 : void task_io_service::shutdown_service()</span>
+<span class="lineNum">     104 </span>            : {
+<span class="lineNum">     105 </span><span class="lineCov">         90 :   mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">     106 </span><span class="lineCov">         30 :   shutdown_ = true;</span>
+<span class="lineNum">     107 </span>            :   lock.unlock();
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            :   // Destroy handler objects.
+<span class="lineNum">     110 </span><span class="lineCov">         96 :   while (!op_queue_.empty())</span>
+<span class="lineNum">     111 </span>            :   {
+<span class="lineNum">     112 </span><span class="lineCov">         66 :     operation* o = op_queue_.front();</span>
+<span class="lineNum">     113 </span><span class="lineCov">        132 :     op_queue_.pop();</span>
+<span class="lineNum">     114 </span><span class="lineCov">         66 :     if (o != &amp;task_operation_)</span>
+<span class="lineNum">     115 </span><span class="lineCov">         36 :       o-&gt;destroy();</span>
+<span class="lineNum">     116 </span>            :   }
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :   // Reset to initial state.
+<span class="lineNum">     119 </span><span class="lineCov">         30 :   task_ = 0;</span>
+<a name="120"><span class="lineNum">     120 </span><span class="lineCov">         30 : }</span></a>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">         80 : void task_io_service::init_task()</span>
+<span class="lineNum">     123 </span>            : {
+<span class="lineNum">     124 </span><span class="lineCov">        240 :   mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">     125 </span><span class="lineCov">         80 :   if (!shutdown_ &amp;&amp; !task_)</span>
+<span class="lineNum">     126 </span>            :   {
+<span class="lineNum">     127 </span><span class="lineCov">         60 :     task_ = &amp;use_service&lt;reactor&gt;(this-&gt;get_io_service());</span>
+<span class="lineNum">     128 </span><span class="lineCov">         60 :     op_queue_.push(&amp;task_operation_);</span>
+<span class="lineNum">     129 </span><span class="lineCov">         30 :     wake_one_thread_and_unlock(lock);</span>
+<span class="lineNum">     130 </span>            :   }
+<a name="131"><span class="lineNum">     131 </span><span class="lineCov">         80 : }</span></a>
+<span class="lineNum">     132 </span>            : 
+<span class="lineNum">     133 </span><span class="lineCov">         20 : std::size_t task_io_service::run(boost::system::error_code&amp; ec)</span>
+<span class="lineNum">     134 </span>            : {
+<span class="lineNum">     135 </span><span class="lineCov">         20 :   ec = boost::system::error_code();</span>
+<span class="lineNum">     136 </span><span class="lineCov">         40 :   if (outstanding_work_ == 0)</span>
+<span class="lineNum">     137 </span>            :   {
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :     stop();</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     140 </span>            :   }
+<span class="lineNum">     141 </span>            : 
+<span class="lineNum">     142 </span><span class="lineCov">         40 :   thread_info this_thread;</span>
+<span class="lineNum">     143 </span><span class="lineCov">         20 :   this_thread.private_outstanding_work = 0;</span>
+<span class="lineNum">     144 </span><span class="lineCov">         40 :   thread_call_stack::context ctx(this, this_thread);</span>
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineCov">         60 :   mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineCov">         20 :   std::size_t n = 0;</span>
+<span class="lineNum">     149 </span><span class="lineCov">       1610 :   for (; do_run_one(lock, this_thread, ec); lock.lock())</span>
+<span class="lineNum">     150 </span><span class="lineCov">       1590 :     if (n != (std::numeric_limits&lt;std::size_t&gt;::max)())</span>
+<span class="lineNum">     151 </span><span class="lineCov">       1590 :       ++n;</span>
+<span class="lineNum">     152 </span><span class="lineCov">         20 :   return n;</span>
+<span class="lineNum">     153 </span>            : }
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            : std::size_t task_io_service::run_one(boost::system::error_code&amp; ec)
+<span class="lineNum">     156 </span>            : {
+<span class="lineNum">     157 </span>            :   ec = boost::system::error_code();
+<span class="lineNum">     158 </span>            :   if (outstanding_work_ == 0)
+<span class="lineNum">     159 </span>            :   {
+<span class="lineNum">     160 </span>            :     stop();
+<span class="lineNum">     161 </span>            :     return 0;
+<span class="lineNum">     162 </span>            :   }
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span>            :   thread_info this_thread;
+<span class="lineNum">     165 </span>            :   this_thread.private_outstanding_work = 0;
+<span class="lineNum">     166 </span>            :   thread_call_stack::context ctx(this, this_thread);
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :   mutex::scoped_lock lock(mutex_);
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            :   return do_run_one(lock, this_thread, ec);
+<a name="171"><span class="lineNum">     171 </span>            : }</a>
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span><span class="lineCov">         22 : std::size_t task_io_service::poll(boost::system::error_code&amp; ec)</span>
+<span class="lineNum">     174 </span>            : {
+<span class="lineNum">     175 </span><span class="lineCov">         22 :   ec = boost::system::error_code();</span>
+<span class="lineNum">     176 </span><span class="lineCov">         44 :   if (outstanding_work_ == 0)</span>
+<span class="lineNum">     177 </span>            :   {
+<span class="lineNum">     178 </span><span class="lineNoCov">          0 :     stop();</span>
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :     return 0;</span>
+<span class="lineNum">     180 </span>            :   }
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineCov">         44 :   thread_info this_thread;</span>
+<span class="lineNum">     183 </span><span class="lineCov">         22 :   this_thread.private_outstanding_work = 0;</span>
+<span class="lineNum">     184 </span><span class="lineCov">         44 :   thread_call_stack::context ctx(this, this_thread);</span>
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span><span class="lineCov">         66 :   mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">     187 </span>            : 
+<span class="lineNum">     188 </span>            : #if defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">     189 </span>            :   // We want to support nested calls to poll() and poll_one(), so any handlers
+<span class="lineNum">     190 </span>            :   // that are already on a thread-private queue need to be put on to the main
+<span class="lineNum">     191 </span>            :   // queue now.
+<span class="lineNum">     192 </span><span class="lineCov">         22 :   if (one_thread_)</span>
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :     if (thread_info* outer_thread_info = ctx.next_by_key())</span>
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :       op_queue_.push(outer_thread_info-&gt;private_op_queue);</span>
+<span class="lineNum">     195 </span>            : #endif // defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            :   std::size_t n = 0;
+<span class="lineNum">     198 </span><span class="lineCov">         94 :   for (; do_poll_one(lock, this_thread, ec); lock.lock())</span>
+<span class="lineNum">     199 </span><span class="lineCov">         72 :     if (n != (std::numeric_limits&lt;std::size_t&gt;::max)())</span>
+<span class="lineNum">     200 </span><span class="lineCov">         72 :       ++n;</span>
+<span class="lineNum">     201 </span><span class="lineCov">         22 :   return n;</span>
+<span class="lineNum">     202 </span>            : }
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            : std::size_t task_io_service::poll_one(boost::system::error_code&amp; ec)
+<span class="lineNum">     205 </span>            : {
+<span class="lineNum">     206 </span>            :   ec = boost::system::error_code();
+<span class="lineNum">     207 </span>            :   if (outstanding_work_ == 0)
+<span class="lineNum">     208 </span>            :   {
+<span class="lineNum">     209 </span>            :     stop();
+<span class="lineNum">     210 </span>            :     return 0;
+<span class="lineNum">     211 </span>            :   }
+<span class="lineNum">     212 </span>            : 
+<span class="lineNum">     213 </span>            :   thread_info this_thread;
+<span class="lineNum">     214 </span>            :   this_thread.private_outstanding_work = 0;
+<span class="lineNum">     215 </span>            :   thread_call_stack::context ctx(this, this_thread);
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :   mutex::scoped_lock lock(mutex_);
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            : #if defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">     220 </span>            :   // We want to support nested calls to poll() and poll_one(), so any handlers
+<span class="lineNum">     221 </span>            :   // that are already on a thread-private queue need to be put on to the main
+<span class="lineNum">     222 </span>            :   // queue now.
+<span class="lineNum">     223 </span>            :   if (one_thread_)
+<span class="lineNum">     224 </span>            :     if (thread_info* outer_thread_info = ctx.next_by_key())
+<span class="lineNum">     225 </span>            :       op_queue_.push(outer_thread_info-&gt;private_op_queue);
+<span class="lineNum">     226 </span>            : #endif // defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :   return do_poll_one(lock, this_thread, ec);
+<a name="229"><span class="lineNum">     229 </span>            : }</a>
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span><span class="lineCov">         45 : void task_io_service::stop()</span>
+<span class="lineNum">     232 </span>            : {
+<span class="lineNum">     233 </span><span class="lineCov">        135 :   mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">     234 </span><span class="lineCov">         45 :   stop_all_threads(lock);</span>
+<span class="lineNum">     235 </span><span class="lineCov">         45 : }</span>
+<span class="lineNum">     236 </span>            : 
+<span class="lineNum">     237 </span>            : bool task_io_service::stopped() const
+<span class="lineNum">     238 </span>            : {
+<span class="lineNum">     239 </span>            :   mutex::scoped_lock lock(mutex_);
+<span class="lineNum">     240 </span>            :   return stopped_;
+<span class="lineNum">     241 </span>            : }
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            : void task_io_service::reset()
+<span class="lineNum">     244 </span>            : {
+<span class="lineNum">     245 </span><span class="lineCov">         84 :   mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">     246 </span><span class="lineCov">         28 :   stopped_ = false;</span>
+<a name="247"><span class="lineNum">     247 </span>            : }</a>
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span><span class="lineCov">        595 : void task_io_service::post_immediate_completion(</span>
+<span class="lineNum">     250 </span>            :     task_io_service::operation* op, bool is_continuation)
+<span class="lineNum">     251 </span>            : {
+<span class="lineNum">     252 </span>            : #if defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">     253 </span><span class="lineCov">        595 :   if (one_thread_ || is_continuation)</span>
+<span class="lineNum">     254 </span>            :   {
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :     if (thread_info* this_thread = thread_call_stack::contains(this))</span>
+<span class="lineNum">     256 </span>            :     {
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :       ++this_thread-&gt;private_outstanding_work;</span>
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :       this_thread-&gt;private_op_queue.push(op);</span>
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :       return;</span>
+<span class="lineNum">     260 </span>            :     }
+<span class="lineNum">     261 </span>            :   }
+<span class="lineNum">     262 </span>            : #else // defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">     263 </span>            :   (void)is_continuation;
+<span class="lineNum">     264 </span>            : #endif // defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">     265 </span>            : 
+<span class="lineNum">     266 </span><span class="lineCov">        595 :   work_started();</span>
+<span class="lineNum">     267 </span><span class="lineCov">       1785 :   mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">     268 </span><span class="lineCov">       1190 :   op_queue_.push(op);</span>
+<span class="lineNum">     269 </span><span class="lineCov">        595 :   wake_one_thread_and_unlock(lock);</span>
+<span class="lineNum">     270 </span>            : }
+<span class="lineNum">     271 </span>            : 
+<span class="lineNum">     272 </span>            : void task_io_service::post_deferred_completion(task_io_service::operation* op)
+<span class="lineNum">     273 </span>            : {
+<span class="lineNum">     274 </span>            : #if defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">     275 </span>            :   if (one_thread_)
+<span class="lineNum">     276 </span>            :   {
+<span class="lineNum">     277 </span>            :     if (thread_info* this_thread = thread_call_stack::contains(this))
+<span class="lineNum">     278 </span>            :     {
+<span class="lineNum">     279 </span>            :       this_thread-&gt;private_op_queue.push(op);
+<span class="lineNum">     280 </span>            :       return;
+<span class="lineNum">     281 </span>            :     }
+<span class="lineNum">     282 </span>            :   }
+<span class="lineNum">     283 </span>            : #endif // defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">     284 </span>            : 
+<span class="lineNum">     285 </span>            :   mutex::scoped_lock lock(mutex_);
+<span class="lineNum">     286 </span>            :   op_queue_.push(op);
+<span class="lineNum">     287 </span>            :   wake_one_thread_and_unlock(lock);
+<a name="288"><span class="lineNum">     288 </span>            : }</a>
+<span class="lineNum">     289 </span>            : 
+<span class="lineNum">     290 </span><span class="lineCov">        916 : void task_io_service::post_deferred_completions(</span>
+<span class="lineNum">     291 </span>            :     op_queue&lt;task_io_service::operation&gt;&amp; ops)
+<span class="lineNum">     292 </span>            : {
+<span class="lineNum">     293 </span><span class="lineCov">        916 :   if (!ops.empty())</span>
+<span class="lineNum">     294 </span>            :   {
+<span class="lineNum">     295 </span>            : #if defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">     296 </span><span class="lineCov">        260 :     if (one_thread_)</span>
+<span class="lineNum">     297 </span>            :     {
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :       if (thread_info* this_thread = thread_call_stack::contains(this))</span>
+<span class="lineNum">     299 </span>            :       {
+<span class="lineNum">     300 </span><span class="lineNoCov">          0 :         this_thread-&gt;private_op_queue.push(ops);</span>
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :         return;</span>
+<span class="lineNum">     302 </span>            :       }
+<span class="lineNum">     303 </span>            :     }
+<span class="lineNum">     304 </span>            : #endif // defined(BOOST_ASIO_HAS_THREADS)
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span><span class="lineCov">        780 :     mutex::scoped_lock lock(mutex_);</span>
+<span class="lineNum">     307 </span><span class="lineCov">        520 :     op_queue_.push(ops);</span>
+<span class="lineNum">     308 </span><span class="lineCov">        260 :     wake_one_thread_and_unlock(lock);</span>
+<span class="lineNum">     309 </span>            :   }
+<span class="lineNum">     310 </span>            : }
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span>            : void task_io_service::do_dispatch(
+<span class="lineNum">     313 </span>            :     task_io_service::operation* op)
+<span class="lineNum">     314 </span>            : {
+<span class="lineNum">     315 </span>            :   work_started();
+<span class="lineNum">     316 </span>            :   mutex::scoped_lock lock(mutex_);
+<span class="lineNum">     317 </span>            :   op_queue_.push(op);
+<span class="lineNum">     318 </span>            :   wake_one_thread_and_unlock(lock);
+<a name="319"><span class="lineNum">     319 </span>            : }</a>
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span><span class="lineCov">         30 : void task_io_service::abandon_operations(</span>
+<span class="lineNum">     322 </span>            :     op_queue&lt;task_io_service::operation&gt;&amp; ops)
+<span class="lineNum">     323 </span>            : {
+<span class="lineNum">     324 </span><span class="lineCov">         60 :   op_queue&lt;task_io_service::operation&gt; ops2;</span>
+<span class="lineNum">     325 </span><span class="lineCov">         30 :   ops2.push(ops);</span>
+<a name="326"><span class="lineNum">     326 </span><span class="lineCov">         30 : }</span></a>
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span><span class="lineCov">       1610 : std::size_t task_io_service::do_run_one(mutex::scoped_lock&amp; lock,</span>
+<span class="lineNum">     329 </span>            :     task_io_service::thread_info&amp; this_thread,
+<span class="lineNum">     330 </span>            :     const boost::system::error_code&amp; ec)
+<span class="lineNum">     331 </span>            : {
+<span class="lineNum">     332 </span><span class="lineCov">       2533 :   while (!stopped_)</span>
+<span class="lineNum">     333 </span>            :   {
+<span class="lineNum">     334 </span><span class="lineCov">       2512 :     if (!op_queue_.empty())</span>
+<span class="lineNum">     335 </span>            :     {
+<span class="lineNum">     336 </span>            :       // Prepare to execute first handler from queue.
+<span class="lineNum">     337 </span><span class="lineCov">       2512 :       operation* o = op_queue_.front();</span>
+<span class="lineNum">     338 </span><span class="lineCov">       5024 :       op_queue_.pop();</span>
+<span class="lineNum">     339 </span><span class="lineCov">       5024 :       bool more_handlers = (!op_queue_.empty());</span>
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span><span class="lineCov">       2512 :       if (o == &amp;task_operation_)</span>
+<span class="lineNum">     342 </span>            :       {
+<span class="lineNum">     343 </span><span class="lineCov">        923 :         task_interrupted_ = more_handlers;</span>
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span><span class="lineCov">        923 :         if (more_handlers &amp;&amp; !one_thread_)</span>
+<span class="lineNum">     346 </span><span class="lineCov">        486 :           wakeup_event_.unlock_and_signal_one(lock);</span>
+<span class="lineNum">     347 </span>            :         else
+<span class="lineNum">     348 </span>            :           lock.unlock();
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span><span class="lineCov">       1846 :         task_cleanup on_exit = { this, &amp;lock, &amp;this_thread };</span>
+<span class="lineNum">     351 </span>            :         (void)on_exit;
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span>            :         // Run the task. May throw an exception. Only block if the operation
+<span class="lineNum">     354 </span>            :         // queue is empty and we're not polling, otherwise we want to return
+<span class="lineNum">     355 </span>            :         // as soon as possible.
+<span class="lineNum">     356 </span><span class="lineCov">        923 :         task_-&gt;run(!more_handlers, this_thread.private_op_queue);</span>
+<span class="lineNum">     357 </span>            :       }
+<span class="lineNum">     358 </span>            :       else
+<span class="lineNum">     359 </span>            :       {
+<span class="lineNum">     360 </span><span class="lineCov">       1589 :         std::size_t task_result = o-&gt;task_result_;</span>
+<span class="lineNum">     361 </span>            : 
+<span class="lineNum">     362 </span><span class="lineCov">       1589 :         if (more_handlers &amp;&amp; !one_thread_)</span>
+<span class="lineNum">     363 </span><span class="lineCov">       1589 :           wake_one_thread_and_unlock(lock);</span>
+<span class="lineNum">     364 </span>            :         else
+<span class="lineNum">     365 </span>            :           lock.unlock();
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span>            :         // Ensure the count of outstanding work is decremented on block exit.
+<span class="lineNum">     368 </span><span class="lineCov">       3179 :         work_cleanup on_exit = { this, &amp;lock, &amp;this_thread };</span>
+<span class="lineNum">     369 </span>            :         (void)on_exit;
+<span class="lineNum">     370 </span>            : 
+<span class="lineNum">     371 </span>            :         // Complete the operation. May throw an exception. Deletes the object.
+<span class="lineNum">     372 </span><span class="lineCov">       1589 :         o-&gt;complete(*this, ec, task_result);</span>
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span>            :         return 1;
+<span class="lineNum">     375 </span>            :       }
+<span class="lineNum">     376 </span>            :     }
+<span class="lineNum">     377 </span>            :     else
+<span class="lineNum">     378 </span>            :     {
+<span class="lineNum">     379 </span><span class="lineNoCov">          0 :       wakeup_event_.clear(lock);</span>
+<span class="lineNum">     380 </span><span class="lineNoCov">          0 :       wakeup_event_.wait(lock);</span>
+<span class="lineNum">     381 </span>            :     }
+<span class="lineNum">     382 </span>            :   }
+<span class="lineNum">     383 </span>            : 
+<span class="lineNum">     384 </span>            :   return 0;
+<a name="385"><span class="lineNum">     385 </span>            : }</a>
+<span class="lineNum">     386 </span>            : 
+<span class="lineNum">     387 </span><span class="lineCov">         94 : std::size_t task_io_service::do_poll_one(mutex::scoped_lock&amp; lock,</span>
+<span class="lineNum">     388 </span>            :     task_io_service::thread_info&amp; this_thread,
+<span class="lineNum">     389 </span>            :     const boost::system::error_code&amp; ec)
+<span class="lineNum">     390 </span>            : {
+<span class="lineNum">     391 </span><span class="lineCov">         94 :   if (stopped_)</span>
+<span class="lineNum">     392 </span>            :     return 0;
+<span class="lineNum">     393 </span>            : 
+<span class="lineNum">     394 </span><span class="lineCov">         82 :   operation* o = op_queue_.front();</span>
+<span class="lineNum">     395 </span><span class="lineCov">         82 :   if (o == &amp;task_operation_)</span>
+<span class="lineNum">     396 </span>            :   {
+<span class="lineNum">     397 </span><span class="lineCov">         60 :     op_queue_.pop();</span>
+<span class="lineNum">     398 </span><span class="lineCov">         30 :     lock.unlock();</span>
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span>            :     {
+<span class="lineNum">     401 </span><span class="lineCov">         60 :       task_cleanup c = { this, &amp;lock, &amp;this_thread };</span>
+<span class="lineNum">     402 </span>            :       (void)c;
+<span class="lineNum">     403 </span>            : 
+<span class="lineNum">     404 </span>            :       // Run the task. May throw an exception. Only block if the operation
+<span class="lineNum">     405 </span>            :       // queue is empty and we're not polling, otherwise we want to return
+<span class="lineNum">     406 </span>            :       // as soon as possible.
+<span class="lineNum">     407 </span><span class="lineCov">         30 :       task_-&gt;run(false, this_thread.private_op_queue);</span>
+<span class="lineNum">     408 </span>            :     }
+<span class="lineNum">     409 </span>            : 
+<span class="lineNum">     410 </span><span class="lineCov">         30 :     o = op_queue_.front();</span>
+<span class="lineNum">     411 </span><span class="lineCov">         30 :     if (o == &amp;task_operation_)</span>
+<span class="lineNum">     412 </span>            :     {
+<span class="lineNum">     413 </span><span class="lineCov">         10 :       wakeup_event_.maybe_unlock_and_signal_one(lock);</span>
+<span class="lineNum">     414 </span><span class="lineCov">         10 :       return 0;</span>
+<span class="lineNum">     415 </span>            :     }
+<span class="lineNum">     416 </span>            :   }
+<span class="lineNum">     417 </span>            : 
+<span class="lineNum">     418 </span><span class="lineCov">         72 :   if (o == 0)</span>
+<span class="lineNum">     419 </span>            :     return 0;
+<span class="lineNum">     420 </span>            : 
+<span class="lineNum">     421 </span><span class="lineCov">        144 :   op_queue_.pop();</span>
+<span class="lineNum">     422 </span><span class="lineCov">         72 :   bool more_handlers = (!op_queue_.empty());</span>
+<span class="lineNum">     423 </span>            : 
+<span class="lineNum">     424 </span><span class="lineCov">         72 :   std::size_t task_result = o-&gt;task_result_;</span>
+<span class="lineNum">     425 </span>            : 
+<span class="lineNum">     426 </span><span class="lineCov">         72 :   if (more_handlers &amp;&amp; !one_thread_)</span>
+<span class="lineNum">     427 </span><span class="lineCov">         72 :     wake_one_thread_and_unlock(lock);</span>
+<span class="lineNum">     428 </span>            :   else
+<span class="lineNum">     429 </span>            :     lock.unlock();
+<span class="lineNum">     430 </span>            : 
+<span class="lineNum">     431 </span>            :   // Ensure the count of outstanding work is decremented on block exit.
+<span class="lineNum">     432 </span><span class="lineCov">        144 :   work_cleanup on_exit = { this, &amp;lock, &amp;this_thread };</span>
+<span class="lineNum">     433 </span>            :   (void)on_exit;
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span>            :   // Complete the operation. May throw an exception. Deletes the object.
+<span class="lineNum">     436 </span><span class="lineCov">         72 :   o-&gt;complete(*this, ec, task_result);</span>
+<span class="lineNum">     437 </span>            : 
+<span class="lineNum">     438 </span>            :   return 1;
+<a name="439"><span class="lineNum">     439 </span>            : }</a>
+<span class="lineNum">     440 </span>            : 
+<span class="lineNum">     441 </span><span class="lineCov">         45 : void task_io_service::stop_all_threads(</span>
+<span class="lineNum">     442 </span>            :     mutex::scoped_lock&amp; lock)
+<span class="lineNum">     443 </span>            : {
+<span class="lineNum">     444 </span><span class="lineCov">         45 :   stopped_ = true;</span>
+<span class="lineNum">     445 </span><span class="lineCov">         45 :   wakeup_event_.signal_all(lock);</span>
+<span class="lineNum">     446 </span>            : 
+<span class="lineNum">     447 </span><span class="lineCov">         45 :   if (!task_interrupted_ &amp;&amp; task_)</span>
+<span class="lineNum">     448 </span>            :   {
+<span class="lineNum">     449 </span><span class="lineCov">          2 :     task_interrupted_ = true;</span>
+<span class="lineNum">     450 </span><span class="lineCov">          2 :     task_-&gt;interrupt();</span>
+<span class="lineNum">     451 </span>            :   }
+<a name="452"><span class="lineNum">     452 </span><span class="lineCov">         45 : }</span></a>
+<span class="lineNum">     453 </span>            : 
+<span class="lineNum">     454 </span><span class="lineCov">       2547 : void task_io_service::wake_one_thread_and_unlock(</span>
+<span class="lineNum">     455 </span>            :     mutex::scoped_lock&amp; lock)
+<span class="lineNum">     456 </span>            : {
+<span class="lineNum">     457 </span><span class="lineCov">       2547 :   if (!wakeup_event_.maybe_unlock_and_signal_one(lock))</span>
+<span class="lineNum">     458 </span>            :   {
+<span class="lineNum">     459 </span><span class="lineCov">       2547 :     if (!task_interrupted_ &amp;&amp; task_)</span>
+<span class="lineNum">     460 </span>            :     {
+<span class="lineNum">     461 </span><span class="lineCov">          9 :       task_interrupted_ = true;</span>
+<span class="lineNum">     462 </span><span class="lineCov">          9 :       task_-&gt;interrupt();</span>
+<span class="lineNum">     463 </span>            :     }
+<span class="lineNum">     464 </span>            :     lock.unlock();
+<span class="lineNum">     465 </span>            :   }
+<span class="lineNum">     466 </span><span class="lineCov">       2547 : }</span>
+<span class="lineNum">     467 </span>            : 
+<span class="lineNum">     468 </span>            : } // namespace detail
+<span class="lineNum">     469 </span>            : } // namespace asio
+<span class="lineNum">     470 </span>            : } // namespace boost
+<span class="lineNum">     471 </span>            : 
+<span class="lineNum">     472 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     473 </span>            : 
+<span class="lineNum">     474 </span>            : #endif // !defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">     475 </span>            : 
+<span class="lineNum">     476 </span>            : #endif // BOOST_ASIO_DETAIL_IMPL_TASK_IO_SERVICE_IPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

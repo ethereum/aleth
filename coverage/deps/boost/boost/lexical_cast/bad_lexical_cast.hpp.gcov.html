@@ -1,0 +1,177 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/lexical_cast/bad_lexical_cast.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/lexical_cast</a> - bad_lexical_cast.hpp<span style="font-size: 80%;"> (source / <a href="bad_lexical_cast.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">8</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Copyright Kevlin Henney, 2000-2005.</a>
+<span class="lineNum">       2 </span>            : // Copyright Alexander Nasonov, 2006-2010.
+<span class="lineNum">       3 </span>            : // Copyright Antony Polukhin, 2011-2014.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">       6 </span>            : // accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       7 </span>            : // http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            : //
+<span class="lineNum">       9 </span>            : // what:  lexical_cast custom keyword cast
+<span class="lineNum">      10 </span>            : // who:   contributed by Kevlin Henney,
+<span class="lineNum">      11 </span>            : //        enhanced with contributions from Terje Slettebo,
+<span class="lineNum">      12 </span>            : //        with additional fixes and suggestions from Gennaro Prota,
+<span class="lineNum">      13 </span>            : //        Beman Dawes, Dave Abrahams, Daryle Walker, Peter Dimov,
+<span class="lineNum">      14 </span>            : //        Alexander Nasonov, Antony Polukhin, Justin Viiret, Michael Hofmann,
+<span class="lineNum">      15 </span>            : //        Cheng Yang, Matthew Bradbury, David W. Birdsall, Pavel Korzh and other Boosters
+<span class="lineNum">      16 </span>            : // when:  November 2000, March 2003, June 2005, June 2006, March 2011 - 2014
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #ifndef BOOST_LEXICAL_CAST_BAD_LEXICAL_CAST_HPP
+<span class="lineNum">      19 </span>            : #define BOOST_LEXICAL_CAST_BAD_LEXICAL_CAST_HPP
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      22 </span>            : #ifdef BOOST_HAS_PRAGMA_ONCE
+<span class="lineNum">      23 </span>            : #   pragma once
+<span class="lineNum">      24 </span>            : #endif
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;typeinfo&gt;
+<span class="lineNum">      27 </span>            : #include &lt;exception&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/throw_exception.hpp&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace boost
+<span class="lineNum">      31 </span>            : {
+<span class="lineNum">      32 </span>            :     // exception used to indicate runtime lexical_cast failure
+<span class="lineNum">      33 </span><span class="lineNoCov">          0 :     class BOOST_SYMBOL_VISIBLE bad_lexical_cast :</span>
+<span class="lineNum">      34 </span>            :     // workaround MSVC bug with std::bad_cast when _HAS_EXCEPTIONS == 0 
+<span class="lineNum">      35 </span>            : #if defined(BOOST_MSVC) &amp;&amp; defined(_HAS_EXCEPTIONS) &amp;&amp; !_HAS_EXCEPTIONS 
+<span class="lineNum">      36 </span>            :         public std::exception 
+<span class="lineNum">      37 </span>            : #else 
+<span class="lineNum">      38 </span>            :         public std::bad_cast 
+<span class="lineNum">      39 </span>            : #endif 
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : #if defined(__BORLANDC__) &amp;&amp; BOOST_WORKAROUND( __BORLANDC__, &lt; 0x560 )
+<span class="lineNum">      42 </span>            :         // under bcc32 5.5.1 bad_cast doesn't derive from exception
+<span class="lineNum">      43 </span>            :         , public std::exception
+<span class="lineNum">      44 </span>            : #endif
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            :     {
+<span class="lineNum">      47 </span>            :     public:
+<span class="lineNum">      48 </span>            :         bad_lexical_cast() BOOST_NOEXCEPT
+<span class="lineNum">      49 </span>            : #ifndef BOOST_NO_TYPEID
+<span class="lineNum">      50 </span>            :            : source(&amp;typeid(void)), target(&amp;typeid(void))
+<span class="lineNum">      51 </span>            : #endif
+<a name="52"><span class="lineNum">      52 </span>            :         {}</a>
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span><span class="lineNoCov">          0 :         virtual const char *what() const BOOST_NOEXCEPT_OR_NOTHROW {</span>
+<span class="lineNum">      55 </span>            :             return &quot;bad lexical cast: &quot;
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :                    &quot;source type value could not be interpreted as target&quot;;</span>
+<a name="57"><span class="lineNum">      57 </span>            :         }</a>
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :         virtual ~bad_lexical_cast() BOOST_NOEXCEPT_OR_NOTHROW</span>
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :         {}</span>
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            : #ifndef BOOST_NO_TYPEID
+<span class="lineNum">      63 </span>            :         bad_lexical_cast(
+<span class="lineNum">      64 </span>            :                 const std::type_info &amp;source_type_arg,
+<span class="lineNum">      65 </span>            :                 const std::type_info &amp;target_type_arg) BOOST_NOEXCEPT
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :             : source(&amp;source_type_arg), target(&amp;target_type_arg)</span>
+<span class="lineNum">      67 </span>            :         {}
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :         const std::type_info &amp;source_type() const BOOST_NOEXCEPT {
+<span class="lineNum">      70 </span>            :             return *source;
+<span class="lineNum">      71 </span>            :         }
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :         const std::type_info &amp;target_type() const BOOST_NOEXCEPT {
+<span class="lineNum">      74 </span>            :             return *target;
+<span class="lineNum">      75 </span>            :         }
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :     private:
+<span class="lineNum">      78 </span>            :         const std::type_info *source;
+<span class="lineNum">      79 </span>            :         const std::type_info *target;
+<span class="lineNum">      80 </span>            : #endif
+<span class="lineNum">      81 </span>            :     };
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :     namespace conversion { namespace detail {
+<span class="lineNum">      84 </span>            : #ifdef BOOST_NO_TYPEID
+<span class="lineNum">      85 </span>            :         template &lt;class S, class T&gt;
+<span class="lineNum">      86 </span>            :         inline void throw_bad_cast() {
+<span class="lineNum">      87 </span>            :             boost::throw_exception(bad_lexical_cast());
+<span class="lineNum">      88 </span>            :         }
+<a name="89"><span class="lineNum">      89 </span>            : #else</a>
+<span class="lineNum">      90 </span>            :         template &lt;class S, class T&gt;
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :         inline void throw_bad_cast() {</span>
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :             boost::throw_exception(bad_lexical_cast(typeid(S), typeid(T)));</span>
+<span class="lineNum">      93 </span>            :         }
+<span class="lineNum">      94 </span>            : #endif
+<span class="lineNum">      95 </span>            :     }} // namespace conversion::detail
+<span class="lineNum">      96 </span>            : 
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : } // namespace boost
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : #endif // BOOST_LEXICAL_CAST_BAD_LEXICAL_CAST_HPP
+<span class="lineNum">     101 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

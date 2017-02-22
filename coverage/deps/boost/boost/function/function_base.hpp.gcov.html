@@ -1,0 +1,942 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/function/function_base.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/function</a> - function_base.hpp<span style="font-size: 80%;"> (source / <a href="function_base.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntry">65</td>
+            <td class="headerCovTableEntryLo">40.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">29</td>
+            <td class="headerCovTableEntryLo">31.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Boost.Function library</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : //  Copyright Douglas Gregor 2001-2006
+<span class="lineNum">       4 </span>            : //  Copyright Emil Dotchevski 2007
+<span class="lineNum">       5 </span>            : //  Use, modification and distribution is subject to the Boost Software License, Version 1.0.
+<span class="lineNum">       6 </span>            : //  (See accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       7 </span>            : //  http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : // For more information, see http://www.boost.org
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_FUNCTION_BASE_HEADER
+<span class="lineNum">      12 </span>            : #define BOOST_FUNCTION_BASE_HEADER
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &lt;stdexcept&gt;
+<span class="lineNum">      15 </span>            : #include &lt;string&gt;
+<span class="lineNum">      16 </span>            : #include &lt;memory&gt;
+<span class="lineNum">      17 </span>            : #include &lt;new&gt;
+<span class="lineNum">      18 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;boost/assert.hpp&gt;
+<span class="lineNum">      20 </span>            : #include &lt;boost/integer.hpp&gt;
+<span class="lineNum">      21 </span>            : #include &lt;boost/type_index.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/type_traits/has_trivial_copy.hpp&gt;
+<span class="lineNum">      23 </span>            : #include &lt;boost/type_traits/has_trivial_destructor.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/type_traits/is_const.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/type_traits/is_integral.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/type_traits/is_volatile.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/type_traits/composite_traits.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/ref.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/mpl/if.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/detail/workaround.hpp&gt;
+<span class="lineNum">      31 </span>            : #include &lt;boost/type_traits/alignment_of.hpp&gt;
+<span class="lineNum">      32 </span>            : #ifndef BOOST_NO_SFINAE
+<span class="lineNum">      33 </span>            : #  include &quot;boost/utility/enable_if.hpp&quot;
+<span class="lineNum">      34 </span>            : #else
+<span class="lineNum">      35 </span>            : #  include &quot;boost/mpl/bool.hpp&quot;
+<span class="lineNum">      36 </span>            : #endif
+<span class="lineNum">      37 </span>            : #include &lt;boost/function_equal.hpp&gt;
+<span class="lineNum">      38 </span>            : #include &lt;boost/function/function_fwd.hpp&gt;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : #if defined(BOOST_MSVC)
+<span class="lineNum">      41 </span>            : #   pragma warning( push )
+<span class="lineNum">      42 </span>            : #   pragma warning( disable : 4793 ) // complaint about native code generation
+<span class="lineNum">      43 </span>            : #   pragma warning( disable : 4127 ) // &quot;conditional expression is constant&quot;
+<span class="lineNum">      44 </span>            : #endif
+<span class="lineNum">      45 </span>            : 
+<span class="lineNum">      46 </span>            : #if defined(__ICL) &amp;&amp; __ICL &lt;= 600 || defined(__MWERKS__) &amp;&amp; __MWERKS__ &lt; 0x2406 &amp;&amp; !defined(BOOST_STRICT_CONFIG)
+<span class="lineNum">      47 </span>            : #  define BOOST_FUNCTION_TARGET_FIX(x) x
+<span class="lineNum">      48 </span>            : #else
+<span class="lineNum">      49 </span>            : #  define BOOST_FUNCTION_TARGET_FIX(x)
+<span class="lineNum">      50 </span>            : #endif // __ICL etc
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            : #  define BOOST_FUNCTION_ENABLE_IF_NOT_INTEGRAL(Functor,Type)              \
+<span class="lineNum">      53 </span>            :       typename ::boost::enable_if_c&lt;          \
+<span class="lineNum">      54 </span>            :                            !(::boost::is_integral&lt;Functor&gt;::value), \
+<span class="lineNum">      55 </span>            :                            Type&gt;::type
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            : namespace boost {
+<span class="lineNum">      58 </span>            :   namespace detail {
+<span class="lineNum">      59 </span>            :     namespace function {
+<span class="lineNum">      60 </span>            :       class X;
+<span class="lineNum">      61 </span>            : 
+<span class="lineNum">      62 </span>            :       /**
+<span class="lineNum">      63 </span>            :        * A buffer used to store small function objects in
+<span class="lineNum">      64 </span>            :        * boost::function. It is a union containing function pointers,
+<span class="lineNum">      65 </span>            :        * object pointers, and a structure that resembles a bound
+<span class="lineNum">      66 </span>            :        * member function pointer.
+<span class="lineNum">      67 </span>            :        */
+<span class="lineNum">      68 </span>            :       union function_buffer_members
+<span class="lineNum">      69 </span>            :       {
+<span class="lineNum">      70 </span>            :         // For pointers to function objects
+<span class="lineNum">      71 </span>            :         typedef void* obj_ptr_t;
+<span class="lineNum">      72 </span>            :         mutable obj_ptr_t obj_ptr;
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :         // For pointers to std::type_info objects
+<span class="lineNum">      75 </span>            :         struct type_t {
+<span class="lineNum">      76 </span>            :           // (get_functor_type_tag, check_functor_type_tag).
+<span class="lineNum">      77 </span>            :           const boost::typeindex::type_info* type;
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :           // Whether the type is const-qualified.
+<span class="lineNum">      80 </span>            :           bool const_qualified;
+<span class="lineNum">      81 </span>            :           // Whether the type is volatile-qualified.
+<span class="lineNum">      82 </span>            :           bool volatile_qualified;
+<span class="lineNum">      83 </span>            :         } type;
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            :         // For function pointers of all kinds
+<span class="lineNum">      86 </span>            :         typedef void (*func_ptr_t)();
+<span class="lineNum">      87 </span>            :         mutable func_ptr_t func_ptr;
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :         // For bound member pointers
+<span class="lineNum">      90 </span>            :         struct bound_memfunc_ptr_t {
+<span class="lineNum">      91 </span>            :           void (X::*memfunc_ptr)(int);
+<span class="lineNum">      92 </span>            :           void* obj_ptr;
+<span class="lineNum">      93 </span>            :         } bound_memfunc_ptr;
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            :         // For references to function objects. We explicitly keep
+<span class="lineNum">      96 </span>            :         // track of the cv-qualifiers on the object referenced.
+<span class="lineNum">      97 </span>            :         struct obj_ref_t {
+<span class="lineNum">      98 </span>            :           mutable void* obj_ptr;
+<span class="lineNum">      99 </span>            :           bool is_const_qualified;
+<span class="lineNum">     100 </span>            :           bool is_volatile_qualified;
+<span class="lineNum">     101 </span>            :         } obj_ref;
+<span class="lineNum">     102 </span>            :       };
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            :       union function_buffer
+<span class="lineNum">     105 </span>            :       {
+<span class="lineNum">     106 </span>            :         // Type-specific union members
+<span class="lineNum">     107 </span>            :         mutable function_buffer_members members;
+<span class="lineNum">     108 </span>            : 
+<span class="lineNum">     109 </span>            :         // To relax aliasing constraints
+<span class="lineNum">     110 </span>            :         mutable char data[sizeof(function_buffer_members)];
+<span class="lineNum">     111 </span>            :       };
+<span class="lineNum">     112 </span>            : 
+<span class="lineNum">     113 </span>            :       /**
+<span class="lineNum">     114 </span>            :        * The unusable class is a placeholder for unused function arguments
+<span class="lineNum">     115 </span>            :        * It is also completely unusable except that it constructable from
+<span class="lineNum">     116 </span>            :        * anything. This helps compilers without partial specialization to
+<span class="lineNum">     117 </span>            :        * handle Boost.Function objects returning void.
+<span class="lineNum">     118 </span>            :        */
+<span class="lineNum">     119 </span>            :       struct unusable
+<span class="lineNum">     120 </span>            :       {
+<span class="lineNum">     121 </span>            :         unusable() {}
+<span class="lineNum">     122 </span>            :         template&lt;typename T&gt; unusable(const T&amp;) {}
+<span class="lineNum">     123 </span>            :       };
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            :       /* Determine the return type. This supports compilers that do not support
+<span class="lineNum">     126 </span>            :        * void returns or partial specialization by silently changing the return
+<span class="lineNum">     127 </span>            :        * type to &quot;unusable&quot;.
+<span class="lineNum">     128 </span>            :        */
+<span class="lineNum">     129 </span>            :       template&lt;typename T&gt; struct function_return_type { typedef T type; };
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            :       template&lt;&gt;
+<span class="lineNum">     132 </span>            :       struct function_return_type&lt;void&gt;
+<span class="lineNum">     133 </span>            :       {
+<span class="lineNum">     134 </span>            :         typedef unusable type;
+<span class="lineNum">     135 </span>            :       };
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :       // The operation type to perform on the given functor/function pointer
+<span class="lineNum">     138 </span>            :       enum functor_manager_operation_type {
+<span class="lineNum">     139 </span>            :         clone_functor_tag,
+<span class="lineNum">     140 </span>            :         move_functor_tag,
+<span class="lineNum">     141 </span>            :         destroy_functor_tag,
+<span class="lineNum">     142 </span>            :         check_functor_type_tag,
+<span class="lineNum">     143 </span>            :         get_functor_type_tag
+<span class="lineNum">     144 </span>            :       };
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            :       // Tags used to decide between different types of functions
+<span class="lineNum">     147 </span>            :       struct function_ptr_tag {};
+<span class="lineNum">     148 </span>            :       struct function_obj_tag {};
+<span class="lineNum">     149 </span>            :       struct member_ptr_tag {};
+<span class="lineNum">     150 </span>            :       struct function_obj_ref_tag {};
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            :       template&lt;typename F&gt;
+<span class="lineNum">     153 </span>            :       class get_function_tag
+<span class="lineNum">     154 </span>            :       {
+<span class="lineNum">     155 </span>            :         typedef typename mpl::if_c&lt;(is_pointer&lt;F&gt;::value),
+<span class="lineNum">     156 </span>            :                                    function_ptr_tag,
+<span class="lineNum">     157 </span>            :                                    function_obj_tag&gt;::type ptr_or_obj_tag;
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            :         typedef typename mpl::if_c&lt;(is_member_pointer&lt;F&gt;::value),
+<span class="lineNum">     160 </span>            :                                    member_ptr_tag,
+<span class="lineNum">     161 </span>            :                                    ptr_or_obj_tag&gt;::type ptr_or_obj_or_mem_tag;
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            :         typedef typename mpl::if_c&lt;(is_reference_wrapper&lt;F&gt;::value),
+<span class="lineNum">     164 </span>            :                                    function_obj_ref_tag,
+<span class="lineNum">     165 </span>            :                                    ptr_or_obj_or_mem_tag&gt;::type or_ref_tag;
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            :       public:
+<span class="lineNum">     168 </span>            :         typedef or_ref_tag type;
+<span class="lineNum">     169 </span>            :       };
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            :       // The trivial manager does nothing but return the same pointer (if we
+<span class="lineNum">     172 </span>            :       // are cloning) or return the null pointer (if we are deleting).
+<span class="lineNum">     173 </span>            :       template&lt;typename F&gt;
+<span class="lineNum">     174 </span>            :       struct reference_manager
+<span class="lineNum">     175 </span>            :       {
+<span class="lineNum">     176 </span>            :         static inline void
+<span class="lineNum">     177 </span>            :         manage(const function_buffer&amp; in_buffer, function_buffer&amp; out_buffer,
+<span class="lineNum">     178 </span>            :                functor_manager_operation_type op)
+<span class="lineNum">     179 </span>            :         {
+<span class="lineNum">     180 </span>            :           switch (op) {
+<span class="lineNum">     181 </span>            :           case clone_functor_tag:
+<span class="lineNum">     182 </span>            :             out_buffer.members.obj_ref = in_buffer.members.obj_ref;
+<span class="lineNum">     183 </span>            :             return;
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :           case move_functor_tag:
+<span class="lineNum">     186 </span>            :             out_buffer.members.obj_ref = in_buffer.members.obj_ref;
+<span class="lineNum">     187 </span>            :             in_buffer.members.obj_ref.obj_ptr = 0;
+<span class="lineNum">     188 </span>            :             return;
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            :           case destroy_functor_tag:
+<span class="lineNum">     191 </span>            :             out_buffer.members.obj_ref.obj_ptr = 0;
+<span class="lineNum">     192 </span>            :             return;
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            :           case check_functor_type_tag:
+<span class="lineNum">     195 </span>            :             {
+<span class="lineNum">     196 </span>            :               // Check whether we have the same type. We can add
+<span class="lineNum">     197 </span>            :               // cv-qualifiers, but we can't take them away.
+<span class="lineNum">     198 </span>            :               if (*out_buffer.members.type.type == boost::typeindex::type_id&lt;F&gt;()
+<span class="lineNum">     199 </span>            :                   &amp;&amp; (!in_buffer.members.obj_ref.is_const_qualified
+<span class="lineNum">     200 </span>            :                       || out_buffer.members.type.const_qualified)
+<span class="lineNum">     201 </span>            :                   &amp;&amp; (!in_buffer.members.obj_ref.is_volatile_qualified
+<span class="lineNum">     202 </span>            :                       || out_buffer.members.type.volatile_qualified))
+<span class="lineNum">     203 </span>            :                 out_buffer.members.obj_ptr = in_buffer.members.obj_ref.obj_ptr;
+<span class="lineNum">     204 </span>            :               else
+<span class="lineNum">     205 </span>            :                 out_buffer.members.obj_ptr = 0;
+<span class="lineNum">     206 </span>            :             }
+<span class="lineNum">     207 </span>            :             return;
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span>            :           case get_functor_type_tag:
+<span class="lineNum">     210 </span>            :             out_buffer.members.type.type = &amp;boost::typeindex::type_id&lt;F&gt;().type_info();
+<span class="lineNum">     211 </span>            :             out_buffer.members.type.const_qualified = in_buffer.members.obj_ref.is_const_qualified;
+<span class="lineNum">     212 </span>            :             out_buffer.members.type.volatile_qualified = in_buffer.members.obj_ref.is_volatile_qualified;
+<span class="lineNum">     213 </span>            :             return;
+<span class="lineNum">     214 </span>            :           }
+<span class="lineNum">     215 </span>            :         }
+<span class="lineNum">     216 </span>            :       };
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            :       /**
+<span class="lineNum">     219 </span>            :        * Determine if boost::function can use the small-object
+<span class="lineNum">     220 </span>            :        * optimization with the function object type F.
+<span class="lineNum">     221 </span>            :        */
+<span class="lineNum">     222 </span>            :       template&lt;typename F&gt;
+<span class="lineNum">     223 </span>            :       struct function_allows_small_object_optimization
+<span class="lineNum">     224 </span>            :       {
+<span class="lineNum">     225 </span>            :         BOOST_STATIC_CONSTANT
+<span class="lineNum">     226 </span>            :           (bool,
+<span class="lineNum">     227 </span>            :            value = ((sizeof(F) &lt;= sizeof(function_buffer) &amp;&amp;
+<span class="lineNum">     228 </span>            :                      (alignment_of&lt;function_buffer&gt;::value
+<span class="lineNum">     229 </span>            :                       % alignment_of&lt;F&gt;::value == 0))));
+<span class="lineNum">     230 </span>            :       };
+<span class="lineNum">     231 </span>            : 
+<span class="lineNum">     232 </span>            :       template &lt;typename F,typename A&gt;
+<span class="lineNum">     233 </span>            :       struct functor_wrapper: public F, public A
+<span class="lineNum">     234 </span>            :       {
+<span class="lineNum">     235 </span>            :         functor_wrapper( F f, A a ):
+<span class="lineNum">     236 </span>            :           F(f),
+<span class="lineNum">     237 </span>            :           A(a)
+<span class="lineNum">     238 </span>            :         {
+<span class="lineNum">     239 </span>            :         }
+<span class="lineNum">     240 </span>            : 
+<span class="lineNum">     241 </span>            :         functor_wrapper(const functor_wrapper&amp; f) :
+<span class="lineNum">     242 </span>            :           F(static_cast&lt;const F&amp;&gt;(f)),
+<span class="lineNum">     243 </span>            :           A(static_cast&lt;const A&amp;&gt;(f))
+<span class="lineNum">     244 </span>            :         {
+<span class="lineNum">     245 </span>            :         }
+<span class="lineNum">     246 </span>            :       };
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span>            :       /**
+<span class="lineNum">     249 </span>            :        * The functor_manager class contains a static function &quot;manage&quot; which
+<span class="lineNum">     250 </span>            :        * can clone or destroy the given function/function object pointer.
+<span class="lineNum">     251 </span>            :        */
+<span class="lineNum">     252 </span>            :       template&lt;typename Functor&gt;
+<span class="lineNum">     253 </span>            :       struct functor_manager_common
+<span class="lineNum">     254 </span>            :       {
+<span class="lineNum">     255 </span>            :         typedef Functor functor_type;
+<span class="lineNum">     256 </span>            : 
+<a name="257"><span class="lineNum">     257 </span>            :         // Function pointers</a>
+<span class="lineNum">     258 </span>            :         static inline void
+<span class="lineNum">     259 </span><span class="lineCov">        321 :         manage_ptr(const function_buffer&amp; in_buffer, function_buffer&amp; out_buffer,</span>
+<span class="lineNum">     260 </span>            :                 functor_manager_operation_type op)
+<span class="lineNum">     261 </span>            :         {
+<span class="lineNum">     262 </span><span class="lineCov">        321 :           if (op == clone_functor_tag)</span>
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :             out_buffer.members.func_ptr = in_buffer.members.func_ptr;</span>
+<span class="lineNum">     264 </span><span class="lineCov">        321 :           else if (op == move_functor_tag) {</span>
+<span class="lineNum">     265 </span><span class="lineNoCov">          0 :             out_buffer.members.func_ptr = in_buffer.members.func_ptr;</span>
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :             in_buffer.members.func_ptr = 0;</span>
+<span class="lineNum">     267 </span><span class="lineCov">        321 :           } else if (op == destroy_functor_tag)</span>
+<span class="lineNum">     268 </span><span class="lineCov">        321 :             out_buffer.members.func_ptr = 0;</span>
+<span class="lineNum">     269 </span><span class="lineNoCov">          0 :           else if (op == check_functor_type_tag) {</span>
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :             if (*out_buffer.members.type.type == boost::typeindex::type_id&lt;Functor&gt;())</span>
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :               out_buffer.members.obj_ptr = &amp;in_buffer.members.func_ptr;</span>
+<span class="lineNum">     272 </span>            :             else
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :               out_buffer.members.obj_ptr = 0;</span>
+<span class="lineNum">     274 </span>            :           } else /* op == get_functor_type_tag */ {
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 :             out_buffer.members.type.type = &amp;boost::typeindex::type_id&lt;Functor&gt;().type_info();</span>
+<span class="lineNum">     276 </span><span class="lineNoCov">          0 :             out_buffer.members.type.const_qualified = false;</span>
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :             out_buffer.members.type.volatile_qualified = false;</span>
+<span class="lineNum">     278 </span>            :           }
+<span class="lineNum">     279 </span><span class="lineCov">        321 :         }</span>
+<span class="lineNum">     280 </span>            : 
+<a name="281"><span class="lineNum">     281 </span>            :         // Function objects that fit in the small-object buffer.</a>
+<span class="lineNum">     282 </span>            :         static inline void
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :         manage_small(const function_buffer&amp; in_buffer, function_buffer&amp; out_buffer,</span>
+<span class="lineNum">     284 </span>            :                 functor_manager_operation_type op)
+<span class="lineNum">     285 </span>            :         {
+<span class="lineNum">     286 </span><span class="lineNoCov">          0 :           if (op == clone_functor_tag || op == move_functor_tag) {</span>
+<span class="lineNum">     287 </span>            :             const functor_type* in_functor =
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :               reinterpret_cast&lt;const functor_type*&gt;(in_buffer.data);</span>
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 :             new (reinterpret_cast&lt;void*&gt;(out_buffer.data)) functor_type(*in_functor);</span>
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            :             if (op == move_functor_tag) {
+<span class="lineNum">     292 </span>            :               functor_type* f = reinterpret_cast&lt;functor_type*&gt;(in_buffer.data);
+<span class="lineNum">     293 </span>            :               (void)f; // suppress warning about the value of f not being used (MSVC)
+<span class="lineNum">     294 </span>            :               f-&gt;~Functor();
+<span class="lineNum">     295 </span>            :             }
+<span class="lineNum">     296 </span><span class="lineNoCov">          0 :           } else if (op == destroy_functor_tag) {</span>
+<span class="lineNum">     297 </span>            :             // Some compilers (Borland, vc6, ...) are unhappy with ~functor_type.
+<span class="lineNum">     298 </span>            :              functor_type* f = reinterpret_cast&lt;functor_type*&gt;(out_buffer.data);
+<span class="lineNum">     299 </span>            :              (void)f; // suppress warning about the value of f not being used (MSVC)
+<span class="lineNum">     300 </span>            :              f-&gt;~Functor();
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :           } else if (op == check_functor_type_tag) {</span>
+<span class="lineNum">     302 </span><span class="lineNoCov">          0 :              if (*out_buffer.members.type.type == boost::typeindex::type_id&lt;Functor&gt;())</span>
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :               out_buffer.members.obj_ptr = in_buffer.data;</span>
+<span class="lineNum">     304 </span>            :             else
+<span class="lineNum">     305 </span><span class="lineNoCov">          0 :               out_buffer.members.obj_ptr = 0;</span>
+<span class="lineNum">     306 </span>            :           } else /* op == get_functor_type_tag */ {
+<span class="lineNum">     307 </span><span class="lineNoCov">          0 :             out_buffer.members.type.type = &amp;boost::typeindex::type_id&lt;Functor&gt;().type_info();</span>
+<span class="lineNum">     308 </span><span class="lineNoCov">          0 :             out_buffer.members.type.const_qualified = false;</span>
+<span class="lineNum">     309 </span><span class="lineNoCov">          0 :             out_buffer.members.type.volatile_qualified = false;</span>
+<span class="lineNum">     310 </span>            :           }
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :         }</span>
+<span class="lineNum">     312 </span>            :       };
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span>            :       template&lt;typename Functor&gt;
+<span class="lineNum">     315 </span>            :       struct functor_manager
+<span class="lineNum">     316 </span>            :       {
+<span class="lineNum">     317 </span>            :       private:
+<span class="lineNum">     318 </span>            :         typedef Functor functor_type;
+<span class="lineNum">     319 </span>            : 
+<span class="lineNum">     320 </span>            :         // Function pointers
+<span class="lineNum">     321 </span>            :         static inline void
+<span class="lineNum">     322 </span>            :         manager(const function_buffer&amp; in_buffer, function_buffer&amp; out_buffer,
+<span class="lineNum">     323 </span>            :                 functor_manager_operation_type op, function_ptr_tag)
+<span class="lineNum">     324 </span>            :         {
+<span class="lineNum">     325 </span><span class="lineCov">        321 :           functor_manager_common&lt;Functor&gt;::manage_ptr(in_buffer,out_buffer,op);</span>
+<span class="lineNum">     326 </span>            :         }
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span>            :         // Function objects that fit in the small-object buffer.
+<span class="lineNum">     329 </span>            :         static inline void
+<span class="lineNum">     330 </span>            :         manager(const function_buffer&amp; in_buffer, function_buffer&amp; out_buffer,
+<span class="lineNum">     331 </span>            :                 functor_manager_operation_type op, mpl::true_)
+<span class="lineNum">     332 </span>            :         {
+<span class="lineNum">     333 </span><span class="lineNoCov">          0 :           functor_manager_common&lt;Functor&gt;::manage_small(in_buffer,out_buffer,op);</span>
+<span class="lineNum">     334 </span>            :         }
+<span class="lineNum">     335 </span>            : 
+<a name="336"><span class="lineNum">     336 </span>            :         // Function objects that require heap allocation</a>
+<span class="lineNum">     337 </span>            :         static inline void
+<span class="lineNum">     338 </span><span class="lineCov">         11 :         manager(const function_buffer&amp; in_buffer, function_buffer&amp; out_buffer,</span>
+<span class="lineNum">     339 </span>            :                 functor_manager_operation_type op, mpl::false_)
+<span class="lineNum">     340 </span>            :         {
+<span class="lineNum">     341 </span><span class="lineCov">         11 :           if (op == clone_functor_tag) {</span>
+<span class="lineNum">     342 </span>            :             // Clone the functor
+<span class="lineNum">     343 </span>            :             // GCC 2.95.3 gets the CV qualifiers wrong here, so we
+<span class="lineNum">     344 </span>            :             // can't do the static_cast that we should do.
+<span class="lineNum">     345 </span>            :             // jewillco: Changing this to static_cast because GCC 2.95.3 is
+<span class="lineNum">     346 </span>            :             // obsolete.
+<span class="lineNum">     347 </span>            :             const functor_type* f =
+<span class="lineNum">     348 </span><span class="lineCov">          4 :               static_cast&lt;const functor_type*&gt;(in_buffer.members.obj_ptr);</span>
+<span class="lineNum">     349 </span><span class="lineCov">          8 :             functor_type* new_f = new functor_type(*f);</span>
+<span class="lineNum">     350 </span><span class="lineCov">          4 :             out_buffer.members.obj_ptr = new_f;</span>
+<span class="lineNum">     351 </span><span class="lineCov">          7 :           } else if (op == move_functor_tag) {</span>
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 :             out_buffer.members.obj_ptr = in_buffer.members.obj_ptr;</span>
+<span class="lineNum">     353 </span><span class="lineNoCov">          0 :             in_buffer.members.obj_ptr = 0;</span>
+<span class="lineNum">     354 </span><span class="lineCov">          7 :           } else if (op == destroy_functor_tag) {</span>
+<span class="lineNum">     355 </span>            :             /* Cast from the void pointer to the functor pointer type */
+<span class="lineNum">     356 </span>            :             functor_type* f =
+<span class="lineNum">     357 </span><span class="lineCov">          7 :               static_cast&lt;functor_type*&gt;(out_buffer.members.obj_ptr);</span>
+<span class="lineNum">     358 </span><span class="lineCov">         12 :             delete f;</span>
+<span class="lineNum">     359 </span><span class="lineCov">          7 :             out_buffer.members.obj_ptr = 0;</span>
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :           } else if (op == check_functor_type_tag) {</span>
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :             if (*out_buffer.members.type.type == boost::typeindex::type_id&lt;Functor&gt;())</span>
+<span class="lineNum">     362 </span><span class="lineNoCov">          0 :               out_buffer.members.obj_ptr = in_buffer.members.obj_ptr;</span>
+<span class="lineNum">     363 </span>            :             else
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :               out_buffer.members.obj_ptr = 0;</span>
+<span class="lineNum">     365 </span>            :           } else /* op == get_functor_type_tag */ {
+<span class="lineNum">     366 </span><span class="lineNoCov">          0 :             out_buffer.members.type.type = &amp;boost::typeindex::type_id&lt;Functor&gt;().type_info();</span>
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 :             out_buffer.members.type.const_qualified = false;</span>
+<span class="lineNum">     368 </span><span class="lineNoCov">          0 :             out_buffer.members.type.volatile_qualified = false;</span>
+<span class="lineNum">     369 </span>            :           }
+<span class="lineNum">     370 </span><span class="lineCov">         11 :         }</span>
+<span class="lineNum">     371 </span>            : 
+<span class="lineNum">     372 </span>            :         // For function objects, we determine whether the function
+<span class="lineNum">     373 </span>            :         // object can use the small-object optimization buffer or
+<span class="lineNum">     374 </span>            :         // whether we need to allocate it on the heap.
+<span class="lineNum">     375 </span>            :         static inline void
+<span class="lineNum">     376 </span>            :         manager(const function_buffer&amp; in_buffer, function_buffer&amp; out_buffer,
+<span class="lineNum">     377 </span>            :                 functor_manager_operation_type op, function_obj_tag)
+<span class="lineNum">     378 </span>            :         {
+<span class="lineNum">     379 </span><span class="lineCov">         11 :           manager(in_buffer, out_buffer, op,</span>
+<span class="lineNum">     380 </span>            :                   mpl::bool_&lt;(function_allows_small_object_optimization&lt;functor_type&gt;::value)&gt;());
+<span class="lineNum">     381 </span>            :         }
+<span class="lineNum">     382 </span>            : 
+<span class="lineNum">     383 </span>            :         // For member pointers, we use the small-object optimization buffer.
+<span class="lineNum">     384 </span>            :         static inline void
+<span class="lineNum">     385 </span>            :         manager(const function_buffer&amp; in_buffer, function_buffer&amp; out_buffer,
+<span class="lineNum">     386 </span>            :                 functor_manager_operation_type op, member_ptr_tag)
+<span class="lineNum">     387 </span>            :         {
+<span class="lineNum">     388 </span>            :           manager(in_buffer, out_buffer, op, mpl::true_());
+<span class="lineNum">     389 </span>            :         }
+<span class="lineNum">     390 </span>            : 
+<span class="lineNum">     391 </span>            :       public:
+<span class="lineNum">     392 </span>            :         /* Dispatch to an appropriate manager based on whether we have a
+<a name="393"><span class="lineNum">     393 </span>            :            function pointer or a function object pointer. */</a>
+<span class="lineNum">     394 </span>            :         static inline void
+<span class="lineNum">     395 </span><span class="lineCov">        332 :         manage(const function_buffer&amp; in_buffer, function_buffer&amp; out_buffer,</span>
+<span class="lineNum">     396 </span>            :                functor_manager_operation_type op)
+<span class="lineNum">     397 </span>            :         {
+<span class="lineNum">     398 </span>            :           typedef typename get_function_tag&lt;functor_type&gt;::type tag_type;
+<span class="lineNum">     399 </span><span class="lineCov">        332 :           switch (op) {</span>
+<span class="lineNum">     400 </span>            :           case get_functor_type_tag:
+<span class="lineNum">     401 </span><span class="lineNoCov">          0 :             out_buffer.members.type.type = &amp;boost::typeindex::type_id&lt;functor_type&gt;().type_info();</span>
+<span class="lineNum">     402 </span><span class="lineNoCov">          0 :             out_buffer.members.type.const_qualified = false;</span>
+<span class="lineNum">     403 </span><span class="lineNoCov">          0 :             out_buffer.members.type.volatile_qualified = false;</span>
+<span class="lineNum">     404 </span><span class="lineNoCov">          0 :             return;</span>
+<span class="lineNum">     405 </span>            : 
+<span class="lineNum">     406 </span>            :           default:
+<span class="lineNum">     407 </span><span class="lineCov">        332 :             manager(in_buffer, out_buffer, op, tag_type());</span>
+<span class="lineNum">     408 </span>            :             return;
+<span class="lineNum">     409 </span>            :           }
+<span class="lineNum">     410 </span>            :         }
+<span class="lineNum">     411 </span>            :       };
+<span class="lineNum">     412 </span>            : 
+<span class="lineNum">     413 </span>            :       template&lt;typename Functor, typename Allocator&gt;
+<span class="lineNum">     414 </span>            :       struct functor_manager_a
+<span class="lineNum">     415 </span>            :       {
+<span class="lineNum">     416 </span>            :       private:
+<span class="lineNum">     417 </span>            :         typedef Functor functor_type;
+<span class="lineNum">     418 </span>            : 
+<span class="lineNum">     419 </span>            :         // Function pointers
+<span class="lineNum">     420 </span>            :         static inline void
+<span class="lineNum">     421 </span>            :         manager(const function_buffer&amp; in_buffer, function_buffer&amp; out_buffer,
+<span class="lineNum">     422 </span>            :                 functor_manager_operation_type op, function_ptr_tag)
+<span class="lineNum">     423 </span>            :         {
+<span class="lineNum">     424 </span>            :           functor_manager_common&lt;Functor&gt;::manage_ptr(in_buffer,out_buffer,op);
+<span class="lineNum">     425 </span>            :         }
+<span class="lineNum">     426 </span>            : 
+<span class="lineNum">     427 </span>            :         // Function objects that fit in the small-object buffer.
+<span class="lineNum">     428 </span>            :         static inline void
+<span class="lineNum">     429 </span>            :         manager(const function_buffer&amp; in_buffer, function_buffer&amp; out_buffer,
+<span class="lineNum">     430 </span>            :                 functor_manager_operation_type op, mpl::true_)
+<span class="lineNum">     431 </span>            :         {
+<span class="lineNum">     432 </span>            :           functor_manager_common&lt;Functor&gt;::manage_small(in_buffer,out_buffer,op);
+<span class="lineNum">     433 </span>            :         }
+<span class="lineNum">     434 </span>            : 
+<span class="lineNum">     435 </span>            :         // Function objects that require heap allocation
+<span class="lineNum">     436 </span>            :         static inline void
+<span class="lineNum">     437 </span>            :         manager(const function_buffer&amp; in_buffer, function_buffer&amp; out_buffer,
+<span class="lineNum">     438 </span>            :                 functor_manager_operation_type op, mpl::false_)
+<span class="lineNum">     439 </span>            :         {
+<span class="lineNum">     440 </span>            :           typedef functor_wrapper&lt;Functor,Allocator&gt; functor_wrapper_type;
+<span class="lineNum">     441 </span>            :           typedef typename Allocator::template rebind&lt;functor_wrapper_type&gt;::other
+<span class="lineNum">     442 </span>            :             wrapper_allocator_type;
+<span class="lineNum">     443 </span>            :           typedef typename wrapper_allocator_type::pointer wrapper_allocator_pointer_type;
+<span class="lineNum">     444 </span>            : 
+<span class="lineNum">     445 </span>            :           if (op == clone_functor_tag) {
+<span class="lineNum">     446 </span>            :             // Clone the functor
+<span class="lineNum">     447 </span>            :             // GCC 2.95.3 gets the CV qualifiers wrong here, so we
+<span class="lineNum">     448 </span>            :             // can't do the static_cast that we should do.
+<span class="lineNum">     449 </span>            :             const functor_wrapper_type* f =
+<span class="lineNum">     450 </span>            :               static_cast&lt;const functor_wrapper_type*&gt;(in_buffer.members.obj_ptr);
+<span class="lineNum">     451 </span>            :             wrapper_allocator_type wrapper_allocator(static_cast&lt;Allocator const &amp;&gt;(*f));
+<span class="lineNum">     452 </span>            :             wrapper_allocator_pointer_type copy = wrapper_allocator.allocate(1);
+<span class="lineNum">     453 </span>            :             wrapper_allocator.construct(copy, *f);
+<span class="lineNum">     454 </span>            : 
+<span class="lineNum">     455 </span>            :             // Get back to the original pointer type
+<span class="lineNum">     456 </span>            :             functor_wrapper_type* new_f = static_cast&lt;functor_wrapper_type*&gt;(copy);
+<span class="lineNum">     457 </span>            :             out_buffer.members.obj_ptr = new_f;
+<span class="lineNum">     458 </span>            :           } else if (op == move_functor_tag) {
+<span class="lineNum">     459 </span>            :             out_buffer.members.obj_ptr = in_buffer.members.obj_ptr;
+<span class="lineNum">     460 </span>            :             in_buffer.members.obj_ptr = 0;
+<span class="lineNum">     461 </span>            :           } else if (op == destroy_functor_tag) {
+<span class="lineNum">     462 </span>            :             /* Cast from the void pointer to the functor_wrapper_type */
+<span class="lineNum">     463 </span>            :             functor_wrapper_type* victim =
+<span class="lineNum">     464 </span>            :               static_cast&lt;functor_wrapper_type*&gt;(in_buffer.members.obj_ptr);
+<span class="lineNum">     465 </span>            :             wrapper_allocator_type wrapper_allocator(static_cast&lt;Allocator const &amp;&gt;(*victim));
+<span class="lineNum">     466 </span>            :             wrapper_allocator.destroy(victim);
+<span class="lineNum">     467 </span>            :             wrapper_allocator.deallocate(victim,1);
+<span class="lineNum">     468 </span>            :             out_buffer.members.obj_ptr = 0;
+<span class="lineNum">     469 </span>            :           } else if (op == check_functor_type_tag) {
+<span class="lineNum">     470 </span>            :             if (*out_buffer.members.type.type == boost::typeindex::type_id&lt;Functor&gt;())
+<span class="lineNum">     471 </span>            :               out_buffer.members.obj_ptr = in_buffer.members.obj_ptr;
+<span class="lineNum">     472 </span>            :             else
+<span class="lineNum">     473 </span>            :               out_buffer.members.obj_ptr = 0;
+<span class="lineNum">     474 </span>            :           } else /* op == get_functor_type_tag */ {
+<span class="lineNum">     475 </span>            :             out_buffer.members.type.type = &amp;boost::typeindex::type_id&lt;Functor&gt;().type_info();
+<span class="lineNum">     476 </span>            :             out_buffer.members.type.const_qualified = false;
+<span class="lineNum">     477 </span>            :             out_buffer.members.type.volatile_qualified = false;
+<span class="lineNum">     478 </span>            :           }
+<span class="lineNum">     479 </span>            :         }
+<span class="lineNum">     480 </span>            : 
+<span class="lineNum">     481 </span>            :         // For function objects, we determine whether the function
+<span class="lineNum">     482 </span>            :         // object can use the small-object optimization buffer or
+<span class="lineNum">     483 </span>            :         // whether we need to allocate it on the heap.
+<span class="lineNum">     484 </span>            :         static inline void
+<span class="lineNum">     485 </span>            :         manager(const function_buffer&amp; in_buffer, function_buffer&amp; out_buffer,
+<span class="lineNum">     486 </span>            :                 functor_manager_operation_type op, function_obj_tag)
+<span class="lineNum">     487 </span>            :         {
+<span class="lineNum">     488 </span>            :           manager(in_buffer, out_buffer, op,
+<span class="lineNum">     489 </span>            :                   mpl::bool_&lt;(function_allows_small_object_optimization&lt;functor_type&gt;::value)&gt;());
+<span class="lineNum">     490 </span>            :         }
+<span class="lineNum">     491 </span>            : 
+<span class="lineNum">     492 </span>            :       public:
+<span class="lineNum">     493 </span>            :         /* Dispatch to an appropriate manager based on whether we have a
+<span class="lineNum">     494 </span>            :            function pointer or a function object pointer. */
+<span class="lineNum">     495 </span>            :         static inline void
+<span class="lineNum">     496 </span>            :         manage(const function_buffer&amp; in_buffer, function_buffer&amp; out_buffer,
+<span class="lineNum">     497 </span>            :                functor_manager_operation_type op)
+<span class="lineNum">     498 </span>            :         {
+<span class="lineNum">     499 </span>            :           typedef typename get_function_tag&lt;functor_type&gt;::type tag_type;
+<span class="lineNum">     500 </span>            :           switch (op) {
+<span class="lineNum">     501 </span>            :           case get_functor_type_tag:
+<span class="lineNum">     502 </span>            :             out_buffer.members.type.type = &amp;boost::typeindex::type_id&lt;functor_type&gt;().type_info();
+<span class="lineNum">     503 </span>            :             out_buffer.members.type.const_qualified = false;
+<span class="lineNum">     504 </span>            :             out_buffer.members.type.volatile_qualified = false;
+<span class="lineNum">     505 </span>            :             return;
+<span class="lineNum">     506 </span>            : 
+<span class="lineNum">     507 </span>            :           default:
+<span class="lineNum">     508 </span>            :             manager(in_buffer, out_buffer, op, tag_type());
+<span class="lineNum">     509 </span>            :             return;
+<span class="lineNum">     510 </span>            :           }
+<span class="lineNum">     511 </span>            :         }
+<span class="lineNum">     512 </span>            :       };
+<span class="lineNum">     513 </span>            : 
+<span class="lineNum">     514 </span>            :       // A type that is only used for comparisons against zero
+<span class="lineNum">     515 </span>            :       struct useless_clear_type {};
+<span class="lineNum">     516 </span>            : 
+<span class="lineNum">     517 </span>            : #ifdef BOOST_NO_SFINAE
+<span class="lineNum">     518 </span>            :       // These routines perform comparisons between a Boost.Function
+<span class="lineNum">     519 </span>            :       // object and an arbitrary function object (when the last
+<span class="lineNum">     520 </span>            :       // parameter is mpl::bool_&lt;false&gt;) or against zero (when the
+<span class="lineNum">     521 </span>            :       // last parameter is mpl::bool_&lt;true&gt;). They are only necessary
+<span class="lineNum">     522 </span>            :       // for compilers that don't support SFINAE.
+<span class="lineNum">     523 </span>            :       template&lt;typename Function, typename Functor&gt;
+<span class="lineNum">     524 </span>            :         bool
+<span class="lineNum">     525 </span>            :         compare_equal(const Function&amp; f, const Functor&amp;, int, mpl::bool_&lt;true&gt;)
+<span class="lineNum">     526 </span>            :         { return f.empty(); }
+<span class="lineNum">     527 </span>            : 
+<span class="lineNum">     528 </span>            :       template&lt;typename Function, typename Functor&gt;
+<span class="lineNum">     529 </span>            :         bool
+<span class="lineNum">     530 </span>            :         compare_not_equal(const Function&amp; f, const Functor&amp;, int,
+<span class="lineNum">     531 </span>            :                           mpl::bool_&lt;true&gt;)
+<span class="lineNum">     532 </span>            :         { return !f.empty(); }
+<span class="lineNum">     533 </span>            : 
+<span class="lineNum">     534 </span>            :       template&lt;typename Function, typename Functor&gt;
+<span class="lineNum">     535 </span>            :         bool
+<span class="lineNum">     536 </span>            :         compare_equal(const Function&amp; f, const Functor&amp; g, long,
+<span class="lineNum">     537 </span>            :                       mpl::bool_&lt;false&gt;)
+<span class="lineNum">     538 </span>            :         {
+<span class="lineNum">     539 </span>            :           if (const Functor* fp = f.template target&lt;Functor&gt;())
+<span class="lineNum">     540 </span>            :             return function_equal(*fp, g);
+<span class="lineNum">     541 </span>            :           else return false;
+<span class="lineNum">     542 </span>            :         }
+<span class="lineNum">     543 </span>            : 
+<span class="lineNum">     544 </span>            :       template&lt;typename Function, typename Functor&gt;
+<span class="lineNum">     545 </span>            :         bool
+<span class="lineNum">     546 </span>            :         compare_equal(const Function&amp; f, const reference_wrapper&lt;Functor&gt;&amp; g,
+<span class="lineNum">     547 </span>            :                       int, mpl::bool_&lt;false&gt;)
+<span class="lineNum">     548 </span>            :         {
+<span class="lineNum">     549 </span>            :           if (const Functor* fp = f.template target&lt;Functor&gt;())
+<span class="lineNum">     550 </span>            :             return fp == g.get_pointer();
+<span class="lineNum">     551 </span>            :           else return false;
+<span class="lineNum">     552 </span>            :         }
+<span class="lineNum">     553 </span>            : 
+<span class="lineNum">     554 </span>            :       template&lt;typename Function, typename Functor&gt;
+<span class="lineNum">     555 </span>            :         bool
+<span class="lineNum">     556 </span>            :         compare_not_equal(const Function&amp; f, const Functor&amp; g, long,
+<span class="lineNum">     557 </span>            :                           mpl::bool_&lt;false&gt;)
+<span class="lineNum">     558 </span>            :         {
+<span class="lineNum">     559 </span>            :           if (const Functor* fp = f.template target&lt;Functor&gt;())
+<span class="lineNum">     560 </span>            :             return !function_equal(*fp, g);
+<span class="lineNum">     561 </span>            :           else return true;
+<span class="lineNum">     562 </span>            :         }
+<span class="lineNum">     563 </span>            : 
+<span class="lineNum">     564 </span>            :       template&lt;typename Function, typename Functor&gt;
+<span class="lineNum">     565 </span>            :         bool
+<span class="lineNum">     566 </span>            :         compare_not_equal(const Function&amp; f,
+<span class="lineNum">     567 </span>            :                           const reference_wrapper&lt;Functor&gt;&amp; g, int,
+<span class="lineNum">     568 </span>            :                           mpl::bool_&lt;false&gt;)
+<span class="lineNum">     569 </span>            :         {
+<span class="lineNum">     570 </span>            :           if (const Functor* fp = f.template target&lt;Functor&gt;())
+<span class="lineNum">     571 </span>            :             return fp != g.get_pointer();
+<span class="lineNum">     572 </span>            :           else return true;
+<span class="lineNum">     573 </span>            :         }
+<span class="lineNum">     574 </span>            : #endif // BOOST_NO_SFINAE
+<span class="lineNum">     575 </span>            : 
+<span class="lineNum">     576 </span>            :       /**
+<span class="lineNum">     577 </span>            :        * Stores the &quot;manager&quot; portion of the vtable for a
+<span class="lineNum">     578 </span>            :        * boost::function object.
+<span class="lineNum">     579 </span>            :        */
+<span class="lineNum">     580 </span>            :       struct vtable_base
+<span class="lineNum">     581 </span>            :       {
+<span class="lineNum">     582 </span>            :         void (*manager)(const function_buffer&amp; in_buffer,
+<span class="lineNum">     583 </span>            :                         function_buffer&amp; out_buffer,
+<span class="lineNum">     584 </span>            :                         functor_manager_operation_type op);
+<span class="lineNum">     585 </span>            :       };
+<span class="lineNum">     586 </span>            :     } // end namespace function
+<span class="lineNum">     587 </span>            :   } // end namespace detail
+<span class="lineNum">     588 </span>            : 
+<span class="lineNum">     589 </span>            : /**
+<span class="lineNum">     590 </span>            :  * The function_base class contains the basic elements needed for the
+<span class="lineNum">     591 </span>            :  * function1, function2, function3, etc. classes. It is common to all
+<span class="lineNum">     592 </span>            :  * functions (and as such can be used to tell if we have one of the
+<span class="lineNum">     593 </span>            :  * functionN objects).
+<span class="lineNum">     594 </span>            :  */
+<span class="lineNum">     595 </span>            : class function_base
+<span class="lineNum">     596 </span>            : {
+<span class="lineNum">     597 </span>            : public:
+<span class="lineNum">     598 </span><span class="lineCov">    3072567 :   function_base() : vtable(0) { }</span>
+<span class="lineNum">     599 </span>            : 
+<span class="lineNum">     600 </span>            :   /** Determine if the function is empty (i.e., has no target). */
+<span class="lineNum">     601 </span>            :   bool empty() const { return !vtable; }
+<span class="lineNum">     602 </span>            : 
+<span class="lineNum">     603 </span>            :   /** Retrieve the type of the stored function object, or type_id&lt;void&gt;()
+<span class="lineNum">     604 </span>            :       if this is empty. */
+<span class="lineNum">     605 </span>            :   const boost::typeindex::type_info&amp; target_type() const
+<span class="lineNum">     606 </span>            :   {
+<span class="lineNum">     607 </span>            :     if (!vtable) return boost::typeindex::type_id&lt;void&gt;().type_info();
+<span class="lineNum">     608 </span>            : 
+<span class="lineNum">     609 </span>            :     detail::function::function_buffer type;
+<span class="lineNum">     610 </span>            :     get_vtable()-&gt;manager(functor, type, detail::function::get_functor_type_tag);
+<span class="lineNum">     611 </span>            :     return *type.members.type.type;
+<span class="lineNum">     612 </span>            :   }
+<span class="lineNum">     613 </span>            : 
+<span class="lineNum">     614 </span>            :   template&lt;typename Functor&gt;
+<span class="lineNum">     615 </span>            :     Functor* target()
+<span class="lineNum">     616 </span>            :     {
+<span class="lineNum">     617 </span>            :       if (!vtable) return 0;
+<span class="lineNum">     618 </span>            : 
+<span class="lineNum">     619 </span>            :       detail::function::function_buffer type_result;
+<span class="lineNum">     620 </span>            :       type_result.members.type.type = &amp;boost::typeindex::type_id&lt;Functor&gt;().type_info();
+<span class="lineNum">     621 </span>            :       type_result.members.type.const_qualified = is_const&lt;Functor&gt;::value;
+<span class="lineNum">     622 </span>            :       type_result.members.type.volatile_qualified = is_volatile&lt;Functor&gt;::value;
+<span class="lineNum">     623 </span>            :       get_vtable()-&gt;manager(functor, type_result,
+<span class="lineNum">     624 </span>            :                       detail::function::check_functor_type_tag);
+<span class="lineNum">     625 </span>            :       return static_cast&lt;Functor*&gt;(type_result.members.obj_ptr);
+<span class="lineNum">     626 </span>            :     }
+<span class="lineNum">     627 </span>            : 
+<span class="lineNum">     628 </span>            :   template&lt;typename Functor&gt;
+<span class="lineNum">     629 </span>            :     const Functor* target() const
+<span class="lineNum">     630 </span>            :     {
+<span class="lineNum">     631 </span>            :       if (!vtable) return 0;
+<span class="lineNum">     632 </span>            : 
+<span class="lineNum">     633 </span>            :       detail::function::function_buffer type_result;
+<span class="lineNum">     634 </span>            :       type_result.members.type.type = &amp;boost::typeindex::type_id&lt;Functor&gt;().type_info();
+<span class="lineNum">     635 </span>            :       type_result.members.type.const_qualified = true;
+<span class="lineNum">     636 </span>            :       type_result.members.type.volatile_qualified = is_volatile&lt;Functor&gt;::value;
+<span class="lineNum">     637 </span>            :       get_vtable()-&gt;manager(functor, type_result,
+<span class="lineNum">     638 </span>            :                       detail::function::check_functor_type_tag);
+<span class="lineNum">     639 </span>            :       // GCC 2.95.3 gets the CV qualifiers wrong here, so we
+<span class="lineNum">     640 </span>            :       // can't do the static_cast that we should do.
+<span class="lineNum">     641 </span>            :       return static_cast&lt;const Functor*&gt;(type_result.members.obj_ptr);
+<span class="lineNum">     642 </span>            :     }
+<span class="lineNum">     643 </span>            : 
+<span class="lineNum">     644 </span>            :   template&lt;typename F&gt;
+<span class="lineNum">     645 </span>            :     bool contains(const F&amp; f) const
+<span class="lineNum">     646 </span>            :     {
+<span class="lineNum">     647 </span>            :       if (const F* fp = this-&gt;template target&lt;F&gt;())
+<span class="lineNum">     648 </span>            :       {
+<span class="lineNum">     649 </span>            :         return function_equal(*fp, f);
+<span class="lineNum">     650 </span>            :       } else {
+<span class="lineNum">     651 </span>            :         return false;
+<span class="lineNum">     652 </span>            :       }
+<span class="lineNum">     653 </span>            :     }
+<span class="lineNum">     654 </span>            : 
+<span class="lineNum">     655 </span>            : #if defined(__GNUC__) &amp;&amp; __GNUC__ == 3 &amp;&amp; __GNUC_MINOR__ &lt;= 3
+<span class="lineNum">     656 </span>            :   // GCC 3.3 and newer cannot copy with the global operator==, due to
+<span class="lineNum">     657 </span>            :   // problems with instantiation of function return types before it
+<span class="lineNum">     658 </span>            :   // has been verified that the argument types match up.
+<span class="lineNum">     659 </span>            :   template&lt;typename Functor&gt;
+<span class="lineNum">     660 </span>            :     BOOST_FUNCTION_ENABLE_IF_NOT_INTEGRAL(Functor, bool)
+<span class="lineNum">     661 </span>            :     operator==(Functor g) const
+<span class="lineNum">     662 </span>            :     {
+<span class="lineNum">     663 </span>            :       if (const Functor* fp = target&lt;Functor&gt;())
+<span class="lineNum">     664 </span>            :         return function_equal(*fp, g);
+<span class="lineNum">     665 </span>            :       else return false;
+<span class="lineNum">     666 </span>            :     }
+<span class="lineNum">     667 </span>            : 
+<span class="lineNum">     668 </span>            :   template&lt;typename Functor&gt;
+<span class="lineNum">     669 </span>            :     BOOST_FUNCTION_ENABLE_IF_NOT_INTEGRAL(Functor, bool)
+<span class="lineNum">     670 </span>            :     operator!=(Functor g) const
+<span class="lineNum">     671 </span>            :     {
+<span class="lineNum">     672 </span>            :       if (const Functor* fp = target&lt;Functor&gt;())
+<span class="lineNum">     673 </span>            :         return !function_equal(*fp, g);
+<span class="lineNum">     674 </span>            :       else return true;
+<span class="lineNum">     675 </span>            :     }
+<span class="lineNum">     676 </span>            : #endif
+<span class="lineNum">     677 </span>            : 
+<span class="lineNum">     678 </span>            : public: // should be protected, but GCC 2.95.3 will fail to allow access
+<span class="lineNum">     679 </span>            :   detail::function::vtable_base* get_vtable() const {
+<span class="lineNum">     680 </span>            :     return reinterpret_cast&lt;detail::function::vtable_base*&gt;(
+<span class="lineNum">     681 </span>            :              reinterpret_cast&lt;std::size_t&gt;(vtable) &amp; ~static_cast&lt;std::size_t&gt;(0x01));
+<span class="lineNum">     682 </span>            :   }
+<span class="lineNum">     683 </span>            : 
+<span class="lineNum">     684 </span>            :   bool has_trivial_copy_and_destroy() const {
+<span class="lineNum">     685 </span><span class="lineCov">    5559252 :     return reinterpret_cast&lt;std::size_t&gt;(vtable) &amp; 0x01;</span>
+<span class="lineNum">     686 </span>            :   }
+<span class="lineNum">     687 </span>            : 
+<span class="lineNum">     688 </span>            :   detail::function::vtable_base* vtable;
+<span class="lineNum">     689 </span>            :   mutable detail::function::function_buffer functor;
+<span class="lineNum">     690 </span>            : };
+<span class="lineNum">     691 </span>            : 
+<span class="lineNum">     692 </span>            : /**
+<span class="lineNum">     693 </span>            :  * The bad_function_call exception class is thrown when a boost::function
+<a name="694"><span class="lineNum">     694 </span>            :  * object is invoked</a>
+<span class="lineNum">     695 </span>            :  */
+<span class="lineNum">     696 </span><span class="lineNoCov">          0 : class bad_function_call : public std::runtime_error</span>
+<span class="lineNum">     697 </span>            : {
+<span class="lineNum">     698 </span>            : public:
+<span class="lineNum">     699 </span><span class="lineNoCov">          0 :   bad_function_call() : std::runtime_error(&quot;call to empty boost::function&quot;) {}</span>
+<span class="lineNum">     700 </span>            : };
+<span class="lineNum">     701 </span>            : 
+<span class="lineNum">     702 </span>            : #ifndef BOOST_NO_SFINAE
+<span class="lineNum">     703 </span>            : inline bool operator==(const function_base&amp; f,
+<span class="lineNum">     704 </span>            :                        detail::function::useless_clear_type*)
+<span class="lineNum">     705 </span>            : {
+<span class="lineNum">     706 </span>            :   return f.empty();
+<span class="lineNum">     707 </span>            : }
+<span class="lineNum">     708 </span>            : 
+<span class="lineNum">     709 </span>            : inline bool operator!=(const function_base&amp; f,
+<span class="lineNum">     710 </span>            :                        detail::function::useless_clear_type*)
+<span class="lineNum">     711 </span>            : {
+<span class="lineNum">     712 </span>            :   return !f.empty();
+<span class="lineNum">     713 </span>            : }
+<span class="lineNum">     714 </span>            : 
+<span class="lineNum">     715 </span>            : inline bool operator==(detail::function::useless_clear_type*,
+<span class="lineNum">     716 </span>            :                        const function_base&amp; f)
+<span class="lineNum">     717 </span>            : {
+<span class="lineNum">     718 </span>            :   return f.empty();
+<span class="lineNum">     719 </span>            : }
+<span class="lineNum">     720 </span>            : 
+<span class="lineNum">     721 </span>            : inline bool operator!=(detail::function::useless_clear_type*,
+<span class="lineNum">     722 </span>            :                        const function_base&amp; f)
+<span class="lineNum">     723 </span>            : {
+<span class="lineNum">     724 </span>            :   return !f.empty();
+<span class="lineNum">     725 </span>            : }
+<span class="lineNum">     726 </span>            : #endif
+<span class="lineNum">     727 </span>            : 
+<span class="lineNum">     728 </span>            : #ifdef BOOST_NO_SFINAE
+<span class="lineNum">     729 </span>            : // Comparisons between boost::function objects and arbitrary function objects
+<span class="lineNum">     730 </span>            : template&lt;typename Functor&gt;
+<span class="lineNum">     731 </span>            :   inline bool operator==(const function_base&amp; f, Functor g)
+<span class="lineNum">     732 </span>            :   {
+<span class="lineNum">     733 </span>            :     typedef mpl::bool_&lt;(is_integral&lt;Functor&gt;::value)&gt; integral;
+<span class="lineNum">     734 </span>            :     return detail::function::compare_equal(f, g, 0, integral());
+<span class="lineNum">     735 </span>            :   }
+<span class="lineNum">     736 </span>            : 
+<span class="lineNum">     737 </span>            : template&lt;typename Functor&gt;
+<span class="lineNum">     738 </span>            :   inline bool operator==(Functor g, const function_base&amp; f)
+<span class="lineNum">     739 </span>            :   {
+<span class="lineNum">     740 </span>            :     typedef mpl::bool_&lt;(is_integral&lt;Functor&gt;::value)&gt; integral;
+<span class="lineNum">     741 </span>            :     return detail::function::compare_equal(f, g, 0, integral());
+<span class="lineNum">     742 </span>            :   }
+<span class="lineNum">     743 </span>            : 
+<span class="lineNum">     744 </span>            : template&lt;typename Functor&gt;
+<span class="lineNum">     745 </span>            :   inline bool operator!=(const function_base&amp; f, Functor g)
+<span class="lineNum">     746 </span>            :   {
+<span class="lineNum">     747 </span>            :     typedef mpl::bool_&lt;(is_integral&lt;Functor&gt;::value)&gt; integral;
+<span class="lineNum">     748 </span>            :     return detail::function::compare_not_equal(f, g, 0, integral());
+<span class="lineNum">     749 </span>            :   }
+<span class="lineNum">     750 </span>            : 
+<span class="lineNum">     751 </span>            : template&lt;typename Functor&gt;
+<span class="lineNum">     752 </span>            :   inline bool operator!=(Functor g, const function_base&amp; f)
+<span class="lineNum">     753 </span>            :   {
+<span class="lineNum">     754 </span>            :     typedef mpl::bool_&lt;(is_integral&lt;Functor&gt;::value)&gt; integral;
+<span class="lineNum">     755 </span>            :     return detail::function::compare_not_equal(f, g, 0, integral());
+<span class="lineNum">     756 </span>            :   }
+<span class="lineNum">     757 </span>            : #else
+<span class="lineNum">     758 </span>            : 
+<span class="lineNum">     759 </span>            : #  if !(defined(__GNUC__) &amp;&amp; __GNUC__ == 3 &amp;&amp; __GNUC_MINOR__ &lt;= 3)
+<span class="lineNum">     760 </span>            : // Comparisons between boost::function objects and arbitrary function
+<span class="lineNum">     761 </span>            : // objects. GCC 3.3 and before has an obnoxious bug that prevents this
+<span class="lineNum">     762 </span>            : // from working.
+<span class="lineNum">     763 </span>            : template&lt;typename Functor&gt;
+<span class="lineNum">     764 </span>            :   BOOST_FUNCTION_ENABLE_IF_NOT_INTEGRAL(Functor, bool)
+<span class="lineNum">     765 </span>            :   operator==(const function_base&amp; f, Functor g)
+<span class="lineNum">     766 </span>            :   {
+<span class="lineNum">     767 </span>            :     if (const Functor* fp = f.template target&lt;Functor&gt;())
+<span class="lineNum">     768 </span>            :       return function_equal(*fp, g);
+<span class="lineNum">     769 </span>            :     else return false;
+<span class="lineNum">     770 </span>            :   }
+<span class="lineNum">     771 </span>            : 
+<span class="lineNum">     772 </span>            : template&lt;typename Functor&gt;
+<span class="lineNum">     773 </span>            :   BOOST_FUNCTION_ENABLE_IF_NOT_INTEGRAL(Functor, bool)
+<span class="lineNum">     774 </span>            :   operator==(Functor g, const function_base&amp; f)
+<span class="lineNum">     775 </span>            :   {
+<span class="lineNum">     776 </span>            :     if (const Functor* fp = f.template target&lt;Functor&gt;())
+<span class="lineNum">     777 </span>            :       return function_equal(g, *fp);
+<span class="lineNum">     778 </span>            :     else return false;
+<span class="lineNum">     779 </span>            :   }
+<span class="lineNum">     780 </span>            : 
+<span class="lineNum">     781 </span>            : template&lt;typename Functor&gt;
+<span class="lineNum">     782 </span>            :   BOOST_FUNCTION_ENABLE_IF_NOT_INTEGRAL(Functor, bool)
+<span class="lineNum">     783 </span>            :   operator!=(const function_base&amp; f, Functor g)
+<span class="lineNum">     784 </span>            :   {
+<span class="lineNum">     785 </span>            :     if (const Functor* fp = f.template target&lt;Functor&gt;())
+<span class="lineNum">     786 </span>            :       return !function_equal(*fp, g);
+<span class="lineNum">     787 </span>            :     else return true;
+<span class="lineNum">     788 </span>            :   }
+<span class="lineNum">     789 </span>            : 
+<span class="lineNum">     790 </span>            : template&lt;typename Functor&gt;
+<span class="lineNum">     791 </span>            :   BOOST_FUNCTION_ENABLE_IF_NOT_INTEGRAL(Functor, bool)
+<span class="lineNum">     792 </span>            :   operator!=(Functor g, const function_base&amp; f)
+<span class="lineNum">     793 </span>            :   {
+<span class="lineNum">     794 </span>            :     if (const Functor* fp = f.template target&lt;Functor&gt;())
+<span class="lineNum">     795 </span>            :       return !function_equal(g, *fp);
+<span class="lineNum">     796 </span>            :     else return true;
+<span class="lineNum">     797 </span>            :   }
+<span class="lineNum">     798 </span>            : #  endif
+<span class="lineNum">     799 </span>            : 
+<span class="lineNum">     800 </span>            : template&lt;typename Functor&gt;
+<span class="lineNum">     801 </span>            :   BOOST_FUNCTION_ENABLE_IF_NOT_INTEGRAL(Functor, bool)
+<span class="lineNum">     802 </span>            :   operator==(const function_base&amp; f, reference_wrapper&lt;Functor&gt; g)
+<span class="lineNum">     803 </span>            :   {
+<span class="lineNum">     804 </span>            :     if (const Functor* fp = f.template target&lt;Functor&gt;())
+<span class="lineNum">     805 </span>            :       return fp == g.get_pointer();
+<span class="lineNum">     806 </span>            :     else return false;
+<span class="lineNum">     807 </span>            :   }
+<span class="lineNum">     808 </span>            : 
+<span class="lineNum">     809 </span>            : template&lt;typename Functor&gt;
+<span class="lineNum">     810 </span>            :   BOOST_FUNCTION_ENABLE_IF_NOT_INTEGRAL(Functor, bool)
+<span class="lineNum">     811 </span>            :   operator==(reference_wrapper&lt;Functor&gt; g, const function_base&amp; f)
+<span class="lineNum">     812 </span>            :   {
+<span class="lineNum">     813 </span>            :     if (const Functor* fp = f.template target&lt;Functor&gt;())
+<span class="lineNum">     814 </span>            :       return g.get_pointer() == fp;
+<span class="lineNum">     815 </span>            :     else return false;
+<span class="lineNum">     816 </span>            :   }
+<span class="lineNum">     817 </span>            : 
+<span class="lineNum">     818 </span>            : template&lt;typename Functor&gt;
+<span class="lineNum">     819 </span>            :   BOOST_FUNCTION_ENABLE_IF_NOT_INTEGRAL(Functor, bool)
+<span class="lineNum">     820 </span>            :   operator!=(const function_base&amp; f, reference_wrapper&lt;Functor&gt; g)
+<span class="lineNum">     821 </span>            :   {
+<span class="lineNum">     822 </span>            :     if (const Functor* fp = f.template target&lt;Functor&gt;())
+<span class="lineNum">     823 </span>            :       return fp != g.get_pointer();
+<span class="lineNum">     824 </span>            :     else return true;
+<span class="lineNum">     825 </span>            :   }
+<span class="lineNum">     826 </span>            : 
+<span class="lineNum">     827 </span>            : template&lt;typename Functor&gt;
+<span class="lineNum">     828 </span>            :   BOOST_FUNCTION_ENABLE_IF_NOT_INTEGRAL(Functor, bool)
+<span class="lineNum">     829 </span>            :   operator!=(reference_wrapper&lt;Functor&gt; g, const function_base&amp; f)
+<span class="lineNum">     830 </span>            :   {
+<span class="lineNum">     831 </span>            :     if (const Functor* fp = f.template target&lt;Functor&gt;())
+<span class="lineNum">     832 </span>            :       return g.get_pointer() != fp;
+<span class="lineNum">     833 </span>            :     else return true;
+<span class="lineNum">     834 </span>            :   }
+<span class="lineNum">     835 </span>            : 
+<span class="lineNum">     836 </span>            : #endif // Compiler supporting SFINAE
+<span class="lineNum">     837 </span>            : 
+<span class="lineNum">     838 </span>            : namespace detail {
+<span class="lineNum">     839 </span>            :   namespace function {
+<span class="lineNum">     840 </span>            :     inline bool has_empty_target(const function_base* f)
+<span class="lineNum">     841 </span>            :     {
+<span class="lineNum">     842 </span>            :       return f-&gt;empty();
+<span class="lineNum">     843 </span>            :     }
+<span class="lineNum">     844 </span>            : 
+<span class="lineNum">     845 </span>            : #if BOOST_WORKAROUND(BOOST_MSVC, &lt;= 1310)
+<span class="lineNum">     846 </span>            :     inline bool has_empty_target(const void*)
+<span class="lineNum">     847 </span>            :     {
+<span class="lineNum">     848 </span>            :       return false;
+<a name="849"><span class="lineNum">     849 </span>            :     }</a>
+<span class="lineNum">     850 </span>            : #else
+<span class="lineNum">     851 </span><span class="lineCov">     585368 :     inline bool has_empty_target(...)</span>
+<span class="lineNum">     852 </span>            :     {
+<span class="lineNum">     853 </span><span class="lineCov">     585368 :       return false;</span>
+<span class="lineNum">     854 </span>            :     }
+<span class="lineNum">     855 </span>            : #endif
+<span class="lineNum">     856 </span>            :   } // end namespace function
+<span class="lineNum">     857 </span>            : } // end namespace detail
+<span class="lineNum">     858 </span>            : } // end namespace boost
+<span class="lineNum">     859 </span>            : 
+<span class="lineNum">     860 </span>            : #undef BOOST_FUNCTION_ENABLE_IF_NOT_INTEGRAL
+<span class="lineNum">     861 </span>            : 
+<span class="lineNum">     862 </span>            : #if defined(BOOST_MSVC)
+<span class="lineNum">     863 </span>            : #   pragma warning( pop )
+<span class="lineNum">     864 </span>            : #endif
+<span class="lineNum">     865 </span>            : 
+<span class="lineNum">     866 </span>            : #endif // BOOST_FUNCTION_BASE_HEADER
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

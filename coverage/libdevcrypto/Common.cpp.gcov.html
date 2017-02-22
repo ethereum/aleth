@@ -1,0 +1,404 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcrypto/Common.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcrypto</a> - Common.cpp<span style="font-size: 80%;"> (source / <a href="Common.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">123</td>
+            <td class="headerCovTableEntry">148</td>
+            <td class="headerCovTableEntryMed">83.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntryMed">83.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Common.cpp
+<span class="lineNum">      18 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      20 </span>            :  * @date 2014
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;libdevcore/Guards.h&gt;  // &lt;boost/thread&gt; conflicts with &lt;thread&gt;
+<span class="lineNum">      24 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      25 </span>            : #include &lt;secp256k1/include/secp256k1.h&gt;
+<span class="lineNum">      26 </span>            : #include &lt;cryptopp/aes.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;cryptopp/pwdbased.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;cryptopp/sha.h&gt;
+<span class="lineNum">      29 </span>            : #include &lt;cryptopp/modes.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libscrypt/libscrypt.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libdevcore/SHA3.h&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libdevcore/RLP.h&gt;
+<span class="lineNum">      33 </span>            : #include &quot;AES.h&quot;
+<span class="lineNum">      34 </span>            : #include &quot;CryptoPP.h&quot;
+<span class="lineNum">      35 </span>            : #include &quot;Exceptions.h&quot;
+<span class="lineNum">      36 </span>            : using namespace std;
+<span class="lineNum">      37 </span>            : using namespace dev;
+<span class="lineNum">      38 </span>            : using namespace dev::crypto;
+<span class="lineNum">      39 </span>            : using namespace CryptoPP;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : class Secp256k1Context
+<a name="42"><span class="lineNum">      42 </span>            : {</a>
+<span class="lineNum">      43 </span>            : public:
+<span class="lineNum">      44 </span><span class="lineCov">      33989 :         static secp256k1_context_t const* get()</span>
+<span class="lineNum">      45 </span>            :         {
+<span class="lineNum">      46 </span><span class="lineCov">      33990 :                 static Secp256k1Context s_ctx;</span>
+<span class="lineNum">      47 </span><span class="lineCov">      33989 :                 return s_ctx.m_ctx;</span>
+<span class="lineNum">      48 </span>            :         }
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : private:
+<a name="51"><span class="lineNum">      51 </span>            :         Secp256k1Context():</a>
+<span class="lineNum">      52 </span><span class="lineCov">          1 :                 m_ctx(secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY)) {}</span>
+<span class="lineNum">      53 </span><span class="lineCov">          1 :         ~Secp256k1Context() { secp256k1_context_destroy(m_ctx); }</span>
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span>            :         secp256k1_context_t* const m_ctx = nullptr;
+<span class="lineNum">      56 </span>            : };
+<a name="57"><span class="lineNum">      57 </span>            : </a>
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span><span class="lineCov">      25065 : bool dev::SignatureStruct::isValid() const noexcept</span>
+<span class="lineNum">      60 </span>            : {
+<span class="lineNum">      61 </span><span class="lineCov">      75193 :         if (v &gt; 1 ||</span>
+<span class="lineNum">      62 </span><span class="lineCov">     150376 :                 r &gt;= h256(&quot;0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141&quot;) ||</span>
+<span class="lineNum">      63 </span><span class="lineCov">     150323 :                 s &gt;= h256(&quot;0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141&quot;) ||</span>
+<span class="lineNum">      64 </span><span class="lineCov">      75155 :                 s &lt; h256(1) ||</span>
+<span class="lineNum">      65 </span><span class="lineCov">      25041 :                 r &lt; h256(1))</span>
+<span class="lineNum">      66 </span>            :                 return false;
+<span class="lineNum">      67 </span><span class="lineCov">      25037 :         return true;</span>
+<a name="68"><span class="lineNum">      68 </span>            : }</a>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 : Public SignatureStruct::recover(h256 const&amp; _hash) const</span>
+<span class="lineNum">      71 </span>            : {
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :         return dev::recover((Signature)*this, _hash);</span>
+<span class="lineNum">      73 </span>            : }
+<span class="lineNum">      74 </span>            : 
+<a name="75"><span class="lineNum">      75 </span><span class="lineCov">          1 : Address dev::ZeroAddress = Address();</span></a>
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span><span class="lineCov">          1 : Public dev::toPublic(Secret const&amp; _secret)</span>
+<span class="lineNum">      78 </span>            : {
+<span class="lineNum">      79 </span><span class="lineCov">          3 :         bytes o(65);</span>
+<span class="lineNum">      80 </span>            :         int pubkeylen;
+<span class="lineNum">      81 </span><span class="lineCov">          2 :         if (!secp256k1_ec_pubkey_create(Secp256k1Context::get(), o.data(), &amp;pubkeylen, _secret.data(), false))</span>
+<span class="lineNum">      82 </span>            :                 return Public();
+<span class="lineNum">      83 </span><span class="lineCov">          2 :         return FixedHash&lt;64&gt;(o.data()+1, Public::ConstructFromPointer);</span>
+<a name="84"><span class="lineNum">      84 </span>            : }</a>
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">        239 : Address dev::toAddress(Public const&amp; _public)</span>
+<span class="lineNum">      87 </span>            : {
+<span class="lineNum">      88 </span><span class="lineCov">        717 :         return right160(sha3(_public.ref()));</span>
+<a name="89"><span class="lineNum">      89 </span>            : }</a>
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span><span class="lineCov">          4 : Address dev::toAddress(Secret const&amp; _secret)</span>
+<span class="lineNum">      92 </span>            : {
+<span class="lineNum">      93 </span><span class="lineCov">          4 :         Public p;</span>
+<span class="lineNum">      94 </span><span class="lineCov">          4 :         Secp256k1PP::get()-&gt;toPublic(_secret, p);</span>
+<span class="lineNum">      95 </span><span class="lineCov">          4 :         return toAddress(p);</span>
+<a name="96"><span class="lineNum">      96 </span>            : }</a>
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span><span class="lineCov">          2 : Address dev::toAddress(Address const&amp; _from, u256 const&amp; _nonce)</span>
+<span class="lineNum">      99 </span>            : {
+<span class="lineNum">     100 </span><span class="lineCov">          6 :         return right160(sha3(rlpList(_from, _nonce)));</span>
+<a name="101"><span class="lineNum">     101 </span>            : }</a>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span><span class="lineCov">          3 : void dev::encrypt(Public const&amp; _k, bytesConstRef _plain, bytes&amp; o_cipher)</span>
+<span class="lineNum">     104 </span>            : {
+<span class="lineNum">     105 </span><span class="lineCov">          6 :         bytes io = _plain.toBytes();</span>
+<span class="lineNum">     106 </span><span class="lineCov">          3 :         Secp256k1PP::get()-&gt;encrypt(_k, io);</span>
+<span class="lineNum">     107 </span><span class="lineCov">          6 :         o_cipher = std::move(io);</span>
+<a name="108"><span class="lineNum">     108 </span><span class="lineCov">          3 : }</span></a>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span><span class="lineCov">          4 : bool dev::decrypt(Secret const&amp; _k, bytesConstRef _cipher, bytes&amp; o_plaintext)</span>
+<span class="lineNum">     111 </span>            : {
+<span class="lineNum">     112 </span><span class="lineCov">          8 :         bytes io = _cipher.toBytes();</span>
+<span class="lineNum">     113 </span><span class="lineCov">          4 :         Secp256k1PP::get()-&gt;decrypt(_k, io);</span>
+<span class="lineNum">     114 </span><span class="lineCov">          4 :         if (io.empty())</span>
+<span class="lineNum">     115 </span>            :                 return false;
+<span class="lineNum">     116 </span><span class="lineCov">          8 :         o_plaintext = std::move(io);</span>
+<span class="lineNum">     117 </span><span class="lineCov">          4 :         return true;</span>
+<a name="118"><span class="lineNum">     118 </span>            : }</a>
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span><span class="lineCov">         42 : void dev::encryptECIES(Public const&amp; _k, bytesConstRef _plain, bytes&amp; o_cipher)</span>
+<span class="lineNum">     121 </span>            : {
+<span class="lineNum">     122 </span><span class="lineCov">         42 :         encryptECIES(_k, bytesConstRef(), _plain, o_cipher);</span>
+<a name="123"><span class="lineNum">     123 </span><span class="lineCov">         42 : }</span></a>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineCov">         44 : void dev::encryptECIES(Public const&amp; _k, bytesConstRef _sharedMacData, bytesConstRef _plain, bytes&amp; o_cipher)</span>
+<span class="lineNum">     126 </span>            : {
+<span class="lineNum">     127 </span><span class="lineCov">         88 :         bytes io = _plain.toBytes();</span>
+<span class="lineNum">     128 </span><span class="lineCov">         44 :         Secp256k1PP::get()-&gt;encryptECIES(_k, _sharedMacData, io);</span>
+<span class="lineNum">     129 </span><span class="lineCov">         88 :         o_cipher = std::move(io);</span>
+<a name="130"><span class="lineNum">     130 </span><span class="lineCov">         44 : }</span></a>
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span><span class="lineCov">         44 : bool dev::decryptECIES(Secret const&amp; _k, bytesConstRef _cipher, bytes&amp; o_plaintext)</span>
+<span class="lineNum">     133 </span>            : {
+<span class="lineNum">     134 </span><span class="lineCov">         44 :         return decryptECIES(_k, bytesConstRef(),  _cipher, o_plaintext);</span>
+<a name="135"><span class="lineNum">     135 </span>            : }</a>
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span><span class="lineCov">         48 : bool dev::decryptECIES(Secret const&amp; _k, bytesConstRef _sharedMacData, bytesConstRef _cipher, bytes&amp; o_plaintext)</span>
+<span class="lineNum">     138 </span>            : {
+<span class="lineNum">     139 </span><span class="lineCov">         96 :         bytes io = _cipher.toBytes();</span>
+<span class="lineNum">     140 </span><span class="lineCov">         48 :         if (!Secp256k1PP::get()-&gt;decryptECIES(_k, _sharedMacData, io))</span>
+<span class="lineNum">     141 </span>            :                 return false;
+<span class="lineNum">     142 </span><span class="lineCov">         88 :         o_plaintext = std::move(io);</span>
+<span class="lineNum">     143 </span><span class="lineCov">         44 :         return true;</span>
+<a name="144"><span class="lineNum">     144 </span>            : }</a>
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineNoCov">          0 : void dev::encryptSym(Secret const&amp; _k, bytesConstRef _plain, bytes&amp; o_cipher)</span>
+<span class="lineNum">     147 </span>            : {
+<span class="lineNum">     148 </span>            :         // TOOD: @alex @subtly do this properly.
+<span class="lineNum">     149 </span><span class="lineNoCov">          0 :         encrypt(KeyPair(_k).pub(), _plain, o_cipher);</span>
+<a name="150"><span class="lineNum">     150 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 : bool dev::decryptSym(Secret const&amp; _k, bytesConstRef _cipher, bytes&amp; o_plain)</span>
+<span class="lineNum">     153 </span>            : {
+<span class="lineNum">     154 </span>            :         // TODO: @alex @subtly do this properly.
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :         return decrypt(_k, _cipher, o_plain);</span>
+<a name="156"><span class="lineNum">     156 </span>            : }</a>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineCov">          1 : std::pair&lt;bytes, h128&gt; dev::encryptSymNoAuth(SecureFixedHash&lt;16&gt; const&amp; _k, bytesConstRef _plain)</span>
+<span class="lineNum">     159 </span>            : {
+<span class="lineNum">     160 </span><span class="lineCov">          3 :         h128 iv(Nonce::get().makeInsecure());</span>
+<span class="lineNum">     161 </span><span class="lineCov">          3 :         return make_pair(encryptSymNoAuth(_k, iv, _plain), iv);</span>
+<a name="162"><span class="lineNum">     162 </span>            : }</a>
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span><span class="lineCov">         67 : bytes dev::encryptAES128CTR(bytesConstRef _k, h128 const&amp; _iv, bytesConstRef _plain)</span>
+<span class="lineNum">     165 </span>            : {
+<span class="lineNum">     166 </span><span class="lineCov">         67 :         if (_k.size() != 16 &amp;&amp; _k.size() != 24 &amp;&amp; _k.size() != 32)</span>
+<span class="lineNum">     167 </span>            :                 return bytes();
+<span class="lineNum">     168 </span><span class="lineCov">         67 :         SecByteBlock key(_k.data(), _k.size());</span>
+<span class="lineNum">     169 </span>            :         try
+<span class="lineNum">     170 </span>            :         {
+<span class="lineNum">     171 </span><span class="lineCov">        134 :                 CTR_Mode&lt;AES&gt;::Encryption e;</span>
+<span class="lineNum">     172 </span><span class="lineCov">         67 :                 e.SetKeyWithIV(key, key.size(), _iv.data());</span>
+<span class="lineNum">     173 </span><span class="lineCov">        201 :                 bytes ret(_plain.size());</span>
+<span class="lineNum">     174 </span><span class="lineCov">        134 :                 e.ProcessData(ret.data(), _plain.data(), _plain.size());</span>
+<span class="lineNum">     175 </span><span class="lineCov">         67 :                 return ret;</span>
+<span class="lineNum">     176 </span>            :         }
+<span class="lineNum">     177 </span><span class="lineNoCov">          0 :         catch (CryptoPP::Exception&amp; _e)</span>
+<span class="lineNum">     178 </span>            :         {
+<span class="lineNum">     179 </span><span class="lineNoCov">          0 :                 cerr &lt;&lt; _e.what() &lt;&lt; endl;</span>
+<span class="lineNum">     180 </span><span class="lineNoCov">          0 :                 return bytes();</span>
+<span class="lineNum">     181 </span>            :         }
+<a name="182"><span class="lineNum">     182 </span>            : }</a>
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span><span class="lineCov">         75 : bytesSec dev::decryptAES128CTR(bytesConstRef _k, h128 const&amp; _iv, bytesConstRef _cipher)</span>
+<span class="lineNum">     185 </span>            : {
+<span class="lineNum">     186 </span><span class="lineCov">         75 :         if (_k.size() != 16 &amp;&amp; _k.size() != 24 &amp;&amp; _k.size() != 32)</span>
+<span class="lineNum">     187 </span>            :                 return bytesSec();
+<span class="lineNum">     188 </span><span class="lineCov">         75 :         SecByteBlock key(_k.data(), _k.size());</span>
+<span class="lineNum">     189 </span>            :         try
+<span class="lineNum">     190 </span>            :         {
+<span class="lineNum">     191 </span><span class="lineCov">        150 :                 CTR_Mode&lt;AES&gt;::Decryption d;</span>
+<span class="lineNum">     192 </span><span class="lineCov">         75 :                 d.SetKeyWithIV(key, key.size(), _iv.data());</span>
+<span class="lineNum">     193 </span><span class="lineCov">        225 :                 bytesSec ret(_cipher.size());</span>
+<span class="lineNum">     194 </span><span class="lineCov">        225 :                 d.ProcessData(ret.writable().data(), _cipher.data(), _cipher.size());</span>
+<span class="lineNum">     195 </span><span class="lineCov">         75 :                 return ret;</span>
+<span class="lineNum">     196 </span>            :         }
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 :         catch (CryptoPP::Exception&amp; _e)</span>
+<span class="lineNum">     198 </span>            :         {
+<span class="lineNum">     199 </span><span class="lineNoCov">          0 :                 cerr &lt;&lt; _e.what() &lt;&lt; endl;</span>
+<span class="lineNum">     200 </span><span class="lineNoCov">          0 :                 return bytesSec();</span>
+<span class="lineNum">     201 </span>            :         }
+<span class="lineNum">     202 </span>            : }
+<span class="lineNum">     203 </span>            : 
+<a name="204"><span class="lineNum">     204 </span><span class="lineCov">          4 : static const Public c_zeroKey(&quot;3f17f1962b36e491b30a40b2405849e597ba5fb5&quot;);</span></a>
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span><span class="lineCov">      32048 : Public dev::recover(Signature const&amp; _sig, h256 const&amp; _message)</span>
+<span class="lineNum">     207 </span>            : {
+<span class="lineNum">     208 </span><span class="lineCov">      32048 :         Public ret;</span>
+<span class="lineNum">     209 </span><span class="lineCov">      96144 :         bytes o(65);</span>
+<span class="lineNum">     210 </span>            :         int pubkeylen;
+<span class="lineNum">     211 </span><span class="lineCov">     160192 :         if (_sig[64] &gt; 3 || !secp256k1_ecdsa_recover_compact(Secp256k1Context::get(), _message.data(), _sig.data(), o.data(), &amp;pubkeylen, false, _sig[64]))</span>
+<span class="lineNum">     212 </span>            :                 return Public();
+<span class="lineNum">     213 </span><span class="lineCov">      96012 :         ret = FixedHash&lt;64&gt;(o.data() + 1, Public::ConstructFromPointer);</span>
+<span class="lineNum">     214 </span><span class="lineCov">      32004 :         if (ret == c_zeroKey)</span>
+<span class="lineNum">     215 </span>            :                 return Public();
+<span class="lineNum">     216 </span><span class="lineCov">      32004 :         return ret;</span>
+<span class="lineNum">     217 </span>            : }
+<span class="lineNum">     218 </span>            : 
+<a name="219"><span class="lineNum">     219 </span>            : static const u256 c_secp256k1n(&quot;115792089237316195423570985008687907852837564279074904382605163141518161494337&quot;);</a>
+<span class="lineNum">     220 </span>            : 
+<span class="lineNum">     221 </span><span class="lineCov">       1952 : Signature dev::sign(Secret const&amp; _k, h256 const&amp; _hash)</span>
+<span class="lineNum">     222 </span>            : {
+<span class="lineNum">     223 </span><span class="lineCov">       1952 :         Signature s;</span>
+<span class="lineNum">     224 </span><span class="lineCov">       1952 :         SignatureStruct&amp; ss = *reinterpret_cast&lt;SignatureStruct*&gt;(&amp;s);</span>
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span>            :         int v;
+<span class="lineNum">     227 </span><span class="lineCov">       5856 :         if (!secp256k1_ecdsa_sign_compact(Secp256k1Context::get(), _hash.data(), s.data(), _k.data(), NULL, NULL, &amp;v))</span>
+<span class="lineNum">     228 </span>            :                 return Signature();
+<span class="lineNum">     229 </span><span class="lineCov">       1952 :         ss.v = static_cast&lt;byte&gt;(v);</span>
+<span class="lineNum">     230 </span><span class="lineCov">       3904 :         if (ss.s &gt; c_secp256k1n / 2)</span>
+<span class="lineNum">     231 </span>            :         {
+<span class="lineNum">     232 </span><span class="lineNoCov">          0 :                 ss.v = ss.v ^ 1;</span>
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :                 ss.s = h256(c_secp256k1n - u256(ss.s));</span>
+<span class="lineNum">     234 </span>            :         }
+<span class="lineNum">     235 </span><span class="lineCov">       3904 :         assert(ss.s &lt;= c_secp256k1n / 2);</span>
+<span class="lineNum">     236 </span><span class="lineCov">       1952 :         return s;</span>
+<a name="237"><span class="lineNum">     237 </span>            : }</a>
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 : bool dev::verify(Public const&amp; _p, Signature const&amp; _s, h256 const&amp; _hash)</span>
+<span class="lineNum">     240 </span>            : {
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :         if (!_p)</span>
+<span class="lineNum">     242 </span>            :                 return false;
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :         return _p == recover(_s, _hash);</span>
+<span class="lineNum">     244 </span>            : }
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span><span class="lineCov">         75 : bytesSec dev::pbkdf2(string const&amp; _pass, bytes const&amp; _salt, unsigned _iterations, unsigned _dkLen)</span>
+<span class="lineNum">     247 </span>            : {
+<span class="lineNum">     248 </span><span class="lineCov">         75 :         bytesSec ret(_dkLen);</span>
+<span class="lineNum">     249 </span><span class="lineCov">        600 :         if (PKCS5_PBKDF2_HMAC&lt;SHA256&gt;().DeriveKey(</span>
+<span class="lineNum">     250 </span><span class="lineCov">         75 :                 ret.writable().data(),</span>
+<span class="lineNum">     251 </span>            :                 _dkLen,
+<span class="lineNum">     252 </span>            :                 0,
+<span class="lineNum">     253 </span><span class="lineCov">         75 :                 reinterpret_cast&lt;byte const*&gt;(_pass.data()),</span>
+<span class="lineNum">     254 </span>            :                 _pass.size(),
+<span class="lineNum">     255 </span>            :                 _salt.data(),
+<span class="lineNum">     256 </span>            :                 _salt.size(),
+<span class="lineNum">     257 </span>            :                 _iterations
+<span class="lineNum">     258 </span>            :         ) != _iterations)
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(CryptoException() &lt;&lt; errinfo_comment(&quot;Key derivation failed.&quot;));</span>
+<span class="lineNum">     260 </span><span class="lineCov">         75 :         return ret;</span>
+<span class="lineNum">     261 </span>            : }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span><span class="lineCov">         26 : bytesSec dev::scrypt(std::string const&amp; _pass, bytes const&amp; _salt, uint64_t _n, uint32_t _r, uint32_t _p, unsigned _dkLen)</span>
+<span class="lineNum">     264 </span>            : {
+<span class="lineNum">     265 </span><span class="lineCov">         26 :         bytesSec ret(_dkLen);</span>
+<span class="lineNum">     266 </span><span class="lineCov">        156 :         if (libscrypt_scrypt(</span>
+<span class="lineNum">     267 </span><span class="lineCov">         26 :                 reinterpret_cast&lt;uint8_t const*&gt;(_pass.data()),</span>
+<span class="lineNum">     268 </span>            :                 _pass.size(),
+<span class="lineNum">     269 </span>            :                 _salt.data(),
+<span class="lineNum">     270 </span>            :                 _salt.size(),
+<span class="lineNum">     271 </span>            :                 _n,
+<span class="lineNum">     272 </span>            :                 _r,
+<span class="lineNum">     273 </span>            :                 _p,
+<span class="lineNum">     274 </span><span class="lineCov">         26 :                 ret.writable().data(),</span>
+<span class="lineNum">     275 </span>            :                 _dkLen
+<span class="lineNum">     276 </span>            :         ) != 0)
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(CryptoException() &lt;&lt; errinfo_comment(&quot;Key derivation failed.&quot;));</span>
+<span class="lineNum">     278 </span><span class="lineCov">         26 :         return ret;</span>
+<a name="279"><span class="lineNum">     279 </span>            : }</a>
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span><span class="lineCov">        228 : void KeyPair::populateFromSecret(Secret const&amp; _sec)</span>
+<span class="lineNum">     282 </span>            : {
+<span class="lineNum">     283 </span><span class="lineCov">        456 :         m_secret = _sec;</span>
+<span class="lineNum">     284 </span><span class="lineCov">        228 :         if (Secp256k1PP::get()-&gt;verifySecret(m_secret, m_public))</span>
+<span class="lineNum">     285 </span><span class="lineCov">        227 :                 m_address = toAddress(m_public);</span>
+<a name="286"><span class="lineNum">     286 </span><span class="lineCov">        228 : }</span></a>
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span><span class="lineCov">        186 : KeyPair KeyPair::create()</span>
+<span class="lineNum">     289 </span>            : {
+<span class="lineNum">     290 </span><span class="lineCov">        186 :         for (int i = 0; i &lt; 100; ++i)</span>
+<span class="lineNum">     291 </span>            :         {
+<span class="lineNum">     292 </span><span class="lineCov">        372 :                 KeyPair ret(Secret::random());</span>
+<span class="lineNum">     293 </span><span class="lineCov">        372 :                 if (ret.address())</span>
+<span class="lineNum">     294 </span><span class="lineCov">        372 :                         return ret;</span>
+<span class="lineNum">     295 </span>            :         }
+<span class="lineNum">     296 </span><span class="lineNoCov">          0 :         return KeyPair();</span>
+<a name="297"><span class="lineNum">     297 </span>            : }</a>
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span><span class="lineNoCov">          0 : KeyPair KeyPair::fromEncryptedSeed(bytesConstRef _seed, std::string const&amp; _password)</span>
+<span class="lineNum">     300 </span>            : {
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :         return KeyPair(Secret(sha3(aesDecrypt(_seed, _password))));</span>
+<span class="lineNum">     302 </span>            : }
+<span class="lineNum">     303 </span>            : 
+<span class="lineNum">     304 </span><span class="lineCov">          4 : h256 crypto::kdf(Secret const&amp; _priv, h256 const&amp; _hash)</span>
+<span class="lineNum">     305 </span>            : {
+<span class="lineNum">     306 </span>            :         // H(H(r||k)^h)
+<span class="lineNum">     307 </span><span class="lineCov">          4 :         h256 s;</span>
+<span class="lineNum">     308 </span><span class="lineCov">         16 :         sha3mac(Secret::random().ref(), _priv.ref(), s.ref());</span>
+<span class="lineNum">     309 </span><span class="lineCov">          4 :         s ^= _hash;</span>
+<span class="lineNum">     310 </span><span class="lineCov">         12 :         sha3(s.ref(), s.ref());</span>
+<span class="lineNum">     311 </span>            :         
+<span class="lineNum">     312 </span><span class="lineCov">         12 :         if (!s || !_hash || !_priv)</span>
+<span class="lineNum">     313 </span><span class="lineNoCov">          0 :                 BOOST_THROW_EXCEPTION(InvalidState());</span>
+<span class="lineNum">     314 </span><span class="lineCov">          4 :         return s;</span>
+<span class="lineNum">     315 </span>            : }
+<span class="lineNum">     316 </span>            : 
+<span class="lineNum">     317 </span><span class="lineCov">         59 : Secret Nonce::next()</span>
+<span class="lineNum">     318 </span>            : {
+<span class="lineNum">     319 </span><span class="lineCov">        177 :         Guard l(x_value);</span>
+<span class="lineNum">     320 </span><span class="lineCov">        118 :         if (!m_value)</span>
+<span class="lineNum">     321 </span>            :         {
+<span class="lineNum">     322 </span><span class="lineCov">          3 :                 m_value = Secret::random();</span>
+<span class="lineNum">     323 </span><span class="lineCov">          2 :                 if (!m_value)</span>
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(InvalidState());</span>
+<span class="lineNum">     325 </span>            :         }
+<a name="326"><span class="lineNum">     326 </span><span class="lineCov">        236 :         m_value = sha3Secure(m_value.ref());</span></a>
+<span class="lineNum">     327 </span><span class="lineCov">        236 :         return sha3(~m_value);</span>
+<span class="lineNum">     328 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

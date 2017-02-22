@@ -1,0 +1,331 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/serial_port_service.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio</a> - serial_port_service.hpp<span style="font-size: 80%;"> (source / <a href="serial_port_service.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // serial_port_service.hpp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_SERIAL_PORT_SERVICE_HPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_SERIAL_PORT_SERVICE_HPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #if defined(BOOST_ASIO_HAS_SERIAL_PORT) \
+<span class="lineNum">      21 </span>            :   || defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &lt;cstddef&gt;
+<span class="lineNum">      24 </span>            : #include &lt;string&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/async_result.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/asio/detail/reactive_serial_port_service.hpp&gt;
+<span class="lineNum">      27 </span>            : #include &lt;boost/asio/detail/win_iocp_serial_port_service.hpp&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/asio/error.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;boost/asio/io_service.hpp&gt;
+<span class="lineNum">      30 </span>            : #include &lt;boost/asio/serial_port_base.hpp&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace boost {
+<span class="lineNum">      35 </span>            : namespace asio {
+<a name="36"><span class="lineNum">      36 </span>            : </a>
+<span class="lineNum">      37 </span>            : /// Default service implementation for a serial port.
+<span class="lineNum">      38 </span><span class="lineNoCov">          0 : class serial_port_service</span>
+<span class="lineNum">      39 </span>            : #if defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      40 </span>            :   : public boost::asio::io_service::service
+<span class="lineNum">      41 </span>            : #else
+<span class="lineNum">      42 </span>            :   : public boost::asio::detail::service_base&lt;serial_port_service&gt;
+<span class="lineNum">      43 </span>            : #endif
+<span class="lineNum">      44 </span>            : {
+<span class="lineNum">      45 </span>            : public:
+<span class="lineNum">      46 </span>            : #if defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      47 </span>            :   /// The unique service identifier.
+<span class="lineNum">      48 </span>            :   static boost::asio::io_service::id id;
+<span class="lineNum">      49 </span>            : #endif
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : private:
+<span class="lineNum">      52 </span>            :   // The type of the platform-specific implementation.
+<span class="lineNum">      53 </span>            : #if defined(BOOST_ASIO_HAS_IOCP)
+<span class="lineNum">      54 </span>            :   typedef detail::win_iocp_serial_port_service service_impl_type;
+<span class="lineNum">      55 </span>            : #else
+<span class="lineNum">      56 </span>            :   typedef detail::reactive_serial_port_service service_impl_type;
+<span class="lineNum">      57 </span>            : #endif
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : public:
+<span class="lineNum">      60 </span>            :   /// The type of a serial port implementation.
+<span class="lineNum">      61 </span>            : #if defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      62 </span>            :   typedef implementation_defined implementation_type;
+<span class="lineNum">      63 </span>            : #else
+<span class="lineNum">      64 </span>            :   typedef service_impl_type::implementation_type implementation_type;
+<span class="lineNum">      65 </span>            : #endif
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :   /// (Deprecated: Use native_handle_type.) The native handle type.
+<span class="lineNum">      68 </span>            : #if defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      69 </span>            :   typedef implementation_defined native_type;
+<span class="lineNum">      70 </span>            : #else
+<span class="lineNum">      71 </span>            :   typedef service_impl_type::native_handle_type native_type;
+<span class="lineNum">      72 </span>            : #endif
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            :   /// The native handle type.
+<span class="lineNum">      75 </span>            : #if defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      76 </span>            :   typedef implementation_defined native_handle_type;
+<span class="lineNum">      77 </span>            : #else
+<span class="lineNum">      78 </span>            :   typedef service_impl_type::native_handle_type native_handle_type;
+<span class="lineNum">      79 </span>            : #endif
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span>            :   /// Construct a new serial port service for the specified io_service.
+<span class="lineNum">      82 </span>            :   explicit serial_port_service(boost::asio::io_service&amp; io_service)
+<span class="lineNum">      83 </span>            :     : boost::asio::detail::service_base&lt;serial_port_service&gt;(io_service),
+<span class="lineNum">      84 </span>            :       service_impl_(io_service)
+<span class="lineNum">      85 </span>            :   {
+<span class="lineNum">      86 </span>            :   }
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            :   /// Construct a new serial port implementation.
+<span class="lineNum">      89 </span>            :   void construct(implementation_type&amp; impl)
+<span class="lineNum">      90 </span>            :   {
+<span class="lineNum">      91 </span>            :     service_impl_.construct(impl);
+<span class="lineNum">      92 </span>            :   }
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : #if defined(BOOST_ASIO_HAS_MOVE) || defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">      95 </span>            :   /// Move-construct a new serial port implementation.
+<span class="lineNum">      96 </span>            :   void move_construct(implementation_type&amp; impl,
+<span class="lineNum">      97 </span>            :       implementation_type&amp; other_impl)
+<span class="lineNum">      98 </span>            :   {
+<span class="lineNum">      99 </span>            :     service_impl_.move_construct(impl, other_impl);
+<span class="lineNum">     100 </span>            :   }
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span>            :   /// Move-assign from another serial port implementation.
+<span class="lineNum">     103 </span>            :   void move_assign(implementation_type&amp; impl,
+<span class="lineNum">     104 </span>            :       serial_port_service&amp; other_service,
+<span class="lineNum">     105 </span>            :       implementation_type&amp; other_impl)
+<span class="lineNum">     106 </span>            :   {
+<span class="lineNum">     107 </span>            :     service_impl_.move_assign(impl, other_service.service_impl_, other_impl);
+<span class="lineNum">     108 </span>            :   }
+<span class="lineNum">     109 </span>            : #endif // defined(BOOST_ASIO_HAS_MOVE) || defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            :   /// Destroy a serial port implementation.
+<span class="lineNum">     112 </span>            :   void destroy(implementation_type&amp; impl)
+<span class="lineNum">     113 </span>            :   {
+<span class="lineNum">     114 </span>            :     service_impl_.destroy(impl);
+<span class="lineNum">     115 </span>            :   }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :   /// Open a serial port.
+<span class="lineNum">     118 </span>            :   boost::system::error_code open(implementation_type&amp; impl,
+<span class="lineNum">     119 </span>            :       const std::string&amp; device, boost::system::error_code&amp; ec)
+<span class="lineNum">     120 </span>            :   {
+<span class="lineNum">     121 </span>            :     return service_impl_.open(impl, device, ec);
+<span class="lineNum">     122 </span>            :   }
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :   /// Assign an existing native handle to a serial port.
+<span class="lineNum">     125 </span>            :   boost::system::error_code assign(implementation_type&amp; impl,
+<span class="lineNum">     126 </span>            :       const native_handle_type&amp; handle, boost::system::error_code&amp; ec)
+<span class="lineNum">     127 </span>            :   {
+<span class="lineNum">     128 </span>            :     return service_impl_.assign(impl, handle, ec);
+<span class="lineNum">     129 </span>            :   }
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            :   /// Determine whether the handle is open.
+<span class="lineNum">     132 </span>            :   bool is_open(const implementation_type&amp; impl) const
+<span class="lineNum">     133 </span>            :   {
+<span class="lineNum">     134 </span>            :     return service_impl_.is_open(impl);
+<span class="lineNum">     135 </span>            :   }
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            :   /// Close a serial port implementation.
+<span class="lineNum">     138 </span>            :   boost::system::error_code close(implementation_type&amp; impl,
+<span class="lineNum">     139 </span>            :       boost::system::error_code&amp; ec)
+<span class="lineNum">     140 </span>            :   {
+<span class="lineNum">     141 </span>            :     return service_impl_.close(impl, ec);
+<span class="lineNum">     142 </span>            :   }
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            :   /// (Deprecated: Use native_handle().) Get the native handle implementation.
+<span class="lineNum">     145 </span>            :   native_type native(implementation_type&amp; impl)
+<span class="lineNum">     146 </span>            :   {
+<span class="lineNum">     147 </span>            :     return service_impl_.native_handle(impl);
+<span class="lineNum">     148 </span>            :   }
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            :   /// Get the native handle implementation.
+<span class="lineNum">     151 </span>            :   native_handle_type native_handle(implementation_type&amp; impl)
+<span class="lineNum">     152 </span>            :   {
+<span class="lineNum">     153 </span>            :     return service_impl_.native_handle(impl);
+<span class="lineNum">     154 </span>            :   }
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :   /// Cancel all asynchronous operations associated with the handle.
+<span class="lineNum">     157 </span>            :   boost::system::error_code cancel(implementation_type&amp; impl,
+<span class="lineNum">     158 </span>            :       boost::system::error_code&amp; ec)
+<span class="lineNum">     159 </span>            :   {
+<span class="lineNum">     160 </span>            :     return service_impl_.cancel(impl, ec);
+<span class="lineNum">     161 </span>            :   }
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            :   /// Set a serial port option.
+<span class="lineNum">     164 </span>            :   template &lt;typename SettableSerialPortOption&gt;
+<span class="lineNum">     165 </span>            :   boost::system::error_code set_option(implementation_type&amp; impl,
+<span class="lineNum">     166 </span>            :       const SettableSerialPortOption&amp; option, boost::system::error_code&amp; ec)
+<span class="lineNum">     167 </span>            :   {
+<span class="lineNum">     168 </span>            :     return service_impl_.set_option(impl, option, ec);
+<span class="lineNum">     169 </span>            :   }
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            :   /// Get a serial port option.
+<span class="lineNum">     172 </span>            :   template &lt;typename GettableSerialPortOption&gt;
+<span class="lineNum">     173 </span>            :   boost::system::error_code get_option(const implementation_type&amp; impl,
+<span class="lineNum">     174 </span>            :       GettableSerialPortOption&amp; option, boost::system::error_code&amp; ec) const
+<span class="lineNum">     175 </span>            :   {
+<span class="lineNum">     176 </span>            :     return service_impl_.get_option(impl, option, ec);
+<span class="lineNum">     177 </span>            :   }
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span>            :   /// Send a break sequence to the serial port.
+<span class="lineNum">     180 </span>            :   boost::system::error_code send_break(implementation_type&amp; impl,
+<span class="lineNum">     181 </span>            :       boost::system::error_code&amp; ec)
+<span class="lineNum">     182 </span>            :   {
+<span class="lineNum">     183 </span>            :     return service_impl_.send_break(impl, ec);
+<span class="lineNum">     184 </span>            :   }
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span>            :   /// Write the given data to the stream.
+<span class="lineNum">     187 </span>            :   template &lt;typename ConstBufferSequence&gt;
+<span class="lineNum">     188 </span>            :   std::size_t write_some(implementation_type&amp; impl,
+<span class="lineNum">     189 </span>            :       const ConstBufferSequence&amp; buffers, boost::system::error_code&amp; ec)
+<span class="lineNum">     190 </span>            :   {
+<span class="lineNum">     191 </span>            :     return service_impl_.write_some(impl, buffers, ec);
+<span class="lineNum">     192 </span>            :   }
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span>            :   /// Start an asynchronous write.
+<span class="lineNum">     195 </span>            :   template &lt;typename ConstBufferSequence, typename WriteHandler&gt;
+<span class="lineNum">     196 </span>            :   BOOST_ASIO_INITFN_RESULT_TYPE(WriteHandler,
+<span class="lineNum">     197 </span>            :       void (boost::system::error_code, std::size_t))
+<span class="lineNum">     198 </span>            :   async_write_some(implementation_type&amp; impl,
+<span class="lineNum">     199 </span>            :       const ConstBufferSequence&amp; buffers,
+<span class="lineNum">     200 </span>            :       BOOST_ASIO_MOVE_ARG(WriteHandler) handler)
+<span class="lineNum">     201 </span>            :   {
+<span class="lineNum">     202 </span>            :     detail::async_result_init&lt;
+<span class="lineNum">     203 </span>            :       WriteHandler, void (boost::system::error_code, std::size_t)&gt; init(
+<span class="lineNum">     204 </span>            :         BOOST_ASIO_MOVE_CAST(WriteHandler)(handler));
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            :     service_impl_.async_write_some(impl, buffers, init.handler);
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            :     return init.result.get();
+<span class="lineNum">     209 </span>            :   }
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :   /// Read some data from the stream.
+<span class="lineNum">     212 </span>            :   template &lt;typename MutableBufferSequence&gt;
+<span class="lineNum">     213 </span>            :   std::size_t read_some(implementation_type&amp; impl,
+<span class="lineNum">     214 </span>            :       const MutableBufferSequence&amp; buffers, boost::system::error_code&amp; ec)
+<span class="lineNum">     215 </span>            :   {
+<span class="lineNum">     216 </span>            :     return service_impl_.read_some(impl, buffers, ec);
+<span class="lineNum">     217 </span>            :   }
+<span class="lineNum">     218 </span>            : 
+<span class="lineNum">     219 </span>            :   /// Start an asynchronous read.
+<span class="lineNum">     220 </span>            :   template &lt;typename MutableBufferSequence, typename ReadHandler&gt;
+<span class="lineNum">     221 </span>            :   BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler,
+<span class="lineNum">     222 </span>            :       void (boost::system::error_code, std::size_t))
+<span class="lineNum">     223 </span>            :   async_read_some(implementation_type&amp; impl,
+<span class="lineNum">     224 </span>            :       const MutableBufferSequence&amp; buffers,
+<span class="lineNum">     225 </span>            :       BOOST_ASIO_MOVE_ARG(ReadHandler) handler)
+<span class="lineNum">     226 </span>            :   {
+<span class="lineNum">     227 </span>            :     detail::async_result_init&lt;
+<span class="lineNum">     228 </span>            :       ReadHandler, void (boost::system::error_code, std::size_t)&gt; init(
+<span class="lineNum">     229 </span>            :         BOOST_ASIO_MOVE_CAST(ReadHandler)(handler));
+<span class="lineNum">     230 </span>            : 
+<span class="lineNum">     231 </span>            :     service_impl_.async_read_some(impl, buffers, init.handler);
+<span class="lineNum">     232 </span>            : 
+<span class="lineNum">     233 </span>            :     return init.result.get();
+<span class="lineNum">     234 </span>            :   }
+<span class="lineNum">     235 </span>            : 
+<a name="236"><span class="lineNum">     236 </span>            : private:</a>
+<span class="lineNum">     237 </span>            :   // Destroy all user-defined handler objects owned by the service.
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :   void shutdown_service()</span>
+<span class="lineNum">     239 </span>            :   {
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :     service_impl_.shutdown_service();</span>
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :   }</span>
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            :   // The platform-specific implementation.
+<span class="lineNum">     244 </span>            :   service_impl_type service_impl_;
+<span class="lineNum">     245 </span>            : };
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            : } // namespace asio
+<span class="lineNum">     248 </span>            : } // namespace boost
+<span class="lineNum">     249 </span>            : 
+<span class="lineNum">     250 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            : #endif // defined(BOOST_ASIO_HAS_SERIAL_PORT)
+<span class="lineNum">     253 </span>            :        //   || defined(GENERATING_DOCUMENTATION)
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span>            : #endif // BOOST_ASIO_SERIAL_PORT_SERVICE_HPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

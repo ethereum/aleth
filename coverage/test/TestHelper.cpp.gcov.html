@@ -1,0 +1,1570 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - test/TestHelper.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">test</a> - TestHelper.cpp<span style="font-size: 80%;"> (source / <a href="TestHelper.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">442</td>
+            <td class="headerCovTableEntry">887</td>
+            <td class="headerCovTableEntryLo">49.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">44</td>
+            <td class="headerCovTableEntry">65</td>
+            <td class="headerCovTableEntryLo">67.7 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file TestHelper.cpp
+<span class="lineNum">      18 </span>            :  * @author Marko Simovic &lt;markobarko@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;TestHelper.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;BlockChainHelper.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;thread&gt;
+<span class="lineNum">      26 </span>            : #include &lt;chrono&gt;
+<span class="lineNum">      27 </span>            : #include &lt;fstream&gt;
+<span class="lineNum">      28 </span>            : #if !defined(_WIN32)
+<span class="lineNum">      29 </span>            : #include &lt;stdio.h&gt;
+<span class="lineNum">      30 </span>            : #endif
+<span class="lineNum">      31 </span>            : #include &lt;boost/algorithm/string/trim.hpp&gt;
+<span class="lineNum">      32 </span>            : #include &lt;libethashseal/EthashAux.h&gt;
+<span class="lineNum">      33 </span>            : #include &lt;libethashseal/Ethash.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;libethashseal/GenesisInfo.h&gt;
+<span class="lineNum">      35 </span>            : #include &lt;libethcore/BasicAuthority.h&gt;
+<span class="lineNum">      36 </span>            : #include &lt;libethereum/Client.h&gt;
+<span class="lineNum">      37 </span>            : #include &lt;libevm/ExtVMFace.h&gt;
+<span class="lineNum">      38 </span>            : #include &lt;libevm/VMFactory.h&gt;
+<span class="lineNum">      39 </span>            : #include &quot;Stats.h&quot;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : using namespace std;
+<span class="lineNum">      42 </span>            : using namespace dev::eth;
+<span class="lineNum">      43 </span>            : 
+<span class="lineNum">      44 </span>            : namespace dev
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span>            : namespace eth
+<a name="47"><span class="lineNum">      47 </span>            : {</a>
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 : void printHelp()</span>
+<span class="lineNum">      50 </span>            : {
+<span class="lineNum">      51 </span><span class="lineNoCov">          0 :         cout &lt;&lt; &quot;Usage: &quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      52 </span><span class="lineNoCov">          0 :         cout &lt;&lt; std::left;</span>
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 :         cout &lt;&lt; std::endl &lt;&lt; &quot;Setting test suite&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      54 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;-t &lt;TestSuite&gt;&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Execute test operations&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;-t &lt;TestSuite&gt;/&lt;TestCase&gt;&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 :         cout &lt;&lt; std::endl &lt;&lt; &quot;Debugging&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;-d &lt;index&gt;&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Set the transaction data array index when running GeneralStateTests&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      59 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;-g &lt;index&gt;&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Set the transaction gas array index when running GeneralStateTests&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      60 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;-v &lt;index&gt;&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Set the transaction value array index when running GeneralStateTests&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      61 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--singletest &lt;TestName&gt;&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Run on a single test&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      62 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--singletest &lt;TestFile&gt; &lt;TestName&gt;&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      63 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--verbosity &lt;level&gt;&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, &gt;2 - detailed&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      64 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--vm &lt;interpreter|jit|smart&gt;&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Set VM type for VMTests suite&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--vmtrace&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Enable VM trace for the test. (Require build with VMTRACE=1)&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--stats &lt;OutFile&gt;&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Output debug stats to the file&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--exectimelog&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Output execution time for each test suite&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--filltest &lt;FileData&gt;&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Try fill tests from the given json stream&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--checktest &lt;FileData&gt;&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Try run tests from the given json stream&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :         cout &lt;&lt; std::endl &lt;&lt; &quot;Additional Tests&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      72 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--performance&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Enable perfomance tests&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      73 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--quadratic&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Enable quadratic complexity tests&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--memory&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Enable memory consuming tests&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      75 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--inputLimits&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Enable inputLimits tests&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--bigdata&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Enable bigdata tests&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      77 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--wallet&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Enable wallet tests&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      78 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--all&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Enable all tests&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span><span class="lineNoCov">          0 :         cout &lt;&lt; std::endl &lt;&lt; &quot;Test Generation&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--filltests&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Run test fillers&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      82 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--checkstate&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Enable expect section state checks&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--fillchain&quot; &lt;&lt; setw(25) &lt;&lt; &quot;When filling the state tests, fill tests as blockchain instead&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--createRandomTest&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Create random test and output it to the console&quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">      85 </span>            :         //cout &lt;&lt; setw(30) &lt;&lt; &quot;--fulloutput&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Disable address compression in the output field&quot; &lt;&lt; std::endl;
+<span class="lineNum">      86 </span>            : 
+<span class="lineNum">      87 </span><span class="lineNoCov">          0 :         cout &lt;&lt; setw(30) &lt;&lt; &quot;--help&quot; &lt;&lt; setw(25) &lt;&lt; &quot;Display list of command arguments&quot; &lt;&lt; std::endl;</span>
+<a name="88"><span class="lineNum">      88 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 : void mine(Client&amp; c, int numBlocks)</span>
+<span class="lineNum">      91 </span>            : {
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :         auto startBlock = c.blockChain().details().number;</span>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span><span class="lineNoCov">          0 :         c.startSealing();</span>
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :         while(c.blockChain().details().number &lt; startBlock + numBlocks)</span>
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :                 std::this_thread::sleep_for(std::chrono::milliseconds(100));</span>
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :         c.stopSealing();</span>
+<a name="98"><span class="lineNum">      98 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 : void connectClients(Client&amp; c1, Client&amp; c2)</span>
+<span class="lineNum">     101 </span>            : {
+<span class="lineNum">     102 </span>            :         (void)c1;
+<span class="lineNum">     103 </span>            :         (void)c2;
+<span class="lineNum">     104 </span>            :         // TODO: Move to WebThree. eth::Client no longer handles networking.
+<span class="lineNum">     105 </span>            : #if 0
+<span class="lineNum">     106 </span>            :         short c1Port = 20000;
+<span class="lineNum">     107 </span>            :         short c2Port = 21000;
+<span class="lineNum">     108 </span>            :         c1.startNetwork(c1Port);
+<span class="lineNum">     109 </span>            :         c2.startNetwork(c2Port);
+<span class="lineNum">     110 </span>            :         c2.connect(&quot;127.0.0.1&quot;, c1Port);
+<span class="lineNum">     111 </span>            : #endif
+<a name="112"><span class="lineNum">     112 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span><span class="lineCov">         16 : void mine(Block&amp; s, BlockChain const&amp; _bc, SealEngineFace* _sealer)</span>
+<span class="lineNum">     115 </span>            : {
+<span class="lineNum">     116 </span><span class="lineCov">         32 :         s.commitToSeal(_bc, s.info().extraData());</span>
+<span class="lineNum">     117 </span><span class="lineCov">         32 :         Notified&lt;bytes&gt; sealed;</span>
+<span class="lineNum">     118 </span><span class="lineCov">         64 :         _sealer-&gt;onSealGenerated([&amp;](bytes const&amp; sealedHeader){ sealed = sealedHeader; });</span>
+<span class="lineNum">     119 </span><span class="lineCov">         32 :         _sealer-&gt;generateSeal(s.info());</span>
+<span class="lineNum">     120 </span><span class="lineCov">         32 :         sealed.waitNot({});</span>
+<span class="lineNum">     121 </span><span class="lineCov">         48 :         _sealer-&gt;onSealGenerated([](bytes const&amp;){});</span>
+<span class="lineNum">     122 </span><span class="lineCov">         48 :         s.sealBlock(sealed);</span>
+<a name="123"><span class="lineNum">     123 </span><span class="lineCov">         16 : }</span></a>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineCov">          1 : void mine(BlockHeader&amp; _bi, SealEngineFace* _sealer, bool _verify)</span>
+<span class="lineNum">     126 </span>            : {
+<span class="lineNum">     127 </span><span class="lineCov">          2 :         Notified&lt;bytes&gt; sealed;</span>
+<span class="lineNum">     128 </span><span class="lineCov">          4 :         _sealer-&gt;onSealGenerated([&amp;](bytes const&amp; sealedHeader){ sealed = sealedHeader; });</span>
+<span class="lineNum">     129 </span><span class="lineCov">          1 :         _sealer-&gt;generateSeal(_bi);</span>
+<span class="lineNum">     130 </span><span class="lineCov">          2 :         sealed.waitNot({});</span>
+<span class="lineNum">     131 </span><span class="lineCov">          3 :         _sealer-&gt;onSealGenerated([](bytes const&amp;){});</span>
+<span class="lineNum">     132 </span><span class="lineCov">          3 :         _bi = BlockHeader(sealed, HeaderData);</span>
+<span class="lineNum">     133 </span>            : //      cdebug &lt;&lt; &quot;Block mined&quot; &lt;&lt; Ethash::boundary(_bi).hex() &lt;&lt; Ethash::nonce(_bi) &lt;&lt; _bi.hash(WithoutSeal).hex();
+<span class="lineNum">     134 </span><span class="lineCov">          1 :         if (_verify) //sometimes it is needed to mine incorrect blockheaders for testing</span>
+<span class="lineNum">     135 </span><span class="lineNoCov">          0 :                 _sealer-&gt;verify(JustSeal, _bi);</span>
+<span class="lineNum">     136 </span><span class="lineCov">          1 : }</span>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            : }
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            : namespace test
+<a name="141"><span class="lineNum">     141 </span>            : {</a>
+<a name="142"><span class="lineNum">     142 </span>            : </a>
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 : struct ValueTooLarge: virtual Exception {};</span>
+<span class="lineNum">     144 </span><span class="lineNoCov">          0 : struct MissingFields : virtual Exception {};</span>
+<span class="lineNum">     145 </span>            : 
+<a name="146"><span class="lineNum">     146 </span><span class="lineCov">          4 : bigint const c_max256plus1 = bigint(1) &lt;&lt; 256;</span></a>
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span><span class="lineCov">     155030 : string netIdToString(eth::Network _netId)</span>
+<span class="lineNum">     149 </span>            : {
+<span class="lineNum">     150 </span><span class="lineCov">     155030 :         switch(_netId)</span>
+<span class="lineNum">     151 </span>            :         {
+<span class="lineNum">     152 </span><span class="lineCov">     215247 :                 case eth::Network::FrontierTest: return &quot;Frontier&quot;;</span>
+<span class="lineNum">     153 </span><span class="lineCov">     181251 :                 case eth::Network::HomesteadTest: return &quot;Homestead&quot;;</span>
+<span class="lineNum">     154 </span><span class="lineCov">     147255 :                 case eth::Network::EIP150Test: return &quot;EIP150&quot;;</span>
+<span class="lineNum">     155 </span><span class="lineCov">     113259 :                 case eth::Network::EIP158Test: return &quot;EIP158&quot;;</span>
+<span class="lineNum">     156 </span><span class="lineCov">      79278 :                 case eth::Network::MetropolisTest: return &quot;Metropolis&quot;;</span>
+<span class="lineNum">     157 </span><span class="lineCov">      45200 :                 default: return &quot;other&quot;;</span>
+<span class="lineNum">     158 </span>            :         }
+<span class="lineNum">     159 </span>            :         return &quot;unknown&quot;;
+<a name="160"><span class="lineNum">     160 </span>            : }</a>
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 : eth::Network stringToNetId(string const&amp; _netname)</span>
+<span class="lineNum">     163 </span>            : {
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :         if (netIdToString(eth::Network::FrontierTest) == _netname)</span>
+<span class="lineNum">     165 </span>            :                 return eth::Network::FrontierTest;
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :         if (netIdToString(eth::Network::HomesteadTest) == _netname)</span>
+<span class="lineNum">     167 </span>            :                 return eth::Network::HomesteadTest;
+<span class="lineNum">     168 </span><span class="lineNoCov">          0 :         if (netIdToString(eth::Network::EIP150Test) == _netname)</span>
+<span class="lineNum">     169 </span>            :                 return eth::Network::EIP150Test;
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :         if (netIdToString(eth::Network::EIP158Test) == _netname)</span>
+<span class="lineNum">     171 </span>            :                 return eth::Network::EIP158Test;
+<span class="lineNum">     172 </span><span class="lineNoCov">          0 :         if (netIdToString(eth::Network::MetropolisTest) == _netname)</span>
+<span class="lineNum">     173 </span>            :                 return eth::Network::MetropolisTest;
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :         BOOST_ERROR(TestOutputHelper::testName() + &quot; network not found: &quot; + _netname);</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :         return eth::Network::FrontierTest;</span>
+<a name="176"><span class="lineNum">     176 </span>            : }</a>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span><span class="lineCov">       1559 : ImportTest::ImportTest(json_spirit::mObject&amp; _o, bool isFiller, testType testTemplate):</span>
+<span class="lineNum">     179 </span>            :         m_statePre(0, OverlayDB(), eth::BaseState::Empty),
+<span class="lineNum">     180 </span>            :         m_statePost(0, OverlayDB(), eth::BaseState::Empty),
+<span class="lineNum">     181 </span>            :         m_testObject(_o),
+<span class="lineNum">     182 </span><span class="lineCov">      10913 :         m_testType(testTemplate)</span>
+<span class="lineNum">     183 </span>            : {
+<span class="lineNum">     184 </span><span class="lineCov">       1559 :         if (testTemplate == testType::StateTests || m_testType == testType::GeneralStateTest)</span>
+<span class="lineNum">     185 </span>            :         {
+<span class="lineNum">     186 </span><span class="lineCov">       6236 :                 importEnv(_o[&quot;env&quot;].get_obj());</span>
+<span class="lineNum">     187 </span><span class="lineCov">       6236 :                 importTransaction(_o[&quot;transaction&quot;].get_obj());</span>
+<span class="lineNum">     188 </span><span class="lineCov">       6236 :                 importState(_o[&quot;pre&quot;].get_obj(), m_statePre);</span>
+<span class="lineNum">     189 </span><span class="lineCov">       1559 :                 if (!isFiller &amp;&amp; m_testType == testType::StateTests)</span>
+<span class="lineNum">     190 </span>            :                 {
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :                         if (_o.count(&quot;post&quot;))</span>
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :                                 importState(_o[&quot;post&quot;].get_obj(), m_statePost);</span>
+<span class="lineNum">     193 </span>            :                         else
+<span class="lineNum">     194 </span><span class="lineNoCov">          0 :                                 importState(_o[&quot;postState&quot;].get_obj(), m_statePost);</span>
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :                         m_logsExpected = importLog(_o[&quot;logs&quot;].get_array());</span>
+<span class="lineNum">     196 </span>            :                 }
+<span class="lineNum">     197 </span>            :         }
+<a name="198"><span class="lineNum">     198 </span><span class="lineCov">       1559 : }</span></a>
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span><span class="lineCov">       1559 : bytes ImportTest::executeTest()</span>
+<span class="lineNum">     201 </span>            : {
+<span class="lineNum">     202 </span><span class="lineCov">       1559 :         if (m_testType == testType::StateTests)</span>
+<span class="lineNum">     203 </span>            :         {
+<span class="lineNum">     204 </span><span class="lineNoCov">          0 :                 eth::Network network = eth::Network::MainNetwork;</span>
+<span class="lineNum">     205 </span><span class="lineNoCov">          0 :                 std::pair&lt;eth::State, ImportTest::execOutput&gt; out = executeTransaction(network, m_envInfo, m_statePre, m_transaction);</span>
+<span class="lineNum">     206 </span><span class="lineNoCov">          0 :                 m_statePost = out.first;</span>
+<span class="lineNum">     207 </span><span class="lineNoCov">          0 :                 m_logs = out.second.second.log();</span>
+<span class="lineNum">     208 </span><span class="lineNoCov">          0 :                 return out.second.first.output;</span>
+<span class="lineNum">     209 </span>            :         }
+<span class="lineNum">     210 </span><span class="lineCov">       1559 :         else if (m_testType == testType::GeneralStateTest)</span>
+<span class="lineNum">     211 </span>            :         {
+<span class="lineNum">     212 </span><span class="lineCov">       3118 :                 vector&lt;eth::Network&gt; networks;</span>
+<span class="lineNum">     213 </span><span class="lineCov">       3118 :                 if (!Options::get().singleTestNet.empty())</span>
+<span class="lineNum">     214 </span>            :                 {
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :                         networks.push_back(stringToNetId(Options::get().singleTestNet));</span>
+<span class="lineNum">     216 </span>            :                 }
+<span class="lineNum">     217 </span>            :                 else
+<span class="lineNum">     218 </span>            :                 {
+<span class="lineNum">     219 </span><span class="lineCov">       3118 :                         networks.push_back(eth::Network::FrontierTest);</span>
+<span class="lineNum">     220 </span><span class="lineCov">       3118 :                         networks.push_back(eth::Network::HomesteadTest);</span>
+<span class="lineNum">     221 </span><span class="lineCov">       3118 :                         networks.push_back(eth::Network::EIP150Test);</span>
+<span class="lineNum">     222 </span><span class="lineCov">       3118 :                         networks.push_back(eth::Network::EIP158Test);</span>
+<span class="lineNum">     223 </span><span class="lineCov">       3118 :                         networks.push_back(eth::Network::MetropolisTest);</span>
+<span class="lineNum">     224 </span>            :                 }
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span><span class="lineCov">       3118 :                 json_spirit::mObject json;</span>
+<span class="lineNum">     227 </span><span class="lineCov">       3118 :                 vector&lt;transactionToExecute&gt; transactionResults;</span>
+<span class="lineNum">     228 </span><span class="lineCov">      18708 :                 for (size_t j = 0; j &lt; networks.size(); j++)</span>
+<span class="lineNum">     229 </span>            :                 {
+<span class="lineNum">     230 </span><span class="lineCov">      42740 :                         for (size_t i = 0; i &lt; m_transactions.size(); i++)</span>
+<span class="lineNum">     231 </span>            :                         {
+<span class="lineNum">     232 </span><span class="lineCov">      18100 :                                 eth::Network network = networks[j];</span>
+<span class="lineNum">     233 </span><span class="lineCov">      27150 :                                 std::pair&lt;eth::State, ImportTest::execOutput&gt; out = executeTransaction(network, m_envInfo, m_statePre, m_transactions[i].transaction);</span>
+<span class="lineNum">     234 </span><span class="lineCov">      18100 :                                 m_transactions[i].postState = out.first;</span>
+<span class="lineNum">     235 </span><span class="lineCov">      18100 :                                 m_transactions[i].netId = network;</span>
+<span class="lineNum">     236 </span><span class="lineCov">       9050 :                                 transactionResults.push_back(m_transactions[i]);</span>
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span><span class="lineCov">       9050 :                                 if (Options::get().fillchain)</span>
+<span class="lineNum">     239 </span>            :                                 {
+<span class="lineNum">     240 </span><span class="lineNoCov">          0 :                                         json_spirit::mObject testObj;</span>
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :                                         testObj[&quot;network&quot;] = netIdToString(networks[j]);</span>
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :                                         string postfix = &quot;_d&quot; + toString(m_transactions[i].dataInd);</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :                                         postfix += &quot;g&quot; + toString(m_transactions[i].gasInd);</span>
+<span class="lineNum">     244 </span><span class="lineNoCov">          0 :                                         postfix += &quot;v&quot; + toString(m_transactions[i].valInd);</span>
+<span class="lineNum">     245 </span><span class="lineNoCov">          0 :                                         postfix += &quot;_&quot; + netIdToString(networks[j]);</span>
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :                                         string testname = TestOutputHelper::testName() + postfix;</span>
+<span class="lineNum">     247 </span>            : 
+<span class="lineNum">     248 </span><span class="lineNoCov">          0 :                                         json_spirit::mObject genesisObj = TestBlockChain::defaultGenesisBlockJson();</span>
+<span class="lineNum">     249 </span><span class="lineNoCov">          0 :                                         genesisObj[&quot;coinbase&quot;] = toString(m_envInfo.author());</span>
+<span class="lineNum">     250 </span><span class="lineNoCov">          0 :                                         genesisObj[&quot;gasLimit&quot;] = toCompactHex(m_envInfo.gasLimit(), HexPrefix::Add);</span>
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :                                         genesisObj[&quot;timestamp&quot;] = toCompactHex(m_envInfo.timestamp() - 50, HexPrefix::Add);</span>
+<span class="lineNum">     252 </span><span class="lineNoCov">          0 :                                         testObj[&quot;genesisBlockHeader&quot;] = genesisObj;</span>
+<span class="lineNum">     253 </span><span class="lineNoCov">          0 :                                         testObj[&quot;pre&quot;] = fillJsonWithState(m_statePre);</span>
+<span class="lineNum">     254 </span>            : 
+<span class="lineNum">     255 </span><span class="lineNoCov">          0 :                                         State s = State (0, OverlayDB(), eth::BaseState::Empty);</span>
+<span class="lineNum">     256 </span><span class="lineNoCov">          0 :                                         AccountMaskMap m = std::unordered_map&lt;Address, AccountMask&gt;();</span>
+<span class="lineNum">     257 </span><span class="lineNoCov">          0 :                                         StateAndMap smap {s, m};</span>
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :                                         TrExpectSection search {m_transactions[i], smap};</span>
+<span class="lineNum">     259 </span><span class="lineNoCov">          0 :                                         vector&lt;size_t&gt; stateIndexesToPrint; //not used</span>
+<span class="lineNum">     260 </span>            :                                         // look if there is an expect section that match this transaction
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span><span class="lineNoCov">          0 :                                         if (m_testObject.count(&quot;expect&quot;))</span>
+<span class="lineNum">     263 </span><span class="lineNoCov">          0 :                                         for (auto const&amp; exp: m_testObject[&quot;expect&quot;].get_array())</span>
+<span class="lineNum">     264 </span>            :                                         {
+<span class="lineNum">     265 </span><span class="lineNoCov">          0 :                                                 TrExpectSection* search2 = &amp;search;</span>
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :                                                 checkGeneralTestSectionSearch(exp.get_obj(), stateIndexesToPrint, &quot;&quot;, search2);</span>
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :                                                 if (search.second.first.addresses().size() != 0) //if match in the expect sections for this tr found</span>
+<span class="lineNum">     268 </span>            :                                                 {
+<span class="lineNum">     269 </span>            :                                                         //replace expected mining reward (in state tests it is 0)
+<span class="lineNum">     270 </span><span class="lineNoCov">          0 :                                                         json_spirit::mObject obj = fillJsonWithState(search2-&gt;second.first, search2-&gt;second.second);</span>
+<span class="lineNum">     271 </span><span class="lineNoCov">          0 :                                                         for (auto&amp; adr: obj)</span>
+<span class="lineNum">     272 </span>            :                                                         {
+<span class="lineNum">     273 </span><span class="lineNoCov">          0 :                                                                 if (adr.first == toString(m_envInfo.author()))</span>
+<span class="lineNum">     274 </span>            :                                                                 {
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 :                                                                         if (adr.second.get_obj().count(&quot;balance&quot;))</span>
+<span class="lineNum">     276 </span>            :                                                                         {
+<span class="lineNum">     277 </span><span class="lineNoCov">          0 :                                                                                 u256 expectCoinbaseBalance = toInt(adr.second.get_obj()[&quot;balance&quot;]);</span>
+<span class="lineNum">     278 </span><span class="lineNoCov">          0 :                                                                                 expectCoinbaseBalance += u256(&quot;5000000000000000000&quot;);</span>
+<span class="lineNum">     279 </span><span class="lineNoCov">          0 :                                                                                 adr.second.get_obj()[&quot;balance&quot;] = toCompactHex(expectCoinbaseBalance, HexPrefix::Add);</span>
+<span class="lineNum">     280 </span>            :                                                                         }
+<span class="lineNum">     281 </span>            :                                                                 }
+<span class="lineNum">     282 </span>            :                                                         }
+<span class="lineNum">     283 </span><span class="lineNoCov">          0 :                                                         testObj[&quot;expect&quot;] = obj;</span>
+<span class="lineNum">     284 </span>            :                                                         break;
+<span class="lineNum">     285 </span>            :                                                 }
+<span class="lineNum">     286 </span>            :                                         }
+<span class="lineNum">     287 </span>            : 
+<span class="lineNum">     288 </span><span class="lineNoCov">          0 :                                         json_spirit::mObject rewriteHeader;</span>
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 :                                         rewriteHeader[&quot;gasLimit&quot;] = toCompactHex(m_envInfo.gasLimit(), HexPrefix::Add);</span>
+<span class="lineNum">     290 </span><span class="lineNoCov">          0 :                                         rewriteHeader[&quot;difficulty&quot;] = toCompactHex(m_envInfo.difficulty(), HexPrefix::Add);</span>
+<span class="lineNum">     291 </span><span class="lineNoCov">          0 :                                         rewriteHeader[&quot;timestamp&quot;] = toCompactHex(m_envInfo.timestamp(), HexPrefix::Add);</span>
+<span class="lineNum">     292 </span><span class="lineNoCov">          0 :                                         rewriteHeader[&quot;updatePoW&quot;] = &quot;1&quot;;</span>
+<span class="lineNum">     293 </span>            : 
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 :                                         json_spirit::mArray blocksArr;</span>
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :                                         json_spirit::mArray transcArr;</span>
+<span class="lineNum">     296 </span><span class="lineNoCov">          0 :                                         transcArr.push_back(fillJsonWithTransaction(m_transactions[i].transaction));</span>
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :                                         json_spirit::mObject blocksObj;</span>
+<span class="lineNum">     298 </span><span class="lineNoCov">          0 :                                         blocksObj[&quot;blockHeaderPremine&quot;] = rewriteHeader;</span>
+<span class="lineNum">     299 </span><span class="lineNoCov">          0 :                                         blocksObj[&quot;transactions&quot;] = transcArr;</span>
+<span class="lineNum">     300 </span><span class="lineNoCov">          0 :                                         blocksObj[&quot;uncleHeaders&quot;] = json_spirit::mArray();</span>
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :                                         blocksArr.push_back(blocksObj);</span>
+<span class="lineNum">     302 </span><span class="lineNoCov">          0 :                                         testObj[&quot;blocks&quot;] = blocksArr;</span>
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :                                         json[testname] = testObj;</span>
+<span class="lineNum">     304 </span>            :                                 }
+<span class="lineNum">     305 </span>            :                         }
+<span class="lineNum">     306 </span>            :                 }
+<span class="lineNum">     307 </span>            : 
+<span class="lineNum">     308 </span><span class="lineCov">       1559 :                 if (Options::get().fillchain)</span>
+<span class="lineNum">     309 </span>            :                 {
+<span class="lineNum">     310 </span><span class="lineNoCov">          0 :                         string tmpFillerName = getTestPath() + &quot;/src/GenStateTestAsBcTemp/&quot; + TestOutputHelper::caseName() + &quot;/&quot; + TestOutputHelper::testName() + &quot;Filler.json&quot;;</span>
+<span class="lineNum">     311 </span><span class="lineNoCov">          0 :                         writeFile(tmpFillerName, asBytes(json_spirit::write_string((json_spirit::mValue)json, true)));</span>
+<span class="lineNum">     312 </span><span class="lineNoCov">          0 :                         dev::test::executeTests(TestOutputHelper::testName(), &quot;/BlockchainTests/GeneralStateTests/&quot; + TestOutputHelper::caseName(),</span>
+<span class="lineNum">     313 </span><span class="lineNoCov">          0 :                                                                                                                                 &quot;/GenStateTestAsBcTemp/&quot; + TestOutputHelper::caseName(), dev::test::doBlockchainTests);</span>
+<span class="lineNum">     314 </span>            :                 }
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span><span class="lineCov">       3118 :                 m_transactions.clear();</span>
+<span class="lineNum">     317 </span><span class="lineCov">       1559 :                 m_transactions = transactionResults;</span>
+<span class="lineNum">     318 </span><span class="lineCov">       1559 :                 return bytes();</span>
+<span class="lineNum">     319 </span>            :         }
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span><span class="lineNoCov">          0 :         BOOST_ERROR(&quot;Error when executing test ImportTest::executeTest()&quot;);</span>
+<span class="lineNum">     322 </span>            :         return bytes();
+<a name="323"><span class="lineNum">     323 </span>            : }</a>
+<span class="lineNum">     324 </span>            : 
+<span class="lineNum">     325 </span><span class="lineCov">       9050 : std::pair&lt;eth::State, ImportTest::execOutput&gt; ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const&amp; _env, eth::State const&amp; _preState, eth::Transaction const&amp; _tr)</span>
+<span class="lineNum">     326 </span>            : {
+<span class="lineNum">     327 </span><span class="lineCov">      18100 :         eth::State initialState = _preState;</span>
+<span class="lineNum">     328 </span>            :         try
+<span class="lineNum">     329 </span>            :         {
+<span class="lineNum">     330 </span><span class="lineCov">      27150 :                 unique_ptr&lt;SealEngineFace&gt; se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());</span>
+<span class="lineNum">     331 </span><span class="lineCov">      63350 :                 bool removeEmptyAccounts = m_envInfo.number() &gt;= se-&gt;chainParams().u256Param(&quot;EIP158ForkBlock&quot;);</span>
+<span class="lineNum">     332 </span><span class="lineCov">      35981 :                 ImportTest::execOutput execOut = initialState.execute(_env, *se.get(), _tr);</span>
+<span class="lineNum">     333 </span><span class="lineCov">       8831 :                 initialState.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);</span>
+<span class="lineNum">     334 </span><span class="lineCov">       8831 :                 return std::pair&lt;eth::State, ImportTest::execOutput&gt;(initialState, execOut);</span>
+<span class="lineNum">     335 </span>            :         }
+<span class="lineNum">     336 </span><span class="lineCov">        438 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">     337 </span>            :         {
+<span class="lineNum">     338 </span><span class="lineCov">        438 :                 cnote &lt;&lt; &quot;Exception: &quot; &lt;&lt; diagnostic_information(_e);</span>
+<span class="lineNum">     339 </span>            :         }
+<span class="lineNum">     340 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     341 </span>            :         {
+<span class="lineNum">     342 </span><span class="lineNoCov">          0 :                 cnote &lt;&lt; &quot;state execution exception: &quot; &lt;&lt; _e.what();</span>
+<span class="lineNum">     343 </span>            :         }
+<span class="lineNum">     344 </span>            : 
+<span class="lineNum">     345 </span><span class="lineCov">        219 :         initialState.commit(State::CommitBehaviour::KeepEmptyAccounts);</span>
+<span class="lineNum">     346 </span><span class="lineCov">        219 :         ExecutionResult emptyRes;</span>
+<span class="lineNum">     347 </span><span class="lineCov">        438 :         LogEntries emptyLogs;</span>
+<span class="lineNum">     348 </span><span class="lineCov">       1095 :         ImportTest::execOutput execOut = make_pair(emptyRes, TransactionReceipt(h256(), u256(), emptyLogs));</span>
+<span class="lineNum">     349 </span><span class="lineCov">        219 :         return std::pair&lt;eth::State, ImportTest::execOutput&gt;(initialState, execOut);</span>
+<a name="350"><span class="lineNum">     350 </span>            : }</a>
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span><span class="lineNoCov">          0 : json_spirit::mObject&amp; ImportTest::makeAllFieldsHex(json_spirit::mObject&amp; _o)</span>
+<span class="lineNum">     353 </span>            : {
+<span class="lineNum">     354 </span>            :         static const set&lt;string&gt; hashes {&quot;bloom&quot; , &quot;coinbase&quot;, &quot;hash&quot;, &quot;mixHash&quot;, &quot;parentHash&quot;, &quot;receiptTrie&quot;,
+<span class="lineNum">     355 </span>            :                                                                          &quot;stateRoot&quot;, &quot;transactionsTrie&quot;, &quot;uncleHash&quot;, &quot;currentCoinbase&quot;,
+<span class="lineNum">     356 </span><span class="lineNoCov">          0 :                                                                          &quot;previousHash&quot;, &quot;to&quot;, &quot;address&quot;, &quot;caller&quot;, &quot;origin&quot;, &quot;secretKey&quot;, &quot;data&quot;};</span>
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span><span class="lineNoCov">          0 :         for (auto&amp; i: _o)</span>
+<span class="lineNum">     359 </span>            :         {
+<span class="lineNum">     360 </span><span class="lineNoCov">          0 :                 std::string key = i.first;</span>
+<span class="lineNum">     361 </span><span class="lineNoCov">          0 :                 if (hashes.count(key))</span>
+<span class="lineNum">     362 </span><span class="lineNoCov">          0 :                         continue;</span>
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span><span class="lineNoCov">          0 :                 std::string str;</span>
+<span class="lineNum">     365 </span><span class="lineNoCov">          0 :                 json_spirit::mValue value = i.second;</span>
+<span class="lineNum">     366 </span>            : 
+<span class="lineNum">     367 </span><span class="lineNoCov">          0 :                 if (value.type() == json_spirit::int_type)</span>
+<span class="lineNum">     368 </span><span class="lineNoCov">          0 :                         str = toString(value.get_int());</span>
+<span class="lineNum">     369 </span><span class="lineNoCov">          0 :                 else if (value.type() == json_spirit::str_type)</span>
+<span class="lineNum">     370 </span><span class="lineNoCov">          0 :                         str = value.get_str();</span>
+<span class="lineNum">     371 </span><span class="lineNoCov">          0 :                 else continue;</span>
+<span class="lineNum">     372 </span>            : 
+<span class="lineNum">     373 </span><span class="lineNoCov">          0 :                 _o[key] = (str.substr(0, 2) == &quot;0x&quot;) ? str : toCompactHex(toInt(str), HexPrefix::Add, 1);</span>
+<span class="lineNum">     374 </span>            :         }
+<span class="lineNum">     375 </span><span class="lineNoCov">          0 :         return _o;</span>
+<a name="376"><span class="lineNum">     376 </span>            : }</a>
+<span class="lineNum">     377 </span>            : 
+<span class="lineNum">     378 </span><span class="lineCov">       1559 : void ImportTest::importEnv(json_spirit::mObject&amp; _o)</span>
+<span class="lineNum">     379 </span>            : {
+<span class="lineNum">     380 </span><span class="lineCov">      18708 :         BOOST_REQUIRE(_o.count(&quot;currentGasLimit&quot;) &gt; 0);</span>
+<span class="lineNum">     381 </span><span class="lineCov">      18708 :         BOOST_REQUIRE(_o.count(&quot;currentDifficulty&quot;) &gt; 0);</span>
+<span class="lineNum">     382 </span><span class="lineCov">      18708 :         BOOST_REQUIRE(_o.count(&quot;currentNumber&quot;) &gt; 0);</span>
+<span class="lineNum">     383 </span><span class="lineCov">      18708 :         BOOST_REQUIRE(_o.count(&quot;currentTimestamp&quot;) &gt; 0);</span>
+<span class="lineNum">     384 </span><span class="lineCov">      18708 :         BOOST_REQUIRE(_o.count(&quot;currentCoinbase&quot;) &gt; 0);</span>
+<span class="lineNum">     385 </span><span class="lineCov">       6236 :         auto gasLimit = toInt(_o[&quot;currentGasLimit&quot;]);</span>
+<span class="lineNum">     386 </span><span class="lineCov">      12472 :         BOOST_REQUIRE(gasLimit &lt;= std::numeric_limits&lt;int64_t&gt;::max());</span>
+<span class="lineNum">     387 </span><span class="lineCov">       3118 :         m_envInfo.setGasLimit(gasLimit.convert_to&lt;int64_t&gt;());</span>
+<span class="lineNum">     388 </span><span class="lineCov">       7795 :         m_envInfo.setDifficulty(toInt(_o[&quot;currentDifficulty&quot;]));</span>
+<span class="lineNum">     389 </span><span class="lineCov">       7795 :         m_envInfo.setNumber(toInt(_o[&quot;currentNumber&quot;]));</span>
+<span class="lineNum">     390 </span><span class="lineCov">       7795 :         m_envInfo.setTimestamp(toInt(_o[&quot;currentTimestamp&quot;]));</span>
+<span class="lineNum">     391 </span><span class="lineCov">       7795 :         m_envInfo.setAuthor(Address(_o[&quot;currentCoinbase&quot;].get_str()));</span>
+<span class="lineNum">     392 </span><span class="lineCov">       6236 :         m_envInfo.setLastHashes( lastHashes( m_envInfo.number() ) );</span>
+<span class="lineNum">     393 </span><span class="lineCov">       1559 : }</span>
+<a name="394"><span class="lineNum">     394 </span>            : </a>
+<span class="lineNum">     395 </span>            : // import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json
+<span class="lineNum">     396 </span><span class="lineCov">      15886 : void replaceLLLinState(json_spirit::mObject&amp; _o)</span>
+<span class="lineNum">     397 </span>            : {
+<span class="lineNum">     398 </span><span class="lineCov">     199545 :         for (auto&amp; account: _o.count(&quot;alloc&quot;) ? _o[&quot;alloc&quot;].get_obj() : _o.count(&quot;accounts&quot;) ? _o[&quot;accounts&quot;].get_obj() : _o)</span>
+<span class="lineNum">     399 </span>            :         {
+<span class="lineNum">     400 </span><span class="lineCov">     122055 :                 auto obj = account.second.get_obj();</span>
+<span class="lineNum">     401 </span><span class="lineCov">     244110 :                 if (obj.count(&quot;code&quot;) &amp;&amp; obj[&quot;code&quot;].type() == json_spirit::str_type)</span>
+<span class="lineNum">     402 </span>            :                 {
+<span class="lineNum">     403 </span><span class="lineCov">     244110 :                         string code = obj[&quot;code&quot;].get_str();</span>
+<span class="lineNum">     404 </span><span class="lineCov">     284795 :                         obj[&quot;code&quot;] = compileLLL(code);</span>
+<span class="lineNum">     405 </span>            :                 }
+<span class="lineNum">     406 </span><span class="lineCov">      81370 :                 account.second = obj;</span>
+<span class="lineNum">     407 </span>            :         }
+<a name="408"><span class="lineNum">     408 </span><span class="lineCov">      15886 : }</span></a>
+<span class="lineNum">     409 </span>            : 
+<span class="lineNum">     410 </span><span class="lineCov">      12795 : void ImportTest::importState(json_spirit::mObject const&amp; _o, State&amp; _state, AccountMaskMap&amp; o_mask)</span>
+<span class="lineNum">     411 </span>            : {
+<span class="lineNum">     412 </span>            :         //Compile LLL code of the test Fillers using external call to lllc
+<span class="lineNum">     413 </span><span class="lineCov">      25590 :         json_spirit::mObject o = _o;</span>
+<span class="lineNum">     414 </span><span class="lineCov">      12795 :         replaceLLLinState(o);</span>
+<span class="lineNum">     415 </span><span class="lineCov">      38385 :         std::string jsondata = json_spirit::write_string((json_spirit::mValue)o, false);</span>
+<span class="lineNum">     416 </span><span class="lineCov">      38385 :         _state.populateFrom(jsonToAccountMap(jsondata, 0, &amp;o_mask));</span>
+<span class="lineNum">     417 </span><span class="lineCov">      12795 : }</span>
+<span class="lineNum">     418 </span>            : 
+<span class="lineNum">     419 </span><span class="lineCov">      12795 : void ImportTest::importState(json_spirit::mObject const&amp; _o, State&amp; _state)</span>
+<span class="lineNum">     420 </span>            : {
+<span class="lineNum">     421 </span><span class="lineCov">      25590 :         AccountMaskMap mask;</span>
+<span class="lineNum">     422 </span><span class="lineCov">      12795 :         importState(_o, _state, mask);</span>
+<span class="lineNum">     423 </span><span class="lineCov">      77562 :         for (auto const&amp; i: mask)</span>
+<span class="lineNum">     424 </span>            :                 //check that every parameter was declared in state object
+<span class="lineNum">     425 </span><span class="lineCov">      78354 :                 if (!i.second.allSet())</span>
+<span class="lineNum">     426 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(MissingFields() &lt;&lt; errinfo_comment(&quot;Import State: Missing state fields!&quot;));</span>
+<span class="lineNum">     427 </span><span class="lineCov">      12795 : }</span>
+<span class="lineNum">     428 </span>            : 
+<span class="lineNum">     429 </span><span class="lineCov">       4011 : void ImportTest::importTransaction (json_spirit::mObject const&amp; _o, eth::Transaction&amp; o_tr)</span>
+<span class="lineNum">     430 </span>            : {
+<span class="lineNum">     431 </span><span class="lineCov">      20055 :         if (_o.count(&quot;secretKey&quot;) &gt; 0)</span>
+<span class="lineNum">     432 </span>            :         {
+<span class="lineNum">     433 </span><span class="lineCov">      22104 :                 BOOST_REQUIRE(_o.count(&quot;nonce&quot;) &gt; 0);</span>
+<span class="lineNum">     434 </span><span class="lineCov">      22104 :                 BOOST_REQUIRE(_o.count(&quot;gasPrice&quot;) &gt; 0);</span>
+<span class="lineNum">     435 </span><span class="lineCov">      22104 :                 BOOST_REQUIRE(_o.count(&quot;gasLimit&quot;) &gt; 0);</span>
+<span class="lineNum">     436 </span><span class="lineCov">      22104 :                 BOOST_REQUIRE(_o.count(&quot;to&quot;) &gt; 0);</span>
+<span class="lineNum">     437 </span><span class="lineCov">      22104 :                 BOOST_REQUIRE(_o.count(&quot;value&quot;) &gt; 0);</span>
+<span class="lineNum">     438 </span><span class="lineCov">      22104 :                 BOOST_REQUIRE(_o.count(&quot;data&quot;) &gt; 0);</span>
+<span class="lineNum">     439 </span>            : 
+<span class="lineNum">     440 </span><span class="lineCov">      11052 :                 if (bigint(_o.at(&quot;nonce&quot;).get_str()) &gt;= c_max256plus1)</span>
+<span class="lineNum">     441 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(ValueTooLarge() &lt;&lt; errinfo_comment(&quot;Transaction 'nonce' is equal or greater than 2**256&quot;) );</span>
+<span class="lineNum">     442 </span><span class="lineCov">      11052 :                 if (bigint(_o.at(&quot;gasPrice&quot;).get_str()) &gt;= c_max256plus1)</span>
+<span class="lineNum">     443 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(ValueTooLarge() &lt;&lt; errinfo_comment(&quot;Transaction 'gasPrice' is equal or greater than 2**256&quot;) );</span>
+<span class="lineNum">     444 </span><span class="lineCov">      11052 :                 if (bigint(_o.at(&quot;gasLimit&quot;).get_str()) &gt;= c_max256plus1)</span>
+<span class="lineNum">     445 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(ValueTooLarge() &lt;&lt; errinfo_comment(&quot;Transaction 'gasLimit' is equal or greater than 2**256&quot;) );</span>
+<span class="lineNum">     446 </span><span class="lineCov">      11052 :                 if (bigint(_o.at(&quot;value&quot;).get_str()) &gt;= c_max256plus1)</span>
+<span class="lineNum">     447 </span><span class="lineNoCov">          0 :                         BOOST_THROW_EXCEPTION(ValueTooLarge() &lt;&lt; errinfo_comment(&quot;Transaction 'value' is equal or greater than 2**256&quot;) );</span>
+<span class="lineNum">     448 </span>            : 
+<span class="lineNum">     449 </span><span class="lineCov">      23686 :                 o_tr = _o.at(&quot;to&quot;).get_str().empty() ?</span>
+<span class="lineNum">     450 </span><span class="lineCov">       7064 :                         Transaction(toInt(_o.at(&quot;value&quot;)), toInt(_o.at(&quot;gasPrice&quot;)), toInt(_o.at(&quot;gasLimit&quot;)), importData(_o), toInt(_o.at(&quot;nonce&quot;)), Secret(_o.at(&quot;secretKey&quot;).get_str())) :</span>
+<span class="lineNum">     451 </span><span class="lineCov">      32680 :                         Transaction(toInt(_o.at(&quot;value&quot;)), toInt(_o.at(&quot;gasPrice&quot;)), toInt(_o.at(&quot;gasLimit&quot;)), Address(_o.at(&quot;to&quot;).get_str()), importData(_o), toInt(_o.at(&quot;nonce&quot;)), Secret(_o.at(&quot;secretKey&quot;).get_str()));</span>
+<span class="lineNum">     452 </span>            :         }
+<span class="lineNum">     453 </span>            :         else
+<span class="lineNum">     454 </span>            :         {
+<span class="lineNum">     455 </span><span class="lineCov">      26028 :                 BOOST_REQUIRE(_o.count(&quot;nonce&quot;));</span>
+<span class="lineNum">     456 </span><span class="lineCov">      26028 :                 BOOST_REQUIRE(_o.count(&quot;gasPrice&quot;));</span>
+<span class="lineNum">     457 </span><span class="lineCov">      26028 :                 BOOST_REQUIRE(_o.count(&quot;gasLimit&quot;));</span>
+<span class="lineNum">     458 </span><span class="lineCov">      26028 :                 BOOST_REQUIRE(_o.count(&quot;to&quot;));</span>
+<span class="lineNum">     459 </span><span class="lineCov">      26028 :                 BOOST_REQUIRE(_o.count(&quot;value&quot;));</span>
+<span class="lineNum">     460 </span><span class="lineCov">      26028 :                 BOOST_REQUIRE(_o.count(&quot;data&quot;));</span>
+<span class="lineNum">     461 </span><span class="lineCov">      26028 :                 BOOST_REQUIRE(_o.count(&quot;v&quot;));</span>
+<span class="lineNum">     462 </span><span class="lineCov">      26028 :                 BOOST_REQUIRE(_o.count(&quot;r&quot;));</span>
+<span class="lineNum">     463 </span><span class="lineCov">      26028 :                 BOOST_REQUIRE(_o.count(&quot;s&quot;));</span>
+<span class="lineNum">     464 </span>            : 
+<span class="lineNum">     465 </span><span class="lineCov">       4338 :                 RLPStream transactionRLPStream = createRLPStreamFromTransactionFields(_o);</span>
+<span class="lineNum">     466 </span><span class="lineCov">       4338 :                 RLP transactionRLP(transactionRLPStream.out());</span>
+<span class="lineNum">     467 </span>            :                 try
+<span class="lineNum">     468 </span>            :                 {
+<span class="lineNum">     469 </span><span class="lineCov">       6507 :                         o_tr = Transaction(transactionRLP.data(), CheckTransaction::Everything);</span>
+<span class="lineNum">     470 </span>            :                 }
+<span class="lineNum">     471 </span><span class="lineNoCov">          0 :                 catch (InvalidSignature)</span>
+<span class="lineNum">     472 </span>            :                 {
+<span class="lineNum">     473 </span>            :                         // create unsigned transaction
+<span class="lineNum">     474 </span><span class="lineNoCov">          0 :                         o_tr = _o.at(&quot;to&quot;).get_str().empty() ?</span>
+<span class="lineNum">     475 </span><span class="lineNoCov">          0 :                                 Transaction(toInt(_o.at(&quot;value&quot;)), toInt(_o.at(&quot;gasPrice&quot;)), toInt(_o.at(&quot;gasLimit&quot;)), importData(_o), toInt(_o.at(&quot;nonce&quot;))) :</span>
+<span class="lineNum">     476 </span><span class="lineNoCov">          0 :                                 Transaction(toInt(_o.at(&quot;value&quot;)), toInt(_o.at(&quot;gasPrice&quot;)), toInt(_o.at(&quot;gasLimit&quot;)), Address(_o.at(&quot;to&quot;).get_str()), importData(_o), toInt(_o.at(&quot;nonce&quot;)));</span>
+<span class="lineNum">     477 </span>            :                 }
+<span class="lineNum">     478 </span><span class="lineNoCov">          0 :                 catch (Exception&amp; _e)</span>
+<span class="lineNum">     479 </span>            :                 {
+<span class="lineNum">     480 </span><span class="lineNoCov">          0 :                         cnote &lt;&lt; &quot;invalid transaction&quot; &lt;&lt; boost::diagnostic_information(_e);</span>
+<span class="lineNum">     481 </span>            :                 }
+<span class="lineNum">     482 </span>            :         }
+<a name="483"><span class="lineNum">     483 </span><span class="lineCov">       4011 : }</span></a>
+<span class="lineNum">     484 </span>            : 
+<span class="lineNum">     485 </span><span class="lineCov">       1559 : void ImportTest::importTransaction(json_spirit::mObject const&amp; o_tr)</span>
+<span class="lineNum">     486 </span>            : {
+<span class="lineNum">     487 </span><span class="lineCov">       1559 :         if (m_testType == testType::StateTests)                         //Import a single transaction</span>
+<span class="lineNum">     488 </span><span class="lineNoCov">          0 :                 importTransaction(o_tr, m_transaction);</span>
+<span class="lineNum">     489 </span><span class="lineCov">       1559 :         else if (m_testType == testType::GeneralStateTest)      //Parse extended transaction</span>
+<span class="lineNum">     490 </span>            :         {
+<span class="lineNum">     491 </span><span class="lineCov">      18708 :                 BOOST_REQUIRE(o_tr.count(&quot;gasLimit&quot;) &gt; 0);</span>
+<span class="lineNum">     492 </span><span class="lineCov">       7795 :                 size_t dataVectorSize = o_tr.at(&quot;data&quot;).get_array().size();</span>
+<span class="lineNum">     493 </span><span class="lineCov">       7795 :                 size_t gasVectorSize = o_tr.at(&quot;gasLimit&quot;).get_array().size();</span>
+<span class="lineNum">     494 </span><span class="lineCov">       7795 :                 size_t valueVectorSize = o_tr.at(&quot;value&quot;).get_array().size();</span>
+<span class="lineNum">     495 </span>            : 
+<span class="lineNum">     496 </span><span class="lineCov">       3328 :                 for (size_t d = 0; d &lt; dataVectorSize; d++)</span>
+<span class="lineNum">     497 </span><span class="lineCov">       5359 :                         for (size_t g = 0; g &lt; gasVectorSize; g++)</span>
+<span class="lineNum">     498 </span><span class="lineCov">       5415 :                                 for (size_t v = 0; v &lt; valueVectorSize; v++)</span>
+<span class="lineNum">     499 </span>            :                                 {
+<span class="lineNum">     500 </span><span class="lineCov">      12670 :                                         json_spirit::mValue gas = o_tr.at(&quot;gasLimit&quot;).get_array().at(g);</span>
+<span class="lineNum">     501 </span><span class="lineCov">      12670 :                                         json_spirit::mValue value = o_tr.at(&quot;value&quot;).get_array().at(v);</span>
+<span class="lineNum">     502 </span><span class="lineCov">      12670 :                                         json_spirit::mValue data = o_tr.at(&quot;data&quot;).get_array().at(d);</span>
+<span class="lineNum">     503 </span>            : 
+<span class="lineNum">     504 </span><span class="lineCov">       3620 :                                         json_spirit::mObject o_tr_tmp = o_tr;</span>
+<span class="lineNum">     505 </span><span class="lineCov">       7240 :                                         o_tr_tmp[&quot;data&quot;] = data;</span>
+<span class="lineNum">     506 </span><span class="lineCov">       7240 :                                         o_tr_tmp[&quot;gasLimit&quot;] = gas;</span>
+<span class="lineNum">     507 </span><span class="lineCov">       7240 :                                         o_tr_tmp[&quot;value&quot;] = value;</span>
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span><span class="lineCov">       1810 :                                         importTransaction(o_tr_tmp, m_transaction);</span>
+<span class="lineNum">     510 </span>            : 
+<span class="lineNum">     511 </span><span class="lineCov">       3620 :                                         transactionToExecute execData(d, g, v, m_transaction);</span>
+<span class="lineNum">     512 </span><span class="lineCov">       1810 :                                         m_transactions.push_back(execData);</span>
+<span class="lineNum">     513 </span>            :                                 }
+<span class="lineNum">     514 </span>            :         }
+<a name="515"><span class="lineNum">     515 </span><span class="lineCov">       1559 : }</span></a>
+<span class="lineNum">     516 </span>            : 
+<span class="lineNum">     517 </span><span class="lineCov">       1814 : int ImportTest::compareStates(State const&amp; _stateExpect, State const&amp; _statePost, AccountMaskMap const _expectedStateOptions, WhenError _throw)</span>
+<span class="lineNum">     518 </span>            : {
+<span class="lineNum">     519 </span><span class="lineCov">       1814 :         bool wasError = false;</span>
+<span class="lineNum">     520 </span>            :         #define CHECK(a,b)                                              \
+<span class="lineNum">     521 </span>            :                 {                                                                       \
+<span class="lineNum">     522 </span>            :                         if (_throw == WhenError::Throw) \
+<span class="lineNum">     523 </span>            :                         {                                                               \
+<span class="lineNum">     524 </span>            :                                 BOOST_CHECK_MESSAGE(a, b);      \
+<span class="lineNum">     525 </span>            :                                 if (!a)                                         \
+<span class="lineNum">     526 </span>            :                                         return 1;                               \
+<span class="lineNum">     527 </span>            :                         }                                                               \
+<span class="lineNum">     528 </span>            :                         else                                                    \
+<span class="lineNum">     529 </span>            :                         {                                                               \
+<span class="lineNum">     530 </span>            :                                 BOOST_WARN_MESSAGE(a,b);        \
+<span class="lineNum">     531 </span>            :                                 if (!a)                                         \
+<span class="lineNum">     532 </span>            :                                         wasError = true;                \
+<span class="lineNum">     533 </span>            :                         }                                                               \
+<span class="lineNum">     534 </span>            :                 }
+<span class="lineNum">     535 </span>            : 
+<span class="lineNum">     536 </span><span class="lineCov">      12160 :         for (auto const&amp; a: _stateExpect.addresses())</span>
+<span class="lineNum">     537 </span>            :         {
+<span class="lineNum">     538 </span><span class="lineCov">       4904 :                 AccountMask addressOptions(true);</span>
+<span class="lineNum">     539 </span><span class="lineCov">       4904 :                 if(_expectedStateOptions.size())</span>
+<span class="lineNum">     540 </span>            :                 {
+<span class="lineNum">     541 </span>            :                         try
+<span class="lineNum">     542 </span>            :                         {
+<span class="lineNum">     543 </span><span class="lineNoCov">          0 :                                 addressOptions = _expectedStateOptions.at(a.first);</span>
+<span class="lineNum">     544 </span>            :                         }
+<span class="lineNum">     545 </span><span class="lineNoCov">          0 :                         catch(std::out_of_range const&amp;)</span>
+<span class="lineNum">     546 </span>            :                         {
+<span class="lineNum">     547 </span><span class="lineNoCov">          0 :                                 BOOST_ERROR(TestOutputHelper::testName() + &quot;expectedStateOptions map does not match expectedState in checkExpectedState!&quot;);</span>
+<span class="lineNum">     548 </span>            :                                 break;
+<span class="lineNum">     549 </span>            :                         }
+<span class="lineNum">     550 </span>            :                 }
+<span class="lineNum">     551 </span>            : 
+<span class="lineNum">     552 </span><span class="lineCov">       9808 :                 if (addressOptions.shouldExist())</span>
+<span class="lineNum">     553 </span>            :                 {
+<span class="lineNum">     554 </span><span class="lineCov">      63752 :                         CHECK(_statePost.addressInUse(a.first), TestOutputHelper::testName() +  &quot;Compare States: &quot; &lt;&lt; a.first &lt;&lt; &quot; missing expected address!&quot;);</span>
+<span class="lineNum">     555 </span>            :                 }
+<span class="lineNum">     556 </span>            :                 else
+<span class="lineNum">     557 </span>            :                 {
+<span class="lineNum">     558 </span><span class="lineNoCov">          0 :                         CHECK(!_statePost.addressInUse(a.first), TestOutputHelper::testName() +  &quot;Compare States: &quot; &lt;&lt; a.first &lt;&lt; &quot; address not expected to exist!&quot;);</span>
+<span class="lineNum">     559 </span>            :                 }
+<span class="lineNum">     560 </span>            : 
+<span class="lineNum">     561 </span><span class="lineCov">       4904 :                 if (_statePost.addressInUse(a.first))</span>
+<span class="lineNum">     562 </span>            :                 {
+<span class="lineNum">     563 </span>            : 
+<span class="lineNum">     564 </span><span class="lineCov">       4904 :                         if (addressOptions.hasBalance())</span>
+<span class="lineNum">     565 </span><span class="lineCov">     102984 :                                 CHECK((_stateExpect.balance(a.first) == _statePost.balance(a.first)),</span>
+<span class="lineNum">     566 </span>            :                                 TestOutputHelper::testName() + &quot;Check State: &quot; &lt;&lt; a.first &lt;&lt;  &quot;: incorrect balance &quot; &lt;&lt; _statePost.balance(a.first) &lt;&lt; &quot;, expected &quot; &lt;&lt; _stateExpect.balance(a.first));
+<span class="lineNum">     567 </span>            : 
+<span class="lineNum">     568 </span><span class="lineCov">       4904 :                         if (addressOptions.hasNonce())</span>
+<span class="lineNum">     569 </span><span class="lineCov">     102984 :                                 CHECK((_stateExpect.getNonce(a.first) == _statePost.getNonce(a.first)),</span>
+<span class="lineNum">     570 </span>            :                                 TestOutputHelper::testName() + &quot;Check State: &quot; &lt;&lt; a.first &lt;&lt;  &quot;: incorrect nonce &quot; &lt;&lt; _statePost.getNonce(a.first) &lt;&lt; &quot;, expected &quot; &lt;&lt; _stateExpect.getNonce(a.first));
+<span class="lineNum">     571 </span>            : 
+<span class="lineNum">     572 </span><span class="lineCov">       4904 :                         if (addressOptions.hasStorage())</span>
+<span class="lineNum">     573 </span>            :                         {
+<span class="lineNum">     574 </span><span class="lineCov">       9808 :                                 map&lt;h256, pair&lt;u256, u256&gt;&gt; stateStorage = _statePost.storage(a.first);</span>
+<span class="lineNum">     575 </span><span class="lineCov">      20415 :                                 for (auto const&amp; s: _stateExpect.storage(a.first))</span>
+<span class="lineNum">     576 </span><span class="lineCov">      27965 :                                         CHECK((stateStorage[s.first] == s.second),</span>
+<span class="lineNum">     577 </span>            :                                         TestOutputHelper::testName() + &quot;Check State: &quot; &lt;&lt; a.first &lt;&lt; &quot;: incorrect storage [&quot; &lt;&lt; toCompactHex(s.second.first, HexPrefix::Add) &lt;&lt; &quot;] = &quot; &lt;&lt; toCompactHex(stateStorage[s.first].second, HexPrefix::Add) &lt;&lt; &quot;, expected [&quot; &lt;&lt; toCompactHex(s.second.first, HexPrefix::Add) &lt;&lt; &quot;] = &quot; &lt;&lt; toCompactHex(s.second.second, HexPrefix::Add));
+<span class="lineNum">     578 </span>            : 
+<span class="lineNum">     579 </span>            :                                 //Check for unexpected storage values
+<span class="lineNum">     580 </span><span class="lineCov">       9808 :                                 map&lt;h256, pair&lt;u256, u256&gt;&gt; expectedStorage = _stateExpect.storage(a.first);</span>
+<span class="lineNum">     581 </span><span class="lineCov">      20415 :                                 for (auto const&amp; s: _statePost.storage(a.first))</span>
+<span class="lineNum">     582 </span><span class="lineCov">      27965 :                                         CHECK((expectedStorage[s.first] == s.second),</span>
+<span class="lineNum">     583 </span>            :                                         TestOutputHelper::testName() + &quot;Check State: &quot; &lt;&lt; a.first &lt;&lt;  &quot;: incorrect storage [&quot; &lt;&lt; toCompactHex(s.second.first, HexPrefix::Add) &lt;&lt; &quot;] = &quot; &lt;&lt; toCompactHex(s.second.second, HexPrefix::Add) &lt;&lt; &quot;, expected [&quot; &lt;&lt; toCompactHex(s.second.first, HexPrefix::Add) &lt;&lt; &quot;] = &quot; &lt;&lt; toCompactHex(expectedStorage[s.first].second, HexPrefix::Add));
+<span class="lineNum">     584 </span>            :                         }
+<span class="lineNum">     585 </span>            : 
+<span class="lineNum">     586 </span><span class="lineCov">       4904 :                         if (addressOptions.hasCode())</span>
+<span class="lineNum">     587 </span><span class="lineCov">     112792 :                                 CHECK((_stateExpect.code(a.first) == _statePost.code(a.first)),</span>
+<span class="lineNum">     588 </span>            :                                 TestOutputHelper::testName() + &quot;Check State: &quot; &lt;&lt; a.first &lt;&lt;  &quot;: incorrect code '&quot; &lt;&lt; toHex(_statePost.code(a.first)) &lt;&lt; &quot;', expected '&quot; &lt;&lt; toHex(_stateExpect.code(a.first)) &lt;&lt; &quot;'&quot;);
+<span class="lineNum">     589 </span>            :                 }
+<span class="lineNum">     590 </span>            :         }
+<span class="lineNum">     591 </span>            : 
+<span class="lineNum">     592 </span><span class="lineCov">       1814 :         return wasError;</span>
+<a name="593"><span class="lineNum">     593 </span>            : }</a>
+<span class="lineNum">     594 </span>            : 
+<span class="lineNum">     595 </span><span class="lineNoCov">          0 : void parseJsonStrValueIntoVector(json_spirit::mValue const&amp; _json, vector&lt;string&gt;&amp; _out)</span>
+<span class="lineNum">     596 </span>            : {
+<span class="lineNum">     597 </span><span class="lineNoCov">          0 :         if (_json.type() == json_spirit::array_type)</span>
+<span class="lineNum">     598 </span>            :         {
+<span class="lineNum">     599 </span><span class="lineNoCov">          0 :                 for (auto const&amp; val: _json.get_array())</span>
+<span class="lineNum">     600 </span><span class="lineNoCov">          0 :                         _out.push_back(val.get_str());</span>
+<span class="lineNum">     601 </span>            :         }
+<span class="lineNum">     602 </span>            :         else
+<span class="lineNum">     603 </span><span class="lineNoCov">          0 :                 _out.push_back(_json.get_str());</span>
+<a name="604"><span class="lineNum">     604 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     605 </span>            : 
+<span class="lineNum">     606 </span><span class="lineCov">      27120 : void parseJsonIntValueIntoVector(json_spirit::mValue const&amp; _json, vector&lt;int&gt;&amp; _out)</span>
+<span class="lineNum">     607 </span>            : {
+<span class="lineNum">     608 </span><span class="lineCov">      27120 :         if (_json.type() == json_spirit::array_type)</span>
+<span class="lineNum">     609 </span>            :         {
+<span class="lineNum">     610 </span><span class="lineNoCov">          0 :                 for (auto const&amp; val: _json.get_array())</span>
+<span class="lineNum">     611 </span><span class="lineNoCov">          0 :                         _out.push_back(val.get_int());</span>
+<span class="lineNum">     612 </span>            :         }
+<span class="lineNum">     613 </span>            :         else
+<span class="lineNum">     614 </span><span class="lineCov">      54240 :                 _out.push_back(_json.get_int());</span>
+<span class="lineNum">     615 </span><span class="lineCov">      27120 : }</span>
+<a name="616"><span class="lineNum">     616 </span>            : </a>
+<span class="lineNum">     617 </span>            : template&lt;class T&gt;
+<span class="lineNum">     618 </span><span class="lineCov">     155030 : bool inArray(vector&lt;T&gt; const&amp; _array, const T _val)</span>
+<span class="lineNum">     619 </span>            : {
+<span class="lineNum">     620 </span><span class="lineCov">     671402 :         for (size_t i = 0; i  &lt; _array.size(); i++)</span>
+<span class="lineNum">     621 </span><span class="lineCov">     448824 :                 if (_array[i] == _val)</span>
+<span class="lineNum">     622 </span>            :                         return true;
+<span class="lineNum">     623 </span>            :         return false;
+<a name="624"><span class="lineNum">     624 </span>            : }</a>
+<span class="lineNum">     625 </span>            : 
+<span class="lineNum">     626 </span><span class="lineCov">       9040 : void ImportTest::checkGeneralTestSection(json_spirit::mObject const&amp; _expects, vector&lt;size_t&gt;&amp; _errorTransactions, string const&amp; _network) const</span>
+<span class="lineNum">     627 </span>            : {
+<span class="lineNum">     628 </span><span class="lineCov">       9040 :         checkGeneralTestSectionSearch(_expects, _errorTransactions, _network, NULL);</span>
+<a name="629"><span class="lineNum">     629 </span><span class="lineCov">       9040 : }</span></a>
+<span class="lineNum">     630 </span>            : 
+<span class="lineNum">     631 </span><span class="lineCov">       9040 : void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const&amp; _expects, vector&lt;size_t&gt;&amp; _errorTransactions, string const&amp; _network, TrExpectSection* _search) const</span>
+<span class="lineNum">     632 </span>            : {
+<span class="lineNum">     633 </span><span class="lineCov">      18080 :         vector&lt;int&gt; d;</span>
+<span class="lineNum">     634 </span><span class="lineCov">      18080 :         vector&lt;int&gt; g;</span>
+<span class="lineNum">     635 </span><span class="lineCov">      18080 :         vector&lt;int&gt; v;</span>
+<span class="lineNum">     636 </span><span class="lineCov">      18080 :         vector&lt;string&gt; network;</span>
+<span class="lineNum">     637 </span><span class="lineCov">       9040 :         if (_network.empty())</span>
+<span class="lineNum">     638 </span><span class="lineNoCov">          0 :                 parseJsonStrValueIntoVector(_expects.at(&quot;network&quot;), network);</span>
+<span class="lineNum">     639 </span>            :         else
+<span class="lineNum">     640 </span><span class="lineCov">       9040 :                 network.push_back(_network);</span>
+<span class="lineNum">     641 </span>            : 
+<span class="lineNum">     642 </span><span class="lineCov">      81360 :         BOOST_CHECK_MESSAGE(network.size() &gt; 0, TestOutputHelper::testName() + &quot;Network array not set!&quot;);</span>
+<span class="lineNum">     643 </span>            :         vector&lt;string&gt; allowednetworks = {netIdToString(eth::Network::FrontierTest), netIdToString(eth::Network::HomesteadTest),
+<span class="lineNum">     644 </span><span class="lineCov">      99440 :                                    netIdToString(eth::Network::EIP150Test), netIdToString(eth::Network::EIP158Test), netIdToString(eth::Network::MetropolisTest), &quot;ALL&quot;};</span>
+<span class="lineNum">     645 </span><span class="lineCov">      36160 :         for(size_t i=0; i&lt;network.size(); i++)</span>
+<span class="lineNum">     646 </span><span class="lineCov">     117520 :                 BOOST_CHECK_MESSAGE(inArray(allowednetworks, network.at(i)), TestOutputHelper::testName() + &quot;Specified Network not found: &quot; + network.at(i));</span>
+<span class="lineNum">     647 </span>            : 
+<span class="lineNum">     648 </span><span class="lineCov">      45200 :         if (_expects.count(&quot;indexes&quot;))</span>
+<span class="lineNum">     649 </span>            :         {
+<span class="lineNum">     650 </span><span class="lineCov">      36160 :                 json_spirit::mObject const&amp; indexes = _expects.at(&quot;indexes&quot;).get_obj();</span>
+<span class="lineNum">     651 </span><span class="lineCov">      36160 :                 parseJsonIntValueIntoVector(indexes.at(&quot;data&quot;), d);</span>
+<span class="lineNum">     652 </span><span class="lineCov">      36160 :                 parseJsonIntValueIntoVector(indexes.at(&quot;gas&quot;), g);</span>
+<span class="lineNum">     653 </span><span class="lineCov">      36160 :                 parseJsonIntValueIntoVector(indexes.at(&quot;value&quot;), v);</span>
+<span class="lineNum">     654 </span><span class="lineCov">      99440 :                 BOOST_CHECK_MESSAGE(d.size() &gt; 0 &amp;&amp; g.size() &gt; 0 &amp;&amp; v.size() &gt; 0, TestOutputHelper::testName() + &quot;Indexes arrays not set!&quot;);</span>
+<span class="lineNum">     655 </span>            :         }
+<span class="lineNum">     656 </span>            :         else
+<span class="lineNum">     657 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(TestOutputHelper::testName() + &quot;indexes section not set!&quot;);</span>
+<span class="lineNum">     658 </span>            : 
+<span class="lineNum">     659 </span><span class="lineCov">       9040 :         bool foundResults = false;</span>
+<span class="lineNum">     660 </span><span class="lineCov">      18080 :         std::vector&lt;transactionToExecute&gt; lookTransactions;</span>
+<span class="lineNum">     661 </span><span class="lineCov">       9040 :         if (_search)</span>
+<span class="lineNum">     662 </span><span class="lineNoCov">          0 :                 lookTransactions.push_back(_search-&gt;first);</span>
+<span class="lineNum">     663 </span>            :         else
+<span class="lineNum">     664 </span><span class="lineCov">       9040 :                 lookTransactions = m_transactions;</span>
+<span class="lineNum">     665 </span><span class="lineCov">     291980 :         for(size_t i = 0; i &lt; lookTransactions.size(); i++)</span>
+<span class="lineNum">     666 </span>            :         {
+<span class="lineNum">     667 </span><span class="lineCov">     428930 :                 transactionToExecute t = lookTransactions[i];</span>
+<span class="lineNum">     668 </span><span class="lineCov">     405140 :                 if (inArray(network, netIdToString(t.netId)) || network[0] == &quot;ALL&quot;)</span>
+<span class="lineNum">     669 </span><span class="lineCov">      84152 :                 if ((inArray(d, t.dataInd) || d[0] == -1) &amp;&amp; (inArray(g, t.gasInd) || g[0] == -1) &amp;&amp; (inArray(v, t.valInd) || v[0] == -1))</span>
+<span class="lineNum">     670 </span>            :                 {
+<span class="lineNum">     671 </span><span class="lineCov">      90400 :                         string trInfo = netIdToString(t.netId) + &quot; data: &quot; + toString(t.dataInd) + &quot; gas: &quot; + toString(t.gasInd) + &quot; val: &quot; + toString(t.valInd);</span>
+<span class="lineNum">     672 </span><span class="lineCov">      45200 :                         if (_expects.count(&quot;result&quot;))</span>
+<span class="lineNum">     673 </span>            :                         {
+<span class="lineNum">     674 </span><span class="lineNoCov">          0 :                                 Options const&amp; opt = Options::get();</span>
+<span class="lineNum">     675 </span>            :                                 //filter transactions if a specific index set in options
+<span class="lineNum">     676 </span><span class="lineNoCov">          0 :                                 if ((opt.trDataIndex != -1 &amp;&amp; opt.trDataIndex != t.dataInd) ||</span>
+<span class="lineNum">     677 </span><span class="lineNoCov">          0 :                                         (opt.trGasIndex != -1 &amp;&amp; opt.trGasIndex != t.gasInd) ||</span>
+<span class="lineNum">     678 </span><span class="lineNoCov">          0 :                                         (opt.trValueIndex != -1 &amp;&amp; opt.trValueIndex != t.valInd))</span>
+<span class="lineNum">     679 </span><span class="lineNoCov">          0 :                                         continue;</span>
+<span class="lineNum">     680 </span>            : 
+<span class="lineNum">     681 </span><span class="lineNoCov">          0 :                                 State postState = t.postState;</span>
+<span class="lineNum">     682 </span><span class="lineNoCov">          0 :                                 eth::AccountMaskMap stateMap;</span>
+<span class="lineNum">     683 </span><span class="lineNoCov">          0 :                                 State expectState(0, OverlayDB(), eth::BaseState::Empty);</span>
+<span class="lineNum">     684 </span><span class="lineNoCov">          0 :                                 importState(_expects.at(&quot;result&quot;).get_obj(), expectState, stateMap);</span>
+<span class="lineNum">     685 </span><span class="lineNoCov">          0 :                                 if (_search)</span>
+<span class="lineNum">     686 </span>            :                                 {
+<span class="lineNum">     687 </span><span class="lineNoCov">          0 :                                         _search-&gt;second.first = expectState;</span>
+<span class="lineNum">     688 </span><span class="lineNoCov">          0 :                                         _search-&gt;second.second = stateMap;</span>
+<span class="lineNum">     689 </span><span class="lineNoCov">          0 :                                         return;</span>
+<span class="lineNum">     690 </span>            :                                 }
+<span class="lineNum">     691 </span><span class="lineNoCov">          0 :                                 int errcode = compareStates(expectState, postState, stateMap, Options::get().checkstate ? WhenError::Throw : WhenError::DontThrow);</span>
+<span class="lineNum">     692 </span><span class="lineNoCov">          0 :                                 if (errcode &gt; 0)</span>
+<span class="lineNum">     693 </span>            :                                 {
+<span class="lineNum">     694 </span><span class="lineNoCov">          0 :                                         cerr &lt;&lt; trInfo &lt;&lt; std::endl;</span>
+<span class="lineNum">     695 </span><span class="lineNoCov">          0 :                                         _errorTransactions.push_back(i);</span>
+<span class="lineNum">     696 </span>            :                                 }
+<span class="lineNum">     697 </span>            :                         }
+<span class="lineNum">     698 </span><span class="lineCov">      45200 :                         else if (_expects.count(&quot;hash&quot;))</span>
+<span class="lineNum">     699 </span><span class="lineCov">     144640 :                                 BOOST_CHECK_MESSAGE(_expects.at(&quot;hash&quot;).get_str() == toHex(t.postState.rootHash().asBytes()), TestOutputHelper::testName() + &quot;Expected another postState hash! &quot; + trInfo);</span>
+<span class="lineNum">     700 </span>            :                         else
+<span class="lineNum">     701 </span><span class="lineNoCov">          0 :                                 BOOST_ERROR(TestOutputHelper::testName() + &quot;Expect section or postState missing some fields!&quot;);</span>
+<span class="lineNum">     702 </span>            : 
+<span class="lineNum">     703 </span><span class="lineCov">       9040 :                         foundResults = true;</span>
+<span class="lineNum">     704 </span>            : 
+<span class="lineNum">     705 </span>            :                         //if a single transaction check then stop once found
+<span class="lineNum">     706 </span><span class="lineCov">      18080 :                         if (network[0] != &quot;ALL&quot; &amp;&amp; d[0] != -1 &amp;&amp; g[0] != -1 &amp;&amp; v[0] != -1)</span>
+<span class="lineNum">     707 </span><span class="lineCov">      45200 :                         if (network.size() == 1 &amp;&amp; d.size() == 1 &amp;&amp; g.size() == 1 &amp;&amp; v.size() == 1)</span>
+<span class="lineNum">     708 </span>            :                                 break;
+<span class="lineNum">     709 </span>            :                 }
+<span class="lineNum">     710 </span>            :         }
+<span class="lineNum">     711 </span><span class="lineCov">       9040 :         if (!_search) //search for a single transaction in one of the expect sections then don't need this output.</span>
+<span class="lineNum">     712 </span><span class="lineCov">      72320 :                 BOOST_CHECK_MESSAGE(foundResults, TestOutputHelper::testName() + &quot;Expect results was not found in test execution!&quot;);</span>
+<a name="713"><span class="lineNum">     713 </span>            : }</a>
+<span class="lineNum">     714 </span>            : 
+<span class="lineNum">     715 </span><span class="lineNoCov">          0 : int ImportTest::exportTest(bytes const&amp; _output)</span>
+<span class="lineNum">     716 </span>            : {
+<span class="lineNum">     717 </span><span class="lineNoCov">          0 :         int err = 0;</span>
+<span class="lineNum">     718 </span><span class="lineNoCov">          0 :         if (m_testType == testType::GeneralStateTest)</span>
+<span class="lineNum">     719 </span>            :         {
+<span class="lineNum">     720 </span><span class="lineNoCov">          0 :                 vector&lt;size_t&gt; stateIndexesToPrint;</span>
+<span class="lineNum">     721 </span><span class="lineNoCov">          0 :                 if (m_testObject.count(&quot;expect&quot;) &gt; 0)</span>
+<span class="lineNum">     722 </span>            :                 {
+<span class="lineNum">     723 </span><span class="lineNoCov">          0 :                         for (auto const&amp; exp: m_testObject[&quot;expect&quot;].get_array())</span>
+<span class="lineNum">     724 </span><span class="lineNoCov">          0 :                                 checkGeneralTestSection(exp.get_obj(), stateIndexesToPrint);</span>
+<span class="lineNum">     725 </span><span class="lineNoCov">          0 :                         m_testObject.erase(m_testObject.find(&quot;expect&quot;));</span>
+<span class="lineNum">     726 </span>            :                 }
+<span class="lineNum">     727 </span>            : 
+<span class="lineNum">     728 </span><span class="lineNoCov">          0 :                 size_t k = 0;</span>
+<span class="lineNum">     729 </span><span class="lineNoCov">          0 :                 std::map&lt;string, json_spirit::mArray&gt; postState;</span>
+<span class="lineNum">     730 </span><span class="lineNoCov">          0 :                 for(size_t i = 0; i &lt; m_transactions.size(); i++)</span>
+<span class="lineNum">     731 </span>            :                 {
+<span class="lineNum">     732 </span><span class="lineNoCov">          0 :                         json_spirit::mObject obj;</span>
+<span class="lineNum">     733 </span><span class="lineNoCov">          0 :                         json_spirit::mObject obj2;</span>
+<span class="lineNum">     734 </span><span class="lineNoCov">          0 :                         obj[&quot;data&quot;] = m_transactions[i].dataInd;</span>
+<span class="lineNum">     735 </span><span class="lineNoCov">          0 :                         obj[&quot;gas&quot;] = m_transactions[i].gasInd;</span>
+<span class="lineNum">     736 </span><span class="lineNoCov">          0 :                         obj[&quot;value&quot;] = m_transactions[i].valInd;</span>
+<span class="lineNum">     737 </span><span class="lineNoCov">          0 :                         obj2[&quot;indexes&quot;] = obj;</span>
+<span class="lineNum">     738 </span><span class="lineNoCov">          0 :                         obj2[&quot;hash&quot;] = toHex(m_transactions[i].postState.rootHash().asBytes());</span>
+<span class="lineNum">     739 </span><span class="lineNoCov">          0 :                         if (stateIndexesToPrint.size())</span>
+<span class="lineNum">     740 </span><span class="lineNoCov">          0 :                         if (i == stateIndexesToPrint[k] &amp;&amp; Options::get().checkstate)</span>
+<span class="lineNum">     741 </span>            :                         {
+<span class="lineNum">     742 </span><span class="lineNoCov">          0 :                                 obj2[&quot;postState&quot;] = fillJsonWithState(m_transactions[i].postState);</span>
+<span class="lineNum">     743 </span><span class="lineNoCov">          0 :                                 k++;</span>
+<span class="lineNum">     744 </span>            :                         }
+<span class="lineNum">     745 </span><span class="lineNoCov">          0 :                         postState[netIdToString(m_transactions[i].netId)].push_back(obj2);</span>
+<span class="lineNum">     746 </span>            :                 }
+<span class="lineNum">     747 </span>            : 
+<span class="lineNum">     748 </span><span class="lineNoCov">          0 :                 json_spirit::mObject obj;</span>
+<span class="lineNum">     749 </span><span class="lineNoCov">          0 :                 for(std::map&lt;string, json_spirit::mArray&gt;::iterator it = postState.begin(); it != postState.end(); ++it)</span>
+<span class="lineNum">     750 </span><span class="lineNoCov">          0 :                         obj[it-&gt;first] = it-&gt;second;</span>
+<span class="lineNum">     751 </span>            : 
+<span class="lineNum">     752 </span><span class="lineNoCov">          0 :                 m_testObject[&quot;post&quot;] = obj;</span>
+<span class="lineNum">     753 </span>            :         }
+<span class="lineNum">     754 </span>            :         else
+<span class="lineNum">     755 </span>            :         {
+<span class="lineNum">     756 </span>            : 
+<span class="lineNum">     757 </span>            :                 // export output
+<span class="lineNum">     758 </span><span class="lineNoCov">          0 :                 m_testObject[&quot;out&quot;] = (_output.size() &gt; 4096 &amp;&amp; !Options::get().fulloutput) ? &quot;#&quot; + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);</span>
+<span class="lineNum">     759 </span>            : 
+<span class="lineNum">     760 </span>            :                 // compare expected output with post output
+<span class="lineNum">     761 </span><span class="lineNoCov">          0 :                 if (m_testObject.count(&quot;expectOut&quot;) &gt; 0)</span>
+<span class="lineNum">     762 </span>            :                 {
+<span class="lineNum">     763 </span><span class="lineNoCov">          0 :                         std::string warning = &quot;Check State: Error! Unexpected output: &quot; + m_testObject[&quot;out&quot;].get_str() + &quot; Expected: &quot; + m_testObject[&quot;expectOut&quot;].get_str();</span>
+<span class="lineNum">     764 </span><span class="lineNoCov">          0 :                         if (Options::get().checkstate)</span>
+<span class="lineNum">     765 </span>            :                         {
+<span class="lineNum">     766 </span><span class="lineNoCov">          0 :                                 bool statement = (m_testObject[&quot;out&quot;].get_str() == m_testObject[&quot;expectOut&quot;].get_str());</span>
+<span class="lineNum">     767 </span><span class="lineNoCov">          0 :                                 BOOST_CHECK_MESSAGE(statement, warning);</span>
+<span class="lineNum">     768 </span><span class="lineNoCov">          0 :                                 if (!statement)</span>
+<span class="lineNum">     769 </span><span class="lineNoCov">          0 :                                         err = 1;</span>
+<span class="lineNum">     770 </span>            :                         }
+<span class="lineNum">     771 </span>            :                         else
+<span class="lineNum">     772 </span><span class="lineNoCov">          0 :                                 BOOST_WARN_MESSAGE(m_testObject[&quot;out&quot;].get_str() == m_testObject[&quot;expectOut&quot;].get_str(), warning);</span>
+<span class="lineNum">     773 </span>            : 
+<span class="lineNum">     774 </span><span class="lineNoCov">          0 :                         m_testObject.erase(m_testObject.find(&quot;expectOut&quot;));</span>
+<span class="lineNum">     775 </span>            :                 }
+<span class="lineNum">     776 </span>            : 
+<span class="lineNum">     777 </span>            :                 // export logs
+<span class="lineNum">     778 </span><span class="lineNoCov">          0 :                 m_testObject[&quot;logs&quot;] = exportLog(m_logs);</span>
+<span class="lineNum">     779 </span>            : 
+<span class="lineNum">     780 </span>            :                 // compare expected state with post state
+<span class="lineNum">     781 </span><span class="lineNoCov">          0 :                 if (m_testObject.count(&quot;expect&quot;) &gt; 0)</span>
+<span class="lineNum">     782 </span>            :                 {
+<span class="lineNum">     783 </span><span class="lineNoCov">          0 :                         eth::AccountMaskMap stateMap;</span>
+<span class="lineNum">     784 </span><span class="lineNoCov">          0 :                         State expectState(0, OverlayDB(), eth::BaseState::Empty);</span>
+<span class="lineNum">     785 </span><span class="lineNoCov">          0 :                         importState(m_testObject[&quot;expect&quot;].get_obj(), expectState, stateMap);</span>
+<span class="lineNum">     786 </span><span class="lineNoCov">          0 :                         compareStates(expectState, m_statePost, stateMap, Options::get().checkstate ? WhenError::Throw : WhenError::DontThrow);</span>
+<span class="lineNum">     787 </span><span class="lineNoCov">          0 :                         m_testObject.erase(m_testObject.find(&quot;expect&quot;));</span>
+<span class="lineNum">     788 </span>            :                 }
+<span class="lineNum">     789 </span>            : 
+<span class="lineNum">     790 </span>            :                 // export post state
+<span class="lineNum">     791 </span><span class="lineNoCov">          0 :                 m_testObject[&quot;post&quot;] = fillJsonWithState(m_statePost);</span>
+<span class="lineNum">     792 </span><span class="lineNoCov">          0 :                 m_testObject[&quot;postStateRoot&quot;] = toHex(m_statePost.rootHash().asBytes());</span>
+<span class="lineNum">     793 </span>            :         }
+<span class="lineNum">     794 </span>            : 
+<span class="lineNum">     795 </span>            :         // export pre state
+<span class="lineNum">     796 </span><span class="lineNoCov">          0 :         m_testObject[&quot;pre&quot;] = fillJsonWithState(m_statePre);</span>
+<span class="lineNum">     797 </span><span class="lineNoCov">          0 :         m_testObject[&quot;env&quot;] = makeAllFieldsHex(m_testObject[&quot;env&quot;].get_obj());</span>
+<span class="lineNum">     798 </span><span class="lineNoCov">          0 :         m_testObject[&quot;transaction&quot;] = makeAllFieldsHex(m_testObject[&quot;transaction&quot;].get_obj());</span>
+<span class="lineNum">     799 </span><span class="lineNoCov">          0 :         return err;</span>
+<a name="800"><span class="lineNum">     800 </span>            : }</a>
+<span class="lineNum">     801 </span>            : 
+<span class="lineNum">     802 </span><span class="lineNoCov">          0 : json_spirit::mObject fillJsonWithTransaction(Transaction const&amp; _txn)</span>
+<span class="lineNum">     803 </span>            : {
+<span class="lineNum">     804 </span><span class="lineNoCov">          0 :         json_spirit::mObject txObject;</span>
+<span class="lineNum">     805 </span><span class="lineNoCov">          0 :         txObject[&quot;nonce&quot;] = toCompactHex(_txn.nonce(), HexPrefix::Add, 1);</span>
+<span class="lineNum">     806 </span><span class="lineNoCov">          0 :         txObject[&quot;data&quot;] = toHex(_txn.data(), 2, HexPrefix::Add);</span>
+<span class="lineNum">     807 </span><span class="lineNoCov">          0 :         txObject[&quot;gasLimit&quot;] = toCompactHex(_txn.gas(), HexPrefix::Add, 1);</span>
+<span class="lineNum">     808 </span><span class="lineNoCov">          0 :         txObject[&quot;gasPrice&quot;] = toCompactHex(_txn.gasPrice(), HexPrefix::Add, 1);</span>
+<span class="lineNum">     809 </span><span class="lineNoCov">          0 :         txObject[&quot;r&quot;] = toCompactHex(_txn.signature().r, HexPrefix::Add, 1);</span>
+<span class="lineNum">     810 </span><span class="lineNoCov">          0 :         txObject[&quot;s&quot;] = toCompactHex(_txn.signature().s, HexPrefix::Add, 1);</span>
+<span class="lineNum">     811 </span><span class="lineNoCov">          0 :         txObject[&quot;v&quot;] = toCompactHex(_txn.signature().v + 27, HexPrefix::Add, 1);</span>
+<span class="lineNum">     812 </span><span class="lineNoCov">          0 :         txObject[&quot;to&quot;] = _txn.isCreation() ? &quot;&quot; : toString(_txn.receiveAddress());</span>
+<span class="lineNum">     813 </span><span class="lineNoCov">          0 :         txObject[&quot;value&quot;] = toCompactHex(_txn.value(), HexPrefix::Add, 1);</span>
+<span class="lineNum">     814 </span><span class="lineNoCov">          0 :         return txObject;</span>
+<a name="815"><span class="lineNum">     815 </span>            : }</a>
+<span class="lineNum">     816 </span>            : 
+<span class="lineNum">     817 </span><span class="lineCov">       6444 : json_spirit::mObject fillJsonWithState(State const&amp; _state)</span>
+<span class="lineNum">     818 </span>            : {
+<span class="lineNum">     819 </span><span class="lineCov">      12888 :         AccountMaskMap emptyMap;</span>
+<span class="lineNum">     820 </span><span class="lineCov">      12888 :         return fillJsonWithState(_state, emptyMap);</span>
+<a name="821"><span class="lineNum">     821 </span>            : }</a>
+<span class="lineNum">     822 </span>            : 
+<span class="lineNum">     823 </span><span class="lineCov">       6444 : json_spirit::mObject fillJsonWithState(State const&amp; _state, eth::AccountMaskMap const&amp; _map)</span>
+<span class="lineNum">     824 </span>            : {
+<span class="lineNum">     825 </span><span class="lineCov">       6444 :         bool mapEmpty = (_map.size() == 0);</span>
+<span class="lineNum">     826 </span><span class="lineCov">       6444 :         json_spirit::mObject oState;</span>
+<span class="lineNum">     827 </span><span class="lineCov">      55577 :         for (auto const&amp; a: _state.addresses())</span>
+<span class="lineNum">     828 </span>            :         {
+<span class="lineNum">     829 </span><span class="lineCov">      59602 :                 if (_map.size() &amp;&amp; _map.find(a.first) == _map.end())</span>
+<span class="lineNum">     830 </span><span class="lineNoCov">          0 :                         continue;</span>
+<span class="lineNum">     831 </span>            : 
+<span class="lineNum">     832 </span><span class="lineCov">      59602 :                 json_spirit::mObject o;</span>
+<span class="lineNum">     833 </span><span class="lineCov">      29801 :                 if (mapEmpty || _map.at(a.first).hasBalance())</span>
+<span class="lineNum">     834 </span><span class="lineCov">     208607 :                         o[&quot;balance&quot;] = toCompactHex(_state.balance(a.first), HexPrefix::Add, 1);</span>
+<span class="lineNum">     835 </span><span class="lineCov">      29801 :                 if (mapEmpty || _map.at(a.first).hasNonce())</span>
+<span class="lineNum">     836 </span><span class="lineCov">     208607 :                         o[&quot;nonce&quot;] = toCompactHex(_state.getNonce(a.first), HexPrefix::Add, 1);</span>
+<span class="lineNum">     837 </span>            :                 {
+<span class="lineNum">     838 </span><span class="lineCov">      29801 :                         if (mapEmpty || _map.at(a.first).hasStorage())</span>
+<span class="lineNum">     839 </span>            :                         {
+<span class="lineNum">     840 </span><span class="lineCov">      59602 :                                 json_spirit::mObject store;</span>
+<span class="lineNum">     841 </span><span class="lineCov">     119592 :                                 for (auto const&amp; s: _state.storage(a.first))</span>
+<span class="lineNum">     842 </span><span class="lineCov">       2716 :                                         store[toCompactHex(s.second.first, HexPrefix::Add, 1)] = toCompactHex(s.second.second, HexPrefix::Add, 1);</span>
+<span class="lineNum">     843 </span><span class="lineCov">     149005 :                                 o[&quot;storage&quot;] = store;</span>
+<span class="lineNum">     844 </span>            :                         }
+<span class="lineNum">     845 </span>            :                 }
+<span class="lineNum">     846 </span>            : 
+<span class="lineNum">     847 </span><span class="lineCov">      29801 :                 if (mapEmpty || _map.at(a.first).hasCode())</span>
+<span class="lineNum">     848 </span><span class="lineCov">     208607 :                         o[&quot;code&quot;] = toHex(_state.code(a.first), 2, HexPrefix::Add);</span>
+<span class="lineNum">     849 </span><span class="lineCov">      89403 :                 oState[toString(a.first)] = o;</span>
+<span class="lineNum">     850 </span>            :         }
+<span class="lineNum">     851 </span><span class="lineCov">       6444 :         return oState;</span>
+<a name="852"><span class="lineNum">     852 </span>            : }</a>
+<span class="lineNum">     853 </span>            : 
+<span class="lineNum">     854 </span><span class="lineNoCov">          0 : json_spirit::mArray exportLog(eth::LogEntries _logs)</span>
+<span class="lineNum">     855 </span>            : {
+<span class="lineNum">     856 </span><span class="lineNoCov">          0 :         json_spirit::mArray ret;</span>
+<span class="lineNum">     857 </span><span class="lineNoCov">          0 :         if (_logs.size() == 0) return ret;</span>
+<span class="lineNum">     858 </span><span class="lineNoCov">          0 :         for (LogEntry const&amp; l: _logs)</span>
+<span class="lineNum">     859 </span>            :         {
+<span class="lineNum">     860 </span><span class="lineNoCov">          0 :                 json_spirit::mObject o;</span>
+<span class="lineNum">     861 </span><span class="lineNoCov">          0 :                 o[&quot;address&quot;] = toString(l.address);</span>
+<span class="lineNum">     862 </span><span class="lineNoCov">          0 :                 json_spirit::mArray topics;</span>
+<span class="lineNum">     863 </span><span class="lineNoCov">          0 :                 for (auto const&amp; t: l.topics)</span>
+<span class="lineNum">     864 </span><span class="lineNoCov">          0 :                         topics.push_back(toString(t));</span>
+<span class="lineNum">     865 </span><span class="lineNoCov">          0 :                 o[&quot;topics&quot;] = topics;</span>
+<span class="lineNum">     866 </span><span class="lineNoCov">          0 :                 o[&quot;data&quot;] = toHex(l.data, 2, HexPrefix::Add);</span>
+<span class="lineNum">     867 </span><span class="lineNoCov">          0 :                 o[&quot;bloom&quot;] = toString(l.bloom());</span>
+<span class="lineNum">     868 </span><span class="lineNoCov">          0 :                 ret.push_back(o);</span>
+<span class="lineNum">     869 </span>            :         }
+<span class="lineNum">     870 </span>            :         return ret;
+<a name="871"><span class="lineNum">     871 </span>            : }</a>
+<span class="lineNum">     872 </span>            : 
+<span class="lineNum">     873 </span><span class="lineCov">      56913 : u256 toInt(json_spirit::mValue const&amp; _v)</span>
+<span class="lineNum">     874 </span>            : {
+<span class="lineNum">     875 </span><span class="lineCov">      56913 :         switch (_v.type())</span>
+<span class="lineNum">     876 </span>            :         {
+<span class="lineNum">     877 </span><span class="lineCov">      56913 :         case json_spirit::str_type: return u256(_v.get_str());</span>
+<span class="lineNum">     878 </span><span class="lineNoCov">          0 :         case json_spirit::int_type: return (u256)_v.get_uint64();</span>
+<span class="lineNum">     879 </span><span class="lineNoCov">          0 :         case json_spirit::bool_type: return (u256)(uint64_t)_v.get_bool();</span>
+<span class="lineNum">     880 </span><span class="lineNoCov">          0 :         case json_spirit::real_type: return (u256)(uint64_t)_v.get_real();</span>
+<span class="lineNum">     881 </span><span class="lineNoCov">          0 :         default: cwarn &lt;&lt; &quot;Bad type for scalar: &quot; &lt;&lt; _v.type();</span>
+<span class="lineNum">     882 </span>            :         }
+<span class="lineNum">     883 </span><span class="lineNoCov">          0 :         return 0;</span>
+<a name="884"><span class="lineNum">     884 </span>            : }</a>
+<span class="lineNum">     885 </span>            : 
+<span class="lineNum">     886 </span><span class="lineNoCov">          0 : byte toByte(json_spirit::mValue const&amp; _v)</span>
+<span class="lineNum">     887 </span>            : {
+<span class="lineNum">     888 </span><span class="lineNoCov">          0 :         switch (_v.type())</span>
+<span class="lineNum">     889 </span>            :         {
+<span class="lineNum">     890 </span><span class="lineNoCov">          0 :         case json_spirit::str_type: return (byte)stoi(_v.get_str());</span>
+<span class="lineNum">     891 </span><span class="lineNoCov">          0 :         case json_spirit::int_type: return (byte)_v.get_uint64();</span>
+<span class="lineNum">     892 </span><span class="lineNoCov">          0 :         case json_spirit::bool_type: return (byte)_v.get_bool();</span>
+<span class="lineNum">     893 </span><span class="lineNoCov">          0 :         case json_spirit::real_type: return (byte)_v.get_real();</span>
+<span class="lineNum">     894 </span><span class="lineNoCov">          0 :         default: cwarn &lt;&lt; &quot;Bad type for scalar: &quot; &lt;&lt; _v.type();</span>
+<span class="lineNum">     895 </span>            :         }
+<span class="lineNum">     896 </span><span class="lineNoCov">          0 :         return 0;</span>
+<a name="897"><span class="lineNum">     897 </span>            : }</a>
+<span class="lineNum">     898 </span>            : 
+<span class="lineNum">     899 </span><span class="lineCov">      40229 : bytes importByteArray(std::string const&amp; _str)</span>
+<span class="lineNum">     900 </span>            : {
+<span class="lineNum">     901 </span><span class="lineCov">     201145 :         return fromHex(_str.substr(0, 2) == &quot;0x&quot; ? _str.substr(2) : _str, WhenError::Throw);</span>
+<a name="902"><span class="lineNum">     902 </span>            : }</a>
+<span class="lineNum">     903 </span>            : 
+<span class="lineNum">     904 </span><span class="lineCov">       4838 : bytes importData(json_spirit::mObject const&amp; _o)</span>
+<span class="lineNum">     905 </span>            : {
+<span class="lineNum">     906 </span><span class="lineCov">       4838 :         bytes data;</span>
+<span class="lineNum">     907 </span><span class="lineCov">      19352 :         if (_o.at(&quot;data&quot;).type() == json_spirit::str_type)</span>
+<span class="lineNum">     908 </span><span class="lineCov">      29028 :                 data = importByteArray(_o.at(&quot;data&quot;).get_str());</span>
+<span class="lineNum">     909 </span>            :         else
+<span class="lineNum">     910 </span><span class="lineNoCov">          0 :                 for (auto const&amp; j: _o.at(&quot;data&quot;).get_array())</span>
+<span class="lineNum">     911 </span><span class="lineNoCov">          0 :                         data.push_back(toByte(j));</span>
+<span class="lineNum">     912 </span><span class="lineCov">       4838 :         return data;</span>
+<a name="913"><span class="lineNum">     913 </span>            : }</a>
+<span class="lineNum">     914 </span>            : 
+<span class="lineNum">     915 </span><span class="lineCov">      40685 : string compileLLL(string const&amp; _code)</span>
+<span class="lineNum">     916 </span>            : {
+<span class="lineNum">     917 </span><span class="lineCov">      40685 :         if (_code == &quot;&quot;)</span>
+<span class="lineNum">     918 </span><span class="lineCov">         52 :                 return &quot;0x&quot;;</span>
+<span class="lineNum">     919 </span><span class="lineCov">     121977 :         if (_code.substr(0,2) == &quot;0x&quot; &amp;&amp; _code.size() &gt;= 2)</span>
+<span class="lineNum">     920 </span>            :                 return _code;
+<span class="lineNum">     921 </span>            : 
+<span class="lineNum">     922 </span>            : #if defined(_WIN32)
+<span class="lineNum">     923 </span>            :         BOOST_ERROR(&quot;LLL compilation only supported on posix systems.&quot;);
+<span class="lineNum">     924 </span>            :         return &quot;&quot;;
+<span class="lineNum">     925 </span>            : #else
+<span class="lineNum">     926 </span>            :         char input[1024];
+<span class="lineNum">     927 </span><span class="lineNoCov">          0 :         boost::filesystem::path path(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());</span>
+<span class="lineNum">     928 </span><span class="lineNoCov">          0 :         string cmd = string(&quot;lllc &quot;) + path.string();</span>
+<span class="lineNum">     929 </span><span class="lineNoCov">          0 :         writeFile(path.string(), _code);</span>
+<span class="lineNum">     930 </span>            : 
+<span class="lineNum">     931 </span><span class="lineNoCov">          0 :         FILE *fp = popen(cmd.c_str(), &quot;r&quot;);</span>
+<span class="lineNum">     932 </span><span class="lineNoCov">          0 :         if (fp == NULL)</span>
+<span class="lineNum">     933 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed to run lllc&quot;);</span>
+<span class="lineNum">     934 </span><span class="lineNoCov">          0 :         if (fgets(input, sizeof(input) - 1, fp) == NULL)</span>
+<span class="lineNum">     935 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Reading empty file for lllc&quot;);</span>
+<span class="lineNum">     936 </span><span class="lineNoCov">          0 :         pclose(fp);</span>
+<span class="lineNum">     937 </span>            : 
+<span class="lineNum">     938 </span><span class="lineNoCov">          0 :         boost::filesystem::remove(path);</span>
+<span class="lineNum">     939 </span><span class="lineNoCov">          0 :         string result(input);</span>
+<span class="lineNum">     940 </span><span class="lineNoCov">          0 :         result = &quot;0x&quot; + boost::trim_copy(result);</span>
+<span class="lineNum">     941 </span><span class="lineNoCov">          0 :         return result;</span>
+<span class="lineNum">     942 </span>            : #endif
+<a name="943"><span class="lineNum">     943 </span>            : }</a>
+<span class="lineNum">     944 </span>            : 
+<span class="lineNum">     945 </span><span class="lineCov">       1905 : bytes importCode(json_spirit::mObject&amp; _o)</span>
+<span class="lineNum">     946 </span>            : {
+<span class="lineNum">     947 </span><span class="lineCov">       1905 :         bytes code;</span>
+<span class="lineNum">     948 </span><span class="lineCov">       7620 :         if (_o[&quot;code&quot;].type() == json_spirit::str_type)</span>
+<span class="lineNum">     949 </span><span class="lineCov">       9525 :                 if (_o[&quot;code&quot;].get_str().find(&quot;0x&quot;) != 0)</span>
+<span class="lineNum">     950 </span><span class="lineNoCov">          0 :                         code = fromHex(compileLLL(_o[&quot;code&quot;].get_str()));</span>
+<span class="lineNum">     951 </span>            :                 else
+<span class="lineNum">     952 </span><span class="lineCov">      13335 :                         code = fromHex(_o[&quot;code&quot;].get_str().substr(2));</span>
+<span class="lineNum">     953 </span><span class="lineNoCov">          0 :         else if (_o[&quot;code&quot;].type() == json_spirit::array_type)</span>
+<span class="lineNum">     954 </span>            :         {
+<span class="lineNum">     955 </span><span class="lineNoCov">          0 :                 code.clear();</span>
+<span class="lineNum">     956 </span><span class="lineNoCov">          0 :                 for (auto const&amp; j: _o[&quot;code&quot;].get_array())</span>
+<span class="lineNum">     957 </span><span class="lineNoCov">          0 :                         code.push_back(toByte(j));</span>
+<span class="lineNum">     958 </span>            :         }
+<span class="lineNum">     959 </span><span class="lineCov">       1905 :         return code;</span>
+<a name="960"><span class="lineNum">     960 </span>            : }</a>
+<span class="lineNum">     961 </span>            : 
+<span class="lineNum">     962 </span><span class="lineCov">        531 : LogEntries importLog(json_spirit::mArray&amp; _a)</span>
+<span class="lineNum">     963 </span>            : {
+<span class="lineNum">     964 </span><span class="lineCov">        531 :         LogEntries logEntries;</span>
+<span class="lineNum">     965 </span><span class="lineCov">       2161 :         for (auto const&amp; l: _a)</span>
+<span class="lineNum">     966 </span>            :         {
+<span class="lineNum">     967 </span><span class="lineCov">         74 :                 json_spirit::mObject o = l.get_obj();</span>
+<span class="lineNum">     968 </span><span class="lineCov">        444 :                 BOOST_REQUIRE(o.count(&quot;address&quot;) &gt; 0);</span>
+<span class="lineNum">     969 </span><span class="lineCov">        444 :                 BOOST_REQUIRE(o.count(&quot;topics&quot;) &gt; 0);</span>
+<span class="lineNum">     970 </span><span class="lineCov">        444 :                 BOOST_REQUIRE(o.count(&quot;data&quot;) &gt; 0);</span>
+<span class="lineNum">     971 </span><span class="lineCov">        444 :                 BOOST_REQUIRE(o.count(&quot;bloom&quot;) &gt; 0);</span>
+<span class="lineNum">     972 </span><span class="lineCov">         74 :                 LogEntry log;</span>
+<span class="lineNum">     973 </span><span class="lineCov">        148 :                 log.address = Address(o[&quot;address&quot;].get_str());</span>
+<span class="lineNum">     974 </span><span class="lineCov">        336 :                 for (auto const&amp; t: o[&quot;topics&quot;].get_array())</span>
+<span class="lineNum">     975 </span><span class="lineCov">        154 :                         log.topics.push_back(h256(t.get_str()));</span>
+<span class="lineNum">     976 </span><span class="lineCov">        111 :                 log.data = importData(o);</span>
+<span class="lineNum">     977 </span><span class="lineCov">         37 :                 logEntries.push_back(log);</span>
+<span class="lineNum">     978 </span>            :         }
+<span class="lineNum">     979 </span><span class="lineCov">        531 :         return logEntries;</span>
+<a name="980"><span class="lineNum">     980 </span>            : }</a>
+<span class="lineNum">     981 </span>            : 
+<span class="lineNum">     982 </span><span class="lineCov">        531 : void checkOutput(bytesConstRef _output, json_spirit::mObject&amp; _o)</span>
+<span class="lineNum">     983 </span>            : {
+<span class="lineNum">     984 </span><span class="lineCov">        531 :         int j = 0;</span>
+<span class="lineNum">     985 </span><span class="lineCov">       3186 :         auto expectedOutput = _o[&quot;out&quot;].get_str();</span>
+<span class="lineNum">     986 </span>            : 
+<span class="lineNum">     987 </span><span class="lineCov">        531 :         if (expectedOutput.find(&quot;#&quot;) == 0)</span>
+<span class="lineNum">     988 </span><span class="lineNoCov">          0 :                 BOOST_CHECK(_output.size() == toInt(expectedOutput.substr(1)));</span>
+<span class="lineNum">     989 </span><span class="lineCov">       2124 :         else if (_o[&quot;out&quot;].type() == json_spirit::array_type)</span>
+<span class="lineNum">     990 </span><span class="lineNoCov">          0 :                 for (auto const&amp; d: _o[&quot;out&quot;].get_array())</span>
+<span class="lineNum">     991 </span>            :                 {
+<span class="lineNum">     992 </span><span class="lineNoCov">          0 :                         BOOST_CHECK_MESSAGE(_output[j] == toInt(d), &quot;Output byte [&quot; &lt;&lt; j &lt;&lt; &quot;] different!&quot;);</span>
+<span class="lineNum">     993 </span><span class="lineNoCov">          0 :                         ++j;</span>
+<span class="lineNum">     994 </span>            :                 }
+<span class="lineNum">     995 </span><span class="lineCov">        531 :         else if (expectedOutput.find(&quot;0x&quot;) == 0)</span>
+<span class="lineNum">     996 </span><span class="lineCov">       5310 :                 BOOST_CHECK(_output.contentsEqual(fromHex(expectedOutput.substr(2))));</span>
+<span class="lineNum">     997 </span>            :         else
+<span class="lineNum">     998 </span><span class="lineNoCov">          0 :                 BOOST_CHECK(_output.contentsEqual(fromHex(expectedOutput)));</span>
+<a name="999"><span class="lineNum">     999 </span><span class="lineCov">        531 : }</span></a>
+<span class="lineNum">    1000 </span>            : 
+<span class="lineNum">    1001 </span><span class="lineNoCov">          0 : void checkStorage(map&lt;u256, u256&gt; _expectedStore, map&lt;u256, u256&gt; _resultStore, Address _expectedAddr)</span>
+<span class="lineNum">    1002 </span>            : {
+<span class="lineNum">    1003 </span><span class="lineNoCov">          0 :         _expectedAddr = _expectedAddr; //unsed parametr when macro</span>
+<span class="lineNum">    1004 </span><span class="lineNoCov">          0 :         for (auto&amp;&amp; expectedStorePair : _expectedStore)</span>
+<span class="lineNum">    1005 </span>            :         {
+<span class="lineNum">    1006 </span><span class="lineNoCov">          0 :                 auto&amp; expectedStoreKey = expectedStorePair.first;</span>
+<span class="lineNum">    1007 </span><span class="lineNoCov">          0 :                 auto resultStoreIt = _resultStore.find(expectedStoreKey);</span>
+<span class="lineNum">    1008 </span><span class="lineNoCov">          0 :                 if (resultStoreIt == _resultStore.end())</span>
+<span class="lineNum">    1009 </span><span class="lineNoCov">          0 :                         BOOST_ERROR(_expectedAddr &lt;&lt; &quot;: missing store key &quot; &lt;&lt; expectedStoreKey);</span>
+<span class="lineNum">    1010 </span>            :                 else
+<span class="lineNum">    1011 </span>            :                 {
+<span class="lineNum">    1012 </span><span class="lineNoCov">          0 :                         auto&amp; expectedStoreValue = expectedStorePair.second;</span>
+<span class="lineNum">    1013 </span><span class="lineNoCov">          0 :                         auto&amp; resultStoreValue = resultStoreIt-&gt;second;</span>
+<span class="lineNum">    1014 </span><span class="lineNoCov">          0 :                         BOOST_CHECK_MESSAGE(expectedStoreValue == resultStoreValue, _expectedAddr &lt;&lt; &quot;: store[&quot; &lt;&lt; expectedStoreKey &lt;&lt; &quot;] = &quot; &lt;&lt; resultStoreValue &lt;&lt; &quot;, expected &quot; &lt;&lt; expectedStoreValue);</span>
+<span class="lineNum">    1015 </span>            :                 }
+<span class="lineNum">    1016 </span>            :         }
+<span class="lineNum">    1017 </span><span class="lineNoCov">          0 :         BOOST_CHECK_EQUAL(_resultStore.size(), _expectedStore.size());</span>
+<span class="lineNum">    1018 </span><span class="lineNoCov">          0 :         for (auto&amp;&amp; resultStorePair: _resultStore)</span>
+<span class="lineNum">    1019 </span>            :         {
+<span class="lineNum">    1020 </span><span class="lineNoCov">          0 :                 if (!_expectedStore.count(resultStorePair.first))</span>
+<span class="lineNum">    1021 </span><span class="lineNoCov">          0 :                         BOOST_ERROR(_expectedAddr &lt;&lt; &quot;: unexpected store key &quot; &lt;&lt; resultStorePair.first);</span>
+<span class="lineNum">    1022 </span>            :         }
+<a name="1023"><span class="lineNum">    1023 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">    1024 </span>            : 
+<span class="lineNum">    1025 </span><span class="lineCov">        531 : void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)</span>
+<span class="lineNum">    1026 </span>            : {
+<span class="lineNum">    1027 </span><span class="lineCov">       3717 :         BOOST_REQUIRE_EQUAL(_resultLogs.size(), _expectedLogs.size());</span>
+<span class="lineNum">    1028 </span>            : 
+<span class="lineNum">    1029 </span><span class="lineCov">       1136 :         for (size_t i = 0; i &lt; _resultLogs.size(); ++i)</span>
+<span class="lineNum">    1030 </span>            :         {
+<span class="lineNum">    1031 </span><span class="lineCov">        259 :                 BOOST_CHECK_EQUAL(_resultLogs[i].address, _expectedLogs[i].address);</span>
+<span class="lineNum">    1032 </span><span class="lineCov">        259 :                 BOOST_CHECK_EQUAL(_resultLogs[i].topics, _expectedLogs[i].topics);</span>
+<span class="lineNum">    1033 </span><span class="lineCov">        370 :                 BOOST_CHECK(_resultLogs[i].data == _expectedLogs[i].data);</span>
+<span class="lineNum">    1034 </span>            :         }
+<a name="1035"><span class="lineNum">    1035 </span><span class="lineCov">        531 : }</span></a>
+<span class="lineNum">    1036 </span>            : 
+<span class="lineNum">    1037 </span><span class="lineCov">        531 : void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates)</span>
+<span class="lineNum">    1038 </span>            : {
+<span class="lineNum">    1039 </span><span class="lineCov">       3717 :         BOOST_REQUIRE_EQUAL(_resultCallCreates.size(), _expectedCallCreates.size());</span>
+<span class="lineNum">    1040 </span>            : 
+<span class="lineNum">    1041 </span><span class="lineCov">       1100 :         for (size_t i = 0; i &lt; _resultCallCreates.size(); ++i)</span>
+<span class="lineNum">    1042 </span>            :         {
+<span class="lineNum">    1043 </span><span class="lineCov">        190 :                 BOOST_CHECK(_resultCallCreates[i].data() == _expectedCallCreates[i].data());</span>
+<span class="lineNum">    1044 </span><span class="lineCov">        247 :                 BOOST_CHECK(_resultCallCreates[i].receiveAddress() == _expectedCallCreates[i].receiveAddress());</span>
+<span class="lineNum">    1045 </span><span class="lineCov">        247 :                 BOOST_CHECK(_resultCallCreates[i].gas() == _expectedCallCreates[i].gas());</span>
+<span class="lineNum">    1046 </span><span class="lineCov">        247 :                 BOOST_CHECK(_resultCallCreates[i].value() == _expectedCallCreates[i].value());</span>
+<span class="lineNum">    1047 </span>            :         }
+<a name="1048"><span class="lineNum">    1048 </span><span class="lineCov">        531 : }</span></a>
+<span class="lineNum">    1049 </span>            : 
+<span class="lineNum">    1050 </span><span class="lineCov">          3 : void userDefinedTest(std::function&lt;void(json_spirit::mValue&amp;, bool)&gt; doTests)</span>
+<span class="lineNum">    1051 </span>            : {
+<span class="lineNum">    1052 </span><span class="lineCov">          3 :         if (!Options::get().singleTest)</span>
+<span class="lineNum">    1053 </span>            :                 return;
+<span class="lineNum">    1054 </span>            : 
+<span class="lineNum">    1055 </span><span class="lineNoCov">          0 :         if (Options::get().singleTestFile.empty() || Options::get().singleTestName.empty())</span>
+<span class="lineNum">    1056 </span>            :         {
+<span class="lineNum">    1057 </span><span class="lineNoCov">          0 :                 cnote &lt;&lt; &quot;Missing user test specification\nUsage: testeth --singletest &lt;filename&gt; &lt;testname&gt;\n&quot;;</span>
+<span class="lineNum">    1058 </span><span class="lineNoCov">          0 :                 return;</span>
+<span class="lineNum">    1059 </span>            :         }
+<span class="lineNum">    1060 </span>            : 
+<span class="lineNum">    1061 </span><span class="lineNoCov">          0 :         auto&amp; filename = Options::get().singleTestFile;</span>
+<span class="lineNum">    1062 </span><span class="lineNoCov">          0 :         auto&amp; testname = Options::get().singleTestName;</span>
+<span class="lineNum">    1063 </span>            : 
+<span class="lineNum">    1064 </span><span class="lineNoCov">          0 :         if (g_logVerbosity != -1)</span>
+<span class="lineNum">    1065 </span><span class="lineNoCov">          0 :                 VerbosityHolder sentinel(12);</span>
+<span class="lineNum">    1066 </span>            : 
+<span class="lineNum">    1067 </span>            :         try
+<span class="lineNum">    1068 </span>            :         {
+<span class="lineNum">    1069 </span><span class="lineNoCov">          0 :                 cnote &lt;&lt; &quot;Testing user defined test: &quot; &lt;&lt; filename;</span>
+<span class="lineNum">    1070 </span><span class="lineNoCov">          0 :                 json_spirit::mValue v;</span>
+<span class="lineNum">    1071 </span><span class="lineNoCov">          0 :                 string s = contentsString(filename);</span>
+<span class="lineNum">    1072 </span><span class="lineNoCov">          0 :                 BOOST_REQUIRE_MESSAGE(s.length() &gt; 0, &quot;Contents of &quot; + filename + &quot; is empty. &quot;);</span>
+<span class="lineNum">    1073 </span><span class="lineNoCov">          0 :                 json_spirit::read_string(s, v);</span>
+<span class="lineNum">    1074 </span><span class="lineNoCov">          0 :                 json_spirit::mObject oSingleTest;</span>
+<span class="lineNum">    1075 </span>            : 
+<span class="lineNum">    1076 </span><span class="lineNoCov">          0 :                 json_spirit::mObject::const_iterator pos = v.get_obj().find(testname);</span>
+<span class="lineNum">    1077 </span><span class="lineNoCov">          0 :                 if (pos == v.get_obj().end())</span>
+<span class="lineNum">    1078 </span>            :                 {
+<span class="lineNum">    1079 </span><span class="lineNoCov">          0 :                         cnote &lt;&lt; &quot;Could not find test: &quot; &lt;&lt; testname &lt;&lt; &quot; in &quot; &lt;&lt; filename &lt;&lt; &quot;\n&quot;;</span>
+<span class="lineNum">    1080 </span><span class="lineNoCov">          0 :                         return;</span>
+<span class="lineNum">    1081 </span>            :                 }
+<span class="lineNum">    1082 </span>            :                 else
+<span class="lineNum">    1083 </span><span class="lineNoCov">          0 :                         oSingleTest[pos-&gt;first] = pos-&gt;second;</span>
+<span class="lineNum">    1084 </span>            : 
+<span class="lineNum">    1085 </span><span class="lineNoCov">          0 :                 json_spirit::mValue v_singleTest(oSingleTest);</span>
+<span class="lineNum">    1086 </span><span class="lineNoCov">          0 :                 doTests(v_singleTest, test::Options::get().filltests);</span>
+<span class="lineNum">    1087 </span>            :         }
+<span class="lineNum">    1088 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">    1089 </span>            :         {
+<span class="lineNum">    1090 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed Test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">    1091 </span>            :         }
+<span class="lineNum">    1092 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">    1093 </span>            :         {
+<span class="lineNum">    1094 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(&quot;Failed Test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">    1095 </span>            :         }
+<a name="1096"><span class="lineNum">    1096 </span>            : }</a>
+<span class="lineNum">    1097 </span>            : 
+<span class="lineNum">    1098 </span><span class="lineCov">       1620 : void executeTests(const string&amp; _name, const string&amp; _testPathAppendix, const string&amp; _fillerPathAppendix, std::function&lt;void(json_spirit::mValue&amp;, bool)&gt; doTests, bool _addFillerSuffix)</span>
+<span class="lineNum">    1099 </span>            : {
+<span class="lineNum">    1100 </span><span class="lineCov">       4860 :         string testPath = getTestPath() + _testPathAppendix;</span>
+<span class="lineNum">    1101 </span><span class="lineCov">       6480 :         string testFillerPath = getTestPath() + &quot;/src/&quot; + _fillerPathAppendix;</span>
+<span class="lineNum">    1102 </span>            : 
+<span class="lineNum">    1103 </span><span class="lineCov">       1620 :         if (Options::get().stats)</span>
+<span class="lineNum">    1104 </span><span class="lineNoCov">          0 :                 Listener::registerListener(Stats::get());</span>
+<span class="lineNum">    1105 </span>            : 
+<span class="lineNum">    1106 </span><span class="lineCov">       3240 :         string name = _name;</span>
+<span class="lineNum">    1107 </span><span class="lineCov">       1620 :         if (_name.rfind(&quot;Filler.json&quot;) != std::string::npos)</span>
+<span class="lineNum">    1108 </span><span class="lineCov">       4677 :                 name = _name.substr(0, _name.rfind(&quot;Filler.json&quot;));</span>
+<span class="lineNum">    1109 </span>            : 
+<span class="lineNum">    1110 </span><span class="lineCov">       1620 :         if (Options::get().filltests)</span>
+<span class="lineNum">    1111 </span>            :         {
+<span class="lineNum">    1112 </span>            :                 try
+<span class="lineNum">    1113 </span>            :                 {
+<span class="lineNum">    1114 </span><span class="lineNoCov">          0 :                         cnote &lt;&lt; &quot;Populating tests...&quot;;</span>
+<span class="lineNum">    1115 </span><span class="lineNoCov">          0 :                         json_spirit::mValue v;</span>
+<span class="lineNum">    1116 </span><span class="lineNoCov">          0 :                         boost::filesystem::path p(__FILE__);</span>
+<span class="lineNum">    1117 </span>            : 
+<span class="lineNum">    1118 </span><span class="lineNoCov">          0 :                         string nameEnding = _addFillerSuffix ? &quot;Filler.json&quot; : &quot;.json&quot;;</span>
+<span class="lineNum">    1119 </span><span class="lineNoCov">          0 :                         string testfilename = testFillerPath + &quot;/&quot; + name + nameEnding;</span>
+<span class="lineNum">    1120 </span><span class="lineNoCov">          0 :                         string  s = asString(dev::contents(testfilename));</span>
+<span class="lineNum">    1121 </span><span class="lineNoCov">          0 :                         BOOST_REQUIRE_MESSAGE(s.length() &gt; 0, &quot;Contents of &quot; + testfilename + &quot; is empty.&quot;);</span>
+<span class="lineNum">    1122 </span>            : 
+<span class="lineNum">    1123 </span><span class="lineNoCov">          0 :                         json_spirit::read_string(s, v);</span>
+<span class="lineNum">    1124 </span><span class="lineNoCov">          0 :                         doTests(v, true);</span>
+<span class="lineNum">    1125 </span><span class="lineNoCov">          0 :                         writeFile(testPath + &quot;/&quot; + name + &quot;.json&quot;, asBytes(json_spirit::write_string(v, true)));</span>
+<span class="lineNum">    1126 </span>            :                 }
+<span class="lineNum">    1127 </span><span class="lineNoCov">          0 :                 catch (Exception const&amp; _e)</span>
+<span class="lineNum">    1128 </span>            :                 {
+<span class="lineNum">    1129 </span><span class="lineNoCov">          0 :                         BOOST_ERROR(TestOutputHelper::testName() + &quot;Failed filling test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">    1130 </span>            :                 }
+<span class="lineNum">    1131 </span><span class="lineNoCov">          0 :                 catch (std::exception const&amp; _e)</span>
+<span class="lineNum">    1132 </span>            :                 {
+<span class="lineNum">    1133 </span><span class="lineNoCov">          0 :                         BOOST_ERROR(TestOutputHelper::testName() + &quot;Failed filling test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">    1134 </span>            :                 }
+<span class="lineNum">    1135 </span>            :         }
+<span class="lineNum">    1136 </span>            :         try
+<span class="lineNum">    1137 </span>            :         {
+<span class="lineNum">    1138 </span><span class="lineCov">       1620 :                 cnote &lt;&lt; &quot;TEST &quot; &lt;&lt; name &lt;&lt; &quot;:&quot;;</span>
+<span class="lineNum">    1139 </span><span class="lineCov">       3240 :                 json_spirit::mValue v;</span>
+<span class="lineNum">    1140 </span><span class="lineCov">      11340 :                 string s = asString(dev::contents(testPath + &quot;/&quot; + name + &quot;.json&quot;));</span>
+<span class="lineNum">    1141 </span><span class="lineCov">      17820 :                 BOOST_REQUIRE_MESSAGE(s.length() &gt; 0, &quot;Contents of &quot; + testPath + &quot;/&quot; + name + &quot;.json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?&quot;);</span>
+<span class="lineNum">    1142 </span><span class="lineCov">       1620 :                 json_spirit::read_string(s, v);</span>
+<span class="lineNum">    1143 </span><span class="lineCov">       1620 :                 Listener::notifySuiteStarted(name);</span>
+<span class="lineNum">    1144 </span><span class="lineCov">       1620 :                 doTests(v, false);</span>
+<span class="lineNum">    1145 </span>            :         }
+<span class="lineNum">    1146 </span><span class="lineNoCov">          0 :         catch (Exception const&amp; _e)</span>
+<span class="lineNum">    1147 </span>            :         {
+<span class="lineNum">    1148 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(TestOutputHelper::testName() + &quot;Failed test with Exception: &quot; &lt;&lt; diagnostic_information(_e));</span>
+<span class="lineNum">    1149 </span>            :         }
+<span class="lineNum">    1150 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">    1151 </span>            :         {
+<span class="lineNum">    1152 </span><span class="lineNoCov">          0 :                 BOOST_ERROR(TestOutputHelper::testName() + &quot;Failed test with Exception: &quot; &lt;&lt; _e.what());</span>
+<span class="lineNum">    1153 </span>            :         }
+<a name="1154"><span class="lineNum">    1154 </span><span class="lineCov">       1620 : }</span></a>
+<span class="lineNum">    1155 </span>            : 
+<span class="lineNum">    1156 </span><span class="lineNoCov">          0 : void copyFile(std::string const&amp; _source, std::string const&amp; _destination)</span>
+<span class="lineNum">    1157 </span>            : {
+<span class="lineNum">    1158 </span><span class="lineNoCov">          0 :         std::ifstream src(_source, std::ios::binary);</span>
+<span class="lineNum">    1159 </span><span class="lineNoCov">          0 :         std::ofstream dst(_destination, std::ios::binary);</span>
+<span class="lineNum">    1160 </span><span class="lineNoCov">          0 :         dst &lt;&lt; src.rdbuf();</span>
+<a name="1161"><span class="lineNum">    1161 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">    1162 </span>            : 
+<span class="lineNum">    1163 </span><span class="lineCov">       2300 : RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const&amp; _tObj)</span>
+<span class="lineNum">    1164 </span>            : {
+<span class="lineNum">    1165 </span>            :         //Construct Rlp of the given transaction
+<span class="lineNum">    1166 </span><span class="lineCov">       2300 :         RLPStream rlpStream;</span>
+<span class="lineNum">    1167 </span><span class="lineCov">       2300 :         rlpStream.appendList(_tObj.size());</span>
+<span class="lineNum">    1168 </span>            : 
+<span class="lineNum">    1169 </span><span class="lineCov">      11500 :         if (_tObj.count(&quot;nonce&quot;))</span>
+<span class="lineNum">    1170 </span><span class="lineCov">      11500 :                 rlpStream &lt;&lt; bigint(_tObj.at(&quot;nonce&quot;).get_str());</span>
+<span class="lineNum">    1171 </span>            : 
+<span class="lineNum">    1172 </span><span class="lineCov">      11500 :         if (_tObj.count(&quot;gasPrice&quot;))</span>
+<span class="lineNum">    1173 </span><span class="lineCov">      11500 :                 rlpStream &lt;&lt; bigint(_tObj.at(&quot;gasPrice&quot;).get_str());</span>
+<span class="lineNum">    1174 </span>            : 
+<span class="lineNum">    1175 </span><span class="lineCov">      11500 :         if (_tObj.count(&quot;gasLimit&quot;))</span>
+<span class="lineNum">    1176 </span><span class="lineCov">      11500 :                 rlpStream &lt;&lt; bigint(_tObj.at(&quot;gasLimit&quot;).get_str());</span>
+<span class="lineNum">    1177 </span>            : 
+<span class="lineNum">    1178 </span><span class="lineCov">      11500 :         if (_tObj.count(&quot;to&quot;))</span>
+<span class="lineNum">    1179 </span>            :         {
+<span class="lineNum">    1180 </span><span class="lineCov">      11500 :                 if (_tObj.at(&quot;to&quot;).get_str().empty())</span>
+<span class="lineNum">    1181 </span>            :                         rlpStream &lt;&lt; &quot;&quot;;
+<span class="lineNum">    1182 </span>            :                 else
+<span class="lineNum">    1183 </span><span class="lineCov">      13404 :                         rlpStream &lt;&lt; importByteArray(_tObj.at(&quot;to&quot;).get_str());</span>
+<span class="lineNum">    1184 </span>            :         }
+<span class="lineNum">    1185 </span>            : 
+<span class="lineNum">    1186 </span><span class="lineCov">      11500 :         if (_tObj.count(&quot;value&quot;))</span>
+<span class="lineNum">    1187 </span><span class="lineCov">      11500 :                 rlpStream &lt;&lt; bigint(_tObj.at(&quot;value&quot;).get_str());</span>
+<span class="lineNum">    1188 </span>            : 
+<span class="lineNum">    1189 </span><span class="lineCov">      11500 :         if (_tObj.count(&quot;data&quot;))</span>
+<span class="lineNum">    1190 </span><span class="lineCov">       6900 :                 rlpStream &lt;&lt; importData(_tObj);</span>
+<span class="lineNum">    1191 </span>            : 
+<span class="lineNum">    1192 </span><span class="lineCov">      11500 :         if (_tObj.count(&quot;v&quot;))</span>
+<span class="lineNum">    1193 </span><span class="lineCov">      11500 :                 rlpStream &lt;&lt; bigint(_tObj.at(&quot;v&quot;).get_str());</span>
+<span class="lineNum">    1194 </span>            : 
+<span class="lineNum">    1195 </span><span class="lineCov">      11500 :         if (_tObj.count(&quot;r&quot;))</span>
+<span class="lineNum">    1196 </span><span class="lineCov">      11500 :                 rlpStream &lt;&lt; bigint(_tObj.at(&quot;r&quot;).get_str());</span>
+<span class="lineNum">    1197 </span>            : 
+<span class="lineNum">    1198 </span><span class="lineCov">      11500 :         if (_tObj.count(&quot;s&quot;))</span>
+<span class="lineNum">    1199 </span><span class="lineCov">      11500 :                 rlpStream &lt;&lt;  bigint(_tObj.at(&quot;s&quot;).get_str());</span>
+<span class="lineNum">    1200 </span>            : 
+<span class="lineNum">    1201 </span><span class="lineCov">      11500 :         if (_tObj.count(&quot;extrafield&quot;))</span>
+<span class="lineNum">    1202 </span><span class="lineNoCov">          0 :                 rlpStream &lt;&lt; bigint(_tObj.at(&quot;extrafield&quot;).get_str());</span>
+<span class="lineNum">    1203 </span>            : 
+<span class="lineNum">    1204 </span><span class="lineCov">       2300 :         return rlpStream;</span>
+<a name="1205"><span class="lineNum">    1205 </span>            : }</a>
+<span class="lineNum">    1206 </span>            : 
+<span class="lineNum">    1207 </span><span class="lineCov">          7 : Options::Options(int argc, char** argv)</span>
+<span class="lineNum">    1208 </span>            : {
+<span class="lineNum">    1209 </span><span class="lineCov">          1 :         trDataIndex = -1;</span>
+<span class="lineNum">    1210 </span><span class="lineCov">          1 :         trGasIndex = -1;</span>
+<span class="lineNum">    1211 </span><span class="lineCov">          1 :         trValueIndex = -1;</span>
+<span class="lineNum">    1212 </span><span class="lineCov">          2 :         for (auto i = 0; i &lt; argc; ++i)</span>
+<span class="lineNum">    1213 </span>            :         {
+<span class="lineNum">    1214 </span><span class="lineCov">          4 :                 auto arg = std::string{argv[i]};</span>
+<span class="lineNum">    1215 </span><span class="lineCov">          1 :                 if (arg == &quot;--help&quot;)</span>
+<span class="lineNum">    1216 </span>            :                 {
+<span class="lineNum">    1217 </span><span class="lineNoCov">          0 :                         printHelp();</span>
+<span class="lineNum">    1218 </span><span class="lineNoCov">          0 :                         exit(0);</span>
+<span class="lineNum">    1219 </span>            :                 }
+<span class="lineNum">    1220 </span>            :                 else
+<span class="lineNum">    1221 </span><span class="lineCov">          1 :                 if (arg == &quot;--vm&quot; &amp;&amp; i + 1 &lt; argc)</span>
+<span class="lineNum">    1222 </span>            :                 {
+<span class="lineNum">    1223 </span><span class="lineNoCov">          0 :                         string vmKind = argv[++i];</span>
+<span class="lineNum">    1224 </span><span class="lineNoCov">          0 :                         if (vmKind == &quot;interpreter&quot;)</span>
+<span class="lineNum">    1225 </span><span class="lineNoCov">          0 :                                 VMFactory::setKind(VMKind::Interpreter);</span>
+<span class="lineNum">    1226 </span><span class="lineNoCov">          0 :                         else if (vmKind == &quot;jit&quot;)</span>
+<span class="lineNum">    1227 </span><span class="lineNoCov">          0 :                                 VMFactory::setKind(VMKind::JIT);</span>
+<span class="lineNum">    1228 </span><span class="lineNoCov">          0 :                         else if (vmKind == &quot;smart&quot;)</span>
+<span class="lineNum">    1229 </span><span class="lineNoCov">          0 :                                 VMFactory::setKind(VMKind::Smart);</span>
+<span class="lineNum">    1230 </span>            :                         else
+<span class="lineNum">    1231 </span><span class="lineNoCov">          0 :                                 cerr &lt;&lt; &quot;Unknown VM kind: &quot; &lt;&lt; vmKind &lt;&lt; endl;</span>
+<span class="lineNum">    1232 </span>            :                 }
+<span class="lineNum">    1233 </span><span class="lineCov">          1 :                 else if (arg == &quot;--jit&quot;) // TODO: Remove deprecated option &quot;--jit&quot;</span>
+<span class="lineNum">    1234 </span><span class="lineNoCov">          0 :                         VMFactory::setKind(VMKind::JIT);</span>
+<span class="lineNum">    1235 </span><span class="lineCov">          1 :                 else if (arg == &quot;--vmtrace&quot;)</span>
+<span class="lineNum">    1236 </span>            :                 {
+<span class="lineNum">    1237 </span><span class="lineNoCov">          0 :                         vmtrace = true;</span>
+<span class="lineNum">    1238 </span><span class="lineNoCov">          0 :                         g_logVerbosity = 13;</span>
+<span class="lineNum">    1239 </span>            :                 }
+<span class="lineNum">    1240 </span><span class="lineCov">          1 :                 else if (arg == &quot;--filltests&quot;)</span>
+<span class="lineNum">    1241 </span><span class="lineNoCov">          0 :                         filltests = true;</span>
+<span class="lineNum">    1242 </span><span class="lineCov">          1 :                 else if (arg == &quot;--fillchain&quot;)</span>
+<span class="lineNum">    1243 </span><span class="lineNoCov">          0 :                         fillchain = true;</span>
+<span class="lineNum">    1244 </span><span class="lineCov">          1 :                 else if (arg == &quot;--stats&quot; &amp;&amp; i + 1 &lt; argc)</span>
+<span class="lineNum">    1245 </span>            :                 {
+<span class="lineNum">    1246 </span><span class="lineNoCov">          0 :                         stats = true;</span>
+<span class="lineNum">    1247 </span><span class="lineNoCov">          0 :                         statsOutFile = argv[i + 1];</span>
+<span class="lineNum">    1248 </span>            :                 }
+<span class="lineNum">    1249 </span><span class="lineCov">          1 :                 else if (arg == &quot;--exectimelog&quot;)</span>
+<span class="lineNum">    1250 </span><span class="lineNoCov">          0 :                         exectimelog = true;</span>
+<span class="lineNum">    1251 </span><span class="lineCov">          1 :                 else if (arg == &quot;--performance&quot;)</span>
+<span class="lineNum">    1252 </span><span class="lineNoCov">          0 :                         performance = true;</span>
+<span class="lineNum">    1253 </span><span class="lineCov">          1 :                 else if (arg == &quot;--quadratic&quot;)</span>
+<span class="lineNum">    1254 </span><span class="lineNoCov">          0 :                         quadratic = true;</span>
+<span class="lineNum">    1255 </span><span class="lineCov">          1 :                 else if (arg == &quot;--memory&quot;)</span>
+<span class="lineNum">    1256 </span><span class="lineNoCov">          0 :                         memory = true;</span>
+<span class="lineNum">    1257 </span><span class="lineCov">          1 :                 else if (arg == &quot;--inputlimits&quot;)</span>
+<span class="lineNum">    1258 </span><span class="lineNoCov">          0 :                         inputLimits = true;</span>
+<span class="lineNum">    1259 </span><span class="lineCov">          1 :                 else if (arg == &quot;--bigdata&quot;)</span>
+<span class="lineNum">    1260 </span><span class="lineNoCov">          0 :                         bigData = true;</span>
+<span class="lineNum">    1261 </span><span class="lineCov">          1 :                 else if (arg == &quot;--checkstate&quot;)</span>
+<span class="lineNum">    1262 </span><span class="lineNoCov">          0 :                         checkstate = true;</span>
+<span class="lineNum">    1263 </span><span class="lineCov">          1 :                 else if (arg == &quot;--wallet&quot;)</span>
+<span class="lineNum">    1264 </span><span class="lineNoCov">          0 :                         wallet = true;</span>
+<span class="lineNum">    1265 </span><span class="lineCov">          1 :                 else if (arg == &quot;--all&quot;)</span>
+<span class="lineNum">    1266 </span>            :                 {
+<span class="lineNum">    1267 </span><span class="lineNoCov">          0 :                         performance = true;</span>
+<span class="lineNum">    1268 </span><span class="lineNoCov">          0 :                         quadratic = true;</span>
+<span class="lineNum">    1269 </span><span class="lineNoCov">          0 :                         memory = true;</span>
+<span class="lineNum">    1270 </span><span class="lineNoCov">          0 :                         inputLimits = true;</span>
+<span class="lineNum">    1271 </span><span class="lineNoCov">          0 :                         bigData = true;</span>
+<span class="lineNum">    1272 </span><span class="lineNoCov">          0 :                         wallet = true;</span>
+<span class="lineNum">    1273 </span>            :                 }
+<span class="lineNum">    1274 </span><span class="lineCov">          1 :                 else if (arg == &quot;--singletest&quot; &amp;&amp; i + 1 &lt; argc)</span>
+<span class="lineNum">    1275 </span>            :                 {
+<span class="lineNum">    1276 </span><span class="lineNoCov">          0 :                         singleTest = true;</span>
+<span class="lineNum">    1277 </span><span class="lineNoCov">          0 :                         auto name1 = std::string{argv[i + 1]};</span>
+<span class="lineNum">    1278 </span><span class="lineNoCov">          0 :                         if (i + 2 &lt; argc) // two params</span>
+<span class="lineNum">    1279 </span>            :                         {
+<span class="lineNum">    1280 </span><span class="lineNoCov">          0 :                                 auto name2 = std::string{argv[i + 2]};</span>
+<span class="lineNum">    1281 </span><span class="lineNoCov">          0 :                                 if (name2[0] == '-') // not param, another option</span>
+<span class="lineNum">    1282 </span><span class="lineNoCov">          0 :                                         singleTestName = std::move(name1);</span>
+<span class="lineNum">    1283 </span>            :                                 else
+<span class="lineNum">    1284 </span>            :                                 {
+<span class="lineNum">    1285 </span><span class="lineNoCov">          0 :                                         singleTestFile = std::move(name1);</span>
+<span class="lineNum">    1286 </span><span class="lineNoCov">          0 :                                         singleTestName = std::move(name2);</span>
+<span class="lineNum">    1287 </span>            :                                 }
+<span class="lineNum">    1288 </span>            :                         }
+<span class="lineNum">    1289 </span>            :                         else
+<span class="lineNum">    1290 </span><span class="lineNoCov">          0 :                                 singleTestName = std::move(name1);</span>
+<span class="lineNum">    1291 </span>            :                 }
+<span class="lineNum">    1292 </span><span class="lineCov">          1 :                 else if (arg == &quot;--singlenet&quot; &amp;&amp; i + 1 &lt; argc)</span>
+<span class="lineNum">    1293 </span><span class="lineNoCov">          0 :                         singleTestNet = std::string{argv[i + 1]};</span>
+<span class="lineNum">    1294 </span><span class="lineCov">          1 :                 else if (arg == &quot;--fulloutput&quot;)</span>
+<span class="lineNum">    1295 </span><span class="lineNoCov">          0 :                         fulloutput = true;</span>
+<span class="lineNum">    1296 </span><span class="lineCov">          1 :                 else if (arg == &quot;--verbosity&quot; &amp;&amp; i + 1 &lt; argc)</span>
+<span class="lineNum">    1297 </span>            :                 {
+<span class="lineNum">    1298 </span><span class="lineNoCov">          0 :                         static std::ostringstream strCout; //static string to redirect logs to</span>
+<span class="lineNum">    1299 </span><span class="lineNoCov">          0 :                         std::string indentLevel = std::string{argv[i + 1]};</span>
+<span class="lineNum">    1300 </span><span class="lineNoCov">          0 :                         if (indentLevel == &quot;0&quot;)</span>
+<span class="lineNum">    1301 </span>            :                         {
+<span class="lineNum">    1302 </span><span class="lineNoCov">          0 :                                 logVerbosity = Verbosity::None;</span>
+<span class="lineNum">    1303 </span><span class="lineNoCov">          0 :                                 std::cout.rdbuf(strCout.rdbuf());</span>
+<span class="lineNum">    1304 </span><span class="lineNoCov">          0 :                                 std::cerr.rdbuf(strCout.rdbuf());</span>
+<span class="lineNum">    1305 </span>            :                         }
+<span class="lineNum">    1306 </span><span class="lineNoCov">          0 :                         else if (indentLevel == &quot;1&quot;)</span>
+<span class="lineNum">    1307 </span><span class="lineNoCov">          0 :                                 logVerbosity = Verbosity::NiceReport;</span>
+<span class="lineNum">    1308 </span>            :                         else
+<span class="lineNum">    1309 </span><span class="lineNoCov">          0 :                                 logVerbosity = Verbosity::Full;</span>
+<span class="lineNum">    1310 </span>            : 
+<span class="lineNum">    1311 </span><span class="lineNoCov">          0 :                         int indentLevelInt = atoi(argv[i + 1]);</span>
+<span class="lineNum">    1312 </span><span class="lineNoCov">          0 :                         if (indentLevelInt &gt; g_logVerbosity)</span>
+<span class="lineNum">    1313 </span><span class="lineNoCov">          0 :                                 g_logVerbosity = indentLevelInt;</span>
+<span class="lineNum">    1314 </span>            :                 }
+<span class="lineNum">    1315 </span><span class="lineCov">          1 :                 else if (arg == &quot;--createRandomTest&quot;)</span>
+<span class="lineNum">    1316 </span><span class="lineNoCov">          0 :                         createRandomTest = true;</span>
+<span class="lineNum">    1317 </span><span class="lineCov">          1 :                 else if (arg == &quot;-t&quot; &amp;&amp; i + 1 &lt; argc)</span>
+<span class="lineNum">    1318 </span><span class="lineNoCov">          0 :                         rCurrentTestSuite = std::string{argv[i + 1]};</span>
+<span class="lineNum">    1319 </span><span class="lineCov">          2 :                 else if (arg == &quot;--checktest&quot; || arg == &quot;--filltest&quot;)</span>
+<span class="lineNum">    1320 </span>            :                 {
+<span class="lineNum">    1321 </span>            :                         //read all line to the end
+<span class="lineNum">    1322 </span><span class="lineNoCov">          0 :                         for (int j = i+1; j &lt; argc; ++j)</span>
+<span class="lineNum">    1323 </span><span class="lineNoCov">          0 :                                 rCheckTest += argv[j];</span>
+<span class="lineNum">    1324 </span><span class="lineNoCov">          0 :                         break;</span>
+<span class="lineNum">    1325 </span>            :                 }
+<span class="lineNum">    1326 </span><span class="lineCov">          1 :                 else if (arg == &quot;--nonetwork&quot;)</span>
+<span class="lineNum">    1327 </span><span class="lineNoCov">          0 :                         nonetwork = true;</span>
+<span class="lineNum">    1328 </span><span class="lineCov">          1 :                 else if (arg == &quot;-d&quot; &amp;&amp; i + 1 &lt; argc)</span>
+<span class="lineNum">    1329 </span><span class="lineNoCov">          0 :                         trDataIndex = atoi(argv[i + 1]);</span>
+<span class="lineNum">    1330 </span><span class="lineCov">          1 :                 else if (arg == &quot;-g&quot; &amp;&amp; i + 1 &lt; argc)</span>
+<span class="lineNum">    1331 </span><span class="lineNoCov">          0 :                         trGasIndex = atoi(argv[i + 1]);</span>
+<span class="lineNum">    1332 </span><span class="lineCov">          1 :                 else if (arg == &quot;-v&quot; &amp;&amp; i + 1 &lt; argc)</span>
+<span class="lineNum">    1333 </span><span class="lineNoCov">          0 :                         trValueIndex = atoi(argv[i + 1]);</span>
+<span class="lineNum">    1334 </span>            :         }
+<span class="lineNum">    1335 </span>            : 
+<span class="lineNum">    1336 </span>            :         //Default option
+<span class="lineNum">    1337 </span><span class="lineCov">          1 :         if (logVerbosity == Verbosity::NiceReport)</span>
+<span class="lineNum">    1338 </span><span class="lineCov">          1 :                 g_logVerbosity = -1;    //disable cnote but leave cerr and cout</span>
+<a name="1339"><span class="lineNum">    1339 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">    1340 </span>            : 
+<span class="lineNum">    1341 </span><span class="lineCov">      38226 : Options const&amp; Options::get(int argc, char** argv)</span>
+<span class="lineNum">    1342 </span>            : {
+<span class="lineNum">    1343 </span><span class="lineCov">      38226 :         static Options instance(argc, argv);</span>
+<span class="lineNum">    1344 </span><span class="lineCov">      38226 :         return instance;</span>
+<a name="1345"><span class="lineNum">    1345 </span>            : }</a>
+<span class="lineNum">    1346 </span>            : 
+<span class="lineNum">    1347 </span><span class="lineCov">       2218 : LastHashes lastHashes(u256 _currentBlockNumber)</span>
+<span class="lineNum">    1348 </span>            : {
+<span class="lineNum">    1349 </span><span class="lineCov">       2218 :         LastHashes ret;</span>
+<span class="lineNum">    1350 </span><span class="lineCov">      15946 :         for (u256 i = 1; i &lt;= 256 &amp;&amp; i &lt;= _currentBlockNumber; ++i)</span>
+<span class="lineNum">    1351 </span><span class="lineCov">      27966 :                 ret.push_back(sha3(toString(_currentBlockNumber - i)));</span>
+<span class="lineNum">    1352 </span><span class="lineCov">       2218 :         return ret;</span>
+<a name="1353"><span class="lineNum">    1353 </span>            : }</a>
+<span class="lineNum">    1354 </span>            : 
+<span class="lineNum">    1355 </span><span class="lineNoCov">          0 : dev::eth::BlockHeader constructHeader(</span>
+<span class="lineNum">    1356 </span>            :         h256 const&amp; _parentHash,
+<span class="lineNum">    1357 </span>            :         h256 const&amp; _sha3Uncles,
+<span class="lineNum">    1358 </span>            :         Address const&amp; _author,
+<span class="lineNum">    1359 </span>            :         h256 const&amp; _stateRoot,
+<span class="lineNum">    1360 </span>            :         h256 const&amp; _transactionsRoot,
+<span class="lineNum">    1361 </span>            :         h256 const&amp; _receiptsRoot,
+<span class="lineNum">    1362 </span>            :         dev::eth::LogBloom const&amp; _logBloom,
+<span class="lineNum">    1363 </span>            :         u256 const&amp; _difficulty,
+<span class="lineNum">    1364 </span>            :         u256 const&amp; _number,
+<span class="lineNum">    1365 </span>            :         u256 const&amp; _gasLimit,
+<span class="lineNum">    1366 </span>            :         u256 const&amp; _gasUsed,
+<span class="lineNum">    1367 </span>            :         u256 const&amp; _timestamp,
+<span class="lineNum">    1368 </span>            :         bytes const&amp; _extraData)
+<span class="lineNum">    1369 </span>            : {
+<span class="lineNum">    1370 </span><span class="lineNoCov">          0 :         RLPStream rlpStream;</span>
+<span class="lineNum">    1371 </span><span class="lineNoCov">          0 :         rlpStream.appendList(15);</span>
+<span class="lineNum">    1372 </span>            : 
+<span class="lineNum">    1373 </span><span class="lineNoCov">          0 :         rlpStream &lt;&lt; _parentHash &lt;&lt; _sha3Uncles &lt;&lt; _author &lt;&lt; _stateRoot &lt;&lt; _transactionsRoot &lt;&lt; _receiptsRoot &lt;&lt; _logBloom</span>
+<span class="lineNum">    1374 </span><span class="lineNoCov">          0 :                 &lt;&lt; _difficulty &lt;&lt; _number &lt;&lt; _gasLimit &lt;&lt; _gasUsed &lt;&lt; _timestamp &lt;&lt; _extraData &lt;&lt; h256{} &lt;&lt; Nonce{};</span>
+<span class="lineNum">    1375 </span>            : 
+<span class="lineNum">    1376 </span><span class="lineNoCov">          0 :         return BlockHeader(rlpStream.out(), HeaderData);</span>
+<a name="1377"><span class="lineNum">    1377 </span>            : }</a>
+<span class="lineNum">    1378 </span>            : 
+<span class="lineNum">    1379 </span><span class="lineNoCov">          0 : void updateEthashSeal(dev::eth::BlockHeader&amp; _header, h256 const&amp; _mixHash, h64 const&amp; _nonce)</span>
+<span class="lineNum">    1380 </span>            : {
+<span class="lineNum">    1381 </span><span class="lineNoCov">          0 :         Ethash::setNonce(_header, _nonce);</span>
+<span class="lineNum">    1382 </span><span class="lineNoCov">          0 :         Ethash::setMixHash(_header, _mixHash);</span>
+<span class="lineNum">    1383 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">    1384 </span>            : 
+<span class="lineNum">    1385 </span>            : namespace
+<span class="lineNum">    1386 </span>            : {
+<span class="lineNum">    1387 </span>            :         Listener* g_listener;
+<a name="1388"><span class="lineNum">    1388 </span>            : }</a>
+<span class="lineNum">    1389 </span>            : 
+<span class="lineNum">    1390 </span><span class="lineNoCov">          0 : void Listener::registerListener(Listener&amp; _listener)</span>
+<span class="lineNum">    1391 </span>            : {
+<span class="lineNum">    1392 </span><span class="lineNoCov">          0 :         g_listener = &amp;_listener;</span>
+<a name="1393"><span class="lineNum">    1393 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">    1394 </span>            : 
+<span class="lineNum">    1395 </span><span class="lineCov">         17 : void Listener::notifySuiteStarted(std::string const&amp; _name)</span>
+<span class="lineNum">    1396 </span>            : {
+<span class="lineNum">    1397 </span><span class="lineCov">       1637 :         if (g_listener)</span>
+<span class="lineNum">    1398 </span><span class="lineNoCov">          0 :                 g_listener-&gt;suiteStarted(_name);</span>
+<a name="1399"><span class="lineNum">    1399 </span><span class="lineCov">         17 : }</span></a>
+<span class="lineNum">    1400 </span>            : 
+<span class="lineNum">    1401 </span><span class="lineCov">       2218 : void Listener::notifyTestStarted(std::string const&amp; _name)</span>
+<span class="lineNum">    1402 </span>            : {
+<span class="lineNum">    1403 </span><span class="lineCov">       2218 :         if (g_listener)</span>
+<span class="lineNum">    1404 </span><span class="lineNoCov">          0 :                 g_listener-&gt;testStarted(_name);</span>
+<a name="1405"><span class="lineNum">    1405 </span><span class="lineCov">       2218 : }</span></a>
+<span class="lineNum">    1406 </span>            : 
+<span class="lineNum">    1407 </span><span class="lineCov">       2218 : void Listener::notifyTestFinished(int64_t _gasUsed)</span>
+<span class="lineNum">    1408 </span>            : {
+<span class="lineNum">    1409 </span><span class="lineCov">       2218 :         if (g_listener)</span>
+<span class="lineNum">    1410 </span><span class="lineNoCov">          0 :                 g_listener-&gt;testFinished(_gasUsed);</span>
+<span class="lineNum">    1411 </span><span class="lineCov">       2218 : }</span>
+<span class="lineNum">    1412 </span>            : 
+<span class="lineNum">    1413 </span>            : using namespace boost;
+<span class="lineNum">    1414 </span><span class="lineCov">          1 : Timer TestOutputHelper::m_timer;</span>
+<span class="lineNum">    1415 </span>            : size_t TestOutputHelper::m_currTest = 0;
+<span class="lineNum">    1416 </span>            : size_t TestOutputHelper::m_maxTests = 0;
+<span class="lineNum">    1417 </span><span class="lineCov">          3 : string TestOutputHelper::m_currentTestName = &quot;n/a&quot;;</span>
+<span class="lineNum">    1418 </span><span class="lineCov">          3 : string TestOutputHelper::m_currentTestCaseName = &quot;n/a&quot;;</span>
+<a name="1419"><span class="lineNum">    1419 </span><span class="lineCov">          3 : string TestOutputHelper::m_currentTestFileName = &quot;n/a&quot;;</span></a>
+<span class="lineNum">    1420 </span><span class="lineCov">          1 : std::vector&lt;TestOutputHelper::execTimeName&gt; TestOutputHelper::m_execTimeResults;</span>
+<span class="lineNum">    1421 </span><span class="lineCov">        226 : void TestOutputHelper::initTest(int _maxTests)</span>
+<span class="lineNum">    1422 </span>            : {
+<span class="lineNum">    1423 </span><span class="lineCov">        226 :         Ethash::init();</span>
+<span class="lineNum">    1424 </span><span class="lineCov">        226 :         BasicAuthority::init();</span>
+<span class="lineNum">    1425 </span><span class="lineCov">        226 :         NoProof::init();</span>
+<span class="lineNum">    1426 </span><span class="lineCov">        226 :         m_timer.restart();</span>
+<span class="lineNum">    1427 </span><span class="lineCov">        678 :         m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;</span>
+<span class="lineNum">    1428 </span><span class="lineCov">       1130 :         std::cout &lt;&lt; &quot;Test Case \&quot;&quot; + m_currentTestCaseName + &quot;\&quot;: &quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">    1429 </span><span class="lineCov">        226 :         m_maxTests = _maxTests;</span>
+<span class="lineNum">    1430 </span><span class="lineCov">        226 :         m_currTest = 0;</span>
+<a name="1431"><span class="lineNum">    1431 </span><span class="lineCov">        226 : }</span></a>
+<span class="lineNum">    1432 </span>            : 
+<span class="lineNum">    1433 </span><span class="lineCov">         67 : void TestOutputHelper::initTest(json_spirit::mValue&amp; _v)</span>
+<span class="lineNum">    1434 </span>            : {
+<span class="lineNum">    1435 </span><span class="lineCov">         67 :         Ethash::init();</span>
+<span class="lineNum">    1436 </span><span class="lineCov">         67 :         BasicAuthority::init();</span>
+<span class="lineNum">    1437 </span><span class="lineCov">         67 :         NoProof::init();</span>
+<span class="lineNum">    1438 </span><span class="lineCov">         67 :         m_timer.restart();</span>
+<span class="lineNum">    1439 </span><span class="lineCov">        201 :         m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;</span>
+<span class="lineNum">    1440 </span><span class="lineCov">        335 :         std::cout &lt;&lt; &quot;Test Case \&quot;&quot; + m_currentTestCaseName + &quot;\&quot;: &quot; &lt;&lt; std::endl;</span>
+<span class="lineNum">    1441 </span><span class="lineCov">        134 :         m_maxTests = _v.get_obj().size();</span>
+<span class="lineNum">    1442 </span><span class="lineCov">         67 :         m_currTest = 0;</span>
+<a name="1443"><span class="lineNum">    1443 </span><span class="lineCov">         67 : }</span></a>
+<span class="lineNum">    1444 </span>            : 
+<span class="lineNum">    1445 </span><span class="lineCov">       8934 : bool TestOutputHelper::passTest(json_spirit::mObject&amp; _o, std::string&amp; _testName)</span>
+<span class="lineNum">    1446 </span>            : {
+<span class="lineNum">    1447 </span><span class="lineCov">       8934 :         m_currTest++;</span>
+<span class="lineNum">    1448 </span><span class="lineCov">      17868 :         int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));</span>
+<span class="lineNum">    1449 </span><span class="lineCov">       8934 :         if (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests)</span>
+<span class="lineNum">    1450 </span>            :         {
+<span class="lineNum">    1451 </span><span class="lineCov">        439 :                 int percent = int(m_currTest*100/m_maxTests);</span>
+<span class="lineNum">    1452 </span><span class="lineCov">        439 :                 std::cout &lt;&lt; percent &lt;&lt; &quot;%&quot;;</span>
+<span class="lineNum">    1453 </span><span class="lineCov">        439 :                 if (percent != 100)</span>
+<span class="lineNum">    1454 </span><span class="lineCov">        337 :                         std::cout &lt;&lt; &quot;...&quot;;</span>
+<span class="lineNum">    1455 </span>            :                 std::cout &lt;&lt; std::endl;
+<span class="lineNum">    1456 </span>            :         }
+<span class="lineNum">    1457 </span>            : 
+<span class="lineNum">    1458 </span><span class="lineCov">       8934 :         if (test::Options::get().singleTest &amp;&amp; test::Options::get().singleTestName != _testName)</span>
+<span class="lineNum">    1459 </span>            :         {
+<span class="lineNum">    1460 </span><span class="lineNoCov">          0 :                 _o.clear();</span>
+<span class="lineNum">    1461 </span><span class="lineNoCov">          0 :                 return false;</span>
+<span class="lineNum">    1462 </span>            :         }
+<span class="lineNum">    1463 </span>            : 
+<span class="lineNum">    1464 </span><span class="lineCov">       8934 :         cnote &lt;&lt; _testName;</span>
+<span class="lineNum">    1465 </span>            :         //Test name for old State Tests
+<span class="lineNum">    1466 </span>            :         //_testName = (m_currentTestFileName == &quot;n/a&quot;) ? &quot;(&quot; + _testName + &quot;) &quot; : &quot;(&quot; + m_currentTestFileName + &quot;/&quot; +  _testName + &quot;) &quot;;
+<span class="lineNum">    1467 </span><span class="lineCov">       8934 :         m_currentTestName = _testName;</span>
+<span class="lineNum">    1468 </span><span class="lineCov">       8934 :         return true;</span>
+<a name="1469"><span class="lineNum">    1469 </span>            : }</a>
+<span class="lineNum">    1470 </span>            : 
+<span class="lineNum">    1471 </span><span class="lineCov">        308 : void TestOutputHelper::finishTest()</span>
+<span class="lineNum">    1472 </span>            : {
+<span class="lineNum">    1473 </span><span class="lineCov">        308 :         if (Options::get().exectimelog)</span>
+<span class="lineNum">    1474 </span>            :         {
+<span class="lineNum">    1475 </span><span class="lineNoCov">          0 :                 execTimeName res;</span>
+<span class="lineNum">    1476 </span><span class="lineNoCov">          0 :                 res.first = m_timer.elapsed();</span>
+<span class="lineNum">    1477 </span><span class="lineNoCov">          0 :                 res.second = caseName();</span>
+<span class="lineNum">    1478 </span><span class="lineNoCov">          0 :                 std::cout &lt;&lt; res.second + &quot; time: &quot; + toString(res.first) &lt;&lt; std::endl;</span>
+<span class="lineNum">    1479 </span><span class="lineNoCov">          0 :                 m_execTimeResults.push_back(res);</span>
+<span class="lineNum">    1480 </span>            :         }
+<a name="1481"><span class="lineNum">    1481 </span><span class="lineCov">        308 : }</span></a>
+<span class="lineNum">    1482 </span>            : 
+<span class="lineNum">    1483 </span><span class="lineCov">          1 : void TestOutputHelper::printTestExecStats()</span>
+<span class="lineNum">    1484 </span>            : {
+<span class="lineNum">    1485 </span><span class="lineCov">          1 :         if (Options::get().exectimelog)</span>
+<span class="lineNum">    1486 </span>            :         {
+<span class="lineNum">    1487 </span><span class="lineNoCov">          0 :                 std::cout &lt;&lt; std::left;</span>
+<span class="lineNum">    1488 </span><span class="lineNoCov">          0 :                 std::sort(m_execTimeResults.begin(), m_execTimeResults.end(), [](execTimeName _a, execTimeName _b) { return (_b.first &lt; _a.first); });</span>
+<span class="lineNum">    1489 </span><span class="lineNoCov">          0 :                 for (size_t i = 0; i &lt; m_execTimeResults.size(); i++)</span>
+<span class="lineNum">    1490 </span><span class="lineNoCov">          0 :                         std::cout &lt;&lt; setw(45) &lt;&lt; m_execTimeResults[i].second &lt;&lt; setw(25) &lt;&lt; &quot; time: &quot; + toString(m_execTimeResults[i].first) &lt;&lt; std::endl;</span>
+<span class="lineNum">    1491 </span>            :         }
+<a name="1492"><span class="lineNum">    1492 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">    1493 </span>            : 
+<span class="lineNum">    1494 </span><span class="lineCov">          3 : } } // namespaces</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

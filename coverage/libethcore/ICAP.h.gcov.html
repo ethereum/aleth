@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libethcore/ICAP.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libethcore</a> - ICAP.h<span style="font-size: 80%;"> (source / <a href="ICAP.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryLo">60.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file ICAP.h
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  *
+<span class="lineNum">      21 </span>            :  * Ethereum-specific data structures &amp; algorithms.
+<span class="lineNum">      22 </span>            :  */
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #pragma once
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #include &lt;string&gt;
+<span class="lineNum">      27 </span>            : #include &lt;functional&gt;
+<span class="lineNum">      28 </span>            : #include &lt;boost/algorithm/string/case_conv.hpp&gt;
+<span class="lineNum">      29 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      30 </span>            : #include &lt;libdevcore/Exceptions.h&gt;
+<span class="lineNum">      31 </span>            : #include &lt;libdevcore/FixedHash.h&gt;
+<span class="lineNum">      32 </span>            : #include &quot;Common.h&quot;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : namespace dev
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            : namespace eth
+<a name="37"><span class="lineNum">      37 </span>            : {</a>
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span><span class="lineCov">        330 : DEV_SIMPLE_EXCEPTION(InvalidICAP);</span>
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : /**
+<span class="lineNum">      42 </span>            :  * @brief Encapsulation of an ICAP address.
+<a name="43"><span class="lineNum">      43 </span>            :  * Can be encoded, decoded, looked-up and inspected.</a>
+<span class="lineNum">      44 </span>            :  */
+<span class="lineNum">      45 </span><span class="lineCov">         88 : class ICAP</span>
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span>            : public:
+<span class="lineNum">      48 </span>            :         /// Construct null ICAP object.
+<span class="lineNum">      49 </span><span class="lineCov">         95 :         ICAP() = default;</span>
+<span class="lineNum">      50 </span>            :         /// Construct a direct ICAP object for given target address. Must have a zero first byte.
+<span class="lineNum">      51 </span><span class="lineCov">         12 :         ICAP(Address const&amp; _target): m_type(Direct), m_direct(_target) {}</span>
+<span class="lineNum">      52 </span>            :         /// Construct an indirect ICAP object for given client and institution names.
+<span class="lineNum">      53 </span>            :         ICAP(std::string const&amp; _client, std::string const&amp; _inst): m_type(Indirect), m_client(boost::algorithm::to_upper_copy(_client)), m_institution(boost::algorithm::to_upper_copy(_inst)), m_asset(&quot;XET&quot;) {}
+<span class="lineNum">      54 </span>            :         /// Construct an indirect ICAP object for given client, institution and asset names. You generally don't want to use this.
+<span class="lineNum">      55 </span>            :         ICAP(std::string const&amp; _c, std::string const&amp; _i, std::string const&amp; _a): m_type(Indirect), m_client(boost::algorithm::to_upper_copy(_c)), m_institution(boost::algorithm::to_upper_copy(_i)), m_asset(boost::algorithm::to_upper_copy(_a)) {}
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :         /// Type of ICAP address.
+<span class="lineNum">      58 </span>            :         enum Type
+<span class="lineNum">      59 </span>            :         {
+<span class="lineNum">      60 </span>            :                 Invalid,
+<span class="lineNum">      61 </span>            :                 Direct,
+<span class="lineNum">      62 </span>            :                 Indirect
+<span class="lineNum">      63 </span>            :         };
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            :         /// Create a direct address for ICAP.
+<span class="lineNum">      66 </span>            :         static Secret createDirect();
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            :         /// @returns IBAN encoding of client and data.
+<span class="lineNum">      69 </span>            :         static std::string iban(std::string _c, std::string _d);
+<span class="lineNum">      70 </span>            :         /// @returns Client and data from given IBAN address.
+<span class="lineNum">      71 </span>            :         static std::pair&lt;std::string, std::string&gt; fromIBAN(std::string _iban);
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            :         /// @returns the ICAP object for the ICAP address given.
+<span class="lineNum">      74 </span>            :         static ICAP decoded(std::string const&amp; _encoded);
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span>            :         /// @returns the encoded ICAP address.
+<span class="lineNum">      77 </span>            :         std::string encoded() const;
+<span class="lineNum">      78 </span>            :         /// @returns type of ICAP.
+<span class="lineNum">      79 </span>            :         Type type() const { return m_type; }
+<span class="lineNum">      80 </span>            :         /// @returns target address. Only valid when type() == Direct.
+<span class="lineNum">      81 </span><span class="lineCov">          3 :         Address const&amp; direct() const { return m_type == Direct ? m_direct : ZeroAddress; }</span>
+<span class="lineNum">      82 </span>            :         /// @returns asset. Only valid when type() == Indirect.
+<span class="lineNum">      83 </span>            :         std::string const&amp; asset() const { return m_type == Indirect ? m_asset : EmptyString; }
+<span class="lineNum">      84 </span>            :         /// @returns target name. Only valid when type() == Indirect and asset() == &quot;ETH&quot;.
+<span class="lineNum">      85 </span>            :         std::string const&amp; target() const { return m_type == Indirect &amp;&amp; m_asset == &quot;ETH&quot; ? m_client : EmptyString; }
+<span class="lineNum">      86 </span>            :         /// @returns institution name. Only valid when type() == Indirect and asset() == &quot;XET&quot;.
+<span class="lineNum">      87 </span>            :         std::string const&amp; institution() const { return m_type == Indirect &amp;&amp; m_asset == &quot;XET&quot; ? m_institution : EmptyString; }
+<span class="lineNum">      88 </span>            :         /// @returns client name. Only valid when type() == Indirect and asset() == &quot;XET&quot;.
+<span class="lineNum">      89 </span>            :         std::string const&amp; client() const { return m_type == Indirect &amp;&amp; m_asset == &quot;XET&quot; ? m_client : EmptyString; }
+<span class="lineNum">      90 </span>            :         /// @returns target address. Always valid, but requires the Registry address and a function to make calls.
+<span class="lineNum">      91 </span>            :         std::pair&lt;Address, bytes&gt; address(std::function&lt;bytes(Address, bytes)&gt; const&amp; _call, Address const&amp; _reg) const { return m_type == Direct ? make_pair(direct(), bytes()) : m_type == Indirect ? lookup(_call, _reg) : make_pair(Address(), bytes()); }
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            :         /// @returns target address. Looks up through the given Registry and call function. Only valid when type() == Indirect.
+<span class="lineNum">      94 </span>            :         std::pair&lt;Address, bytes&gt; lookup(std::function&lt;bytes(Address, bytes)&gt; const&amp; _call, Address const&amp; _reg) const;
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : private:
+<span class="lineNum">      97 </span>            :         Type m_type = Invalid;
+<span class="lineNum">      98 </span>            :         Address m_direct;
+<span class="lineNum">      99 </span>            :         std::string m_client;
+<span class="lineNum">     100 </span>            :         std::string m_institution;
+<span class="lineNum">     101 </span>            :         std::string m_asset;
+<span class="lineNum">     102 </span>            : };
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : }
+<span class="lineNum">     106 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

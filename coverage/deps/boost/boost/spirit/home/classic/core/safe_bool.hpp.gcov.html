@@ -1,0 +1,140 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/spirit/home/classic/core/safe_bool.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/spirit/home/classic/core</a> - safe_bool.hpp<span style="font-size: 80%;"> (source / <a href="safe_bool.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*=============================================================================</a>
+<span class="lineNum">       2 </span>            :     Copyright (c) 2003 Joel de Guzman
+<span class="lineNum">       3 </span>            :     http://spirit.sourceforge.net/
+<span class="lineNum">       4 </span>            : 
+<span class="lineNum">       5 </span>            :   Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       6 </span>            :   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       7 </span>            : =============================================================================*/
+<span class="lineNum">       8 </span>            : #if !defined(BOOST_SPIRIT_SAFE_BOOL_HPP)
+<span class="lineNum">       9 </span>            : #define BOOST_SPIRIT_SAFE_BOOL_HPP
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #include &lt;boost/config.hpp&gt;
+<span class="lineNum">      12 </span>            : #include &lt;boost/detail/workaround.hpp&gt;
+<span class="lineNum">      13 </span>            : #include &lt;boost/spirit/home/classic/namespace.hpp&gt;
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : namespace boost { namespace spirit {
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            :     namespace impl
+<span class="lineNum">      20 </span>            :     {
+<span class="lineNum">      21 </span>            :         template &lt;typename T&gt;
+<span class="lineNum">      22 </span>            :         struct no_base {};
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            :         template &lt;typename T&gt;
+<span class="lineNum">      25 </span>            :         struct safe_bool_impl
+<span class="lineNum">      26 </span>            :         {
+<span class="lineNum">      27 </span>            : #if BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3003))
+<span class="lineNum">      28 </span>            :             void stub(T*) {};
+<span class="lineNum">      29 </span>            :             typedef void (safe_bool_impl::*type)(T*);
+<span class="lineNum">      30 </span>            : #else
+<span class="lineNum">      31 </span>            :             typedef T* TP; // workaround to make parsing easier
+<span class="lineNum">      32 </span>            :             TP stub;
+<span class="lineNum">      33 </span>            :             typedef TP safe_bool_impl::*type;
+<span class="lineNum">      34 </span>            : #endif
+<span class="lineNum">      35 </span>            :         };
+<span class="lineNum">      36 </span>            :     }
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            :     template &lt;typename DerivedT, typename BaseT = impl::no_base&lt;DerivedT&gt; &gt;
+<span class="lineNum">      39 </span><span class="lineCov"> 1264134041 :     struct safe_bool : BaseT</span>
+<span class="lineNum">      40 </span>            :     {
+<span class="lineNum">      41 </span>            :     private:
+<span class="lineNum">      42 </span>            :         typedef impl::safe_bool_impl&lt;DerivedT&gt; impl_t;
+<span class="lineNum">      43 </span>            :         typedef typename impl_t::type bool_type;
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            :     public:
+<span class="lineNum">      46 </span>            :         operator bool_type() const
+<span class="lineNum">      47 </span>            :         {
+<span class="lineNum">      48 </span><span class="lineCov">  211916881 :             return static_cast&lt;const DerivedT*&gt;(this)-&gt;operator_bool() ?</span>
+<span class="lineNum">      49 </span><span class="lineCov">  211916881 :                 &amp;impl_t::stub : 0;</span>
+<span class="lineNum">      50 </span>            :         }
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            :         operator bool_type()
+<span class="lineNum">      53 </span>            :         {
+<span class="lineNum">      54 </span><span class="lineCov"> 1072355629 :             return static_cast&lt;DerivedT*&gt;(this)-&gt;operator_bool() ?</span>
+<span class="lineNum">      55 </span><span class="lineCov"> 1072355629 :                 &amp;impl_t::stub : 0;</span>
+<span class="lineNum">      56 </span>            :         }
+<span class="lineNum">      57 </span>            :     };
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : BOOST_SPIRIT_CLASSIC_NAMESPACE_END
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : }}
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : #endif
+<span class="lineNum">      64 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

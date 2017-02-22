@@ -1,0 +1,282 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/asio/ip/detail/impl/endpoint.ipp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/asio/ip/detail/impl</a> - endpoint.ipp<span style="font-size: 80%;"> (source / <a href="endpoint.ipp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntry">49</td>
+            <td class="headerCovTableEntryLo">51.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">9</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryMed">75.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : //</a>
+<span class="lineNum">       2 </span>            : // ip/detail/impl/endpoint.ipp
+<span class="lineNum">       3 </span>            : // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // Copyright (c) 2003-2016 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+<span class="lineNum">       6 </span>            : //
+<span class="lineNum">       7 </span>            : // Distributed under the Boost Software License, Version 1.0. (See accompanying
+<span class="lineNum">       8 </span>            : // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       9 </span>            : //
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #ifndef BOOST_ASIO_IP_DETAIL_IMPL_ENDPOINT_IPP
+<span class="lineNum">      12 </span>            : #define BOOST_ASIO_IP_DETAIL_IMPL_ENDPOINT_IPP
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #if defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      15 </span>            : # pragma once
+<span class="lineNum">      16 </span>            : #endif // defined(_MSC_VER) &amp;&amp; (_MSC_VER &gt;= 1200)
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &lt;boost/asio/detail/config.hpp&gt;
+<span class="lineNum">      19 </span>            : #include &lt;cstring&gt;
+<span class="lineNum">      20 </span>            : #if !defined(BOOST_ASIO_NO_IOSTREAM)
+<span class="lineNum">      21 </span>            : # include &lt;sstream&gt;
+<span class="lineNum">      22 </span>            : #endif // !defined(BOOST_ASIO_NO_IOSTREAM)
+<span class="lineNum">      23 </span>            : #include &lt;boost/asio/detail/socket_ops.hpp&gt;
+<span class="lineNum">      24 </span>            : #include &lt;boost/asio/detail/throw_error.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/asio/error.hpp&gt;
+<span class="lineNum">      26 </span>            : #include &lt;boost/asio/ip/detail/endpoint.hpp&gt;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : #include &lt;boost/asio/detail/push_options.hpp&gt;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : namespace boost {
+<span class="lineNum">      31 </span>            : namespace asio {
+<span class="lineNum">      32 </span>            : namespace ip {
+<span class="lineNum">      33 </span>            : namespace detail {
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : endpoint::endpoint()
+<span class="lineNum">      36 </span><span class="lineCov">        237 :   : data_()</span>
+<span class="lineNum">      37 </span>            : {
+<span class="lineNum">      38 </span><span class="lineCov">        237 :   data_.v4.sin_family = BOOST_ASIO_OS_DEF(AF_INET);</span>
+<span class="lineNum">      39 </span>            :   data_.v4.sin_port = 0;
+<span class="lineNum">      40 </span>            :   data_.v4.sin_addr.s_addr = BOOST_ASIO_OS_DEF(INADDR_ANY);
+<a name="41"><span class="lineNum">      41 </span>            : }</a>
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span><span class="lineCov">          1 : endpoint::endpoint(int family, unsigned short port_num)</span>
+<span class="lineNum">      44 </span><span class="lineCov">          1 :   : data_()</span>
+<span class="lineNum">      45 </span>            : {
+<span class="lineNum">      46 </span>            :   using namespace std; // For memcpy.
+<span class="lineNum">      47 </span><span class="lineCov">          1 :   if (family == BOOST_ASIO_OS_DEF(AF_INET))</span>
+<span class="lineNum">      48 </span>            :   {
+<span class="lineNum">      49 </span><span class="lineCov">          1 :     data_.v4.sin_family = BOOST_ASIO_OS_DEF(AF_INET);</span>
+<span class="lineNum">      50 </span>            :     data_.v4.sin_port =
+<span class="lineNum">      51 </span><span class="lineCov">          1 :       boost::asio::detail::socket_ops::host_to_network_short(port_num);</span>
+<span class="lineNum">      52 </span>            :     data_.v4.sin_addr.s_addr = BOOST_ASIO_OS_DEF(INADDR_ANY);
+<span class="lineNum">      53 </span>            :   }
+<span class="lineNum">      54 </span>            :   else
+<span class="lineNum">      55 </span>            :   {
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :     data_.v6.sin6_family = BOOST_ASIO_OS_DEF(AF_INET6);</span>
+<span class="lineNum">      57 </span>            :     data_.v6.sin6_port =
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :       boost::asio::detail::socket_ops::host_to_network_short(port_num);</span>
+<span class="lineNum">      59 </span>            :     data_.v6.sin6_flowinfo = 0;
+<span class="lineNum">      60 </span>            :     data_.v6.sin6_addr.s6_addr[0] = 0; data_.v6.sin6_addr.s6_addr[1] = 0;
+<span class="lineNum">      61 </span>            :     data_.v6.sin6_addr.s6_addr[2] = 0, data_.v6.sin6_addr.s6_addr[3] = 0;
+<span class="lineNum">      62 </span>            :     data_.v6.sin6_addr.s6_addr[4] = 0, data_.v6.sin6_addr.s6_addr[5] = 0;
+<span class="lineNum">      63 </span>            :     data_.v6.sin6_addr.s6_addr[6] = 0, data_.v6.sin6_addr.s6_addr[7] = 0;
+<span class="lineNum">      64 </span>            :     data_.v6.sin6_addr.s6_addr[8] = 0, data_.v6.sin6_addr.s6_addr[9] = 0;
+<span class="lineNum">      65 </span>            :     data_.v6.sin6_addr.s6_addr[10] = 0, data_.v6.sin6_addr.s6_addr[11] = 0;
+<span class="lineNum">      66 </span>            :     data_.v6.sin6_addr.s6_addr[12] = 0, data_.v6.sin6_addr.s6_addr[13] = 0;
+<span class="lineNum">      67 </span>            :     data_.v6.sin6_addr.s6_addr[14] = 0, data_.v6.sin6_addr.s6_addr[15] = 0;
+<span class="lineNum">      68 </span>            :     data_.v6.sin6_scope_id = 0;
+<span class="lineNum">      69 </span>            :   }
+<a name="70"><span class="lineNum">      70 </span><span class="lineCov">          1 : }</span></a>
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span><span class="lineCov">        211 : endpoint::endpoint(const boost::asio::ip::address&amp; addr,</span>
+<span class="lineNum">      73 </span>            :     unsigned short port_num)
+<span class="lineNum">      74 </span><span class="lineCov">        211 :   : data_()</span>
+<span class="lineNum">      75 </span>            : {
+<span class="lineNum">      76 </span>            :   using namespace std; // For memcpy.
+<span class="lineNum">      77 </span><span class="lineCov">        211 :   if (addr.is_v4())</span>
+<span class="lineNum">      78 </span>            :   {
+<span class="lineNum">      79 </span><span class="lineCov">        211 :     data_.v4.sin_family = BOOST_ASIO_OS_DEF(AF_INET);</span>
+<span class="lineNum">      80 </span>            :     data_.v4.sin_port =
+<span class="lineNum">      81 </span><span class="lineCov">        211 :       boost::asio::detail::socket_ops::host_to_network_short(port_num);</span>
+<span class="lineNum">      82 </span>            :     data_.v4.sin_addr.s_addr =
+<span class="lineNum">      83 </span><span class="lineCov">        422 :       boost::asio::detail::socket_ops::host_to_network_long(</span>
+<span class="lineNum">      84 </span>            :           static_cast&lt;boost::asio::detail::u_long_type&gt;(
+<span class="lineNum">      85 </span><span class="lineCov">        633 :             addr.to_v4().to_ulong()));</span>
+<span class="lineNum">      86 </span>            :   }
+<span class="lineNum">      87 </span>            :   else
+<span class="lineNum">      88 </span>            :   {
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 :     data_.v6.sin6_family = BOOST_ASIO_OS_DEF(AF_INET6);</span>
+<span class="lineNum">      90 </span>            :     data_.v6.sin6_port =
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :       boost::asio::detail::socket_ops::host_to_network_short(port_num);</span>
+<span class="lineNum">      92 </span>            :     data_.v6.sin6_flowinfo = 0;
+<span class="lineNum">      93 </span><span class="lineNoCov">          0 :     boost::asio::ip::address_v6 v6_addr = addr.to_v6();</span>
+<span class="lineNum">      94 </span>            :     boost::asio::ip::address_v6::bytes_type bytes = v6_addr.to_bytes();
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 :     memcpy(data_.v6.sin6_addr.s6_addr, bytes.data(), 16);</span>
+<span class="lineNum">      96 </span>            :     data_.v6.sin6_scope_id =
+<span class="lineNum">      97 </span>            :       static_cast&lt;boost::asio::detail::u_long_type&gt;(
+<span class="lineNum">      98 </span><span class="lineNoCov">          0 :         v6_addr.scope_id());</span>
+<span class="lineNum">      99 </span>            :   }
+<a name="100"><span class="lineNum">     100 </span><span class="lineCov">        211 : }</span></a>
+<span class="lineNum">     101 </span>            : 
+<span class="lineNum">     102 </span><span class="lineCov">        232 : void endpoint::resize(std::size_t new_size)</span>
+<span class="lineNum">     103 </span>            : {
+<span class="lineNum">     104 </span><span class="lineCov">        232 :   if (new_size &gt; sizeof(boost::asio::detail::sockaddr_storage_type))</span>
+<span class="lineNum">     105 </span>            :   {
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :     boost::system::error_code ec(boost::asio::error::invalid_argument);</span>
+<span class="lineNum">     107 </span>            :     boost::asio::detail::throw_error(ec);
+<span class="lineNum">     108 </span>            :   }
+<span class="lineNum">     109 </span><span class="lineCov">        232 : }</span>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span>            : unsigned short endpoint::port() const
+<span class="lineNum">     112 </span>            : {
+<span class="lineNum">     113 </span><span class="lineCov">        442 :   if (is_v4())</span>
+<span class="lineNum">     114 </span>            :   {
+<span class="lineNum">     115 </span>            :     return boost::asio::detail::socket_ops::network_to_host_short(
+<span class="lineNum">     116 </span><span class="lineCov">        442 :         data_.v4.sin_port);</span>
+<span class="lineNum">     117 </span>            :   }
+<span class="lineNum">     118 </span>            :   else
+<span class="lineNum">     119 </span>            :   {
+<span class="lineNum">     120 </span>            :     return boost::asio::detail::socket_ops::network_to_host_short(
+<span class="lineNum">     121 </span><span class="lineNoCov">          0 :         data_.v6.sin6_port);</span>
+<span class="lineNum">     122 </span>            :   }
+<span class="lineNum">     123 </span>            : }
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span>            : void endpoint::port(unsigned short port_num)
+<span class="lineNum">     126 </span>            : {
+<span class="lineNum">     127 </span>            :   if (is_v4())
+<span class="lineNum">     128 </span>            :   {
+<span class="lineNum">     129 </span>            :     data_.v4.sin_port
+<span class="lineNum">     130 </span>            :       = boost::asio::detail::socket_ops::host_to_network_short(port_num);
+<span class="lineNum">     131 </span>            :   }
+<span class="lineNum">     132 </span>            :   else
+<span class="lineNum">     133 </span>            :   {
+<span class="lineNum">     134 </span>            :     data_.v6.sin6_port
+<span class="lineNum">     135 </span>            :       = boost::asio::detail::socket_ops::host_to_network_short(port_num);
+<span class="lineNum">     136 </span>            :   }
+<a name="137"><span class="lineNum">     137 </span>            : }</a>
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span><span class="lineCov">        367 : boost::asio::ip::address endpoint::address() const</span>
+<span class="lineNum">     140 </span>            : {
+<span class="lineNum">     141 </span>            :   using namespace std; // For memcpy.
+<span class="lineNum">     142 </span><span class="lineCov">        367 :   if (is_v4())</span>
+<span class="lineNum">     143 </span>            :   {
+<span class="lineNum">     144 </span>            :     return boost::asio::ip::address_v4(
+<span class="lineNum">     145 </span><span class="lineCov">        367 :         boost::asio::detail::socket_ops::network_to_host_long(</span>
+<span class="lineNum">     146 </span><span class="lineCov">       1101 :           data_.v4.sin_addr.s_addr));</span>
+<span class="lineNum">     147 </span>            :   }
+<span class="lineNum">     148 </span>            :   else
+<span class="lineNum">     149 </span>            :   {
+<span class="lineNum">     150 </span>            :     boost::asio::ip::address_v6::bytes_type bytes;
+<span class="lineNum">     151 </span>            : #if defined(BOOST_ASIO_HAS_STD_ARRAY)
+<span class="lineNum">     152 </span><span class="lineNoCov">          0 :     memcpy(bytes.data(), data_.v6.sin6_addr.s6_addr, 16);</span>
+<span class="lineNum">     153 </span>            : #else // defined(BOOST_ASIO_HAS_STD_ARRAY)
+<span class="lineNum">     154 </span>            :     memcpy(bytes.elems, data_.v6.sin6_addr.s6_addr, 16);
+<span class="lineNum">     155 </span>            : #endif // defined(BOOST_ASIO_HAS_STD_ARRAY)
+<span class="lineNum">     156 </span><span class="lineNoCov">          0 :     return boost::asio::ip::address_v6(bytes, data_.v6.sin6_scope_id);</span>
+<span class="lineNum">     157 </span>            :   }
+<a name="158"><span class="lineNum">     158 </span>            : }</a>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 : void endpoint::address(const boost::asio::ip::address&amp; addr)</span>
+<span class="lineNum">     161 </span>            : {
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :   endpoint tmp_endpoint(addr, port());</span>
+<span class="lineNum">     163 </span><span class="lineNoCov">          0 :   data_ = tmp_endpoint.data_;</span>
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            : bool operator==(const endpoint&amp; e1, const endpoint&amp; e2)
+<span class="lineNum">     167 </span>            : {
+<span class="lineNum">     168 </span>            :   return e1.address() == e2.address() &amp;&amp; e1.port() == e2.port();
+<span class="lineNum">     169 </span>            : }
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            : bool operator&lt;(const endpoint&amp; e1, const endpoint&amp; e2)
+<span class="lineNum">     172 </span>            : {
+<span class="lineNum">     173 </span>            :   if (e1.address() &lt; e2.address())
+<span class="lineNum">     174 </span>            :     return true;
+<span class="lineNum">     175 </span>            :   if (e1.address() != e2.address())
+<span class="lineNum">     176 </span>            :     return false;
+<span class="lineNum">     177 </span>            :   return e1.port() &lt; e2.port();
+<span class="lineNum">     178 </span>            : }
+<a name="179"><span class="lineNum">     179 </span>            : </a>
+<span class="lineNum">     180 </span>            : #if !defined(BOOST_ASIO_NO_IOSTREAM)
+<span class="lineNum">     181 </span><span class="lineNoCov">          0 : std::string endpoint::to_string(boost::system::error_code&amp; ec) const</span>
+<span class="lineNum">     182 </span>            : {
+<span class="lineNum">     183 </span><span class="lineNoCov">          0 :   std::string a = address().to_string(ec);</span>
+<span class="lineNum">     184 </span><span class="lineNoCov">          0 :   if (ec)</span>
+<span class="lineNum">     185 </span>            :     return std::string();
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span><span class="lineNoCov">          0 :   std::ostringstream tmp_os;</span>
+<span class="lineNum">     188 </span><span class="lineNoCov">          0 :   tmp_os.imbue(std::locale::classic());</span>
+<span class="lineNum">     189 </span><span class="lineNoCov">          0 :   if (is_v4())</span>
+<span class="lineNum">     190 </span>            :     tmp_os &lt;&lt; a;
+<span class="lineNum">     191 </span>            :   else
+<span class="lineNum">     192 </span><span class="lineNoCov">          0 :     tmp_os &lt;&lt; '[' &lt;&lt; a &lt;&lt; ']';</span>
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 :   tmp_os &lt;&lt; ':' &lt;&lt; port();</span>
+<span class="lineNum">     194 </span>            : 
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :   return tmp_os.str();</span>
+<span class="lineNum">     196 </span>            : }
+<span class="lineNum">     197 </span>            : #endif // !defined(BOOST_ASIO_NO_IOSTREAM)
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            : } // namespace detail
+<span class="lineNum">     200 </span>            : } // namespace ip
+<span class="lineNum">     201 </span>            : } // namespace asio
+<span class="lineNum">     202 </span>            : } // namespace boost
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            : #include &lt;boost/asio/detail/pop_options.hpp&gt;
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            : #endif // BOOST_ASIO_IP_DETAIL_IMPL_ENDPOINT_IPP
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

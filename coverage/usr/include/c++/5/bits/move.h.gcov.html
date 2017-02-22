@@ -1,0 +1,284 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/bits/move.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5/bits</a> - move.h<span style="font-size: 80%;"> (source / <a href="move.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryLo">20.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Move, forward and identity for C++0x + swap -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 2007-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file bits/move.h
+<span class="lineNum">      26 </span>            :  *  This is an internal header file, included by other library headers.
+<span class="lineNum">      27 </span>            :  *  Do not attempt to use it directly. @headername{utility}
+<span class="lineNum">      28 </span>            :  */
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #ifndef _MOVE_H
+<span class="lineNum">      31 </span>            : #define _MOVE_H 1
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #include &lt;bits/c++config.h&gt;
+<span class="lineNum">      34 </span>            : #include &lt;bits/concept_check.h&gt;
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      37 </span>            : {
+<span class="lineNum">      38 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            :   // Used, in C++03 mode too, by allocators, etc.
+<span class="lineNum">      41 </span>            :   /**
+<span class="lineNum">      42 </span>            :    *  @brief Same as C++11 std::addressof
+<span class="lineNum">      43 </span>            :    *  @ingroup utilities
+<span class="lineNum">      44 </span>            :    */
+<span class="lineNum">      45 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">      46 </span>            :     inline _Tp*
+<span class="lineNum">      47 </span>            :     __addressof(_Tp&amp; __r) _GLIBCXX_NOEXCEPT
+<span class="lineNum">      48 </span>            :     {
+<span class="lineNum">      49 </span>            :       return reinterpret_cast&lt;_Tp*&gt;
+<span class="lineNum">      50 </span>            :         (&amp;const_cast&lt;char&amp;&gt;(reinterpret_cast&lt;const volatile char&amp;&gt;(__r)));
+<span class="lineNum">      51 </span>            :     }
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">      54 </span>            : } // namespace
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">      57 </span>            : #include &lt;type_traits&gt; // Brings in std::declval too.
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      60 </span>            : {
+<span class="lineNum">      61 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            :   /**
+<span class="lineNum">      64 </span>            :    *  @addtogroup utilities
+<span class="lineNum">      65 </span>            :    *  @{
+<span class="lineNum">      66 </span>            :    */
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            :   /**
+<span class="lineNum">      69 </span>            :    *  @brief  Forward an lvalue.
+<span class="lineNum">      70 </span>            :    *  @return The parameter cast to the specified type.
+<span class="lineNum">      71 </span>            :    *
+<span class="lineNum">      72 </span>            :    *  This function is used to implement &quot;perfect forwarding&quot;.
+<span class="lineNum">      73 </span>            :    */
+<span class="lineNum">      74 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">      75 </span>            :     constexpr _Tp&amp;&amp;
+<span class="lineNum">      76 </span>            :     forward(typename std::remove_reference&lt;_Tp&gt;::type&amp; __t) noexcept
+<span class="lineNum">      77 </span>            :     { return static_cast&lt;_Tp&amp;&amp;&gt;(__t); }
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :   /**
+<span class="lineNum">      80 </span>            :    *  @brief  Forward an rvalue.
+<span class="lineNum">      81 </span>            :    *  @return The parameter cast to the specified type.
+<span class="lineNum">      82 </span>            :    *
+<span class="lineNum">      83 </span>            :    *  This function is used to implement &quot;perfect forwarding&quot;.
+<span class="lineNum">      84 </span>            :    */
+<span class="lineNum">      85 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">      86 </span>            :     constexpr _Tp&amp;&amp;
+<span class="lineNum">      87 </span>            :     forward(typename std::remove_reference&lt;_Tp&gt;::type&amp;&amp; __t) noexcept
+<span class="lineNum">      88 </span>            :     {
+<span class="lineNum">      89 </span>            :       static_assert(!std::is_lvalue_reference&lt;_Tp&gt;::value, &quot;template argument&quot;
+<span class="lineNum">      90 </span>            :                     &quot; substituting _Tp is an lvalue reference type&quot;);
+<span class="lineNum">      91 </span>            :       return static_cast&lt;_Tp&amp;&amp;&gt;(__t);
+<span class="lineNum">      92 </span>            :     }
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :   /**
+<span class="lineNum">      95 </span>            :    *  @brief  Convert a value to an rvalue.
+<span class="lineNum">      96 </span>            :    *  @param  __t  A thing of arbitrary type.
+<span class="lineNum">      97 </span>            :    *  @return The parameter cast to an rvalue-reference to allow moving it.
+<span class="lineNum">      98 </span>            :   */
+<span class="lineNum">      99 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">     100 </span>            :     constexpr typename std::remove_reference&lt;_Tp&gt;::type&amp;&amp;
+<span class="lineNum">     101 </span>            :     move(_Tp&amp;&amp; __t) noexcept
+<span class="lineNum">     102 </span>            :     { return static_cast&lt;typename std::remove_reference&lt;_Tp&gt;::type&amp;&amp;&gt;(__t); }
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">     106 </span>            :     struct __move_if_noexcept_cond
+<span class="lineNum">     107 </span>            :     : public __and_&lt;__not_&lt;is_nothrow_move_constructible&lt;_Tp&gt;&gt;,
+<span class="lineNum">     108 </span>            :                     is_copy_constructible&lt;_Tp&gt;&gt;::type { };
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            :   /**
+<span class="lineNum">     111 </span>            :    *  @brief  Conditionally convert a value to an rvalue.
+<span class="lineNum">     112 </span>            :    *  @param  __x  A thing of arbitrary type.
+<span class="lineNum">     113 </span>            :    *  @return The parameter, possibly cast to an rvalue-reference.
+<span class="lineNum">     114 </span>            :    *
+<span class="lineNum">     115 </span>            :    *  Same as std::move unless the type's move constructor could throw and the
+<span class="lineNum">     116 </span>            :    *  type is copyable, in which case an lvalue-reference is returned instead.
+<span class="lineNum">     117 </span>            :    */
+<span class="lineNum">     118 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">     119 </span>            :     constexpr typename
+<span class="lineNum">     120 </span>            :     conditional&lt;__move_if_noexcept_cond&lt;_Tp&gt;::value, const _Tp&amp;, _Tp&amp;&amp;&gt;::type
+<span class="lineNum">     121 </span>            :     move_if_noexcept(_Tp&amp; __x) noexcept
+<span class="lineNum">     122 </span>            :     { return std::move(__x); }
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :   // declval, from type_traits.
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            :   /**
+<span class="lineNum">     127 </span>            :    *  @brief Returns the actual address of the object or function
+<span class="lineNum">     128 </span>            :    *         referenced by r, even in the presence of an overloaded
+<span class="lineNum">     129 </span>            :    *         operator&amp;.
+<span class="lineNum">     130 </span>            :    *  @param  __r  Reference to an object or function.
+<span class="lineNum">     131 </span>            :    *  @return   The actual address.
+<span class="lineNum">     132 </span>            :   */
+<span class="lineNum">     133 </span>            :   template&lt;typename _Tp&gt;
+<span class="lineNum">     134 </span>            :     inline _Tp*
+<span class="lineNum">     135 </span>            :     addressof(_Tp&amp; __r) noexcept
+<span class="lineNum">     136 </span><span class="lineCov">  141538252 :     { return std::__addressof(__r); }</span>
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :   // C++11 version of std::exchange for internal use.
+<span class="lineNum">     139 </span>            :   template &lt;typename _Tp, typename _Up = _Tp&gt;
+<span class="lineNum">     140 </span>            :     inline _Tp
+<span class="lineNum">     141 </span>            :     __exchange(_Tp&amp; __obj, _Up&amp;&amp; __new_val)
+<span class="lineNum">     142 </span>            :     {
+<span class="lineNum">     143 </span>            :       _Tp __old_val = std::move(__obj);
+<span class="lineNum">     144 </span>            :       __obj = std::forward&lt;_Up&gt;(__new_val);
+<span class="lineNum">     145 </span>            :       return __old_val;
+<span class="lineNum">     146 </span>            :     }
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            :   /// @} group utilities
+<span class="lineNum">     149 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     150 </span>            : } // namespace
+<span class="lineNum">     151 </span>            : 
+<span class="lineNum">     152 </span>            : #define _GLIBCXX_MOVE(__val) std::move(__val)
+<span class="lineNum">     153 </span>            : #define _GLIBCXX_FORWARD(_Tp, __val) std::forward&lt;_Tp&gt;(__val)
+<span class="lineNum">     154 </span>            : #else
+<span class="lineNum">     155 </span>            : #define _GLIBCXX_MOVE(__val) (__val)
+<span class="lineNum">     156 </span>            : #define _GLIBCXX_FORWARD(_Tp, __val) (__val)
+<span class="lineNum">     157 </span>            : #endif
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">     160 </span>            : {
+<span class="lineNum">     161 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            :   /**
+<span class="lineNum">     164 </span>            :    *  @addtogroup utilities
+<span class="lineNum">     165 </span>            :    *  @{
+<span class="lineNum">     166 </span>            :    */
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :   /**
+<span class="lineNum">     169 </span>            :    *  @brief Swaps two values.
+<span class="lineNum">     170 </span>            :    *  @param  __a  A thing of arbitrary type.
+<span class="lineNum">     171 </span>            :    *  @param  __b  Another thing of arbitrary type.
+<span class="lineNum">     172 </span>            :    *  @return   Nothing.
+<span class="lineNum">     173 </span>            :   */
+<a name="174"><span class="lineNum">     174 </span>            :   template&lt;typename _Tp&gt;</a>
+<span class="lineNum">     175 </span>            :     inline void
+<span class="lineNum">     176 </span><span class="lineCov">    1864969 :     swap(_Tp&amp; __a, _Tp&amp; __b)</span>
+<span class="lineNum">     177 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     178 </span>            :     noexcept(__and_&lt;is_nothrow_move_constructible&lt;_Tp&gt;,
+<span class="lineNum">     179 </span>            :                     is_nothrow_move_assignable&lt;_Tp&gt;&gt;::value)
+<span class="lineNum">     180 </span>            : #endif
+<span class="lineNum">     181 </span>            :     {
+<span class="lineNum">     182 </span>            :       // concept requirements
+<span class="lineNum">     183 </span>            :       __glibcxx_function_requires(_SGIAssignableConcept&lt;_Tp&gt;)
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span><span class="lineCov">  435473645 :       _Tp __tmp = _GLIBCXX_MOVE(__a);</span>
+<span class="lineNum">     186 </span><span class="lineCov">  433608674 :       __a = _GLIBCXX_MOVE(__b);</span>
+<span class="lineNum">     187 </span><span class="lineCov">  433608674 :       __b = _GLIBCXX_MOVE(__tmp);</span>
+<span class="lineNum">     188 </span><span class="lineCov">    1864969 :     }</span>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span>            :   // _GLIBCXX_RESOLVE_LIB_DEFECTS
+<span class="lineNum">     191 </span>            :   // DR 809. std::swap should be overloaded for array types.
+<span class="lineNum">     192 </span>            :   /// Swap the contents of two arrays.
+<span class="lineNum">     193 </span>            :   template&lt;typename _Tp, size_t _Nm&gt;
+<span class="lineNum">     194 </span>            :     inline void
+<span class="lineNum">     195 </span>            :     swap(_Tp (&amp;__a)[_Nm], _Tp (&amp;__b)[_Nm])
+<span class="lineNum">     196 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     197 </span>            :     noexcept(noexcept(swap(*__a, *__b)))
+<span class="lineNum">     198 </span>            : #endif
+<span class="lineNum">     199 </span>            :     {
+<span class="lineNum">     200 </span>            :       for (size_t __n = 0; __n &lt; _Nm; ++__n)
+<span class="lineNum">     201 </span>            :         swap(__a[__n], __b[__n]);
+<span class="lineNum">     202 </span>            :     }
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            :   /// @} group utilities
+<span class="lineNum">     205 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     206 </span>            : } // namespace
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            : #endif /* _MOVE_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

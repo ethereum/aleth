@@ -1,0 +1,238 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libp2p/RLPXFrameWriter.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libp2p</a> - RLPXFrameWriter.cpp<span style="font-size: 80%;"> (source / <a href="RLPXFrameWriter.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">70</td>
+            <td class="headerCovTableEntry">71</td>
+            <td class="headerCovTableEntryHi">98.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :  This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            :  
+<span class="lineNum">       4 </span>            :  cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :  it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :  the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :  (at your option) any later version.
+<span class="lineNum">       8 </span>            :  
+<span class="lineNum">       9 </span>            :  cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :  but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :  GNU General Public License for more details.
+<span class="lineNum">      13 </span>            :  
+<span class="lineNum">      14 </span>            :  You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :  along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            :  */
+<span class="lineNum">      17 </span>            : /** @file RLPXFrameWriter.cpp
+<span class="lineNum">      18 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2015
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;RLPXFrameWriter.h&quot;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : using namespace std;
+<span class="lineNum">      25 </span>            : using namespace dev;
+<span class="lineNum">      26 </span>            : using namespace dev::p2p;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : const uint16_t RLPXFrameWriter::EmptyFrameLength = h128::size * 3; // header + headerMAC + frameMAC
+<a name="29"><span class="lineNum">      29 </span>            : const uint16_t RLPXFrameWriter::MinFrameDequeLength = h128::size * 4; // header + headerMAC + padded-block + frameMAC</a>
+<span class="lineNum">      30 </span>            : 
+<span class="lineNum">      31 </span><span class="lineCov">       2060 : void RLPXFrameWriter::enque(RLPXPacket&amp;&amp; _p, PacketPriority _priority)</span>
+<span class="lineNum">      32 </span>            : {
+<span class="lineNum">      33 </span><span class="lineCov">       2060 :         if (!_p.isValid())</span>
+<span class="lineNum">      34 </span>            :                 return;
+<span class="lineNum">      35 </span><span class="lineCov">       2060 :         WriterState&amp; qs = _priority ? m_q.first : m_q.second;</span>
+<span class="lineNum">      36 </span><span class="lineCov">       8240 :         DEV_GUARDED(qs.x)</span>
+<span class="lineNum">      37 </span><span class="lineCov">       2060 :                 qs.q.push_back(move(_p));</span>
+<a name="38"><span class="lineNum">      38 </span>            : }</a>
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span><span class="lineCov">       2060 : void RLPXFrameWriter::enque(uint8_t _packetType, RLPStream&amp; _payload, PacketPriority _priority)</span>
+<span class="lineNum">      41 </span>            : {
+<span class="lineNum">      42 </span><span class="lineCov">       6180 :         enque(RLPXPacket(m_protocolId, (RLPStream() &lt;&lt; _packetType), _payload), _priority);</span>
+<a name="43"><span class="lineNum">      43 </span><span class="lineCov">       2060 : }</span></a>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">       1386 : size_t RLPXFrameWriter::mux(RLPXFrameCoder&amp; _coder, unsigned _size, deque&lt;bytes&gt;&amp; o_toWrite)</span>
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span>            :         static const size_t c_blockSize = h128::size;
+<span class="lineNum">      48 </span>            :         static const size_t c_overhead = c_blockSize * 3; // header + headerMac + frameMAC
+<span class="lineNum">      49 </span><span class="lineCov">       1386 :         if (_size &lt; c_overhead + c_blockSize)</span>
+<span class="lineNum">      50 </span>            :                 return 0;
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span><span class="lineCov">       1386 :         size_t ret = 0;</span>
+<span class="lineNum">      53 </span><span class="lineCov">       1386 :         size_t frameLen = _size / 16 * 16;</span>
+<span class="lineNum">      54 </span><span class="lineCov">       4158 :         bytes payload(0);</span>
+<span class="lineNum">      55 </span><span class="lineCov">       1386 :         bool swapQueues = false;</span>
+<span class="lineNum">      56 </span><span class="lineCov">       3976 :         while (frameLen &gt;= c_overhead + c_blockSize)</span>
+<span class="lineNum">      57 </span>            :         {
+<span class="lineNum">      58 </span><span class="lineCov">       2616 :                 bool highPending = false;</span>
+<span class="lineNum">      59 </span><span class="lineCov">       2616 :                 bool lowPending = false;</span>
+<span class="lineNum">      60 </span><span class="lineCov">      13080 :                 DEV_GUARDED(m_q.first.x)</span>
+<span class="lineNum">      61 </span><span class="lineCov">       5232 :                         highPending = !!m_q.first.q.size();</span>
+<span class="lineNum">      62 </span><span class="lineCov">      13080 :                 DEV_GUARDED(m_q.second.x)</span>
+<span class="lineNum">      63 </span><span class="lineCov">       5232 :                         lowPending = !!m_q.second.q.size();</span>
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineCov">       2616 :                 if (!highPending &amp;&amp; !lowPending)</span>
+<span class="lineNum">      66 </span>            :                         return ret;
+<span class="lineNum">      67 </span>            :                 
+<span class="lineNum">      68 </span>            :                 // first run when !swapQueues, high &gt; low, otherwise low &gt; high
+<span class="lineNum">      69 </span><span class="lineCov">       2590 :                 bool high = highPending &amp;&amp; !swapQueues ? true : !lowPending;</span>
+<span class="lineNum">      70 </span><span class="lineCov">       2590 :                 WriterState &amp;qs = high ? m_q.first : m_q.second;</span>
+<span class="lineNum">      71 </span><span class="lineCov">       2590 :                 size_t frameAllot = (!swapQueues &amp;&amp; highPending &amp;&amp; lowPending ? frameLen / 2 - (c_overhead + c_blockSize) &gt; 0 ? frameLen / 2 : frameLen : frameLen) - c_overhead;</span>
+<span class="lineNum">      72 </span>            :                 size_t offset = 0;
+<span class="lineNum">      73 </span>            :                 size_t length = 0;
+<span class="lineNum">      74 </span><span class="lineCov">       3844 :                 while (frameAllot &gt;= c_blockSize)</span>
+<span class="lineNum">      75 </span>            :                 {
+<span class="lineNum">      76 </span>            :                         // Invariants:
+<span class="lineNum">      77 </span>            :                         // !qs.writing &amp;&amp; payload.empty()       initial entry
+<span class="lineNum">      78 </span>            :                         // !qs.writing &amp;&amp; !payload.empty()      continuation (multiple packets per frame)
+<span class="lineNum">      79 </span>            :                         // qs.writing &amp;&amp; payload.empty()        initial entry, continuation (multiple frames per packet)
+<span class="lineNum">      80 </span>            :                         // qs.writing &amp;&amp; !payload.empty()       INVALID
+<span class="lineNum">      81 </span>            :                         
+<span class="lineNum">      82 </span>            :                         // write packet-type
+<span class="lineNum">      83 </span><span class="lineCov">       3819 :                         if (qs.writing == nullptr)</span>
+<span class="lineNum">      84 </span>            :                         {
+<span class="lineNum">      85 </span>            :                                 {
+<span class="lineNum">      86 </span><span class="lineCov">       7774 :                                         Guard l(qs.x);</span>
+<span class="lineNum">      87 </span><span class="lineCov">       5188 :                                         if (!qs.q.empty())</span>
+<span class="lineNum">      88 </span><span class="lineCov">       5172 :                                                 qs.writing = &amp;qs.q[0];</span>
+<span class="lineNum">      89 </span>            :                                         else
+<span class="lineNum">      90 </span>            :                                                 break;
+<span class="lineNum">      91 </span>            :                                 }
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span>            :                                 // break here if we can't write-out packet-type
+<span class="lineNum">      94 </span>            :                                 // or payload is packed and next packet won't fit (implicit)
+<span class="lineNum">      95 </span><span class="lineCov">       5172 :                                 qs.multiFrame = qs.writing-&gt;size() &gt; frameAllot;</span>
+<span class="lineNum">      96 </span><span class="lineCov">       5172 :                                 assert(qs.writing-&gt;type().size());</span>
+<span class="lineNum">      97 </span><span class="lineCov">       3918 :                                 if (qs.writing-&gt;type().size() &gt; frameAllot || (qs.multiFrame &amp;&amp; !payload.empty()))</span>
+<span class="lineNum">      98 </span>            :                                 {
+<span class="lineNum">      99 </span><span class="lineCov">        526 :                                         qs.writing = nullptr;</span>
+<span class="lineNum">     100 </span><span class="lineCov">        526 :                                         qs.remaining = 0;</span>
+<span class="lineNum">     101 </span><span class="lineCov">        526 :                                         qs.multiFrame = false;</span>
+<span class="lineNum">     102 </span><span class="lineCov">        526 :                                         break;</span>
+<span class="lineNum">     103 </span>            :                                 }
+<span class="lineNum">     104 </span><span class="lineCov">       2060 :                                 else if (qs.multiFrame)</span>
+<span class="lineNum">     105 </span><span class="lineCov">        806 :                                         qs.sequence = ++m_sequenceId;</span>
+<span class="lineNum">     106 </span>            :                                 
+<span class="lineNum">     107 </span><span class="lineCov">       2060 :                                 frameAllot -= qs.writing-&gt;type().size();</span>
+<span class="lineNum">     108 </span><span class="lineCov">       4120 :                                 payload += qs.writing-&gt;type();</span>
+<span class="lineNum">     109 </span>            :                                 
+<span class="lineNum">     110 </span><span class="lineCov">       4120 :                                 qs.remaining = qs.writing-&gt;data().size();</span>
+<span class="lineNum">     111 </span>            :                         }
+<span class="lineNum">     112 </span>            :                         
+<span class="lineNum">     113 </span>            :                         // write payload w/remaining allotment
+<span class="lineNum">     114 </span><span class="lineCov">       3285 :                         assert(qs.multiFrame || (!qs.multiFrame &amp;&amp; frameAllot &gt;= qs.remaining));</span>
+<span class="lineNum">     115 </span><span class="lineCov">       3285 :                         if (frameAllot &amp;&amp; qs.remaining)</span>
+<span class="lineNum">     116 </span>            :                         {
+<span class="lineNum">     117 </span><span class="lineCov">       6570 :                                 offset = qs.writing-&gt;data().size() - qs.remaining;</span>
+<span class="lineNum">     118 </span><span class="lineCov">       3285 :                                 length = qs.remaining &lt;= frameAllot ? qs.remaining : frameAllot;</span>
+<span class="lineNum">     119 </span><span class="lineCov">      16425 :                                 bytes portion = bytesConstRef(&amp;qs.writing-&gt;data()).cropped(offset, length).toBytes();</span>
+<span class="lineNum">     120 </span><span class="lineCov">       3285 :                                 qs.remaining -= length;</span>
+<span class="lineNum">     121 </span><span class="lineCov">       6570 :                                 frameAllot -= portion.size();</span>
+<span class="lineNum">     122 </span><span class="lineCov">       3285 :                                 payload += portion;</span>
+<span class="lineNum">     123 </span>            :                         }
+<span class="lineNum">     124 </span>            :                         
+<span class="lineNum">     125 </span><span class="lineCov">       3285 :                         assert((!qs.remaining &amp;&amp; (offset &gt; 0 || !qs.multiFrame)) || (qs.remaining &amp;&amp; qs.multiFrame));</span>
+<span class="lineNum">     126 </span><span class="lineCov">       3285 :                         if (!qs.remaining)</span>
+<span class="lineNum">     127 </span>            :                         {
+<span class="lineNum">     128 </span><span class="lineCov">       2060 :                                 qs.writing = nullptr;</span>
+<span class="lineNum">     129 </span><span class="lineCov">      10300 :                                 DEV_GUARDED(qs.x)</span>
+<span class="lineNum">     130 </span><span class="lineCov">       2060 :                                         qs.q.pop_front();</span>
+<span class="lineNum">     131 </span><span class="lineCov">       2060 :                                 ret++;</span>
+<span class="lineNum">     132 </span>            :                         }
+<span class="lineNum">     133 </span>            :                         // qs.writing is left alone for first frame of multi-frame packet
+<span class="lineNum">     134 </span><span class="lineCov">       3285 :                         if (qs.multiFrame)</span>
+<span class="lineNum">     135 </span>            :                                 break;
+<span class="lineNum">     136 </span>            :                 }
+<span class="lineNum">     137 </span>            :                 
+<span class="lineNum">     138 </span><span class="lineCov">       2590 :                 if (!payload.empty())</span>
+<span class="lineNum">     139 </span>            :                 {
+<span class="lineNum">     140 </span><span class="lineCov">       2590 :                         if (qs.multiFrame)</span>
+<span class="lineNum">     141 </span><span class="lineCov">       2031 :                                 if (offset == 0 &amp;&amp; qs.writing)</span>
+<span class="lineNum">     142 </span>            :                                         // 1st frame of segmented packet writes total-size of packet
+<span class="lineNum">     143 </span><span class="lineCov">        806 :                                         _coder.writeFrame(m_protocolId, qs.sequence, qs.writing-&gt;size(), &amp;payload, payload);</span>
+<span class="lineNum">     144 </span>            :                                 else
+<span class="lineNum">     145 </span><span class="lineCov">       1225 :                                         _coder.writeFrame(m_protocolId, qs.sequence, &amp;payload, payload);</span>
+<span class="lineNum">     146 </span>            :                         else
+<span class="lineNum">     147 </span><span class="lineCov">        559 :                                 _coder.writeFrame(m_protocolId, &amp;payload, payload);</span>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">       5180 :                         assert(frameLen &gt;= payload.size());</span>
+<span class="lineNum">     150 </span><span class="lineCov">       2590 :                         frameLen -= payload.size();</span>
+<span class="lineNum">     151 </span><span class="lineCov">       2590 :                         o_toWrite.push_back(payload);</span>
+<span class="lineNum">     152 </span><span class="lineCov">       2590 :                         payload.resize(0);</span>
+<span class="lineNum">     153 </span>            :                         
+<span class="lineNum">     154 </span><span class="lineCov">       2590 :                         if (!qs.remaining &amp;&amp; qs.multiFrame)</span>
+<span class="lineNum">     155 </span><span class="lineCov">        806 :                                 qs.multiFrame = false;</span>
+<span class="lineNum">     156 </span>            :                 }
+<span class="lineNum">     157 </span><span class="lineNoCov">          0 :                 else if (swapQueues)</span>
+<span class="lineNum">     158 </span>            :                         break;
+<span class="lineNum">     159 </span>            :                 swapQueues = true;
+<a name="160"><span class="lineNum">     160 </span>            :         }</a>
+<span class="lineNum">     161 </span>            :         return ret;
+<span class="lineNum">     162 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

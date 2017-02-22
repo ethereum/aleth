@@ -1,0 +1,604 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/iomanip</title>
+  <link rel="stylesheet" type="text/css" href="../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5</a> - iomanip<span style="font-size: 80%;"> (source / <a href="iomanip.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Standard stream manipulators -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 1997-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file include/iomanip
+<span class="lineNum">      26 </span>            :  *  This is a Standard C++ Library header.
+<span class="lineNum">      27 </span>            :  */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : //
+<span class="lineNum">      30 </span>            : // ISO C++ 14882: 27.6.3  Standard manipulators
+<span class="lineNum">      31 </span>            : //
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #ifndef _GLIBCXX_IOMANIP
+<span class="lineNum">      34 </span>            : #define _GLIBCXX_IOMANIP 1
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #pragma GCC system_header
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : #include &lt;bits/c++config.h&gt;
+<span class="lineNum">      39 </span>            : #include &lt;iosfwd&gt;
+<span class="lineNum">      40 </span>            : #include &lt;bits/ios_base.h&gt;
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">      43 </span>            : #include &lt;locale&gt;
+<span class="lineNum">      44 </span>            : #if __cplusplus &gt; 201103L
+<span class="lineNum">      45 </span>            : #include &lt;bits/quoted_string.h&gt;
+<span class="lineNum">      46 </span>            : #endif
+<span class="lineNum">      47 </span>            : #endif
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      50 </span>            : {
+<span class="lineNum">      51 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span>            :   // [27.6.3] standard manipulators
+<span class="lineNum">      54 </span>            :   // Also see DR 183.
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            :   struct _Resetiosflags { ios_base::fmtflags _M_mask; };
+<span class="lineNum">      57 </span>            : 
+<span class="lineNum">      58 </span>            :   /**
+<span class="lineNum">      59 </span>            :    *  @brief  Manipulator for @c setf.
+<span class="lineNum">      60 </span>            :    *  @param  __mask  A format flags mask.
+<span class="lineNum">      61 </span>            :    *
+<span class="lineNum">      62 </span>            :    *  Sent to a stream object, this manipulator resets the specified flags,
+<span class="lineNum">      63 </span>            :    *  via @e stream.setf(0,__mask).
+<span class="lineNum">      64 </span>            :   */
+<span class="lineNum">      65 </span>            :   inline _Resetiosflags 
+<span class="lineNum">      66 </span>            :   resetiosflags(ios_base::fmtflags __mask)
+<span class="lineNum">      67 </span>            :   { return { __mask }; }
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">      70 </span>            :     inline basic_istream&lt;_CharT, _Traits&gt;&amp; 
+<span class="lineNum">      71 </span>            :     operator&gt;&gt;(basic_istream&lt;_CharT, _Traits&gt;&amp; __is, _Resetiosflags __f)
+<span class="lineNum">      72 </span>            :     { 
+<span class="lineNum">      73 </span>            :       __is.setf(ios_base::fmtflags(0), __f._M_mask); 
+<span class="lineNum">      74 </span>            :       return __is; 
+<span class="lineNum">      75 </span>            :     }
+<span class="lineNum">      76 </span>            : 
+<span class="lineNum">      77 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">      78 </span>            :     inline basic_ostream&lt;_CharT, _Traits&gt;&amp; 
+<span class="lineNum">      79 </span>            :     operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os, _Resetiosflags __f)
+<span class="lineNum">      80 </span>            :     { 
+<span class="lineNum">      81 </span>            :       __os.setf(ios_base::fmtflags(0), __f._M_mask); 
+<span class="lineNum">      82 </span>            :       return __os; 
+<span class="lineNum">      83 </span>            :     }
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span>            :   struct _Setiosflags { ios_base::fmtflags _M_mask; };
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            :   /**
+<span class="lineNum">      89 </span>            :    *  @brief  Manipulator for @c setf.
+<span class="lineNum">      90 </span>            :    *  @param  __mask  A format flags mask.
+<span class="lineNum">      91 </span>            :    *
+<span class="lineNum">      92 </span>            :    *  Sent to a stream object, this manipulator sets the format flags
+<span class="lineNum">      93 </span>            :    *  to @a __mask.
+<span class="lineNum">      94 </span>            :   */
+<span class="lineNum">      95 </span>            :   inline _Setiosflags 
+<span class="lineNum">      96 </span>            :   setiosflags(ios_base::fmtflags __mask)
+<span class="lineNum">      97 </span>            :   { return { __mask }; }
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     100 </span>            :     inline basic_istream&lt;_CharT, _Traits&gt;&amp; 
+<span class="lineNum">     101 </span>            :     operator&gt;&gt;(basic_istream&lt;_CharT, _Traits&gt;&amp; __is, _Setiosflags __f)
+<span class="lineNum">     102 </span>            :     { 
+<span class="lineNum">     103 </span>            :       __is.setf(__f._M_mask); 
+<span class="lineNum">     104 </span>            :       return __is; 
+<span class="lineNum">     105 </span>            :     }
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     108 </span>            :     inline basic_ostream&lt;_CharT, _Traits&gt;&amp; 
+<span class="lineNum">     109 </span>            :     operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os, _Setiosflags __f)
+<span class="lineNum">     110 </span>            :     { 
+<span class="lineNum">     111 </span>            :       __os.setf(__f._M_mask); 
+<span class="lineNum">     112 </span>            :       return __os; 
+<span class="lineNum">     113 </span>            :     }
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            :   struct _Setbase { int _M_base; };
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            :   /**
+<span class="lineNum">     119 </span>            :    *  @brief  Manipulator for @c setf.
+<span class="lineNum">     120 </span>            :    *  @param  __base  A numeric base.
+<span class="lineNum">     121 </span>            :    *
+<span class="lineNum">     122 </span>            :    *  Sent to a stream object, this manipulator changes the
+<span class="lineNum">     123 </span>            :    *  @c ios_base::basefield flags to @c oct, @c dec, or @c hex when @a base
+<span class="lineNum">     124 </span>            :    *  is 8, 10, or 16, accordingly, and to 0 if @a __base is any other value.
+<span class="lineNum">     125 </span>            :   */
+<span class="lineNum">     126 </span>            :   inline _Setbase 
+<span class="lineNum">     127 </span>            :   setbase(int __base)
+<span class="lineNum">     128 </span>            :   { return { __base }; }
+<span class="lineNum">     129 </span>            : 
+<span class="lineNum">     130 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     131 </span>            :     inline basic_istream&lt;_CharT, _Traits&gt;&amp; 
+<span class="lineNum">     132 </span>            :     operator&gt;&gt;(basic_istream&lt;_CharT, _Traits&gt;&amp; __is, _Setbase __f)
+<span class="lineNum">     133 </span>            :     {
+<span class="lineNum">     134 </span>            :       __is.setf(__f._M_base ==  8 ? ios_base::oct : 
+<span class="lineNum">     135 </span>            :                 __f._M_base == 10 ? ios_base::dec : 
+<span class="lineNum">     136 </span>            :                 __f._M_base == 16 ? ios_base::hex : 
+<span class="lineNum">     137 </span>            :                 ios_base::fmtflags(0), ios_base::basefield);
+<span class="lineNum">     138 </span>            :       return __is; 
+<span class="lineNum">     139 </span>            :     }
+<span class="lineNum">     140 </span>            :   
+<span class="lineNum">     141 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     142 </span>            :     inline basic_ostream&lt;_CharT, _Traits&gt;&amp; 
+<span class="lineNum">     143 </span>            :     operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os, _Setbase __f)
+<span class="lineNum">     144 </span>            :     {
+<span class="lineNum">     145 </span>            :       __os.setf(__f._M_base ==  8 ? ios_base::oct : 
+<span class="lineNum">     146 </span>            :                 __f._M_base == 10 ? ios_base::dec : 
+<span class="lineNum">     147 </span>            :                 __f._M_base == 16 ? ios_base::hex : 
+<span class="lineNum">     148 </span>            :                 ios_base::fmtflags(0), ios_base::basefield);
+<span class="lineNum">     149 </span>            :       return __os; 
+<span class="lineNum">     150 </span>            :     }
+<span class="lineNum">     151 </span>            :   
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :   template&lt;typename _CharT&gt;
+<span class="lineNum">     154 </span>            :     struct _Setfill { _CharT _M_c; };
+<span class="lineNum">     155 </span>            : 
+<span class="lineNum">     156 </span>            :   /**
+<span class="lineNum">     157 </span>            :    *  @brief  Manipulator for @c fill.
+<span class="lineNum">     158 </span>            :    *  @param  __c  The new fill character.
+<span class="lineNum">     159 </span>            :    *
+<span class="lineNum">     160 </span>            :    *  Sent to a stream object, this manipulator calls @c fill(__c) for that
+<span class="lineNum">     161 </span>            :    *  object.
+<span class="lineNum">     162 </span>            :   */
+<span class="lineNum">     163 </span>            :   template&lt;typename _CharT&gt;
+<span class="lineNum">     164 </span>            :     inline _Setfill&lt;_CharT&gt;
+<span class="lineNum">     165 </span>            :     setfill(_CharT __c)
+<span class="lineNum">     166 </span>            :     { return { __c }; }
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     169 </span>            :     inline basic_istream&lt;_CharT, _Traits&gt;&amp; 
+<span class="lineNum">     170 </span>            :     operator&gt;&gt;(basic_istream&lt;_CharT, _Traits&gt;&amp; __is, _Setfill&lt;_CharT&gt; __f)
+<span class="lineNum">     171 </span>            :     { 
+<span class="lineNum">     172 </span>            :       __is.fill(__f._M_c); 
+<span class="lineNum">     173 </span>            :       return __is; 
+<span class="lineNum">     174 </span>            :     }
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     177 </span>            :     inline basic_ostream&lt;_CharT, _Traits&gt;&amp; 
+<span class="lineNum">     178 </span>            :     operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os, _Setfill&lt;_CharT&gt; __f)
+<span class="lineNum">     179 </span>            :     { 
+<span class="lineNum">     180 </span><span class="lineCov">   25831775 :       __os.fill(__f._M_c); </span>
+<span class="lineNum">     181 </span>            :       return __os; 
+<span class="lineNum">     182 </span>            :     }
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :   struct _Setprecision { int _M_n; };
+<span class="lineNum">     186 </span>            : 
+<span class="lineNum">     187 </span>            :   /**
+<span class="lineNum">     188 </span>            :    *  @brief  Manipulator for @c precision.
+<span class="lineNum">     189 </span>            :    *  @param  __n  The new precision.
+<span class="lineNum">     190 </span>            :    *
+<span class="lineNum">     191 </span>            :    *  Sent to a stream object, this manipulator calls @c precision(__n) for
+<span class="lineNum">     192 </span>            :    *  that object.
+<span class="lineNum">     193 </span>            :   */
+<span class="lineNum">     194 </span>            :   inline _Setprecision 
+<span class="lineNum">     195 </span>            :   setprecision(int __n)
+<span class="lineNum">     196 </span>            :   { return { __n }; }
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     199 </span>            :     inline basic_istream&lt;_CharT, _Traits&gt;&amp; 
+<span class="lineNum">     200 </span>            :     operator&gt;&gt;(basic_istream&lt;_CharT, _Traits&gt;&amp; __is, _Setprecision __f)
+<span class="lineNum">     201 </span>            :     { 
+<span class="lineNum">     202 </span>            :       __is.precision(__f._M_n); 
+<span class="lineNum">     203 </span>            :       return __is; 
+<span class="lineNum">     204 </span>            :     }
+<span class="lineNum">     205 </span>            : 
+<span class="lineNum">     206 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     207 </span>            :     inline basic_ostream&lt;_CharT, _Traits&gt;&amp; 
+<span class="lineNum">     208 </span>            :     operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os, _Setprecision __f)
+<span class="lineNum">     209 </span>            :     { 
+<span class="lineNum">     210 </span><span class="lineCov">      53416 :       __os.precision(__f._M_n); </span>
+<span class="lineNum">     211 </span>            :       return __os; 
+<span class="lineNum">     212 </span>            :     }
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            :   struct _Setw { int _M_n; };
+<span class="lineNum">     216 </span>            : 
+<span class="lineNum">     217 </span>            :   /**
+<span class="lineNum">     218 </span>            :    *  @brief  Manipulator for @c width.
+<span class="lineNum">     219 </span>            :    *  @param  __n  The new width.
+<span class="lineNum">     220 </span>            :    *
+<span class="lineNum">     221 </span>            :    *  Sent to a stream object, this manipulator calls @c width(__n) for
+<span class="lineNum">     222 </span>            :    *  that object.
+<span class="lineNum">     223 </span>            :   */
+<span class="lineNum">     224 </span>            :   inline _Setw 
+<span class="lineNum">     225 </span>            :   setw(int __n)
+<span class="lineNum">     226 </span>            :   { return { __n }; }
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     229 </span>            :     inline basic_istream&lt;_CharT, _Traits&gt;&amp; 
+<span class="lineNum">     230 </span>            :     operator&gt;&gt;(basic_istream&lt;_CharT, _Traits&gt;&amp; __is, _Setw __f)
+<span class="lineNum">     231 </span>            :     {
+<span class="lineNum">     232 </span>            :       __is.width(__f._M_n);
+<span class="lineNum">     233 </span>            :       return __is; 
+<span class="lineNum">     234 </span>            :     }
+<span class="lineNum">     235 </span>            : 
+<span class="lineNum">     236 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     237 </span>            :     inline basic_ostream&lt;_CharT, _Traits&gt;&amp; 
+<span class="lineNum">     238 </span>            :     operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os, _Setw __f)
+<span class="lineNum">     239 </span>            :     {
+<span class="lineNum">     240 </span><span class="lineCov">   29051906 :       __os.width(__f._M_n);</span>
+<span class="lineNum">     241 </span>            :       return __os; 
+<span class="lineNum">     242 </span>            :     }
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     245 </span>            :   
+<span class="lineNum">     246 </span>            :   template&lt;typename _MoneyT&gt;
+<span class="lineNum">     247 </span>            :     struct _Get_money { _MoneyT&amp; _M_mon; bool _M_intl; };
+<span class="lineNum">     248 </span>            : 
+<span class="lineNum">     249 </span>            :   /**
+<span class="lineNum">     250 </span>            :    *  @brief  Extended manipulator for extracting money.
+<span class="lineNum">     251 </span>            :    *  @param  __mon  Either long double or a specialization of @c basic_string.
+<span class="lineNum">     252 </span>            :    *  @param  __intl A bool indicating whether international format 
+<span class="lineNum">     253 </span>            :    *                 is to be used.
+<span class="lineNum">     254 </span>            :    *
+<span class="lineNum">     255 </span>            :    *  Sent to a stream object, this manipulator extracts @a __mon.
+<span class="lineNum">     256 </span>            :   */
+<span class="lineNum">     257 </span>            :   template&lt;typename _MoneyT&gt;
+<span class="lineNum">     258 </span>            :     inline _Get_money&lt;_MoneyT&gt;
+<span class="lineNum">     259 </span>            :     get_money(_MoneyT&amp; __mon, bool __intl = false)
+<span class="lineNum">     260 </span>            :     { return { __mon, __intl }; }
+<span class="lineNum">     261 </span>            : 
+<span class="lineNum">     262 </span>            :   template&lt;typename _CharT, typename _Traits, typename _MoneyT&gt;
+<span class="lineNum">     263 </span>            :     basic_istream&lt;_CharT, _Traits&gt;&amp;
+<span class="lineNum">     264 </span>            :     operator&gt;&gt;(basic_istream&lt;_CharT, _Traits&gt;&amp; __is, _Get_money&lt;_MoneyT&gt; __f)
+<span class="lineNum">     265 </span>            :     {
+<span class="lineNum">     266 </span>            :       typename basic_istream&lt;_CharT, _Traits&gt;::sentry __cerb(__is, false);
+<span class="lineNum">     267 </span>            :       if (__cerb)
+<span class="lineNum">     268 </span>            :         {
+<span class="lineNum">     269 </span>            :           ios_base::iostate __err = ios_base::goodbit;
+<span class="lineNum">     270 </span>            :           __try
+<span class="lineNum">     271 </span>            :             {
+<span class="lineNum">     272 </span>            :               typedef istreambuf_iterator&lt;_CharT, _Traits&gt;   _Iter;
+<span class="lineNum">     273 </span>            :               typedef money_get&lt;_CharT, _Iter&gt;               _MoneyGet;
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            :               const _MoneyGet&amp; __mg = use_facet&lt;_MoneyGet&gt;(__is.getloc());
+<span class="lineNum">     276 </span>            :               __mg.get(_Iter(__is.rdbuf()), _Iter(), __f._M_intl,
+<span class="lineNum">     277 </span>            :                        __is, __err, __f._M_mon);
+<span class="lineNum">     278 </span>            :             }
+<span class="lineNum">     279 </span>            :           __catch(__cxxabiv1::__forced_unwind&amp;)
+<span class="lineNum">     280 </span>            :             {
+<span class="lineNum">     281 </span>            :               __is._M_setstate(ios_base::badbit);
+<span class="lineNum">     282 </span>            :               __throw_exception_again;
+<span class="lineNum">     283 </span>            :             }
+<span class="lineNum">     284 </span>            :           __catch(...)
+<span class="lineNum">     285 </span>            :             { __is._M_setstate(ios_base::badbit); }
+<span class="lineNum">     286 </span>            :           if (__err)
+<span class="lineNum">     287 </span>            :             __is.setstate(__err);
+<span class="lineNum">     288 </span>            :         }
+<span class="lineNum">     289 </span>            :       return __is; 
+<span class="lineNum">     290 </span>            :     }
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            :   template&lt;typename _MoneyT&gt;
+<span class="lineNum">     294 </span>            :     struct _Put_money { const _MoneyT&amp; _M_mon; bool _M_intl; };
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            :   /**
+<span class="lineNum">     297 </span>            :    *  @brief  Extended manipulator for inserting money.
+<span class="lineNum">     298 </span>            :    *  @param  __mon  Either long double or a specialization of @c basic_string.
+<span class="lineNum">     299 </span>            :    *  @param  __intl A bool indicating whether international format 
+<span class="lineNum">     300 </span>            :    *                 is to be used.
+<span class="lineNum">     301 </span>            :    *
+<span class="lineNum">     302 </span>            :    *  Sent to a stream object, this manipulator inserts @a __mon.
+<span class="lineNum">     303 </span>            :   */
+<span class="lineNum">     304 </span>            :   template&lt;typename _MoneyT&gt;
+<span class="lineNum">     305 </span>            :     inline _Put_money&lt;_MoneyT&gt;
+<span class="lineNum">     306 </span>            :     put_money(const _MoneyT&amp; __mon, bool __intl = false)
+<span class="lineNum">     307 </span>            :     { return { __mon, __intl }; }
+<span class="lineNum">     308 </span>            : 
+<span class="lineNum">     309 </span>            :   template&lt;typename _CharT, typename _Traits, typename _MoneyT&gt;
+<span class="lineNum">     310 </span>            :     basic_ostream&lt;_CharT, _Traits&gt;&amp; 
+<span class="lineNum">     311 </span>            :     operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os, _Put_money&lt;_MoneyT&gt; __f)
+<span class="lineNum">     312 </span>            :     {
+<span class="lineNum">     313 </span>            :       typename basic_ostream&lt;_CharT, _Traits&gt;::sentry __cerb(__os);
+<span class="lineNum">     314 </span>            :       if (__cerb)
+<span class="lineNum">     315 </span>            :         {
+<span class="lineNum">     316 </span>            :           ios_base::iostate __err = ios_base::goodbit;
+<span class="lineNum">     317 </span>            :           __try
+<span class="lineNum">     318 </span>            :             {
+<span class="lineNum">     319 </span>            :               typedef ostreambuf_iterator&lt;_CharT, _Traits&gt;   _Iter;
+<span class="lineNum">     320 </span>            :               typedef money_put&lt;_CharT, _Iter&gt;               _MoneyPut;
+<span class="lineNum">     321 </span>            : 
+<span class="lineNum">     322 </span>            :               const _MoneyPut&amp; __mp = use_facet&lt;_MoneyPut&gt;(__os.getloc());
+<span class="lineNum">     323 </span>            :               if (__mp.put(_Iter(__os.rdbuf()), __f._M_intl, __os,
+<span class="lineNum">     324 </span>            :                            __os.fill(), __f._M_mon).failed())
+<span class="lineNum">     325 </span>            :                 __err |= ios_base::badbit;
+<span class="lineNum">     326 </span>            :             }
+<span class="lineNum">     327 </span>            :           __catch(__cxxabiv1::__forced_unwind&amp;)
+<span class="lineNum">     328 </span>            :             {
+<span class="lineNum">     329 </span>            :               __os._M_setstate(ios_base::badbit);
+<span class="lineNum">     330 </span>            :               __throw_exception_again;
+<span class="lineNum">     331 </span>            :             }
+<span class="lineNum">     332 </span>            :           __catch(...)
+<span class="lineNum">     333 </span>            :             { __os._M_setstate(ios_base::badbit); }
+<span class="lineNum">     334 </span>            :           if (__err)
+<span class="lineNum">     335 </span>            :             __os.setstate(__err);
+<span class="lineNum">     336 </span>            :         }
+<span class="lineNum">     337 </span>            :       return __os; 
+<span class="lineNum">     338 </span>            :     }
+<span class="lineNum">     339 </span>            : 
+<span class="lineNum">     340 </span>            :   template&lt;typename _CharT&gt;
+<span class="lineNum">     341 </span>            :     struct _Put_time
+<span class="lineNum">     342 </span>            :     {
+<span class="lineNum">     343 </span>            :       const std::tm* _M_tmb;
+<span class="lineNum">     344 </span>            :       const _CharT* _M_fmt;
+<span class="lineNum">     345 </span>            :     };
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span>            :   /**
+<span class="lineNum">     348 </span>            :    *  @brief  Extended manipulator for formatting time.
+<span class="lineNum">     349 </span>            :    *
+<span class="lineNum">     350 </span>            :    *  This manipulator uses time_put::put to format time.
+<span class="lineNum">     351 </span>            :    *  [ext.manip]
+<span class="lineNum">     352 </span>            :    *
+<span class="lineNum">     353 </span>            :    *  @param __tmb  struct tm time data to format.
+<span class="lineNum">     354 </span>            :    *  @param __fmt  format string.
+<span class="lineNum">     355 </span>            :    */
+<span class="lineNum">     356 </span>            :   template&lt;typename _CharT&gt;
+<span class="lineNum">     357 </span>            :     inline _Put_time&lt;_CharT&gt;
+<span class="lineNum">     358 </span>            :     put_time(const std::tm* __tmb, const _CharT* __fmt)
+<span class="lineNum">     359 </span>            :     { return { __tmb, __fmt }; }
+<span class="lineNum">     360 </span>            : 
+<span class="lineNum">     361 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     362 </span>            :     basic_ostream&lt;_CharT, _Traits&gt;&amp;
+<span class="lineNum">     363 </span>            :     operator&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __os, _Put_time&lt;_CharT&gt; __f)
+<span class="lineNum">     364 </span>            :     {
+<span class="lineNum">     365 </span>            :       typename basic_ostream&lt;_CharT, _Traits&gt;::sentry __cerb(__os);
+<span class="lineNum">     366 </span>            :       if (__cerb)
+<span class="lineNum">     367 </span>            :         {
+<span class="lineNum">     368 </span>            :           ios_base::iostate __err = ios_base::goodbit;
+<span class="lineNum">     369 </span>            :           __try
+<span class="lineNum">     370 </span>            :             {
+<span class="lineNum">     371 </span>            :               typedef ostreambuf_iterator&lt;_CharT, _Traits&gt;   _Iter;
+<span class="lineNum">     372 </span>            :               typedef time_put&lt;_CharT, _Iter&gt;                _TimePut;
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span>            :               const _CharT* const __fmt_end = __f._M_fmt +
+<span class="lineNum">     375 </span>            :                 _Traits::length(__f._M_fmt);
+<span class="lineNum">     376 </span>            : 
+<span class="lineNum">     377 </span>            :               const _TimePut&amp; __mp = use_facet&lt;_TimePut&gt;(__os.getloc());
+<span class="lineNum">     378 </span>            :               if (__mp.put(_Iter(__os.rdbuf()), __os, __os.fill(),
+<span class="lineNum">     379 </span>            :                            __f._M_tmb, __f._M_fmt, __fmt_end).failed())
+<span class="lineNum">     380 </span>            :                 __err |= ios_base::badbit;
+<span class="lineNum">     381 </span>            :             }
+<span class="lineNum">     382 </span>            :           __catch(__cxxabiv1::__forced_unwind&amp;)
+<span class="lineNum">     383 </span>            :             {
+<span class="lineNum">     384 </span>            :               __os._M_setstate(ios_base::badbit);
+<span class="lineNum">     385 </span>            :               __throw_exception_again;
+<span class="lineNum">     386 </span>            :             }
+<span class="lineNum">     387 </span>            :           __catch(...)
+<span class="lineNum">     388 </span>            :             { __os._M_setstate(ios_base::badbit); }
+<span class="lineNum">     389 </span>            :           if (__err)
+<span class="lineNum">     390 </span>            :             __os.setstate(__err);
+<span class="lineNum">     391 </span>            :         }
+<span class="lineNum">     392 </span>            :       return __os;
+<span class="lineNum">     393 </span>            :     }
+<span class="lineNum">     394 </span>            : 
+<span class="lineNum">     395 </span>            :   template&lt;typename _CharT&gt;
+<span class="lineNum">     396 </span>            :     struct _Get_time
+<span class="lineNum">     397 </span>            :     {
+<span class="lineNum">     398 </span>            :       std::tm*      _M_tmb;
+<span class="lineNum">     399 </span>            :       const _CharT* _M_fmt;
+<span class="lineNum">     400 </span>            :     };
+<span class="lineNum">     401 </span>            : 
+<span class="lineNum">     402 </span>            :   /**
+<span class="lineNum">     403 </span>            :    *  @brief  Extended manipulator for extracting time.
+<span class="lineNum">     404 </span>            :    *
+<span class="lineNum">     405 </span>            :    *  This manipulator uses time_get::get to extract time.
+<span class="lineNum">     406 </span>            :    *  [ext.manip]
+<span class="lineNum">     407 </span>            :    *
+<span class="lineNum">     408 </span>            :    *  @param __tmb  struct to extract the time data to.
+<span class="lineNum">     409 </span>            :    *  @param __fmt  format string.
+<span class="lineNum">     410 </span>            :    */
+<span class="lineNum">     411 </span>            :   template&lt;typename _CharT&gt;
+<span class="lineNum">     412 </span>            :     inline _Get_time&lt;_CharT&gt;
+<span class="lineNum">     413 </span>            :     get_time(std::tm* __tmb, const _CharT* __fmt)
+<span class="lineNum">     414 </span>            :     { return { __tmb, __fmt }; }
+<span class="lineNum">     415 </span>            : 
+<span class="lineNum">     416 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">     417 </span>            :     basic_istream&lt;_CharT, _Traits&gt;&amp;
+<span class="lineNum">     418 </span>            :     operator&gt;&gt;(basic_istream&lt;_CharT, _Traits&gt;&amp; __is, _Get_time&lt;_CharT&gt; __f)
+<span class="lineNum">     419 </span>            :     {
+<span class="lineNum">     420 </span>            :       typename basic_istream&lt;_CharT, _Traits&gt;::sentry __cerb(__is, false);
+<span class="lineNum">     421 </span>            :       if (__cerb)
+<span class="lineNum">     422 </span>            :         {
+<span class="lineNum">     423 </span>            :           ios_base::iostate __err = ios_base::goodbit;
+<span class="lineNum">     424 </span>            :           __try
+<span class="lineNum">     425 </span>            :             {
+<span class="lineNum">     426 </span>            :               typedef istreambuf_iterator&lt;_CharT, _Traits&gt;   _Iter;
+<span class="lineNum">     427 </span>            :               typedef time_get&lt;_CharT, _Iter&gt;                _TimeGet;
+<span class="lineNum">     428 </span>            : 
+<span class="lineNum">     429 </span>            :               const _CharT* const __fmt_end = __f._M_fmt +
+<span class="lineNum">     430 </span>            :                 _Traits::length(__f._M_fmt);
+<span class="lineNum">     431 </span>            : 
+<span class="lineNum">     432 </span>            :               const _TimeGet&amp; __mg = use_facet&lt;_TimeGet&gt;(__is.getloc());
+<span class="lineNum">     433 </span>            :               __mg.get(_Iter(__is.rdbuf()), _Iter(), __is,
+<span class="lineNum">     434 </span>            :                        __err, __f._M_tmb, __f._M_fmt, __fmt_end);
+<span class="lineNum">     435 </span>            :             }
+<span class="lineNum">     436 </span>            :           __catch(__cxxabiv1::__forced_unwind&amp;)
+<span class="lineNum">     437 </span>            :             {
+<span class="lineNum">     438 </span>            :               __is._M_setstate(ios_base::badbit);
+<span class="lineNum">     439 </span>            :               __throw_exception_again;
+<span class="lineNum">     440 </span>            :             }
+<span class="lineNum">     441 </span>            :           __catch(...)
+<span class="lineNum">     442 </span>            :             { __is._M_setstate(ios_base::badbit); }
+<span class="lineNum">     443 </span>            :           if (__err)
+<span class="lineNum">     444 </span>            :             __is.setstate(__err);
+<span class="lineNum">     445 </span>            :         }
+<span class="lineNum">     446 </span>            :       return __is;
+<span class="lineNum">     447 </span>            :     }
+<span class="lineNum">     448 </span>            : 
+<span class="lineNum">     449 </span>            : #if __cplusplus &gt; 201103L
+<span class="lineNum">     450 </span>            : 
+<span class="lineNum">     451 </span>            : #define __cpp_lib_quoted_string_io 201304
+<span class="lineNum">     452 </span>            : 
+<span class="lineNum">     453 </span>            :   /**
+<span class="lineNum">     454 </span>            :    * @brief Manipulator for quoted strings.
+<span class="lineNum">     455 </span>            :    * @param __string String to quote.
+<span class="lineNum">     456 </span>            :    * @param __delim  Character to quote string with.
+<span class="lineNum">     457 </span>            :    * @param __escape Escape character to escape itself or quote character.
+<span class="lineNum">     458 </span>            :    */
+<span class="lineNum">     459 </span>            :   template&lt;typename _CharT&gt;
+<span class="lineNum">     460 </span>            :     inline auto
+<span class="lineNum">     461 </span>            :     quoted(const _CharT* __string,
+<span class="lineNum">     462 </span>            :            _CharT __delim = _CharT('&quot;'), _CharT __escape = _CharT('\\'))
+<span class="lineNum">     463 </span>            :     {
+<span class="lineNum">     464 </span>            :       return __detail::_Quoted_string&lt;const _CharT*, _CharT&gt;(__string, __delim,
+<span class="lineNum">     465 </span>            :                                                              __escape);
+<span class="lineNum">     466 </span>            :     }
+<span class="lineNum">     467 </span>            : 
+<span class="lineNum">     468 </span>            :   template&lt;typename _CharT, typename _Traits, typename _Alloc&gt;
+<span class="lineNum">     469 </span>            :     inline auto
+<span class="lineNum">     470 </span>            :     quoted(const basic_string&lt;_CharT, _Traits, _Alloc&gt;&amp; __string,
+<span class="lineNum">     471 </span>            :            _CharT __delim = _CharT('&quot;'), _CharT __escape = _CharT('\\'))
+<span class="lineNum">     472 </span>            :     {
+<span class="lineNum">     473 </span>            :       return __detail::_Quoted_string&lt;
+<span class="lineNum">     474 </span>            :                         const basic_string&lt;_CharT, _Traits, _Alloc&gt;&amp;, _CharT&gt;(
+<span class="lineNum">     475 </span>            :                                 __string, __delim, __escape);
+<span class="lineNum">     476 </span>            :     }
+<span class="lineNum">     477 </span>            : 
+<span class="lineNum">     478 </span>            :   template&lt;typename _CharT, typename _Traits, typename _Alloc&gt;
+<span class="lineNum">     479 </span>            :     inline auto
+<span class="lineNum">     480 </span>            :     quoted(basic_string&lt;_CharT, _Traits, _Alloc&gt;&amp; __string,
+<span class="lineNum">     481 </span>            :            _CharT __delim = _CharT('&quot;'), _CharT __escape = _CharT('\\'))
+<span class="lineNum">     482 </span>            :     {
+<span class="lineNum">     483 </span>            :       return __detail::_Quoted_string&lt;
+<span class="lineNum">     484 </span>            :                         basic_string&lt;_CharT, _Traits, _Alloc&gt;&amp;, _CharT&gt;(
+<span class="lineNum">     485 </span>            :                                 __string, __delim, __escape);
+<span class="lineNum">     486 </span>            :     }
+<span class="lineNum">     487 </span>            : 
+<span class="lineNum">     488 </span>            : #endif // __cplusplus &gt; 201103L
+<span class="lineNum">     489 </span>            : 
+<span class="lineNum">     490 </span>            : #endif // __cplusplus &gt;= 201103L
+<span class="lineNum">     491 </span>            : 
+<span class="lineNum">     492 </span>            :   // Inhibit implicit instantiations for required instantiations,
+<span class="lineNum">     493 </span>            :   // which are defined via explicit instantiations elsewhere.  
+<span class="lineNum">     494 </span>            :   // NB:  This syntax is a GNU extension.
+<span class="lineNum">     495 </span>            : #if _GLIBCXX_EXTERN_TEMPLATE
+<span class="lineNum">     496 </span>            :   extern template ostream&amp; operator&lt;&lt;(ostream&amp;, _Setfill&lt;char&gt;);
+<span class="lineNum">     497 </span>            :   extern template ostream&amp; operator&lt;&lt;(ostream&amp;, _Setiosflags);
+<span class="lineNum">     498 </span>            :   extern template ostream&amp; operator&lt;&lt;(ostream&amp;, _Resetiosflags);
+<span class="lineNum">     499 </span>            :   extern template ostream&amp; operator&lt;&lt;(ostream&amp;, _Setbase);
+<span class="lineNum">     500 </span>            :   extern template ostream&amp; operator&lt;&lt;(ostream&amp;, _Setprecision);
+<span class="lineNum">     501 </span>            :   extern template ostream&amp; operator&lt;&lt;(ostream&amp;, _Setw);
+<span class="lineNum">     502 </span>            :   extern template istream&amp; operator&gt;&gt;(istream&amp;, _Setfill&lt;char&gt;);
+<span class="lineNum">     503 </span>            :   extern template istream&amp; operator&gt;&gt;(istream&amp;, _Setiosflags);
+<span class="lineNum">     504 </span>            :   extern template istream&amp; operator&gt;&gt;(istream&amp;, _Resetiosflags);
+<span class="lineNum">     505 </span>            :   extern template istream&amp; operator&gt;&gt;(istream&amp;, _Setbase);
+<span class="lineNum">     506 </span>            :   extern template istream&amp; operator&gt;&gt;(istream&amp;, _Setprecision);
+<span class="lineNum">     507 </span>            :   extern template istream&amp; operator&gt;&gt;(istream&amp;, _Setw);
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            : #ifdef _GLIBCXX_USE_WCHAR_T
+<span class="lineNum">     510 </span>            :   extern template wostream&amp; operator&lt;&lt;(wostream&amp;, _Setfill&lt;wchar_t&gt;);
+<span class="lineNum">     511 </span>            :   extern template wostream&amp; operator&lt;&lt;(wostream&amp;, _Setiosflags);
+<span class="lineNum">     512 </span>            :   extern template wostream&amp; operator&lt;&lt;(wostream&amp;, _Resetiosflags);
+<span class="lineNum">     513 </span>            :   extern template wostream&amp; operator&lt;&lt;(wostream&amp;, _Setbase);
+<span class="lineNum">     514 </span>            :   extern template wostream&amp; operator&lt;&lt;(wostream&amp;, _Setprecision);
+<span class="lineNum">     515 </span>            :   extern template wostream&amp; operator&lt;&lt;(wostream&amp;, _Setw);
+<span class="lineNum">     516 </span>            :   extern template wistream&amp; operator&gt;&gt;(wistream&amp;, _Setfill&lt;wchar_t&gt;);
+<span class="lineNum">     517 </span>            :   extern template wistream&amp; operator&gt;&gt;(wistream&amp;, _Setiosflags);
+<span class="lineNum">     518 </span>            :   extern template wistream&amp; operator&gt;&gt;(wistream&amp;, _Resetiosflags);
+<span class="lineNum">     519 </span>            :   extern template wistream&amp; operator&gt;&gt;(wistream&amp;, _Setbase);
+<span class="lineNum">     520 </span>            :   extern template wistream&amp; operator&gt;&gt;(wistream&amp;, _Setprecision);
+<span class="lineNum">     521 </span>            :   extern template wistream&amp; operator&gt;&gt;(wistream&amp;, _Setw);
+<span class="lineNum">     522 </span>            : #endif
+<span class="lineNum">     523 </span>            : #endif
+<span class="lineNum">     524 </span>            : 
+<span class="lineNum">     525 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     526 </span>            : } // namespace
+<span class="lineNum">     527 </span>            : 
+<span class="lineNum">     528 </span>            : #endif /* _GLIBCXX_IOMANIP */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,594 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - /usr/include/c++/5/bits/basic_ios.h</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">usr/include/c++/5/bits</a> - basic_ios.h<span style="font-size: 80%;"> (source / <a href="basic_ios.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryLo">45.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntryHi">-</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : // Iostreams base classes -*- C++ -*-</a>
+<span class="lineNum">       2 </span>            : 
+<span class="lineNum">       3 </span>            : // Copyright (C) 1997-2015 Free Software Foundation, Inc.
+<span class="lineNum">       4 </span>            : //
+<span class="lineNum">       5 </span>            : // This file is part of the GNU ISO C++ Library.  This library is free
+<span class="lineNum">       6 </span>            : // software; you can redistribute it and/or modify it under the
+<span class="lineNum">       7 </span>            : // terms of the GNU General Public License as published by the
+<span class="lineNum">       8 </span>            : // Free Software Foundation; either version 3, or (at your option)
+<span class="lineNum">       9 </span>            : // any later version.
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : // This library is distributed in the hope that it will be useful,
+<span class="lineNum">      12 </span>            : // but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      13 </span>            : // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      14 </span>            : // GNU General Public License for more details.
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : // Under Section 7 of GPL version 3, you are granted additional
+<span class="lineNum">      17 </span>            : // permissions described in the GCC Runtime Library Exception, version
+<span class="lineNum">      18 </span>            : // 3.1, as published by the Free Software Foundation.
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : // You should have received a copy of the GNU General Public License and
+<span class="lineNum">      21 </span>            : // a copy of the GCC Runtime Library Exception along with this program;
+<span class="lineNum">      22 </span>            : // see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+<span class="lineNum">      23 </span>            : // &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** @file bits/basic_ios.h
+<span class="lineNum">      26 </span>            :  *  This is an internal header file, included by other library headers.
+<span class="lineNum">      27 </span>            :  *  Do not attempt to use it directly. @headername{ios}
+<span class="lineNum">      28 </span>            :  */
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #ifndef _BASIC_IOS_H
+<span class="lineNum">      31 </span>            : #define _BASIC_IOS_H 1
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span>            : #pragma GCC system_header
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : #include &lt;bits/localefwd.h&gt;
+<span class="lineNum">      36 </span>            : #include &lt;bits/locale_classes.h&gt;
+<span class="lineNum">      37 </span>            : #include &lt;bits/locale_facets.h&gt;
+<span class="lineNum">      38 </span>            : #include &lt;bits/streambuf_iterator.h&gt;
+<span class="lineNum">      39 </span>            : #include &lt;bits/move.h&gt;
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : namespace std _GLIBCXX_VISIBILITY(default)
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span>            : _GLIBCXX_BEGIN_NAMESPACE_VERSION
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span>            :   template&lt;typename _Facet&gt;
+<span class="lineNum">      46 </span>            :     inline const _Facet&amp;
+<span class="lineNum">      47 </span>            :     __check_facet(const _Facet* __f)
+<span class="lineNum">      48 </span>            :     {
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :       if (!__f)</span>
+<span class="lineNum">      50 </span><span class="lineNoCov">          0 :         __throw_bad_cast();</span>
+<span class="lineNum">      51 </span>            :       return *__f;
+<span class="lineNum">      52 </span>            :     }
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            :   /**
+<span class="lineNum">      55 </span>            :    *  @brief Template class basic_ios, virtual base class for all
+<span class="lineNum">      56 </span>            :    *  stream classes. 
+<span class="lineNum">      57 </span>            :    *  @ingroup io
+<span class="lineNum">      58 </span>            :    *
+<span class="lineNum">      59 </span>            :    *  @tparam _CharT  Type of character stream.
+<span class="lineNum">      60 </span>            :    *  @tparam _Traits  Traits for character type, defaults to
+<span class="lineNum">      61 </span>            :    *                   char_traits&lt;_CharT&gt;.
+<span class="lineNum">      62 </span>            :    *
+<span class="lineNum">      63 </span>            :    *  Most of the member functions called dispatched on stream objects
+<span class="lineNum">      64 </span>            :    *  (e.g., @c std::cout.foo(bar);) are consolidated in this class.
+<span class="lineNum">      65 </span>            :   */
+<span class="lineNum">      66 </span>            :   template&lt;typename _CharT, typename _Traits&gt;
+<span class="lineNum">      67 </span>            :     class basic_ios : public ios_base
+<span class="lineNum">      68 </span>            :     {
+<span class="lineNum">      69 </span>            :     public:
+<span class="lineNum">      70 </span>            :       //@{
+<span class="lineNum">      71 </span>            :       /**
+<span class="lineNum">      72 </span>            :        *  These are standard types.  They permit a standardized way of
+<span class="lineNum">      73 </span>            :        *  referring to names of (or names dependent on) the template
+<span class="lineNum">      74 </span>            :        *  parameters, which are specific to the implementation.
+<span class="lineNum">      75 </span>            :       */
+<span class="lineNum">      76 </span>            :       typedef _CharT                                 char_type;
+<span class="lineNum">      77 </span>            :       typedef typename _Traits::int_type             int_type;
+<span class="lineNum">      78 </span>            :       typedef typename _Traits::pos_type             pos_type;
+<span class="lineNum">      79 </span>            :       typedef typename _Traits::off_type             off_type;
+<span class="lineNum">      80 </span>            :       typedef _Traits                                traits_type;
+<span class="lineNum">      81 </span>            :       //@}
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            :       //@{
+<span class="lineNum">      84 </span>            :       /**
+<span class="lineNum">      85 </span>            :        *  These are non-standard types.
+<span class="lineNum">      86 </span>            :       */
+<span class="lineNum">      87 </span>            :       typedef ctype&lt;_CharT&gt;                          __ctype_type;
+<span class="lineNum">      88 </span>            :       typedef num_put&lt;_CharT, ostreambuf_iterator&lt;_CharT, _Traits&gt; &gt;
+<span class="lineNum">      89 </span>            :                                                      __num_put_type;
+<span class="lineNum">      90 </span>            :       typedef num_get&lt;_CharT, istreambuf_iterator&lt;_CharT, _Traits&gt; &gt;
+<span class="lineNum">      91 </span>            :                                                      __num_get_type;
+<span class="lineNum">      92 </span>            :       //@}
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            :       // Data members:
+<span class="lineNum">      95 </span>            :     protected:
+<span class="lineNum">      96 </span>            :       basic_ostream&lt;_CharT, _Traits&gt;*                _M_tie;
+<span class="lineNum">      97 </span>            :       mutable char_type                              _M_fill;
+<span class="lineNum">      98 </span>            :       mutable bool                                   _M_fill_init;
+<span class="lineNum">      99 </span>            :       basic_streambuf&lt;_CharT, _Traits&gt;*              _M_streambuf;
+<span class="lineNum">     100 </span>            : 
+<span class="lineNum">     101 </span>            :       // Cached use_facet&lt;ctype&gt;, which is based on the current locale info.
+<span class="lineNum">     102 </span>            :       const __ctype_type*                            _M_ctype;
+<span class="lineNum">     103 </span>            :       // For ostream.
+<span class="lineNum">     104 </span>            :       const __num_put_type*                          _M_num_put;
+<span class="lineNum">     105 </span>            :       // For istream.
+<span class="lineNum">     106 </span>            :       const __num_get_type*                          _M_num_get;
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            :     public:
+<span class="lineNum">     109 </span>            :       //@{
+<span class="lineNum">     110 </span>            :       /**
+<span class="lineNum">     111 </span>            :        *  @brief  The quick-and-easy status check.
+<span class="lineNum">     112 </span>            :        *
+<span class="lineNum">     113 </span>            :        *  This allows you to write constructs such as
+<span class="lineNum">     114 </span>            :        *  &lt;code&gt;if (!a_stream) ...&lt;/code&gt; and &lt;code&gt;while (a_stream) ...&lt;/code&gt;
+<span class="lineNum">     115 </span>            :       */
+<span class="lineNum">     116 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     117 </span>            :       explicit operator bool() const
+<span class="lineNum">     118 </span>            :       { return !this-&gt;fail(); }
+<span class="lineNum">     119 </span>            : #else
+<span class="lineNum">     120 </span>            :       operator void*() const
+<span class="lineNum">     121 </span>            :       { return this-&gt;fail() ? 0 : const_cast&lt;basic_ios*&gt;(this); }
+<span class="lineNum">     122 </span>            : #endif
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :       bool
+<span class="lineNum">     125 </span>            :       operator!() const
+<span class="lineNum">     126 </span><span class="lineCov">       3033 :       { return this-&gt;fail(); }</span>
+<span class="lineNum">     127 </span>            :       //@}
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span>            :       /**
+<span class="lineNum">     130 </span>            :        *  @brief  Returns the error state of the stream buffer.
+<span class="lineNum">     131 </span>            :        *  @return  A bit pattern (well, isn't everything?)
+<span class="lineNum">     132 </span>            :        *
+<span class="lineNum">     133 </span>            :        *  See std::ios_base::iostate for the possible bit values.  Most
+<span class="lineNum">     134 </span>            :        *  users will call one of the interpreting wrappers, e.g., good().
+<span class="lineNum">     135 </span>            :       */
+<span class="lineNum">     136 </span>            :       iostate
+<span class="lineNum">     137 </span>            :       rdstate() const
+<span class="lineNum">     138 </span>            :       { return _M_streambuf_state; }
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span>            :       /**
+<span class="lineNum">     141 </span>            :        *  @brief  [Re]sets the error state.
+<span class="lineNum">     142 </span>            :        *  @param  __state  The new state flag(s) to set.
+<span class="lineNum">     143 </span>            :        *
+<span class="lineNum">     144 </span>            :        *  See std::ios_base::iostate for the possible bit values.  Most
+<span class="lineNum">     145 </span>            :        *  users will not need to pass an argument.
+<span class="lineNum">     146 </span>            :       */
+<span class="lineNum">     147 </span>            :       void
+<span class="lineNum">     148 </span>            :       clear(iostate __state = goodbit);
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            :       /**
+<span class="lineNum">     151 </span>            :        *  @brief  Sets additional flags in the error state.
+<span class="lineNum">     152 </span>            :        *  @param  __state  The additional state flag(s) to set.
+<span class="lineNum">     153 </span>            :        *
+<span class="lineNum">     154 </span>            :        *  See std::ios_base::iostate for the possible bit values.
+<span class="lineNum">     155 </span>            :       */
+<span class="lineNum">     156 </span>            :       void
+<span class="lineNum">     157 </span>            :       setstate(iostate __state)
+<span class="lineNum">     158 </span><span class="lineCov">          6 :       { this-&gt;clear(this-&gt;rdstate() | __state); }</span>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            :       // Flip the internal state on for the proper state bits, then re
+<span class="lineNum">     161 </span>            :       // throws the propagated exception if bit also set in
+<span class="lineNum">     162 </span>            :       // exceptions().
+<span class="lineNum">     163 </span>            :       void
+<span class="lineNum">     164 </span>            :       _M_setstate(iostate __state)
+<span class="lineNum">     165 </span>            :       {
+<span class="lineNum">     166 </span>            :         // 27.6.1.2.1 Common requirements.
+<span class="lineNum">     167 </span>            :         // Turn this on without causing an ios::failure to be thrown.
+<span class="lineNum">     168 </span>            :         _M_streambuf_state |= __state;
+<span class="lineNum">     169 </span>            :         if (this-&gt;exceptions() &amp; __state)
+<span class="lineNum">     170 </span>            :           __throw_exception_again;
+<span class="lineNum">     171 </span>            :       }
+<span class="lineNum">     172 </span>            : 
+<span class="lineNum">     173 </span>            :       /**
+<span class="lineNum">     174 </span>            :        *  @brief  Fast error checking.
+<span class="lineNum">     175 </span>            :        *  @return  True if no error flags are set.
+<span class="lineNum">     176 </span>            :        *
+<span class="lineNum">     177 </span>            :        *  A wrapper around rdstate.
+<span class="lineNum">     178 </span>            :       */
+<span class="lineNum">     179 </span>            :       bool
+<span class="lineNum">     180 </span>            :       good() const
+<span class="lineNum">     181 </span>            :       { return this-&gt;rdstate() == 0; }
+<span class="lineNum">     182 </span>            : 
+<span class="lineNum">     183 </span>            :       /**
+<span class="lineNum">     184 </span>            :        *  @brief  Fast error checking.
+<span class="lineNum">     185 </span>            :        *  @return  True if the eofbit is set.
+<span class="lineNum">     186 </span>            :        *
+<span class="lineNum">     187 </span>            :        *  Note that other iostate flags may also be set.
+<span class="lineNum">     188 </span>            :       */
+<span class="lineNum">     189 </span>            :       bool
+<span class="lineNum">     190 </span>            :       eof() const
+<span class="lineNum">     191 </span><span class="lineNoCov">          0 :       { return (this-&gt;rdstate() &amp; eofbit) != 0; }</span>
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            :       /**
+<span class="lineNum">     194 </span>            :        *  @brief  Fast error checking.
+<span class="lineNum">     195 </span>            :        *  @return  True if either the badbit or the failbit is set.
+<span class="lineNum">     196 </span>            :        *
+<span class="lineNum">     197 </span>            :        *  Checking the badbit in fail() is historical practice.
+<span class="lineNum">     198 </span>            :        *  Note that other iostate flags may also be set.
+<span class="lineNum">     199 </span>            :       */
+<span class="lineNum">     200 </span>            :       bool
+<span class="lineNum">     201 </span>            :       fail() const
+<span class="lineNum">     202 </span><span class="lineCov">       6066 :       { return (this-&gt;rdstate() &amp; (badbit | failbit)) != 0; }</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span>            :       /**
+<span class="lineNum">     205 </span>            :        *  @brief  Fast error checking.
+<span class="lineNum">     206 </span>            :        *  @return  True if the badbit is set.
+<span class="lineNum">     207 </span>            :        *
+<span class="lineNum">     208 </span>            :        *  Note that other iostate flags may also be set.
+<span class="lineNum">     209 </span>            :       */
+<span class="lineNum">     210 </span>            :       bool
+<span class="lineNum">     211 </span>            :       bad() const
+<span class="lineNum">     212 </span>            :       { return (this-&gt;rdstate() &amp; badbit) != 0; }
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            :       /**
+<span class="lineNum">     215 </span>            :        *  @brief  Throwing exceptions on errors.
+<span class="lineNum">     216 </span>            :        *  @return  The current exceptions mask.
+<span class="lineNum">     217 </span>            :        *
+<span class="lineNum">     218 </span>            :        *  This changes nothing in the stream.  See the one-argument version
+<span class="lineNum">     219 </span>            :        *  of exceptions(iostate) for the meaning of the return value.
+<span class="lineNum">     220 </span>            :       */
+<span class="lineNum">     221 </span>            :       iostate
+<span class="lineNum">     222 </span>            :       exceptions() const
+<span class="lineNum">     223 </span>            :       { return _M_exception; }
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span>            :       /**
+<span class="lineNum">     226 </span>            :        *  @brief  Throwing exceptions on errors.
+<span class="lineNum">     227 </span>            :        *  @param  __except  The new exceptions mask.
+<span class="lineNum">     228 </span>            :        *
+<span class="lineNum">     229 </span>            :        *  By default, error flags are set silently.  You can set an
+<span class="lineNum">     230 </span>            :        *  exceptions mask for each stream; if a bit in the mask becomes set
+<span class="lineNum">     231 </span>            :        *  in the error flags, then an exception of type
+<span class="lineNum">     232 </span>            :        *  std::ios_base::failure is thrown.
+<span class="lineNum">     233 </span>            :        *
+<span class="lineNum">     234 </span>            :        *  If the error flag is already set when the exceptions mask is
+<span class="lineNum">     235 </span>            :        *  added, the exception is immediately thrown.  Try running the
+<span class="lineNum">     236 </span>            :        *  following under GCC 3.1 or later:
+<span class="lineNum">     237 </span>            :        *  @code
+<span class="lineNum">     238 </span>            :        *  #include &lt;iostream&gt;
+<span class="lineNum">     239 </span>            :        *  #include &lt;fstream&gt;
+<span class="lineNum">     240 </span>            :        *  #include &lt;exception&gt;
+<span class="lineNum">     241 </span>            :        *
+<span class="lineNum">     242 </span>            :        *  int main()
+<span class="lineNum">     243 </span>            :        *  {
+<span class="lineNum">     244 </span>            :        *      std::set_terminate (__gnu_cxx::__verbose_terminate_handler);
+<span class="lineNum">     245 </span>            :        *
+<span class="lineNum">     246 </span>            :        *      std::ifstream f (&quot;/etc/motd&quot;);
+<span class="lineNum">     247 </span>            :        *
+<span class="lineNum">     248 </span>            :        *      std::cerr &lt;&lt; &quot;Setting badbit\n&quot;;
+<span class="lineNum">     249 </span>            :        *      f.setstate (std::ios_base::badbit);
+<span class="lineNum">     250 </span>            :        *
+<span class="lineNum">     251 </span>            :        *      std::cerr &lt;&lt; &quot;Setting exception mask\n&quot;;
+<span class="lineNum">     252 </span>            :        *      f.exceptions (std::ios_base::badbit);
+<span class="lineNum">     253 </span>            :        *  }
+<span class="lineNum">     254 </span>            :        *  @endcode
+<span class="lineNum">     255 </span>            :       */
+<span class="lineNum">     256 </span>            :       void
+<span class="lineNum">     257 </span>            :       exceptions(iostate __except)
+<span class="lineNum">     258 </span>            :       {
+<span class="lineNum">     259 </span>            :         _M_exception = __except;
+<span class="lineNum">     260 </span>            :         this-&gt;clear(_M_streambuf_state);
+<span class="lineNum">     261 </span>            :       }
+<span class="lineNum">     262 </span>            : 
+<span class="lineNum">     263 </span>            :       // Constructor/destructor:
+<span class="lineNum">     264 </span>            :       /**
+<span class="lineNum">     265 </span>            :        *  @brief  Constructor performs initialization.
+<span class="lineNum">     266 </span>            :        *
+<span class="lineNum">     267 </span>            :        *  The parameter is passed by derived streams.
+<span class="lineNum">     268 </span>            :       */
+<span class="lineNum">     269 </span>            :       explicit
+<span class="lineNum">     270 </span>            :       basic_ios(basic_streambuf&lt;_CharT, _Traits&gt;* __sb)
+<span class="lineNum">     271 </span>            :       : ios_base(), _M_tie(0), _M_fill(), _M_fill_init(false), _M_streambuf(0),
+<span class="lineNum">     272 </span>            :         _M_ctype(0), _M_num_put(0), _M_num_get(0)
+<span class="lineNum">     273 </span>            :       { this-&gt;init(__sb); }
+<span class="lineNum">     274 </span>            : 
+<span class="lineNum">     275 </span>            :       /**
+<span class="lineNum">     276 </span>            :        *  @brief  Empty.
+<span class="lineNum">     277 </span>            :        *
+<span class="lineNum">     278 </span>            :        *  The destructor does nothing.  More specifically, it does not
+<span class="lineNum">     279 </span>            :        *  destroy the streambuf held by rdbuf().
+<span class="lineNum">     280 </span>            :       */
+<span class="lineNum">     281 </span>            :       virtual
+<span class="lineNum">     282 </span><span class="lineNoCov">          0 :       ~basic_ios() { }</span>
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span>            :       // Members:
+<span class="lineNum">     285 </span>            :       /**
+<span class="lineNum">     286 </span>            :        *  @brief  Fetches the current @e tied stream.
+<span class="lineNum">     287 </span>            :        *  @return  A pointer to the tied stream, or NULL if the stream is
+<span class="lineNum">     288 </span>            :        *           not tied.
+<span class="lineNum">     289 </span>            :        *
+<span class="lineNum">     290 </span>            :        *  A stream may be @e tied (or synchronized) to a second output
+<span class="lineNum">     291 </span>            :        *  stream.  When this stream performs any I/O, the tied stream is
+<span class="lineNum">     292 </span>            :        *  first flushed.  For example, @c std::cin is tied to @c std::cout.
+<span class="lineNum">     293 </span>            :       */
+<span class="lineNum">     294 </span>            :       basic_ostream&lt;_CharT, _Traits&gt;*
+<span class="lineNum">     295 </span>            :       tie() const
+<span class="lineNum">     296 </span>            :       { return _M_tie; }
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            :       /**
+<span class="lineNum">     299 </span>            :        *  @brief  Ties this stream to an output stream.
+<span class="lineNum">     300 </span>            :        *  @param  __tiestr  The output stream.
+<span class="lineNum">     301 </span>            :        *  @return  The previously tied output stream, or NULL if the stream
+<span class="lineNum">     302 </span>            :        *           was not tied.
+<span class="lineNum">     303 </span>            :        *
+<span class="lineNum">     304 </span>            :        *  This sets up a new tie; see tie() for more.
+<span class="lineNum">     305 </span>            :       */
+<span class="lineNum">     306 </span>            :       basic_ostream&lt;_CharT, _Traits&gt;*
+<span class="lineNum">     307 </span>            :       tie(basic_ostream&lt;_CharT, _Traits&gt;* __tiestr)
+<span class="lineNum">     308 </span>            :       {
+<span class="lineNum">     309 </span>            :         basic_ostream&lt;_CharT, _Traits&gt;* __old = _M_tie;
+<span class="lineNum">     310 </span>            :         _M_tie = __tiestr;
+<span class="lineNum">     311 </span>            :         return __old;
+<span class="lineNum">     312 </span>            :       }
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span>            :       /**
+<span class="lineNum">     315 </span>            :        *  @brief  Accessing the underlying buffer.
+<span class="lineNum">     316 </span>            :        *  @return  The current stream buffer.
+<span class="lineNum">     317 </span>            :        *
+<span class="lineNum">     318 </span>            :        *  This does not change the state of the stream.
+<span class="lineNum">     319 </span>            :       */
+<span class="lineNum">     320 </span>            :       basic_streambuf&lt;_CharT, _Traits&gt;*
+<span class="lineNum">     321 </span>            :       rdbuf() const
+<span class="lineNum">     322 </span>            :       { return _M_streambuf; }
+<span class="lineNum">     323 </span>            : 
+<span class="lineNum">     324 </span>            :       /**
+<span class="lineNum">     325 </span>            :        *  @brief  Changing the underlying buffer.
+<span class="lineNum">     326 </span>            :        *  @param  __sb  The new stream buffer.
+<span class="lineNum">     327 </span>            :        *  @return  The previous stream buffer.
+<span class="lineNum">     328 </span>            :        *
+<span class="lineNum">     329 </span>            :        *  Associates a new buffer with the current stream, and clears the
+<span class="lineNum">     330 </span>            :        *  error state.
+<span class="lineNum">     331 </span>            :        *
+<span class="lineNum">     332 </span>            :        *  Due to historical accidents which the LWG refuses to correct, the
+<span class="lineNum">     333 </span>            :        *  I/O library suffers from a design error:  this function is hidden
+<span class="lineNum">     334 </span>            :        *  in derived classes by overrides of the zero-argument @c rdbuf(),
+<span class="lineNum">     335 </span>            :        *  which is non-virtual for hysterical raisins.  As a result, you
+<span class="lineNum">     336 </span>            :        *  must use explicit qualifications to access this function via any
+<span class="lineNum">     337 </span>            :        *  derived class.  For example:
+<span class="lineNum">     338 </span>            :        *
+<span class="lineNum">     339 </span>            :        *  @code
+<span class="lineNum">     340 </span>            :        *  std::fstream     foo;         // or some other derived type
+<span class="lineNum">     341 </span>            :        *  std::streambuf*  p = .....;
+<span class="lineNum">     342 </span>            :        *
+<span class="lineNum">     343 </span>            :        *  foo.ios::rdbuf(p);            // ios == basic_ios&lt;char&gt;
+<span class="lineNum">     344 </span>            :        *  @endcode
+<span class="lineNum">     345 </span>            :       */
+<span class="lineNum">     346 </span>            :       basic_streambuf&lt;_CharT, _Traits&gt;*
+<span class="lineNum">     347 </span>            :       rdbuf(basic_streambuf&lt;_CharT, _Traits&gt;* __sb);
+<span class="lineNum">     348 </span>            : 
+<span class="lineNum">     349 </span>            :       /**
+<span class="lineNum">     350 </span>            :        *  @brief  Copies fields of __rhs into this.
+<span class="lineNum">     351 </span>            :        *  @param  __rhs  The source values for the copies.
+<span class="lineNum">     352 </span>            :        *  @return  Reference to this object.
+<span class="lineNum">     353 </span>            :        *
+<span class="lineNum">     354 </span>            :        *  All fields of __rhs are copied into this object except that rdbuf()
+<span class="lineNum">     355 </span>            :        *  and rdstate() remain unchanged.  All values in the pword and iword
+<span class="lineNum">     356 </span>            :        *  arrays are copied.  Before copying, each callback is invoked with
+<span class="lineNum">     357 </span>            :        *  erase_event.  After copying, each (new) callback is invoked with
+<span class="lineNum">     358 </span>            :        *  copyfmt_event.  The final step is to copy exceptions().
+<span class="lineNum">     359 </span>            :       */
+<span class="lineNum">     360 </span>            :       basic_ios&amp;
+<span class="lineNum">     361 </span>            :       copyfmt(const basic_ios&amp; __rhs);
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span>            :       /**
+<span class="lineNum">     364 </span>            :        *  @brief  Retrieves the @a empty character.
+<span class="lineNum">     365 </span>            :        *  @return  The current fill character.
+<span class="lineNum">     366 </span>            :        *
+<span class="lineNum">     367 </span>            :        *  It defaults to a space (' ') in the current locale.
+<span class="lineNum">     368 </span>            :       */
+<span class="lineNum">     369 </span>            :       char_type
+<span class="lineNum">     370 </span>            :       fill() const
+<span class="lineNum">     371 </span>            :       {
+<span class="lineNum">     372 </span>            :         if (!_M_fill_init)
+<span class="lineNum">     373 </span>            :           {
+<span class="lineNum">     374 </span>            :             _M_fill = this-&gt;widen(' ');
+<span class="lineNum">     375 </span>            :             _M_fill_init = true;
+<span class="lineNum">     376 </span>            :           }
+<span class="lineNum">     377 </span>            :         return _M_fill;
+<span class="lineNum">     378 </span>            :       }
+<span class="lineNum">     379 </span>            : 
+<span class="lineNum">     380 </span>            :       /**
+<span class="lineNum">     381 </span>            :        *  @brief  Sets a new @a empty character.
+<span class="lineNum">     382 </span>            :        *  @param  __ch  The new character.
+<span class="lineNum">     383 </span>            :        *  @return  The previous fill character.
+<span class="lineNum">     384 </span>            :        *
+<span class="lineNum">     385 </span>            :        *  The fill character is used to fill out space when P+ characters
+<span class="lineNum">     386 </span>            :        *  have been requested (e.g., via setw), Q characters are actually
+<span class="lineNum">     387 </span>            :        *  used, and Q&lt;P.  It defaults to a space (' ') in the current locale.
+<span class="lineNum">     388 </span>            :       */
+<span class="lineNum">     389 </span>            :       char_type
+<span class="lineNum">     390 </span>            :       fill(char_type __ch)
+<span class="lineNum">     391 </span>            :       {
+<span class="lineNum">     392 </span><span class="lineCov">   12916141 :         char_type __old = this-&gt;fill();</span>
+<span class="lineNum">     393 </span><span class="lineCov">   12916140 :         _M_fill = __ch;</span>
+<span class="lineNum">     394 </span>            :         return __old;
+<span class="lineNum">     395 </span>            :       }
+<span class="lineNum">     396 </span>            : 
+<span class="lineNum">     397 </span>            :       // Locales:
+<span class="lineNum">     398 </span>            :       /**
+<span class="lineNum">     399 </span>            :        *  @brief  Moves to a new locale.
+<span class="lineNum">     400 </span>            :        *  @param  __loc  The new locale.
+<span class="lineNum">     401 </span>            :        *  @return  The previous locale.
+<span class="lineNum">     402 </span>            :        *
+<span class="lineNum">     403 </span>            :        *  Calls @c ios_base::imbue(loc), and if a stream buffer is associated
+<span class="lineNum">     404 </span>            :        *  with this stream, calls that buffer's @c pubimbue(loc).
+<span class="lineNum">     405 </span>            :        *
+<span class="lineNum">     406 </span>            :        *  Additional l10n notes are at
+<span class="lineNum">     407 </span>            :        *  http://gcc.gnu.org/onlinedocs/libstdc++/manual/localization.html
+<span class="lineNum">     408 </span>            :       */
+<span class="lineNum">     409 </span>            :       locale
+<span class="lineNum">     410 </span>            :       imbue(const locale&amp; __loc);
+<span class="lineNum">     411 </span>            : 
+<span class="lineNum">     412 </span>            :       /**
+<span class="lineNum">     413 </span>            :        *  @brief  Squeezes characters.
+<span class="lineNum">     414 </span>            :        *  @param  __c  The character to narrow.
+<span class="lineNum">     415 </span>            :        *  @param  __dfault  The character to narrow.
+<span class="lineNum">     416 </span>            :        *  @return  The narrowed character.
+<span class="lineNum">     417 </span>            :        *
+<span class="lineNum">     418 </span>            :        *  Maps a character of @c char_type to a character of @c char,
+<span class="lineNum">     419 </span>            :        *  if possible.
+<span class="lineNum">     420 </span>            :        *
+<span class="lineNum">     421 </span>            :        *  Returns the result of
+<span class="lineNum">     422 </span>            :        *  @code
+<span class="lineNum">     423 </span>            :        *    std::use_facet&lt;ctype&lt;char_type&gt; &gt;(getloc()).narrow(c,dfault)
+<span class="lineNum">     424 </span>            :        *  @endcode
+<span class="lineNum">     425 </span>            :        *
+<span class="lineNum">     426 </span>            :        *  Additional l10n notes are at
+<span class="lineNum">     427 </span>            :        *  http://gcc.gnu.org/onlinedocs/libstdc++/manual/localization.html
+<span class="lineNum">     428 </span>            :       */
+<span class="lineNum">     429 </span>            :       char
+<span class="lineNum">     430 </span>            :       narrow(char_type __c, char __dfault) const
+<span class="lineNum">     431 </span>            :       { return __check_facet(_M_ctype).narrow(__c, __dfault); }
+<span class="lineNum">     432 </span>            : 
+<span class="lineNum">     433 </span>            :       /**
+<span class="lineNum">     434 </span>            :        *  @brief  Widens characters.
+<span class="lineNum">     435 </span>            :        *  @param  __c  The character to widen.
+<span class="lineNum">     436 </span>            :        *  @return  The widened character.
+<span class="lineNum">     437 </span>            :        *
+<span class="lineNum">     438 </span>            :        *  Maps a character of @c char to a character of @c char_type.
+<span class="lineNum">     439 </span>            :        *
+<span class="lineNum">     440 </span>            :        *  Returns the result of
+<span class="lineNum">     441 </span>            :        *  @code
+<span class="lineNum">     442 </span>            :        *    std::use_facet&lt;ctype&lt;char_type&gt; &gt;(getloc()).widen(c)
+<span class="lineNum">     443 </span>            :        *  @endcode
+<span class="lineNum">     444 </span>            :        *
+<span class="lineNum">     445 </span>            :        *  Additional l10n notes are at
+<span class="lineNum">     446 </span>            :        *  http://gcc.gnu.org/onlinedocs/libstdc++/manual/localization.html
+<span class="lineNum">     447 </span>            :       */
+<span class="lineNum">     448 </span>            :       char_type
+<span class="lineNum">     449 </span>            :       widen(char __c) const
+<span class="lineNum">     450 </span><span class="lineNoCov">          0 :       { return __check_facet(_M_ctype).widen(__c); }</span>
+<span class="lineNum">     451 </span>            : 
+<span class="lineNum">     452 </span>            :     protected:
+<span class="lineNum">     453 </span>            :       // 27.4.5.1  basic_ios constructors
+<span class="lineNum">     454 </span>            :       /**
+<span class="lineNum">     455 </span>            :        *  @brief  Empty.
+<span class="lineNum">     456 </span>            :        *
+<span class="lineNum">     457 </span>            :        *  The default constructor does nothing and is not normally
+<span class="lineNum">     458 </span>            :        *  accessible to users.
+<span class="lineNum">     459 </span>            :       */
+<span class="lineNum">     460 </span>            :       basic_ios()
+<span class="lineNum">     461 </span>            :       : ios_base(), _M_tie(0), _M_fill(char_type()), _M_fill_init(false), 
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 :         _M_streambuf(0), _M_ctype(0), _M_num_put(0), _M_num_get(0)</span>
+<span class="lineNum">     463 </span>            :       { }
+<span class="lineNum">     464 </span>            : 
+<span class="lineNum">     465 </span>            :       /**
+<span class="lineNum">     466 </span>            :        *  @brief  All setup is performed here.
+<span class="lineNum">     467 </span>            :        *
+<span class="lineNum">     468 </span>            :        *  This is called from the public constructor.  It is not virtual and
+<span class="lineNum">     469 </span>            :        *  cannot be redefined.
+<span class="lineNum">     470 </span>            :       */
+<span class="lineNum">     471 </span>            :       void
+<span class="lineNum">     472 </span>            :       init(basic_streambuf&lt;_CharT, _Traits&gt;* __sb);
+<span class="lineNum">     473 </span>            : 
+<span class="lineNum">     474 </span>            : #if __cplusplus &gt;= 201103L
+<span class="lineNum">     475 </span>            :       basic_ios(const basic_ios&amp;) = delete;
+<span class="lineNum">     476 </span>            :       basic_ios&amp; operator=(const basic_ios&amp;) = delete;
+<span class="lineNum">     477 </span>            : 
+<span class="lineNum">     478 </span>            :       void
+<span class="lineNum">     479 </span>            :       move(basic_ios&amp; __rhs)
+<span class="lineNum">     480 </span>            :       {
+<span class="lineNum">     481 </span>            :         ios_base::_M_move(__rhs);
+<span class="lineNum">     482 </span>            :         _M_cache_locale(_M_ios_locale);
+<span class="lineNum">     483 </span>            :         this-&gt;tie(__rhs.tie(nullptr));
+<span class="lineNum">     484 </span>            :         _M_fill = __rhs._M_fill;
+<span class="lineNum">     485 </span>            :         _M_fill_init = __rhs._M_fill_init;
+<span class="lineNum">     486 </span>            :         _M_streambuf = nullptr;
+<span class="lineNum">     487 </span>            :       }
+<span class="lineNum">     488 </span>            : 
+<span class="lineNum">     489 </span>            :       void
+<span class="lineNum">     490 </span>            :       move(basic_ios&amp;&amp; __rhs)
+<span class="lineNum">     491 </span>            :       { this-&gt;move(__rhs); }
+<span class="lineNum">     492 </span>            : 
+<span class="lineNum">     493 </span>            :       void
+<span class="lineNum">     494 </span>            :       swap(basic_ios&amp; __rhs) noexcept
+<span class="lineNum">     495 </span>            :       {
+<span class="lineNum">     496 </span>            :         ios_base::_M_swap(__rhs);
+<span class="lineNum">     497 </span>            :         _M_cache_locale(_M_ios_locale);
+<span class="lineNum">     498 </span>            :         __rhs._M_cache_locale(__rhs._M_ios_locale);
+<span class="lineNum">     499 </span>            :         std::swap(_M_tie, __rhs._M_tie);
+<span class="lineNum">     500 </span>            :         std::swap(_M_fill, __rhs._M_fill);
+<span class="lineNum">     501 </span>            :         std::swap(_M_fill_init, __rhs._M_fill_init);
+<span class="lineNum">     502 </span>            :       }
+<span class="lineNum">     503 </span>            : 
+<span class="lineNum">     504 </span>            :       void
+<span class="lineNum">     505 </span>            :       set_rdbuf(basic_streambuf&lt;_CharT, _Traits&gt;* __sb)
+<span class="lineNum">     506 </span>            :       { _M_streambuf = __sb; }
+<span class="lineNum">     507 </span>            : #endif
+<span class="lineNum">     508 </span>            : 
+<span class="lineNum">     509 </span>            :       void
+<span class="lineNum">     510 </span>            :       _M_cache_locale(const locale&amp; __loc);
+<span class="lineNum">     511 </span>            :     };
+<span class="lineNum">     512 </span>            : 
+<span class="lineNum">     513 </span>            : _GLIBCXX_END_NAMESPACE_VERSION
+<span class="lineNum">     514 </span>            : } // namespace
+<span class="lineNum">     515 </span>            : 
+<span class="lineNum">     516 </span>            : #include &lt;bits/basic_ios.tcc&gt;
+<span class="lineNum">     517 </span>            : 
+<span class="lineNum">     518 </span>            : #endif /* _BASIC_IOS_H */
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,504 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - utils/secp256k1/field_5x52_impl.h</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">utils/secp256k1</a> - field_5x52_impl.h<span style="font-size: 80%;"> (source / <a href="field_5x52_impl.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">139</td>
+            <td class="headerCovTableEntry">147</td>
+            <td class="headerCovTableEntryHi">94.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /**********************************************************************</a>
+<span class="lineNum">       2 </span>            :  * Copyright (c) 2013, 2014 Pieter Wuille                             *
+<span class="lineNum">       3 </span>            :  * Distributed under the MIT software license, see the accompanying   *
+<span class="lineNum">       4 </span>            :  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+<span class="lineNum">       5 </span>            :  **********************************************************************/
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #ifndef _SECP256K1_FIELD_REPR_IMPL_H_
+<span class="lineNum">       8 </span>            : #define _SECP256K1_FIELD_REPR_IMPL_H_
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #if defined HAVE_CONFIG_H
+<span class="lineNum">      11 </span>            : #include &quot;libsecp256k1-config.h&quot;
+<span class="lineNum">      12 </span>            : #endif
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &lt;string.h&gt;
+<span class="lineNum">      15 </span>            : #include &quot;util.h&quot;
+<span class="lineNum">      16 </span>            : #include &quot;num.h&quot;
+<span class="lineNum">      17 </span>            : #include &quot;field.h&quot;
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #if defined(USE_ASM_X86_64)
+<span class="lineNum">      20 </span>            : #include &quot;field_5x52_asm_impl.h&quot;
+<span class="lineNum">      21 </span>            : #else
+<span class="lineNum">      22 </span>            : #include &quot;field_5x52_int128_impl.h&quot;
+<span class="lineNum">      23 </span>            : #endif
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : /** Implements arithmetic modulo FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE FFFFFC2F,
+<span class="lineNum">      26 </span>            :  *  represented as 5 uint64_t's in base 2^52. The values are allowed to contain &gt;52 each. In particular,
+<span class="lineNum">      27 </span>            :  *  each FieldElem has a 'magnitude' associated with it. Internally, a magnitude M means each element
+<span class="lineNum">      28 </span>            :  *  is at most M*(2^53-1), except the most significant one, which is limited to M*(2^49-1). All operations
+<span class="lineNum">      29 </span>            :  *  accept any input with magnitude at most M, and have different rules for propagating magnitude to their
+<span class="lineNum">      30 </span>            :  *  output.
+<a name="31"><span class="lineNum">      31 </span>            :  */</a>
+<span class="lineNum">      32 </span>            : 
+<span class="lineNum">      33 </span><span class="lineCov">     198581 : static void secp256k1_fe_normalize(secp256k1_fe_t *r) {</span>
+<span class="lineNum">      34 </span><span class="lineCov">     198581 :     uint64_t t0 = r-&gt;n[0], t1 = r-&gt;n[1], t2 = r-&gt;n[2], t3 = r-&gt;n[3], t4 = r-&gt;n[4];</span>
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            :     /* Reduce t4 at the start so there will be at most a single carry from the first pass */
+<span class="lineNum">      37 </span>            :     uint64_t m;
+<span class="lineNum">      38 </span><span class="lineCov">     198581 :     uint64_t x = t4 &gt;&gt; 48; t4 &amp;= 0x0FFFFFFFFFFFFULL;</span>
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            :     /* The first pass ensures the magnitude is 1, ... */
+<span class="lineNum">      41 </span><span class="lineCov">     198581 :     t0 += x * 0x1000003D1ULL;</span>
+<span class="lineNum">      42 </span><span class="lineCov">     198581 :     t1 += (t0 &gt;&gt; 52); t0 &amp;= 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">      43 </span><span class="lineCov">     198581 :     t2 += (t1 &gt;&gt; 52); t1 &amp;= 0xFFFFFFFFFFFFFULL; m = t1;</span>
+<span class="lineNum">      44 </span><span class="lineCov">     198581 :     t3 += (t2 &gt;&gt; 52); t2 &amp;= 0xFFFFFFFFFFFFFULL; m &amp;= t2;</span>
+<span class="lineNum">      45 </span><span class="lineCov">     198581 :     t4 += (t3 &gt;&gt; 52); t3 &amp;= 0xFFFFFFFFFFFFFULL; m &amp;= t3;</span>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            :     /* ... except for a possible carry at bit 48 of t4 (i.e. bit 256 of the field element) */
+<span class="lineNum">      48 </span>            :     VERIFY_CHECK(t4 &gt;&gt; 49 == 0);
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            :     /* At most a single final reduction is needed; check if the value is &gt;= the field characteristic */
+<span class="lineNum">      51 </span><span class="lineCov">     397162 :     x = (t4 &gt;&gt; 48) | ((t4 == 0x0FFFFFFFFFFFFULL) &amp; (m == 0xFFFFFFFFFFFFFULL)</span>
+<span class="lineNum">      52 </span><span class="lineCov">     198581 :         &amp; (t0 &gt;= 0xFFFFEFFFFFC2FULL));</span>
+<span class="lineNum">      53 </span>            : 
+<span class="lineNum">      54 </span>            :     /* Apply the final reduction (for constant-time behaviour, we do it always) */
+<span class="lineNum">      55 </span><span class="lineCov">     198581 :     t0 += x * 0x1000003D1ULL;</span>
+<span class="lineNum">      56 </span><span class="lineCov">     198581 :     t1 += (t0 &gt;&gt; 52); t0 &amp;= 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">      57 </span><span class="lineCov">     198581 :     t2 += (t1 &gt;&gt; 52); t1 &amp;= 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">      58 </span><span class="lineCov">     198581 :     t3 += (t2 &gt;&gt; 52); t2 &amp;= 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">      59 </span><span class="lineCov">     198581 :     t4 += (t3 &gt;&gt; 52); t3 &amp;= 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            :     /* If t4 didn't carry to bit 48 already, then it should have after any final reduction */
+<span class="lineNum">      62 </span>            :     VERIFY_CHECK(t4 &gt;&gt; 48 == x);
+<span class="lineNum">      63 </span>            : 
+<span class="lineNum">      64 </span>            :     /* Mask off the possible multiple of 2^256 from the final reduction */
+<span class="lineNum">      65 </span><span class="lineCov">     198581 :     t4 &amp;= 0x0FFFFFFFFFFFFULL;</span>
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span><span class="lineCov">     198581 :     r-&gt;n[0] = t0; r-&gt;n[1] = t1; r-&gt;n[2] = t2; r-&gt;n[3] = t3; r-&gt;n[4] = t4;</span>
+<span class="lineNum">      68 </span>            : 
+<span class="lineNum">      69 </span>            : #ifdef VERIFY
+<span class="lineNum">      70 </span>            :     r-&gt;magnitude = 1;
+<span class="lineNum">      71 </span>            :     r-&gt;normalized = 1;
+<span class="lineNum">      72 </span>            :     secp256k1_fe_verify(r);
+<span class="lineNum">      73 </span>            : #endif
+<a name="74"><span class="lineNum">      74 </span><span class="lineCov">     198581 : }</span></a>
+<span class="lineNum">      75 </span>            : 
+<span class="lineNum">      76 </span><span class="lineCov">    2284315 : static void secp256k1_fe_normalize_weak(secp256k1_fe_t *r) {</span>
+<span class="lineNum">      77 </span><span class="lineCov">    2284315 :     uint64_t t0 = r-&gt;n[0], t1 = r-&gt;n[1], t2 = r-&gt;n[2], t3 = r-&gt;n[3], t4 = r-&gt;n[4];</span>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            :     /* Reduce t4 at the start so there will be at most a single carry from the first pass */
+<span class="lineNum">      80 </span><span class="lineCov">    2284315 :     uint64_t x = t4 &gt;&gt; 48; t4 &amp;= 0x0FFFFFFFFFFFFULL;</span>
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            :     /* The first pass ensures the magnitude is 1, ... */
+<span class="lineNum">      83 </span><span class="lineCov">    2284315 :     t0 += x * 0x1000003D1ULL;</span>
+<span class="lineNum">      84 </span><span class="lineCov">    2284315 :     t1 += (t0 &gt;&gt; 52); t0 &amp;= 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">      85 </span><span class="lineCov">    2284315 :     t2 += (t1 &gt;&gt; 52); t1 &amp;= 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">      86 </span><span class="lineCov">    2284315 :     t3 += (t2 &gt;&gt; 52); t2 &amp;= 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">      87 </span><span class="lineCov">    2284315 :     t4 += (t3 &gt;&gt; 52); t3 &amp;= 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span>            :     /* ... except for a possible carry at bit 48 of t4 (i.e. bit 256 of the field element) */
+<span class="lineNum">      90 </span>            :     VERIFY_CHECK(t4 &gt;&gt; 49 == 0);
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span><span class="lineCov">    2284315 :     r-&gt;n[0] = t0; r-&gt;n[1] = t1; r-&gt;n[2] = t2; r-&gt;n[3] = t3; r-&gt;n[4] = t4;</span>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : #ifdef VERIFY
+<span class="lineNum">      95 </span>            :     r-&gt;magnitude = 1;
+<span class="lineNum">      96 </span>            :     secp256k1_fe_verify(r);
+<span class="lineNum">      97 </span>            : #endif
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">    2284315 : }</span></a>
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span><span class="lineCov">     128024 : static void secp256k1_fe_normalize_var(secp256k1_fe_t *r) {</span>
+<span class="lineNum">     101 </span><span class="lineCov">     128024 :     uint64_t t0 = r-&gt;n[0], t1 = r-&gt;n[1], t2 = r-&gt;n[2], t3 = r-&gt;n[3], t4 = r-&gt;n[4];</span>
+<span class="lineNum">     102 </span>            : 
+<span class="lineNum">     103 </span>            :     /* Reduce t4 at the start so there will be at most a single carry from the first pass */
+<span class="lineNum">     104 </span>            :     uint64_t m;
+<span class="lineNum">     105 </span><span class="lineCov">     128024 :     uint64_t x = t4 &gt;&gt; 48; t4 &amp;= 0x0FFFFFFFFFFFFULL;</span>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            :     /* The first pass ensures the magnitude is 1, ... */
+<span class="lineNum">     108 </span><span class="lineCov">     128024 :     t0 += x * 0x1000003D1ULL;</span>
+<span class="lineNum">     109 </span><span class="lineCov">     128024 :     t1 += (t0 &gt;&gt; 52); t0 &amp;= 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">     110 </span><span class="lineCov">     128024 :     t2 += (t1 &gt;&gt; 52); t1 &amp;= 0xFFFFFFFFFFFFFULL; m = t1;</span>
+<span class="lineNum">     111 </span><span class="lineCov">     128024 :     t3 += (t2 &gt;&gt; 52); t2 &amp;= 0xFFFFFFFFFFFFFULL; m &amp;= t2;</span>
+<span class="lineNum">     112 </span><span class="lineCov">     128024 :     t4 += (t3 &gt;&gt; 52); t3 &amp;= 0xFFFFFFFFFFFFFULL; m &amp;= t3;</span>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            :     /* ... except for a possible carry at bit 48 of t4 (i.e. bit 256 of the field element) */
+<span class="lineNum">     115 </span>            :     VERIFY_CHECK(t4 &gt;&gt; 49 == 0);
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            :     /* At most a single final reduction is needed; check if the value is &gt;= the field characteristic */
+<span class="lineNum">     118 </span><span class="lineCov">     256048 :     x = (t4 &gt;&gt; 48) | ((t4 == 0x0FFFFFFFFFFFFULL) &amp; (m == 0xFFFFFFFFFFFFFULL)</span>
+<span class="lineNum">     119 </span><span class="lineCov">     128024 :         &amp; (t0 &gt;= 0xFFFFEFFFFFC2FULL));</span>
+<span class="lineNum">     120 </span>            : 
+<span class="lineNum">     121 </span><span class="lineCov">     128024 :     if (x) {</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :         t0 += 0x1000003D1ULL;</span>
+<span class="lineNum">     123 </span><span class="lineNoCov">          0 :         t1 += (t0 &gt;&gt; 52); t0 &amp;= 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :         t2 += (t1 &gt;&gt; 52); t1 &amp;= 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">     125 </span><span class="lineNoCov">          0 :         t3 += (t2 &gt;&gt; 52); t2 &amp;= 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">     126 </span><span class="lineNoCov">          0 :         t4 += (t3 &gt;&gt; 52); t3 &amp;= 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            :         /* If t4 didn't carry to bit 48 already, then it should have after any final reduction */
+<span class="lineNum">     129 </span>            :         VERIFY_CHECK(t4 &gt;&gt; 48 == x);
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            :         /* Mask off the possible multiple of 2^256 from the final reduction */
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :         t4 &amp;= 0x0FFFFFFFFFFFFULL;</span>
+<span class="lineNum">     133 </span>            :     }
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineCov">     128024 :     r-&gt;n[0] = t0; r-&gt;n[1] = t1; r-&gt;n[2] = t2; r-&gt;n[3] = t3; r-&gt;n[4] = t4;</span>
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : #ifdef VERIFY
+<span class="lineNum">     138 </span>            :     r-&gt;magnitude = 1;
+<span class="lineNum">     139 </span>            :     r-&gt;normalized = 1;
+<span class="lineNum">     140 </span>            :     secp256k1_fe_verify(r);
+<span class="lineNum">     141 </span>            : #endif
+<a name="142"><span class="lineNum">     142 </span><span class="lineCov">     128024 : }</span></a>
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineCov">     125063 : static int secp256k1_fe_normalizes_to_zero(secp256k1_fe_t *r) {</span>
+<span class="lineNum">     145 </span><span class="lineCov">     125063 :     uint64_t t0 = r-&gt;n[0], t1 = r-&gt;n[1], t2 = r-&gt;n[2], t3 = r-&gt;n[3], t4 = r-&gt;n[4];</span>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            :     /* z0 tracks a possible raw value of 0, z1 tracks a possible raw value of P */
+<span class="lineNum">     148 </span>            :     uint64_t z0, z1;
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            :     /* Reduce t4 at the start so there will be at most a single carry from the first pass */
+<span class="lineNum">     151 </span><span class="lineCov">     125063 :     uint64_t x = t4 &gt;&gt; 48; t4 &amp;= 0x0FFFFFFFFFFFFULL;</span>
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            :     /* The first pass ensures the magnitude is 1, ... */
+<span class="lineNum">     154 </span><span class="lineCov">     125063 :     t0 += x * 0x1000003D1ULL;</span>
+<span class="lineNum">     155 </span><span class="lineCov">     125063 :     t1 += (t0 &gt;&gt; 52); t0 &amp;= 0xFFFFFFFFFFFFFULL; z0  = t0; z1  = t0 ^ 0x1000003D0ULL;</span>
+<span class="lineNum">     156 </span><span class="lineCov">     125063 :     t2 += (t1 &gt;&gt; 52); t1 &amp;= 0xFFFFFFFFFFFFFULL; z0 |= t1; z1 &amp;= t1;</span>
+<span class="lineNum">     157 </span><span class="lineCov">     125063 :     t3 += (t2 &gt;&gt; 52); t2 &amp;= 0xFFFFFFFFFFFFFULL; z0 |= t2; z1 &amp;= t2;</span>
+<span class="lineNum">     158 </span><span class="lineCov">     125063 :     t4 += (t3 &gt;&gt; 52); t3 &amp;= 0xFFFFFFFFFFFFFULL; z0 |= t3; z1 &amp;= t3;</span>
+<span class="lineNum">     159 </span><span class="lineCov">     125063 :                                                 z0 |= t4; z1 &amp;= t4 ^ 0xF000000000000ULL;</span>
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span>            :     /* ... except for a possible carry at bit 48 of t4 (i.e. bit 256 of the field element) */
+<span class="lineNum">     162 </span>            :     VERIFY_CHECK(t4 &gt;&gt; 49 == 0);
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span><span class="lineCov">     125063 :     return (z0 == 0) | (z1 == 0xFFFFFFFFFFFFFULL);</span>
+<a name="165"><span class="lineNum">     165 </span>            : }</a>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span><span class="lineCov">    2129126 : static int secp256k1_fe_normalizes_to_zero_var(secp256k1_fe_t *r) {</span>
+<span class="lineNum">     168 </span>            :     uint64_t t0, t1, t2, t3, t4;
+<span class="lineNum">     169 </span>            :     uint64_t z0, z1;
+<span class="lineNum">     170 </span>            :     uint64_t x;
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span><span class="lineCov">    2129126 :     t0 = r-&gt;n[0];</span>
+<span class="lineNum">     173 </span><span class="lineCov">    2129126 :     t4 = r-&gt;n[4];</span>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :     /* Reduce t4 at the start so there will be at most a single carry from the first pass */
+<span class="lineNum">     176 </span><span class="lineCov">    2129126 :     x = t4 &gt;&gt; 48;</span>
+<span class="lineNum">     177 </span>            : 
+<span class="lineNum">     178 </span>            :     /* The first pass ensures the magnitude is 1, ... */
+<span class="lineNum">     179 </span><span class="lineCov">    2129126 :     t0 += x * 0x1000003D1ULL;</span>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            :     /* z0 tracks a possible raw value of 0, z1 tracks a possible raw value of P */
+<span class="lineNum">     182 </span><span class="lineCov">    2129126 :     z0 = t0 &amp; 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">     183 </span><span class="lineCov">    2129126 :     z1 = z0 ^ 0x1000003D0ULL;</span>
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            :     /* Fast return path should catch the majority of cases */
+<span class="lineNum">     186 </span><span class="lineCov">    2129126 :     if ((z0 != 0ULL) &amp; (z1 != 0xFFFFFFFFFFFFFULL)) {</span>
+<span class="lineNum">     187 </span>            :         return 0;
+<span class="lineNum">     188 </span>            :     }
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span><span class="lineCov">      32026 :     t1 = r-&gt;n[1];</span>
+<span class="lineNum">     191 </span><span class="lineCov">      32026 :     t2 = r-&gt;n[2];</span>
+<span class="lineNum">     192 </span><span class="lineCov">      32026 :     t3 = r-&gt;n[3];</span>
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineCov">      32026 :     t4 &amp;= 0x0FFFFFFFFFFFFULL;</span>
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span><span class="lineCov">      32026 :     t1 += (t0 &gt;&gt; 52); t0  = z0;</span>
+<span class="lineNum">     197 </span><span class="lineCov">      32026 :     t2 += (t1 &gt;&gt; 52); t1 &amp;= 0xFFFFFFFFFFFFFULL; z0 |= t1; z1 &amp;= t1;</span>
+<span class="lineNum">     198 </span><span class="lineCov">      32026 :     t3 += (t2 &gt;&gt; 52); t2 &amp;= 0xFFFFFFFFFFFFFULL; z0 |= t2; z1 &amp;= t2;</span>
+<span class="lineNum">     199 </span><span class="lineCov">      32026 :     t4 += (t3 &gt;&gt; 52); t3 &amp;= 0xFFFFFFFFFFFFFULL; z0 |= t3; z1 &amp;= t3;</span>
+<span class="lineNum">     200 </span><span class="lineCov">      32026 :                                                 z0 |= t4; z1 &amp;= t4 ^ 0xF000000000000ULL;</span>
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span>            :     /* ... except for a possible carry at bit 48 of t4 (i.e. bit 256 of the field element) */
+<span class="lineNum">     203 </span>            :     VERIFY_CHECK(t4 &gt;&gt; 49 == 0);
+<span class="lineNum">     204 </span>            : 
+<span class="lineNum">     205 </span><span class="lineCov">      32026 :     return (z0 == 0) | (z1 == 0xFFFFFFFFFFFFFULL);</span>
+<span class="lineNum">     206 </span>            : }
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            : SECP256K1_INLINE static void secp256k1_fe_set_int(secp256k1_fe_t *r, int a) {
+<span class="lineNum">     209 </span><span class="lineCov">     199704 :     r-&gt;n[0] = a;</span>
+<span class="lineNum">     210 </span><span class="lineCov">     199704 :     r-&gt;n[1] = r-&gt;n[2] = r-&gt;n[3] = r-&gt;n[4] = 0;</span>
+<span class="lineNum">     211 </span>            : #ifdef VERIFY
+<span class="lineNum">     212 </span>            :     r-&gt;magnitude = 1;
+<span class="lineNum">     213 </span>            :     r-&gt;normalized = 1;
+<span class="lineNum">     214 </span>            :     secp256k1_fe_verify(r);
+<span class="lineNum">     215 </span>            : #endif
+<span class="lineNum">     216 </span>            : }
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span>            : SECP256K1_INLINE static int secp256k1_fe_is_zero(const secp256k1_fe_t *a) {
+<span class="lineNum">     219 </span><span class="lineCov">          4 :     const uint64_t *t = a-&gt;n;</span>
+<span class="lineNum">     220 </span>            : #ifdef VERIFY
+<span class="lineNum">     221 </span>            :     VERIFY_CHECK(a-&gt;normalized);
+<span class="lineNum">     222 </span>            :     secp256k1_fe_verify(a);
+<span class="lineNum">     223 </span>            : #endif
+<span class="lineNum">     224 </span><span class="lineCov">          2 :     return (t[0] | t[1] | t[2] | t[3] | t[4]) == 0;</span>
+<span class="lineNum">     225 </span>            : }
+<span class="lineNum">     226 </span>            : 
+<span class="lineNum">     227 </span>            : SECP256K1_INLINE static int secp256k1_fe_is_odd(const secp256k1_fe_t *a) {
+<span class="lineNum">     228 </span>            : #ifdef VERIFY
+<span class="lineNum">     229 </span>            :     VERIFY_CHECK(a-&gt;normalized);
+<span class="lineNum">     230 </span>            :     secp256k1_fe_verify(a);
+<span class="lineNum">     231 </span>            : #endif
+<span class="lineNum">     232 </span><span class="lineCov">      33958 :     return a-&gt;n[0] &amp; 1;</span>
+<span class="lineNum">     233 </span>            : }
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            : SECP256K1_INLINE static void secp256k1_fe_clear(secp256k1_fe_t *a) {
+<span class="lineNum">     236 </span>            :     int i;
+<span class="lineNum">     237 </span>            : #ifdef VERIFY
+<span class="lineNum">     238 </span>            :     a-&gt;magnitude = 0;
+<span class="lineNum">     239 </span>            :     a-&gt;normalized = 1;
+<span class="lineNum">     240 </span>            : #endif
+<span class="lineNum">     241 </span><span class="lineCov">      54689 :     for (i=0; i&lt;5; i++) {</span>
+<span class="lineNum">     242 </span><span class="lineCov">      48825 :         a-&gt;n[i] = 0;</span>
+<span class="lineNum">     243 </span>            :     }
+<span class="lineNum">     244 </span>            : }
+<span class="lineNum">     245 </span>            : 
+<span class="lineNum">     246 </span>            : static int secp256k1_fe_cmp_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
+<span class="lineNum">     247 </span>            :     int i;
+<span class="lineNum">     248 </span>            : #ifdef VERIFY
+<span class="lineNum">     249 </span>            :     VERIFY_CHECK(a-&gt;normalized);
+<span class="lineNum">     250 </span>            :     VERIFY_CHECK(b-&gt;normalized);
+<span class="lineNum">     251 </span>            :     secp256k1_fe_verify(a);
+<span class="lineNum">     252 </span>            :     secp256k1_fe_verify(b);
+<span class="lineNum">     253 </span>            : #endif
+<span class="lineNum">     254 </span><span class="lineNoCov">          0 :     for (i = 4; i &gt;= 0; i--) {</span>
+<span class="lineNum">     255 </span><span class="lineCov">          4 :         if (a-&gt;n[i] &gt; b-&gt;n[i]) {</span>
+<span class="lineNum">     256 </span>            :             return 1;
+<span class="lineNum">     257 </span>            :         }
+<span class="lineNum">     258 </span><span class="lineNoCov">          0 :         if (a-&gt;n[i] &lt; b-&gt;n[i]) {</span>
+<span class="lineNum">     259 </span>            :             return -1;
+<span class="lineNum">     260 </span>            :         }
+<span class="lineNum">     261 </span>            :     }
+<span class="lineNum">     262 </span>            :     return 0;
+<a name="263"><span class="lineNum">     263 </span>            : }</a>
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span><span class="lineCov">      64054 : static int secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {</span>
+<span class="lineNum">     266 </span>            :     int i;
+<span class="lineNum">     267 </span><span class="lineCov">      64054 :     r-&gt;n[0] = r-&gt;n[1] = r-&gt;n[2] = r-&gt;n[3] = r-&gt;n[4] = 0;</span>
+<span class="lineNum">     268 </span><span class="lineCov">    2113782 :     for (i=0; i&lt;32; i++) {</span>
+<span class="lineNum">     269 </span>            :         int j;
+<span class="lineNum">     270 </span><span class="lineCov">    4099456 :         for (j=0; j&lt;2; j++) {</span>
+<span class="lineNum">     271 </span><span class="lineCov">    4099456 :             int limb = (8*i+4*j)/52;</span>
+<span class="lineNum">     272 </span><span class="lineCov">    4099456 :             int shift = (8*i+4*j)%52;</span>
+<span class="lineNum">     273 </span><span class="lineCov">    4099456 :             r-&gt;n[limb] |= (uint64_t)((a[31-i] &gt;&gt; (4*j)) &amp; 0xF) &lt;&lt; shift;</span>
+<span class="lineNum">     274 </span>            :         }
+<span class="lineNum">     275 </span>            :     }
+<span class="lineNum">     276 </span><span class="lineCov">      64054 :     if (r-&gt;n[4] == 0x0FFFFFFFFFFFFULL &amp;&amp; (r-&gt;n[3] &amp; r-&gt;n[2] &amp; r-&gt;n[1]) == 0xFFFFFFFFFFFFFULL &amp;&amp; r-&gt;n[0] &gt;= 0xFFFFEFFFFFC2FULL) {</span>
+<span class="lineNum">     277 </span>            :         return 0;
+<span class="lineNum">     278 </span>            :     }
+<span class="lineNum">     279 </span>            : #ifdef VERIFY
+<span class="lineNum">     280 </span>            :     r-&gt;magnitude = 1;
+<span class="lineNum">     281 </span>            :     r-&gt;normalized = 1;
+<span class="lineNum">     282 </span>            :     secp256k1_fe_verify(r);
+<span class="lineNum">     283 </span>            : #endif
+<span class="lineNum">     284 </span><span class="lineCov">      64054 :     return 1;</span>
+<span class="lineNum">     285 </span>            : }
+<a name="286"><span class="lineNum">     286 </span>            : </a>
+<span class="lineNum">     287 </span>            : /** Convert a field element to a 32-byte big endian value. Requires the input to be normalized */
+<span class="lineNum">     288 </span><span class="lineCov">      97970 : static void secp256k1_fe_get_b32(unsigned char *r, const secp256k1_fe_t *a) {</span>
+<span class="lineNum">     289 </span>            :     int i;
+<span class="lineNum">     290 </span>            : #ifdef VERIFY
+<span class="lineNum">     291 </span>            :     VERIFY_CHECK(a-&gt;normalized);
+<span class="lineNum">     292 </span>            :     secp256k1_fe_verify(a);
+<span class="lineNum">     293 </span>            : #endif
+<span class="lineNum">     294 </span><span class="lineCov">    3233010 :     for (i=0; i&lt;32; i++) {</span>
+<span class="lineNum">     295 </span>            :         int j;
+<span class="lineNum">     296 </span>            :         int c = 0;
+<span class="lineNum">     297 </span><span class="lineCov">    6270080 :         for (j=0; j&lt;2; j++) {</span>
+<span class="lineNum">     298 </span><span class="lineCov">    6270080 :             int limb = (8*i+4*j)/52;</span>
+<span class="lineNum">     299 </span><span class="lineCov">    6270080 :             int shift = (8*i+4*j)%52;</span>
+<span class="lineNum">     300 </span><span class="lineCov">    6270080 :             c |= ((a-&gt;n[limb] &gt;&gt; shift) &amp; 0xF) &lt;&lt; (4 * j);</span>
+<span class="lineNum">     301 </span>            :         }
+<span class="lineNum">     302 </span><span class="lineCov">    3135040 :         r[31-i] = c;</span>
+<span class="lineNum">     303 </span>            :     }
+<span class="lineNum">     304 </span><span class="lineCov">      97970 : }</span>
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span>            : SECP256K1_INLINE static void secp256k1_fe_negate(secp256k1_fe_t *r, const secp256k1_fe_t *a, int m) {
+<span class="lineNum">     307 </span>            : #ifdef VERIFY
+<span class="lineNum">     308 </span>            :     VERIFY_CHECK(a-&gt;magnitude &lt;= m);
+<span class="lineNum">     309 </span>            :     secp256k1_fe_verify(a);
+<span class="lineNum">     310 </span>            : #endif
+<span class="lineNum">     311 </span><span class="lineCov">   36233054 :     r-&gt;n[0] = 0xFFFFEFFFFFC2FULL * 2 * (m + 1) - a-&gt;n[0];</span>
+<span class="lineNum">     312 </span><span class="lineCov">   36233054 :     r-&gt;n[1] = 0xFFFFFFFFFFFFFULL * 2 * (m + 1) - a-&gt;n[1];</span>
+<span class="lineNum">     313 </span><span class="lineCov">   36233054 :     r-&gt;n[2] = 0xFFFFFFFFFFFFFULL * 2 * (m + 1) - a-&gt;n[2];</span>
+<span class="lineNum">     314 </span><span class="lineCov">   36233054 :     r-&gt;n[3] = 0xFFFFFFFFFFFFFULL * 2 * (m + 1) - a-&gt;n[3];</span>
+<span class="lineNum">     315 </span><span class="lineCov">   36233054 :     r-&gt;n[4] = 0x0FFFFFFFFFFFFULL * 2 * (m + 1) - a-&gt;n[4];</span>
+<span class="lineNum">     316 </span>            : #ifdef VERIFY
+<span class="lineNum">     317 </span>            :     r-&gt;magnitude = m + 1;
+<span class="lineNum">     318 </span>            :     r-&gt;normalized = 0;
+<span class="lineNum">     319 </span>            :     secp256k1_fe_verify(r);
+<span class="lineNum">     320 </span>            : #endif
+<span class="lineNum">     321 </span>            : }
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span>            : SECP256K1_INLINE static void secp256k1_fe_mul_int(secp256k1_fe_t *r, int a) {
+<span class="lineNum">     324 </span><span class="lineCov">   51518045 :     r-&gt;n[0] *= a;</span>
+<span class="lineNum">     325 </span><span class="lineCov">   51518045 :     r-&gt;n[1] *= a;</span>
+<span class="lineNum">     326 </span><span class="lineCov">   51518045 :     r-&gt;n[2] *= a;</span>
+<span class="lineNum">     327 </span><span class="lineCov">   51518045 :     r-&gt;n[3] *= a;</span>
+<span class="lineNum">     328 </span><span class="lineCov">   51518045 :     r-&gt;n[4] *= a;</span>
+<span class="lineNum">     329 </span>            : #ifdef VERIFY
+<span class="lineNum">     330 </span>            :     r-&gt;magnitude *= a;
+<span class="lineNum">     331 </span>            :     r-&gt;normalized = 0;
+<span class="lineNum">     332 </span>            :     secp256k1_fe_verify(r);
+<span class="lineNum">     333 </span>            : #endif
+<span class="lineNum">     334 </span>            : }
+<span class="lineNum">     335 </span>            : 
+<span class="lineNum">     336 </span>            : SECP256K1_INLINE static void secp256k1_fe_add(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
+<span class="lineNum">     337 </span>            : #ifdef VERIFY
+<span class="lineNum">     338 </span>            :     secp256k1_fe_verify(a);
+<span class="lineNum">     339 </span>            : #endif
+<span class="lineNum">     340 </span><span class="lineCov">   37795040 :     r-&gt;n[0] += a-&gt;n[0];</span>
+<span class="lineNum">     341 </span><span class="lineCov">   37795038 :     r-&gt;n[1] += a-&gt;n[1];</span>
+<span class="lineNum">     342 </span><span class="lineCov">   37795038 :     r-&gt;n[2] += a-&gt;n[2];</span>
+<span class="lineNum">     343 </span><span class="lineCov">   37795038 :     r-&gt;n[3] += a-&gt;n[3];</span>
+<span class="lineNum">     344 </span><span class="lineCov">   37795038 :     r-&gt;n[4] += a-&gt;n[4];</span>
+<span class="lineNum">     345 </span>            : #ifdef VERIFY
+<span class="lineNum">     346 </span>            :     r-&gt;magnitude += a-&gt;magnitude;
+<span class="lineNum">     347 </span>            :     r-&gt;normalized = 0;
+<span class="lineNum">     348 </span>            :     secp256k1_fe_verify(r);
+<span class="lineNum">     349 </span>            : #endif
+<span class="lineNum">     350 </span>            : }
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span>            : static void secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const secp256k1_fe_t * SECP256K1_RESTRICT b) {
+<span class="lineNum">     353 </span>            : #ifdef VERIFY
+<span class="lineNum">     354 </span>            :     VERIFY_CHECK(a-&gt;magnitude &lt;= 8);
+<span class="lineNum">     355 </span>            :     VERIFY_CHECK(b-&gt;magnitude &lt;= 8);
+<span class="lineNum">     356 </span>            :     secp256k1_fe_verify(a);
+<span class="lineNum">     357 </span>            :     secp256k1_fe_verify(b);
+<span class="lineNum">     358 </span>            :     VERIFY_CHECK(r != b);
+<span class="lineNum">     359 </span>            : #endif
+<span class="lineNum">     360 </span><span class="lineCov">   49266443 :     secp256k1_fe_mul_inner(r-&gt;n, a-&gt;n, b-&gt;n);</span>
+<span class="lineNum">     361 </span>            : #ifdef VERIFY
+<span class="lineNum">     362 </span>            :     r-&gt;magnitude = 1;
+<span class="lineNum">     363 </span>            :     r-&gt;normalized = 0;
+<span class="lineNum">     364 </span>            :     secp256k1_fe_verify(r);
+<span class="lineNum">     365 </span>            : #endif
+<span class="lineNum">     366 </span>            : }
+<span class="lineNum">     367 </span>            : 
+<span class="lineNum">     368 </span>            : static void secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
+<span class="lineNum">     369 </span>            : #ifdef VERIFY
+<span class="lineNum">     370 </span>            :     VERIFY_CHECK(a-&gt;magnitude &lt;= 8);
+<span class="lineNum">     371 </span>            :     secp256k1_fe_verify(a);
+<span class="lineNum">     372 </span>            : #endif
+<span class="lineNum">     373 </span><span class="lineCov">   49788997 :     secp256k1_fe_sqr_inner(r-&gt;n, a-&gt;n);</span>
+<span class="lineNum">     374 </span>            : #ifdef VERIFY
+<span class="lineNum">     375 </span>            :     r-&gt;magnitude = 1;
+<span class="lineNum">     376 </span>            :     r-&gt;normalized = 0;
+<span class="lineNum">     377 </span>            :     secp256k1_fe_verify(r);
+<span class="lineNum">     378 </span>            : #endif
+<a name="379"><span class="lineNum">     379 </span>            : }</a>
+<span class="lineNum">     380 </span>            : 
+<span class="lineNum">     381 </span><span class="lineCov">     375138 : static SECP256K1_INLINE void secp256k1_fe_cmov(secp256k1_fe_t *r, const secp256k1_fe_t *a, int flag) {</span>
+<span class="lineNum">     382 </span>            :     uint64_t mask0, mask1;
+<span class="lineNum">     383 </span><span class="lineCov">     375138 :     mask0 = flag + ~((uint64_t)0);</span>
+<span class="lineNum">     384 </span><span class="lineCov">     375138 :     mask1 = ~mask0;</span>
+<span class="lineNum">     385 </span><span class="lineCov">     375138 :     r-&gt;n[0] = (r-&gt;n[0] &amp; mask0) | (a-&gt;n[0] &amp; mask1);</span>
+<span class="lineNum">     386 </span><span class="lineCov">     375138 :     r-&gt;n[1] = (r-&gt;n[1] &amp; mask0) | (a-&gt;n[1] &amp; mask1);</span>
+<span class="lineNum">     387 </span><span class="lineCov">     375138 :     r-&gt;n[2] = (r-&gt;n[2] &amp; mask0) | (a-&gt;n[2] &amp; mask1);</span>
+<span class="lineNum">     388 </span><span class="lineCov">     375138 :     r-&gt;n[3] = (r-&gt;n[3] &amp; mask0) | (a-&gt;n[3] &amp; mask1);</span>
+<span class="lineNum">     389 </span><span class="lineCov">     375138 :     r-&gt;n[4] = (r-&gt;n[4] &amp; mask0) | (a-&gt;n[4] &amp; mask1);</span>
+<span class="lineNum">     390 </span>            : #ifdef VERIFY
+<span class="lineNum">     391 </span>            :     r-&gt;magnitude = (r-&gt;magnitude &amp; mask0) | (a-&gt;magnitude &amp; mask1);
+<span class="lineNum">     392 </span>            :     r-&gt;normalized = (r-&gt;normalized &amp; mask0) | (a-&gt;normalized &amp; mask1);
+<span class="lineNum">     393 </span>            : #endif
+<a name="394"><span class="lineNum">     394 </span><span class="lineCov">     375138 : }</span></a>
+<span class="lineNum">     395 </span>            : 
+<span class="lineNum">     396 </span><span class="lineCov">    3999840 : static SECP256K1_INLINE void secp256k1_fe_storage_cmov(secp256k1_fe_storage_t *r, const secp256k1_fe_storage_t *a, int flag) {</span>
+<span class="lineNum">     397 </span>            :     uint64_t mask0, mask1;
+<span class="lineNum">     398 </span><span class="lineCov">    3999840 :     mask0 = flag + ~((uint64_t)0);</span>
+<span class="lineNum">     399 </span><span class="lineCov">    3999840 :     mask1 = ~mask0;</span>
+<span class="lineNum">     400 </span><span class="lineCov">    3999840 :     r-&gt;n[0] = (r-&gt;n[0] &amp; mask0) | (a-&gt;n[0] &amp; mask1);</span>
+<span class="lineNum">     401 </span><span class="lineCov">    3999840 :     r-&gt;n[1] = (r-&gt;n[1] &amp; mask0) | (a-&gt;n[1] &amp; mask1);</span>
+<span class="lineNum">     402 </span><span class="lineCov">    3999840 :     r-&gt;n[2] = (r-&gt;n[2] &amp; mask0) | (a-&gt;n[2] &amp; mask1);</span>
+<span class="lineNum">     403 </span><span class="lineCov">    3999840 :     r-&gt;n[3] = (r-&gt;n[3] &amp; mask0) | (a-&gt;n[3] &amp; mask1);</span>
+<span class="lineNum">     404 </span><span class="lineCov">    3999840 : }</span>
+<span class="lineNum">     405 </span>            : 
+<span class="lineNum">     406 </span>            : static void secp256k1_fe_to_storage(secp256k1_fe_storage_t *r, const secp256k1_fe_t *a) {
+<span class="lineNum">     407 </span>            : #ifdef VERIFY
+<span class="lineNum">     408 </span>            :     VERIFY_CHECK(a-&gt;normalized);
+<span class="lineNum">     409 </span>            : #endif
+<span class="lineNum">     410 </span><span class="lineCov">      69632 :     r-&gt;n[0] = a-&gt;n[0] | a-&gt;n[1] &lt;&lt; 52;</span>
+<span class="lineNum">     411 </span><span class="lineCov">      69632 :     r-&gt;n[1] = a-&gt;n[1] &gt;&gt; 12 | a-&gt;n[2] &lt;&lt; 40;</span>
+<span class="lineNum">     412 </span><span class="lineCov">      69632 :     r-&gt;n[2] = a-&gt;n[2] &gt;&gt; 24 | a-&gt;n[3] &lt;&lt; 28;</span>
+<span class="lineNum">     413 </span><span class="lineCov">      69632 :     r-&gt;n[3] = a-&gt;n[3] &gt;&gt; 36 | a-&gt;n[4] &lt;&lt; 16;</span>
+<a name="414"><span class="lineNum">     414 </span>            : }</a>
+<span class="lineNum">     415 </span>            : 
+<span class="lineNum">     416 </span><span class="lineCov">    1241670 : static SECP256K1_INLINE void secp256k1_fe_from_storage(secp256k1_fe_t *r, const secp256k1_fe_storage_t *a) {</span>
+<span class="lineNum">     417 </span><span class="lineCov">    1241670 :     r-&gt;n[0] = a-&gt;n[0] &amp; 0xFFFFFFFFFFFFFULL;</span>
+<span class="lineNum">     418 </span><span class="lineCov">    1241670 :     r-&gt;n[1] = a-&gt;n[0] &gt;&gt; 52 | ((a-&gt;n[1] &lt;&lt; 12) &amp; 0xFFFFFFFFFFFFFULL);</span>
+<span class="lineNum">     419 </span><span class="lineCov">    1241670 :     r-&gt;n[2] = a-&gt;n[1] &gt;&gt; 40 | ((a-&gt;n[2] &lt;&lt; 24) &amp; 0xFFFFFFFFFFFFFULL);</span>
+<span class="lineNum">     420 </span><span class="lineCov">    1241670 :     r-&gt;n[3] = a-&gt;n[2] &gt;&gt; 28 | ((a-&gt;n[3] &lt;&lt; 36) &amp; 0xFFFFFFFFFFFFFULL);</span>
+<span class="lineNum">     421 </span><span class="lineCov">    1241670 :     r-&gt;n[4] = a-&gt;n[3] &gt;&gt; 16;</span>
+<span class="lineNum">     422 </span>            : #ifdef VERIFY
+<span class="lineNum">     423 </span>            :     r-&gt;magnitude = 1;
+<span class="lineNum">     424 </span>            :     r-&gt;normalized = 1;
+<span class="lineNum">     425 </span>            : #endif
+<span class="lineNum">     426 </span><span class="lineCov">    1241670 : }</span>
+<span class="lineNum">     427 </span>            : 
+<span class="lineNum">     428 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

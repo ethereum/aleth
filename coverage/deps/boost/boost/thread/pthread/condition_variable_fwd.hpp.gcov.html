@@ -1,0 +1,437 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - deps/boost/boost/thread/pthread/condition_variable_fwd.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../../../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../../../../index.html">top level</a> - <a href="index.html">deps/boost/boost/thread/pthread</a> - condition_variable_fwd.hpp<span style="font-size: 80%;"> (source / <a href="condition_variable_fwd.hpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntryMed">84.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : #ifndef BOOST_THREAD_PTHREAD_CONDITION_VARIABLE_FWD_HPP</a>
+<span class="lineNum">       2 </span>            : #define BOOST_THREAD_PTHREAD_CONDITION_VARIABLE_FWD_HPP
+<span class="lineNum">       3 </span>            : // Distributed under the Boost Software License, Version 1.0. (See
+<span class="lineNum">       4 </span>            : // accompanying file LICENSE_1_0.txt or copy at
+<span class="lineNum">       5 </span>            : // http://www.boost.org/LICENSE_1_0.txt)
+<span class="lineNum">       6 </span>            : // (C) Copyright 2007-8 Anthony Williams
+<span class="lineNum">       7 </span>            : // (C) Copyright 2011-2012 Vicente J. Botet Escriba
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : #include &lt;boost/assert.hpp&gt;
+<span class="lineNum">      10 </span>            : #include &lt;boost/throw_exception.hpp&gt;
+<span class="lineNum">      11 </span>            : #include &lt;pthread.h&gt;
+<span class="lineNum">      12 </span>            : #include &lt;boost/thread/cv_status.hpp&gt;
+<span class="lineNum">      13 </span>            : #include &lt;boost/thread/mutex.hpp&gt;
+<span class="lineNum">      14 </span>            : #include &lt;boost/thread/lock_types.hpp&gt;
+<span class="lineNum">      15 </span>            : #include &lt;boost/thread/thread_time.hpp&gt;
+<span class="lineNum">      16 </span>            : #include &lt;boost/thread/pthread/timespec.hpp&gt;
+<span class="lineNum">      17 </span>            : #if defined BOOST_THREAD_USES_DATETIME
+<span class="lineNum">      18 </span>            : #include &lt;boost/thread/xtime.hpp&gt;
+<span class="lineNum">      19 </span>            : #endif
+<span class="lineNum">      20 </span>            : #ifdef BOOST_THREAD_USES_CHRONO
+<span class="lineNum">      21 </span>            : #include &lt;boost/chrono/system_clocks.hpp&gt;
+<span class="lineNum">      22 </span>            : #include &lt;boost/chrono/ceil.hpp&gt;
+<span class="lineNum">      23 </span>            : #endif
+<span class="lineNum">      24 </span>            : #include &lt;boost/thread/detail/delete.hpp&gt;
+<span class="lineNum">      25 </span>            : #include &lt;boost/date_time/posix_time/posix_time_duration.hpp&gt;
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &lt;boost/config/abi_prefix.hpp&gt;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : namespace boost
+<span class="lineNum">      30 </span>            : {
+<span class="lineNum">      31 </span>            :   namespace detail {
+<span class="lineNum">      32 </span>            :     inline int monotonic_pthread_cond_init(pthread_cond_t&amp; cond) {
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+<span class="lineNum">      35 </span>            :             pthread_condattr_t attr;
+<span class="lineNum">      36 </span>            :             int res = pthread_condattr_init(&amp;attr);
+<span class="lineNum">      37 </span>            :             if (res)
+<span class="lineNum">      38 </span>            :             {
+<span class="lineNum">      39 </span>            :               return res;
+<span class="lineNum">      40 </span>            :             }
+<span class="lineNum">      41 </span>            :             pthread_condattr_setclock(&amp;attr, CLOCK_MONOTONIC);
+<span class="lineNum">      42 </span>            :             res=pthread_cond_init(&amp;cond,&amp;attr);
+<span class="lineNum">      43 </span>            :             pthread_condattr_destroy(&amp;attr);
+<span class="lineNum">      44 </span>            :             return res;
+<span class="lineNum">      45 </span>            : #else
+<span class="lineNum">      46 </span><span class="lineCov">     188412 :             return pthread_cond_init(&amp;cond,NULL);</span>
+<span class="lineNum">      47 </span>            : #endif
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            :     }
+<span class="lineNum">      50 </span>            :   }
+<span class="lineNum">      51 </span>            : 
+<span class="lineNum">      52 </span>            :     class condition_variable
+<span class="lineNum">      53 </span>            :     {
+<span class="lineNum">      54 </span>            :     private:
+<span class="lineNum">      55 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">      56 </span>            :         pthread_mutex_t internal_mutex;
+<span class="lineNum">      57 </span>            : #endif
+<span class="lineNum">      58 </span>            :         pthread_cond_t cond;
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span>            :     public:
+<span class="lineNum">      61 </span>            :     //private: // used by boost::thread::try_join_until
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            :         inline bool do_wait_until(
+<span class="lineNum">      64 </span>            :             unique_lock&lt;mutex&gt;&amp; lock,
+<span class="lineNum">      65 </span>            :             struct timespec const &amp;timeout);
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            :         bool do_wait_for(
+<span class="lineNum">      68 </span>            :             unique_lock&lt;mutex&gt;&amp; lock,
+<span class="lineNum">      69 </span>            :             struct timespec const &amp;timeout)
+<span class="lineNum">      70 </span>            :         {
+<span class="lineNum">      71 </span>            :           return do_wait_until(lock, boost::detail::timespec_plus(timeout, boost::detail::timespec_now()));
+<span class="lineNum">      72 </span>            :         }
+<span class="lineNum">      73 </span>            : 
+<a name="74"><span class="lineNum">      74 </span>            :     public:</a>
+<span class="lineNum">      75 </span>            :       BOOST_THREAD_NO_COPYABLE(condition_variable)
+<span class="lineNum">      76 </span><span class="lineCov">     188412 :         condition_variable()</span>
+<span class="lineNum">      77 </span>            :         {
+<span class="lineNum">      78 </span>            :             int res;
+<span class="lineNum">      79 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">      80 </span><span class="lineCov">     188412 :             res=pthread_mutex_init(&amp;internal_mutex,NULL);</span>
+<span class="lineNum">      81 </span><span class="lineCov">     188412 :             if(res)</span>
+<span class="lineNum">      82 </span>            :             {
+<span class="lineNum">      83 </span><span class="lineNoCov">          0 :                 boost::throw_exception(thread_resource_error(res, &quot;boost::condition_variable::condition_variable() constructor failed in pthread_mutex_init&quot;));</span>
+<span class="lineNum">      84 </span>            :             }
+<span class="lineNum">      85 </span>            : #endif
+<span class="lineNum">      86 </span><span class="lineCov">     376824 :             res = detail::monotonic_pthread_cond_init(cond);</span>
+<span class="lineNum">      87 </span><span class="lineCov">     188412 :             if (res)</span>
+<span class="lineNum">      88 </span>            :             {
+<span class="lineNum">      89 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 :                 BOOST_VERIFY(!pthread_mutex_destroy(&amp;internal_mutex));</span>
+<span class="lineNum">      91 </span>            : #endif
+<span class="lineNum">      92 </span><span class="lineNoCov">          0 :                 boost::throw_exception(thread_resource_error(res, &quot;boost::condition_variable::condition_variable() constructor failed in detail::monotonic_pthread_cond_init&quot;));</span>
+<a name="93"><span class="lineNum">      93 </span>            :             }</a>
+<span class="lineNum">      94 </span><span class="lineCov">     188412 :         }</span>
+<span class="lineNum">      95 </span><span class="lineCov">     188259 :         ~condition_variable()</span>
+<span class="lineNum">      96 </span><span class="lineCov">     188259 :         {</span>
+<span class="lineNum">      97 </span>            :             int ret;
+<span class="lineNum">      98 </span>            : #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+<span class="lineNum">      99 </span>            :             do {
+<span class="lineNum">     100 </span><span class="lineCov">     188259 :               ret = pthread_mutex_destroy(&amp;internal_mutex);</span>
+<span class="lineNum">     101 </span><span class="lineCov">     188259 :             } while (ret == EINTR);</span>
+<span class="lineNum">     102 </span><span class="lineCov">     188259 :             BOOST_ASSERT(!ret);</span>
+<span class="lineNum">     103 </span>            : #endif
+<span class="lineNum">     104 </span>            :             do {
+<span class="lineNum">     105 </span><span class="lineCov">     188259 :               ret = pthread_cond_destroy(&amp;cond);</span>
+<span class="lineNum">     106 </span><span class="lineCov">     188259 :             } while (ret == EINTR);</span>
+<span class="lineNum">     107 </span><span class="lineCov">     188259 :             BOOST_ASSERT(!ret);</span>
+<span class="lineNum">     108 </span><span class="lineCov">     188259 :         }</span>
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            :         void wait(unique_lock&lt;mutex&gt;&amp; m);
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            :         template&lt;typename predicate_type&gt;
+<span class="lineNum">     113 </span>            :         void wait(unique_lock&lt;mutex&gt;&amp; m,predicate_type pred)
+<span class="lineNum">     114 </span>            :         {
+<span class="lineNum">     115 </span>            :             while(!pred()) wait(m);
+<span class="lineNum">     116 </span>            :         }
+<span class="lineNum">     117 </span>            : 
+<span class="lineNum">     118 </span>            : #if defined BOOST_THREAD_USES_DATETIME
+<span class="lineNum">     119 </span>            :         inline bool timed_wait(
+<span class="lineNum">     120 </span>            :             unique_lock&lt;mutex&gt;&amp; m,
+<span class="lineNum">     121 </span>            :             boost::system_time const&amp; abs_time)
+<span class="lineNum">     122 </span>            :         {
+<span class="lineNum">     123 </span>            : #if defined BOOST_THREAD_WAIT_BUG
+<span class="lineNum">     124 </span>            :             struct timespec const timeout=detail::to_timespec(abs_time + BOOST_THREAD_WAIT_BUG);
+<span class="lineNum">     125 </span>            :             return do_wait_until(m, timeout);
+<span class="lineNum">     126 </span>            : #else
+<span class="lineNum">     127 </span>            :             struct timespec const timeout=detail::to_timespec(abs_time);
+<span class="lineNum">     128 </span>            :             return do_wait_until(m, timeout);
+<span class="lineNum">     129 </span>            : #endif
+<span class="lineNum">     130 </span>            :         }
+<span class="lineNum">     131 </span>            :         bool timed_wait(
+<span class="lineNum">     132 </span>            :             unique_lock&lt;mutex&gt;&amp; m,
+<span class="lineNum">     133 </span>            :             xtime const&amp; abs_time)
+<span class="lineNum">     134 </span>            :         {
+<span class="lineNum">     135 </span>            :             return timed_wait(m,system_time(abs_time));
+<span class="lineNum">     136 </span>            :         }
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :         template&lt;typename duration_type&gt;
+<span class="lineNum">     139 </span>            :         bool timed_wait(
+<span class="lineNum">     140 </span>            :             unique_lock&lt;mutex&gt;&amp; m,
+<span class="lineNum">     141 </span>            :             duration_type const&amp; wait_duration)
+<span class="lineNum">     142 </span>            :         {
+<span class="lineNum">     143 </span>            :             if (wait_duration.is_pos_infinity())
+<span class="lineNum">     144 </span>            :             {
+<span class="lineNum">     145 </span>            :                 wait(m); // or do_wait(m,detail::timeout::sentinel());
+<span class="lineNum">     146 </span>            :                 return true;
+<span class="lineNum">     147 </span>            :             }
+<span class="lineNum">     148 </span>            :             if (wait_duration.is_special())
+<span class="lineNum">     149 </span>            :             {
+<span class="lineNum">     150 </span>            :                 return true;
+<span class="lineNum">     151 </span>            :             }
+<span class="lineNum">     152 </span>            :             return timed_wait(m,get_system_time()+wait_duration);
+<span class="lineNum">     153 </span>            :         }
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            :         template&lt;typename predicate_type&gt;
+<span class="lineNum">     156 </span>            :         bool timed_wait(
+<span class="lineNum">     157 </span>            :             unique_lock&lt;mutex&gt;&amp; m,
+<span class="lineNum">     158 </span>            :             boost::system_time const&amp; abs_time,predicate_type pred)
+<span class="lineNum">     159 </span>            :         {
+<span class="lineNum">     160 </span>            :             while (!pred())
+<span class="lineNum">     161 </span>            :             {
+<span class="lineNum">     162 </span>            :                 if(!timed_wait(m, abs_time))
+<span class="lineNum">     163 </span>            :                     return pred();
+<span class="lineNum">     164 </span>            :             }
+<span class="lineNum">     165 </span>            :             return true;
+<span class="lineNum">     166 </span>            :         }
+<span class="lineNum">     167 </span>            : 
+<span class="lineNum">     168 </span>            :         template&lt;typename predicate_type&gt;
+<span class="lineNum">     169 </span>            :         bool timed_wait(
+<span class="lineNum">     170 </span>            :             unique_lock&lt;mutex&gt;&amp; m,
+<span class="lineNum">     171 </span>            :             xtime const&amp; abs_time,predicate_type pred)
+<span class="lineNum">     172 </span>            :         {
+<span class="lineNum">     173 </span>            :             return timed_wait(m,system_time(abs_time),pred);
+<span class="lineNum">     174 </span>            :         }
+<span class="lineNum">     175 </span>            : 
+<span class="lineNum">     176 </span>            :         template&lt;typename duration_type,typename predicate_type&gt;
+<span class="lineNum">     177 </span>            :         bool timed_wait(
+<span class="lineNum">     178 </span>            :             unique_lock&lt;mutex&gt;&amp; m,
+<span class="lineNum">     179 </span>            :             duration_type const&amp; wait_duration,predicate_type pred)
+<span class="lineNum">     180 </span>            :         {
+<span class="lineNum">     181 </span>            :             if (wait_duration.is_pos_infinity())
+<span class="lineNum">     182 </span>            :             {
+<span class="lineNum">     183 </span>            :                 while (!pred())
+<span class="lineNum">     184 </span>            :                 {
+<span class="lineNum">     185 </span>            :                   wait(m); // or do_wait(m,detail::timeout::sentinel());
+<span class="lineNum">     186 </span>            :                 }
+<span class="lineNum">     187 </span>            :                 return true;
+<span class="lineNum">     188 </span>            :             }
+<span class="lineNum">     189 </span>            :             if (wait_duration.is_special())
+<span class="lineNum">     190 </span>            :             {
+<span class="lineNum">     191 </span>            :                 return pred();
+<span class="lineNum">     192 </span>            :             }
+<span class="lineNum">     193 </span>            :             return timed_wait(m,get_system_time()+wait_duration,pred);
+<span class="lineNum">     194 </span>            :         }
+<span class="lineNum">     195 </span>            : #endif
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span>            : #ifndef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span>            : #ifdef BOOST_THREAD_USES_CHRONO
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            :         template &lt;class Duration&gt;
+<span class="lineNum">     202 </span>            :         cv_status
+<span class="lineNum">     203 </span>            :         wait_until(
+<span class="lineNum">     204 </span>            :                 unique_lock&lt;mutex&gt;&amp; lock,
+<span class="lineNum">     205 </span>            :                 const chrono::time_point&lt;chrono::system_clock, Duration&gt;&amp; t)
+<span class="lineNum">     206 </span>            :         {
+<span class="lineNum">     207 </span>            :           using namespace chrono;
+<span class="lineNum">     208 </span>            :           typedef time_point&lt;system_clock, nanoseconds&gt; nano_sys_tmpt;
+<span class="lineNum">     209 </span>            :           wait_until(lock,
+<span class="lineNum">     210 </span>            :                         nano_sys_tmpt(ceil&lt;nanoseconds&gt;(t.time_since_epoch())));
+<span class="lineNum">     211 </span>            :           return system_clock::now() &lt; t ? cv_status::no_timeout :
+<span class="lineNum">     212 </span>            :                                              cv_status::timeout;
+<span class="lineNum">     213 </span>            :         }
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span>            :         template &lt;class Clock, class Duration&gt;
+<span class="lineNum">     216 </span>            :         cv_status
+<span class="lineNum">     217 </span>            :         wait_until(
+<span class="lineNum">     218 </span>            :                 unique_lock&lt;mutex&gt;&amp; lock,
+<span class="lineNum">     219 </span>            :                 const chrono::time_point&lt;Clock, Duration&gt;&amp; t)
+<span class="lineNum">     220 </span>            :         {
+<span class="lineNum">     221 </span>            :           using namespace chrono;
+<span class="lineNum">     222 </span>            :           system_clock::time_point     s_now = system_clock::now();
+<span class="lineNum">     223 </span>            :           typename Clock::time_point  c_now = Clock::now();
+<span class="lineNum">     224 </span>            :           wait_until(lock, s_now + ceil&lt;nanoseconds&gt;(t - c_now));
+<span class="lineNum">     225 </span>            :           return Clock::now() &lt; t ? cv_status::no_timeout : cv_status::timeout;
+<span class="lineNum">     226 </span>            :         }
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span>            : 
+<span class="lineNum">     230 </span>            :         template &lt;class Rep, class Period&gt;
+<span class="lineNum">     231 </span>            :         cv_status
+<span class="lineNum">     232 </span>            :         wait_for(
+<span class="lineNum">     233 </span>            :                 unique_lock&lt;mutex&gt;&amp; lock,
+<span class="lineNum">     234 </span>            :                 const chrono::duration&lt;Rep, Period&gt;&amp; d)
+<span class="lineNum">     235 </span>            :         {
+<span class="lineNum">     236 </span>            :           using namespace chrono;
+<span class="lineNum">     237 </span>            :           system_clock::time_point s_now = system_clock::now();
+<span class="lineNum">     238 </span>            :           steady_clock::time_point c_now = steady_clock::now();
+<span class="lineNum">     239 </span>            :           wait_until(lock, s_now + ceil&lt;nanoseconds&gt;(d));
+<span class="lineNum">     240 </span>            :           return steady_clock::now() - c_now &lt; d ? cv_status::no_timeout :
+<span class="lineNum">     241 </span>            :                                                    cv_status::timeout;
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span>            :         }
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span>            :         inline cv_status wait_until(
+<span class="lineNum">     246 </span>            :             unique_lock&lt;mutex&gt;&amp; lk,
+<span class="lineNum">     247 </span>            :             chrono::time_point&lt;chrono::system_clock, chrono::nanoseconds&gt; tp)
+<span class="lineNum">     248 </span>            :         {
+<span class="lineNum">     249 </span>            :             using namespace chrono;
+<span class="lineNum">     250 </span>            :             nanoseconds d = tp.time_since_epoch();
+<span class="lineNum">     251 </span>            :             timespec ts = boost::detail::to_timespec(d);
+<span class="lineNum">     252 </span>            :             if (do_wait_until(lk, ts)) return cv_status::no_timeout;
+<span class="lineNum">     253 </span>            :             else return cv_status::timeout;
+<span class="lineNum">     254 </span>            :         }
+<span class="lineNum">     255 </span>            : #endif
+<span class="lineNum">     256 </span>            : 
+<span class="lineNum">     257 </span>            : #else // defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+<span class="lineNum">     258 </span>            : #ifdef BOOST_THREAD_USES_CHRONO
+<span class="lineNum">     259 </span>            : 
+<span class="lineNum">     260 </span>            :         template &lt;class Duration&gt;
+<span class="lineNum">     261 </span>            :         cv_status
+<span class="lineNum">     262 </span>            :         wait_until(
+<span class="lineNum">     263 </span>            :               unique_lock&lt;mutex&gt;&amp; lock,
+<span class="lineNum">     264 </span>            :               const chrono::time_point&lt;chrono::steady_clock, Duration&gt;&amp; t)
+<span class="lineNum">     265 </span>            :         {
+<span class="lineNum">     266 </span>            :             using namespace chrono;
+<span class="lineNum">     267 </span>            :             typedef time_point&lt;steady_clock, nanoseconds&gt; nano_sys_tmpt;
+<span class="lineNum">     268 </span>            :             wait_until(lock,
+<span class="lineNum">     269 </span>            :                         nano_sys_tmpt(ceil&lt;nanoseconds&gt;(t.time_since_epoch())));
+<span class="lineNum">     270 </span>            :             return steady_clock::now() &lt; t ? cv_status::no_timeout :
+<span class="lineNum">     271 </span>            :                                              cv_status::timeout;
+<span class="lineNum">     272 </span>            :         }
+<span class="lineNum">     273 </span>            : 
+<span class="lineNum">     274 </span>            :         template &lt;class Clock, class Duration&gt;
+<span class="lineNum">     275 </span>            :         cv_status
+<span class="lineNum">     276 </span>            :         wait_until(
+<span class="lineNum">     277 </span>            :             unique_lock&lt;mutex&gt;&amp; lock,
+<span class="lineNum">     278 </span>            :             const chrono::time_point&lt;Clock, Duration&gt;&amp; t)
+<span class="lineNum">     279 </span>            :         {
+<span class="lineNum">     280 </span>            :             using namespace chrono;
+<span class="lineNum">     281 </span>            :             steady_clock::time_point     s_now = steady_clock::now();
+<span class="lineNum">     282 </span>            :             typename Clock::time_point  c_now = Clock::now();
+<span class="lineNum">     283 </span>            :             wait_until(lock, s_now + ceil&lt;nanoseconds&gt;(t - c_now));
+<span class="lineNum">     284 </span>            :             return Clock::now() &lt; t ? cv_status::no_timeout : cv_status::timeout;
+<span class="lineNum">     285 </span>            :         }
+<span class="lineNum">     286 </span>            : 
+<span class="lineNum">     287 </span>            :         template &lt;class Rep, class Period&gt;
+<span class="lineNum">     288 </span>            :         cv_status
+<span class="lineNum">     289 </span>            :         wait_for(
+<span class="lineNum">     290 </span>            :             unique_lock&lt;mutex&gt;&amp; lock,
+<span class="lineNum">     291 </span>            :             const chrono::duration&lt;Rep, Period&gt;&amp; d)
+<span class="lineNum">     292 </span>            :         {
+<span class="lineNum">     293 </span>            :             using namespace chrono;
+<span class="lineNum">     294 </span>            :             steady_clock::time_point c_now = steady_clock::now();
+<span class="lineNum">     295 </span>            :             wait_until(lock, c_now + ceil&lt;nanoseconds&gt;(d));
+<span class="lineNum">     296 </span>            :             return steady_clock::now() - c_now &lt; d ? cv_status::no_timeout :
+<span class="lineNum">     297 </span>            :                                                    cv_status::timeout;
+<span class="lineNum">     298 </span>            :         }
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            :         inline cv_status wait_until(
+<span class="lineNum">     301 </span>            :             unique_lock&lt;mutex&gt;&amp; lk,
+<span class="lineNum">     302 </span>            :             chrono::time_point&lt;chrono::steady_clock, chrono::nanoseconds&gt; tp)
+<span class="lineNum">     303 </span>            :         {
+<span class="lineNum">     304 </span>            :             using namespace chrono;
+<span class="lineNum">     305 </span>            :             nanoseconds d = tp.time_since_epoch();
+<span class="lineNum">     306 </span>            :             timespec ts = boost::detail::to_timespec(d);
+<span class="lineNum">     307 </span>            :             if (do_wait_until(lk, ts)) return cv_status::no_timeout;
+<span class="lineNum">     308 </span>            :             else return cv_status::timeout;
+<span class="lineNum">     309 </span>            :         }
+<span class="lineNum">     310 </span>            : #endif
+<span class="lineNum">     311 </span>            : 
+<span class="lineNum">     312 </span>            : #endif // defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+<span class="lineNum">     313 </span>            : 
+<span class="lineNum">     314 </span>            : #ifdef BOOST_THREAD_USES_CHRONO
+<span class="lineNum">     315 </span>            :         template &lt;class Clock, class Duration, class Predicate&gt;
+<span class="lineNum">     316 </span>            :         bool
+<span class="lineNum">     317 </span>            :         wait_until(
+<span class="lineNum">     318 </span>            :                 unique_lock&lt;mutex&gt;&amp; lock,
+<span class="lineNum">     319 </span>            :                 const chrono::time_point&lt;Clock, Duration&gt;&amp; t,
+<span class="lineNum">     320 </span>            :                 Predicate pred)
+<span class="lineNum">     321 </span>            :         {
+<span class="lineNum">     322 </span>            :             while (!pred())
+<span class="lineNum">     323 </span>            :             {
+<span class="lineNum">     324 </span>            :                 if (wait_until(lock, t) == cv_status::timeout)
+<span class="lineNum">     325 </span>            :                     return pred();
+<span class="lineNum">     326 </span>            :             }
+<span class="lineNum">     327 </span>            :             return true;
+<span class="lineNum">     328 </span>            :         }
+<span class="lineNum">     329 </span>            : 
+<span class="lineNum">     330 </span>            :         template &lt;class Rep, class Period, class Predicate&gt;
+<span class="lineNum">     331 </span>            :         bool
+<span class="lineNum">     332 </span>            :         wait_for(
+<span class="lineNum">     333 </span>            :                 unique_lock&lt;mutex&gt;&amp; lock,
+<span class="lineNum">     334 </span>            :                 const chrono::duration&lt;Rep, Period&gt;&amp; d,
+<span class="lineNum">     335 </span>            :                 Predicate pred)
+<span class="lineNum">     336 </span>            :         {
+<span class="lineNum">     337 </span>            :           return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
+<span class="lineNum">     338 </span>            :         }
+<span class="lineNum">     339 </span>            : #endif
+<span class="lineNum">     340 </span>            : 
+<span class="lineNum">     341 </span>            : #define BOOST_THREAD_DEFINES_CONDITION_VARIABLE_NATIVE_HANDLE
+<span class="lineNum">     342 </span>            :         typedef pthread_cond_t* native_handle_type;
+<span class="lineNum">     343 </span>            :         native_handle_type native_handle()
+<span class="lineNum">     344 </span>            :         {
+<span class="lineNum">     345 </span>            :             return &amp;cond;
+<span class="lineNum">     346 </span>            :         }
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            :         void notify_one() BOOST_NOEXCEPT;
+<span class="lineNum">     349 </span>            :         void notify_all() BOOST_NOEXCEPT;
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span>            :     };
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span>            :     BOOST_THREAD_DECL void notify_all_at_thread_exit(condition_variable&amp; cond, unique_lock&lt;mutex&gt; lk);
+<span class="lineNum">     355 </span>            : 
+<span class="lineNum">     356 </span>            : }
+<span class="lineNum">     357 </span>            : 
+<span class="lineNum">     358 </span>            : 
+<span class="lineNum">     359 </span>            : #include &lt;boost/config/abi_suffix.hpp&gt;
+<span class="lineNum">     360 </span>            : 
+<span class="lineNum">     361 </span>            : #endif
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../../../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libdevcore/Log.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libdevcore</a> - Log.cpp<span style="font-size: 80%;"> (source / <a href="Log.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">49</td>
+            <td class="headerCovTableEntry">77</td>
+            <td class="headerCovTableEntryLo">63.6 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntryLo">72.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Log.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @date 2014
+<span class="lineNum">      20 </span>            :  */
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #include &quot;Log.h&quot;
+<span class="lineNum">      23 </span>            : 
+<span class="lineNum">      24 </span>            : #include &lt;string&gt;
+<span class="lineNum">      25 </span>            : #include &lt;iostream&gt;
+<span class="lineNum">      26 </span>            : #include &lt;thread&gt;
+<span class="lineNum">      27 </span>            : #ifdef __APPLE__
+<span class="lineNum">      28 </span>            : #include &lt;pthread.h&gt;
+<span class="lineNum">      29 </span>            : #endif
+<span class="lineNum">      30 </span>            : #include &quot;Guards.h&quot;
+<span class="lineNum">      31 </span>            : using namespace std;
+<span class="lineNum">      32 </span>            : using namespace dev;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : //⊳⊲◀▶■▣▢□▷◁▧▨▩▲◆◉◈◇◎●◍◌○◼☑☒☎☢☣☰☀♽♥♠✩✭❓✔✓✖✕✘✓✔✅⚒⚡⦸⬌∅⁕«««»»»⚙
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : // Logging
+<span class="lineNum">      37 </span>            : int dev::g_logVerbosity = 5;
+<span class="lineNum">      38 </span>            : mutex x_logOverride;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : /// Map of Log Channel types to bool, false forces the channel to be disabled, true forces it to be enabled.
+<span class="lineNum">      41 </span>            : /// If a channel has no entry, then it will output as long as its verbosity (LogChannel::verbosity) is less than
+<span class="lineNum">      42 </span>            : /// or equal to the currently output verbosity (g_logVerbosity).
+<a name="43"><span class="lineNum">      43 </span><span class="lineCov">          1 : static map&lt;type_info const*, bool&gt; s_logOverride;</span></a>
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">       9850 : bool dev::isChannelVisible(std::type_info const* _ch, bool _default)</span>
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span><span class="lineCov">      19700 :         Guard l(x_logOverride);</span>
+<span class="lineNum">      48 </span><span class="lineCov">       9850 :         if (s_logOverride.count(_ch))</span>
+<span class="lineNum">      49 </span><span class="lineNoCov">          0 :                 return s_logOverride[_ch];</span>
+<span class="lineNum">      50 </span>            :         return _default;
+<a name="51"><span class="lineNum">      51 </span>            : }</a>
+<span class="lineNum">      52 </span>            : 
+<span class="lineNum">      53 </span><span class="lineCov">       4499 : LogOverrideAux::LogOverrideAux(std::type_info const* _ch, bool _value):</span>
+<span class="lineNum">      54 </span><span class="lineCov">       4499 :         m_ch(_ch)</span>
+<span class="lineNum">      55 </span>            : {
+<span class="lineNum">      56 </span><span class="lineCov">       8998 :         Guard l(x_logOverride);</span>
+<span class="lineNum">      57 </span><span class="lineCov">       4499 :         m_old = s_logOverride.count(_ch) ? (int)s_logOverride[_ch] : c_null;</span>
+<span class="lineNum">      58 </span><span class="lineCov">       4499 :         s_logOverride[m_ch] = _value;</span>
+<a name="59"><span class="lineNum">      59 </span><span class="lineCov">       4499 : }</span></a>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span><span class="lineCov">       8998 : LogOverrideAux::~LogOverrideAux()</span>
+<span class="lineNum">      62 </span>            : {
+<span class="lineNum">      63 </span><span class="lineCov">       8998 :         Guard l(x_logOverride);</span>
+<span class="lineNum">      64 </span><span class="lineCov">       4499 :         if (m_old == c_null)</span>
+<span class="lineNum">      65 </span><span class="lineCov">       4499 :                 s_logOverride.erase(m_ch);</span>
+<span class="lineNum">      66 </span>            :         else
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :                 s_logOverride[m_ch] = (bool)m_old;</span>
+<span class="lineNum">      68 </span><span class="lineCov">       4499 : }</span>
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span>            : #if defined(_WIN32)
+<span class="lineNum">      71 </span>            : const char* LogChannel::name() { return EthGray &quot;...&quot;; }
+<span class="lineNum">      72 </span>            : const char* LeftChannel::name() { return EthNavy &quot;&lt;--&quot;; }
+<span class="lineNum">      73 </span>            : const char* RightChannel::name() { return EthGreen &quot;--&gt;&quot;; }
+<span class="lineNum">      74 </span>            : const char* WarnChannel::name() { return EthOnRed EthBlackBold &quot;  X&quot;; }
+<span class="lineNum">      75 </span>            : const char* NoteChannel::name() { return EthBlue &quot;  i&quot;; }
+<span class="lineNum">      76 </span>            : const char* DebugChannel::name() { return EthWhite &quot;  D&quot;; }
+<a name="77"><span class="lineNum">      77 </span>            : const char* TraceChannel::name() { return EthGray &quot;...&quot;; }</a>
+<a name="78"><span class="lineNum">      78 </span>            : #else</a>
+<a name="79"><span class="lineNum">      79 </span><span class="lineNoCov">          0 : const char* LogChannel::name() { return EthGray &quot;···&quot;; }</span></a>
+<a name="80"><span class="lineNum">      80 </span><span class="lineNoCov">          0 : const char* LeftChannel::name() { return EthNavy &quot;◀▬▬&quot;; }</span></a>
+<a name="81"><span class="lineNum">      81 </span><span class="lineNoCov">          0 : const char* RightChannel::name() { return EthGreen &quot;▬▬▶&quot;; }</span></a>
+<a name="82"><span class="lineNum">      82 </span><span class="lineCov">     276582 : const char* WarnChannel::name() { return EthOnRed EthBlackBold &quot;  ✘&quot;; }</span></a>
+<a name="83"><span class="lineNum">      83 </span><span class="lineCov">      25507 : const char* NoteChannel::name() { return EthBlue &quot;  ℹ&quot;; }</span></a>
+<span class="lineNum">      84 </span><span class="lineCov">        130 : const char* DebugChannel::name() { return EthWhite &quot;  ◇&quot;; }</span>
+<span class="lineNum">      85 </span><span class="lineCov">      21765 : const char* TraceChannel::name() { return EthGray &quot;...&quot;; }</span>
+<a name="86"><span class="lineNum">      86 </span>            : #endif</a>
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span><span class="lineCov">     768872 : LogOutputStreamBase::LogOutputStreamBase(char const* _id, std::type_info const* _info, unsigned _v, bool _autospacing):</span>
+<span class="lineNum">      89 </span>            :         m_autospacing(_autospacing),
+<span class="lineNum">      90 </span><span class="lineCov">     768872 :         m_verbosity(_v)</span>
+<span class="lineNum">      91 </span>            : {
+<span class="lineNum">      92 </span><span class="lineCov">    1537754 :         Guard l(x_logOverride);</span>
+<span class="lineNum">      93 </span><span class="lineCov">     768877 :         auto it = s_logOverride.find(_info);</span>
+<span class="lineNum">      94 </span><span class="lineCov">    2306633 :         if ((it != s_logOverride.end() &amp;&amp; it-&gt;second == true) || (it == s_logOverride.end() &amp;&amp; (int)_v &lt;= g_logVerbosity))</span>
+<span class="lineNum">      95 </span>            :         {
+<span class="lineNum">      96 </span><span class="lineNoCov">          0 :                 time_t rawTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());</span>
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :                 unsigned ms = chrono::duration_cast&lt;chrono::milliseconds&gt;(std::chrono::system_clock::now().time_since_epoch()).count() % 1000;</span>
+<span class="lineNum">      98 </span>            :                 char buf[24];
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :                 if (strftime(buf, 24, &quot;%X&quot;, localtime(&amp;rawTime)) == 0)</span>
+<span class="lineNum">     100 </span><span class="lineNoCov">          0 :                         buf[0] = '\0'; // empty if case strftime fails</span>
+<span class="lineNum">     101 </span>            :                 static char const* c_begin = &quot;  &quot; EthViolet;
+<span class="lineNum">     102 </span>            :                 static char const* c_sep1 = EthReset EthBlack &quot;|&quot; EthNavy;
+<span class="lineNum">     103 </span>            :                 static char const* c_sep2 = EthReset EthBlack &quot;|&quot; EthTeal;
+<span class="lineNum">     104 </span>            :                 static char const* c_end = EthReset &quot;  &quot;;
+<span class="lineNum">     105 </span><span class="lineNoCov">          0 :                 m_sstr &lt;&lt; _id &lt;&lt; c_begin &lt;&lt; buf &lt;&lt; &quot;.&quot; &lt;&lt; setw(3) &lt;&lt; setfill('0') &lt;&lt; ms;</span>
+<span class="lineNum">     106 </span><span class="lineNoCov">          0 :                 m_sstr &lt;&lt; c_sep1 &lt;&lt; getThreadName() &lt;&lt; ThreadContext::join(c_sep2) &lt;&lt; c_end;</span>
+<span class="lineNum">     107 </span>            :         }
+<span class="lineNum">     108 </span><span class="lineCov">     768877 : }</span>
+<a name="109"><span class="lineNum">     109 </span>            : </a>
+<span class="lineNum">     110 </span>            : /// Associate a name with each thread for nice logging.
+<a name="111"><span class="lineNum">     111 </span><span class="lineCov">          1 : struct ThreadLocalLogName</span></a>
+<span class="lineNum">     112 </span>            : {
+<span class="lineNum">     113 </span><span class="lineCov">          2 :         ThreadLocalLogName(std::string const&amp; _name) { m_name.reset(new string(_name)); }</span>
+<span class="lineNum">     114 </span>            :         boost::thread_specific_ptr&lt;std::string&gt; m_name;
+<span class="lineNum">     115 </span>            : };
+<a name="116"><span class="lineNum">     116 </span>            : </a>
+<span class="lineNum">     117 </span>            : /// Associate a name with each thread for nice logging.
+<span class="lineNum">     118 </span><span class="lineCov">          1 : struct ThreadLocalLogContext</span>
+<span class="lineNum">     119 </span>            : {
+<a name="120"><span class="lineNum">     120 </span><span class="lineCov">          1 :         ThreadLocalLogContext() = default;</span></a>
+<span class="lineNum">     121 </span>            : 
+<span class="lineNum">     122 </span><span class="lineCov">        867 :         void push(std::string const&amp; _name)</span>
+<span class="lineNum">     123 </span>            :         {
+<span class="lineNum">     124 </span><span class="lineCov">       1737 :                 if (!m_contexts.get())</span>
+<span class="lineNum">     125 </span><span class="lineCov">         24 :                         m_contexts.reset(new vector&lt;string&gt;);</span>
+<span class="lineNum">     126 </span><span class="lineCov">       1741 :                 m_contexts-&gt;push_back(_name);</span>
+<a name="127"><span class="lineNum">     127 </span><span class="lineCov">        870 :         }</span></a>
+<span class="lineNum">     128 </span>            : 
+<span class="lineNum">     129 </span><span class="lineCov">        872 :         void pop()</span>
+<span class="lineNum">     130 </span>            :         {
+<span class="lineNum">     131 </span><span class="lineCov">       1744 :                 m_contexts-&gt;pop_back();</span>
+<a name="132"><span class="lineNum">     132 </span><span class="lineCov">        872 :         }</span></a>
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span><span class="lineNoCov">          0 :         string join(string const&amp; _prior)</span>
+<span class="lineNum">     135 </span>            :         {
+<span class="lineNum">     136 </span><span class="lineNoCov">          0 :                 string ret;</span>
+<span class="lineNum">     137 </span><span class="lineNoCov">          0 :                 if (m_contexts.get())</span>
+<span class="lineNum">     138 </span><span class="lineNoCov">          0 :                         for (auto const&amp; i: *m_contexts)</span>
+<span class="lineNum">     139 </span><span class="lineNoCov">          0 :                                 ret += _prior + i;</span>
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :                 return ret;</span>
+<span class="lineNum">     141 </span>            :         }
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :         boost::thread_specific_ptr&lt;std::vector&lt;std::string&gt;&gt; m_contexts;
+<span class="lineNum">     144 </span>            : };
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span><span class="lineCov">          1 : ThreadLocalLogContext g_logThreadContext;</span>
+<span class="lineNum">     147 </span>            : 
+<a name="148"><span class="lineNum">     148 </span><span class="lineCov">          4 : ThreadLocalLogName g_logThreadName(&quot;main&quot;);</span></a>
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span><span class="lineCov">        868 : void dev::ThreadContext::push(string const&amp; _n)</span>
+<span class="lineNum">     151 </span>            : {
+<span class="lineNum">     152 </span><span class="lineCov">        868 :         g_logThreadContext.push(_n);</span>
+<a name="153"><span class="lineNum">     153 </span><span class="lineCov">        870 : }</span></a>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span><span class="lineCov">        872 : void dev::ThreadContext::pop()</span>
+<span class="lineNum">     156 </span>            : {
+<span class="lineNum">     157 </span><span class="lineCov">        872 :         g_logThreadContext.pop();</span>
+<a name="158"><span class="lineNum">     158 </span><span class="lineCov">        872 : }</span></a>
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span><span class="lineNoCov">          0 : string dev::ThreadContext::join(string const&amp; _prior)</span>
+<span class="lineNum">     161 </span>            : {
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :         return g_logThreadContext.join(_prior);</span>
+<span class="lineNum">     163 </span>            : }
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : // foward declare without all of Windows.h
+<span class="lineNum">     166 </span>            : #if defined(_WIN32)
+<span class="lineNum">     167 </span>            : extern &quot;C&quot; __declspec(dllimport) void __stdcall OutputDebugStringA(const char* lpOutputString);
+<a name="168"><span class="lineNum">     168 </span>            : #endif</a>
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 : string dev::getThreadName()</span>
+<span class="lineNum">     171 </span>            : {
+<span class="lineNum">     172 </span>            : #if defined(__GLIBC__) || defined(__APPLE__)
+<span class="lineNum">     173 </span>            :         char buffer[128];
+<span class="lineNum">     174 </span><span class="lineNoCov">          0 :         pthread_getname_np(pthread_self(), buffer, 127);</span>
+<span class="lineNum">     175 </span><span class="lineNoCov">          0 :         buffer[127] = 0;</span>
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :         return buffer;</span>
+<span class="lineNum">     177 </span>            : #else
+<span class="lineNum">     178 </span>            :         return g_logThreadName.m_name.get() ? *g_logThreadName.m_name.get() : &quot;&lt;unknown&gt;&quot;;
+<span class="lineNum">     179 </span>            : #endif
+<a name="180"><span class="lineNum">     180 </span>            : }</a>
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span><span class="lineCov">     180230 : void dev::setThreadName(string const&amp; _n)</span>
+<span class="lineNum">     183 </span>            : {
+<span class="lineNum">     184 </span>            : #if defined(__GLIBC__)
+<span class="lineNum">     185 </span><span class="lineCov">     180230 :         pthread_setname_np(pthread_self(), _n.c_str());</span>
+<span class="lineNum">     186 </span>            : #elif defined(__APPLE__)
+<span class="lineNum">     187 </span>            :         pthread_setname_np(_n.c_str());
+<span class="lineNum">     188 </span>            : #else
+<span class="lineNum">     189 </span>            :         g_logThreadName.m_name.reset(new std::string(_n));
+<span class="lineNum">     190 </span>            : #endif
+<a name="191"><span class="lineNum">     191 </span><span class="lineCov">     180879 : }</span></a>
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span><span class="lineNoCov">          0 : void dev::simpleDebugOut(std::string const&amp; _s, char const*)</span>
+<span class="lineNum">     194 </span>            : {
+<span class="lineNum">     195 </span><span class="lineNoCov">          0 :         static SpinLock s_lock;</span>
+<span class="lineNum">     196 </span><span class="lineNoCov">          0 :         SpinGuard l(s_lock);</span>
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span><span class="lineNoCov">          0 :         cerr &lt;&lt; _s &lt;&lt; endl &lt;&lt; flush;</span>
+<span class="lineNum">     199 </span>            : 
+<span class="lineNum">     200 </span>            :         // helpful to use OutputDebugString on windows
+<span class="lineNum">     201 </span>            :         #if defined(_WIN32)
+<span class="lineNum">     202 </span>            :         {
+<span class="lineNum">     203 </span>            :                 OutputDebugStringA(_s.data());
+<span class="lineNum">     204 </span>            :                 OutputDebugStringA(&quot;\n&quot;);
+<span class="lineNum">     205 </span>            :         }
+<span class="lineNum">     206 </span>            :         #endif
+<a name="207"><span class="lineNum">     207 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineCov">          3 : std::function&lt;void(std::string const&amp;, char const*)&gt; dev::g_logPost = simpleDebugOut;</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

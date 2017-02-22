@@ -1,0 +1,665 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - cov.data - libp2p/Session.cpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">libp2p</a> - Session.cpp<span style="font-size: 80%;"> (source / <a href="Session.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">cov.data</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">163</td>
+            <td class="headerCovTableEntry">299</td>
+            <td class="headerCovTableEntryLo">54.5 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2017-02-22 16:10:09</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">21</td>
+            <td class="headerCovTableEntry">36</td>
+            <td class="headerCovTableEntryLo">58.3 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :         This file is part of cpp-ethereum.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            :         cpp-ethereum is free software: you can redistribute it and/or modify
+<span class="lineNum">       5 </span>            :         it under the terms of the GNU General Public License as published by
+<span class="lineNum">       6 </span>            :         the Free Software Foundation, either version 3 of the License, or
+<span class="lineNum">       7 </span>            :         (at your option) any later version.
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            :         cpp-ethereum is distributed in the hope that it will be useful,
+<span class="lineNum">      10 </span>            :         but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      11 </span>            :         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      12 </span>            :         GNU General Public License for more details.
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            :         You should have received a copy of the GNU General Public License
+<span class="lineNum">      15 </span>            :         along with cpp-ethereum.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+<span class="lineNum">      16 </span>            : */
+<span class="lineNum">      17 </span>            : /** @file Session.cpp
+<span class="lineNum">      18 </span>            :  * @author Gav Wood &lt;i@gavwood.com&gt;
+<span class="lineNum">      19 </span>            :  * @author Alex Leverington &lt;nessence@gmail.com&gt;
+<span class="lineNum">      20 </span>            :  * @date 2014
+<span class="lineNum">      21 </span>            :  */
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : #include &quot;Session.h&quot;
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : #include &lt;chrono&gt;
+<span class="lineNum">      26 </span>            : #include &lt;libdevcore/Common.h&gt;
+<span class="lineNum">      27 </span>            : #include &lt;libdevcore/CommonIO.h&gt;
+<span class="lineNum">      28 </span>            : #include &lt;libdevcore/Exceptions.h&gt;
+<span class="lineNum">      29 </span>            : #include &quot;Host.h&quot;
+<span class="lineNum">      30 </span>            : #include &quot;Capability.h&quot;
+<span class="lineNum">      31 </span>            : using namespace std;
+<span class="lineNum">      32 </span>            : using namespace dev;
+<a name="33"><span class="lineNum">      33 </span>            : using namespace dev::p2p;</a>
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span><span class="lineCov">         38 : Session::Session(Host* _h, unique_ptr&lt;RLPXFrameCoder&gt;&amp;&amp; _io, std::shared_ptr&lt;RLPXSocket&gt; const&amp; _s, std::shared_ptr&lt;Peer&gt; const&amp; _n, PeerSessionInfo _info):</span>
+<span class="lineNum">      36 </span>            :         m_server(_h),
+<span class="lineNum">      37 </span><span class="lineCov">         38 :         m_io(move(_io)),</span>
+<span class="lineNum">      38 </span>            :         m_socket(_s),
+<span class="lineNum">      39 </span>            :         m_peer(_n),
+<span class="lineNum">      40 </span>            :         m_info(_info),
+<span class="lineNum">      41 </span><span class="lineCov">        674 :         m_ping(chrono::steady_clock::time_point::max())</span>
+<span class="lineNum">      42 </span>            : {
+<span class="lineNum">      43 </span><span class="lineCov">         38 :         registerFraming(0);</span>
+<span class="lineNum">      44 </span><span class="lineCov">         38 :         m_peer-&gt;m_lastDisconnect = NoDisconnect;</span>
+<span class="lineNum">      45 </span><span class="lineCov">         38 :         m_lastReceived = m_connect = chrono::steady_clock::now();</span>
+<span class="lineNum">      46 </span><span class="lineCov">        185 :         DEV_GUARDED(x_info)</span>
+<span class="lineNum">      47 </span><span class="lineCov">         74 :                 m_info.socketId = m_socket-&gt;ref().native_handle();</span>
+<a name="48"><span class="lineNum">      48 </span><span class="lineCov">         37 : }</span></a>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">        380 : Session::~Session()</span>
+<span class="lineNum">      51 </span>            : {
+<span class="lineNum">      52 </span><span class="lineCov">        114 :         ThreadContext tc(info().id.abridged());</span>
+<span class="lineNum">      53 </span><span class="lineCov">        114 :         ThreadContext tc2(info().clientVersion);</span>
+<span class="lineNum">      54 </span><span class="lineCov">         38 :         clog(NetMessageSummary) &lt;&lt; &quot;Closing peer session :-(&quot;;</span>
+<span class="lineNum">      55 </span><span class="lineCov">         76 :         m_peer-&gt;m_lastConnected = m_peer-&gt;m_lastAttempted - chrono::seconds(1);</span>
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span>            :         // Read-chain finished for one reason or another.
+<span class="lineNum">      58 </span><span class="lineCov">        138 :         for (auto&amp; i: m_capabilities)</span>
+<span class="lineNum">      59 </span><span class="lineCov">         48 :                 i.second.reset();</span>
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            :         try
+<span class="lineNum">      62 </span>            :         {
+<span class="lineNum">      63 </span><span class="lineCov">         38 :                 bi::tcp::socket&amp; socket = m_socket-&gt;ref();</span>
+<span class="lineNum">      64 </span><span class="lineCov">         76 :                 if (socket.is_open())</span>
+<span class="lineNum">      65 </span>            :                 {
+<span class="lineNum">      66 </span><span class="lineNoCov">          0 :                         boost::system::error_code ec;</span>
+<span class="lineNum">      67 </span><span class="lineNoCov">          0 :                         socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);</span>
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :                         socket.close();</span>
+<span class="lineNum">      69 </span>            :                 }
+<span class="lineNum">      70 </span>            :         }
+<span class="lineNum">      71 </span><span class="lineNoCov">          0 :         catch (...){}</span>
+<a name="72"><span class="lineNum">      72 </span><span class="lineCov">         38 : }</span></a>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineNoCov">          0 : ReputationManager&amp; Session::repMan()</span>
+<span class="lineNum">      75 </span>            : {
+<span class="lineNum">      76 </span><span class="lineNoCov">          0 :         return m_server-&gt;repMan();</span>
+<a name="77"><span class="lineNum">      77 </span>            : }</a>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span><span class="lineNoCov">          0 : NodeID Session::id() const</span>
+<span class="lineNum">      80 </span>            : {
+<span class="lineNum">      81 </span><span class="lineNoCov">          0 :         return m_peer ? m_peer-&gt;id : NodeID();</span>
+<a name="82"><span class="lineNum">      82 </span>            : }</a>
+<span class="lineNum">      83 </span>            : 
+<span class="lineNum">      84 </span><span class="lineNoCov">          0 : void Session::addRating(int _r)</span>
+<span class="lineNum">      85 </span>            : {
+<span class="lineNum">      86 </span><span class="lineNoCov">          0 :         if (m_peer)</span>
+<span class="lineNum">      87 </span>            :         {
+<span class="lineNum">      88 </span><span class="lineNoCov">          0 :                 m_peer-&gt;m_rating += _r;</span>
+<span class="lineNum">      89 </span><span class="lineNoCov">          0 :                 m_peer-&gt;m_score += _r;</span>
+<span class="lineNum">      90 </span><span class="lineNoCov">          0 :                 if (_r &gt;= 0)</span>
+<span class="lineNum">      91 </span><span class="lineNoCov">          0 :                         m_peer-&gt;noteSessionGood();</span>
+<span class="lineNum">      92 </span>            :         }
+<a name="93"><span class="lineNum">      93 </span><span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span><span class="lineNoCov">          0 : int Session::rating() const</span>
+<span class="lineNum">      96 </span>            : {
+<span class="lineNum">      97 </span><span class="lineNoCov">          0 :         return m_peer-&gt;m_rating;</span>
+<span class="lineNum">      98 </span>            : }
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            : template &lt;class T&gt; vector&lt;T&gt; randomSelection(vector&lt;T&gt; const&amp; _t, unsigned _n)
+<span class="lineNum">     101 </span>            : {
+<span class="lineNum">     102 </span>            :         if (_t.size() &lt;= _n)
+<span class="lineNum">     103 </span>            :                 return _t;
+<span class="lineNum">     104 </span>            :         vector&lt;T&gt; ret = _t;
+<span class="lineNum">     105 </span>            :         while (ret.size() &gt; _n)
+<span class="lineNum">     106 </span>            :         {
+<span class="lineNum">     107 </span>            :                 auto i = ret.begin();
+<span class="lineNum">     108 </span>            :                 advance(i, rand() % ret.size());
+<span class="lineNum">     109 </span>            :                 ret.erase(i);
+<span class="lineNum">     110 </span>            :         }
+<span class="lineNum">     111 </span>            :         return ret;
+<a name="112"><span class="lineNum">     112 </span>            : }</a>
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span><span class="lineCov">        124 : bool Session::readPacket(uint16_t _capId, PacketType _t, RLP const&amp; _r)</span>
+<span class="lineNum">     115 </span>            : {
+<span class="lineNum">     116 </span><span class="lineCov">        124 :         m_lastReceived = chrono::steady_clock::now();</span>
+<span class="lineNum">     117 </span><span class="lineCov">        124 :         clog(NetRight) &lt;&lt; _t &lt;&lt; _r;</span>
+<span class="lineNum">     118 </span>            :         try // Generic try-catch block designed to capture RLP format errors - TODO: give decent diagnostics, make a bit more specific over what is caught.
+<span class="lineNum">     119 </span>            :         {
+<span class="lineNum">     120 </span>            :                 // v4 frame headers are useless, offset packet type used
+<span class="lineNum">     121 </span>            :                 // v5 protocol type is in header, packet type not offset
+<span class="lineNum">     122 </span><span class="lineCov">        124 :                 if (_capId == 0 &amp;&amp; _t &lt; UserPacket)</span>
+<span class="lineNum">     123 </span><span class="lineCov">         60 :                         return interpret(_t, _r);</span>
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineCov">        128 :                 if (isFramingEnabled())</span>
+<span class="lineNum">     126 </span>            :                 {
+<span class="lineNum">     127 </span><span class="lineNoCov">          0 :                         for (auto const&amp; i: m_capabilities)</span>
+<span class="lineNum">     128 </span><span class="lineNoCov">          0 :                                 if (i.second-&gt;c_protocolID == _capId)</span>
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :                                         return i.second-&gt;m_enabled ? i.second-&gt;interpret(_t, _r) : true;</span>
+<span class="lineNum">     130 </span>            :                 }
+<span class="lineNum">     131 </span>            :                 else
+<span class="lineNum">     132 </span>            :                 {
+<span class="lineNum">     133 </span><span class="lineCov">        256 :                         for (auto const&amp; i: m_capabilities)</span>
+<span class="lineNum">     134 </span><span class="lineCov">         64 :                                 if (_t &gt;= (int)i.second-&gt;m_idOffset &amp;&amp; _t - i.second-&gt;m_idOffset &lt; i.second-&gt;hostCapability()-&gt;messageCount())</span>
+<span class="lineNum">     135 </span><span class="lineCov">         64 :                                         return i.second-&gt;m_enabled ? i.second-&gt;interpret(_t - i.second-&gt;m_idOffset, _r) : true;</span>
+<span class="lineNum">     136 </span>            :                 }
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span>            :                 return false;
+<span class="lineNum">     139 </span>            :         }
+<span class="lineNum">     140 </span><span class="lineNoCov">          0 :         catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     141 </span>            :         {
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :                 clog(NetWarn) &lt;&lt; &quot;Exception caught in p2p::Session::interpret(): &quot; &lt;&lt; _e.what() &lt;&lt; &quot;. PacketType: &quot; &lt;&lt; _t &lt;&lt; &quot;. RLP: &quot; &lt;&lt; _r;</span>
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :                 disconnect(BadProtocol);</span>
+<span class="lineNum">     144 </span>            :                 return true;
+<span class="lineNum">     145 </span>            :         }
+<span class="lineNum">     146 </span>            :         return true;
+<a name="147"><span class="lineNum">     147 </span>            : }</a>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">         60 : bool Session::interpret(PacketType _t, RLP const&amp; _r)</span>
+<span class="lineNum">     150 </span>            : {
+<span class="lineNum">     151 </span><span class="lineCov">         60 :         switch (_t)</span>
+<span class="lineNum">     152 </span>            :         {
+<span class="lineNum">     153 </span>            :         case DisconnectPacket:
+<span class="lineNum">     154 </span>            :         {
+<span class="lineNum">     155 </span><span class="lineCov">         36 :                 string reason = &quot;Unspecified&quot;;</span>
+<span class="lineNum">     156 </span><span class="lineCov">         12 :                 auto r = (DisconnectReason)_r[0].toInt&lt;int&gt;();</span>
+<span class="lineNum">     157 </span><span class="lineCov">         12 :                 if (!_r[0].isInt())</span>
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :                         drop(BadProtocol);</span>
+<span class="lineNum">     159 </span>            :                 else
+<span class="lineNum">     160 </span>            :                 {
+<span class="lineNum">     161 </span><span class="lineCov">         36 :                         reason = reasonOf(r);</span>
+<span class="lineNum">     162 </span><span class="lineCov">         12 :                         clog(NetMessageSummary) &lt;&lt; &quot;Disconnect (reason: &quot; &lt;&lt; reason &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">     163 </span><span class="lineCov">         12 :                         drop(DisconnectRequested);</span>
+<span class="lineNum">     164 </span>            :                 }
+<span class="lineNum">     165 </span>            :                 break;
+<span class="lineNum">     166 </span>            :         }
+<span class="lineNum">     167 </span>            :         case PingPacket:
+<span class="lineNum">     168 </span>            :         {
+<span class="lineNum">     169 </span><span class="lineCov">         24 :                 clog(NetTriviaSummary) &lt;&lt; &quot;Ping&quot; &lt;&lt; m_info.id;</span>
+<span class="lineNum">     170 </span><span class="lineCov">         48 :                 RLPStream s;</span>
+<span class="lineNum">     171 </span><span class="lineCov">         48 :                 sealAndSend(prep(s, PongPacket), 0);</span>
+<span class="lineNum">     172 </span>            :                 break;
+<span class="lineNum">     173 </span>            :         }
+<span class="lineNum">     174 </span>            :         case PongPacket:
+<span class="lineNum">     175 </span><span class="lineCov">        120 :                 DEV_GUARDED(x_info)</span>
+<span class="lineNum">     176 </span>            :                 {
+<span class="lineNum">     177 </span><span class="lineCov">         48 :                         m_info.lastPing = std::chrono::steady_clock::now() - m_ping;</span>
+<span class="lineNum">     178 </span><span class="lineCov">         48 :                         clog(NetTriviaSummary) &lt;&lt; &quot;Latency: &quot; &lt;&lt; chrono::duration_cast&lt;chrono::milliseconds&gt;(m_info.lastPing).count() &lt;&lt; &quot; ms&quot;;</span>
+<span class="lineNum">     179 </span>            :                 }
+<span class="lineNum">     180 </span><span class="lineCov">         24 :                 break;</span>
+<span class="lineNum">     181 </span>            :         case GetPeersPacket:
+<span class="lineNum">     182 </span>            :         case PeersPacket:
+<span class="lineNum">     183 </span>            :                 break;
+<span class="lineNum">     184 </span>            :         default:
+<span class="lineNum">     185 </span>            :                 return false;
+<span class="lineNum">     186 </span>            :         }
+<span class="lineNum">     187 </span>            :         return true;
+<a name="188"><span class="lineNum">     188 </span>            : }</a>
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span><span class="lineCov">         24 : void Session::ping()</span>
+<span class="lineNum">     191 </span>            : {
+<span class="lineNum">     192 </span><span class="lineCov">         48 :         RLPStream s;</span>
+<span class="lineNum">     193 </span><span class="lineCov">         48 :         sealAndSend(prep(s, PingPacket), 0);</span>
+<span class="lineNum">     194 </span><span class="lineCov">         24 :         m_ping = std::chrono::steady_clock::now();</span>
+<a name="195"><span class="lineNum">     195 </span><span class="lineCov">         24 : }</span></a>
+<span class="lineNum">     196 </span>            : 
+<span class="lineNum">     197 </span><span class="lineNoCov">          0 : RLPStream&amp; Session::prep(RLPStream&amp; _s, PacketType _id, unsigned _args)</span>
+<span class="lineNum">     198 </span>            : {
+<span class="lineNum">     199 </span><span class="lineCov">         74 :         return _s.append((unsigned)_id).appendList(_args);</span>
+<a name="200"><span class="lineNum">     200 </span>            : }</a>
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span><span class="lineCov">        138 : void Session::sealAndSend(RLPStream&amp; _s, uint16_t _protocolID)</span>
+<span class="lineNum">     203 </span>            : {
+<span class="lineNum">     204 </span><span class="lineCov">        276 :         bytes b;</span>
+<span class="lineNum">     205 </span><span class="lineCov">        138 :         _s.swapOut(b);</span>
+<span class="lineNum">     206 </span><span class="lineCov">        138 :         send(move(b), _protocolID);</span>
+<a name="207"><span class="lineNum">     207 </span><span class="lineCov">        138 : }</span></a>
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineCov">        262 : bool Session::checkPacket(bytesConstRef _msg)</span>
+<span class="lineNum">     210 </span>            : {
+<span class="lineNum">     211 </span><span class="lineCov">        262 :         if (_msg[0] &gt; 0x7f || _msg.size() &lt; 2)</span>
+<span class="lineNum">     212 </span>            :                 return false;
+<span class="lineNum">     213 </span><span class="lineCov">        262 :         if (RLP(_msg.cropped(1)).actualSize() + 1 != _msg.size())</span>
+<span class="lineNum">     214 </span>            :                 return false;
+<span class="lineNum">     215 </span><span class="lineCov">        262 :         return true;</span>
+<a name="216"><span class="lineNum">     216 </span>            : }</a>
+<span class="lineNum">     217 </span>            : 
+<span class="lineNum">     218 </span><span class="lineCov">        138 : void Session::send(bytes&amp;&amp; _msg, uint16_t _protocolID)</span>
+<span class="lineNum">     219 </span>            : {
+<span class="lineNum">     220 </span><span class="lineCov">        138 :         bytesConstRef msg(&amp;_msg);</span>
+<span class="lineNum">     221 </span><span class="lineCov">        138 :         clog(NetLeft) &lt;&lt; RLP(msg.cropped(1));</span>
+<span class="lineNum">     222 </span><span class="lineCov">        138 :         if (!checkPacket(msg))</span>
+<span class="lineNum">     223 </span><span class="lineNoCov">          0 :                 clog(NetWarn) &lt;&lt; &quot;INVALID PACKET CONSTRUCTED!&quot;;</span>
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span><span class="lineCov">        276 :         if (!m_socket-&gt;ref().is_open())</span>
+<span class="lineNum">     226 </span>            :                 return;
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span><span class="lineCov">        138 :         bool doWrite = false;</span>
+<span class="lineNum">     229 </span><span class="lineCov">        276 :         if (isFramingEnabled())</span>
+<span class="lineNum">     230 </span>            :         {
+<span class="lineNum">     231 </span><span class="lineNoCov">          0 :                 DEV_GUARDED(x_framing)</span>
+<span class="lineNum">     232 </span>            :                 {
+<span class="lineNum">     233 </span><span class="lineNoCov">          0 :                         doWrite = m_encFrames.empty();</span>
+<span class="lineNum">     234 </span><span class="lineNoCov">          0 :                         auto f = getFraming(_protocolID);</span>
+<span class="lineNum">     235 </span><span class="lineNoCov">          0 :                         if (!f)</span>
+<span class="lineNum">     236 </span><span class="lineNoCov">          0 :                                 return;</span>
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span><span class="lineNoCov">          0 :                         f-&gt;writer.enque(RLPXPacket(_protocolID, msg));</span>
+<span class="lineNum">     239 </span><span class="lineNoCov">          0 :                         multiplexAll();</span>
+<span class="lineNum">     240 </span>            :                 }
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span><span class="lineNoCov">          0 :                 if (doWrite)</span>
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :                         writeFrames();</span>
+<span class="lineNum">     244 </span>            :         }
+<span class="lineNum">     245 </span>            :         else
+<span class="lineNum">     246 </span>            :         {
+<span class="lineNum">     247 </span><span class="lineCov">        690 :                 DEV_GUARDED(x_framing)</span>
+<span class="lineNum">     248 </span>            :                 {
+<span class="lineNum">     249 </span><span class="lineCov">        276 :                         m_writeQueue.push_back(std::move(_msg));</span>
+<span class="lineNum">     250 </span><span class="lineCov">        276 :                         doWrite = (m_writeQueue.size() == 1);</span>
+<span class="lineNum">     251 </span>            :                 }
+<span class="lineNum">     252 </span>            : 
+<span class="lineNum">     253 </span><span class="lineCov">        138 :                 if (doWrite)</span>
+<span class="lineNum">     254 </span><span class="lineCov">         75 :                         write();</span>
+<span class="lineNum">     255 </span>            :         }
+<a name="256"><span class="lineNum">     256 </span>            : }</a>
+<span class="lineNum">     257 </span>            : 
+<span class="lineNum">     258 </span><span class="lineCov">        138 : void Session::write()</span>
+<span class="lineNum">     259 </span>            : {
+<span class="lineNum">     260 </span><span class="lineCov">        138 :         bytes const* out = nullptr;</span>
+<span class="lineNum">     261 </span><span class="lineCov">        690 :         DEV_GUARDED(x_framing)</span>
+<span class="lineNum">     262 </span>            :         {
+<span class="lineNum">     263 </span><span class="lineCov">        690 :                 m_io-&gt;writeSingleFramePacket(&amp;m_writeQueue[0], m_writeQueue[0]);</span>
+<span class="lineNum">     264 </span><span class="lineCov">        276 :                 out = &amp;m_writeQueue[0];</span>
+<a name="265"><span class="lineNum">     265 </span>            :         }</a>
+<span class="lineNum">     266 </span><span class="lineCov">        414 :         auto self(shared_from_this());</span>
+<span class="lineNum">     267 </span><span class="lineCov">       3726 :         ba::async_write(m_socket-&gt;ref(), ba::buffer(*out), [this, self](boost::system::error_code ec, std::size_t /*length*/)</span>
+<span class="lineNum">     268 </span><span class="lineCov">        753 :         {</span>
+<span class="lineNum">     269 </span><span class="lineCov">        414 :                 ThreadContext tc(info().id.abridged());</span>
+<span class="lineNum">     270 </span><span class="lineCov">        339 :                 ThreadContext tc2(info().clientVersion);</span>
+<span class="lineNum">     271 </span>            :                 // must check queue, as write callback can occur following dropped()
+<span class="lineNum">     272 </span><span class="lineCov">        276 :                 if (ec)</span>
+<span class="lineNum">     273 </span>            :                 {
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :                         clog(NetWarn) &lt;&lt; &quot;Error sending: &quot; &lt;&lt; ec.message();</span>
+<span class="lineNum">     275 </span><span class="lineNoCov">          0 :                         drop(TCPError);</span>
+<span class="lineNum">     276 </span><span class="lineCov">         75 :                         return;</span>
+<span class="lineNum">     277 </span>            :                 }
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span><span class="lineCov">        402 :                 DEV_GUARDED(x_framing)</span>
+<span class="lineNum">     280 </span>            :                 {
+<span class="lineNum">     281 </span><span class="lineCov">        138 :                         m_writeQueue.pop_front();</span>
+<span class="lineNum">     282 </span><span class="lineCov">        276 :                         if (m_writeQueue.empty())</span>
+<span class="lineNum">     283 </span><span class="lineCov">         75 :                                 return;</span>
+<span class="lineNum">     284 </span>            :                 }
+<span class="lineNum">     285 </span><span class="lineCov">         63 :                 write();</span>
+<span class="lineNum">     286 </span><span class="lineCov">        138 :         });</span>
+<a name="287"><span class="lineNum">     287 </span><span class="lineCov">        138 : }</span></a>
+<span class="lineNum">     288 </span>            : 
+<span class="lineNum">     289 </span><span class="lineNoCov">          0 : void Session::writeFrames()</span>
+<span class="lineNum">     290 </span>            : {
+<span class="lineNum">     291 </span><span class="lineNoCov">          0 :         bytes const* out = nullptr;</span>
+<span class="lineNum">     292 </span><span class="lineNoCov">          0 :         DEV_GUARDED(x_framing)</span>
+<span class="lineNum">     293 </span>            :         {
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 :                 if (m_encFrames.empty())</span>
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :                         return;</span>
+<span class="lineNum">     296 </span>            :                 else
+<span class="lineNum">     297 </span><span class="lineNoCov">          0 :                         out = &amp;m_encFrames[0];</span>
+<span class="lineNum">     298 </span>            :         }
+<a name="299"><span class="lineNum">     299 </span>            : </a>
+<span class="lineNum">     300 </span><span class="lineNoCov">          0 :         auto self(shared_from_this());</span>
+<span class="lineNum">     301 </span><span class="lineNoCov">          0 :         ba::async_write(m_socket-&gt;ref(), ba::buffer(*out), [this, self](boost::system::error_code ec, std::size_t /*length*/)</span>
+<span class="lineNum">     302 </span><span class="lineNoCov">          0 :         {</span>
+<span class="lineNum">     303 </span><span class="lineNoCov">          0 :                 ThreadContext tc(info().id.abridged());</span>
+<span class="lineNum">     304 </span><span class="lineNoCov">          0 :                 ThreadContext tc2(info().clientVersion);</span>
+<span class="lineNum">     305 </span>            :                 // must check queue, as write callback can occur following dropped()
+<span class="lineNum">     306 </span><span class="lineNoCov">          0 :                 if (ec)</span>
+<span class="lineNum">     307 </span>            :                 {
+<span class="lineNum">     308 </span><span class="lineNoCov">          0 :                         clog(NetWarn) &lt;&lt; &quot;Error sending: &quot; &lt;&lt; ec.message();</span>
+<span class="lineNum">     309 </span><span class="lineNoCov">          0 :                         drop(TCPError);</span>
+<span class="lineNum">     310 </span><span class="lineNoCov">          0 :                         return;</span>
+<span class="lineNum">     311 </span>            :                 }
+<span class="lineNum">     312 </span>            : 
+<span class="lineNum">     313 </span><span class="lineNoCov">          0 :                 DEV_GUARDED(x_framing)</span>
+<span class="lineNum">     314 </span>            :                 {
+<span class="lineNum">     315 </span><span class="lineNoCov">          0 :                         if (!m_encFrames.empty())</span>
+<span class="lineNum">     316 </span><span class="lineNoCov">          0 :                                 m_encFrames.pop_front();</span>
+<span class="lineNum">     317 </span>            : 
+<span class="lineNum">     318 </span><span class="lineNoCov">          0 :                         multiplexAll();</span>
+<span class="lineNum">     319 </span><span class="lineNoCov">          0 :                         if (m_encFrames.empty())</span>
+<span class="lineNum">     320 </span><span class="lineNoCov">          0 :                                 return;</span>
+<span class="lineNum">     321 </span>            :                 }
+<span class="lineNum">     322 </span>            : 
+<span class="lineNum">     323 </span><span class="lineNoCov">          0 :                 writeFrames();</span>
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 :         });</span>
+<a name="325"><span class="lineNum">     325 </span>            : }</a>
+<span class="lineNum">     326 </span>            : 
+<span class="lineNum">     327 </span><span class="lineCov">         50 : void Session::drop(DisconnectReason _reason)</span>
+<span class="lineNum">     328 </span>            : {
+<span class="lineNum">     329 </span><span class="lineCov">         50 :         if (m_dropped)</span>
+<span class="lineNum">     330 </span>            :                 return;
+<span class="lineNum">     331 </span><span class="lineCov">         38 :         bi::tcp::socket&amp; socket = m_socket-&gt;ref();</span>
+<span class="lineNum">     332 </span><span class="lineCov">         76 :         if (socket.is_open())</span>
+<span class="lineNum">     333 </span>            :                 try
+<span class="lineNum">     334 </span>            :                 {
+<span class="lineNum">     335 </span><span class="lineCov">         38 :                         boost::system::error_code ec;</span>
+<span class="lineNum">     336 </span><span class="lineCov">        114 :                         clog(NetConnect) &lt;&lt; &quot;Closing &quot; &lt;&lt; socket.remote_endpoint(ec) &lt;&lt; &quot;(&quot; &lt;&lt; reasonOf(_reason) &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">     337 </span><span class="lineCov">         76 :                         socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);</span>
+<span class="lineNum">     338 </span><span class="lineCov">         38 :                         socket.close();</span>
+<span class="lineNum">     339 </span>            :                 }
+<span class="lineNum">     340 </span><span class="lineNoCov">          0 :                 catch (...) {}</span>
+<span class="lineNum">     341 </span>            : 
+<span class="lineNum">     342 </span><span class="lineCov">         38 :         m_peer-&gt;m_lastDisconnect = _reason;</span>
+<span class="lineNum">     343 </span><span class="lineCov">         38 :         if (_reason == BadProtocol)</span>
+<span class="lineNum">     344 </span>            :         {
+<span class="lineNum">     345 </span><span class="lineNoCov">          0 :                 m_peer-&gt;m_rating /= 2;</span>
+<span class="lineNum">     346 </span><span class="lineNoCov">          0 :                 m_peer-&gt;m_score /= 2;</span>
+<span class="lineNum">     347 </span>            :         }
+<span class="lineNum">     348 </span><span class="lineCov">         38 :         m_dropped = true;</span>
+<a name="349"><span class="lineNum">     349 </span>            : }</a>
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span><span class="lineCov">         26 : void Session::disconnect(DisconnectReason _reason)</span>
+<span class="lineNum">     352 </span>            : {
+<span class="lineNum">     353 </span><span class="lineCov">         52 :         clog(NetConnect) &lt;&lt; &quot;Disconnecting (our reason:&quot; &lt;&lt; reasonOf(_reason) &lt;&lt; &quot;)&quot;;</span>
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span><span class="lineCov">         52 :         if (m_socket-&gt;ref().is_open())</span>
+<span class="lineNum">     356 </span>            :         {
+<span class="lineNum">     357 </span><span class="lineCov">         52 :                 RLPStream s;</span>
+<span class="lineNum">     358 </span><span class="lineCov">         78 :                 prep(s, DisconnectPacket, 1) &lt;&lt; (int)_reason;</span>
+<span class="lineNum">     359 </span><span class="lineCov">         26 :                 sealAndSend(s, 0);</span>
+<span class="lineNum">     360 </span>            :         }
+<span class="lineNum">     361 </span><span class="lineCov">         26 :         drop(_reason);</span>
+<a name="362"><span class="lineNum">     362 </span><span class="lineCov">         26 : }</span></a>
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span><span class="lineCov">         24 : void Session::start()</span>
+<span class="lineNum">     365 </span>            : {
+<span class="lineNum">     366 </span><span class="lineCov">         24 :         ping();</span>
+<span class="lineNum">     367 </span>            : 
+<span class="lineNum">     368 </span><span class="lineCov">         48 :         if (isFramingEnabled())</span>
+<span class="lineNum">     369 </span><span class="lineNoCov">          0 :                 doReadFrames();</span>
+<span class="lineNum">     370 </span>            :         else
+<span class="lineNum">     371 </span><span class="lineCov">         24 :                 doRead();</span>
+<a name="372"><span class="lineNum">     372 </span><span class="lineCov">         24 : }</span></a>
+<span class="lineNum">     373 </span>            : 
+<span class="lineNum">     374 </span><span class="lineCov">        148 : void Session::doRead()</span>
+<span class="lineNum">     375 </span>            : {
+<span class="lineNum">     376 </span>            :         // ignore packets received while waiting to disconnect.
+<span class="lineNum">     377 </span><span class="lineCov">        148 :         if (m_dropped)</span>
+<span class="lineNum">     378 </span><span class="lineCov">         12 :                 return;</span>
+<span class="lineNum">     379 </span>            : 
+<a name="380"><span class="lineNum">     380 </span><span class="lineCov">        408 :         auto self(shared_from_this());</span></a>
+<span class="lineNum">     381 </span><span class="lineCov">        136 :         m_data.resize(h256::size);</span>
+<span class="lineNum">     382 </span><span class="lineCov">       3672 :         ba::async_read(m_socket-&gt;ref(), boost::asio::buffer(m_data, h256::size), [this,self](boost::system::error_code ec, std::size_t length)</span>
+<span class="lineNum">     383 </span><span class="lineCov">       1028 :         {</span>
+<span class="lineNum">     384 </span><span class="lineCov">        408 :                 ThreadContext tc(info().id.abridged());</span>
+<span class="lineNum">     385 </span><span class="lineCov">        396 :                 ThreadContext tc2(info().clientVersion);</span>
+<span class="lineNum">     386 </span><span class="lineCov">        136 :                 if (!checkRead(h256::size, ec, length))</span>
+<span class="lineNum">     387 </span><span class="lineCov">         12 :                         return;</span>
+<span class="lineNum">     388 </span><span class="lineCov">        496 :                 else if (!m_io-&gt;authAndDecryptHeader(bytesRef(m_data.data(), length)))</span>
+<span class="lineNum">     389 </span>            :                 {
+<span class="lineNum">     390 </span><span class="lineNoCov">          0 :                         clog(NetWarn) &lt;&lt; &quot;header decrypt failed&quot;;</span>
+<span class="lineNum">     391 </span><span class="lineNoCov">          0 :                         drop(BadProtocol); // todo: better error</span>
+<span class="lineNum">     392 </span>            :                         return;
+<span class="lineNum">     393 </span>            :                 }
+<span class="lineNum">     394 </span>            :                 
+<span class="lineNum">     395 </span>            :                 uint16_t hProtocolId;
+<span class="lineNum">     396 </span>            :                 uint32_t hLength;
+<span class="lineNum">     397 </span>            :                 uint8_t hPadding;
+<span class="lineNum">     398 </span>            :                 try
+<span class="lineNum">     399 </span>            :                 {
+<span class="lineNum">     400 </span><span class="lineCov">        496 :                         RLPXFrameInfo header(bytesConstRef(m_data.data(), length));</span>
+<span class="lineNum">     401 </span><span class="lineCov">        124 :                         hProtocolId = header.protocolId;</span>
+<span class="lineNum">     402 </span><span class="lineCov">        124 :                         hLength = header.length;</span>
+<span class="lineNum">     403 </span><span class="lineCov">        124 :                         hPadding = header.padding;</span>
+<span class="lineNum">     404 </span>            :                 }
+<span class="lineNum">     405 </span><span class="lineNoCov">          0 :                 catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     406 </span>            :                 {
+<span class="lineNum">     407 </span><span class="lineNoCov">          0 :                         clog(NetWarn) &lt;&lt; &quot;Exception decoding frame header RLP:&quot; &lt;&lt; _e.what() &lt;&lt; bytesConstRef(m_data.data(), h128::size).cropped(3);</span>
+<span class="lineNum">     408 </span><span class="lineNoCov">          0 :                         drop(BadProtocol);</span>
+<span class="lineNum">     409 </span>            :                         return;
+<span class="lineNum">     410 </span>            :                 }
+<span class="lineNum">     411 </span>            : 
+<span class="lineNum">     412 </span>            :                 /// read padded frame and mac
+<a name="413"><span class="lineNum">     413 </span><span class="lineCov">        124 :                 auto tlen = hLength + hPadding + h128::size;</span></a>
+<span class="lineNum">     414 </span><span class="lineCov">        248 :                 m_data.resize(tlen);</span>
+<span class="lineNum">     415 </span><span class="lineCov">       3472 :                 ba::async_read(m_socket-&gt;ref(), boost::asio::buffer(m_data, tlen), [this, self, hLength, hProtocolId, tlen](boost::system::error_code ec, std::size_t length)</span>
+<span class="lineNum">     416 </span><span class="lineCov">       1364 :                 {</span>
+<span class="lineNum">     417 </span><span class="lineCov">        372 :                         ThreadContext tc(info().id.abridged());</span>
+<span class="lineNum">     418 </span><span class="lineCov">        372 :                         ThreadContext tc2(info().clientVersion);</span>
+<span class="lineNum">     419 </span><span class="lineCov">        248 :                         if (!checkRead(tlen, ec, length))</span>
+<span class="lineNum">     420 </span><span class="lineNoCov">          0 :                                 return;</span>
+<span class="lineNum">     421 </span><span class="lineCov">        620 :                         else if (!m_io-&gt;authAndDecryptFrame(bytesRef(m_data.data(), tlen)))</span>
+<span class="lineNum">     422 </span>            :                         {
+<span class="lineNum">     423 </span><span class="lineNoCov">          0 :                                 clog(NetWarn) &lt;&lt; &quot;frame decrypt failed&quot;;</span>
+<span class="lineNum">     424 </span><span class="lineNoCov">          0 :                                 drop(BadProtocol); // todo: better error</span>
+<span class="lineNum">     425 </span>            :                                 return;
+<span class="lineNum">     426 </span>            :                         }
+<span class="lineNum">     427 </span>            : 
+<span class="lineNum">     428 </span><span class="lineCov">        496 :                         bytesConstRef frame(m_data.data(), hLength);</span>
+<span class="lineNum">     429 </span><span class="lineCov">        124 :                         if (!checkPacket(frame))</span>
+<span class="lineNum">     430 </span>            :                         {
+<span class="lineNum">     431 </span><span class="lineNoCov">          0 :                                 cerr &lt;&lt; &quot;Received &quot; &lt;&lt; frame.size() &lt;&lt; &quot;: &quot; &lt;&lt; toHex(frame) &lt;&lt; endl;</span>
+<span class="lineNum">     432 </span><span class="lineNoCov">          0 :                                 clog(NetWarn) &lt;&lt; &quot;INVALID MESSAGE RECEIVED&quot;;</span>
+<span class="lineNum">     433 </span><span class="lineNoCov">          0 :                                 disconnect(BadProtocol);</span>
+<span class="lineNum">     434 </span>            :                                 return;
+<span class="lineNum">     435 </span>            :                         }
+<span class="lineNum">     436 </span>            :                         else
+<span class="lineNum">     437 </span>            :                         {
+<span class="lineNum">     438 </span><span class="lineCov">        124 :                                 auto packetType = (PacketType)RLP(frame.cropped(0, 1)).toInt&lt;unsigned&gt;();</span>
+<span class="lineNum">     439 </span><span class="lineCov">        124 :                                 RLP r(frame.cropped(1));</span>
+<span class="lineNum">     440 </span><span class="lineCov">        248 :                                 bool ok = readPacket(hProtocolId, packetType, r);</span>
+<span class="lineNum">     441 </span>            :                                 (void)ok;
+<span class="lineNum">     442 </span>            : #if ETH_DEBUG
+<span class="lineNum">     443 </span>            :                                 if (!ok)
+<span class="lineNum">     444 </span>            :                                         clog(NetWarn) &lt;&lt; &quot;Couldn't interpret packet.&quot; &lt;&lt; RLP(r);
+<span class="lineNum">     445 </span>            : #endif
+<span class="lineNum">     446 </span>            :                         }
+<span class="lineNum">     447 </span><span class="lineCov">        124 :                         doRead();</span>
+<span class="lineNum">     448 </span><span class="lineCov">        124 :                 });</span>
+<span class="lineNum">     449 </span><span class="lineCov">        136 :         });</span>
+<a name="450"><span class="lineNum">     450 </span>            : }</a>
+<span class="lineNum">     451 </span>            : 
+<span class="lineNum">     452 </span><span class="lineCov">        260 : bool Session::checkRead(std::size_t _expected, boost::system::error_code _ec, std::size_t _length)</span>
+<span class="lineNum">     453 </span>            : {
+<span class="lineNum">     454 </span><span class="lineCov">        520 :         if (_ec &amp;&amp; _ec.category() != boost::asio::error::get_misc_category() &amp;&amp; _ec.value() != boost::asio::error::eof)</span>
+<span class="lineNum">     455 </span>            :         {
+<span class="lineNum">     456 </span><span class="lineCov">         24 :                 clog(NetConnect) &lt;&lt; &quot;Error reading: &quot; &lt;&lt; _ec.message();</span>
+<span class="lineNum">     457 </span><span class="lineCov">         12 :                 drop(TCPError);</span>
+<span class="lineNum">     458 </span><span class="lineCov">         12 :                 return false;</span>
+<span class="lineNum">     459 </span>            :         }
+<span class="lineNum">     460 </span><span class="lineCov">        496 :         else if (_ec &amp;&amp; _length &lt; _expected)</span>
+<span class="lineNum">     461 </span>            :         {
+<span class="lineNum">     462 </span><span class="lineNoCov">          0 :                 clog(NetWarn) &lt;&lt; &quot;Error reading - Abrupt peer disconnect: &quot; &lt;&lt; _ec.message();</span>
+<span class="lineNum">     463 </span><span class="lineNoCov">          0 :                 repMan().noteRude(*this);</span>
+<span class="lineNum">     464 </span><span class="lineNoCov">          0 :                 drop(TCPError);</span>
+<span class="lineNum">     465 </span><span class="lineNoCov">          0 :                 return false;</span>
+<span class="lineNum">     466 </span>            :         }
+<span class="lineNum">     467 </span><span class="lineCov">        248 :         else if (_length != _expected)</span>
+<span class="lineNum">     468 </span>            :         {
+<span class="lineNum">     469 </span>            :                 // with static m_data-sized buffer this shouldn't happen unless there's a regression
+<span class="lineNum">     470 </span>            :                 // sec recommends checking anyways (instead of assert)
+<span class="lineNum">     471 </span><span class="lineNoCov">          0 :                 clog(NetWarn) &lt;&lt; &quot;Error reading - TCP read buffer length differs from expected frame size.&quot;;</span>
+<span class="lineNum">     472 </span><span class="lineNoCov">          0 :                 disconnect(UserReason);</span>
+<span class="lineNum">     473 </span><span class="lineNoCov">          0 :                 return false;</span>
+<span class="lineNum">     474 </span>            :         }
+<span class="lineNum">     475 </span>            : 
+<span class="lineNum">     476 </span>            :         return true;
+<a name="477"><span class="lineNum">     477 </span>            : }</a>
+<span class="lineNum">     478 </span>            : 
+<span class="lineNum">     479 </span><span class="lineNoCov">          0 : void Session::doReadFrames()</span>
+<span class="lineNum">     480 </span>            : {
+<span class="lineNum">     481 </span><span class="lineNoCov">          0 :         if (m_dropped)</span>
+<span class="lineNum">     482 </span><span class="lineNoCov">          0 :                 return; // ignore packets received while waiting to disconnect</span>
+<span class="lineNum">     483 </span>            : 
+<a name="484"><span class="lineNum">     484 </span><span class="lineNoCov">          0 :         auto self(shared_from_this());</span></a>
+<span class="lineNum">     485 </span><span class="lineNoCov">          0 :         m_data.resize(h256::size);</span>
+<span class="lineNum">     486 </span><span class="lineNoCov">          0 :         ba::async_read(m_socket-&gt;ref(), boost::asio::buffer(m_data, h256::size), [this, self](boost::system::error_code ec, std::size_t length)</span>
+<span class="lineNum">     487 </span><span class="lineNoCov">          0 :         {</span>
+<span class="lineNum">     488 </span><span class="lineNoCov">          0 :                 ThreadContext tc(info().id.abridged());</span>
+<span class="lineNum">     489 </span><span class="lineNoCov">          0 :                 ThreadContext tc2(info().clientVersion);</span>
+<span class="lineNum">     490 </span><span class="lineNoCov">          0 :                 if (!checkRead(h256::size, ec, length))</span>
+<span class="lineNum">     491 </span><span class="lineNoCov">          0 :                         return;</span>
+<span class="lineNum">     492 </span>            : 
+<span class="lineNum">     493 </span><span class="lineNoCov">          0 :                 DEV_GUARDED(x_framing)</span>
+<span class="lineNum">     494 </span>            :                 {
+<span class="lineNum">     495 </span><span class="lineNoCov">          0 :                         if (!m_io-&gt;authAndDecryptHeader(bytesRef(m_data.data(), length)))</span>
+<span class="lineNum">     496 </span>            :                         {
+<span class="lineNum">     497 </span><span class="lineNoCov">          0 :                                 clog(NetWarn) &lt;&lt; &quot;header decrypt failed&quot;;</span>
+<span class="lineNum">     498 </span><span class="lineNoCov">          0 :                                 drop(BadProtocol); // todo: better error</span>
+<span class="lineNum">     499 </span><span class="lineNoCov">          0 :                                 return;</span>
+<span class="lineNum">     500 </span>            :                         }
+<span class="lineNum">     501 </span>            :                 }
+<span class="lineNum">     502 </span>            : 
+<span class="lineNum">     503 </span><span class="lineNoCov">          0 :                 bytesConstRef rawHeader(m_data.data(), length);</span>
+<span class="lineNum">     504 </span>            :                 try
+<span class="lineNum">     505 </span>            :                 {
+<span class="lineNum">     506 </span><span class="lineNoCov">          0 :                         RLPXFrameInfo tmpHeader(rawHeader);</span>
+<span class="lineNum">     507 </span>            :                 }
+<span class="lineNum">     508 </span><span class="lineNoCov">          0 :                 catch (std::exception const&amp; _e)</span>
+<span class="lineNum">     509 </span>            :                 {
+<span class="lineNum">     510 </span><span class="lineNoCov">          0 :                         clog(NetWarn) &lt;&lt; &quot;Exception decoding frame header RLP:&quot; &lt;&lt; _e.what() &lt;&lt; bytesConstRef(m_data.data(), h128::size).cropped(3);</span>
+<span class="lineNum">     511 </span><span class="lineNoCov">          0 :                         drop(BadProtocol);</span>
+<span class="lineNum">     512 </span>            :                         return;
+<span class="lineNum">     513 </span>            :                 }
+<span class="lineNum">     514 </span>            : 
+<span class="lineNum">     515 </span><span class="lineNoCov">          0 :                 RLPXFrameInfo header(rawHeader);</span>
+<a name="516"><span class="lineNum">     516 </span><span class="lineNoCov">          0 :                 auto tlen = header.length + header.padding + h128::size; // padded frame and mac</span></a>
+<span class="lineNum">     517 </span><span class="lineNoCov">          0 :                 m_data.resize(tlen);</span>
+<span class="lineNum">     518 </span><span class="lineNoCov">          0 :                 ba::async_read(m_socket-&gt;ref(), boost::asio::buffer(m_data, tlen), [this, self, tlen, header](boost::system::error_code ec, std::size_t length)</span>
+<span class="lineNum">     519 </span><span class="lineNoCov">          0 :                 {</span>
+<span class="lineNum">     520 </span><span class="lineNoCov">          0 :                         ThreadContext tc(info().id.abridged());</span>
+<span class="lineNum">     521 </span><span class="lineNoCov">          0 :                         ThreadContext tc2(info().clientVersion);</span>
+<span class="lineNum">     522 </span><span class="lineNoCov">          0 :                         if (!checkRead(tlen, ec, length))</span>
+<span class="lineNum">     523 </span><span class="lineNoCov">          0 :                                 return;</span>
+<span class="lineNum">     524 </span>            : 
+<span class="lineNum">     525 </span><span class="lineNoCov">          0 :                         bytesRef frame(m_data.data(), tlen);</span>
+<span class="lineNum">     526 </span><span class="lineNoCov">          0 :                         vector&lt;RLPXPacket&gt; px;</span>
+<span class="lineNum">     527 </span><span class="lineNoCov">          0 :                         DEV_GUARDED(x_framing)</span>
+<span class="lineNum">     528 </span>            :                         {
+<span class="lineNum">     529 </span><span class="lineNoCov">          0 :                                 auto f = getFraming(header.protocolId);</span>
+<span class="lineNum">     530 </span><span class="lineNoCov">          0 :                                 if (!f)</span>
+<span class="lineNum">     531 </span>            :                                 {
+<span class="lineNum">     532 </span><span class="lineNoCov">          0 :                                         clog(NetWarn) &lt;&lt; &quot;Unknown subprotocol &quot; &lt;&lt; header.protocolId;</span>
+<span class="lineNum">     533 </span><span class="lineNoCov">          0 :                                         drop(BadProtocol);</span>
+<span class="lineNum">     534 </span><span class="lineNoCov">          0 :                                         return;</span>
+<span class="lineNum">     535 </span>            :                                 }
+<span class="lineNum">     536 </span>            : 
+<span class="lineNum">     537 </span><span class="lineNoCov">          0 :                                 auto v = f-&gt;reader.demux(*m_io, header, frame);</span>
+<span class="lineNum">     538 </span><span class="lineNoCov">          0 :                                 px.swap(v);</span>
+<span class="lineNum">     539 </span>            :                         }
+<span class="lineNum">     540 </span>            : 
+<span class="lineNum">     541 </span><span class="lineNoCov">          0 :                         for (RLPXPacket&amp; p: px)</span>
+<span class="lineNum">     542 </span>            :                         {
+<span class="lineNum">     543 </span><span class="lineNoCov">          0 :                                 PacketType packetType = (PacketType)RLP(p.type()).toInt&lt;unsigned&gt;(RLP::AllowNonCanon);</span>
+<span class="lineNum">     544 </span><span class="lineNoCov">          0 :                                 bool ok = readPacket(header.protocolId, packetType, RLP(p.data()));</span>
+<span class="lineNum">     545 </span>            : #if ETH_DEBUG
+<span class="lineNum">     546 </span>            :                                 if (!ok)
+<span class="lineNum">     547 </span>            :                                         clog(NetWarn) &lt;&lt; &quot;Couldn't interpret packet.&quot; &lt;&lt; RLP(p.data());
+<span class="lineNum">     548 </span>            : #endif
+<span class="lineNum">     549 </span><span class="lineNoCov">          0 :                                 ok = true;</span>
+<span class="lineNum">     550 </span>            :                                 (void)ok;
+<span class="lineNum">     551 </span>            :                         }
+<span class="lineNum">     552 </span><span class="lineNoCov">          0 :                         doReadFrames();</span>
+<span class="lineNum">     553 </span><span class="lineNoCov">          0 :                 });</span>
+<span class="lineNum">     554 </span><span class="lineNoCov">          0 :         });</span>
+<a name="555"><span class="lineNum">     555 </span>            : }</a>
+<span class="lineNum">     556 </span>            : 
+<span class="lineNum">     557 </span><span class="lineNoCov">          0 : std::shared_ptr&lt;Session::Framing&gt; Session::getFraming(uint16_t _protocolID)</span>
+<span class="lineNum">     558 </span>            : {
+<span class="lineNum">     559 </span><span class="lineNoCov">          0 :         if (m_framing.find(_protocolID) == m_framing.end())</span>
+<span class="lineNum">     560 </span><span class="lineNoCov">          0 :                 return nullptr;</span>
+<span class="lineNum">     561 </span>            :         else
+<span class="lineNum">     562 </span><span class="lineNoCov">          0 :                 return m_framing[_protocolID];</span>
+<a name="563"><span class="lineNum">     563 </span>            : }</a>
+<span class="lineNum">     564 </span>            : 
+<span class="lineNum">     565 </span><span class="lineCov">         24 : void Session::registerCapability(CapDesc const&amp; _desc, std::shared_ptr&lt;Capability&gt; _p)</span>
+<span class="lineNum">     566 </span>            : {
+<span class="lineNum">     567 </span><span class="lineCov">        120 :         DEV_GUARDED(x_framing)</span>
+<span class="lineNum">     568 </span>            :         {
+<span class="lineNum">     569 </span><span class="lineCov">         48 :                 m_capabilities[_desc] = _p;</span>
+<span class="lineNum">     570 </span>            :         }
+<a name="571"><span class="lineNum">     571 </span><span class="lineCov">         24 : }</span></a>
+<span class="lineNum">     572 </span>            : 
+<span class="lineNum">     573 </span><span class="lineCov">         62 : void Session::registerFraming(uint16_t _id)</span>
+<span class="lineNum">     574 </span>            : {
+<span class="lineNum">     575 </span><span class="lineCov">        247 :         DEV_GUARDED(x_framing)</span>
+<span class="lineNum">     576 </span>            :         {
+<span class="lineNum">     577 </span><span class="lineCov">        186 :                 if (m_framing.find(_id) == m_framing.end())</span>
+<span class="lineNum">     578 </span>            :                 {
+<span class="lineNum">     579 </span><span class="lineCov">        152 :                         std::shared_ptr&lt;Session::Framing&gt; f(new Session::Framing(_id));</span>
+<span class="lineNum">     580 </span><span class="lineCov">         76 :                         m_framing[_id] = f;</span>
+<span class="lineNum">     581 </span>            :                 }
+<span class="lineNum">     582 </span>            :         }
+<a name="583"><span class="lineNum">     583 </span><span class="lineCov">         62 : }</span></a>
+<span class="lineNum">     584 </span>            : 
+<span class="lineNum">     585 </span><span class="lineNoCov">          0 : void Session::multiplexAll()</span>
+<span class="lineNum">     586 </span>            : {
+<a name="587"><span class="lineNum">     587 </span><span class="lineNoCov">          0 :         for (auto&amp; f: m_framing)</span></a>
+<span class="lineNum">     588 </span><span class="lineNoCov">          0 :                 f.second-&gt;writer.mux(*m_io, maxFrameSize(), m_encFrames);</span>
+<span class="lineNum">     589 </span><span class="lineCov">          3 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.12</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>
